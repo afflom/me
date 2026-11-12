@@ -1,0 +1,39 @@
+\begin{lexlean}{InverseProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Vocab.V1.SchemaOrg}
+\importmodule{Foundation.Vocab.V1.Crosswalk}
+\importmodule{Foundation.Me.V1.Anchors}
+\importmodule{Foundation.Me.V1.Model}
+\title{Inverse guarantees}
+\begin{semanticmodule}
+theorem{
+  name: inverseColumnAgrees,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designInverseColumn (Foundation.Vocab.V1.SchemaOrg::vocabPropertyRows)) = (Foundation.Vocab.V1.SchemaOrg::vocabInverseTable)),
+  proof: decide{}
+}
+
+theorem{
+  name: successorColumnAgrees,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designSuccessorColumn (Foundation.Vocab.V1.SchemaOrg::vocabPropertyRows)) = (Foundation.Vocab.V1.SchemaOrg::vocabSuccessorTable)),
+  proof: decide{}
+}
+
+theorem{
+  name: inversesSymmetric,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designInversesPaired 0 (Foundation.Vocab.V1.SchemaOrg::vocabInverseTable) (Foundation.Vocab.V1.SchemaOrg::vocabInverseTable)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: supersessionResolves,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designSuccessorsSettle (Foundation.Vocab.V1.SchemaOrg::vocabSuccessorTable) (Foundation.Vocab.V1.SchemaOrg::vocabSuccessorTable)) = true),
+  proof: decide{}
+}
+\end{semanticmodule}
+\end{lexlean}

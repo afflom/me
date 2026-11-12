@@ -45,6 +45,12 @@ model does not sanction.
 | --- | --- | --- |
 | `R4-01` | `build` | The R4 language model runs in the browser only from bytes that re-derive to their pinned SHA-256, served by the page in pieces of at most 16 MiB, and shows an answer only when the proved Prism R4 decision allows it |
 
+## route
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `RT-01` | `build` | The vocabulary register the page reads lists schema.org 30.1's 939 types and 1,538 properties, the 12 domains and the 1,229 crosswalk rows in the order of the Lean indices, every source pinned by sha256 |
+
 ## vault
 
 | ID | Level | Statement |

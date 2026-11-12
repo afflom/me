@@ -1,0 +1,1011 @@
+\begin{lexlean}{Foundation.Me.V1.Model}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Vocab.V1.SchemaOrg}
+\importmodule{Foundation.Vocab.V1.Crosswalk}
+\importmodule{Foundation.Me.V1.Anchors}
+\title{Prism design model}
+\begin{semanticmodule}
+definition{
+  name: designNthOr,
+  parameters: [fallback : Nat, at : Nat, position : Nat, values : (List Nat)],
+  result: Nat,
+  body: (match values
+    | List.nil => fallback
+    | List.cons value rest => (if (position =? at) then value else (designNthOr fallback (at + 1) position rest))),
+  recursive_argument: values
+}
+
+definition{
+  name: designMaxNat,
+  parameters: [left : Nat, right : Nat],
+  result: Nat,
+  body: (if (left <? right) then right else left)
+}
+
+definition{
+  name: designMemberNat,
+  parameters: [wanted : Nat, values : (List Nat)],
+  result: Bool,
+  body: (match values
+    | List.nil => false
+    | List.cons value rest => ((value =? wanted) || (designMemberNat wanted rest))),
+  recursive_argument: values
+}
+
+definition{
+  name: designAllBelow,
+  parameters: [bound : Nat, values : (List Nat)],
+  result: Bool,
+  body: (match values
+    | List.nil => true
+    | List.cons value rest => ((value <? bound) && (designAllBelow bound rest))),
+  recursive_argument: values
+}
+
+definition{
+  name: designAllAtLeast,
+  parameters: [bound : Nat, values : (List Nat)],
+  result: Bool,
+  body: (match values
+    | List.nil => true
+    | List.cons value rest => ((bound <=? value) && (designAllAtLeast bound rest))),
+  recursive_argument: values
+}
+
+definition{
+  name: designSnoc,
+  parameters: [values : (List Nat), last : Nat],
+  result: (List Nat),
+  body: (match values
+    | List.nil => (cons last (nil Nat))
+    | List.cons value rest => (cons value (designSnoc rest last))),
+  recursive_argument: values
+}
+
+definition{name: designDomainCount, parameters: [], result: Nat, body: 12}
+
+definition{name: designHealthDomain, parameters: [], result: Nat, body: 0}
+
+definition{name: designIdentityDomain, parameters: [], result: Nat, body: 2}
+
+definition{name: designPeopleDomain, parameters: [], result: Nat, body: 3}
+
+definition{name: designTopicsDomain, parameters: [], result: Nat, body: 11}
+
+definition{name: designRestricted, parameters: [], result: Nat, body: 3}
+
+definition{
+  name: designDomainFloors,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 3 (cons 2 (cons 2 (cons 2 (cons 2 (cons 2 (cons 2 (cons 1 (cons 1 (cons 1 (cons 1 (cons 1 (nil Nat)))))))))))))
+}
+
+definition{
+  name: designFloorOf,
+  parameters: [domain : Nat],
+  result: Nat,
+  body: (designNthOr 3 0 domain (designDomainFloors))
+}
+
+definition{
+  name: designAnchorOf,
+  parameters: [key : Nat, anchors : (List Foundation.Me.V1.Anchors::DomainAnchor)],
+  result: Nat,
+  body: (match anchors
+    | List.nil => 12
+    | List.cons anchor rest => (if ((project anchor key) =? key) then (project anchor value) else (designAnchorOf key rest))),
+  recursive_argument: anchors
+}
+
+definition{
+  name: designMinParentDomain,
+  parameters: [best : Nat, parents : (List Nat), resolved : (List Nat)],
+  result: Nat,
+  body: (match parents
+    | List.nil => best
+    | List.cons parent rest => (designMinParentDomain (if ((designNthOr 11 0 parent resolved) <? best) then (designNthOr 11 0 parent resolved) else best) rest resolved)),
+  recursive_argument: parents
+}
+
+definition{
+  name: designDomainFor,
+  parameters: [row : Foundation.Vocab.V1.SchemaOrg::VocabTypeRow, resolved : (List Nat)],
+  result: Nat,
+  body: (if ((designAnchorOf (project row index) (Foundation.Me.V1.Anchors::anchorsAnchorRows)) <? 12) then (designAnchorOf (project row index) (Foundation.Me.V1.Anchors::anchorsAnchorRows)) else (designMinParentDomain 11 (project row parents) resolved))
+}
+
+definition{
+  name: designResolveFrom,
+  parameters: [rows : (List Foundation.Vocab.V1.SchemaOrg::VocabTypeRow), resolved : (List Nat)],
+  result: (List Nat),
+  body: (match rows
+    | List.nil => resolved
+    | List.cons row rest => (designResolveFrom rest (designSnoc resolved (designDomainFor row resolved)))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designTypeDomains,
+  parameters: [],
+  result: (List Nat),
+  body: (designResolveFrom (Foundation.Vocab.V1.SchemaOrg::vocabTypeRows) (nil Nat))
+}
+
+definition{
+  name: designRangeFloor,
+  parameters: [best : Nat, ranges : (List Nat), domains : (List Nat)],
+  result: Nat,
+  body: (match ranges
+    | List.nil => best
+    | List.cons range rest => (designRangeFloor (designMaxNat best (designFloorOf (designNthOr 11 0 range domains))) rest domains)),
+  recursive_argument: ranges
+}
+
+definition{
+  name: designFloorOverride,
+  parameters: [key : Nat, rows : (List Foundation.Me.V1.Anchors::DomainAnchor)],
+  result: Nat,
+  body: (match rows
+    | List.nil => 0
+    | List.cons row rest => (if ((project row key) =? key) then (project row value) else (designFloorOverride key rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designPropertyFloor,
+  parameters: [row : Foundation.Vocab.V1.SchemaOrg::VocabPropertyRow, domains : (List Nat)],
+  result: Nat,
+  body: (designMaxNat (designFloorOverride (project row index) (Foundation.Me.V1.Anchors::anchorsFloorRows)) (designRangeFloor 0 (project row ranges) domains))
+}
+
+definition{
+  name: designClaimDomain,
+  parameters: [aboutOwner : Bool, typeDomain : Nat],
+  result: Nat,
+  body: (if (aboutOwner && (typeDomain =? 3)) then 2 else typeDomain)
+}
+
+definition{
+  name: designClaimLabel,
+  parameters: [domain : Nat, propertyLabel : Nat, personLabel : Nat],
+  result: Nat,
+  body: (designMaxNat (designFloorOf domain) (designMaxNat propertyLabel personLabel))
+}
+
+inductive{
+  name: ContentSource,
+  type_parameters: [],
+  parameters: [],
+  constructors: [
+    {name: gmail, fields: []},
+    {name: protonMail, fields: []},
+    {name: googleCalendar, fields: []},
+    {name: protonCalendar, fields: []},
+    {name: website, fields: []},
+    {name: feed, fields: []},
+    {name: file, fields: []},
+    {name: activityPub, fields: []},
+    {name: ownerUtterance, fields: []},
+    {name: otherSource, fields: []}
+  ]
+}
+
+inductive{
+  name: ContentMedia,
+  type_parameters: [],
+  parameters: [],
+  constructors: [
+    {name: message, fields: []},
+    {name: calendar, fields: []},
+    {name: contactCard, fields: []},
+    {name: html, fields: []},
+    {name: linkedData, fields: []},
+    {name: json, fields: []},
+    {name: syndication, fields: []},
+    {name: pdf, fields: []},
+    {name: plainText, fields: []},
+    {name: image, fields: []},
+    {name: audioVideo, fields: []},
+    {name: unknownMedia, fields: []}
+  ]
+}
+
+inductive{
+  name: IngestStage,
+  type_parameters: [],
+  parameters: [],
+  constructors: [
+    {name: decoding, fields: []},
+    {name: lifting, fields: []},
+    {name: interpreting, fields: []},
+    {name: resolving, fields: []},
+    {name: classifying, fields: []},
+    {name: admitting, fields: []},
+    {name: storing, fields: []},
+    {name: indexing, fields: []}
+  ]
+}
+
+structure{
+  name: ContentEnvelope,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: source, type: ContentSource},
+    {name: media, type: ContentMedia},
+    {name: size, type: Nat},
+    {name: digest, type: String}
+  ]
+}
+
+definition{
+  name: designStageNumber,
+  parameters: [stage : IngestStage],
+  result: Nat,
+  body: (match stage
+    | IngestStage.decoding => 0
+    | IngestStage.lifting => 1
+    | IngestStage.interpreting => 2
+    | IngestStage.resolving => 3
+    | IngestStage.classifying => 4
+    | IngestStage.admitting => 5
+    | IngestStage.storing => 6
+    | IngestStage.indexing => 7)
+}
+
+definition{
+  name: designHasText,
+  parameters: [media : ContentMedia],
+  result: Bool,
+  body: (match media
+    | ContentMedia.message => true
+    | ContentMedia.calendar => true
+    | ContentMedia.contactCard => false
+    | ContentMedia.html => true
+    | ContentMedia.linkedData => false
+    | ContentMedia.json => false
+    | ContentMedia.syndication => true
+    | ContentMedia.pdf => true
+    | ContentMedia.plainText => true
+    | ContentMedia.image => false
+    | ContentMedia.audioVideo => false
+    | ContentMedia.unknownMedia => false)
+}
+
+definition{
+  name: designHasEmbeddedData,
+  parameters: [media : ContentMedia],
+  result: Bool,
+  body: (match media
+    | ContentMedia.message => true
+    | ContentMedia.calendar => true
+    | ContentMedia.contactCard => true
+    | ContentMedia.html => true
+    | ContentMedia.linkedData => true
+    | ContentMedia.json => true
+    | ContentMedia.syndication => true
+    | ContentMedia.pdf => true
+    | ContentMedia.plainText => false
+    | ContentMedia.image => true
+    | ContentMedia.audioVideo => true
+    | ContentMedia.unknownMedia => false)
+}
+
+definition{
+  name: designCommonTail,
+  parameters: [],
+  result: (List IngestStage),
+  body: (cons (ctor IngestStage.resolving) (cons (ctor IngestStage.classifying) (cons (ctor IngestStage.admitting) (cons (ctor IngestStage.storing) (cons (ctor IngestStage.indexing) (nil IngestStage))))))
+}
+
+definition{
+  name: designWithInterpret,
+  parameters: [media : ContentMedia],
+  result: (List IngestStage),
+  body: (if (designHasText media) then (cons (ctor IngestStage.interpreting) (designCommonTail)) else (designCommonTail))
+}
+
+definition{
+  name: designPlanOf,
+  parameters: [media : ContentMedia],
+  result: (List IngestStage),
+  body: (cons (ctor IngestStage.decoding) (if (designHasEmbeddedData media) then (cons (ctor IngestStage.lifting) (designWithInterpret media)) else (designWithInterpret media)))
+}
+
+definition{
+  name: designPlan,
+  parameters: [envelope : ContentEnvelope],
+  result: (List IngestStage),
+  body: (designPlanOf (project envelope media))
+}
+
+definition{
+  name: designWithSource,
+  parameters: [envelope : ContentEnvelope, source : ContentSource],
+  result: ContentEnvelope,
+  body: (record ContentEnvelope {source := source, media := (project envelope media), size := (project envelope size), digest := (project envelope digest)})
+}
+
+definition{
+  name: designStageNumbers,
+  parameters: [stages : (List IngestStage)],
+  result: (List Nat),
+  body: (match stages
+    | List.nil => (nil Nat)
+    | List.cons stage rest => (cons (designStageNumber stage) (designStageNumbers rest))),
+  recursive_argument: stages
+}
+
+definition{
+  name: designIncreasing,
+  parameters: [last : Nat, values : (List Nat)],
+  result: Bool,
+  body: (match values
+    | List.nil => true
+    | List.cons value rest => ((last <? value) && (designIncreasing value rest))),
+  recursive_argument: values
+}
+
+definition{
+  name: designPlanSound,
+  parameters: [media : ContentMedia],
+  result: Bool,
+  body: ((designMemberNat 0 (designStageNumbers (designPlanOf media))) && ((designMemberNat 4 (designStageNumbers (designPlanOf media))) && ((designMemberNat 5 (designStageNumbers (designPlanOf media))) && ((designMemberNat 6 (designStageNumbers (designPlanOf media))) && (match (designStageNumbers (designPlanOf media))
+    | List.nil => false
+    | List.cons opening rest => ((opening =? 0) && (designIncreasing opening rest)))))))
+}
+
+inductive{
+  name: DesignAudience,
+  type_parameters: [],
+  parameters: [],
+  constructors: [
+    {name: owner, fields: []},
+    {name: contact, fields: []},
+    {name: visitor, fields: []},
+    {name: agent, fields: []}
+  ]
+}
+
+definition{
+  name: designAudienceNumber,
+  parameters: [audience : DesignAudience],
+  result: Nat,
+  body: (match audience
+    | DesignAudience.owner => 0
+    | DesignAudience.contact => 1
+    | DesignAudience.visitor => 2
+    | DesignAudience.agent => 3)
+}
+
+definition{
+  name: designShows,
+  parameters: [audience : DesignAudience, label : Nat, shared : Bool, declassified : Bool],
+  result: Bool,
+  body: (match audience
+    | DesignAudience.owner => true
+    | DesignAudience.contact => ((label <? 3) && (shared || declassified))
+    | DesignAudience.visitor => ((label <? 3) && declassified)
+    | DesignAudience.agent => ((label <? 3) && declassified))
+}
+
+definition{
+  name: designLabels,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 0 (cons 1 (cons 2 (cons 3 (nil Nat)))))
+}
+
+definition{
+  name: designShowsOnly,
+  parameters: [audience : DesignAudience, values : (List Nat)],
+  result: Bool,
+  body: (match values
+    | List.nil => true
+    | List.cons label rest => ((not (designShows audience label false false)) && ((not (designShows audience 3 true true)) && (designShowsOnly audience rest)))),
+  recursive_argument: values
+}
+
+structure{
+  name: DesignView,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: index, type: Nat},
+    {name: audience, type: Nat},
+    {name: role, type: Nat},
+    {name: domains, type: (List Nat)}
+  ]
+}
+
+definition{
+  name: designAllDomains,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 0 (cons 1 (cons 2 (cons 3 (cons 4 (cons 5 (cons 6 (cons 7 (cons 8 (cons 9 (cons 10 (cons 11 (nil Nat)))))))))))))
+}
+
+definition{
+  name: designView,
+  parameters: [index : Nat, audience : Nat, role : Nat, domains : (List Nat)],
+  result: DesignView,
+  body: (record DesignView {index := index, audience := audience, role := role, domains := domains})
+}
+
+definition{
+  name: designViews,
+  parameters: [],
+  result: (List DesignView),
+  body: (cons (designView 0 0 1 (cons 4 (cons 5 (cons 9 (cons 1 (nil Nat)))))) (cons (designView 1 0 1 (cons 4 (cons 3 (nil Nat)))) (cons (designView 2 0 1 (cons 3 (cons 4 (cons 5 (nil Nat))))) (cons (designView 3 0 2 (cons 5 (cons 6 (nil Nat)))) (cons (designView 4 0 0 (designAllDomains)) (cons (designView 5 0 0 (cons 2 (cons 0 (cons 7 (cons 1 (nil Nat)))))) (cons (designView 6 0 0 (cons 10 (cons 11 (nil Nat)))) (cons (designView 7 0 2 (cons 6 (nil Nat))) (cons (designView 8 0 2 (cons 1 (cons 8 (nil Nat)))) (cons (designView 9 0 0 (cons 0 (nil Nat))) (cons (designView 10 0 0 (cons 7 (nil Nat))) (cons (designView 11 0 2 (cons 9 (nil Nat))) (cons (designView 12 0 2 (cons 8 (nil Nat))) (cons (designView 13 0 0 (cons 11 (nil Nat))) (cons (designView 14 0 3 (designAllDomains)) (cons (designView 15 0 0 (designAllDomains)) (cons (designView 16 2 6 (cons 2 (cons 7 (cons 10 (nil Nat))))) (cons (designView 17 1 5 (cons 5 (cons 10 (cons 4 (nil Nat))))) (cons (designView 18 3 7 (cons 2 (cons 7 (cons 10 (nil Nat))))) (cons (designView 19 0 4 (cons 2 (cons 7 (cons 10 (nil Nat))))) (nil DesignView)))))))))))))))))))))
+}
+
+definition{
+  name: designRoleAudience,
+  parameters: [role : Nat],
+  result: Nat,
+  body: (if (role <? 5) then 0 else (if (role =? 5) then 1 else (if (role =? 6) then 2 else 3)))
+}
+
+definition{name: designRoleCount, parameters: [], result: Nat, body: 8}
+
+definition{
+  name: designViewsNumbered,
+  parameters: [position : Nat, rows : (List DesignView)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => (((project row index) =? position) && (designViewsNumbered (position + 1) rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designViewsWellFormed,
+  parameters: [rows : (List DesignView)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => (((project row role) <? (designRoleCount)) && (((designRoleAudience (project row role)) =? (project row audience)) && ((designAllBelow (designDomainCount) (project row domains)) && (designViewsWellFormed rest))))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designOwnerViewHas,
+  parameters: [domain : Nat, rows : (List DesignView)],
+  result: Bool,
+  body: (match rows
+    | List.nil => false
+    | List.cons row rest => ((((project row audience) =? 0) && ((not ((project row index) =? 4)) && ((not ((project row index) =? 14)) && ((not ((project row index) =? 15)) && (designMemberNat domain (project row domains)))))) || (designOwnerViewHas domain rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designEveryDomainOwned,
+  parameters: [domains : (List Nat)],
+  result: Bool,
+  body: (match domains
+    | List.nil => true
+    | List.cons domain rest => ((designOwnerViewHas domain (designViews)) && (designEveryDomainOwned rest))),
+  recursive_argument: domains
+}
+
+definition{
+  name: designFloorsOf,
+  parameters: [domains : (List Nat)],
+  result: (List Nat),
+  body: (match domains
+    | List.nil => (nil Nat)
+    | List.cons domain rest => (cons (designFloorOf domain) (designFloorsOf rest))),
+  recursive_argument: domains
+}
+
+definition{
+  name: designOthersAvoidRestricted,
+  parameters: [rows : (List DesignView)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => ((((project row audience) =? 0) || (designAllBelow 3 (designFloorsOf (project row domains)))) && (designOthersAvoidRestricted rest))),
+  recursive_argument: rows
+}
+
+structure{
+  name: DesignJourney,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: role, type: Nat}, {name: steps, type: (List Nat)}]
+}
+
+definition{
+  name: designJourneys,
+  parameters: [],
+  result: (List DesignJourney),
+  body: (cons (record DesignJourney {role := 1, steps := (cons 0 (cons 1 (cons 2 (nil Nat))))}) (cons (record DesignJourney {role := 2, steps := (cons 0 (cons 3 (cons 7 (cons 11 (nil Nat)))))}) (cons (record DesignJourney {role := 0, steps := (cons 5 (cons 4 (cons 6 (nil Nat))))}) (cons (record DesignJourney {role := 3, steps := (cons 14 (cons 5 (cons 19 (nil Nat))))}) (cons (record DesignJourney {role := 4, steps := (cons 5 (cons 14 (cons 19 (nil Nat))))}) (cons (record DesignJourney {role := 5, steps := (cons 17 (nil Nat))}) (cons (record DesignJourney {role := 6, steps := (cons 16 (nil Nat))}) (cons (record DesignJourney {role := 7, steps := (cons 18 (nil Nat))}) (nil DesignJourney)))))))))
+}
+
+definition{
+  name: designViewAudience,
+  parameters: [position : Nat, rows : (List DesignView)],
+  result: Nat,
+  body: (match rows
+    | List.nil => 99
+    | List.cons row rest => (if ((project row index) =? position) then (project row audience) else (designViewAudience position rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designStepsReachable,
+  parameters: [role : Nat, steps : (List Nat)],
+  result: Bool,
+  body: (match steps
+    | List.nil => true
+    | List.cons step rest => (((designViewAudience step (designViews)) =? (designRoleAudience role)) && (designStepsReachable role rest))),
+  recursive_argument: steps
+}
+
+definition{
+  name: designJourneysWellFormed,
+  parameters: [rows : (List DesignJourney)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => (((project row role) <? (designRoleCount)) && ((designStepsReachable (project row role) (project row steps)) && (designJourneysWellFormed rest)))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designRolesWithJourney,
+  parameters: [role : Nat, rows : (List DesignJourney)],
+  result: Bool,
+  body: (match rows
+    | List.nil => false
+    | List.cons row rest => (((project row role) =? role) || (designRolesWithJourney role rest))),
+  recursive_argument: rows
+}
+
+inductive{
+  name: OutboundOutcome,
+  type_parameters: [],
+  parameters: [],
+  constructors: [{name: send, fields: []}, {name: hold, fields: []}, {name: refuse, fields: []}]
+}
+
+definition{
+  name: designOutbound,
+  parameters: [label : Nat, ownerAct : Bool, halted : Bool],
+  result: OutboundOutcome,
+  body: (if halted then (ctor OutboundOutcome.refuse) else (if (3 <=? label) then (ctor OutboundOutcome.refuse) else (if ownerAct then (ctor OutboundOutcome.send) else (ctor OutboundOutcome.hold))))
+}
+
+definition{
+  name: designOutcomeNumber,
+  parameters: [outcome : OutboundOutcome],
+  result: Nat,
+  body: (match outcome
+    | OutboundOutcome.send => 0
+    | OutboundOutcome.hold => 1
+    | OutboundOutcome.refuse => 2)
+}
+
+definition{
+  name: designOutboundSafe,
+  parameters: [values : (List Nat)],
+  result: Bool,
+  body: (match values
+    | List.nil => true
+    | List.cons label rest => ((not ((designOutcomeNumber (designOutbound label false false)) =? 0)) && ((not ((designOutcomeNumber (designOutbound label true true)) =? 0)) && ((not ((designOutcomeNumber (designOutbound label false true)) =? 0)) && ((if (label <? 3) then ((designOutcomeNumber (designOutbound label true false)) =? 0) else ((designOutcomeNumber (designOutbound label true false)) =? 2)) && (designOutboundSafe rest)))))),
+  recursive_argument: values
+}
+
+inductive{
+  name: AttentionLevel,
+  type_parameters: [],
+  parameters: [],
+  constructors: [
+    {name: now, fields: []},
+    {name: today, fields: []},
+    {name: digest, fields: []},
+    {name: quiet, fields: []}
+  ]
+}
+
+definition{
+  name: designAttention,
+  parameters: [
+    muted : Bool,
+    promotional : Bool,
+    deadlineSoon : Bool,
+    fromKnownPerson : Bool,
+    direct : Bool,
+    automated : Bool
+  ],
+  result: AttentionLevel,
+  body: (if muted then (ctor AttentionLevel.quiet) else (if promotional then (ctor AttentionLevel.digest) else (if deadlineSoon then (ctor AttentionLevel.now) else (if automated then (ctor AttentionLevel.digest) else (if direct then (ctor AttentionLevel.today) else (if fromKnownPerson then (ctor AttentionLevel.today) else (ctor AttentionLevel.digest)))))))
+}
+
+definition{
+  name: designAttentionNumber,
+  parameters: [value : AttentionLevel],
+  result: Nat,
+  body: (match value
+    | AttentionLevel.now => 0
+    | AttentionLevel.today => 1
+    | AttentionLevel.digest => 2
+    | AttentionLevel.quiet => 3)
+}
+
+definition{
+  name: designAttentionOf,
+  parameters: [
+    muted : Bool,
+    promotional : Bool,
+    deadlineSoon : Bool,
+    fromKnownPerson : Bool,
+    direct : Bool,
+    automated : Bool
+  ],
+  result: Nat,
+  body: (designAttentionNumber (designAttention muted promotional deadlineSoon fromKnownPerson direct automated))
+}
+
+definition{
+  name: designAttentionRules,
+  parameters: [
+    muted : Bool,
+    promotional : Bool,
+    deadlineSoon : Bool,
+    fromKnownPerson : Bool,
+    direct : Bool,
+    automated : Bool
+  ],
+  result: Bool,
+  body: (((not muted) || ((designAttentionOf muted promotional deadlineSoon fromKnownPerson direct automated) =? 3)) && (((not ((not muted) && promotional)) || ((designAttentionOf muted promotional deadlineSoon fromKnownPerson direct automated) =? 2)) && (((not ((not muted) && ((not promotional) && deadlineSoon))) || ((designAttentionOf muted promotional deadlineSoon fromKnownPerson direct automated) =? 0)) && (((not ((designAttentionOf muted promotional deadlineSoon fromKnownPerson direct automated) =? 0)) || deadlineSoon) && ((not ((not muted) && ((not promotional) && ((not automated) && direct)))) || ((designAttentionOf muted promotional deadlineSoon fromKnownPerson direct automated) <=? 1))))))
+}
+
+definition{
+  name: designAttentionAll5,
+  parameters: [
+    muted : Bool,
+    promotional : Bool,
+    deadlineSoon : Bool,
+    fromKnownPerson : Bool,
+    direct : Bool
+  ],
+  result: Bool,
+  body: ((designAttentionRules muted promotional deadlineSoon fromKnownPerson direct true) && (designAttentionRules muted promotional deadlineSoon fromKnownPerson direct false))
+}
+
+definition{
+  name: designAttentionAll4,
+  parameters: [muted : Bool, promotional : Bool, deadlineSoon : Bool, fromKnownPerson : Bool],
+  result: Bool,
+  body: ((designAttentionAll5 muted promotional deadlineSoon fromKnownPerson true) && (designAttentionAll5 muted promotional deadlineSoon fromKnownPerson false))
+}
+
+definition{
+  name: designAttentionAll3,
+  parameters: [muted : Bool, promotional : Bool, deadlineSoon : Bool],
+  result: Bool,
+  body: ((designAttentionAll4 muted promotional deadlineSoon true) && (designAttentionAll4 muted promotional deadlineSoon false))
+}
+
+definition{
+  name: designAttentionAll2,
+  parameters: [muted : Bool, promotional : Bool],
+  result: Bool,
+  body: ((designAttentionAll3 muted promotional true) && (designAttentionAll3 muted promotional false))
+}
+
+definition{
+  name: designAttentionAll,
+  parameters: [],
+  result: Bool,
+  body: ((designAttentionAll2 true true) && ((designAttentionAll2 true false) && ((designAttentionAll2 false true) && (designAttentionAll2 false false))))
+}
+
+definition{
+  name: designTypesNumbered,
+  parameters: [position : Nat, rows : (List Foundation.Vocab.V1.SchemaOrg::VocabTypeRow)],
+  result: Bool,
+  body: (match rows
+    | List.nil => (position =? (Foundation.Vocab.V1.SchemaOrg::vocabTypeCount))
+    | List.cons row rest => (((project row index) =? position) && (designTypesNumbered (position + 1) rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designParentsBefore,
+  parameters: [rows : (List Foundation.Vocab.V1.SchemaOrg::VocabTypeRow)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => ((designAllBelow (project row index) (project row parents)) && (designParentsBefore rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designRootsAnchored,
+  parameters: [rows : (List Foundation.Vocab.V1.SchemaOrg::VocabTypeRow)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => ((match (project row parents)
+      | List.nil => ((designAnchorOf (project row index) (Foundation.Me.V1.Anchors::anchorsAnchorRows)) <? 12)
+      | List.cons parent more => true) && (designRootsAnchored rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designAnchorsRespected,
+  parameters: [anchors : (List Foundation.Me.V1.Anchors::DomainAnchor), domains : (List Nat)],
+  result: Bool,
+  body: (match anchors
+    | List.nil => true
+    | List.cons anchor rest => (((designNthOr 99 0 (project anchor key) domains) =? (project anchor value)) && (designAnchorsRespected rest domains))),
+  recursive_argument: anchors
+}
+
+definition{
+  name: designAnchorsDeclared,
+  parameters: [anchors : (List Foundation.Me.V1.Anchors::DomainAnchor)],
+  result: Bool,
+  body: (match anchors
+    | List.nil => true
+    | List.cons anchor rest => (((project anchor key) <? (Foundation.Vocab.V1.SchemaOrg::vocabTypeCount)) && (((project anchor value) <? 12) && (designAnchorsDeclared rest)))),
+  recursive_argument: anchors
+}
+
+definition{
+  name: designSomeParentIn,
+  parameters: [domain : Nat, parents : (List Nat), domains : (List Nat)],
+  result: Bool,
+  body: (match parents
+    | List.nil => false
+    | List.cons parent rest => (((designNthOr 99 0 parent domains) =? domain) || (designSomeParentIn domain rest domains))),
+  recursive_argument: parents
+}
+
+definition{
+  name: designHealthClosed,
+  parameters: [rows : (List Foundation.Vocab.V1.SchemaOrg::VocabTypeRow), domains : (List Nat)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => (((not (designSomeParentIn 0 (project row parents) domains)) || ((designNthOr 99 0 (project row index) domains) =? 0)) && (designHealthClosed rest domains))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designPropertiesSound,
+  parameters: [position : Nat, rows : (List Foundation.Vocab.V1.SchemaOrg::VocabPropertyRow)],
+  result: Bool,
+  body: (match rows
+    | List.nil => (position =? (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount))
+    | List.cons row rest => (((project row index) =? position) && ((designAllBelow (Foundation.Vocab.V1.SchemaOrg::vocabTypeCount) (project row domains)) && ((designAllBelow (Foundation.Vocab.V1.SchemaOrg::vocabTypeCount) (project row ranges)) && (((project row inverse) <=? (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount)) && (((project row supersededBy) <=? (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount)) && (designPropertiesSound (position + 1) rest))))))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designHealthRangeRestricted,
+  parameters: [rows : (List Foundation.Vocab.V1.SchemaOrg::VocabPropertyRow), domains : (List Nat)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => (((not (designSomeParentIn 0 (project row ranges) domains)) || ((designPropertyFloor row domains) =? 3)) && (designHealthRangeRestricted rest domains))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designPropertyInverse,
+  parameters: [position : Nat, rows : (List Foundation.Vocab.V1.SchemaOrg::VocabPropertyRow)],
+  result: Nat,
+  body: (match rows
+    | List.nil => (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount)
+    | List.cons row rest => (if ((project row index) =? position) then (project row inverse) else (designPropertyInverse position rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designPropertySuccessor,
+  parameters: [position : Nat, rows : (List Foundation.Vocab.V1.SchemaOrg::VocabPropertyRow)],
+  result: Nat,
+  body: (match rows
+    | List.nil => (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount)
+    | List.cons row rest => (if ((project row index) =? position) then (project row supersededBy) else (designPropertySuccessor position rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designInversesSymmetric,
+  parameters: [rows : (List Foundation.Vocab.V1.SchemaOrg::VocabPropertyRow)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => ((((project row inverse) =? (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount)) || ((designPropertyInverse (project row inverse) (Foundation.Vocab.V1.SchemaOrg::vocabPropertyRows)) =? (project row index))) && (designInversesSymmetric rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designCurrent,
+  parameters: [position : Nat],
+  result: Nat,
+  body: (if ((designPropertySuccessor position (Foundation.Vocab.V1.SchemaOrg::vocabPropertyRows)) =? (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount)) then position else (if ((designPropertySuccessor (designPropertySuccessor position (Foundation.Vocab.V1.SchemaOrg::vocabPropertyRows)) (Foundation.Vocab.V1.SchemaOrg::vocabPropertyRows)) =? (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount)) then (designPropertySuccessor position (Foundation.Vocab.V1.SchemaOrg::vocabPropertyRows)) else (designPropertySuccessor (designPropertySuccessor position (Foundation.Vocab.V1.SchemaOrg::vocabPropertyRows)) (Foundation.Vocab.V1.SchemaOrg::vocabPropertyRows))))
+}
+
+definition{
+  name: designSupersessionResolves,
+  parameters: [rows : (List Foundation.Vocab.V1.SchemaOrg::VocabPropertyRow)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => (((designPropertySuccessor (designCurrent (project row index)) (Foundation.Vocab.V1.SchemaOrg::vocabPropertyRows)) =? (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount)) && (designSupersessionResolves rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designCrosswalkTargeted,
+  parameters: [rows : (List Foundation.Vocab.V1.Crosswalk::CrosswalkTermRow)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => (((project row vocabulary) <? (Foundation.Vocab.V1.Crosswalk::crosswalkVocabularyCount)) && (((project row match) <? 6) && ((if ((project row kind) =? 0) then ((project row target) <? (Foundation.Vocab.V1.SchemaOrg::vocabTypeCount)) else ((project row target) <? (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount))) && (((not ((project row match) =? 5)) || (if ((project row kind) =? 0) then ((project row target) =? (Foundation.Vocab.V1.Crosswalk::crosswalkResidualType)) else ((project row target) =? (Foundation.Vocab.V1.Crosswalk::crosswalkResidualProperty)))) && (designCrosswalkTargeted rest)))))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designEveryTypeViewed,
+  parameters: [domains : (List Nat)],
+  result: Bool,
+  body: (match domains
+    | List.nil => true
+    | List.cons domain rest => ((designOwnerViewHas domain (designViews)) && (designEveryTypeViewed rest))),
+  recursive_argument: domains
+}
+
+definition{
+  name: designAllMedia,
+  parameters: [],
+  result: (List ContentMedia),
+  body: (cons (ctor ContentMedia.message) (cons (ctor ContentMedia.calendar) (cons (ctor ContentMedia.contactCard) (cons (ctor ContentMedia.html) (cons (ctor ContentMedia.linkedData) (cons (ctor ContentMedia.json) (cons (ctor ContentMedia.syndication) (cons (ctor ContentMedia.pdf) (cons (ctor ContentMedia.plainText) (cons (ctor ContentMedia.image) (cons (ctor ContentMedia.audioVideo) (cons (ctor ContentMedia.unknownMedia) (nil ContentMedia)))))))))))))
+}
+
+definition{
+  name: designPlansSound,
+  parameters: [media : (List ContentMedia)],
+  result: Bool,
+  body: (match media
+    | List.nil => true
+    | List.cons item rest => ((designPlanSound item) && (designPlansSound rest))),
+  recursive_argument: media
+}
+
+definition{
+  name: designAudienceRule,
+  parameters: [],
+  result: Bool,
+  body: ((designShowsOnly (ctor DesignAudience.contact) (designLabels)) && ((designShowsOnly (ctor DesignAudience.visitor) (designLabels)) && ((designShowsOnly (ctor DesignAudience.agent) (designLabels)) && ((designShows (ctor DesignAudience.owner) 3 false false) && ((not (designShows (ctor DesignAudience.visitor) 2 true false)) && (not (designShows (ctor DesignAudience.agent) 2 true false)))))))
+}
+
+definition{
+  name: designInverseColumn,
+  parameters: [rows : (List Foundation.Vocab.V1.SchemaOrg::VocabPropertyRow)],
+  result: (List Nat),
+  body: (match rows
+    | List.nil => (nil Nat)
+    | List.cons row rest => (cons (project row inverse) (designInverseColumn rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designSuccessorColumn,
+  parameters: [rows : (List Foundation.Vocab.V1.SchemaOrg::VocabPropertyRow)],
+  result: (List Nat),
+  body: (match rows
+    | List.nil => (nil Nat)
+    | List.cons row rest => (cons (project row supersededBy) (designSuccessorColumn rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: designInversesPaired,
+  parameters: [position : Nat, values : (List Nat), table : (List Nat)],
+  result: Bool,
+  body: (match values
+    | List.nil => true
+    | List.cons value rest => (((value =? (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount)) || ((designNthOr (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount) 0 value table) =? position)) && (designInversesPaired (position + 1) rest table))),
+  recursive_argument: values
+}
+
+definition{
+  name: designSuccessorsSettle,
+  parameters: [values : (List Nat), table : (List Nat)],
+  result: Bool,
+  body: (match values
+    | List.nil => true
+    | List.cons value rest => (((value =? (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount)) || (((designNthOr (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount) 0 value table) =? (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount)) || ((designNthOr (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount) 0 (designNthOr (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount) 0 value table) table) =? (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount)))) && (designSuccessorsSettle rest table))),
+  recursive_argument: values
+}
+
+definition{
+  name: designMediaNamed,
+  parameters: [name : Bytes],
+  result: (Option ContentMedia),
+  body: (if (prim equal name (prim utf8_encode "message" : Bytes) : Bool) then (ctor Option.some [ContentMedia] (ctor ContentMedia.message)) else (if (prim equal name (prim utf8_encode "calendar" : Bytes) : Bool) then (ctor Option.some [ContentMedia] (ctor ContentMedia.calendar)) else (if (prim equal name (prim utf8_encode "contact-card" : Bytes) : Bool) then (ctor Option.some [ContentMedia] (ctor ContentMedia.contactCard)) else (if (prim equal name (prim utf8_encode "html" : Bytes) : Bool) then (ctor Option.some [ContentMedia] (ctor ContentMedia.html)) else (if (prim equal name (prim utf8_encode "linked-data" : Bytes) : Bool) then (ctor Option.some [ContentMedia] (ctor ContentMedia.linkedData)) else (if (prim equal name (prim utf8_encode "json" : Bytes) : Bool) then (ctor Option.some [ContentMedia] (ctor ContentMedia.json)) else (if (prim equal name (prim utf8_encode "syndication" : Bytes) : Bool) then (ctor Option.some [ContentMedia] (ctor ContentMedia.syndication)) else (if (prim equal name (prim utf8_encode "pdf" : Bytes) : Bool) then (ctor Option.some [ContentMedia] (ctor ContentMedia.pdf)) else (if (prim equal name (prim utf8_encode "plain-text" : Bytes) : Bool) then (ctor Option.some [ContentMedia] (ctor ContentMedia.plainText)) else (if (prim equal name (prim utf8_encode "image" : Bytes) : Bool) then (ctor Option.some [ContentMedia] (ctor ContentMedia.image)) else (if (prim equal name (prim utf8_encode "audio-video" : Bytes) : Bool) then (ctor Option.some [ContentMedia] (ctor ContentMedia.audioVideo)) else (if (prim equal name (prim utf8_encode "unknown" : Bytes) : Bool) then (ctor Option.some [ContentMedia] (ctor ContentMedia.unknownMedia)) else (ctor Option.none [ContentMedia])))))))))))))
+}
+
+definition{
+  name: designStageWord,
+  parameters: [stage : IngestStage],
+  result: String,
+  body: (match stage
+    | IngestStage.decoding => "decode"
+    | IngestStage.lifting => "lift"
+    | IngestStage.interpreting => "interpret"
+    | IngestStage.resolving => "resolve"
+    | IngestStage.classifying => "classify"
+    | IngestStage.admitting => "admit"
+    | IngestStage.storing => "store"
+    | IngestStage.indexing => "index")
+}
+
+definition{
+  name: designStageWords,
+  parameters: [stages : (List IngestStage)],
+  result: String,
+  body: (match stages
+    | List.nil => ""
+    | List.cons stage rest => (prim join (cons " " (cons (designStageWord stage) (cons (designStageWords rest) (nil String)))) "" : String)),
+  axioms: [propext],
+  recursive_argument: stages
+}
+
+definition{
+  name: designPlanText,
+  parameters: [media : ContentMedia],
+  result: String,
+  body: (prim join (cons "plan decode" (cons (if (designHasEmbeddedData media) then " lift" else "") (cons (if (designHasText media) then " interpret" else "") (cons " resolve classify admit store index" (nil String))))) "" : String),
+  axioms: [propext]
+}
+
+definition{
+  name: designPlanAnswer,
+  parameters: [name : Bytes],
+  result: String,
+  body: (match (designMediaNamed name)
+    | Option.none => "refused unknown-media"
+    | Option.some media => (designPlanText media)),
+  axioms: [propext]
+}
+
+definition{
+  name: designDomainKey,
+  parameters: [domain : Nat],
+  result: String,
+  body: (if (domain =? 0) then "health" else (if (domain =? 1) then "money" else (if (domain =? 2) then "identity" else (if (domain =? 3) then "people" else (if (domain =? 4) then "conversations" else (if (domain =? 5) then "time" else (if (domain =? 6) then "places" else (if (domain =? 7) then "work" else (if (domain =? 8) then "things" else (if (domain =? 9) then "tasks" else (if (domain =? 10) then "library" else "topics")))))))))))
+}
+
+definition{
+  name: designLabelWord,
+  parameters: [floor : Nat],
+  result: String,
+  body: (if (floor =? 0) then "public" else (if (floor =? 1) then "internal" else (if (floor =? 2) then "confidential" else "restricted")))
+}
+
+definition{
+  name: designTypeDomain,
+  parameters: [typeIndex : Nat],
+  result: Nat,
+  body: (if (typeIndex <? 50) then (designNthOr 12 0 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable0)) else (if (typeIndex <? 100) then (designNthOr 12 50 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable1)) else (if (typeIndex <? 150) then (designNthOr 12 100 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable2)) else (if (typeIndex <? 200) then (designNthOr 12 150 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable3)) else (if (typeIndex <? 250) then (designNthOr 12 200 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable4)) else (if (typeIndex <? 300) then (designNthOr 12 250 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable5)) else (if (typeIndex <? 350) then (designNthOr 12 300 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable6)) else (if (typeIndex <? 400) then (designNthOr 12 350 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable7)) else (if (typeIndex <? 450) then (designNthOr 12 400 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable8)) else (if (typeIndex <? 500) then (designNthOr 12 450 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable9)) else (if (typeIndex <? 550) then (designNthOr 12 500 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable10)) else (if (typeIndex <? 600) then (designNthOr 12 550 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable11)) else (if (typeIndex <? 650) then (designNthOr 12 600 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable12)) else (if (typeIndex <? 700) then (designNthOr 12 650 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable13)) else (if (typeIndex <? 750) then (designNthOr 12 700 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable14)) else (if (typeIndex <? 800) then (designNthOr 12 750 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable15)) else (if (typeIndex <? 850) then (designNthOr 12 800 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable16)) else (if (typeIndex <? 900) then (designNthOr 12 850 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable17)) else (if (typeIndex <? 950) then (designNthOr 12 900 typeIndex (Foundation.Me.V1.Anchors::anchorsDomainTable18)) else 12)))))))))))))))))))
+}
+
+definition{
+  name: designDomainAnswer,
+  parameters: [typeIndex : Nat],
+  result: String,
+  body: (if ((designTypeDomain typeIndex) <? 12) then (prim join (cons "domain " (cons (designDomainKey (designTypeDomain typeIndex)) (cons " label " (cons (designLabelWord (designFloorOf (designTypeDomain typeIndex))) (nil String))))) "" : String) else "refused unknown-type"),
+  axioms: [propext]
+}
+\end{semanticmodule}
+\end{lexlean}

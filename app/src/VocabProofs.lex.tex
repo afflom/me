@@ -1,0 +1,60 @@
+\begin{lexlean}{VocabProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Vocab.V1.SchemaOrg}
+\importmodule{Foundation.Vocab.V1.Crosswalk}
+\importmodule{Foundation.Me.V1.Anchors}
+\importmodule{Foundation.Me.V1.Model}
+\title{Vocabulary guarantees}
+\begin{semanticmodule}
+theorem{
+  name: typesNumbered,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designTypesNumbered 0 (Foundation.Vocab.V1.SchemaOrg::vocabTypeRows)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: hierarchyAcyclic,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designParentsBefore (Foundation.Vocab.V1.SchemaOrg::vocabTypeRows)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: rootsAnchored,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designRootsAnchored (Foundation.Vocab.V1.SchemaOrg::vocabTypeRows)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: anchorsDeclared,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designAnchorsDeclared (Foundation.Me.V1.Anchors::anchorsAnchorRows)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: membersTyped,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designAllBelow (Foundation.Vocab.V1.SchemaOrg::vocabTypeCount) (Foundation.Vocab.V1.SchemaOrg::vocabMemberRows)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: crosswalkTargeted,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designCrosswalkTargeted (Foundation.Vocab.V1.Crosswalk::crosswalkTermRows)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: propertiesSound,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designPropertiesSound 0 (Foundation.Vocab.V1.SchemaOrg::vocabPropertyRows)) = true),
+  proof: decide{}
+}
+\end{semanticmodule}
+\end{lexlean}

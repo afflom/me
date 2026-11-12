@@ -27,9 +27,10 @@ FACETS = [
     ("store", "PrismVaultStore", "storeDispatch"),
     ("restore", "PrismVaultRestore", "restoreDispatch"),
     ("r4", "PrismR4", "r4Dispatch"),
+    ("route", "PrismRoute", "routeDispatch"),
 ]
-REQ_MAX, RESP_MAX, ALLOC = 512, 256, 1024
-h = lambda s: "0x" + s.encode().hex()
+REQ_MAX, RESP_MAX, ALLOC = 1107, 16384, 2214
+h = lambda s: "0x" + (s if isinstance(s, bytes) else s.encode()).hex()
 VECTORS = [
  ("boundary public none browser none no no", "allow"),
  ("boundary confidential none github owner no no", "deny"),
@@ -50,10 +51,18 @@ VECTORS = [
  ("", "invalid request"),
  ("hello world", "invalid request"),
  ("Boundary public none browser none no no", "invalid request"),
- ("x" * 512, "invalid request"),
- ("x" * 513, "invalid request"),
- ("x" * 1024, "invalid request"),
+ ("route", "invalid request"),
+ ("x" * REQ_MAX, "invalid request"),
+ ("x" * (REQ_MAX + 1), "invalid request"),
+ ("x" * ALLOC, "invalid request"),
 ]
+# The route facet's own vectors live beside it, in PrismRoute.lex.tex
+# (routeVectors); the root replays each with the facet keyword in front.
+import os as _os, re as _re
+_route = open(_os.path.join(sys.argv[1], "PrismRoute.lex.tex")).read()
+_route = _route[_route.index("name: routeVectors"):]
+VECTORS += [(b"route " + bytes.fromhex(q), bytes.fromhex(r))
+            for q, r in _re.findall(r"request := 0x([0-9a-f]*), response := 0x([0-9a-f]*)", _route)]
 out = []
 w = out.append
 w(r"""\begin{lexlean}{Prism}
