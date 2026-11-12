@@ -1,0 +1,536 @@
+\begin{lexlean}{PrismDestProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismDest}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: destBreaksInv001,
+  parameters: [request : PrismDest::DestRequest],
+  result: Bool,
+  body: ((((((((((((project request target) <? 5) && ((project request verdict) <? 4)) && ((project request cause) <? 2)) && ((project request act) <? 2)) && ((project request wording) <? 2)) && ((project request tone) <? 2)) && ((project request pace) <? 2)) && ((project request urgency) <? 2)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismDest::destHaltedYes))) && (not ((PrismDest::destJudge request) =? (PrismDest::destAnswerRefuse))))
+}
+
+theorem{
+  name: destInv001Holds,
+  parameters: [request : PrismDest::DestRequest],
+  statement: ((destBreaksInv001 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismDest::destActNone,
+      PrismDest::destActOwner,
+      PrismDest::destAnswerDeliver,
+      PrismDest::destAnswerDraft,
+      PrismDest::destAnswerHold,
+      PrismDest::destAnswerRefuse,
+      PrismDest::destAnswerShow,
+      PrismDest::destCauseGrounded,
+      PrismDest::destCauseOrphan,
+      PrismDest::destHaltedNo,
+      PrismDest::destHaltedYes,
+      PrismDest::destJudge,
+      PrismDest::destPaceOpen,
+      PrismDest::destPaceQuiet,
+      PrismDest::destTargetCalendar,
+      PrismDest::destTargetMail,
+      PrismDest::destTargetOther,
+      PrismDest::destTargetOwner,
+      PrismDest::destTargetPlatform,
+      PrismDest::destToneCalm,
+      PrismDest::destToneCoercive,
+      PrismDest::destUrgencyNormal,
+      PrismDest::destUrgencyUrgent,
+      PrismDest::destVerdictAllow,
+      PrismDest::destVerdictAsk,
+      PrismDest::destVerdictDeny,
+      PrismDest::destVerdictHashonly,
+      PrismDest::destWordingChanged,
+      PrismDest::destWordingSeen,
+      destBreaksInv001
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: destBreaksInv002,
+  parameters: [request : PrismDest::DestRequest],
+  result: Bool,
+  body: ((((((((((((project request target) <? 5) && ((project request verdict) <? 4)) && ((project request cause) <? 2)) && ((project request act) <? 2)) && ((project request wording) <? 2)) && ((project request tone) <? 2)) && ((project request pace) <? 2)) && ((project request urgency) <? 2)) && ((project request halted) <? 2)) && ((project request target) =? (PrismDest::destTargetOther))) && (not ((PrismDest::destJudge request) =? (PrismDest::destAnswerRefuse))))
+}
+
+theorem{
+  name: destInv002Holds,
+  parameters: [request : PrismDest::DestRequest],
+  statement: ((destBreaksInv002 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismDest::destActNone,
+      PrismDest::destActOwner,
+      PrismDest::destAnswerDeliver,
+      PrismDest::destAnswerDraft,
+      PrismDest::destAnswerHold,
+      PrismDest::destAnswerRefuse,
+      PrismDest::destAnswerShow,
+      PrismDest::destCauseGrounded,
+      PrismDest::destCauseOrphan,
+      PrismDest::destHaltedNo,
+      PrismDest::destHaltedYes,
+      PrismDest::destJudge,
+      PrismDest::destPaceOpen,
+      PrismDest::destPaceQuiet,
+      PrismDest::destTargetCalendar,
+      PrismDest::destTargetMail,
+      PrismDest::destTargetOther,
+      PrismDest::destTargetOwner,
+      PrismDest::destTargetPlatform,
+      PrismDest::destToneCalm,
+      PrismDest::destToneCoercive,
+      PrismDest::destUrgencyNormal,
+      PrismDest::destUrgencyUrgent,
+      PrismDest::destVerdictAllow,
+      PrismDest::destVerdictAsk,
+      PrismDest::destVerdictDeny,
+      PrismDest::destVerdictHashonly,
+      PrismDest::destWordingChanged,
+      PrismDest::destWordingSeen,
+      destBreaksInv002
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: destBreaksInv003,
+  parameters: [request : PrismDest::DestRequest],
+  result: Bool,
+  body: ((((((((((((project request target) <? 5) && ((project request verdict) <? 4)) && ((project request cause) <? 2)) && ((project request act) <? 2)) && ((project request wording) <? 2)) && ((project request tone) <? 2)) && ((project request pace) <? 2)) && ((project request urgency) <? 2)) && ((project request halted) <? 2)) && ((project request cause) =? (PrismDest::destCauseOrphan))) && (not ((PrismDest::destJudge request) =? (PrismDest::destAnswerRefuse))))
+}
+
+theorem{
+  name: destInv003Holds,
+  parameters: [request : PrismDest::DestRequest],
+  statement: ((destBreaksInv003 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismDest::destActNone,
+      PrismDest::destActOwner,
+      PrismDest::destAnswerDeliver,
+      PrismDest::destAnswerDraft,
+      PrismDest::destAnswerHold,
+      PrismDest::destAnswerRefuse,
+      PrismDest::destAnswerShow,
+      PrismDest::destCauseGrounded,
+      PrismDest::destCauseOrphan,
+      PrismDest::destHaltedNo,
+      PrismDest::destHaltedYes,
+      PrismDest::destJudge,
+      PrismDest::destPaceOpen,
+      PrismDest::destPaceQuiet,
+      PrismDest::destTargetCalendar,
+      PrismDest::destTargetMail,
+      PrismDest::destTargetOther,
+      PrismDest::destTargetOwner,
+      PrismDest::destTargetPlatform,
+      PrismDest::destToneCalm,
+      PrismDest::destToneCoercive,
+      PrismDest::destUrgencyNormal,
+      PrismDest::destUrgencyUrgent,
+      PrismDest::destVerdictAllow,
+      PrismDest::destVerdictAsk,
+      PrismDest::destVerdictDeny,
+      PrismDest::destVerdictHashonly,
+      PrismDest::destWordingChanged,
+      PrismDest::destWordingSeen,
+      destBreaksInv003
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: destBreaksInv004,
+  parameters: [request : PrismDest::DestRequest],
+  result: Bool,
+  body: ((((((((((((project request target) <? 5) && ((project request verdict) <? 4)) && ((project request cause) <? 2)) && ((project request act) <? 2)) && ((project request wording) <? 2)) && ((project request tone) <? 2)) && ((project request pace) <? 2)) && ((project request urgency) <? 2)) && ((project request halted) <? 2)) && ((project request verdict) =? (PrismDest::destVerdictDeny))) && (not ((PrismDest::destJudge request) =? (PrismDest::destAnswerRefuse))))
+}
+
+theorem{
+  name: destInv004Holds,
+  parameters: [request : PrismDest::DestRequest],
+  statement: ((destBreaksInv004 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismDest::destActNone,
+      PrismDest::destActOwner,
+      PrismDest::destAnswerDeliver,
+      PrismDest::destAnswerDraft,
+      PrismDest::destAnswerHold,
+      PrismDest::destAnswerRefuse,
+      PrismDest::destAnswerShow,
+      PrismDest::destCauseGrounded,
+      PrismDest::destCauseOrphan,
+      PrismDest::destHaltedNo,
+      PrismDest::destHaltedYes,
+      PrismDest::destJudge,
+      PrismDest::destPaceOpen,
+      PrismDest::destPaceQuiet,
+      PrismDest::destTargetCalendar,
+      PrismDest::destTargetMail,
+      PrismDest::destTargetOther,
+      PrismDest::destTargetOwner,
+      PrismDest::destTargetPlatform,
+      PrismDest::destToneCalm,
+      PrismDest::destToneCoercive,
+      PrismDest::destUrgencyNormal,
+      PrismDest::destUrgencyUrgent,
+      PrismDest::destVerdictAllow,
+      PrismDest::destVerdictAsk,
+      PrismDest::destVerdictDeny,
+      PrismDest::destVerdictHashonly,
+      PrismDest::destWordingChanged,
+      PrismDest::destWordingSeen,
+      destBreaksInv004
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: destBreaksInv005,
+  parameters: [request : PrismDest::DestRequest],
+  result: Bool,
+  body: ((((((((((((project request target) <? 5) && ((project request verdict) <? 4)) && ((project request cause) <? 2)) && ((project request act) <? 2)) && ((project request wording) <? 2)) && ((project request tone) <? 2)) && ((project request pace) <? 2)) && ((project request urgency) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismDest::destActNone))) && ((PrismDest::destJudge request) =? (PrismDest::destAnswerDeliver)))
+}
+
+theorem{
+  name: destInv005Holds,
+  parameters: [request : PrismDest::DestRequest],
+  statement: ((destBreaksInv005 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismDest::destActNone,
+      PrismDest::destActOwner,
+      PrismDest::destAnswerDeliver,
+      PrismDest::destAnswerDraft,
+      PrismDest::destAnswerHold,
+      PrismDest::destAnswerRefuse,
+      PrismDest::destAnswerShow,
+      PrismDest::destCauseGrounded,
+      PrismDest::destCauseOrphan,
+      PrismDest::destHaltedNo,
+      PrismDest::destHaltedYes,
+      PrismDest::destJudge,
+      PrismDest::destPaceOpen,
+      PrismDest::destPaceQuiet,
+      PrismDest::destTargetCalendar,
+      PrismDest::destTargetMail,
+      PrismDest::destTargetOther,
+      PrismDest::destTargetOwner,
+      PrismDest::destTargetPlatform,
+      PrismDest::destToneCalm,
+      PrismDest::destToneCoercive,
+      PrismDest::destUrgencyNormal,
+      PrismDest::destUrgencyUrgent,
+      PrismDest::destVerdictAllow,
+      PrismDest::destVerdictAsk,
+      PrismDest::destVerdictDeny,
+      PrismDest::destVerdictHashonly,
+      PrismDest::destWordingChanged,
+      PrismDest::destWordingSeen,
+      destBreaksInv005
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: destBreaksInv006,
+  parameters: [request : PrismDest::DestRequest],
+  result: Bool,
+  body: ((((((((((((project request target) <? 5) && ((project request verdict) <? 4)) && ((project request cause) <? 2)) && ((project request act) <? 2)) && ((project request wording) <? 2)) && ((project request tone) <? 2)) && ((project request pace) <? 2)) && ((project request urgency) <? 2)) && ((project request halted) <? 2)) && ((project request wording) =? (PrismDest::destWordingChanged))) && ((PrismDest::destJudge request) =? (PrismDest::destAnswerDeliver)))
+}
+
+theorem{
+  name: destInv006Holds,
+  parameters: [request : PrismDest::DestRequest],
+  statement: ((destBreaksInv006 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismDest::destActNone,
+      PrismDest::destActOwner,
+      PrismDest::destAnswerDeliver,
+      PrismDest::destAnswerDraft,
+      PrismDest::destAnswerHold,
+      PrismDest::destAnswerRefuse,
+      PrismDest::destAnswerShow,
+      PrismDest::destCauseGrounded,
+      PrismDest::destCauseOrphan,
+      PrismDest::destHaltedNo,
+      PrismDest::destHaltedYes,
+      PrismDest::destJudge,
+      PrismDest::destPaceOpen,
+      PrismDest::destPaceQuiet,
+      PrismDest::destTargetCalendar,
+      PrismDest::destTargetMail,
+      PrismDest::destTargetOther,
+      PrismDest::destTargetOwner,
+      PrismDest::destTargetPlatform,
+      PrismDest::destToneCalm,
+      PrismDest::destToneCoercive,
+      PrismDest::destUrgencyNormal,
+      PrismDest::destUrgencyUrgent,
+      PrismDest::destVerdictAllow,
+      PrismDest::destVerdictAsk,
+      PrismDest::destVerdictDeny,
+      PrismDest::destVerdictHashonly,
+      PrismDest::destWordingChanged,
+      PrismDest::destWordingSeen,
+      destBreaksInv006
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: destBreaksInv007,
+  parameters: [request : PrismDest::DestRequest],
+  result: Bool,
+  body: ((((((((((((project request target) <? 5) && ((project request verdict) <? 4)) && ((project request cause) <? 2)) && ((project request act) <? 2)) && ((project request wording) <? 2)) && ((project request tone) <? 2)) && ((project request pace) <? 2)) && ((project request urgency) <? 2)) && ((project request halted) <? 2)) && ((project request tone) =? (PrismDest::destToneCoercive))) && ((PrismDest::destJudge request) =? (PrismDest::destAnswerDeliver)))
+}
+
+theorem{
+  name: destInv007Holds,
+  parameters: [request : PrismDest::DestRequest],
+  statement: ((destBreaksInv007 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismDest::destActNone,
+      PrismDest::destActOwner,
+      PrismDest::destAnswerDeliver,
+      PrismDest::destAnswerDraft,
+      PrismDest::destAnswerHold,
+      PrismDest::destAnswerRefuse,
+      PrismDest::destAnswerShow,
+      PrismDest::destCauseGrounded,
+      PrismDest::destCauseOrphan,
+      PrismDest::destHaltedNo,
+      PrismDest::destHaltedYes,
+      PrismDest::destJudge,
+      PrismDest::destPaceOpen,
+      PrismDest::destPaceQuiet,
+      PrismDest::destTargetCalendar,
+      PrismDest::destTargetMail,
+      PrismDest::destTargetOther,
+      PrismDest::destTargetOwner,
+      PrismDest::destTargetPlatform,
+      PrismDest::destToneCalm,
+      PrismDest::destToneCoercive,
+      PrismDest::destUrgencyNormal,
+      PrismDest::destUrgencyUrgent,
+      PrismDest::destVerdictAllow,
+      PrismDest::destVerdictAsk,
+      PrismDest::destVerdictDeny,
+      PrismDest::destVerdictHashonly,
+      PrismDest::destWordingChanged,
+      PrismDest::destWordingSeen,
+      destBreaksInv007
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: destBreaksInv008,
+  parameters: [request : PrismDest::DestRequest],
+  result: Bool,
+  body: ((((((((((((project request target) <? 5) && ((project request verdict) <? 4)) && ((project request cause) <? 2)) && ((project request act) <? 2)) && ((project request wording) <? 2)) && ((project request tone) <? 2)) && ((project request pace) <? 2)) && ((project request urgency) <? 2)) && ((project request halted) <? 2)) && ((project request tone) =? (PrismDest::destToneCoercive))) && ((PrismDest::destJudge request) =? (PrismDest::destAnswerShow)))
+}
+
+theorem{
+  name: destInv008Holds,
+  parameters: [request : PrismDest::DestRequest],
+  statement: ((destBreaksInv008 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismDest::destActNone,
+      PrismDest::destActOwner,
+      PrismDest::destAnswerDeliver,
+      PrismDest::destAnswerDraft,
+      PrismDest::destAnswerHold,
+      PrismDest::destAnswerRefuse,
+      PrismDest::destAnswerShow,
+      PrismDest::destCauseGrounded,
+      PrismDest::destCauseOrphan,
+      PrismDest::destHaltedNo,
+      PrismDest::destHaltedYes,
+      PrismDest::destJudge,
+      PrismDest::destPaceOpen,
+      PrismDest::destPaceQuiet,
+      PrismDest::destTargetCalendar,
+      PrismDest::destTargetMail,
+      PrismDest::destTargetOther,
+      PrismDest::destTargetOwner,
+      PrismDest::destTargetPlatform,
+      PrismDest::destToneCalm,
+      PrismDest::destToneCoercive,
+      PrismDest::destUrgencyNormal,
+      PrismDest::destUrgencyUrgent,
+      PrismDest::destVerdictAllow,
+      PrismDest::destVerdictAsk,
+      PrismDest::destVerdictDeny,
+      PrismDest::destVerdictHashonly,
+      PrismDest::destWordingChanged,
+      PrismDest::destWordingSeen,
+      destBreaksInv008
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: destBreaksInv009,
+  parameters: [request : PrismDest::DestRequest],
+  result: Bool,
+  body: ((((((((((((project request target) <? 5) && ((project request verdict) <? 4)) && ((project request cause) <? 2)) && ((project request act) <? 2)) && ((project request wording) <? 2)) && ((project request tone) <? 2)) && ((project request pace) <? 2)) && ((project request urgency) <? 2)) && ((project request halted) <? 2)) && ((project request verdict) =? (PrismDest::destVerdictHashonly))) && (((PrismDest::destJudge request) =? (PrismDest::destAnswerDeliver)) || ((PrismDest::destJudge request) =? (PrismDest::destAnswerDraft))))
+}
+
+theorem{
+  name: destInv009Holds,
+  parameters: [request : PrismDest::DestRequest],
+  statement: ((destBreaksInv009 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismDest::destActNone,
+      PrismDest::destActOwner,
+      PrismDest::destAnswerDeliver,
+      PrismDest::destAnswerDraft,
+      PrismDest::destAnswerHold,
+      PrismDest::destAnswerRefuse,
+      PrismDest::destAnswerShow,
+      PrismDest::destCauseGrounded,
+      PrismDest::destCauseOrphan,
+      PrismDest::destHaltedNo,
+      PrismDest::destHaltedYes,
+      PrismDest::destJudge,
+      PrismDest::destPaceOpen,
+      PrismDest::destPaceQuiet,
+      PrismDest::destTargetCalendar,
+      PrismDest::destTargetMail,
+      PrismDest::destTargetOther,
+      PrismDest::destTargetOwner,
+      PrismDest::destTargetPlatform,
+      PrismDest::destToneCalm,
+      PrismDest::destToneCoercive,
+      PrismDest::destUrgencyNormal,
+      PrismDest::destUrgencyUrgent,
+      PrismDest::destVerdictAllow,
+      PrismDest::destVerdictAsk,
+      PrismDest::destVerdictDeny,
+      PrismDest::destVerdictHashonly,
+      PrismDest::destWordingChanged,
+      PrismDest::destWordingSeen,
+      destBreaksInv009
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: destBreaksInv010,
+  parameters: [request : PrismDest::DestRequest],
+  result: Bool,
+  body: ((((((((((((project request target) <? 5) && ((project request verdict) <? 4)) && ((project request cause) <? 2)) && ((project request act) <? 2)) && ((project request wording) <? 2)) && ((project request tone) <? 2)) && ((project request pace) <? 2)) && ((project request urgency) <? 2)) && ((project request halted) <? 2)) && ((project request target) =? (PrismDest::destTargetOwner))) && (((PrismDest::destJudge request) =? (PrismDest::destAnswerDeliver)) || ((PrismDest::destJudge request) =? (PrismDest::destAnswerDraft))))
+}
+
+theorem{
+  name: destInv010Holds,
+  parameters: [request : PrismDest::DestRequest],
+  statement: ((destBreaksInv010 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismDest::destActNone,
+      PrismDest::destActOwner,
+      PrismDest::destAnswerDeliver,
+      PrismDest::destAnswerDraft,
+      PrismDest::destAnswerHold,
+      PrismDest::destAnswerRefuse,
+      PrismDest::destAnswerShow,
+      PrismDest::destCauseGrounded,
+      PrismDest::destCauseOrphan,
+      PrismDest::destHaltedNo,
+      PrismDest::destHaltedYes,
+      PrismDest::destJudge,
+      PrismDest::destPaceOpen,
+      PrismDest::destPaceQuiet,
+      PrismDest::destTargetCalendar,
+      PrismDest::destTargetMail,
+      PrismDest::destTargetOther,
+      PrismDest::destTargetOwner,
+      PrismDest::destTargetPlatform,
+      PrismDest::destToneCalm,
+      PrismDest::destToneCoercive,
+      PrismDest::destUrgencyNormal,
+      PrismDest::destUrgencyUrgent,
+      PrismDest::destVerdictAllow,
+      PrismDest::destVerdictAsk,
+      PrismDest::destVerdictDeny,
+      PrismDest::destVerdictHashonly,
+      PrismDest::destWordingChanged,
+      PrismDest::destWordingSeen,
+      destBreaksInv010
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: destBreaksInv011,
+  parameters: [request : PrismDest::DestRequest],
+  result: Bool,
+  body: (((((((((((((project request target) <? 5) && ((project request verdict) <? 4)) && ((project request cause) <? 2)) && ((project request act) <? 2)) && ((project request wording) <? 2)) && ((project request tone) <? 2)) && ((project request pace) <? 2)) && ((project request urgency) <? 2)) && ((project request halted) <? 2)) && ((project request pace) =? (PrismDest::destPaceQuiet))) && ((project request urgency) =? (PrismDest::destUrgencyNormal))) && ((PrismDest::destJudge request) =? (PrismDest::destAnswerShow)))
+}
+
+theorem{
+  name: destInv011Holds,
+  parameters: [request : PrismDest::DestRequest],
+  statement: ((destBreaksInv011 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismDest::destActNone,
+      PrismDest::destActOwner,
+      PrismDest::destAnswerDeliver,
+      PrismDest::destAnswerDraft,
+      PrismDest::destAnswerHold,
+      PrismDest::destAnswerRefuse,
+      PrismDest::destAnswerShow,
+      PrismDest::destCauseGrounded,
+      PrismDest::destCauseOrphan,
+      PrismDest::destHaltedNo,
+      PrismDest::destHaltedYes,
+      PrismDest::destJudge,
+      PrismDest::destPaceOpen,
+      PrismDest::destPaceQuiet,
+      PrismDest::destTargetCalendar,
+      PrismDest::destTargetMail,
+      PrismDest::destTargetOther,
+      PrismDest::destTargetOwner,
+      PrismDest::destTargetPlatform,
+      PrismDest::destToneCalm,
+      PrismDest::destToneCoercive,
+      PrismDest::destUrgencyNormal,
+      PrismDest::destUrgencyUrgent,
+      PrismDest::destVerdictAllow,
+      PrismDest::destVerdictAsk,
+      PrismDest::destVerdictDeny,
+      PrismDest::destVerdictHashonly,
+      PrismDest::destWordingChanged,
+      PrismDest::destWordingSeen,
+      destBreaksInv011
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
