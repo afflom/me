@@ -56,8 +56,33 @@ jobs:
           node bootstrap/brand-sync.mjs --check
           python3 -I bootstrap/brand-fonts.py --check
           node bootstrap/frame-sync.mjs --check
+      # The proof is the slow part (15 to 25 minutes). This job reuses one
+      # exactly as bootstrap.yml and `just app` do: the cache key, the same
+      # one bootstrap.yml writes, only finds a candidate, and `xtask
+      # proof-reuse` accepts it only if its attestation binds this checkout,
+      # this image's Lean and Lake, the architecture and every input file. A
+      # tag or a manual run proves in full. A reused proof leaves no holo, so
+      # the holo is then built (six minutes, no proof) and must carry the very
+      # build ID the reused attestation verified, or this job fails.
+      - name: Name the SDK image digest and the Lean toolchain the proof runs on
+        id: proof-inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk=$(sed -n 's/.*"sdk_image":"[^"@]*@sha256:\([0-9a-f]\{64\}\)".*/\1/p' prismpm.lock)
+          lean=$(sed -n 's/^leanprover\/lean4:\(v[0-9A-Za-z.-]*\)$/\1/p' app/lean-toolchain)
+          test -n "$sdk"
+          test -n "$lean"
+          printf 'sdk=%s\nlean=%s\n' "$sdk" "$lean" >>"$GITHUB_OUTPUT"
+      - name: The proof of these exact proof inputs, kept by an earlier run
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: .prism-proof
+          key: prism-proof-${{ runner.os }}-${{ runner.arch }}-sdk-${{ steps.proof-inputs.outputs.sdk }}-lean-${{ steps.proof-inputs.outputs.lean }}-${{ hashFiles('app/**', 'prismpm.lock', 'Justfile', 'rust-toolchain.toml') }}
       - name: Build and verify the holo through the locked SDK
         shell: bash
+        env:
+          PRISM_PROOF_EVENT: ${{ github.event_name }}:${{ github.ref }}
         run: |
           set -euo pipefail
           image=$(sed -n 's/.*"sdk_image":"\([^"]*\)".*/\1/p' prismpm.lock)
@@ -80,7 +105,26 @@ jobs:
             --env BUILDX_CONFIG=/tmp/prismpm-buildx \
             --env HOME=/tmp/prismpm-home \
             --env PRISMPM_EPHEMERAL_HOME=1 \
-            "$image" just app
+            --env PRISM_PROOF_EVENT \
+            "$image" bash -c '
+              set -euo pipefail
+              just app
+              shopt -s nullglob
+              holos=(app/.prism/build/*/*.holo)
+              if [[ ${#holos[@]} -eq 0 ]]; then
+                proved=$(grep -o "\"build_id\": *\"[0-9a-f]\{64\}\"" .prism-proof/verified/manifest.json | grep -o "[0-9a-f]\{64\}")
+                test -n "$proved"
+                prismpm --project app build
+                holos=(app/.prism/build/*/*.holo)
+                test ${#holos[@]} -eq 1
+                built=$(basename "$(dirname "${holos[0]}")")
+                if [[ $built != "$proved" ]]; then
+                  printf "the holo built here (%s) is not the build the reused proof verified (%s)\n" "$built" "$proved" >&2
+                  exit 1
+                fi
+                echo "the holo is build $built, the build the reused proof verified"
+              fi
+            '
       - name: Find the holo
         id: holo
         shell: bash
