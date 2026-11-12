@@ -82,6 +82,24 @@ suite = "vault"
 statement = "The owner's device key is made by the browser and never leaves it: no passphrase is asked to keep or read a value, only to make or read an encrypted export, and a wrong or tampered export is refused"
 
 [[id]]
+id = "GG-01"
+level = "build"
+suite = "google"
+statement = "The page makes a Google API call only when PrismGoogle answers fetch, which it never does while halted, to any other host, without a fresh read grant, or for a write without the owner's act"
+
+[[id]]
+id = "GG-02"
+level = "build"
+suite = "google"
+statement = "The Google connection moves between stages only as PrismGoogleLink answers: only the owner grants, a client for another origin is never used, and the kill switch or a forget revokes every grant"
+
+[[id]]
+id = "GG-03"
+level = "build"
+suite = "google"
+statement = "Mail and calendar items read from Google reach only the browser vault, through the detectors, the router and the Boundary, by GET to the two API hosts with the token only in the Authorization header"
+
+[[id]]
 id = "PG-01"
 level = "build"
 suite = "page"

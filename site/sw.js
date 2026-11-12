@@ -83,7 +83,10 @@ self.addEventListener("fetch", (event) => {
   // registry, say) is never cached here, so it is never served stale.
   if (event.request.method !== "GET" || !url.href.startsWith(self.registration.scope)) return;
   if (url.pathname.endsWith("/precache.json")) return;
-  const isPage = event.request.mode === "navigate" || url.pathname.endsWith("/") || url.pathname.endsWith("/index.html");
+  const isPage = url.pathname.endsWith("/") || url.pathname.endsWith("/index.html");
+  // Another page of the app (the Google consent relay, say) is fetched as is:
+  // only the app's own page is kept as "./".
+  if (event.request.mode === "navigate" && !isPage) return;
   event.respondWith((async () => {
     const name = await currentCacheName();
     const cache = name ? await caches.open(name) : null;

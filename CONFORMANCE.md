@@ -24,6 +24,14 @@ model does not sanction.
 | --- | --- | --- |
 | `FR-01` | `build` | With a working worker, the page loads and verifies the archive only in that worker before using its identities or guest |
 
+## google
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `GG-01` | `build` | The page makes a Google API call only when PrismGoogle answers fetch, which it never does while halted, to any other host, without a fresh read grant, or for a write without the owner's act |
+| `GG-02` | `build` | The Google connection moves between stages only as PrismGoogleLink answers: only the owner grants, a client for another origin is never used, and the kill switch or a forget revokes every grant |
+| `GG-03` | `build` | Mail and calendar items read from Google reach only the browser vault, through the detectors, the router and the Boundary, by GET to the two API hosts with the token only in the Authorization header |
+
 ## page
 
 | ID | Level | Statement |

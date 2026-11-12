@@ -6,6 +6,8 @@
 \importmodule{Prism}
 \importmodule{PrismBoundary}
 \importmodule{PrismChronology}
+\importmodule{PrismGoogle}
+\importmodule{PrismGoogleLink}
 \importmodule{PrismLearning}
 \importmodule{PrismR4}
 \importmodule{PrismVaultRestore}
@@ -56,6 +58,22 @@ theorem{
   name: routesR4,
   parameters: [rest : Bytes],
   statement: ((Prism::route (Prism::facetR4) rest) = (PrismR4::r4Dispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesGoogle,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetGoogle) rest) = (PrismGoogle::googleDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesGooglelink,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetGooglelink) rest) = (PrismGoogleLink::googleLinkDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }

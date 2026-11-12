@@ -27,6 +27,8 @@ FACETS = [
     ("store", "PrismVaultStore", "storeDispatch"),
     ("restore", "PrismVaultRestore", "restoreDispatch"),
     ("r4", "PrismR4", "r4Dispatch"),
+    ("google", "PrismGoogle", "googleDispatch"),
+    ("googlelink", "PrismGoogleLink", "googleLinkDispatch"),
 ]
 REQ_MAX, RESP_MAX, ALLOC = 512, 256, 1024
 h = lambda s: "0x" + s.encode().hex()
@@ -44,6 +46,17 @@ VECTORS = [
  ("restore present known broken derived value", "refuse"),
  ("r4 inprism match match none allow", "answer"),
  ("r4 inprism match mismatch none allow", "refuse"),
+ ("google gmail read readonly fresh none no", "fetch"),
+ ("google gmail read readonly fresh none yes", "refuse"),
+ ("google other read readonly fresh owner no", "refuse"),
+ ("google gmail write readonly fresh none no", "ask"),
+ ("google calendar read readonly expired none no", "consent"),
+ ("googlelink unprovisioned provision operator matches no", "registered"),
+ ("googlelink registered consent owner matches no", "granted"),
+ ("googlelink registered consent prism matches no", "refuse"),
+ ("googlelink granted sync prism differs no", "unprovisioned"),
+ ("googlelink syncing sync prism matches yes", "revoked"),
+ ("google", "invalid request"),
  ("learn", "invalid request"),
  ("when", "invalid request"),
  ("boundary", "invalid request"),

@@ -1,6 +1,7 @@
 // The Prism's own surface. Every decision is the verified app's: this script
 // only carries text between the page, the vault, R4 and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
+import { mountGoogle } from "./google/panel.mjs";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -77,6 +78,16 @@ export default async function start({ app, reason, $ }) {
     await count();
   } catch (error) {
     $("me-count").textContent = `The vault could not open: ${error?.message ?? error}`;
+  }
+
+  // Connections: one row per source, each deciding through the root.
+  if (vault) {
+    try {
+      await mountGoogle($("me-connections"), { vault, line, halted });
+      $("me-conn").hidden = false;
+    } catch (error) {
+      console.warn(`connections: ${error?.message ?? error}`);
+    }
   }
 
   $("me-keep").addEventListener("submit", async (event) => {
