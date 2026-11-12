@@ -1,0 +1,285 @@
+{
+  "schema": "me/models-lock/1",
+  "note": "Every byte a model routed into the Prism runs or loads, by SHA-256: the runtime for each format, pinned by package version and registry integrity, and each model's files, pinned by hub commit. Objects are served by this page as gzip pieces of at most pieceBytes; the browser checks each piece after decompressing it and the whole file after joining them. Bytes that do not re-derive to their fingerprint are refused.",
+  "limitBytes": 16777216,
+  "pieceBytes": 8388608,
+  "sources": {
+    "huggingface": "https://huggingface.co/",
+    "npm": "https://registry.npmjs.org/"
+  },
+  "runtimes": [
+    {
+      "id": "onnx-transformers",
+      "format": "onnx",
+      "package": {
+        "name": "@huggingface/transformers",
+        "version": "4.3.1",
+        "integrity": "sha512-5+voSeUCFK6PCKlY15dPhNOKq3/zOTxDN7oC+Wy9dFb1QZ0TSQomZRRy7URRK8YRuUoE9fGMQTTPC5d/pWBJhA==",
+        "license": "Apache-2.0"
+      },
+      "files": [
+        {
+          "role": "library",
+          "path": "package/dist/transformers.min.js",
+          "fingerprint": "sha256-8d6716d9086f57c30a4bf367dba61b887593573c770c454465e8019b2703e743",
+          "bytes": 586230,
+          "pieces": [
+            {
+              "fingerprint": "sha256-8d6716d9086f57c30a4bf367dba61b887593573c770c454465e8019b2703e743",
+              "bytes": 586230
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "onnx-runtime-web",
+      "format": "onnx",
+      "package": {
+        "name": "onnxruntime-web",
+        "version": "1.31.0-dev.20260914-8d85527a0",
+        "integrity": "sha512-Iy7rtadoBgxS/LLvDr3QW38DB1PNXRnr0GJMcL0TAt7c9qjgVQl83UlGCVyeAnK2InpmW8Uc3PL8XIuqtDeF6g==",
+        "license": "MIT"
+      },
+      "files": [
+        {
+          "role": "wasm",
+          "path": "package/dist/ort-wasm-simd-threaded.asyncify.wasm",
+          "fingerprint": "sha256-49871f5a4409519797e127440868a6d1923339d9185907f301a5b2a1d90af082",
+          "bytes": 26861777,
+          "pieces": [
+            {
+              "fingerprint": "sha256-d312842068314554c3cfedc085f8ae7df9cedd839bc3a1cda3017d3297d0f135",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-8ced5df61e8340a420de3710af94ff547362983c9b5247f26781e26f7b986009",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-35436986fa8918e3e09643178bf03c924c2f77ccf48f80cfd44cd6725b8e17b6",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-db833ca34cdde5e57fdff2bea6f303c2e916bd59b5ed4d3cb49af583fb6ece79",
+              "bytes": 1695953
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "models": [
+    {
+      "id": "smollm2-135m-instruct",
+      "title": "SmolLM2 135M Instruct",
+      "task": "text-generation",
+      "format": "onnx",
+      "runtimes": [
+        "onnx-transformers",
+        "onnx-runtime-web"
+      ],
+      "dtype": "q8",
+      "label": "public",
+      "source": {
+        "hub": "huggingface",
+        "repository": "HuggingFaceTB/SmolLM2-135M-Instruct",
+        "revision": "12fd25f77366fa6b3b4b768ec3050bf629380bac",
+        "license": "apache-2.0"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "fingerprint": "sha256-8eb740e8bbe4cff95ea7b4588d17a2432deb16e8075bc5828ff7ba9be94d982a",
+          "bytes": 861,
+          "pieces": [
+            {
+              "fingerprint": "sha256-8eb740e8bbe4cff95ea7b4588d17a2432deb16e8075bc5828ff7ba9be94d982a",
+              "bytes": 861
+            }
+          ]
+        },
+        {
+          "path": "generation_config.json",
+          "fingerprint": "sha256-87b916edaaab66b3899b9d0dd0752727dff6666686da0504d89ae0a6e055a013",
+          "bytes": 132,
+          "pieces": [
+            {
+              "fingerprint": "sha256-87b916edaaab66b3899b9d0dd0752727dff6666686da0504d89ae0a6e055a013",
+              "bytes": 132
+            }
+          ]
+        },
+        {
+          "path": "tokenizer.json",
+          "fingerprint": "sha256-9ca9acddb6525a194ec8ac7a87f24fbba7232a9a15ffa1af0c1224fcd888e47c",
+          "bytes": 2104556,
+          "pieces": [
+            {
+              "fingerprint": "sha256-9ca9acddb6525a194ec8ac7a87f24fbba7232a9a15ffa1af0c1224fcd888e47c",
+              "bytes": 2104556
+            }
+          ]
+        },
+        {
+          "path": "tokenizer_config.json",
+          "fingerprint": "sha256-4ec77d44f62efeb38d7e044a1db318f6a939438425312dfa333b8382dbad98df",
+          "bytes": 3764,
+          "pieces": [
+            {
+              "fingerprint": "sha256-4ec77d44f62efeb38d7e044a1db318f6a939438425312dfa333b8382dbad98df",
+              "bytes": 3764
+            }
+          ]
+        },
+        {
+          "path": "onnx/model_quantized.onnx",
+          "fingerprint": "sha256-ecc1a19eece6494e2963cf74f78ace35916e8d0b803168ddd41db00979f18e39",
+          "bytes": 137147981,
+          "pieces": [
+            {
+              "fingerprint": "sha256-06ed0d361d08da97f5a6899dff257c42e66c9a3f45a17af374c24638480a9002",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-60b2e13bbf6743ceefadfd1e3051ca68b7d16ec621fccd60eca97e2edd641ade",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-43524eb3d6065ba9af5989d83783b03abb590c2426aaf6ad05aa761a206730f8",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-6bc302fbce2c96e8622e45650b638b1d8615eb32f97b9a2703d61344b25f0eaf",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-9807db60a89407a9165cd9017dc4c1322a57ca80eeda67c1b77fc14c3266b185",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-12b73f036a9d6d5ca20566d7907962755b365412b50b317bb3f8362556f16e2b",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-1a3a21af42708d737d346f2de5043b0fd05f6f5f590a5fdf55760fba778d8b00",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-c29268628a5e35dd45cb346023410e8f76b382b3fc4f612e072609c01e5eda9f",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-1d0534c7c76919fcf632c2fb6a3535a0c7f460c4f0259e0058da04033d59ff4e",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-f34a4164e99e340aaa91681210eb773af3e74dbe33f6094eeeac34f81c58f921",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-42caf06e6c4afce07e17e24af0accec5447e3307325addb8a176bf0456f1c389",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-5d120279b7d67cfcad30efb7d43572825e2ba1438d6e1c27b8c3df064673e9da",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-59692816c9720dc2b157f13ea3c493d83f1a2dbba6877c3b706c547f700d71c3",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-48f41285de0bc5dc81f455b28ad281693011342782c51a3afd03301f0dccc602",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-b5eb3977cdea5c7306af08abb888bbcf5c2d3762f942ae9b42f76138f0fe9523",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-308e401da22e4281058a2bee7d3285873c36f75a096eda26b7758b662b1a6aec",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-d14cdbd221b9aca5deb3146b712a4be2d63be58e8e6df88b9e9ec55f856a2d16",
+              "bytes": 2930253
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "all-minilm-l6-v2",
+      "title": "all-MiniLM-L6-v2",
+      "task": "feature-extraction",
+      "format": "onnx",
+      "runtimes": [
+        "onnx-transformers",
+        "onnx-runtime-web"
+      ],
+      "dtype": "q8",
+      "label": "public",
+      "source": {
+        "hub": "huggingface",
+        "repository": "Xenova/all-MiniLM-L6-v2",
+        "revision": "751bff37182d3f1213fa05d7196b954e230abad9",
+        "license": "apache-2.0"
+      },
+      "files": [
+        {
+          "path": "config.json",
+          "fingerprint": "sha256-7135149f7cffa1a573466c6e4d8423ed73b62fd2332c575bf738a0d033f70df7",
+          "bytes": 650,
+          "pieces": [
+            {
+              "fingerprint": "sha256-7135149f7cffa1a573466c6e4d8423ed73b62fd2332c575bf738a0d033f70df7",
+              "bytes": 650
+            }
+          ]
+        },
+        {
+          "path": "tokenizer.json",
+          "fingerprint": "sha256-da0e79933b9ed51798a3ae27893d3c5fa4a201126cef75586296df9b4d2c62a0",
+          "bytes": 711661,
+          "pieces": [
+            {
+              "fingerprint": "sha256-da0e79933b9ed51798a3ae27893d3c5fa4a201126cef75586296df9b4d2c62a0",
+              "bytes": 711661
+            }
+          ]
+        },
+        {
+          "path": "tokenizer_config.json",
+          "fingerprint": "sha256-9261e7d79b44c8195c1cada2b453e55b00aeb81e907a6664974b4d7776172ab3",
+          "bytes": 366,
+          "pieces": [
+            {
+              "fingerprint": "sha256-9261e7d79b44c8195c1cada2b453e55b00aeb81e907a6664974b4d7776172ab3",
+              "bytes": 366
+            }
+          ]
+        },
+        {
+          "path": "onnx/model_quantized.onnx",
+          "fingerprint": "sha256-afdb6f1a0e45b715d0bb9b11772f032c399babd23bfc31fed1c170afc848bdb1",
+          "bytes": 22972370,
+          "pieces": [
+            {
+              "fingerprint": "sha256-dac510d62caf019b5fb7ec74a8dfdf341a59eba0198fd3a375ca8ea9b9d781b7",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-1df8c37737e834a8c98e6bb353ed4106687924499f7ddb4b6b282fda988652f1",
+              "bytes": 8388608
+            },
+            {
+              "fingerprint": "sha256-8bdaa80935c394b9c614e00c7b829303b05df133447f901c98c56ebf90d672b6",
+              "bytes": 6195154
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

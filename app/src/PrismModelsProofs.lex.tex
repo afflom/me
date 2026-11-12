@@ -1,0 +1,431 @@
+\begin{lexlean}{PrismModelsProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismModels}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: modelsBreaksInv001,
+  parameters: [request : PrismModels::ModelsRequest],
+  result: Bool,
+  body: (((((((((project request source) <? 2) && ((project request format) <? 3)) && ((project request runtime) <? 3)) && ((project request weights) <? 3)) && ((project request route) <? 2)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismModels::modelsHaltedYes))) && ((PrismModels::modelsJudge request) =? (PrismModels::modelsAnswerRun)))
+}
+
+theorem{
+  name: modelsInv001Holds,
+  parameters: [request : PrismModels::ModelsRequest],
+  statement: ((modelsBreaksInv001 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismModels::modelsAnswerAsk,
+      PrismModels::modelsAnswerFetch,
+      PrismModels::modelsAnswerRefuse,
+      PrismModels::modelsAnswerRun,
+      PrismModels::modelsFormatGguf,
+      PrismModels::modelsFormatOnnx,
+      PrismModels::modelsFormatOther,
+      PrismModels::modelsHaltedNo,
+      PrismModels::modelsHaltedYes,
+      PrismModels::modelsJudge,
+      PrismModels::modelsRouteGranted,
+      PrismModels::modelsRouteUngranted,
+      PrismModels::modelsRule1,
+      PrismModels::modelsRule2,
+      PrismModels::modelsRule3,
+      PrismModels::modelsRule4,
+      PrismModels::modelsRule5,
+      PrismModels::modelsRule6,
+      PrismModels::modelsRule7,
+      PrismModels::modelsRule8,
+      PrismModels::modelsRuntimeMatch,
+      PrismModels::modelsRuntimeMismatch,
+      PrismModels::modelsRuntimeMissing,
+      PrismModels::modelsSourceLocked,
+      PrismModels::modelsSourceUnlocked,
+      PrismModels::modelsWeightsMatch,
+      PrismModels::modelsWeightsMismatch,
+      PrismModels::modelsWeightsMissing,
+      modelsBreaksInv001
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: modelsBreaksInv002,
+  parameters: [request : PrismModels::ModelsRequest],
+  result: Bool,
+  body: (((((((((project request source) <? 2) && ((project request format) <? 3)) && ((project request runtime) <? 3)) && ((project request weights) <? 3)) && ((project request route) <? 2)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismModels::modelsHaltedYes))) && ((PrismModels::modelsJudge request) =? (PrismModels::modelsAnswerFetch)))
+}
+
+theorem{
+  name: modelsInv002Holds,
+  parameters: [request : PrismModels::ModelsRequest],
+  statement: ((modelsBreaksInv002 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismModels::modelsAnswerAsk,
+      PrismModels::modelsAnswerFetch,
+      PrismModels::modelsAnswerRefuse,
+      PrismModels::modelsAnswerRun,
+      PrismModels::modelsFormatGguf,
+      PrismModels::modelsFormatOnnx,
+      PrismModels::modelsFormatOther,
+      PrismModels::modelsHaltedNo,
+      PrismModels::modelsHaltedYes,
+      PrismModels::modelsJudge,
+      PrismModels::modelsRouteGranted,
+      PrismModels::modelsRouteUngranted,
+      PrismModels::modelsRule1,
+      PrismModels::modelsRule2,
+      PrismModels::modelsRule3,
+      PrismModels::modelsRule4,
+      PrismModels::modelsRule5,
+      PrismModels::modelsRule6,
+      PrismModels::modelsRule7,
+      PrismModels::modelsRule8,
+      PrismModels::modelsRuntimeMatch,
+      PrismModels::modelsRuntimeMismatch,
+      PrismModels::modelsRuntimeMissing,
+      PrismModels::modelsSourceLocked,
+      PrismModels::modelsSourceUnlocked,
+      PrismModels::modelsWeightsMatch,
+      PrismModels::modelsWeightsMismatch,
+      PrismModels::modelsWeightsMissing,
+      modelsBreaksInv002
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: modelsBreaksInv003,
+  parameters: [request : PrismModels::ModelsRequest],
+  result: Bool,
+  body: (((((((((project request source) <? 2) && ((project request format) <? 3)) && ((project request runtime) <? 3)) && ((project request weights) <? 3)) && ((project request route) <? 2)) && ((project request halted) <? 2)) && ((project request source) =? (PrismModels::modelsSourceUnlocked))) && ((PrismModels::modelsJudge request) =? (PrismModels::modelsAnswerRun)))
+}
+
+theorem{
+  name: modelsInv003Holds,
+  parameters: [request : PrismModels::ModelsRequest],
+  statement: ((modelsBreaksInv003 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismModels::modelsAnswerAsk,
+      PrismModels::modelsAnswerFetch,
+      PrismModels::modelsAnswerRefuse,
+      PrismModels::modelsAnswerRun,
+      PrismModels::modelsFormatGguf,
+      PrismModels::modelsFormatOnnx,
+      PrismModels::modelsFormatOther,
+      PrismModels::modelsHaltedNo,
+      PrismModels::modelsHaltedYes,
+      PrismModels::modelsJudge,
+      PrismModels::modelsRouteGranted,
+      PrismModels::modelsRouteUngranted,
+      PrismModels::modelsRule1,
+      PrismModels::modelsRule2,
+      PrismModels::modelsRule3,
+      PrismModels::modelsRule4,
+      PrismModels::modelsRule5,
+      PrismModels::modelsRule6,
+      PrismModels::modelsRule7,
+      PrismModels::modelsRule8,
+      PrismModels::modelsRuntimeMatch,
+      PrismModels::modelsRuntimeMismatch,
+      PrismModels::modelsRuntimeMissing,
+      PrismModels::modelsSourceLocked,
+      PrismModels::modelsSourceUnlocked,
+      PrismModels::modelsWeightsMatch,
+      PrismModels::modelsWeightsMismatch,
+      PrismModels::modelsWeightsMissing,
+      modelsBreaksInv003
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: modelsBreaksInv004,
+  parameters: [request : PrismModels::ModelsRequest],
+  result: Bool,
+  body: (((((((((project request source) <? 2) && ((project request format) <? 3)) && ((project request runtime) <? 3)) && ((project request weights) <? 3)) && ((project request route) <? 2)) && ((project request halted) <? 2)) && ((project request source) =? (PrismModels::modelsSourceUnlocked))) && ((PrismModels::modelsJudge request) =? (PrismModels::modelsAnswerFetch)))
+}
+
+theorem{
+  name: modelsInv004Holds,
+  parameters: [request : PrismModels::ModelsRequest],
+  statement: ((modelsBreaksInv004 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismModels::modelsAnswerAsk,
+      PrismModels::modelsAnswerFetch,
+      PrismModels::modelsAnswerRefuse,
+      PrismModels::modelsAnswerRun,
+      PrismModels::modelsFormatGguf,
+      PrismModels::modelsFormatOnnx,
+      PrismModels::modelsFormatOther,
+      PrismModels::modelsHaltedNo,
+      PrismModels::modelsHaltedYes,
+      PrismModels::modelsJudge,
+      PrismModels::modelsRouteGranted,
+      PrismModels::modelsRouteUngranted,
+      PrismModels::modelsRule1,
+      PrismModels::modelsRule2,
+      PrismModels::modelsRule3,
+      PrismModels::modelsRule4,
+      PrismModels::modelsRule5,
+      PrismModels::modelsRule6,
+      PrismModels::modelsRule7,
+      PrismModels::modelsRule8,
+      PrismModels::modelsRuntimeMatch,
+      PrismModels::modelsRuntimeMismatch,
+      PrismModels::modelsRuntimeMissing,
+      PrismModels::modelsSourceLocked,
+      PrismModels::modelsSourceUnlocked,
+      PrismModels::modelsWeightsMatch,
+      PrismModels::modelsWeightsMismatch,
+      PrismModels::modelsWeightsMissing,
+      modelsBreaksInv004
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: modelsBreaksInv005,
+  parameters: [request : PrismModels::ModelsRequest],
+  result: Bool,
+  body: (((((((((project request source) <? 2) && ((project request format) <? 3)) && ((project request runtime) <? 3)) && ((project request weights) <? 3)) && ((project request route) <? 2)) && ((project request halted) <? 2)) && ((project request route) =? (PrismModels::modelsRouteUngranted))) && ((PrismModels::modelsJudge request) =? (PrismModels::modelsAnswerRun)))
+}
+
+theorem{
+  name: modelsInv005Holds,
+  parameters: [request : PrismModels::ModelsRequest],
+  statement: ((modelsBreaksInv005 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismModels::modelsAnswerAsk,
+      PrismModels::modelsAnswerFetch,
+      PrismModels::modelsAnswerRefuse,
+      PrismModels::modelsAnswerRun,
+      PrismModels::modelsFormatGguf,
+      PrismModels::modelsFormatOnnx,
+      PrismModels::modelsFormatOther,
+      PrismModels::modelsHaltedNo,
+      PrismModels::modelsHaltedYes,
+      PrismModels::modelsJudge,
+      PrismModels::modelsRouteGranted,
+      PrismModels::modelsRouteUngranted,
+      PrismModels::modelsRule1,
+      PrismModels::modelsRule2,
+      PrismModels::modelsRule3,
+      PrismModels::modelsRule4,
+      PrismModels::modelsRule5,
+      PrismModels::modelsRule6,
+      PrismModels::modelsRule7,
+      PrismModels::modelsRule8,
+      PrismModels::modelsRuntimeMatch,
+      PrismModels::modelsRuntimeMismatch,
+      PrismModels::modelsRuntimeMissing,
+      PrismModels::modelsSourceLocked,
+      PrismModels::modelsSourceUnlocked,
+      PrismModels::modelsWeightsMatch,
+      PrismModels::modelsWeightsMismatch,
+      PrismModels::modelsWeightsMissing,
+      modelsBreaksInv005
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: modelsBreaksInv006,
+  parameters: [request : PrismModels::ModelsRequest],
+  result: Bool,
+  body: (((((((((project request source) <? 2) && ((project request format) <? 3)) && ((project request runtime) <? 3)) && ((project request weights) <? 3)) && ((project request route) <? 2)) && ((project request halted) <? 2)) && ((project request route) =? (PrismModels::modelsRouteUngranted))) && ((PrismModels::modelsJudge request) =? (PrismModels::modelsAnswerFetch)))
+}
+
+theorem{
+  name: modelsInv006Holds,
+  parameters: [request : PrismModels::ModelsRequest],
+  statement: ((modelsBreaksInv006 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismModels::modelsAnswerAsk,
+      PrismModels::modelsAnswerFetch,
+      PrismModels::modelsAnswerRefuse,
+      PrismModels::modelsAnswerRun,
+      PrismModels::modelsFormatGguf,
+      PrismModels::modelsFormatOnnx,
+      PrismModels::modelsFormatOther,
+      PrismModels::modelsHaltedNo,
+      PrismModels::modelsHaltedYes,
+      PrismModels::modelsJudge,
+      PrismModels::modelsRouteGranted,
+      PrismModels::modelsRouteUngranted,
+      PrismModels::modelsRule1,
+      PrismModels::modelsRule2,
+      PrismModels::modelsRule3,
+      PrismModels::modelsRule4,
+      PrismModels::modelsRule5,
+      PrismModels::modelsRule6,
+      PrismModels::modelsRule7,
+      PrismModels::modelsRule8,
+      PrismModels::modelsRuntimeMatch,
+      PrismModels::modelsRuntimeMismatch,
+      PrismModels::modelsRuntimeMissing,
+      PrismModels::modelsSourceLocked,
+      PrismModels::modelsSourceUnlocked,
+      PrismModels::modelsWeightsMatch,
+      PrismModels::modelsWeightsMismatch,
+      PrismModels::modelsWeightsMissing,
+      modelsBreaksInv006
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: modelsBreaksInv007,
+  parameters: [request : PrismModels::ModelsRequest],
+  result: Bool,
+  body: (((((((((project request source) <? 2) && ((project request format) <? 3)) && ((project request runtime) <? 3)) && ((project request weights) <? 3)) && ((project request route) <? 2)) && ((project request halted) <? 2)) && (not ((project request runtime) =? (PrismModels::modelsRuntimeMatch)))) && ((PrismModels::modelsJudge request) =? (PrismModels::modelsAnswerRun)))
+}
+
+theorem{
+  name: modelsInv007Holds,
+  parameters: [request : PrismModels::ModelsRequest],
+  statement: ((modelsBreaksInv007 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismModels::modelsAnswerAsk,
+      PrismModels::modelsAnswerFetch,
+      PrismModels::modelsAnswerRefuse,
+      PrismModels::modelsAnswerRun,
+      PrismModels::modelsFormatGguf,
+      PrismModels::modelsFormatOnnx,
+      PrismModels::modelsFormatOther,
+      PrismModels::modelsHaltedNo,
+      PrismModels::modelsHaltedYes,
+      PrismModels::modelsJudge,
+      PrismModels::modelsRouteGranted,
+      PrismModels::modelsRouteUngranted,
+      PrismModels::modelsRule1,
+      PrismModels::modelsRule2,
+      PrismModels::modelsRule3,
+      PrismModels::modelsRule4,
+      PrismModels::modelsRule5,
+      PrismModels::modelsRule6,
+      PrismModels::modelsRule7,
+      PrismModels::modelsRule8,
+      PrismModels::modelsRuntimeMatch,
+      PrismModels::modelsRuntimeMismatch,
+      PrismModels::modelsRuntimeMissing,
+      PrismModels::modelsSourceLocked,
+      PrismModels::modelsSourceUnlocked,
+      PrismModels::modelsWeightsMatch,
+      PrismModels::modelsWeightsMismatch,
+      PrismModels::modelsWeightsMissing,
+      modelsBreaksInv007
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: modelsBreaksInv008,
+  parameters: [request : PrismModels::ModelsRequest],
+  result: Bool,
+  body: (((((((((project request source) <? 2) && ((project request format) <? 3)) && ((project request runtime) <? 3)) && ((project request weights) <? 3)) && ((project request route) <? 2)) && ((project request halted) <? 2)) && (not ((project request weights) =? (PrismModels::modelsWeightsMatch)))) && ((PrismModels::modelsJudge request) =? (PrismModels::modelsAnswerRun)))
+}
+
+theorem{
+  name: modelsInv008Holds,
+  parameters: [request : PrismModels::ModelsRequest],
+  statement: ((modelsBreaksInv008 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismModels::modelsAnswerAsk,
+      PrismModels::modelsAnswerFetch,
+      PrismModels::modelsAnswerRefuse,
+      PrismModels::modelsAnswerRun,
+      PrismModels::modelsFormatGguf,
+      PrismModels::modelsFormatOnnx,
+      PrismModels::modelsFormatOther,
+      PrismModels::modelsHaltedNo,
+      PrismModels::modelsHaltedYes,
+      PrismModels::modelsJudge,
+      PrismModels::modelsRouteGranted,
+      PrismModels::modelsRouteUngranted,
+      PrismModels::modelsRule1,
+      PrismModels::modelsRule2,
+      PrismModels::modelsRule3,
+      PrismModels::modelsRule4,
+      PrismModels::modelsRule5,
+      PrismModels::modelsRule6,
+      PrismModels::modelsRule7,
+      PrismModels::modelsRule8,
+      PrismModels::modelsRuntimeMatch,
+      PrismModels::modelsRuntimeMismatch,
+      PrismModels::modelsRuntimeMissing,
+      PrismModels::modelsSourceLocked,
+      PrismModels::modelsSourceUnlocked,
+      PrismModels::modelsWeightsMatch,
+      PrismModels::modelsWeightsMismatch,
+      PrismModels::modelsWeightsMissing,
+      modelsBreaksInv008
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: modelsBreaksInv009,
+  parameters: [request : PrismModels::ModelsRequest],
+  result: Bool,
+  body: (((((((((project request source) <? 2) && ((project request format) <? 3)) && ((project request runtime) <? 3)) && ((project request weights) <? 3)) && ((project request route) <? 2)) && ((project request halted) <? 2)) && ((project request format) =? (PrismModels::modelsFormatOther))) && ((PrismModels::modelsJudge request) =? (PrismModels::modelsAnswerRun)))
+}
+
+theorem{
+  name: modelsInv009Holds,
+  parameters: [request : PrismModels::ModelsRequest],
+  statement: ((modelsBreaksInv009 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismModels::modelsAnswerAsk,
+      PrismModels::modelsAnswerFetch,
+      PrismModels::modelsAnswerRefuse,
+      PrismModels::modelsAnswerRun,
+      PrismModels::modelsFormatGguf,
+      PrismModels::modelsFormatOnnx,
+      PrismModels::modelsFormatOther,
+      PrismModels::modelsHaltedNo,
+      PrismModels::modelsHaltedYes,
+      PrismModels::modelsJudge,
+      PrismModels::modelsRouteGranted,
+      PrismModels::modelsRouteUngranted,
+      PrismModels::modelsRule1,
+      PrismModels::modelsRule2,
+      PrismModels::modelsRule3,
+      PrismModels::modelsRule4,
+      PrismModels::modelsRule5,
+      PrismModels::modelsRule6,
+      PrismModels::modelsRule7,
+      PrismModels::modelsRule8,
+      PrismModels::modelsRuntimeMatch,
+      PrismModels::modelsRuntimeMismatch,
+      PrismModels::modelsRuntimeMissing,
+      PrismModels::modelsSourceLocked,
+      PrismModels::modelsSourceUnlocked,
+      PrismModels::modelsWeightsMatch,
+      PrismModels::modelsWeightsMismatch,
+      PrismModels::modelsWeightsMissing,
+      modelsBreaksInv009
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
