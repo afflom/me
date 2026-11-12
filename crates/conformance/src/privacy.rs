@@ -147,20 +147,53 @@ pub fn scan_tracked(root: &Path) -> Result<Vec<Finding>, String> {
 /// terms of `root`.
 pub fn scan_dir(root: &Path, dir: &Path) -> Result<Vec<Finding>, String> {
     let deny = deny_terms(root);
+    let pinned = pinned_pieces(dir);
     let mut files = Vec::new();
     walk(dir, &mut files)?;
     files.sort();
     let mut out = Vec::new();
     for path in files {
-        let bytes = std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
         let rel = path
             .strip_prefix(dir)
             .unwrap_or(&path)
             .display()
             .to_string();
+        if pinned.contains(&rel) {
+            continue;
+        }
+        let bytes = std::fs::read(&path).map_err(|e| format!("{}: {e}", path.display()))?;
         out.extend(scan_text(&rel, &String::from_utf8_lossy(&bytes), &deny));
     }
     Ok(out)
+}
+
+/// The pieces of R4's engine and weights the page serves (`R4-01`), by the
+/// path each has in the page: `r4/objects/<sha256>.gz` for every piece
+/// fingerprint `r4/r4.lock.json` names. Their content is fixed by that hash to
+/// public upstream bytes, which `bootstrap/r4-objects.mjs` checks before writing
+/// them and every browser checks again, so no personal value can enter through
+/// them; compressed, they match the text patterns by chance. Any other file
+/// there, or a piece the lock does not name, is scanned as usual.
+fn pinned_pieces(dir: &Path) -> std::collections::BTreeSet<String> {
+    let Ok(lock) = std::fs::read_to_string(dir.join("r4").join("r4.lock.json")) else {
+        return std::collections::BTreeSet::new();
+    };
+    lock.split("\"pieces\": [")
+        .skip(1)
+        .filter_map(|rest| rest.split(']').next())
+        .flat_map(|list| list.split("\"fingerprint\": \"sha256-").skip(1))
+        .filter_map(|rest| rest.get(..64))
+        .filter(|hex| {
+            hex.bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+        })
+        .map(|hex| {
+            format!(
+                "r4{sep}objects{sep}{hex}.gz",
+                sep = std::path::MAIN_SEPARATOR
+            )
+        })
+        .collect()
 }
 
 fn walk(dir: &Path, out: &mut Vec<PathBuf>) -> Result<(), String> {

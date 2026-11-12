@@ -7,6 +7,7 @@
 \importmodule{PrismBoundary}
 \importmodule{PrismChronology}
 \importmodule{PrismLearning}
+\importmodule{PrismR4}
 \importmodule{PrismVaultRestore}
 \importmodule{PrismVaultStore}
 \title{Text application model}
@@ -47,6 +48,14 @@ theorem{
   name: routesRestore,
   parameters: [rest : Bytes],
   statement: ((Prism::route (Prism::facetRestore) rest) = (PrismVaultRestore::restoreDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesR4,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetR4) rest) = (PrismR4::r4Dispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }

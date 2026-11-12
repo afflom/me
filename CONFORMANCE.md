@@ -39,6 +39,12 @@ model does not sanction.
 | --- | --- | --- |
 | `PV-01` | `build` | Neither the tracked tree nor the built page holds personal data: every email address is at a reserved domain, and no phone, payment card or national ID number appears |
 
+## r4
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `R4-01` | `build` | The R4 language model runs in the browser only from bytes that re-derive to their pinned SHA-256, served by the page in pieces of at most 16 MiB, and shows an answer only when the proved Prism R4 decision allows it |
+
 ## vault
 
 | ID | Level | Statement |

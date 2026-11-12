@@ -26,6 +26,7 @@ FACETS = [
     ("when", "PrismChronology", "chronologyDispatch"),
     ("store", "PrismVaultStore", "storeDispatch"),
     ("restore", "PrismVaultRestore", "restoreDispatch"),
+    ("r4", "PrismR4", "r4Dispatch"),
 ]
 REQ_MAX, RESP_MAX, ALLOC = 512, 256, 1024
 h = lambda s: "0x" + s.encode().hex()
@@ -41,6 +42,8 @@ VECTORS = [
  ("store allow present mismatch ok", "refuse"),
  ("restore present known valid derived value", "restore"),
  ("restore present known broken derived value", "refuse"),
+ ("r4 inprism match match none allow", "answer"),
+ ("r4 inprism match mismatch none allow", "refuse"),
  ("learn", "invalid request"),
  ("when", "invalid request"),
  ("boundary", "invalid request"),
