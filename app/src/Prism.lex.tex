@@ -1,0 +1,107 @@
+\begin{lexlean}{Prism}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\importmodule{PrismBoundary}
+\importmodule{PrismLearning}
+\importmodule{PrismChronology}
+\importmodule{PrismVaultStore}
+\importmodule{PrismVaultRestore}
+\importmodule{PrismR4}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: facetUnknown, parameters: [], result: Nat, body: 0}
+
+definition{name: facetBoundary, parameters: [], result: Nat, body: 1}
+
+definition{name: facetLearn, parameters: [], result: Nat, body: 2}
+
+definition{name: facetWhen, parameters: [], result: Nat, body: 3}
+
+definition{name: facetStore, parameters: [], result: Nat, body: 4}
+
+definition{name: facetRestore, parameters: [], result: Nat, body: 5}
+
+definition{name: facetR4, parameters: [], result: Nat, body: 6}
+
+definition{name: refusal, parameters: [], result: Bytes, body: 0x696e76616c69642072657175657374}
+
+definition{
+  name: wordEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match (prim index s i : (Option UInt8))
+      | Option.none => i
+      | Option.some b => (if ((prim to_nat b : Nat) =? 32) then i else (wordEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sliceOr,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: headEnd,
+  parameters: [value : Bytes],
+  result: Nat,
+  body: (wordEnd value 0 (Foundation.Bytes::byteLength value)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: parseFacet,
+  parameters: [word : Bytes],
+  result: Nat,
+  body: (if (prim equal word 0x626f756e64617279 : Bool) then (facetBoundary) else (if (prim equal word 0x6c6561726e : Bool) then (facetLearn) else (if (prim equal word 0x7768656e : Bool) then (facetWhen) else (if (prim equal word 0x73746f7265 : Bool) then (facetStore) else (if (prim equal word 0x726573746f7265 : Bool) then (facetRestore) else (if (prim equal word 0x7234 : Bool) then (facetR4) else (facetUnknown)))))))
+}
+
+definition{
+  name: facetOf,
+  parameters: [value : Bytes],
+  result: Nat,
+  body: (parseFacet (sliceOr value 0 (headEnd value))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: restOf,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if ((headEnd value) =? (Foundation.Bytes::byteLength value)) then 0x else (sliceOr value ((headEnd value) + 1) (prim subtract (Foundation.Bytes::byteLength value) ((headEnd value) + 1) : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: route,
+  parameters: [facet : Nat, rest : Bytes],
+  result: Bytes,
+  body: (if (facet =? (facetBoundary)) then (PrismBoundary::boundaryDispatch rest) else (if (facet =? (facetLearn)) then (PrismLearning::learningDispatch rest) else (if (facet =? (facetWhen)) then (PrismChronology::chronologyDispatch rest) else (if (facet =? (facetStore)) then (PrismVaultStore::storeDispatch rest) else (if (facet =? (facetRestore)) then (PrismVaultRestore::restoreDispatch rest) else (if (facet =? (facetR4)) then (PrismR4::r4Dispatch rest) else (refusal))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: dispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (512 <? (Foundation.Bytes::byteLength value)) then (refusal) else (if ((Foundation.Bytes::byteLength (restOf value)) =? 0) then (refusal) else (route (facetOf value) (restOf value)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: application,
+  parameters: [],
+  result: Foundation.View.Text.V1.Model::TextApplication,
+  body: (record Foundation.View.Text.V1.Model::TextApplication {profile := "prismpm/text-application/1", name := "me", cargoName := "prism-me", cargoVersion := "0.1.0", cargoDescription := "A Prism of its owner: routes each request to the facet that decides it.", cargoRepository := "https://github.com/afflom/me", cargoHomepage := "https://afflom.github.io/me/", libraryRoots := (cons "Me.Prism.dispatch" (nil String)), acceptanceVectors := (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x626f756e64617279207075626c6963206e6f6e652062726f77736572206e6f6e65206e6f206e6f, response := 0x616c6c6f77}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x626f756e6461727920636f6e666964656e7469616c206e6f6e6520676974687562206f776e6572206e6f206e6f, response := 0x64656e79}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x626f756e64617279207075626c6963206e6f6e652062726f77736572206e6f6e65206e6f20796573, response := 0x64656e79}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x626f756e6461727920636f6e666964656e7469616c206e6f6e65206f7574626f756e64206e6f6e65206e6f206e6f, response := 0x61736b}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x626f756e646172792072657374726963746564206e6f6e652062726f77736572206f776e6572206e6f206e6f, response := 0x686173686f6e6c79}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x626f756e64617279207075626c6963206e6f6e652062726f77736572206e6f6e65206e6f, response := 0x696e76616c6964}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x73746f726520616c6c6f772070726573656e742064657269766564206f6b, response := 0x73746f7265}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x73746f726520686173686f6e6c792070726573656e742064657269766564206f6b, response := 0x73746f726568617368}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x73746f726520616c6c6f772070726573656e74206d69736d61746368206f6b, response := 0x726566757365}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x726573746f72652070726573656e74206b6e6f776e2076616c696420646572697665642076616c7565, response := 0x726573746f7265}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x726573746f72652070726573656e74206b6e6f776e2062726f6b656e20646572697665642076616c7565, response := 0x726566757365}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x723420696e707269736d206d61746368206d61746368206e6f6e6520616c6c6f77, response := 0x616e73776572}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x723420696e707269736d206d61746368206d69736d61746368206e6f6e6520616c6c6f77, response := 0x726566757365}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x6c6561726e, response := 0x696e76616c69642072657175657374}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x7768656e, response := 0x696e76616c69642072657175657374}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x626f756e64617279, response := 0x696e76616c69642072657175657374}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x, response := 0x696e76616c69642072657175657374}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x68656c6c6f20776f726c64, response := 0x696e76616c69642072657175657374}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x426f756e64617279207075626c6963206e6f6e652062726f77736572206e6f6e65206e6f206e6f, response := 0x696e76616c69642072657175657374}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x7878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878, response := 0x696e76616c69642072657175657374}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878, response := 0x696e76616c69642072657175657374}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x78787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878787878, response := 0x696e76616c69642072657175657374}) (nil Foundation.View.Text.V1.Model::AcceptanceVector))))))))))))))))))))))), entryRoot := "Me.Prism.dispatch", coreContract := "hologram:guest/core-wasm@1", requestMaximum := (512 : UInt32), responseMaximum := (256 : UInt32), guestAllocationMaximum := (1024 : UInt32), capabilitiesEmpty := true, fatArchive := true, primaryLayer := (0 : UInt8), viewLayer := (1 : UInt8), view := (record Foundation.View.Text.V1.Model::TextView {title := "me", heading := "me", inputLabel := "Request: facet, then its fields", submitLabel := "Ask", outputLabel := "Answer", inputError := "Invalid request", responseError := "Invalid response"})})
+}
+\end{semanticmodule}
+\end{lexlean}

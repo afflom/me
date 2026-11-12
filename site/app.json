@@ -1,44 +1,62 @@
 {
-  "name": "Template contract",
-  "shortName": "Contract",
+  "name": "me",
+  "shortName": "me",
   "live": "https://afflom.github.io/me/",
-  "purpose": "Checks each universal policy file of a UOR template repository against its locked digest. Send the six expected and observed digests; it answers conformant, or names every file that drifted, and invalid request for anything else.",
-  "inputLabel": "Expected and observed digests",
-  "placeholder": "hex: followed by 384 bytes",
-  "submitLabel": "Check",
-  "outputLabel": "Verdict",
+  "purpose": "A Prism of its owner, generic until the owner's own content fills it in their browser. Send a facet and its fields: boundary decides whether a labeled fact may move, learn moves a belief's weight on a signal, when relates two intervals. Anything else is refused.",
+  "inputLabel": "Request: facet, then its fields",
+  "placeholder": "boundary public none browser none no no",
+  "submitLabel": "Ask",
+  "outputLabel": "Answer",
   "answers": {
     "positive": [
-      "conformant"
+      "allow"
     ],
     "negative": [
-      "drift:*"
+      "deny"
     ],
     "refusal": "invalid request"
   },
   "promise": {
-    "headline": "Says conformant exactly when every policy file matches its lock.",
-    "detail": "Each of the six universal policy files is compared with the digest the lock records, and any file that drifted is named."
+    "headline": "Nothing of yours leaves your browser unless the proved Boundary allows it.",
+    "detail": "Every request is routed to the facet that decides it, and each facet's guarantees are proved in Lean 4: nothing moves while halted, nothing goes to GitHub or the hosted verifier, and nothing goes out without your approval."
   },
-  "claim": "TC-01: the checker answers conformant exactly when every universal policy file's observed digest equals its locked digest.",
+  "claim": "PM-01: the Prism answers a request naming a known facet with exactly that facet's decision of the rest, and refuses every other request.",
   "proposition": {
-    "name": "Conformant",
-    "text": "Conformant observation :=\n  SameDigest devcontainer.expected devcontainer.observed\n  /\\ SameDigest bootstrap.expected bootstrap.observed\n  /\\ SameDigest agents.expected agents.observed\n  /\\ SameDigest verification.expected verification.observed\n  /\\ SameDigest prismpmLock.expected prismpmLock.observed\n  /\\ SameDigest templateContract.expected templateContract.observed\n\nSameDigest left right :=\n  left.w0 = right.w0 /\\ left.w1 = right.w1 /\\ left.w2 = right.w2 /\\ left.w3 = right.w3",
-    "plain": "Every one of the six universal policy files has the digest the lock says it has."
+    "name": "routes",
+    "text": "route facetBoundary rest = PrismBoundary.dispatch rest\nroute facetLearn rest = PrismLearning.dispatch rest\nroute facetWhen rest = PrismChronology.dispatch rest\nroute facetUnknown rest = refusal",
+    "plain": "Each request is answered by the facet it names, and only by that facet."
   },
   "theorems": [
     {
-      "name": "conformant_decides",
-      "statement": "conformant observation = true ↔ Conformant observation, for every observation",
-      "how": "Proved by simplification over the record fields, checked by the Lean kernel by prismpm verify in CI",
-      "where": "app/src/Contract.lex.tex"
+      "name": "routesBoundary, routesLearn, routesWhen, refusesUnknownFacet",
+      "statement": "route facet rest = that facet's dispatch rest, and refusal for an unknown facet",
+      "how": "Proved by linear arithmetic over the facet codes, checked by the Lean kernel by prismpm verify in CI",
+      "where": "app/src/Prism.lex.tex"
+    },
+    {
+      "name": "Boundary inv001Holds to inv007Holds",
+      "statement": "deny while halted, deny to GitHub, deny to the verifier, never allow detected or restricted data, never outbound without approval, never an identifier outside the browser",
+      "how": "Proved by linear arithmetic for every request, axioms Quot.sound and propext only",
+      "where": "app/src/PrismBoundaryProofs.lex.tex"
+    },
+    {
+      "name": "Learning inv001Holds to inv008Holds",
+      "statement": "only the owner confirms or rejects; confirmed and rejected beliefs hold; weights stay within bounds",
+      "how": "Proved by linear arithmetic for every request, axioms Quot.sound and propext only",
+      "where": "app/src/PrismLearningProofs.lex.tex"
+    },
+    {
+      "name": "Chronology inv001Holds to inv008Holds",
+      "statement": "no Allen relation the endpoints contradict; well-formed intervals are never malformed",
+      "how": "Proved by linear arithmetic for every request, axioms Quot.sound and propext only",
+      "where": "app/src/PrismChronologyProofs.lex.tex"
     }
   ],
   "pinned": [
     {
-      "name": "contract_tc_01",
-      "what": "The theorem's statement and axioms, the six files the proposition names against template-contract.json, that a drifted file is named in the verdict, and that the verdict is decided by conformant. A string-matching test, not a theorem: a planted defect fails it.",
-      "where": "crates/conformance/tests/contract.rs"
+      "name": "prism_pm_01 to prism_pm_04",
+      "what": "Each theorem's exact statement and axioms, that every guarantee is about the facet's own judge, and that the application's answer is decided by route. A string-matching test, not a theorem: a planted defect fails it.",
+      "where": "crates/conformance/tests/prism.rs"
     }
   ],
   "trusted": [
@@ -65,7 +83,7 @@
   ],
   "attestations": {
     "proof": {
-      "id": "not recorded for the template's own app; an instance records the UOR MCP server's attestation here",
+      "id": "printed by prismpm verify in every bootstrap run",
       "url": "https://github.com/afflom/me/actions/workflows/bootstrap.yml"
     },
     "build": {
@@ -74,5 +92,6 @@
     }
   },
   "repository": "https://github.com/afflom/me",
-  "report": "https://github.com/afflom/me/blob/main/TEMPLATE-VERIFICATION.md"
+  "report": "https://github.com/afflom/me/blob/main/TEMPLATE-VERIFICATION.md",
+  "inputMode": "text"
 }

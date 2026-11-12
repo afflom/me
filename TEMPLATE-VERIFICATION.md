@@ -12,12 +12,12 @@ template contract checker in `app/`.
 | `just lint` | Clippy at `-D warnings`, every target, every optional feature | --- |
 | `just test` | the workspace suite, including the R3 meta-gate | `CM-02`, `CM-03` |
 | `just deny` | R6 over the dependency graph | --- |
-| `just app` | the Prism application: LexLean format and lock, then `prismpm verify`, which builds the holo and checks it | `TC-01` |
+| `just app` | the Prism application: LexLean format and lock, then `prismpm verify`, which builds the holo and checks it | `PM-01` to `PM-04` |
 
 Each check runs once per `just vv`. `just bdd` runs only the meta-gate while a
 scenario is being written; `just test` already includes it.
 
-The register holds `TC-01`, `FR-01`, `PV-01` and `R4-01`, so the meta-gate checks real rows,
+The register holds `PM-01` to `PM-04`, `VS-01` to `VS-03`, `R4-01`, `FR-01` and `PV-01`, so the meta-gate checks real rows,
 scenarios and tests. It becomes an error as soon as an ID, scenario,
 or test is added without the other two.
 
@@ -28,8 +28,8 @@ or test is added without the other two.
 | `check-model` | `CONFORMANCE.md` disagrees with the register | rejected |
 | `audit-deferral` | a deferral marker in a crate and in the gate's own source | both rejected |
 | honesty meta-gate | an ID with no test | rejected |
-| `contract_tc_01` | `Conformant` drops the `bootstrap` conjunct, or `dispatch` answers on `true` instead of `conformant` | both rejected |
-| `prismpm verify` | an acceptance vector set without the exact guest-allocation boundary | rejected (PP2009) |
+| `prism_pm_01` | `routesBoundary` states that the boundary facet answers with `PrismLearning::learningDispatch` | rejected (`PM-01: routesBoundary must prove the Boundary facet answers with PrismBoundary::boundaryDispatch`); restoring the statement passes |
+| `prismpm verify` | an acceptance vector set without the exact guest-allocation boundary | rejected (PP2009); seen again on the Prism root before its 1024-byte vector was added |
 | `audit-bootstrap` | a floating/copied action, mutable SDK tag, changed universal file, narrowed boundary, shallow/credential-retaining checkout, copied project renderer, omitted standards lock, acceptance bypass, deploy-job signing privilege, incomplete release lifecycle, or a bootstrap that drops a native architecture from main or tags, cancels or replaces a main run, or skips runs by path, condition or matrix exclusion | all rejected |
 | `audit-bootstrap` (`proof_reuse_is_confined`) | a cache key that omits any one of its eight proof inputs, the SDK digest named by a constant, the Lean toolchain read from another file, the ref spliced into the script or dropped, the event line removed, reuse on a tag or on any event, reuse without the read-time check, a stale kept proof surviving a full proof, a recipe that stops proving or keeps a proof without its inputs, a second use of the event, an early exit, and the `merge_group` trigger dropped | all rejected |
 | `audit-pii` (`PV-01`) | a tracked file holding an email address at a public mail domain; a tracked file holding a term from a local `.pii-deny` | both rejected, naming the file, line and kind and never the value (`gate failed: PV-01: 1 value(s) in the tracked tree look personal`); removing the file restores `audit-pii: no personal data in the tracked tree` |
@@ -346,48 +346,45 @@ produced files that passed `cargo fmt --check` and all-feature Clippy, and
 passed with the pinned Rust 1.97.1 on `x86_64-unknown-linux-gnu`, locked,
 outside the SDK image; the SDK checks run in the pull request's bootstrap job.
 
-## The template contract checker
+## The Prism root and its facets
 
-`app/` is a Prism text application modeled in `app/src/Contract.lex.tex`. Its
-request is 384 bytes: for each universal policy file, in `template.lock`
-`policy_files` order, the locked SHA-256 then the observed SHA-256. It answers
-`conformant`, or `drift:` followed by each drifted path after a space, or
-`invalid request` for any
-other length. Lean proves, with only `propext`, that the executable verdict is
-both sound and complete for the specification:
+`app/` is one Prism text application whose root is `app/src/Prism.lex.tex`,
+written by `tools/prism_root.py`. A request is `<facet> <rest>`. The root reads
+the first word, routes `rest` to that facet's dispatch (`boundaryDispatch`, `learningDispatch`, `chronologyDispatch`), and answers
+`invalid request` for an unknown facet, an empty rest or a request over 512
+bytes. The facets are library modules with no `application` record of their
+own, because `prismpm` admits one application root per product (`PP2001`):
 
-- `conformant_decides`: `conformant observation = true ↔ Conformant observation`.
+| Keyword | Module | Guarantees |
+| --- | --- | --- |
+| `boundary` | `PrismBoundary` | 7 (`PM-02`) |
+| `learn` | `PrismLearning` | 8 (`PM-03`) |
+| `when` | `PrismChronology` | 8 (`PM-04`) |
+| `store` | `PrismVaultStore` | 5 (`VS-01`) |
+| `restore` | `PrismVaultRestore` | 5 (`VS-02`) |
+| `r4` | `PrismR4` | 7 (`R4-01`) |
 
-The proof is `simplify` over the definitions and Lean's `Bool.and_eq_true` and
-`Nat.beq_eq`, not `linear_arithmetic`. A `linear_arithmetic` proof makes the
-generated module import `LexLeanRuntime.Laws`, and `prismpm build` then
-compiles that module to C, which did not finish within the build's ten-minute
-limit in CI or in 25 minutes locally (without C generation it takes four
-seconds). The first CI run of this app failed exactly there, with
-`PP5007: application-lean timed out`. The second failed in code generation
-(`PP4102`), because the drift report was a `List String` built as an
-intermediate value. It is now `Bytes` appended straight into the response.
+`app/src/PrismProofs.lex.tex` proves `routesBoundary`, `routesLearn`,
+`routesWhen`, `routesStore`, `routesRestore`, `routesR4` and `refusesUnknownFacet` (`PM-01`) by reflexivity: the facet codes are literals, so `route` reduces by definition. They
+live apart from the root, as the facets' guarantees do. `linear_arithmetic`
+failed on them (`omega` finds no constraints in an equality of `Bytes`).
+Parsing the first
+word is checked by the root's acceptance vectors, which the build replays in
+the compiled guest, including the 512, 513 and 1024 byte boundaries.
 
-`Conformant` is the conjunction of six digest equalities, one per universal
-policy path. A digest is four big-endian 64-bit words, because generated code
-represents a `Nat` as a checked `u64`, and `SameDigest` requires all four words
-to be equal, so two digests are the same exactly when their 32 bytes are. `contract_tc_01` reads the model as text and requires the theorem
-statement, its axiom list, one `Conformant` conjunct for each path in
-`template-contract.json` other than `template.lock` (which cannot pin its own
-digest), each path in the drift report, and a `dispatch` decided by
-`conformant`. The nine acceptance vectors (conformant, four drift cases, 383,
-385, 0 and 512 bytes) are executed against the compiled guest by the build
-that `prismpm verify` runs before it checks the resulting holo, so the proof, the code
-and the observed behaviour ship as one artifact.
+The holo build compiles every module into one Rust crate, so every type and
+definition name is unique across `app/src`: a facet prefixes its own names
+(`BoundaryRequest`, `boundaryJudge`). The first build of the combined product
+failed with `PP5008: two Lean types share the last name component Request`
+and then with Rust `E0428` duplicate definitions until they were prefixed.
 
-Locally, with LexLean 0.3.0 (the SDK's compiler), `lexlean check` and
-`lexlean verify` passed, verifying three modules; both planted defects in the
-table above made `contract_tc_01` fail with a message naming the defect. The
-holo build and verify run in the pull request's bootstrap job inside the
-locked SDK. `just app` runs only `prismpm verify`: it begins with the same
-build `prismpm build` performs, so running both built the holo twice. In the
-first green run, `prismpm build` took 82 seconds and `prismpm verify` 6
-minutes 14 seconds.
+Every guarantee rests on exactly `Quot.sound` and `propext`. The facets were
+drafted with the Prism guided path and hand-patched for that axiom policy and
+for Lean's `split` depth limit; `app/specs/README.md` records the patches.
+`prism_pm_01` to `prism_pm_04` read the model as text and require each
+theorem's statement and axioms, that each guarantee is about its facet's own
+`judge`, that each facet's answer is decided by that `judge`, and that the
+application's answer is decided by `route`.
 
 ## Prism accounts: the remembered passkey
 
