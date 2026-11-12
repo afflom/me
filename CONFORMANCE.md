@@ -30,6 +30,12 @@ model does not sanction.
 | --- | --- | --- |
 | `FR-01` | `build` | With a working worker, the page loads and verifies the archive only in that worker before using its identities or guest |
 
+## privacy
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PV-01` | `build` | Neither the tracked tree nor the built page holds personal data: every email address is at a reserved domain, and no phone, payment card or national ID number appears |
+
 ## Cited authorities
 
 Never re-derived, vendored, or gated on.
