@@ -1,0 +1,424 @@
+\begin{lexlean}{PrismLearningProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismLearning}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: breaksInv001,
+  parameters: [request : PrismLearning::Request],
+  result: Bool,
+  body: (((((((project request state) <? 4) && (1 <=? (project request weight))) && ((project request weight) <=? 16)) && ((project request signal) <? 5)) && (not ((project request signal) =? (PrismLearning::signalOwnerconfirm)))) && ((PrismLearning::judge request) =? (PrismLearning::answerConfirm)))
+}
+
+theorem{
+  name: inv001Holds,
+  parameters: [request : PrismLearning::Request],
+  statement: ((breaksInv001 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismLearning::answerConfirm,
+      PrismLearning::answerConsolidate,
+      PrismLearning::answerDemote,
+      PrismLearning::answerHold,
+      PrismLearning::answerLower,
+      PrismLearning::answerRaise,
+      PrismLearning::answerReject,
+      PrismLearning::judge,
+      PrismLearning::rule1,
+      PrismLearning::rule10,
+      PrismLearning::rule11,
+      PrismLearning::rule1Misses,
+      PrismLearning::rule2,
+      PrismLearning::rule2Misses,
+      PrismLearning::rule3,
+      PrismLearning::rule4,
+      PrismLearning::rule5,
+      PrismLearning::rule5Misses,
+      PrismLearning::rule6,
+      PrismLearning::rule6Misses,
+      PrismLearning::rule7,
+      PrismLearning::rule8,
+      PrismLearning::rule8Misses,
+      PrismLearning::rule9,
+      PrismLearning::signalContradict,
+      PrismLearning::signalDecay,
+      PrismLearning::signalOwnerconfirm,
+      PrismLearning::signalOwnerreject,
+      PrismLearning::signalSupport,
+      PrismLearning::stateConfirmed,
+      PrismLearning::stateConsolidated,
+      PrismLearning::stateInferred,
+      PrismLearning::stateRejected,
+      breaksInv001
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv002,
+  parameters: [request : PrismLearning::Request],
+  result: Bool,
+  body: (((((((project request state) <? 4) && (1 <=? (project request weight))) && ((project request weight) <=? 16)) && ((project request signal) <? 5)) && (not ((project request signal) =? (PrismLearning::signalOwnerreject)))) && ((PrismLearning::judge request) =? (PrismLearning::answerReject)))
+}
+
+theorem{
+  name: inv002Holds,
+  parameters: [request : PrismLearning::Request],
+  statement: ((breaksInv002 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismLearning::answerConfirm,
+      PrismLearning::answerConsolidate,
+      PrismLearning::answerDemote,
+      PrismLearning::answerHold,
+      PrismLearning::answerLower,
+      PrismLearning::answerRaise,
+      PrismLearning::answerReject,
+      PrismLearning::judge,
+      PrismLearning::rule1,
+      PrismLearning::rule10,
+      PrismLearning::rule11,
+      PrismLearning::rule1Misses,
+      PrismLearning::rule2,
+      PrismLearning::rule2Misses,
+      PrismLearning::rule3,
+      PrismLearning::rule4,
+      PrismLearning::rule5,
+      PrismLearning::rule5Misses,
+      PrismLearning::rule6,
+      PrismLearning::rule6Misses,
+      PrismLearning::rule7,
+      PrismLearning::rule8,
+      PrismLearning::rule8Misses,
+      PrismLearning::rule9,
+      PrismLearning::signalContradict,
+      PrismLearning::signalDecay,
+      PrismLearning::signalOwnerconfirm,
+      PrismLearning::signalOwnerreject,
+      PrismLearning::signalSupport,
+      PrismLearning::stateConfirmed,
+      PrismLearning::stateConsolidated,
+      PrismLearning::stateInferred,
+      PrismLearning::stateRejected,
+      breaksInv002
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv003,
+  parameters: [request : PrismLearning::Request],
+  result: Bool,
+  body: ((((((((project request state) <? 4) && (1 <=? (project request weight))) && ((project request weight) <=? 16)) && ((project request signal) <? 5)) && ((project request state) =? (PrismLearning::stateConfirmed))) && (not ((project request signal) =? (PrismLearning::signalOwnerreject)))) && (not ((PrismLearning::judge request) =? (PrismLearning::answerHold))))
+}
+
+theorem{
+  name: inv003Holds,
+  parameters: [request : PrismLearning::Request],
+  statement: ((breaksInv003 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismLearning::answerConfirm,
+      PrismLearning::answerConsolidate,
+      PrismLearning::answerDemote,
+      PrismLearning::answerHold,
+      PrismLearning::answerLower,
+      PrismLearning::answerRaise,
+      PrismLearning::answerReject,
+      PrismLearning::judge,
+      PrismLearning::rule1,
+      PrismLearning::rule10,
+      PrismLearning::rule11,
+      PrismLearning::rule1Misses,
+      PrismLearning::rule2,
+      PrismLearning::rule2Misses,
+      PrismLearning::rule3,
+      PrismLearning::rule4,
+      PrismLearning::rule5,
+      PrismLearning::rule5Misses,
+      PrismLearning::rule6,
+      PrismLearning::rule6Misses,
+      PrismLearning::rule7,
+      PrismLearning::rule8,
+      PrismLearning::rule8Misses,
+      PrismLearning::rule9,
+      PrismLearning::signalContradict,
+      PrismLearning::signalDecay,
+      PrismLearning::signalOwnerconfirm,
+      PrismLearning::signalOwnerreject,
+      PrismLearning::signalSupport,
+      PrismLearning::stateConfirmed,
+      PrismLearning::stateConsolidated,
+      PrismLearning::stateInferred,
+      PrismLearning::stateRejected,
+      breaksInv003
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv004,
+  parameters: [request : PrismLearning::Request],
+  result: Bool,
+  body: ((((((((project request state) <? 4) && (1 <=? (project request weight))) && ((project request weight) <=? 16)) && ((project request signal) <? 5)) && ((project request state) =? (PrismLearning::stateRejected))) && (not ((project request signal) =? (PrismLearning::signalOwnerconfirm)))) && (not ((PrismLearning::judge request) =? (PrismLearning::answerHold))))
+}
+
+theorem{
+  name: inv004Holds,
+  parameters: [request : PrismLearning::Request],
+  statement: ((breaksInv004 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismLearning::answerConfirm,
+      PrismLearning::answerConsolidate,
+      PrismLearning::answerDemote,
+      PrismLearning::answerHold,
+      PrismLearning::answerLower,
+      PrismLearning::answerRaise,
+      PrismLearning::answerReject,
+      PrismLearning::judge,
+      PrismLearning::rule1,
+      PrismLearning::rule10,
+      PrismLearning::rule11,
+      PrismLearning::rule1Misses,
+      PrismLearning::rule2,
+      PrismLearning::rule2Misses,
+      PrismLearning::rule3,
+      PrismLearning::rule4,
+      PrismLearning::rule5,
+      PrismLearning::rule5Misses,
+      PrismLearning::rule6,
+      PrismLearning::rule6Misses,
+      PrismLearning::rule7,
+      PrismLearning::rule8,
+      PrismLearning::rule8Misses,
+      PrismLearning::rule9,
+      PrismLearning::signalContradict,
+      PrismLearning::signalDecay,
+      PrismLearning::signalOwnerconfirm,
+      PrismLearning::signalOwnerreject,
+      PrismLearning::signalSupport,
+      PrismLearning::stateConfirmed,
+      PrismLearning::stateConsolidated,
+      PrismLearning::stateInferred,
+      PrismLearning::stateRejected,
+      breaksInv004
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv005,
+  parameters: [request : PrismLearning::Request],
+  result: Bool,
+  body: (((((((project request state) <? 4) && (1 <=? (project request weight))) && ((project request weight) <=? 16)) && ((project request signal) <? 5)) && ((project request weight) <? 10)) && ((PrismLearning::judge request) =? (PrismLearning::answerConsolidate)))
+}
+
+theorem{
+  name: inv005Holds,
+  parameters: [request : PrismLearning::Request],
+  statement: ((breaksInv005 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismLearning::answerConfirm,
+      PrismLearning::answerConsolidate,
+      PrismLearning::answerDemote,
+      PrismLearning::answerHold,
+      PrismLearning::answerLower,
+      PrismLearning::answerRaise,
+      PrismLearning::answerReject,
+      PrismLearning::judge,
+      PrismLearning::rule1,
+      PrismLearning::rule10,
+      PrismLearning::rule11,
+      PrismLearning::rule1Misses,
+      PrismLearning::rule2,
+      PrismLearning::rule2Misses,
+      PrismLearning::rule3,
+      PrismLearning::rule4,
+      PrismLearning::rule5,
+      PrismLearning::rule5Misses,
+      PrismLearning::rule6,
+      PrismLearning::rule6Misses,
+      PrismLearning::rule7,
+      PrismLearning::rule8,
+      PrismLearning::rule8Misses,
+      PrismLearning::rule9,
+      PrismLearning::signalContradict,
+      PrismLearning::signalDecay,
+      PrismLearning::signalOwnerconfirm,
+      PrismLearning::signalOwnerreject,
+      PrismLearning::signalSupport,
+      PrismLearning::stateConfirmed,
+      PrismLearning::stateConsolidated,
+      PrismLearning::stateInferred,
+      PrismLearning::stateRejected,
+      breaksInv005
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv006,
+  parameters: [request : PrismLearning::Request],
+  result: Bool,
+  body: (((((((project request state) <? 4) && (1 <=? (project request weight))) && ((project request weight) <=? 16)) && ((project request signal) <? 5)) && (14 <? (project request weight))) && ((PrismLearning::judge request) =? (PrismLearning::answerRaise)))
+}
+
+theorem{
+  name: inv006Holds,
+  parameters: [request : PrismLearning::Request],
+  statement: ((breaksInv006 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismLearning::answerConfirm,
+      PrismLearning::answerConsolidate,
+      PrismLearning::answerDemote,
+      PrismLearning::answerHold,
+      PrismLearning::answerLower,
+      PrismLearning::answerRaise,
+      PrismLearning::answerReject,
+      PrismLearning::judge,
+      PrismLearning::rule1,
+      PrismLearning::rule10,
+      PrismLearning::rule11,
+      PrismLearning::rule1Misses,
+      PrismLearning::rule2,
+      PrismLearning::rule2Misses,
+      PrismLearning::rule3,
+      PrismLearning::rule4,
+      PrismLearning::rule5,
+      PrismLearning::rule5Misses,
+      PrismLearning::rule6,
+      PrismLearning::rule6Misses,
+      PrismLearning::rule7,
+      PrismLearning::rule8,
+      PrismLearning::rule8Misses,
+      PrismLearning::rule9,
+      PrismLearning::signalContradict,
+      PrismLearning::signalDecay,
+      PrismLearning::signalOwnerconfirm,
+      PrismLearning::signalOwnerreject,
+      PrismLearning::signalSupport,
+      PrismLearning::stateConfirmed,
+      PrismLearning::stateConsolidated,
+      PrismLearning::stateInferred,
+      PrismLearning::stateRejected,
+      breaksInv006
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv007,
+  parameters: [request : PrismLearning::Request],
+  result: Bool,
+  body: (((((((project request state) <? 4) && (1 <=? (project request weight))) && ((project request weight) <=? 16)) && ((project request signal) <? 5)) && ((project request weight) <? 2)) && ((PrismLearning::judge request) =? (PrismLearning::answerLower)))
+}
+
+theorem{
+  name: inv007Holds,
+  parameters: [request : PrismLearning::Request],
+  statement: ((breaksInv007 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismLearning::answerConfirm,
+      PrismLearning::answerConsolidate,
+      PrismLearning::answerDemote,
+      PrismLearning::answerHold,
+      PrismLearning::answerLower,
+      PrismLearning::answerRaise,
+      PrismLearning::answerReject,
+      PrismLearning::judge,
+      PrismLearning::rule1,
+      PrismLearning::rule10,
+      PrismLearning::rule11,
+      PrismLearning::rule1Misses,
+      PrismLearning::rule2,
+      PrismLearning::rule2Misses,
+      PrismLearning::rule3,
+      PrismLearning::rule4,
+      PrismLearning::rule5,
+      PrismLearning::rule5Misses,
+      PrismLearning::rule6,
+      PrismLearning::rule6Misses,
+      PrismLearning::rule7,
+      PrismLearning::rule8,
+      PrismLearning::rule8Misses,
+      PrismLearning::rule9,
+      PrismLearning::signalContradict,
+      PrismLearning::signalDecay,
+      PrismLearning::signalOwnerconfirm,
+      PrismLearning::signalOwnerreject,
+      PrismLearning::signalSupport,
+      PrismLearning::stateConfirmed,
+      PrismLearning::stateConsolidated,
+      PrismLearning::stateInferred,
+      PrismLearning::stateRejected,
+      breaksInv007
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv008,
+  parameters: [request : PrismLearning::Request],
+  result: Bool,
+  body: (((((((project request state) <? 4) && (1 <=? (project request weight))) && ((project request weight) <=? 16)) && ((project request signal) <? 5)) && (not ((project request state) =? (PrismLearning::stateConsolidated)))) && ((PrismLearning::judge request) =? (PrismLearning::answerDemote)))
+}
+
+theorem{
+  name: inv008Holds,
+  parameters: [request : PrismLearning::Request],
+  statement: ((breaksInv008 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismLearning::answerConfirm,
+      PrismLearning::answerConsolidate,
+      PrismLearning::answerDemote,
+      PrismLearning::answerHold,
+      PrismLearning::answerLower,
+      PrismLearning::answerRaise,
+      PrismLearning::answerReject,
+      PrismLearning::judge,
+      PrismLearning::rule1,
+      PrismLearning::rule10,
+      PrismLearning::rule11,
+      PrismLearning::rule1Misses,
+      PrismLearning::rule2,
+      PrismLearning::rule2Misses,
+      PrismLearning::rule3,
+      PrismLearning::rule4,
+      PrismLearning::rule5,
+      PrismLearning::rule5Misses,
+      PrismLearning::rule6,
+      PrismLearning::rule6Misses,
+      PrismLearning::rule7,
+      PrismLearning::rule8,
+      PrismLearning::rule8Misses,
+      PrismLearning::rule9,
+      PrismLearning::signalContradict,
+      PrismLearning::signalDecay,
+      PrismLearning::signalOwnerconfirm,
+      PrismLearning::signalOwnerreject,
+      PrismLearning::signalSupport,
+      PrismLearning::stateConfirmed,
+      PrismLearning::stateConsolidated,
+      PrismLearning::stateInferred,
+      PrismLearning::stateRejected,
+      breaksInv008
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

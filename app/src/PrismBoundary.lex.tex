@@ -1,0 +1,358 @@
+\begin{lexlean}{PrismBoundary}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: labelPublic, parameters: [], result: Nat, body: 0}
+
+definition{name: labelInternal, parameters: [], result: Nat, body: 1}
+
+definition{name: labelConfidential, parameters: [], result: Nat, body: 2}
+
+definition{name: labelRestricted, parameters: [], result: Nat, body: 3}
+
+definition{name: labelUnlabeled, parameters: [], result: Nat, body: 4}
+
+definition{name: detectorNone, parameters: [], result: Nat, body: 0}
+
+definition{name: detectorPci, parameters: [], result: Nat, body: 1}
+
+definition{name: detectorPhi, parameters: [], result: Nat, body: 2}
+
+definition{name: detectorCredential, parameters: [], result: Nat, body: 3}
+
+definition{name: detectorSpecial, parameters: [], result: Nat, body: 4}
+
+definition{name: destinationBrowser, parameters: [], result: Nat, body: 0}
+
+definition{name: destinationGithub, parameters: [], result: Nat, body: 1}
+
+definition{name: destinationVerifier, parameters: [], result: Nat, body: 2}
+
+definition{name: destinationOutbound, parameters: [], result: Nat, body: 3}
+
+definition{name: approvalNone, parameters: [], result: Nat, body: 0}
+
+definition{name: approvalOwner, parameters: [], result: Nat, body: 1}
+
+definition{name: identifierNo, parameters: [], result: Nat, body: 0}
+
+definition{name: identifierYes, parameters: [], result: Nat, body: 1}
+
+definition{name: haltedNo, parameters: [], result: Nat, body: 0}
+
+definition{name: haltedYes, parameters: [], result: Nat, body: 1}
+
+definition{name: answerAllow, parameters: [], result: Nat, body: 0}
+
+definition{name: answerHashonly, parameters: [], result: Nat, body: 1}
+
+definition{name: answerAsk, parameters: [], result: Nat, body: 2}
+
+definition{name: answerDeny, parameters: [], result: Nat, body: 3}
+
+structure{
+  name: Request,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: label, type: Nat},
+    {name: detector, type: Nat},
+    {name: destination, type: Nat},
+    {name: approval, type: Nat},
+    {name: identifier, type: Nat},
+    {name: halted, type: Nat}
+  ]
+}
+
+definition{
+  name: byteAt,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some b => (ctor Option.some [Nat] (prim to_nat b : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: digitsValue,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.some [Nat] acc)
+    | Nat.succ rest => (match (byteAt s i)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (digitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: parseDigits,
+  parameters: [s : Bytes],
+  result: (Option Nat),
+  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (byteAt s 0)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (digitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: parseNumber,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (parseDigits value),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: parseLabel,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x7075626c6963 : Bool) then (ctor Option.some [Nat] (labelPublic)) else (if (prim equal value 0x696e7465726e616c : Bool) then (ctor Option.some [Nat] (labelInternal)) else (if (prim equal value 0x636f6e666964656e7469616c : Bool) then (ctor Option.some [Nat] (labelConfidential)) else (if (prim equal value 0x72657374726963746564 : Bool) then (ctor Option.some [Nat] (labelRestricted)) else (if (prim equal value 0x756e6c6162656c6564 : Bool) then (ctor Option.some [Nat] (labelUnlabeled)) else (ctor Option.none [Nat]))))))
+}
+
+definition{
+  name: parseDetector,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f6e65 : Bool) then (ctor Option.some [Nat] (detectorNone)) else (if (prim equal value 0x706369 : Bool) then (ctor Option.some [Nat] (detectorPci)) else (if (prim equal value 0x706869 : Bool) then (ctor Option.some [Nat] (detectorPhi)) else (if (prim equal value 0x63726564656e7469616c : Bool) then (ctor Option.some [Nat] (detectorCredential)) else (if (prim equal value 0x7370656369616c : Bool) then (ctor Option.some [Nat] (detectorSpecial)) else (ctor Option.none [Nat]))))))
+}
+
+definition{
+  name: parseDestination,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x62726f77736572 : Bool) then (ctor Option.some [Nat] (destinationBrowser)) else (if (prim equal value 0x676974687562 : Bool) then (ctor Option.some [Nat] (destinationGithub)) else (if (prim equal value 0x7665726966696572 : Bool) then (ctor Option.some [Nat] (destinationVerifier)) else (if (prim equal value 0x6f7574626f756e64 : Bool) then (ctor Option.some [Nat] (destinationOutbound)) else (ctor Option.none [Nat])))))
+}
+
+definition{
+  name: parseApproval,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f6e65 : Bool) then (ctor Option.some [Nat] (approvalNone)) else (if (prim equal value 0x6f776e6572 : Bool) then (ctor Option.some [Nat] (approvalOwner)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: parseIdentifier,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (identifierNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (identifierYes)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: parseHalted,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (haltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (haltedYes)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: sliceOf,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: fieldEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match (byteAt s i)
+      | Option.none => i
+      | Option.some d => (if (d =? 32) then i else (fieldEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: decodeField6,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat],
+  result: (Option Request),
+  body: (let e : Nat := (fieldEnd s start (Foundation.Bytes::byteLength s)); (match (parseHalted (sliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [Request])
+    | Option.some v6 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [Request] (record Request {label := v1, detector := v2, destination := v3, approval := v4, identifier := v5, halted := v6})) else (ctor Option.none [Request])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: decodeField5,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat],
+  result: (Option Request),
+  body: (let e : Nat := (fieldEnd s start (Foundation.Bytes::byteLength s)); (match (parseIdentifier (sliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [Request])
+    | Option.some v5 => (if (e <? (Foundation.Bytes::byteLength s)) then (decodeField6 s (e + 1) v1 v2 v3 v4 v5) else (ctor Option.none [Request])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: decodeField4,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
+  result: (Option Request),
+  body: (let e : Nat := (fieldEnd s start (Foundation.Bytes::byteLength s)); (match (parseApproval (sliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [Request])
+    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (decodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [Request])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: decodeField3,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
+  result: (Option Request),
+  body: (let e : Nat := (fieldEnd s start (Foundation.Bytes::byteLength s)); (match (parseDestination (sliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [Request])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (decodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [Request])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: decodeField2,
+  parameters: [s : Bytes, start : Nat, v1 : Nat],
+  result: (Option Request),
+  body: (let e : Nat := (fieldEnd s start (Foundation.Bytes::byteLength s)); (match (parseDetector (sliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [Request])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (decodeField3 s (e + 1) v1 v2) else (ctor Option.none [Request])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: decodeField1,
+  parameters: [s : Bytes, start : Nat],
+  result: (Option Request),
+  body: (let e : Nat := (fieldEnd s start (Foundation.Bytes::byteLength s)); (match (parseLabel (sliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [Request])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (decodeField2 s (e + 1) v1) else (ctor Option.none [Request])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rule1,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request halted) =? (haltedYes))
+}
+
+definition{
+  name: rule2,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request destination) =? (destinationGithub))
+}
+
+definition{
+  name: rule3,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request destination) =? (destinationVerifier))
+}
+
+definition{
+  name: rule4,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((not ((project request detector) =? (detectorNone))) && ((project request destination) =? (destinationBrowser)))
+}
+
+definition{
+  name: rule4Misses,
+  parameters: [request : Request],
+  result: Bool,
+  body: (((project request detector) =? (detectorNone)) || (((project request destination) <? (destinationBrowser)) || ((destinationBrowser) <? (project request destination))))
+}
+
+definition{
+  name: rule5,
+  parameters: [request : Request],
+  result: Bool,
+  body: (((project request label) =? (labelRestricted)) && ((project request destination) =? (destinationBrowser)))
+}
+
+definition{
+  name: rule5Misses,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((((project request label) <? (labelRestricted)) || ((labelRestricted) <? (project request label))) || (((project request destination) <? (destinationBrowser)) || ((destinationBrowser) <? (project request destination))))
+}
+
+definition{
+  name: rule6,
+  parameters: [request : Request],
+  result: Bool,
+  body: (not ((project request detector) =? (detectorNone)))
+}
+
+definition{
+  name: rule6Misses,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request detector) =? (detectorNone))
+}
+
+definition{
+  name: rule7,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request label) =? (labelRestricted))
+}
+
+definition{
+  name: rule8,
+  parameters: [request : Request],
+  result: Bool,
+  body: (((project request identifier) =? (identifierYes)) && (not ((project request destination) =? (destinationBrowser))))
+}
+
+definition{
+  name: rule8Misses,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((((project request identifier) <? (identifierYes)) || ((identifierYes) <? (project request identifier))) || ((project request destination) =? (destinationBrowser)))
+}
+
+definition{
+  name: rule9,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request destination) =? (destinationBrowser))
+}
+
+definition{
+  name: rule10,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request approval) =? (approvalOwner))
+}
+
+definition{
+  name: judge,
+  parameters: [request : Request],
+  result: Nat,
+  body: (if (rule1 request) then (answerDeny) else (if (rule2 request) then (answerDeny) else (if (rule3 request) then (answerDeny) else (if (rule4Misses request) then (if (rule5Misses request) then (if (rule6Misses request) then (if (rule7 request) then (answerDeny) else (if (rule8Misses request) then (if (rule9 request) then (answerAllow) else (if (rule10 request) then (answerAllow) else (answerAsk))) else (answerDeny))) else (answerDeny)) else (answerHashonly)) else (answerHashonly)))))
+}
+
+definition{
+  name: encodeAnswer,
+  parameters: [code : Nat],
+  result: Bytes,
+  body: (if (code =? (answerAllow)) then 0x616c6c6f77 else (if (code =? (answerHashonly)) then 0x686173686f6e6c79 else (if (code =? (answerAsk)) then 0x61736b else (if (code =? (answerDeny)) then 0x64656e79 else 0x696e76616c6964))))
+}
+
+definition{
+  name: dispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (160 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (decodeField1 value 0)
+    | Option.none => 0x696e76616c6964
+    | Option.some request => (encodeAnswer (judge request)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
