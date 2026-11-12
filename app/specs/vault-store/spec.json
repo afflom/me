@@ -1,0 +1,265 @@
+{
+  "name": "prism-vault-store",
+  "title": "Prism Vault Store",
+  "purpose": "Decides whether the browser vault may keep one value, as its value or as a hash only, so that nothing is kept that the Boundary refused, that the owner has not yet approved, or that does not re-derive to the address it is filed under.",
+  "fields": [
+    {
+      "name": "boundary",
+      "kind": "choice",
+      "values": [
+        "allow",
+        "hashonly",
+        "ask",
+        "deny"
+      ],
+      "means": "the Boundary's answer for this value with destination browser"
+    },
+    {
+      "name": "key",
+      "kind": "choice",
+      "values": [
+        "present",
+        "missing"
+      ],
+      "means": "whether the browser still holds the vault's own non-extractable key"
+    },
+    {
+      "name": "address",
+      "kind": "choice",
+      "values": [
+        "derived",
+        "mismatch"
+      ],
+      "means": "whether the address the value is filed under re-derives from its bytes under the vault key"
+    },
+    {
+      "name": "room",
+      "kind": "choice",
+      "values": [
+        "ok",
+        "full"
+      ],
+      "means": "whether the browser's storage quota has room for the sealed bytes"
+    }
+  ],
+  "outcomes": [
+    "store",
+    "storehash",
+    "ask",
+    "refuse"
+  ],
+  "rules": [
+    {
+      "id": "REQ-001",
+      "when": [
+        {
+          "field": "key",
+          "op": "is",
+          "value": "missing"
+        }
+      ],
+      "then": "refuse",
+      "says": "when key is missing then refuse",
+      "why": "nothing can be sealed without the key"
+    },
+    {
+      "id": "REQ-002",
+      "when": [
+        {
+          "field": "address",
+          "op": "is",
+          "value": "mismatch"
+        }
+      ],
+      "then": "refuse",
+      "says": "when address is mismatch then refuse",
+      "why": "it enforces INV-001"
+    },
+    {
+      "id": "REQ-003",
+      "when": [
+        {
+          "field": "boundary",
+          "op": "is",
+          "value": "deny"
+        }
+      ],
+      "then": "refuse",
+      "says": "when boundary is deny then refuse",
+      "why": "it enforces INV-002"
+    },
+    {
+      "id": "REQ-004",
+      "when": [
+        {
+          "field": "room",
+          "op": "is",
+          "value": "full"
+        }
+      ],
+      "then": "refuse",
+      "says": "when room is full then refuse",
+      "why": "a partial write is never kept"
+    },
+    {
+      "id": "REQ-005",
+      "when": [
+        {
+          "field": "boundary",
+          "op": "is",
+          "value": "ask"
+        }
+      ],
+      "then": "ask",
+      "says": "when boundary is ask then ask",
+      "why": "it enforces INV-005"
+    },
+    {
+      "id": "REQ-006",
+      "when": [
+        {
+          "field": "boundary",
+          "op": "is",
+          "value": "hashonly"
+        }
+      ],
+      "then": "storehash",
+      "says": "when boundary is hashonly then storehash",
+      "why": "it enforces INV-003"
+    },
+    {
+      "id": "REQ-007",
+      "when": [
+        {
+          "field": "boundary",
+          "op": "is",
+          "value": "allow"
+        }
+      ],
+      "then": "store",
+      "says": "when boundary is allow then store",
+      "why": "the Boundary allowed it"
+    }
+  ],
+  "otherwise": "refuse",
+  "properties": [
+    {
+      "id": "INV-001",
+      "kind": "always",
+      "when": [
+        {
+          "field": "address",
+          "op": "is",
+          "value": "mismatch"
+        }
+      ],
+      "then": "refuse",
+      "says": "always when address is mismatch then refuse",
+      "why": "a value filed under an address it does not re-derive to could stand in for another"
+    },
+    {
+      "id": "INV-002",
+      "kind": "always",
+      "when": [
+        {
+          "field": "boundary",
+          "op": "is",
+          "value": "deny"
+        }
+      ],
+      "then": "refuse",
+      "says": "always when boundary is deny then refuse",
+      "why": "the vault never keeps what the Boundary refused"
+    },
+    {
+      "id": "INV-003",
+      "kind": "never",
+      "when": [
+        {
+          "field": "boundary",
+          "op": "is",
+          "value": "hashonly"
+        }
+      ],
+      "then": "store",
+      "says": "never when boundary is hashonly then store",
+      "why": "regulated and restricted data is never kept as a value"
+    },
+    {
+      "id": "INV-004",
+      "kind": "never",
+      "when": [
+        {
+          "field": "key",
+          "op": "is",
+          "value": "missing"
+        }
+      ],
+      "then": "store",
+      "says": "never when key is missing then store",
+      "why": "nothing is ever written in the clear"
+    },
+    {
+      "id": "INV-005",
+      "kind": "never",
+      "when": [
+        {
+          "field": "boundary",
+          "op": "is",
+          "value": "ask"
+        }
+      ],
+      "then": "store",
+      "says": "never when boundary is ask then store",
+      "why": "nothing waiting on the owner is kept before they approve"
+    }
+  ],
+  "examples": [
+    {
+      "request": "allow present derived ok",
+      "response": "store"
+    },
+    {
+      "request": "hashonly present derived ok",
+      "response": "storehash"
+    },
+    {
+      "request": "ask present derived ok",
+      "response": "ask"
+    },
+    {
+      "request": "deny present derived ok",
+      "response": "refuse"
+    },
+    {
+      "request": "allow present mismatch ok",
+      "response": "refuse"
+    },
+    {
+      "request": "allow missing derived ok",
+      "response": "refuse"
+    },
+    {
+      "request": "allow present derived full",
+      "response": "refuse"
+    },
+    {
+      "request": "hashonly missing derived ok",
+      "response": "refuse"
+    }
+  ],
+  "schema": "prism/spec/1",
+  "actors": [],
+  "meanings": {
+    "store": "seal and keep the value at its address",
+    "storehash": "keep only the hash and a pointer to the original",
+    "ask": "the owner must approve first",
+    "refuse": "keep nothing"
+  },
+  "otherwiseWhy": "keep nothing by default",
+  "limits": [
+    "It does not compute the address or seal the bytes; the adapter does that with WebCrypto and reports the result.",
+    "It does not ask the owner; ask means the adapter must get approval and then ask the Boundary again.",
+    "Storage being made persistent is reported, not required: a value is kept even if the browser may evict it."
+  ]
+}

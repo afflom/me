@@ -1,0 +1,203 @@
+\begin{lexlean}{PrismVaultRestoreProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismVaultRestore}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: restoreBreaksInv001,
+  parameters: [request : PrismVaultRestore::RestoreRequest],
+  result: Bool,
+  body: ((((((((project request key) <? 2) && ((project request format) <? 2)) && ((project request seal) <? 2)) && ((project request address) <? 2)) && ((project request kind) <? 2)) && ((project request address) =? (PrismVaultRestore::restoreAddressMismatch))) && (not ((PrismVaultRestore::restoreJudge request) =? (PrismVaultRestore::restoreAnswerRefuse))))
+}
+
+theorem{
+  name: restoreInv001Holds,
+  parameters: [request : PrismVaultRestore::RestoreRequest],
+  statement: ((restoreBreaksInv001 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismVaultRestore::restoreAddressDerived,
+      PrismVaultRestore::restoreAddressMismatch,
+      PrismVaultRestore::restoreAnswerHashonly,
+      PrismVaultRestore::restoreAnswerRefuse,
+      PrismVaultRestore::restoreAnswerRestore,
+      PrismVaultRestore::restoreFormatKnown,
+      PrismVaultRestore::restoreFormatUnknown,
+      PrismVaultRestore::restoreJudge,
+      PrismVaultRestore::restoreKeyMissing,
+      PrismVaultRestore::restoreKeyPresent,
+      PrismVaultRestore::restoreKindHash,
+      PrismVaultRestore::restoreKindValue,
+      PrismVaultRestore::restoreRule1,
+      PrismVaultRestore::restoreRule2,
+      PrismVaultRestore::restoreRule3,
+      PrismVaultRestore::restoreRule4,
+      PrismVaultRestore::restoreRule5,
+      PrismVaultRestore::restoreRule6,
+      PrismVaultRestore::restoreSealBroken,
+      PrismVaultRestore::restoreSealValid,
+      restoreBreaksInv001
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: restoreBreaksInv002,
+  parameters: [request : PrismVaultRestore::RestoreRequest],
+  result: Bool,
+  body: ((((((((project request key) <? 2) && ((project request format) <? 2)) && ((project request seal) <? 2)) && ((project request address) <? 2)) && ((project request kind) <? 2)) && ((project request seal) =? (PrismVaultRestore::restoreSealBroken))) && (not ((PrismVaultRestore::restoreJudge request) =? (PrismVaultRestore::restoreAnswerRefuse))))
+}
+
+theorem{
+  name: restoreInv002Holds,
+  parameters: [request : PrismVaultRestore::RestoreRequest],
+  statement: ((restoreBreaksInv002 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismVaultRestore::restoreAddressDerived,
+      PrismVaultRestore::restoreAddressMismatch,
+      PrismVaultRestore::restoreAnswerHashonly,
+      PrismVaultRestore::restoreAnswerRefuse,
+      PrismVaultRestore::restoreAnswerRestore,
+      PrismVaultRestore::restoreFormatKnown,
+      PrismVaultRestore::restoreFormatUnknown,
+      PrismVaultRestore::restoreJudge,
+      PrismVaultRestore::restoreKeyMissing,
+      PrismVaultRestore::restoreKeyPresent,
+      PrismVaultRestore::restoreKindHash,
+      PrismVaultRestore::restoreKindValue,
+      PrismVaultRestore::restoreRule1,
+      PrismVaultRestore::restoreRule2,
+      PrismVaultRestore::restoreRule3,
+      PrismVaultRestore::restoreRule4,
+      PrismVaultRestore::restoreRule5,
+      PrismVaultRestore::restoreRule6,
+      PrismVaultRestore::restoreSealBroken,
+      PrismVaultRestore::restoreSealValid,
+      restoreBreaksInv002
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: restoreBreaksInv003,
+  parameters: [request : PrismVaultRestore::RestoreRequest],
+  result: Bool,
+  body: ((((((((project request key) <? 2) && ((project request format) <? 2)) && ((project request seal) <? 2)) && ((project request address) <? 2)) && ((project request kind) <? 2)) && ((project request key) =? (PrismVaultRestore::restoreKeyMissing))) && (not ((PrismVaultRestore::restoreJudge request) =? (PrismVaultRestore::restoreAnswerRefuse))))
+}
+
+theorem{
+  name: restoreInv003Holds,
+  parameters: [request : PrismVaultRestore::RestoreRequest],
+  statement: ((restoreBreaksInv003 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismVaultRestore::restoreAddressDerived,
+      PrismVaultRestore::restoreAddressMismatch,
+      PrismVaultRestore::restoreAnswerHashonly,
+      PrismVaultRestore::restoreAnswerRefuse,
+      PrismVaultRestore::restoreAnswerRestore,
+      PrismVaultRestore::restoreFormatKnown,
+      PrismVaultRestore::restoreFormatUnknown,
+      PrismVaultRestore::restoreJudge,
+      PrismVaultRestore::restoreKeyMissing,
+      PrismVaultRestore::restoreKeyPresent,
+      PrismVaultRestore::restoreKindHash,
+      PrismVaultRestore::restoreKindValue,
+      PrismVaultRestore::restoreRule1,
+      PrismVaultRestore::restoreRule2,
+      PrismVaultRestore::restoreRule3,
+      PrismVaultRestore::restoreRule4,
+      PrismVaultRestore::restoreRule5,
+      PrismVaultRestore::restoreRule6,
+      PrismVaultRestore::restoreSealBroken,
+      PrismVaultRestore::restoreSealValid,
+      restoreBreaksInv003
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: restoreBreaksInv004,
+  parameters: [request : PrismVaultRestore::RestoreRequest],
+  result: Bool,
+  body: ((((((((project request key) <? 2) && ((project request format) <? 2)) && ((project request seal) <? 2)) && ((project request address) <? 2)) && ((project request kind) <? 2)) && ((project request format) =? (PrismVaultRestore::restoreFormatUnknown))) && ((PrismVaultRestore::restoreJudge request) =? (PrismVaultRestore::restoreAnswerRestore)))
+}
+
+theorem{
+  name: restoreInv004Holds,
+  parameters: [request : PrismVaultRestore::RestoreRequest],
+  statement: ((restoreBreaksInv004 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismVaultRestore::restoreAddressDerived,
+      PrismVaultRestore::restoreAddressMismatch,
+      PrismVaultRestore::restoreAnswerHashonly,
+      PrismVaultRestore::restoreAnswerRefuse,
+      PrismVaultRestore::restoreAnswerRestore,
+      PrismVaultRestore::restoreFormatKnown,
+      PrismVaultRestore::restoreFormatUnknown,
+      PrismVaultRestore::restoreJudge,
+      PrismVaultRestore::restoreKeyMissing,
+      PrismVaultRestore::restoreKeyPresent,
+      PrismVaultRestore::restoreKindHash,
+      PrismVaultRestore::restoreKindValue,
+      PrismVaultRestore::restoreRule1,
+      PrismVaultRestore::restoreRule2,
+      PrismVaultRestore::restoreRule3,
+      PrismVaultRestore::restoreRule4,
+      PrismVaultRestore::restoreRule5,
+      PrismVaultRestore::restoreRule6,
+      PrismVaultRestore::restoreSealBroken,
+      PrismVaultRestore::restoreSealValid,
+      restoreBreaksInv004
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: restoreBreaksInv005,
+  parameters: [request : PrismVaultRestore::RestoreRequest],
+  result: Bool,
+  body: ((((((((project request key) <? 2) && ((project request format) <? 2)) && ((project request seal) <? 2)) && ((project request address) <? 2)) && ((project request kind) <? 2)) && ((project request kind) =? (PrismVaultRestore::restoreKindHash))) && ((PrismVaultRestore::restoreJudge request) =? (PrismVaultRestore::restoreAnswerRestore)))
+}
+
+theorem{
+  name: restoreInv005Holds,
+  parameters: [request : PrismVaultRestore::RestoreRequest],
+  statement: ((restoreBreaksInv005 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismVaultRestore::restoreAddressDerived,
+      PrismVaultRestore::restoreAddressMismatch,
+      PrismVaultRestore::restoreAnswerHashonly,
+      PrismVaultRestore::restoreAnswerRefuse,
+      PrismVaultRestore::restoreAnswerRestore,
+      PrismVaultRestore::restoreFormatKnown,
+      PrismVaultRestore::restoreFormatUnknown,
+      PrismVaultRestore::restoreJudge,
+      PrismVaultRestore::restoreKeyMissing,
+      PrismVaultRestore::restoreKeyPresent,
+      PrismVaultRestore::restoreKindHash,
+      PrismVaultRestore::restoreKindValue,
+      PrismVaultRestore::restoreRule1,
+      PrismVaultRestore::restoreRule2,
+      PrismVaultRestore::restoreRule3,
+      PrismVaultRestore::restoreRule4,
+      PrismVaultRestore::restoreRule5,
+      PrismVaultRestore::restoreRule6,
+      PrismVaultRestore::restoreSealBroken,
+      PrismVaultRestore::restoreSealValid,
+      restoreBreaksInv005
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
