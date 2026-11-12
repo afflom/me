@@ -32,6 +32,12 @@ model does not sanction.
 | `GG-02` | `build` | The Google connection moves between stages only as PrismGoogleLink answers: only the owner grants, a client for another origin is never used, and the kill switch or a forget revokes every grant |
 | `GG-03` | `build` | Mail and calendar items read from Google reach only the browser vault, through the detectors, the router and the Boundary, by GET to the two API hosts with the token only in the Authorization header |
 
+## page
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PG-01` | `build` | The page keeps, reads and answers only through the verified app: a fact is kept only when the Boundary and the vault allow it, nothing is kept while halted, and every check is the root's own answer |
+
 ## prism
 
 | ID | Level | Statement |
