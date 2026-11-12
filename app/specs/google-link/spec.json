@@ -1,0 +1,525 @@
+{
+  "name": "prism-google-link",
+  "title": "Prism Google Link",
+  "purpose": "Decides the next stage of the owner's Google connection on one event, so that only the Prism's operator provisions the client, only the owner grants access, a client whose origin drifted from the model is provisioned again, and the kill switch or the owner's forget ends every grant.",
+  "fields": [
+    {
+      "name": "stage",
+      "kind": "choice",
+      "values": [
+        "unprovisioned",
+        "registered",
+        "granted",
+        "syncing",
+        "revoked"
+      ],
+      "means": "the connection's current stage: no client yet, client registered for this origin, owner granted reading, reading in progress, or grant withdrawn"
+    },
+    {
+      "name": "event",
+      "kind": "choice",
+      "values": [
+        "provision",
+        "consent",
+        "renew",
+        "sync",
+        "forget",
+        "halt"
+      ],
+      "means": "what happened: the client was provisioned, the owner consented, the page renewed its token silently, the page read, the grant was forgotten, or the kill switch was pressed"
+    },
+    {
+      "name": "actor",
+      "kind": "choice",
+      "values": [
+        "prism",
+        "operator",
+        "owner",
+        "other"
+      ],
+      "means": "who caused the event: the page itself, the Prism's provisioning operator, the owner, or anyone else"
+    },
+    {
+      "name": "origin",
+      "kind": "choice",
+      "values": [
+        "matches",
+        "differs"
+      ],
+      "means": "whether the client's authorized origin equals the live origin the model names"
+    },
+    {
+      "name": "halted",
+      "kind": "choice",
+      "values": [
+        "no",
+        "yes"
+      ],
+      "means": "whether the owner has pressed the kill switch"
+    }
+  ],
+  "outcomes": [
+    "unprovisioned",
+    "registered",
+    "granted",
+    "syncing",
+    "revoked",
+    "refuse"
+  ],
+  "rules": [
+    {
+      "id": "REQ-001",
+      "when": [
+        {
+          "field": "halted",
+          "op": "is",
+          "value": "yes"
+        }
+      ],
+      "then": "revoked",
+      "says": "when halted is yes then revoked",
+      "why": "stop means stop (kill switch)"
+    },
+    {
+      "id": "REQ-002",
+      "when": [
+        {
+          "field": "event",
+          "op": "is",
+          "value": "halt"
+        }
+      ],
+      "then": "revoked",
+      "says": "when event is halt then revoked",
+      "why": "the kill switch ends every grant"
+    },
+    {
+      "id": "REQ-003",
+      "when": [
+        {
+          "field": "origin",
+          "op": "is",
+          "value": "differs"
+        }
+      ],
+      "then": "unprovisioned",
+      "says": "when origin is differs then unprovisioned",
+      "why": "configuration comes from the model; drift is provisioned again"
+    },
+    {
+      "id": "REQ-004",
+      "when": [
+        {
+          "field": "event",
+          "op": "is",
+          "value": "forget"
+        },
+        {
+          "field": "actor",
+          "op": "is",
+          "value": "owner"
+        }
+      ],
+      "then": "revoked",
+      "says": "when event is forget and actor is owner then revoked",
+      "why": "the owner may forget at any time"
+    },
+    {
+      "id": "REQ-005",
+      "when": [
+        {
+          "field": "event",
+          "op": "is",
+          "value": "forget"
+        },
+        {
+          "field": "actor",
+          "op": "is",
+          "value": "prism"
+        }
+      ],
+      "then": "revoked",
+      "says": "when event is forget and actor is prism then revoked",
+      "why": "the page forgets a grant Google stopped accepting"
+    },
+    {
+      "id": "REQ-006",
+      "when": [
+        {
+          "field": "event",
+          "op": "is",
+          "value": "provision"
+        },
+        {
+          "field": "actor",
+          "op": "is",
+          "value": "operator"
+        },
+        {
+          "field": "stage",
+          "op": "is",
+          "value": "unprovisioned"
+        }
+      ],
+      "then": "registered",
+      "says": "when event is provision and actor is operator and stage is unprovisioned then registered",
+      "why": "the operator provisions the client from the model"
+    },
+    {
+      "id": "REQ-007",
+      "when": [
+        {
+          "field": "event",
+          "op": "is",
+          "value": "consent"
+        },
+        {
+          "field": "actor",
+          "op": "is",
+          "value": "owner"
+        },
+        {
+          "field": "stage",
+          "op": "is",
+          "value": "registered"
+        }
+      ],
+      "then": "granted",
+      "says": "when event is consent and actor is owner and stage is registered then granted",
+      "why": "only the owner grants"
+    },
+    {
+      "id": "REQ-008",
+      "when": [
+        {
+          "field": "event",
+          "op": "is",
+          "value": "consent"
+        },
+        {
+          "field": "actor",
+          "op": "is",
+          "value": "owner"
+        },
+        {
+          "field": "stage",
+          "op": "is",
+          "value": "revoked"
+        }
+      ],
+      "then": "granted",
+      "says": "when event is consent and actor is owner and stage is revoked then granted",
+      "why": "only the owner restores a grant"
+    },
+    {
+      "id": "REQ-009",
+      "when": [
+        {
+          "field": "event",
+          "op": "is",
+          "value": "renew"
+        },
+        {
+          "field": "actor",
+          "op": "is",
+          "value": "prism"
+        },
+        {
+          "field": "stage",
+          "op": "is",
+          "value": "granted"
+        }
+      ],
+      "then": "granted",
+      "says": "when event is renew and actor is prism and stage is granted then granted",
+      "why": "a silent renewal keeps the owner's grant"
+    },
+    {
+      "id": "REQ-010",
+      "when": [
+        {
+          "field": "event",
+          "op": "is",
+          "value": "renew"
+        },
+        {
+          "field": "actor",
+          "op": "is",
+          "value": "prism"
+        },
+        {
+          "field": "stage",
+          "op": "is",
+          "value": "syncing"
+        }
+      ],
+      "then": "syncing",
+      "says": "when event is renew and actor is prism and stage is syncing then syncing",
+      "why": "a silent renewal keeps the owner's grant"
+    },
+    {
+      "id": "REQ-011",
+      "when": [
+        {
+          "field": "event",
+          "op": "is",
+          "value": "sync"
+        },
+        {
+          "field": "actor",
+          "op": "is",
+          "value": "prism"
+        },
+        {
+          "field": "stage",
+          "op": "is",
+          "value": "granted"
+        }
+      ],
+      "then": "syncing",
+      "says": "when event is sync and actor is prism and stage is granted then syncing",
+      "why": "the page reads under the owner's grant"
+    },
+    {
+      "id": "REQ-012",
+      "when": [
+        {
+          "field": "event",
+          "op": "is",
+          "value": "sync"
+        },
+        {
+          "field": "actor",
+          "op": "is",
+          "value": "prism"
+        },
+        {
+          "field": "stage",
+          "op": "is",
+          "value": "syncing"
+        }
+      ],
+      "then": "syncing",
+      "says": "when event is sync and actor is prism and stage is syncing then syncing",
+      "why": "the page keeps reading under the owner's grant"
+    }
+  ],
+  "otherwise": "refuse",
+  "properties": [
+    {
+      "id": "INV-001",
+      "kind": "always",
+      "when": [
+        {
+          "field": "halted",
+          "op": "is",
+          "value": "yes"
+        }
+      ],
+      "then": "revoked",
+      "says": "always when halted is yes then revoked",
+      "why": "when the owner presses the kill switch every grant ends (constitution P7)"
+    },
+    {
+      "id": "INV-002",
+      "kind": "never",
+      "when": [
+        {
+          "field": "actor",
+          "op": "is not",
+          "value": "owner"
+        },
+        {
+          "field": "stage",
+          "op": "is",
+          "value": "registered"
+        }
+      ],
+      "then": "granted",
+      "says": "never when actor is not owner and stage is registered then granted",
+      "why": "no one but the owner grants access to the owner's mail and calendar"
+    },
+    {
+      "id": "INV-003",
+      "kind": "never",
+      "when": [
+        {
+          "field": "actor",
+          "op": "is not",
+          "value": "owner"
+        },
+        {
+          "field": "stage",
+          "op": "is",
+          "value": "revoked"
+        }
+      ],
+      "then": "granted",
+      "says": "never when actor is not owner and stage is revoked then granted",
+      "why": "no one but the owner restores a forgotten grant"
+    },
+    {
+      "id": "INV-004",
+      "kind": "never",
+      "when": [
+        {
+          "field": "actor",
+          "op": "is",
+          "value": "operator"
+        }
+      ],
+      "then": "syncing",
+      "says": "never when actor is operator then syncing",
+      "why": "the operator provisions the client but never reads"
+    },
+    {
+      "id": "INV-005",
+      "kind": "never",
+      "when": [
+        {
+          "field": "actor",
+          "op": "is",
+          "value": "other"
+        }
+      ],
+      "then": "syncing",
+      "says": "never when actor is other then syncing",
+      "why": "no one else drives the connection"
+    },
+    {
+      "id": "INV-006",
+      "kind": "never",
+      "when": [
+        {
+          "field": "stage",
+          "op": "is",
+          "value": "unprovisioned"
+        }
+      ],
+      "then": "granted",
+      "says": "never when stage is unprovisioned then granted",
+      "why": "no grant without a client provisioned from the model"
+    },
+    {
+      "id": "INV-007",
+      "kind": "never",
+      "when": [
+        {
+          "field": "stage",
+          "op": "is",
+          "value": "revoked"
+        },
+        {
+          "field": "actor",
+          "op": "is",
+          "value": "prism"
+        }
+      ],
+      "then": "syncing",
+      "says": "never when stage is revoked and actor is prism then syncing",
+      "why": "a forgotten grant is never resumed by the page itself"
+    },
+    {
+      "id": "INV-008",
+      "kind": "never",
+      "when": [
+        {
+          "field": "origin",
+          "op": "is",
+          "value": "differs"
+        }
+      ],
+      "then": "syncing",
+      "says": "never when origin is differs then syncing",
+      "why": "a client provisioned for another origin is never used"
+    },
+    {
+      "id": "INV-009",
+      "kind": "never",
+      "when": [
+        {
+          "field": "origin",
+          "op": "is",
+          "value": "differs"
+        }
+      ],
+      "then": "granted",
+      "says": "never when origin is differs then granted",
+      "why": "a client provisioned for another origin is never used"
+    }
+  ],
+  "examples": [
+    {
+      "request": "unprovisioned provision operator matches no",
+      "response": "registered"
+    },
+    {
+      "request": "unprovisioned provision owner matches no",
+      "response": "refuse"
+    },
+    {
+      "request": "registered consent owner matches no",
+      "response": "granted"
+    },
+    {
+      "request": "registered consent prism matches no",
+      "response": "refuse"
+    },
+    {
+      "request": "granted sync prism matches no",
+      "response": "syncing"
+    },
+    {
+      "request": "syncing renew prism matches no",
+      "response": "syncing"
+    },
+    {
+      "request": "syncing forget owner matches no",
+      "response": "revoked"
+    },
+    {
+      "request": "revoked renew prism matches no",
+      "response": "refuse"
+    },
+    {
+      "request": "revoked consent owner matches no",
+      "response": "granted"
+    },
+    {
+      "request": "granted sync prism differs no",
+      "response": "unprovisioned"
+    },
+    {
+      "request": "syncing sync prism matches yes",
+      "response": "revoked"
+    },
+    {
+      "request": "granted halt owner matches no",
+      "response": "revoked"
+    },
+    {
+      "request": "unprovisioned consent owner matches no",
+      "response": "refuse"
+    },
+    {
+      "request": "granted forget prism matches no",
+      "response": "revoked"
+    }
+  ],
+  "schema": "prism/spec/1",
+  "actors": [],
+  "meanings": {
+    "unprovisioned": "the client must be provisioned (again) from the model",
+    "registered": "a client exists for this origin; the owner has not granted reading",
+    "granted": "the owner granted reading; the page may read",
+    "syncing": "the page is reading",
+    "revoked": "every grant is dropped; only the owner's consent restores it",
+    "refuse": "the event does not apply; the stage stays as it is"
+  },
+  "otherwiseWhy": "deny by default",
+  "limits": [
+    "It does not create the client; the operator's provisioning recipe does, from the model, in a browser where the owner is signed in to Google.",
+    "Google itself requires a signed-in person to accept its Cloud terms once and to press its consent button; the actor field records that act, it cannot stand in for it.",
+    "The token's freshness and each call are decided by PrismGoogle, not here."
+  ]
+}

@@ -12,6 +12,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { DEFAULT_REGISTRY } from "./register.mjs";
 import { prepareWorkerRuntime } from "./worker-runtime.mjs";
+import { API as GOOGLE_API } from "../site/google/google.mjs";
 
 const site = process.argv[2] ?? "site";
 await prepareWorkerRuntime(site, fileURLToPath(new URL("../try/vendor", import.meta.url)));
@@ -435,6 +436,8 @@ const fill = {
   ACCOUNTS: escape(accounts.href),
   ACCOUNTS_ORIGIN: accounts.origin,
   UNSPLASH_ORIGIN: unsplashOrigin,
+  // The two Google APIs the Google connection reads (site/google/google.mjs).
+  GOOGLE_API_ORIGINS: [...new Set(Object.values(GOOGLE_API).map((root) => new URL(root).origin))].join(" "),
   OG_IMAGE: escape(new URL("og.png", live).href),
   OG_ALT: escape(`${meta.name}: ${meta.purpose}`),
   NAME: escape(meta.name),

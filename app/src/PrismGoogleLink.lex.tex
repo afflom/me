@@ -1,0 +1,391 @@
+\begin{lexlean}{PrismGoogleLink}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: googleLinkStageUnprovisioned, parameters: [], result: Nat, body: 0}
+
+definition{name: googleLinkStageRegistered, parameters: [], result: Nat, body: 1}
+
+definition{name: googleLinkStageGranted, parameters: [], result: Nat, body: 2}
+
+definition{name: googleLinkStageSyncing, parameters: [], result: Nat, body: 3}
+
+definition{name: googleLinkStageRevoked, parameters: [], result: Nat, body: 4}
+
+definition{name: googleLinkEventProvision, parameters: [], result: Nat, body: 0}
+
+definition{name: googleLinkEventConsent, parameters: [], result: Nat, body: 1}
+
+definition{name: googleLinkEventRenew, parameters: [], result: Nat, body: 2}
+
+definition{name: googleLinkEventSync, parameters: [], result: Nat, body: 3}
+
+definition{name: googleLinkEventForget, parameters: [], result: Nat, body: 4}
+
+definition{name: googleLinkEventHalt, parameters: [], result: Nat, body: 5}
+
+definition{name: googleLinkActorPrism, parameters: [], result: Nat, body: 0}
+
+definition{name: googleLinkActorOperator, parameters: [], result: Nat, body: 1}
+
+definition{name: googleLinkActorOwner, parameters: [], result: Nat, body: 2}
+
+definition{name: googleLinkActorOther, parameters: [], result: Nat, body: 3}
+
+definition{name: googleLinkOriginMatches, parameters: [], result: Nat, body: 0}
+
+definition{name: googleLinkOriginDiffers, parameters: [], result: Nat, body: 1}
+
+definition{name: googleLinkHaltedNo, parameters: [], result: Nat, body: 0}
+
+definition{name: googleLinkHaltedYes, parameters: [], result: Nat, body: 1}
+
+definition{name: googleLinkAnswerUnprovisioned, parameters: [], result: Nat, body: 0}
+
+definition{name: googleLinkAnswerRegistered, parameters: [], result: Nat, body: 1}
+
+definition{name: googleLinkAnswerGranted, parameters: [], result: Nat, body: 2}
+
+definition{name: googleLinkAnswerSyncing, parameters: [], result: Nat, body: 3}
+
+definition{name: googleLinkAnswerRevoked, parameters: [], result: Nat, body: 4}
+
+definition{name: googleLinkAnswerRefuse, parameters: [], result: Nat, body: 5}
+
+structure{
+  name: GoogleLinkRequest,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: stage, type: Nat},
+    {name: event, type: Nat},
+    {name: actor, type: Nat},
+    {name: origin, type: Nat},
+    {name: halted, type: Nat}
+  ]
+}
+
+definition{
+  name: googleLinkByteAt,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some b => (ctor Option.some [Nat] (prim to_nat b : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleLinkDigitsValue,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.some [Nat] acc)
+    | Nat.succ rest => (match (googleLinkByteAt s i)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (googleLinkDigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: googleLinkParseDigits,
+  parameters: [s : Bytes],
+  result: (Option Nat),
+  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (googleLinkByteAt s 0)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (googleLinkDigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleLinkParseNumber,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (googleLinkParseDigits value),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleLinkParseStage,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x756e70726f766973696f6e6564 : Bool) then (ctor Option.some [Nat] (googleLinkStageUnprovisioned)) else (if (prim equal value 0x72656769737465726564 : Bool) then (ctor Option.some [Nat] (googleLinkStageRegistered)) else (if (prim equal value 0x6772616e746564 : Bool) then (ctor Option.some [Nat] (googleLinkStageGranted)) else (if (prim equal value 0x73796e63696e67 : Bool) then (ctor Option.some [Nat] (googleLinkStageSyncing)) else (if (prim equal value 0x7265766f6b6564 : Bool) then (ctor Option.some [Nat] (googleLinkStageRevoked)) else (ctor Option.none [Nat]))))))
+}
+
+definition{
+  name: googleLinkParseEvent,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x70726f766973696f6e : Bool) then (ctor Option.some [Nat] (googleLinkEventProvision)) else (if (prim equal value 0x636f6e73656e74 : Bool) then (ctor Option.some [Nat] (googleLinkEventConsent)) else (if (prim equal value 0x72656e6577 : Bool) then (ctor Option.some [Nat] (googleLinkEventRenew)) else (if (prim equal value 0x73796e63 : Bool) then (ctor Option.some [Nat] (googleLinkEventSync)) else (if (prim equal value 0x666f72676574 : Bool) then (ctor Option.some [Nat] (googleLinkEventForget)) else (if (prim equal value 0x68616c74 : Bool) then (ctor Option.some [Nat] (googleLinkEventHalt)) else (ctor Option.none [Nat])))))))
+}
+
+definition{
+  name: googleLinkParseActor,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x707269736d : Bool) then (ctor Option.some [Nat] (googleLinkActorPrism)) else (if (prim equal value 0x6f70657261746f72 : Bool) then (ctor Option.some [Nat] (googleLinkActorOperator)) else (if (prim equal value 0x6f776e6572 : Bool) then (ctor Option.some [Nat] (googleLinkActorOwner)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (googleLinkActorOther)) else (ctor Option.none [Nat])))))
+}
+
+definition{
+  name: googleLinkParseOrigin,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6d617463686573 : Bool) then (ctor Option.some [Nat] (googleLinkOriginMatches)) else (if (prim equal value 0x64696666657273 : Bool) then (ctor Option.some [Nat] (googleLinkOriginDiffers)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: googleLinkParseHalted,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (googleLinkHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (googleLinkHaltedYes)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: googleLinkSliceOf,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: googleLinkFieldEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match (googleLinkByteAt s i)
+      | Option.none => i
+      | Option.some d => (if (d =? 32) then i else (googleLinkFieldEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: googleLinkDecodeField5,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat],
+  result: (Option GoogleLinkRequest),
+  body: (let e : Nat := (googleLinkFieldEnd s start (Foundation.Bytes::byteLength s)); (match (googleLinkParseHalted (googleLinkSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [GoogleLinkRequest])
+    | Option.some v5 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [GoogleLinkRequest] (record GoogleLinkRequest {stage := v1, event := v2, actor := v3, origin := v4, halted := v5})) else (ctor Option.none [GoogleLinkRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleLinkDecodeField4,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
+  result: (Option GoogleLinkRequest),
+  body: (let e : Nat := (googleLinkFieldEnd s start (Foundation.Bytes::byteLength s)); (match (googleLinkParseOrigin (googleLinkSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [GoogleLinkRequest])
+    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (googleLinkDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [GoogleLinkRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleLinkDecodeField3,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
+  result: (Option GoogleLinkRequest),
+  body: (let e : Nat := (googleLinkFieldEnd s start (Foundation.Bytes::byteLength s)); (match (googleLinkParseActor (googleLinkSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [GoogleLinkRequest])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (googleLinkDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [GoogleLinkRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleLinkDecodeField2,
+  parameters: [s : Bytes, start : Nat, v1 : Nat],
+  result: (Option GoogleLinkRequest),
+  body: (let e : Nat := (googleLinkFieldEnd s start (Foundation.Bytes::byteLength s)); (match (googleLinkParseEvent (googleLinkSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [GoogleLinkRequest])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (googleLinkDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [GoogleLinkRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleLinkDecodeField1,
+  parameters: [s : Bytes, start : Nat],
+  result: (Option GoogleLinkRequest),
+  body: (let e : Nat := (googleLinkFieldEnd s start (Foundation.Bytes::byteLength s)); (match (googleLinkParseStage (googleLinkSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [GoogleLinkRequest])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (googleLinkDecodeField2 s (e + 1) v1) else (ctor Option.none [GoogleLinkRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleLinkRule1,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: ((project request halted) =? (googleLinkHaltedYes))
+}
+
+definition{
+  name: googleLinkRule2,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: ((project request event) =? (googleLinkEventHalt))
+}
+
+definition{
+  name: googleLinkRule3,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: ((project request origin) =? (googleLinkOriginDiffers))
+}
+
+definition{
+  name: googleLinkRule4,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: (((project request event) =? (googleLinkEventForget)) && ((project request actor) =? (googleLinkActorOwner)))
+}
+
+definition{
+  name: googleLinkRule4Misses,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: ((((project request event) <? (googleLinkEventForget)) || ((googleLinkEventForget) <? (project request event))) || (((project request actor) <? (googleLinkActorOwner)) || ((googleLinkActorOwner) <? (project request actor))))
+}
+
+definition{
+  name: googleLinkRule5,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: (((project request event) =? (googleLinkEventForget)) && ((project request actor) =? (googleLinkActorPrism)))
+}
+
+definition{
+  name: googleLinkRule5Misses,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: ((((project request event) <? (googleLinkEventForget)) || ((googleLinkEventForget) <? (project request event))) || (((project request actor) <? (googleLinkActorPrism)) || ((googleLinkActorPrism) <? (project request actor))))
+}
+
+definition{
+  name: googleLinkRule6,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: ((((project request event) =? (googleLinkEventProvision)) && ((project request actor) =? (googleLinkActorOperator))) && ((project request stage) =? (googleLinkStageUnprovisioned)))
+}
+
+definition{
+  name: googleLinkRule6Misses,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: (((((project request event) <? (googleLinkEventProvision)) || ((googleLinkEventProvision) <? (project request event))) || (((project request actor) <? (googleLinkActorOperator)) || ((googleLinkActorOperator) <? (project request actor)))) || (((project request stage) <? (googleLinkStageUnprovisioned)) || ((googleLinkStageUnprovisioned) <? (project request stage))))
+}
+
+definition{
+  name: googleLinkRule7,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: ((((project request event) =? (googleLinkEventConsent)) && ((project request actor) =? (googleLinkActorOwner))) && ((project request stage) =? (googleLinkStageRegistered)))
+}
+
+definition{
+  name: googleLinkRule7Misses,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: (((((project request event) <? (googleLinkEventConsent)) || ((googleLinkEventConsent) <? (project request event))) || (((project request actor) <? (googleLinkActorOwner)) || ((googleLinkActorOwner) <? (project request actor)))) || (((project request stage) <? (googleLinkStageRegistered)) || ((googleLinkStageRegistered) <? (project request stage))))
+}
+
+definition{
+  name: googleLinkRule8,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: ((((project request event) =? (googleLinkEventConsent)) && ((project request actor) =? (googleLinkActorOwner))) && ((project request stage) =? (googleLinkStageRevoked)))
+}
+
+definition{
+  name: googleLinkRule8Misses,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: (((((project request event) <? (googleLinkEventConsent)) || ((googleLinkEventConsent) <? (project request event))) || (((project request actor) <? (googleLinkActorOwner)) || ((googleLinkActorOwner) <? (project request actor)))) || (((project request stage) <? (googleLinkStageRevoked)) || ((googleLinkStageRevoked) <? (project request stage))))
+}
+
+definition{
+  name: googleLinkRule9,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: ((((project request event) =? (googleLinkEventRenew)) && ((project request actor) =? (googleLinkActorPrism))) && ((project request stage) =? (googleLinkStageGranted)))
+}
+
+definition{
+  name: googleLinkRule9Misses,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: (((((project request event) <? (googleLinkEventRenew)) || ((googleLinkEventRenew) <? (project request event))) || (((project request actor) <? (googleLinkActorPrism)) || ((googleLinkActorPrism) <? (project request actor)))) || (((project request stage) <? (googleLinkStageGranted)) || ((googleLinkStageGranted) <? (project request stage))))
+}
+
+definition{
+  name: googleLinkRule10,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: ((((project request event) =? (googleLinkEventRenew)) && ((project request actor) =? (googleLinkActorPrism))) && ((project request stage) =? (googleLinkStageSyncing)))
+}
+
+definition{
+  name: googleLinkRule10Misses,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: (((((project request event) <? (googleLinkEventRenew)) || ((googleLinkEventRenew) <? (project request event))) || (((project request actor) <? (googleLinkActorPrism)) || ((googleLinkActorPrism) <? (project request actor)))) || (((project request stage) <? (googleLinkStageSyncing)) || ((googleLinkStageSyncing) <? (project request stage))))
+}
+
+definition{
+  name: googleLinkRule11,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: ((((project request event) =? (googleLinkEventSync)) && ((project request actor) =? (googleLinkActorPrism))) && ((project request stage) =? (googleLinkStageGranted)))
+}
+
+definition{
+  name: googleLinkRule11Misses,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: (((((project request event) <? (googleLinkEventSync)) || ((googleLinkEventSync) <? (project request event))) || (((project request actor) <? (googleLinkActorPrism)) || ((googleLinkActorPrism) <? (project request actor)))) || (((project request stage) <? (googleLinkStageGranted)) || ((googleLinkStageGranted) <? (project request stage))))
+}
+
+definition{
+  name: googleLinkRule12,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: ((((project request event) =? (googleLinkEventSync)) && ((project request actor) =? (googleLinkActorPrism))) && ((project request stage) =? (googleLinkStageSyncing)))
+}
+
+definition{
+  name: googleLinkRule12Misses,
+  parameters: [request : GoogleLinkRequest],
+  result: Bool,
+  body: (((((project request event) <? (googleLinkEventSync)) || ((googleLinkEventSync) <? (project request event))) || (((project request actor) <? (googleLinkActorPrism)) || ((googleLinkActorPrism) <? (project request actor)))) || (((project request stage) <? (googleLinkStageSyncing)) || ((googleLinkStageSyncing) <? (project request stage))))
+}
+
+definition{
+  name: googleLinkJudge,
+  parameters: [request : GoogleLinkRequest],
+  result: Nat,
+  body: (if (googleLinkRule1 request) then (googleLinkAnswerRevoked) else (if (googleLinkRule2 request) then (googleLinkAnswerRevoked) else (if (googleLinkRule3 request) then (googleLinkAnswerUnprovisioned) else (if ((project request event) =? (googleLinkEventForget)) then (if ((project request actor) =? (googleLinkActorOwner)) then (googleLinkAnswerRevoked) else (if ((project request actor) =? (googleLinkActorPrism)) then (googleLinkAnswerRevoked) else (googleLinkAnswerRefuse))) else (if ((project request event) =? (googleLinkEventProvision)) then (if ((project request actor) =? (googleLinkActorOperator)) then (if ((project request stage) =? (googleLinkStageUnprovisioned)) then (googleLinkAnswerRegistered) else (googleLinkAnswerRefuse)) else (googleLinkAnswerRefuse)) else (if ((project request event) =? (googleLinkEventConsent)) then (if ((project request actor) =? (googleLinkActorOwner)) then (if ((project request stage) =? (googleLinkStageRegistered)) then (googleLinkAnswerGranted) else (if ((project request stage) =? (googleLinkStageRevoked)) then (googleLinkAnswerGranted) else (googleLinkAnswerRefuse))) else (googleLinkAnswerRefuse)) else (if ((project request event) =? (googleLinkEventRenew)) then (if ((project request actor) =? (googleLinkActorPrism)) then (if ((project request stage) =? (googleLinkStageGranted)) then (googleLinkAnswerGranted) else (if ((project request stage) =? (googleLinkStageSyncing)) then (googleLinkAnswerSyncing) else (googleLinkAnswerRefuse))) else (googleLinkAnswerRefuse)) else (if ((project request event) =? (googleLinkEventSync)) then (if ((project request actor) =? (googleLinkActorPrism)) then (if ((project request stage) =? (googleLinkStageGranted)) then (googleLinkAnswerSyncing) else (if ((project request stage) =? (googleLinkStageSyncing)) then (googleLinkAnswerSyncing) else (googleLinkAnswerRefuse))) else (googleLinkAnswerRefuse)) else (googleLinkAnswerRefuse)))))))))
+}
+
+definition{
+  name: googleLinkEncodeAnswer,
+  parameters: [code : Nat],
+  result: Bytes,
+  body: (if (code =? (googleLinkAnswerUnprovisioned)) then 0x756e70726f766973696f6e6564 else (if (code =? (googleLinkAnswerRegistered)) then 0x72656769737465726564 else (if (code =? (googleLinkAnswerGranted)) then 0x6772616e746564 else (if (code =? (googleLinkAnswerSyncing)) then 0x73796e63696e67 else (if (code =? (googleLinkAnswerRevoked)) then 0x7265766f6b6564 else (if (code =? (googleLinkAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964))))))
+}
+
+definition{
+  name: googleLinkDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (136 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (googleLinkDecodeField1 value 0)
+    | Option.none => 0x696e76616c6964
+    | Option.some request => (googleLinkEncodeAnswer (googleLinkJudge request)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

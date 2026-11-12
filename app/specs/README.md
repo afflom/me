@@ -12,6 +12,8 @@ questions, the examples and the guarantees in plain words.
 | `PrismChronology` | `chronology/` | Allen's 13 interval relations between two spans, in minutes of the week | 8 |
 | `PrismVaultStore` | `vault-store/` | whether the browser vault may keep one value: store, store a hash only, ask, or refuse | 5 |
 | `PrismVaultRestore` | `vault-restore/` | whether the browser vault may give one stored object back: restore, hash only, or refuse | 5 |
+| `PrismGoogle` | `google/` | whether the page may make one Gmail or Calendar API call: fetch, consent, ask, or refuse | 7 |
+| `PrismGoogleLink` | `google-link/` | the Google connection's next stage: unprovisioned, registered, granted, syncing, revoked, or refuse | 9 |
 
 Boundary guarantees: nothing moves while the Prism is halted; nothing goes to
 GitHub or the hosted verifier, even with approval; nothing a detector matched is
@@ -36,6 +38,9 @@ These modules are hand-patched after generation, so do not regenerate them from
 - Vault store and restore: every name carries its facet (`StoreRequest`,
   `storeDispatch`, `restoreJudge`, ...), because the one guest flattens every
   module into a single crate, where two names may not meet.
+- Google: the rule lists are rewritten as nested De Morgan conditions (as Boundary).
+- Google link: the judge is a tree on the event, because the flat chain is 12
+  rules deep and Lean's `split` gives up; the first-match answers are unchanged.
 - Chronology: the judge is a decision tree, because Lean's `split` gives up on
   an if-chain 13 or more deep.
 
