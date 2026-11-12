@@ -161,6 +161,11 @@ jobs:
         run: |
           set -euo pipefail
           NODE_PATH="$(npm root --global)" node test/r4/run.mjs
+      - name: The page keeps, refuses while halted and answers only through the app (PG-01)
+        shell: bash
+        run: |
+          set -euo pipefail
+          NODE_PATH="$(npm root --global)" node --test test/page/card.test.mjs
       - name: Keep the screens
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
