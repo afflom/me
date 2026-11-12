@@ -122,3 +122,11 @@ button.pr-go[aria-current="page"] { background: var(--secondary); color: var(--f
 @media (max-width: 839px) {
   .rail .result:has(#pr-out:empty) { display: none; }
 }
+/* A finger, not a cursor: every target at least 48 px. */
+@media (pointer: coarse) {
+  button.pr-go, .pr button, .pr-ask button, .pr-file, .pr input:not([type="checkbox"]):not([type="file"]) { min-height: 48px; min-width: 48px; }
+  .pr-ask textarea { min-height: 48px; height: 48px; }
+  .pr input[role="switch"] { width: 4.5rem; height: 48px; }
+  .pr input[role="switch"]::after { top: 4px; left: 4px; width: calc(48px - 10px); height: calc(48px - 10px); }
+  .pr input[role="switch"]:checked::after { transform: translateX(calc(4.5rem - 48px)); }
+}
