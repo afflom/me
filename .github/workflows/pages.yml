@@ -131,6 +131,14 @@ jobs:
           ' "$FINGERPRINT" "$ATTESTATION_URL"
           node bootstrap/page.mjs site
           node bootstrap/precache.mjs site
+      - name: No personal data in the assembled page (PV-01)
+        # The same gate `just vv` runs over the tracked tree, here over every
+        # file the page publishes. It names the file, line and kind of a
+        # finding, never the value, because this log is public.
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo run -q --locked -p xtask -- audit-pii site
       - name: Lighthouse at 100 on mobile, before anything is deployed
         shell: bash
         run: |
