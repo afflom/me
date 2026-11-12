@@ -99,9 +99,32 @@ fn privacy_pv_01() {
         format!("{{\"to\": \"someone{at}gmail.com\"}}\n"),
     )
     .expect("a planted asset");
+    // R4's pieces are skipped only when the page's R4 lock pins them by
+    // fingerprint (R4-01); an unpinned file beside them is still read.
+    let pinned = "ab".repeat(32);
+    let unpinned = "cd".repeat(32);
+    std::fs::create_dir_all(dir.join("r4").join("objects")).expect("a temporary r4 folder");
+    std::fs::write(
+        dir.join("r4").join("r4.lock.json"),
+        format!("{{\"pieces\": [{{\"fingerprint\": \"sha256-{pinned}\", \"bytes\": 1}}]}}\n"),
+    )
+    .expect("a lock");
+    for hex in [&pinned, &unpinned] {
+        std::fs::write(
+            dir.join("r4").join("objects").join(format!("{hex}.gz")),
+            format!("someone{at}gmail.com\n"),
+        )
+        .expect("a piece");
+    }
     let found = scan_dir(&root(), &dir).expect("the page is read");
     std::fs::remove_dir_all(&dir).expect("the temporary page is removed");
-    assert_eq!(found.len(), 1, "PV-01 missed the planted page asset");
-    assert_eq!(found[0].kind, Kind::Email);
-    assert!(found[0].path.ends_with("data.json"));
+    assert_eq!(found.len(), 2, "PV-01 missed a planted page asset");
+    assert!(found.iter().all(|f| f.kind == Kind::Email));
+    assert!(found.iter().any(|f| f.path.ends_with("data.json")));
+    assert!(
+        found
+            .iter()
+            .any(|f| f.path.ends_with(&format!("{unpinned}.gz"))),
+        "PV-01 skipped a file the R4 lock does not pin"
+    );
 }
