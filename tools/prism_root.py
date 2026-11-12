@@ -31,6 +31,7 @@ FACETS = [
     ("google", "PrismGoogle", "googleDispatch"),
     ("googlelink", "PrismGoogleLink", "googleLinkDispatch"),
     ("dest", "PrismDest", "destDispatch"),
+    ("model", "PrismModels", "modelsDispatch"),
 ]
 REQ_MAX, RESP_MAX, ALLOC = 1107, 16384, 2214
 h = lambda s: "0x" + (s if isinstance(s, bytes) else s.encode()).hex()
@@ -62,6 +63,12 @@ VECTORS = [
  ("dest mail ask grounded none seen calm open normal no", "draft"),
  ("dest mail allow grounded owner seen calm open normal no", "deliver"),
  ("dest", "invalid request"),
+ ("model locked onnx match match granted no", "run"),
+ ("model locked onnx missing match granted no", "fetch"),
+ ("model locked onnx match match ungranted no", "ask"),
+ ("model locked onnx match match granted yes", "refuse"),
+ ("model unlocked gguf match match granted no", "refuse"),
+ ("model", "invalid request"),
  ("google", "invalid request"),
  ("learn", "invalid request"),
  ("when", "invalid request"),

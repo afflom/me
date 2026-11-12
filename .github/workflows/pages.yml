@@ -106,6 +106,7 @@ jobs:
             --env HOME=/tmp/prismpm-home \
             --env PRISMPM_EPHEMERAL_HOME=1 \
             --env PRISM_PROOF_EVENT \
+            --env SDK_IMAGE="$image" \
             "$image" bash -c '
               set -euo pipefail
               just app

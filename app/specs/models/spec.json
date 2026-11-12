@@ -1,0 +1,372 @@
+{
+  "name": "prism-models",
+  "title": "Prism Models",
+  "purpose": "Decides whether one language or reasoning model routed into the Prism from a hub such as Hugging Face may be fetched or run in the owner's browser, so that only a model pinned by revision and hash, in a format with a locked runtime, granted by the owner, runs, and nothing moves while the Prism is halted.",
+  "fields": [
+    {
+      "name": "source",
+      "kind": "choice",
+      "values": [
+        "locked",
+        "unlocked"
+      ],
+      "means": "whether the model's hub, repository, revision and every file it loads are pinned by SHA-256 in the models lock"
+    },
+    {
+      "name": "format",
+      "kind": "choice",
+      "values": [
+        "onnx",
+        "gguf",
+        "other"
+      ],
+      "means": "the standard the model's weights are written in: ONNX, GGUF, or anything else"
+    },
+    {
+      "name": "runtime",
+      "kind": "choice",
+      "values": [
+        "match",
+        "mismatch",
+        "missing"
+      ],
+      "means": "whether the runtime bytes for that format (the ONNX or GGUF engine), read back from the browser store, equal the ones in the lock"
+    },
+    {
+      "name": "weights",
+      "kind": "choice",
+      "values": [
+        "match",
+        "mismatch",
+        "missing"
+      ],
+      "means": "whether the model's weight and tokenizer files, read back from the browser store, equal the ones in the lock"
+    },
+    {
+      "name": "route",
+      "kind": "choice",
+      "values": [
+        "granted",
+        "ungranted"
+      ],
+      "means": "whether the owner's grant names this model as one routed into the Prism"
+    },
+    {
+      "name": "halted",
+      "kind": "choice",
+      "values": [
+        "no",
+        "yes"
+      ],
+      "means": "whether the owner's kill switch has halted the Prism"
+    }
+  ],
+  "outcomes": [
+    "run",
+    "fetch",
+    "ask",
+    "refuse"
+  ],
+  "rules": [
+    {
+      "id": "REQ-001",
+      "when": [
+        {
+          "field": "halted",
+          "op": "is",
+          "value": "yes"
+        }
+      ],
+      "then": "refuse",
+      "says": "when halted is yes then refuse",
+      "why": "the kill switch stops every model"
+    },
+    {
+      "id": "REQ-002",
+      "when": [
+        {
+          "field": "source",
+          "op": "is",
+          "value": "unlocked"
+        }
+      ],
+      "then": "refuse",
+      "says": "when source is unlocked then refuse",
+      "why": "only a model pinned by revision and hash is routed into the Prism"
+    },
+    {
+      "id": "REQ-003",
+      "when": [
+        {
+          "field": "format",
+          "op": "is",
+          "value": "other"
+        }
+      ],
+      "then": "refuse",
+      "says": "when format is other then refuse",
+      "why": "the Prism runs only a format it holds a locked runtime for"
+    },
+    {
+      "id": "REQ-004",
+      "when": [
+        {
+          "field": "runtime",
+          "op": "is",
+          "value": "mismatch"
+        }
+      ],
+      "then": "refuse",
+      "says": "when runtime is mismatch then refuse",
+      "why": "runtime bytes that differ from the lock could compute anything"
+    },
+    {
+      "id": "REQ-005",
+      "when": [
+        {
+          "field": "weights",
+          "op": "is",
+          "value": "mismatch"
+        }
+      ],
+      "then": "refuse",
+      "says": "when weights is mismatch then refuse",
+      "why": "weights that differ from the lock are not the model the owner granted"
+    },
+    {
+      "id": "REQ-006",
+      "when": [
+        {
+          "field": "route",
+          "op": "is",
+          "value": "ungranted"
+        }
+      ],
+      "then": "ask",
+      "says": "when route is ungranted then ask",
+      "why": "the owner decides which models are routed into the Prism"
+    },
+    {
+      "id": "REQ-007",
+      "when": [
+        {
+          "field": "runtime",
+          "op": "is",
+          "value": "missing"
+        }
+      ],
+      "then": "fetch",
+      "says": "when runtime is missing then fetch",
+      "why": "the locked runtime is fetched from this page, checked, then kept"
+    },
+    {
+      "id": "REQ-008",
+      "when": [
+        {
+          "field": "weights",
+          "op": "is",
+          "value": "missing"
+        }
+      ],
+      "then": "fetch",
+      "says": "when weights is missing then fetch",
+      "why": "the locked weights are fetched from this page, checked, then kept"
+    }
+  ],
+  "otherwise": "run",
+  "properties": [
+    {
+      "id": "INV-001",
+      "kind": "never",
+      "when": [
+        {
+          "field": "halted",
+          "op": "is",
+          "value": "yes"
+        }
+      ],
+      "then": "run",
+      "says": "never when halted is yes then run",
+      "why": "a halted Prism would still compute"
+    },
+    {
+      "id": "INV-002",
+      "kind": "never",
+      "when": [
+        {
+          "field": "halted",
+          "op": "is",
+          "value": "yes"
+        }
+      ],
+      "then": "fetch",
+      "says": "never when halted is yes then fetch",
+      "why": "a halted Prism would still move bytes"
+    },
+    {
+      "id": "INV-003",
+      "kind": "never",
+      "when": [
+        {
+          "field": "source",
+          "op": "is",
+          "value": "unlocked"
+        }
+      ],
+      "then": "run",
+      "says": "never when source is unlocked then run",
+      "why": "a model nobody pinned could be swapped upstream"
+    },
+    {
+      "id": "INV-004",
+      "kind": "never",
+      "when": [
+        {
+          "field": "source",
+          "op": "is",
+          "value": "unlocked"
+        }
+      ],
+      "then": "fetch",
+      "says": "never when source is unlocked then fetch",
+      "why": "bytes nobody pinned could be anything"
+    },
+    {
+      "id": "INV-005",
+      "kind": "never",
+      "when": [
+        {
+          "field": "route",
+          "op": "is",
+          "value": "ungranted"
+        }
+      ],
+      "then": "run",
+      "says": "never when route is ungranted then run",
+      "why": "a model the owner never granted would read the owner's content"
+    },
+    {
+      "id": "INV-006",
+      "kind": "never",
+      "when": [
+        {
+          "field": "route",
+          "op": "is",
+          "value": "ungranted"
+        }
+      ],
+      "then": "fetch",
+      "says": "never when route is ungranted then fetch",
+      "why": "bytes would be moved for a model the owner never granted"
+    },
+    {
+      "id": "INV-007",
+      "kind": "never",
+      "when": [
+        {
+          "field": "runtime",
+          "op": "is not",
+          "value": "match"
+        }
+      ],
+      "then": "run",
+      "says": "never when runtime is not match then run",
+      "why": "unverified runtime bytes could compute anything"
+    },
+    {
+      "id": "INV-008",
+      "kind": "never",
+      "when": [
+        {
+          "field": "weights",
+          "op": "is not",
+          "value": "match"
+        }
+      ],
+      "then": "run",
+      "says": "never when weights is not match then run",
+      "why": "unverified weights would answer as if they were the locked model"
+    },
+    {
+      "id": "INV-009",
+      "kind": "never",
+      "when": [
+        {
+          "field": "format",
+          "op": "is",
+          "value": "other"
+        }
+      ],
+      "then": "run",
+      "says": "never when format is other then run",
+      "why": "a format without a locked runtime would run on unverified code"
+    }
+  ],
+  "examples": [
+    {
+      "request": "locked onnx match match granted no",
+      "response": "run"
+    },
+    {
+      "request": "locked gguf match match granted no",
+      "response": "run"
+    },
+    {
+      "request": "locked onnx match match granted yes",
+      "response": "refuse"
+    },
+    {
+      "request": "unlocked onnx match match granted no",
+      "response": "refuse"
+    },
+    {
+      "request": "locked other match match granted no",
+      "response": "refuse"
+    },
+    {
+      "request": "locked onnx mismatch match granted no",
+      "response": "refuse"
+    },
+    {
+      "request": "locked onnx match mismatch granted no",
+      "response": "refuse"
+    },
+    {
+      "request": "locked onnx match match ungranted no",
+      "response": "ask"
+    },
+    {
+      "request": "locked onnx missing match granted no",
+      "response": "fetch"
+    },
+    {
+      "request": "locked onnx match missing granted no",
+      "response": "fetch"
+    },
+    {
+      "request": "locked gguf missing missing granted no",
+      "response": "fetch"
+    },
+    {
+      "request": "locked onnx missing missing ungranted no",
+      "response": "ask"
+    },
+    {
+      "request": "locked onnx mismatch missing ungranted no",
+      "response": "refuse"
+    },
+    {
+      "request": "unlocked gguf missing missing ungranted yes",
+      "response": "refuse"
+    }
+  ],
+  "schema": "prism/spec/1",
+  "actors": [],
+  "meanings": {
+    "run": "run the model on locally held, verified bytes",
+    "fetch": "fetch the missing locked bytes from this page, check them, and keep them in the browser",
+    "ask": "ask the owner whether to route this model into the Prism",
+    "refuse": "run and fetch nothing, and say why"
+  },
+  "otherwiseWhy": "a pinned model with verified runtime and weights, granted by the owner, runs locally"
+}
