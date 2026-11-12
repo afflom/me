@@ -1,0 +1,18 @@
+\begin{lexlean}{PropertyProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Vocab.V1.SchemaOrg}
+\importmodule{Foundation.Vocab.V1.Crosswalk}
+\importmodule{Foundation.Me.V1.Anchors}
+\importmodule{Foundation.Me.V1.Model}
+\title{Property guarantees}
+\begin{semanticmodule}
+theorem{
+  name: healthRangeRestricted,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designHealthRangeRestricted (Foundation.Vocab.V1.SchemaOrg::vocabPropertyRows) (Foundation.Me.V1.Anchors::anchorsDomainTable)) = true),
+  proof: decide{}
+}
+\end{semanticmodule}
+\end{lexlean}

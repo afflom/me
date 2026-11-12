@@ -1,0 +1,211 @@
+\begin{lexlean}{Foundation.Me.V1.Anchors}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\title{Domain anchors}
+\begin{semanticmodule}
+structure{
+  name: DomainAnchor,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: key, type: Nat}, {name: value, type: Nat}]
+}
+
+definition{
+  name: anchorsAppendAnchors,
+  parameters: [front : (List DomainAnchor), back : (List DomainAnchor)],
+  result: (List DomainAnchor),
+  body: (match front
+    | List.nil => back
+    | List.cons item rest => (cons item (anchorsAppendAnchors rest back))),
+  recursive_argument: front
+}
+
+definition{name: anchorsThingIndex, parameters: [], result: Nat, body: 0}
+
+definition{
+  name: anchorsAppendNats,
+  parameters: [front : (List Nat), back : (List Nat)],
+  result: (List Nat),
+  body: (match front
+    | List.nil => back
+    | List.cons item rest => (cons item (anchorsAppendNats rest back))),
+  recursive_argument: front
+}
+
+definition{
+  name: anchorsDomainTable0,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 11 (cons 11 (cons 11 (cons 11 (cons 11 (cons 11 (cons 11 (cons 11 (cons 11 (cons 9 (cons 0 (cons 10 (cons 11 (cons 11 (cons 11 (cons 11 (cons 5 (cons 11 (cons 11 (cons 11 (cons 11 (cons 0 (cons 3 (cons 3 (cons 6 (cons 8 (cons 11 (cons 11 (cons 11 (cons 11 (cons 6 (cons 9 (cons 11 (cons 6 (cons 3 (cons 11 (cons 0 (cons 0 (cons 10 (cons 10 (cons 9 (cons 10 (cons 3 (cons 11 (cons 10 (cons 10 (cons 8 (cons 11 (cons 11 (cons 5 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable1,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 10 (cons 10 (cons 0 (cons 5 (cons 6 (cons 10 (cons 11 (cons 10 (cons 10 (cons 10 (cons 5 (cons 10 (cons 4 (cons 11 (cons 5 (cons 3 (cons 11 (cons 9 (cons 9 (cons 4 (cons 3 (cons 3 (cons 5 (cons 9 (cons 10 (cons 10 (cons 5 (cons 10 (cons 11 (cons 10 (cons 11 (cons 10 (cons 5 (cons 1 (cons 10 (cons 11 (cons 10 (cons 0 (cons 0 (cons 5 (cons 7 (cons 11 (cons 11 (cons 11 (cons 10 (cons 5 (cons 5 (cons 1 (cons 9 (cons 11 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable2,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 5 (cons 3 (cons 10 (cons 11 (cons 0 (cons 6 (cons 3 (cons 1 (cons 10 (cons 5 (cons 0 (cons 0 (cons 0 (cons 0 (cons 10 (cons 10 (cons 10 (cons 8 (cons 3 (cons 1 (cons 11 (cons 7 (cons 6 (cons 6 (cons 11 (cons 7 (cons 10 (cons 3 (cons 0 (cons 11 (cons 5 (cons 3 (cons 10 (cons 10 (cons 10 (cons 10 (cons 10 (cons 1 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable3,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 0 (cons 1 (cons 1 (cons 10 (cons 11 (cons 10 (cons 1 (cons 11 (cons 4 (cons 0 (cons 6 (cons 10 (cons 10 (cons 5 (cons 10 (cons 10 (cons 3 (cons 3 (cons 7 (cons 7 (cons 1 (cons 3 (cons 1 (cons 9 (cons 10 (cons 1 (cons 1 (cons 5 (cons 3 (cons 2 (cons 10 (cons 10 (cons 9 (cons 3 (cons 10 (cons 8 (cons 8 (cons 1 (cons 2 (cons 7 (cons 11 (cons 11 (cons 0 (cons 5 (cons 10 (cons 10 (cons 10 (cons 11 (cons 3 (cons 5 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable4,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 6 (cons 10 (cons 11 (cons 5 (cons 5 (cons 5 (cons 10 (cons 9 (cons 3 (cons 10 (cons 11 (cons 9 (cons 11 (cons 8 (cons 11 (cons 10 (cons 10 (cons 5 (cons 10 (cons 10 (cons 9 (cons 8 (cons 11 (cons 10 (cons 5 (cons 3 (cons 10 (cons 11 (cons 11 (cons 0 (cons 0 (cons 5 (cons 10 (cons 5 (cons 6 (cons 6 (cons 1 (cons 9 (cons 5 (cons 9 (cons 5 (cons 8 (cons 6 (cons 5 (cons 10 (cons 10 (cons 10 (cons 10 (cons 10 (cons 3 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable5,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 10 (cons 10 (cons 9 (cons 9 (cons 11 (cons 10 (cons 1 (cons 11 (cons 6 (cons 9 (cons 10 (cons 3 (cons 4 (cons 6 (cons 6 (cons 9 (cons 0 (cons 6 (cons 3 (cons 6 (cons 10 (cons 9 (cons 3 (cons 6 (cons 3 (cons 0 (cons 11 (cons 5 (cons 6 (cons 5 (cons 6 (cons 0 (cons 11 (cons 9 (cons 9 (cons 0 (cons 11 (cons 6 (cons 5 (cons 8 (cons 8 (cons 5 (cons 6 (cons 6 (cons 5 (cons 3 (cons 11 (cons 11 (cons 1 (cons 11 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable6,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 8 (cons 6 (cons 8 (cons 11 (cons 11 (cons 10 (cons 6 (cons 11 (cons 9 (cons 10 (cons 3 (cons 9 (cons 6 (cons 10 (cons 10 (cons 10 (cons 4 (cons 10 (cons 3 (cons 11 (cons 6 (cons 9 (cons 4 (cons 6 (cons 7 (cons 10 (cons 10 (cons 6 (cons 10 (cons 0 (cons 3 (cons 10 (cons 10 (cons 11 (cons 5 (cons 9 (cons 10 (cons 6 (cons 9 (cons 11 (cons 11 (cons 6 (cons 0 (cons 0 (cons 0 (cons 0 (cons 11 (cons 11 (cons 10 (cons 9 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable7,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 9 (cons 0 (cons 9 (cons 9 (cons 9 (cons 0 (cons 0 (cons 0 (cons 3 (cons 9 (cons 3 (cons 2 (cons 3 (cons 4 (cons 3 (cons 10 (cons 3 (cons 11 (cons 11 (cons 11 (cons 3 (cons 10 (cons 5 (cons 5 (cons 5 (cons 6 (cons 1 (cons 9 (cons 10 (cons 9 (cons 1 (cons 3 (cons 5 (cons 5 (cons 3 (cons 3 (cons 5 (cons 8 (cons 11 (cons 7 (cons 11 (cons 11 (cons 6 (cons 2 (cons 6 (cons 6 (cons 9 (cons 11 (cons 6 (cons 3 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable8,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 2 (cons 8 (cons 3 (cons 0 (cons 0 (cons 3 (cons 6 (cons 10 (cons 11 (cons 10 (cons 10 (cons 10 (cons 9 (cons 10 (cons 0 (cons 11 (cons 11 (cons 11 (cons 0 (cons 9 (cons 11 (cons 11 (cons 3 (cons 11 (cons 11 (cons 10 (cons 3 (cons 0 (cons 3 (cons 3 (cons 11 (cons 10 (cons 9 (cons 3 (cons 0 (cons 11 (cons 9 (cons 3 (cons 5 (cons 9 (cons 9 (cons 11 (cons 3 (cons 11 (cons 11 (cons 11 (cons 11 (cons 10 (cons 3 (cons 0 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable9,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 11 (cons 10 (cons 1 (cons 1 (cons 9 (cons 8 (cons 8 (cons 6 (cons 10 (cons 0 (cons 6 (cons 10 (cons 11 (cons 11 (cons 3 (cons 10 (cons 11 (cons 6 (cons 10 (cons 0 (cons 10 (cons 11 (cons 10 (cons 11 (cons 11 (cons 1 (cons 1 (cons 11 (cons 11 (cons 5 (cons 3 (cons 5 (cons 10 (cons 1 (cons 1 (cons 7 (cons 11 (cons 9 (cons 6 (cons 6 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable10,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 0 (cons 1 (cons 11 (cons 3 (cons 9 (cons 11 (cons 6 (cons 9 (cons 0 (cons 11 (cons 6 (cons 5 (cons 9 (cons 6 (cons 10 (cons 10 (cons 11 (cons 1 (cons 10 (cons 0 (cons 11 (cons 1 (cons 11 (cons 8 (cons 11 (cons 3 (cons 10 (cons 11 (cons 6 (cons 11 (cons 10 (cons 11 (cons 11 (cons 11 (cons 4 (cons 7 (cons 1 (cons 6 (cons 11 (cons 10 (cons 10 (cons 10 (cons 3 (cons 4 (cons 9 (cons 3 (cons 10 (cons 9 (cons 10 (cons 10 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable11,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 3 (cons 11 (cons 3 (cons 1 (cons 5 (cons 11 (cons 9 (cons 10 (cons 7 (cons 3 (cons 5 (cons 9 (cons 11 (cons 9 (cons 9 (cons 11 (cons 11 (cons 11 (cons 9 (cons 6 (cons 11 (cons 10 (cons 10 (cons 10 (cons 6 (cons 10 (cons 3 (cons 1 (cons 9 (cons 10 (cons 11 (cons 11 (cons 11 (cons 11 (cons 11 (cons 3 (cons 10 (cons 11 (cons 11 (cons 4 (cons 11 (cons 3 (cons 3 (cons 10 (cons 6 (cons 11 (cons 11 (cons 3 (cons 3 (cons 6 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable12,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 6 (cons 0 (cons 9 (cons 7 (cons 10 (cons 10 (cons 10 (cons 10 (cons 9 (cons 8 (cons 5 (cons 8 (cons 6 (cons 10 (cons 11 (cons 3 (cons 10 (cons 10 (cons 3 (cons 0 (cons 9 (cons 11 (cons 1 (cons 3 (cons 5 (cons 9 (cons 5 (cons 6 (cons 5 (cons 6 (cons 3 (cons 0 (cons 11 (cons 3 (cons 9 (cons 5 (cons 5 (cons 5 (cons 5 (cons 5 (cons 5 (cons 5 (cons 5 (cons 10 (cons 5 (cons 0 (cons 0 (cons 10 (cons 10 (cons 10 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable13,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 9 (cons 6 (cons 10 (cons 10 (cons 10 (cons 10 (cons 11 (cons 11 (cons 9 (cons 8 (cons 10 (cons 9 (cons 7 (cons 9 (cons 6 (cons 11 (cons 10 (cons 9 (cons 3 (cons 11 (cons 3 (cons 4 (cons 3 (cons 10 (cons 3 (cons 0 (cons 4 (cons 10 (cons 9 (cons 3 (cons 10 (cons 10 (cons 9 (cons 3 (cons 3 (cons 3 (cons 3 (cons 3 (cons 3 (cons 3 (cons 10 (cons 3 (cons 1 (cons 3 (cons 3 (cons 10 (cons 3 (cons 3 (cons 11 (cons 3 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable14,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 4 (cons 11 (cons 10 (cons 3 (cons 3 (cons 3 (cons 6 (cons 3 (cons 3 (cons 6 (cons 5 (cons 3 (cons 4 (cons 4 (cons 6 (cons 6 (cons 3 (cons 3 (cons 3 (cons 10 (cons 4 (cons 10 (cons 1 (cons 3 (cons 3 (cons 6 (cons 1 (cons 11 (cons 3 (cons 6 (cons 1 (cons 0 (cons 3 (cons 4 (cons 4 (cons 4 (cons 3 (cons 11 (cons 0 (cons 0 (cons 0 (cons 11 (cons 3 (cons 3 (cons 3 (cons 6 (cons 7 (cons 11 (cons 4 (cons 11 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable15,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 11 (cons 5 (cons 3 (cons 0 (cons 11 (cons 3 (cons 3 (cons 3 (cons 3 (cons 11 (cons 3 (cons 3 (cons 3 (cons 6 (cons 3 (cons 3 (cons 3 (cons 3 (cons 3 (cons 3 (cons 3 (cons 6 (cons 3 (cons 3 (cons 0 (cons 3 (cons 3 (cons 6 (cons 3 (cons 11 (cons 11 (cons 11 (cons 11 (cons 3 (cons 10 (cons 0 (cons 4 (cons 9 (cons 3 (cons 1 (cons 4 (cons 3 (cons 6 (cons 11 (cons 6 (cons 4 (cons 3 (cons 1 (cons 6 (cons 3 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable16,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 0 (cons 0 (cons 10 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 6 (cons 3 (cons 3 (cons 3 (cons 1 (cons 6 (cons 3 (cons 3 (cons 3 (cons 3 (cons 10 (cons 3 (cons 3 (cons 3 (cons 11 (cons 3 (cons 3 (cons 3 (cons 11 (cons 6 (cons 3 (cons 3 (cons 10 (cons 3 (cons 1 (cons 3 (cons 3 (cons 3 (cons 1 (cons 1 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable17,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 1 (cons 1 (cons 10 (cons 3 (cons 0 (cons 0 (cons 0 (cons 3 (cons 10 (cons 3 (cons 6 (cons 3 (cons 6 (cons 3 (cons 0 (cons 3 (cons 8 (cons 10 (cons 0 (cons 9 (cons 4 (cons 10 (cons 0 (cons 5 (cons 5 (cons 6 (cons 3 (cons 3 (cons 10 (cons 6 (cons 3 (cons 5 (cons 3 (cons 6 (cons 4 (cons 3 (cons 6 (cons 11 (cons 3 (cons 3 (cons 3 (cons 11 (cons 6 (cons 10 (cons 3 (cons 3 (cons 3 (cons 3 (cons 11 (cons 11 (nil Nat)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable18,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 1 (cons 3 (cons 0 (cons 10 (cons 10 (cons 9 (cons 4 (cons 6 (cons 9 (cons 11 (cons 11 (cons 11 (cons 3 (cons 3 (cons 9 (cons 1 (cons 6 (cons 10 (cons 4 (cons 0 (cons 1 (cons 1 (cons 10 (cons 0 (cons 1 (cons 4 (cons 1 (cons 10 (cons 0 (cons 0 (cons 0 (cons 0 (cons 0 (cons 9 (cons 0 (cons 4 (cons 3 (cons 10 (cons 0 (nil Nat))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsDomainTable,
+  parameters: [],
+  result: (List Nat),
+  body: (anchorsAppendNats (anchorsDomainTable0) (anchorsAppendNats (anchorsDomainTable1) (anchorsAppendNats (anchorsDomainTable2) (anchorsAppendNats (anchorsDomainTable3) (anchorsAppendNats (anchorsDomainTable4) (anchorsAppendNats (anchorsDomainTable5) (anchorsAppendNats (anchorsDomainTable6) (anchorsAppendNats (anchorsDomainTable7) (anchorsAppendNats (anchorsDomainTable8) (anchorsAppendNats (anchorsDomainTable9) (anchorsAppendNats (anchorsDomainTable10) (anchorsAppendNats (anchorsDomainTable11) (anchorsAppendNats (anchorsDomainTable12) (anchorsAppendNats (anchorsDomainTable13) (anchorsAppendNats (anchorsDomainTable14) (anchorsAppendNats (anchorsDomainTable15) (anchorsAppendNats (anchorsDomainTable16) (anchorsAppendNats (anchorsDomainTable17) (anchorsDomainTable18)))))))))))))))))))
+}
+
+definition{
+  name: anchorsAnchorRows0,
+  parameters: [],
+  result: (List DomainAnchor),
+  body: (cons (record DomainAnchor {key := 0, value := 11}) (cons (record DomainAnchor {key := 1, value := 11}) (cons (record DomainAnchor {key := 2, value := 11}) (cons (record DomainAnchor {key := 3, value := 11}) (cons (record DomainAnchor {key := 4, value := 11}) (cons (record DomainAnchor {key := 5, value := 11}) (cons (record DomainAnchor {key := 6, value := 11}) (cons (record DomainAnchor {key := 7, value := 11}) (cons (record DomainAnchor {key := 8, value := 11}) (cons (record DomainAnchor {key := 9, value := 9}) (cons (record DomainAnchor {key := 10, value := 0}) (cons (record DomainAnchor {key := 11, value := 10}) (cons (record DomainAnchor {key := 16, value := 5}) (cons (record DomainAnchor {key := 18, value := 11}) (cons (record DomainAnchor {key := 21, value := 0}) (cons (record DomainAnchor {key := 22, value := 3}) (cons (record DomainAnchor {key := 23, value := 3}) (cons (record DomainAnchor {key := 24, value := 6}) (cons (record DomainAnchor {key := 25, value := 8}) (cons (record DomainAnchor {key := 27, value := 11}) (cons (record DomainAnchor {key := 42, value := 3}) (cons (record DomainAnchor {key := 46, value := 8}) (cons (record DomainAnchor {key := 56, value := 11}) (cons (record DomainAnchor {key := 62, value := 4}) (cons (record DomainAnchor {key := 69, value := 4}) (cons (record DomainAnchor {key := 80, value := 11}) (cons (record DomainAnchor {key := 83, value := 1}) (cons (record DomainAnchor {key := 90, value := 7}) (cons (record DomainAnchor {key := 93, value := 11}) (cons (record DomainAnchor {key := 97, value := 1}) (cons (record DomainAnchor {key := 105, value := 6}) (cons (record DomainAnchor {key := 107, value := 1}) (cons (record DomainAnchor {key := 110, value := 0}) (cons (record DomainAnchor {key := 111, value := 0}) (cons (record DomainAnchor {key := 112, value := 0}) (cons (record DomainAnchor {key := 113, value := 0}) (cons (record DomainAnchor {key := 118, value := 3}) (cons (record DomainAnchor {key := 119, value := 1}) (cons (record DomainAnchor {key := 121, value := 7}) (cons (record DomainAnchor {key := 125, value := 7}) (cons (record DomainAnchor {key := 137, value := 1}) (cons (record DomainAnchor {key := 145, value := 0}) (cons (record DomainAnchor {key := 151, value := 1}) (cons (record DomainAnchor {key := 152, value := 1}) (cons (record DomainAnchor {key := 156, value := 1}) (cons (record DomainAnchor {key := 158, value := 4}) (cons (record DomainAnchor {key := 160, value := 6}) (cons (record DomainAnchor {key := 168, value := 7}) (cons (record DomainAnchor {key := 169, value := 7}) (cons (record DomainAnchor {key := 170, value := 1}) (nil DomainAnchor)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsAnchorRows1,
+  parameters: [],
+  result: (List DomainAnchor),
+  body: (cons (record DomainAnchor {key := 172, value := 1}) (cons (record DomainAnchor {key := 175, value := 1}) (cons (record DomainAnchor {key := 176, value := 1}) (cons (record DomainAnchor {key := 179, value := 2}) (cons (record DomainAnchor {key := 187, value := 1}) (cons (record DomainAnchor {key := 188, value := 2}) (cons (record DomainAnchor {key := 189, value := 7}) (cons (record DomainAnchor {key := 190, value := 11}) (cons (record DomainAnchor {key := 199, value := 5}) (cons (record DomainAnchor {key := 204, value := 5}) (cons (record DomainAnchor {key := 213, value := 8}) (cons (record DomainAnchor {key := 228, value := 11}) (cons (record DomainAnchor {key := 233, value := 5}) (cons (record DomainAnchor {key := 236, value := 1}) (cons (record DomainAnchor {key := 238, value := 5}) (cons (record DomainAnchor {key := 242, value := 6}) (cons (record DomainAnchor {key := 316, value := 4}) (cons (record DomainAnchor {key := 318, value := 3}) (cons (record DomainAnchor {key := 324, value := 7}) (cons (record DomainAnchor {key := 334, value := 5}) (cons (record DomainAnchor {key := 361, value := 2}) (cons (record DomainAnchor {key := 372, value := 5}) (cons (record DomainAnchor {key := 376, value := 1}) (cons (record DomainAnchor {key := 380, value := 1}) (cons (record DomainAnchor {key := 393, value := 2}) (cons (record DomainAnchor {key := 394, value := 6}) (cons (record DomainAnchor {key := 395, value := 6}) (cons (record DomainAnchor {key := 403, value := 0}) (cons (record DomainAnchor {key := 404, value := 0}) (cons (record DomainAnchor {key := 450, value := 0}) (cons (record DomainAnchor {key := 459, value := 0}) (cons (record DomainAnchor {key := 462, value := 1}) (cons (record DomainAnchor {key := 491, value := 5}) (cons (record DomainAnchor {key := 494, value := 1}) (cons (record DomainAnchor {key := 495, value := 7}) (cons (record DomainAnchor {key := 511, value := 5}) (cons (record DomainAnchor {key := 521, value := 1}) (cons (record DomainAnchor {key := 534, value := 4}) (cons (record DomainAnchor {key := 543, value := 4}) (cons (record DomainAnchor {key := 589, value := 4}) (cons (record DomainAnchor {key := 746, value := 7}) (cons (record DomainAnchor {key := 751, value := 5}) (cons (record DomainAnchor {key := 798, value := 6}) (cons (record DomainAnchor {key := 803, value := 0}) (cons (record DomainAnchor {key := 812, value := 0}) (cons (record DomainAnchor {key := 824, value := 1}) (cons (record DomainAnchor {key := 844, value := 1}) (cons (record DomainAnchor {key := 851, value := 1}) (cons (record DomainAnchor {key := 862, value := 6}) (cons (record DomainAnchor {key := 873, value := 5}) (nil DomainAnchor)))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsAnchorRows,
+  parameters: [],
+  result: (List DomainAnchor),
+  body: (anchorsAppendAnchors (anchorsAnchorRows0) (anchorsAnchorRows1))
+}
+
+definition{
+  name: anchorsFloorRows0,
+  parameters: [],
+  result: (List DomainAnchor),
+  body: (cons (record DomainAnchor {key := 8, value := 3}) (cons (record DomainAnchor {key := 43, value := 2}) (cons (record DomainAnchor {key := 171, value := 2}) (cons (record DomainAnchor {key := 246, value := 2}) (cons (record DomainAnchor {key := 262, value := 2}) (cons (record DomainAnchor {key := 370, value := 2}) (cons (record DomainAnchor {key := 434, value := 1}) (cons (record DomainAnchor {key := 459, value := 2}) (cons (record DomainAnchor {key := 525, value := 2}) (cons (record DomainAnchor {key := 540, value := 2}) (cons (record DomainAnchor {key := 570, value := 2}) (cons (record DomainAnchor {key := 644, value := 3}) (cons (record DomainAnchor {key := 662, value := 2}) (cons (record DomainAnchor {key := 787, value := 2}) (cons (record DomainAnchor {key := 923, value := 2}) (cons (record DomainAnchor {key := 928, value := 2}) (cons (record DomainAnchor {key := 1007, value := 2}) (cons (record DomainAnchor {key := 1184, value := 2}) (cons (record DomainAnchor {key := 1267, value := 2}) (cons (record DomainAnchor {key := 1298, value := 2}) (cons (record DomainAnchor {key := 1336, value := 2}) (cons (record DomainAnchor {key := 1393, value := 2}) (cons (record DomainAnchor {key := 1397, value := 2}) (cons (record DomainAnchor {key := 1492, value := 2}) (nil DomainAnchor)))))))))))))))))))))))))
+}
+
+definition{
+  name: anchorsFloorRows,
+  parameters: [],
+  result: (List DomainAnchor),
+  body: (anchorsFloorRows0)
+}
+\end{semanticmodule}
+\end{lexlean}
