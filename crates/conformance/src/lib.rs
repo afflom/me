@@ -20,6 +20,7 @@
 #![deny(missing_docs)]
 
 pub mod meta;
+pub mod privacy;
 pub mod runner;
 
 pub use meta::{check_honesty, HonestyReport};

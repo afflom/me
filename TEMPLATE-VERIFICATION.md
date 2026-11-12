@@ -17,7 +17,7 @@ template contract checker in `app/`.
 Each check runs once per `just vv`. `just bdd` runs only the meta-gate while a
 scenario is being written; `just test` already includes it.
 
-The register holds `TC-01` and `FR-01`, so the meta-gate checks real rows,
+The register holds `TC-01`, `FR-01` and `PV-01`, so the meta-gate checks real rows,
 scenarios and tests. It becomes an error as soon as an ID, scenario,
 or test is added without the other two.
 
@@ -32,6 +32,7 @@ or test is added without the other two.
 | `prismpm verify` | an acceptance vector set without the exact guest-allocation boundary | rejected (PP2009) |
 | `audit-bootstrap` | a floating/copied action, mutable SDK tag, changed universal file, narrowed boundary, shallow/credential-retaining checkout, copied project renderer, omitted standards lock, acceptance bypass, deploy-job signing privilege, incomplete release lifecycle, or a bootstrap that drops a native architecture from main or tags, cancels or replaces a main run, or skips runs by path, condition or matrix exclusion | all rejected |
 | `audit-bootstrap` (`proof_reuse_is_confined`) | a cache key that omits any one of its eight proof inputs, the SDK digest named by a constant, the Lean toolchain read from another file, the ref spliced into the script or dropped, the event line removed, reuse on a tag or on any event, reuse without the read-time check, a stale kept proof surviving a full proof, a recipe that stops proving or keeps a proof without its inputs, a second use of the event, an early exit, and the `merge_group` trigger dropped | all rejected |
+| `audit-pii` (`PV-01`) | a tracked file holding an email address at a public mail domain; a tracked file holding a term from a local `.pii-deny` | both rejected, naming the file, line and kind and never the value (`gate failed: PV-01: 1 value(s) in the tracked tree look personal`); removing the file restores `audit-pii: no personal data in the tracked tree` |
 | `xtask proof-reuse` (`binds`) | an attestation ID that does not resolve, a manifest, LexLean attestation or acceptance changed after sealing, a verdict that is not verified, an acceptance of another attestation, a changed model or meaning, another Lean, Lake, architecture or SDK image, a changed Lake workspace file, a modified input, inputs recorded for another attestation, and a Lake path outside `app/` | all proved again |
 
 `audit-deferral` reads every crate and `xtask`, including itself. Its token

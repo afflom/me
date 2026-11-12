@@ -28,6 +28,7 @@ fn main() -> ExitCode {
         "audit-deferral" => audit::audit_deferral(&root),
         "audit-bootstrap" => bootstrap::audit(&root),
         "audit-dependency-updates" => bootstrap::audit_dependency_updates(&root),
+        "audit-pii" => audit_pii(&root, std::env::args().nth(2)),
         "validate" => validate(&root),
         "proof-reuse" => proof::reuse(&root),
         "proof-keep" => proof::keep(&root, &std::env::args().nth(2).unwrap_or_default()),
@@ -105,12 +106,37 @@ fn check_model(root: &Path, write: bool) -> Result<(), Fail> {
     Ok(())
 }
 
+/// `PV-01`: no personal data in the tracked tree or, given a directory, in
+/// every file under it (the assembled page in `pages.yml`). Findings name the
+/// file, line and kind, never the value, because this output is public.
+fn audit_pii(root: &Path, dir: Option<String>) -> Result<(), Fail> {
+    use repo_conformance::privacy::{scan_dir, scan_tracked};
+    let (scope, found) = match &dir {
+        Some(dir) => (dir.as_str(), scan_dir(root, Path::new(dir))?),
+        None => ("the tracked tree", scan_tracked(root)?),
+    };
+    if found.is_empty() {
+        println!("audit-pii: no personal data in {scope} (PV-01)");
+        return Ok(());
+    }
+    for finding in &found {
+        eprintln!("{finding}");
+    }
+    Err(format!(
+        "PV-01: {} value(s) in {scope} look personal. Use a reserved example domain \
+         or a fictional number, or remove the value; the repository holds no personal data.",
+        found.len()
+    )
+    .into())
+}
+
 /// The whole normative acceptance gate, in one place.
 fn validate(root: &Path) -> Result<(), Fail> {
     check_model(root, false)?;
     audit::audit_limits(root)?;
     audit::audit_deferral(root)?;
     bootstrap::audit(root)?;
+    audit_pii(root, None)?;
     println!("validate: every gate passed");
     Ok(())
 }
