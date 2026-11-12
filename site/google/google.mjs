@@ -8,8 +8,8 @@
 // Boundary, the router and the vault decide what is kept (see ingest.mjs).
 //
 // The token comes from Google's OAuth 2.0 token flow for browser apps: a
-// popup to accounts.google.com that returns to google/callback.html on this
-// origin, which hands the token back over a BroadcastChannel. The token is
+// popup to accounts.google.com that returns to the Prism page itself, which
+// hands the token back over a BroadcastChannel (relay.mjs). The token is
 // held in memory only, sent only in the Authorization header, and only to
 // the two API hosts below. No client secret exists; nothing runs on a server.
 
@@ -50,7 +50,7 @@ export function serviceOf(url) {
   return 'other';
 }
 
-// The fragment Google returns to callback.html: access_token, expires_in, scope, state, or error.
+// The fragment Google returns to the page: access_token, expires_in, scope, state, or error.
 export function parseGrant(fragment) {
   const p = new URLSearchParams(String(fragment).replace(/^#/, ''));
   if (p.get('error')) return { state: p.get('state'), error: p.get('error') };
@@ -60,7 +60,7 @@ export function parseGrant(fragment) {
   return { state: p.get('state'), token, seconds, scopes: (p.get('scope') ?? '').split(' ').filter(Boolean) };
 }
 
-// The consent popup: resolves with the callback's fragment for this state, or rejects.
+// The consent popup: resolves with the returned fragment for this state, or rejects.
 // The answer arrives sealed (seal.mjs), so another page on this origin cannot read it.
 export function popupAuthorize({ clientId, redirectUri, timeoutMs = 300000 }) {
   return (scopes, { state }) => new Promise((resolve, reject) => {

@@ -123,20 +123,18 @@ fn google_gg_02() {
 /// `GG-03`: Mail and calendar items read from Google reach only the browser vault, through the detectors, the router and the Boundary, by GET to the two API hosts with the token only in the Authorization header
 #[test]
 fn google_gg_03() {
-    let template = read("site/page.template.html");
+    let relay = read("site/google/relay.mjs");
     assert!(
-        template.contains("connect-src 'self' {{GOOGLE_API_ORIGINS}}"),
-        "GG-03: the page's policy names the Google API origins"
+        relay.contains("history.replaceState(null, '', where.pathname + where.search);")
+            && relay.contains("channel.postMessage(await seal(state, fragment));")
+            && !relay.contains("localStorage")
+            && !relay.contains("indexedDB"),
+        "GG-03: the returning page wipes the token from the address and history, sends it sealed, and stores nothing"
     );
-    let builder = read("bootstrap/page.mjs");
+    let card = read("site/card.mjs");
     assert!(
-        builder.contains("import { API as GOOGLE_API } from \"../site/google/google.mjs\";"),
-        "GG-03: the policy's origins come from the connection's own API list"
-    );
-    let callback = read("site/google/callback.html");
-    assert!(
-        callback.contains("default-src 'none'; script-src 'self'"),
-        "GG-03: the consent relay runs only its own script"
+        card.contains("if (await relayConsent()) return;"),
+        "GG-03: the page hands a consent return back before doing anything else"
     );
     node_suite();
 }

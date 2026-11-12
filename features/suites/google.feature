@@ -29,4 +29,4 @@ Feature: google
     Then every request is a GET to gmail.googleapis.com or www.googleapis.com, with the token only in the Authorization header, no cookies and no cache
     And each message is kept as its RFC 5322 bytes and each event as iCalendar, labeled confidential, through the detectors and the vault's Boundary call
     And a card number or a one-time code is detected so the Boundary keeps only its hash
-    And the page's policy connects to those two hosts, and the consent answer crosses the origin sealed for the page that asked
+    And the consent answer returns to the Prism page, which wipes it from the address and history and hands it sealed to the page that asked

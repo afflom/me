@@ -2,6 +2,7 @@
 // only carries text between the page, the vault, R4 and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
 import { mountGoogle } from "./google/panel.mjs";
+import { relayConsent } from "./google/relay.mjs";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -17,6 +18,8 @@ function writeHalt(on) {
 }
 
 export default async function start({ app, reason, $ }) {
+  // This window may be Google's return with the owner's consent: hand it back and close.
+  if (await relayConsent()) return;
   const out = $("me-out");
   const log = $("me-log");
   const halt = $("me-halt");
