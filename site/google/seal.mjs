@@ -1,7 +1,7 @@
-// The consent answer crosses from callback.html to the page over a
-// BroadcastChannel, which every page on this origin can hear. So the answer
-// is sealed with AES-GCM under a key only the page that chose the random
-// `state` can derive, and tagged by a digest of it, never by the state itself.
+// The consent answer crosses from the returning Prism page (relay.mjs) to the
+// page that asked, over a BroadcastChannel, which every page on this origin
+// can hear. So the answer is sealed with AES-GCM under a key only the page
+// that chose the random `state` can derive, and tagged by a digest of it, never by the state itself.
 
 const encoder = new TextEncoder();
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
