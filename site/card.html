@@ -1,0 +1,48 @@
+<div class="me" data-slot="surface">
+  <section class="me-sec" aria-labelledby="me-ask-h">
+    <h2 id="me-ask-h" class="k">Ask</h2>
+    <p class="me-note">R4 answers here, in this browser. No remote model is called. The Boundary decides what an answer may show.</p>
+    <form id="me-ask" class="me-row">
+      <textarea id="me-prompt" aria-label="Your question" rows="2" placeholder="Ask your Prism" autocomplete="off" spellcheck="true"></textarea>
+      <button id="me-ask-go" type="submit">Ask</button>
+    </form>
+    <p id="me-r4-state" class="me-note">The language model loads on your first question: about 92 MB, then kept in this browser.</p>
+  </section>
+
+  <section class="me-sec" aria-labelledby="me-keep-h">
+    <h2 id="me-keep-h" class="k">Your content</h2>
+    <p class="me-note">Kept only in this browser, sealed under a key the browser made and never shows. Nothing here is sent anywhere.</p>
+    <form id="me-keep" class="me-row">
+      <input id="me-fact" type="text" aria-label="A fact to keep" placeholder="A fact to keep" autocomplete="off" />
+      <select id="me-label" aria-label="Label">
+        <option value="confidential" selected>confidential</option>
+        <option value="internal">internal</option>
+        <option value="public">public</option>
+        <option value="restricted">restricted</option>
+      </select>
+      <button type="submit">Keep</button>
+    </form>
+    <p id="me-count" class="me-note">Opening the vault</p>
+    <div class="me-row">
+      <button id="me-export" type="button">Export, encrypted</button>
+      <label class="me-file"><span>Import</span><input id="me-import" type="file" accept=".pvx,application/octet-stream" /></label>
+    </div>
+  </section>
+
+  <section class="me-sec" id="me-conn" aria-labelledby="me-conn-h" hidden>
+    <h2 id="me-conn-h" class="k">Connections</h2>
+    <div id="me-connections"></div>
+  </section>
+</div>
+
+<div id="me-result" data-slot="result" class="result" aria-live="polite"><output id="me-out" class="idle">—</output></div>
+
+<div class="me-controls" data-slot="actions" data-label="Controls">
+  <label class="me-halt"><input id="me-halt" type="checkbox" /> <span>Halt everything</span></label>
+  <form id="me-check" class="me-row">
+    <input id="me-line" type="text" placeholder="boundary public none browser none no no" autocomplete="off" spellcheck="false" aria-label="Ask the model directly" />
+    <button type="submit">Check</button>
+  </form>
+</div>
+
+<ol id="me-log" data-slot="history" data-label="Recent"></ol>

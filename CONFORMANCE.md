@@ -24,6 +24,12 @@ model does not sanction.
 | --- | --- | --- |
 | `FR-01` | `build` | With a working worker, the page loads and verifies the archive only in that worker before using its identities or guest |
 
+## page
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PG-01` | `build` | The page keeps, reads and answers only through the verified app: a fact is kept only when the Boundary and the vault allow it, nothing is kept while halted, and every check is the root's own answer |
+
 ## prism
 
 | ID | Level | Statement |
