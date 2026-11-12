@@ -166,7 +166,8 @@ export async function openVault({ decide, name = 'prism-vault', halted = () => '
   // put(value, {label, detector, approval, pointer, address})
   //   address: optional, the address the caller files it under; it must re-derive.
   //   pointer: where the original lives, kept in a hash-only record (sealed).
-  async function put(value, { label = 'unlabeled', detector = 'none', approval = 'none', identifier = 'no', pointer = '', address } = {}) {
+  //   about: where the item belongs in the owner's places ({domain, media, at}), sealed with it.
+  async function put(value, { label = 'unlabeled', detector = 'none', approval = 'none', identifier = 'no', pointer = '', address, about } = {}) {
     const bytes = bytesOf(value);
     const boundary = await decide.boundary(`${label} ${detector} browser ${approval} ${identifier} ${halted()}`);
     if (!keys) {
@@ -177,7 +178,7 @@ export async function openVault({ decide, name = 'prism-vault', halted = () => '
     const derived = 'k1:' + hex(mac);
     const filed = address ?? derived;
     const addr = filed === derived ? 'derived' : 'mismatch';
-    const meta = { label, detector, identifier };
+    const meta = about ? { label, detector, identifier, about } : { label, detector, identifier };
     // The guest says which record, if any, may be written; a hash-only answer keeps the digest, never the value.
     const probe = await decide.store(`${boundary} present ${addr} ok`);
     if (probe === 'store') {
@@ -285,22 +286,22 @@ export async function openVault({ decide, name = 'prism-vault', halted = () => '
     if (!keys) keys = await newRing(db);
     const results = [];
     for (const { kind, rec } of opened) {
-      const { label = 'unlabeled', detector = 'none', identifier = 'no' } = rec.meta || {};
-      if (kind === KIND.value) results.push(await put(rec.body, { label, detector, identifier }));
-      else results.push(await putHash(rec.body.subarray(0, 32), td.decode(rec.body.subarray(32)), { label, detector, identifier }));
+      const { label = 'unlabeled', detector = 'none', identifier = 'no', about } = rec.meta || {};
+      if (kind === KIND.value) results.push(await put(rec.body, { label, detector, identifier, about }));
+      else results.push(await putHash(rec.body.subarray(0, 32), td.decode(rec.body.subarray(32)), { label, detector, identifier, about }));
     }
     return { outcome: 'import', results };
   }
 
   // A hash record coming back from an export: its digest was made under the old ring's MAC key,
   // so it is filed under that digest; the guest still decides whether it may be kept.
-  async function putHash(digest, pointer, { label, detector, identifier }) {
+  async function putHash(digest, pointer, { label, detector, identifier, about }) {
     const boundary = await decide.boundary(`${label} ${detector} browser none ${identifier} ${halted()}`);
     const address = 'k1:' + hex(digest);
     const probe = await decide.store(`${boundary} present derived ok`);
     if (probe !== 'storehash' && probe !== 'store') return { outcome: probe };
     // A value-shaped answer for a hash record still keeps only the hash: a hash never turns back into a value.
-    const outcome = await write(address, 'hash', encodeRecord({ label, detector, identifier }, concat(digest, te.encode(pointer))), (r) => `${boundary} present derived ${r}`);
+    const outcome = await write(address, 'hash', encodeRecord(about ? { label, detector, identifier, about } : { label, detector, identifier }, concat(digest, te.encode(pointer))), (r) => `${boundary} present derived ${r}`);
     return { outcome, address: outcome === 'store' || outcome === 'storehash' ? address : undefined };
   }
 

@@ -49,7 +49,8 @@ model does not sanction.
 
 | ID | Level | Statement |
 | --- | --- | --- |
-| `PG-01` | `build` | The page keeps, reads and answers only through the verified app: a fact is kept only when the Boundary and the vault allow it, nothing is kept while halted, and every check is the root's own answer |
+| `PG-01` | `build` | The page keeps, reads and answers only through the verified app: a note is kept at its domain's floor only when the Boundary and the vault allow it, nothing is kept while halted, and an outbound act is only drafted until the owner's Send |
+| `PG-02` | `build` | The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, and every visible word a name from the model |
 
 ## prism
 

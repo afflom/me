@@ -1,19 +1,28 @@
-// The Prism's own surface. Every decision is the verified app's: this script
-// only carries text between the page, the vault, R4 and the root guest.
+// The Prism's surface. Every place, act, setting and word is PrismSurface's
+// (site/surface/surface.mjs, generated with the model), and every decision is
+// the verified app's: this script only carries bytes between the page, the
+// vault, R4, the routed models and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
+import { PLACES, ACTS, LABELS, FLOORS, GROUPS, SETTINGS, WORDS, DOMAINS } from "./surface/surface.mjs";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
+const element = (tag, props = {}, ...children) => {
+  const node = Object.assign(document.createElement(tag), props);
+  node.append(...children);
+  return node;
+};
+const store = {
+  get: (key, fallback) => { try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; } },
+  set: (key, value) => { try { localStorage.setItem(key, value); } catch { /* a private window: it holds for this page */ } },
+};
 
 // The halt switch is a convenience of this device. It is read on every
-// question, so the Boundary sees "halted yes" the moment it is ticked.
+// question, so the Boundary sees "halted yes" the moment it is set.
 const HALT_KEY = "me.halted";
-function readHalt() {
-  try { return localStorage.getItem(HALT_KEY) === "yes"; } catch { return false; }
-}
-function writeHalt(on) {
-  try { localStorage.setItem(HALT_KEY, on ? "yes" : "no"); } catch { /* private window: the switch still holds for this page */ }
-}
+const PACE_KEY = "me.pace";
+const GRANT_KEY = "me.models.grant";
+const PLACE_KEY = "me.place";
 
 // Google's consent return, when this window is one. The relay and its sealing
 // load only then, so an ordinary visit fetches none of it.
@@ -22,208 +31,530 @@ async function relayConsent() {
   return (await import("./google/relay.mjs")).relayConsent();
 }
 
+// What one kept item says, for its row in a place: a title, who it is from
+// or with, and when. It reads the bytes the vault restored and decides
+// nothing; an item kept only as a hash says only that.
+const lenient = new TextDecoder("utf-8", { fatal: false });
+
+// RFC 5322 and RFC 5545 fold long lines; unfold before reading a field.
+const unfold = (text) => text.replace(/\r?\n[ \t]/g, " ");
+
+function headers(text) {
+  const head = unfold(text.split(/\r?\n\r?\n/, 1)[0]);
+  const out = {};
+  for (const line of head.split(/\r?\n/)) {
+    const at = line.indexOf(":");
+    if (at > 0) out[line.slice(0, at).trim().toLowerCase()] ??= line.slice(at + 1).trim();
+  }
+  return out;
+}
+
+// RFC 2047 encoded words, the common case of a subject or a sender's name.
+function words(value = "") {
+  return value.replace(/=\?([^?]+)\?([bqBQ])\?([^?]*)\?=/g, (_, charset, kind, data) => {
+    try {
+      const bytes = kind.toUpperCase() === "B"
+        ? Uint8Array.from(atob(data), (c) => c.charCodeAt(0))
+        : Uint8Array.from(data.replace(/_/g, " ").replace(/=([0-9a-f]{2})/gi, (m, h) => String.fromCharCode(parseInt(h, 16))), (c) => c.charCodeAt(0));
+      return new TextDecoder(charset, { fatal: false }).decode(bytes);
+    } catch {
+      return data;
+    }
+  });
+}
+
+const person = (from = "") => {
+  const named = /^\s*"?([^"<]+?)"?\s*<[^>]+>\s*$/.exec(from);
+  return words(named ? named[1] : from.replace(/[<>]/g, ""));
+};
+
+function calendarField(text, name) {
+  const match = new RegExp(`^${name}(?:;[^:]*)?:(.*)$`, "mi").exec(unfold(text));
+  return match ? match[1].trim().replace(/\\([,;\\])/g, "$1").replace(/\\n/gi, " ") : "";
+}
+
+function icsTime(value) {
+  const m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/.exec(value);
+  if (!m) return NaN;
+  const [, y, mo, d, h = "0", mi = "0", s = "0", z] = m;
+  return z ? Date.UTC(+y, mo - 1, +d, +h, +mi, +s) : new Date(+y, mo - 1, +d, +h, +mi, +s).getTime();
+}
+
+function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
+  const about = meta.about ?? {};
+  const base = { address, domain: about.domain ?? 11, media: about.media ?? "plainText", label: meta.label, at: about.at ?? at };
+  if (outcome !== "restore") return { ...base, sealed: true, title: "", who: "", text: "" };
+  const text = lenient.decode(bytes);
+  if (base.media === "message") {
+    const h = headers(text);
+    const when = Date.parse(h.date ?? "");
+    return { ...base, at: Number.isNaN(when) ? base.at : when, title: words(h.subject ?? ""), who: person(h.from), text };
+  }
+  if (base.media === "calendar") {
+    const start = icsTime(calendarField(text, "DTSTART"));
+    return { ...base, at: Number.isNaN(start) ? base.at : start, title: calendarField(text, "SUMMARY"), who: calendarField(text, "LOCATION"), text };
+  }
+  const first = text.split(/\r?\n/).find((line) => line.trim()) ?? "";
+  return { ...base, title: first.trim(), who: "", text };
+}
+
+const short = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" });
+const clock = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
+const when = (at) => {
+  if (!at) return "";
+  const date = new Date(at);
+  return date.toDateString() === new Date().toDateString() ? clock.format(date) : short.format(date);
+};
+
 export default async function start({ app, reason, $ }) {
   // This window may be Google's return with the owner's consent: hand it back and close.
   if (await relayConsent()) return;
-  const out = $("me-out");
-  const log = $("me-log");
-  const halt = $("me-halt");
-  let haltedNow = readHalt();
-  halt.checked = haltedNow;
+  const root = document.documentElement;
+  const out = $("pr-out");
+  const log = $("pr-log");
+  let haltedNow = store.get(HALT_KEY, "no") === "yes";
   const halted = () => (haltedNow ? "yes" : "no");
+  let paceNow = store.get(PACE_KEY, "open") === "quiet" ? "quiet" : "open";
+  const pace = () => paceNow;
 
   function say(text, state = "") {
     out.textContent = text;
     out.className = state;
   }
   function remember(what, answer) {
-    const row = document.createElement("li");
-    const req = document.createElement("span");
-    req.textContent = what.length > 28 ? `${what.slice(0, 26)}…` : what;
-    const tag = document.createElement("span");
-    tag.className = "tag";
-    tag.textContent = answer.length > 18 ? `${answer.slice(0, 16)}…` : answer;
-    row.append(req, tag);
+    const row = element("li", {}, element("span", { textContent: what.length > 28 ? `${what.slice(0, 26)}…` : what }), element("span", { className: "tag", textContent: answer }));
     log.prepend(row);
     while (log.children.length > 30) log.lastChild.remove();
   }
+  const paintHalt = () => {
+    root.classList.toggle("pr-halted", haltedNow);
+    if (haltedNow) say(WORDS.halted, "bad");
+    else if (out.textContent === WORDS.halted) say("", "idle");
+  };
+  paintHalt();
 
   if (!app) {
-    say(`The app is ${reason || "not available"}, so nothing is kept, read or asked.`, "bad");
-    for (const control of document.querySelectorAll(".me button, .me input, .me select, .me textarea, .me-controls input, .me-controls button")) control.disabled = true;
+    say(`${WORDS["not.verified"]}${reason ? ` · ${reason}` : ""}`, "bad");
+    for (const control of document.querySelectorAll(".pr button, .pr input, .pr textarea, .pr-ask textarea, .pr-ask button")) control.disabled = true;
     return;
   }
 
   // The root guest: "<facet> <rest>" in, the facet's answer out.
   const line = async (text) => decoder.decode(await app.dispatch(encoder.encode(text))).trim();
 
-  halt.addEventListener("change", () => {
-    haltedNow = halt.checked;
-    writeHalt(haltedNow);
-    say(haltedNow ? "Halted. The Boundary denies every move until you untick it." : "Running.", haltedNow ? "bad" : "good");
-    remember("halt", halted());
-  });
-
-  // Direct questions to the model, for anyone who wants to see a decision.
-  $("me-check").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const text = $("me-line").value.trim();
-    if (!text) return;
-    const answer = await line(text);
-    say(answer, answer === "invalid request" || answer === "invalid" ? "refuse" : "");
-    remember(text, answer);
-  });
-
   // The vault: kept in this browser, every keep and read decided by the app.
   let vault = null;
-  async function count() {
-    const items = await vault.list();
-    const where = await vault.persist();
-    $("me-count").textContent = `${items.length} kept in this browser${where?.persisted ? ", protected from eviction" : ""}.`;
-  }
   try {
     vault = await openVault({ decide: routerDecide(line), halted });
-    await count();
   } catch (error) {
-    $("me-count").textContent = `The vault could not open: ${error?.message ?? error}`;
+    say(`${WORDS.unavailable} · ${error?.message ?? error}`, "bad");
   }
 
-  // Connections: one row per source, each deciding through the root.
-  if (vault) {
-    try {
-      // The Google row loads once the platform has published its client;
-      // until then one line says so and none of the Google code is fetched.
-      const platform = await fetch(new URL("./google/platform.json", import.meta.url), { cache: "no-cache" }).then((response) => response.json());
-      if (platform.clientId) {
-        const { mountGoogle } = await import("./google/panel.mjs");
-        await mountGoogle($("me-connections"), { vault, line, halted });
-      } else {
-        const note = Object.assign(document.createElement("p"), { className: "me-note", textContent: "Gmail and Calendar turn on here once the platform publishes its Google client." });
-        $("me-connections").replaceChildren(note);
-      }
-      $("me-conn").hidden = false;
-    } catch (error) {
-      console.warn(`connections: ${error?.message ?? error}`);
-    }
-  }
-
-  // Destinations: the Prism routed out, to the owner and to the apps they act in.
-  // Its code loads on the owner's first press, so an ordinary visit fetches none of it.
-  $("me-dest-sec").hidden = false;
-  $("me-dest-open").addEventListener("click", async () => {
-    try {
-      const { mountDest } = await import("./dest/panel.mjs");
-      mountDest($("me-dest"), { line, halted });
-    } catch (error) {
-      console.warn(`destinations: ${error?.message ?? error}`);
-    }
-  }, { once: true });
-
-  $("me-keep").addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const fact = $("me-fact").value;
-    if (!fact || !vault) return;
-    const label = $("me-label").value;
-    const result = await vault.put(encoder.encode(fact), { label });
-    say(result.outcome === "store" ? "Kept." : result.outcome === "storehash" ? "Kept as a keyed hash only." : `Not kept: ${result.outcome}.`, result.outcome?.startsWith("store") ? "good" : "bad");
-    remember(`keep (${label})`, result.outcome);
-    if (result.outcome?.startsWith("store")) $("me-fact").value = "";
-    await count();
-  });
-
-  $("me-export").addEventListener("click", async () => {
+  // Everything kept, read once through the vault (each read is the root's
+  // restore decision) and placed by its domain, newest first.
+  let items = [];
+  async function load() {
     if (!vault) return;
-    // The one place a passphrase is asked: an export leaves this browser's key behind.
-    const passphrase = prompt("A passphrase for this export. You will need it to import it.");
-    if (!passphrase) return;
-    const bytes = await vault.exportTo(passphrase);
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" }));
-    link.download = "prism-export.pvx";
-    link.click();
-    URL.revokeObjectURL(link.href);
-    remember("export", `${bytes.length} bytes`);
-  });
+    const rows = await vault.list();
+    const read = [];
+    for (const row of rows) {
+      const got = await vault.get(row.address);
+      if (got.outcome === "restore" || got.outcome === "hashonly") read.push(readItem({ address: row.address, outcome: got.outcome, bytes: got.bytes, meta: got.meta, at: row.at }));
+    }
+    items = read.sort((a, b) => b.at - a.at);
+  }
 
-  $("me-import").addEventListener("change", async (event) => {
-    const file = event.target.files?.[0];
-    if (!file || !vault) return;
-    const passphrase = prompt("The passphrase this export was made with.");
-    if (!passphrase) return;
-    const result = await vault.importFrom(new Uint8Array(await file.arrayBuffer()), passphrase);
-    say(result.outcome === "refuse" ? `Not imported: ${result.reason ?? "refused"}.` : "Imported.", result.outcome === "refuse" ? "bad" : "good");
-    remember("import", result.outcome ?? "done");
-    event.target.value = "";
-    await count();
-  });
+  // The destinations router: PrismDest and the Boundary decide every hand-off.
+  let router = null;
+  const routerOf = async () => {
+    if (router) return router;
+    const { makeRouter } = await import("./dest/dest.mjs");
+    router = makeRouter({ line, halted, pace });
+    return router;
+  };
 
-  // R4: opened on the first question, so the page itself stays light.
+  // --- Places ---
+  const byKey = new Map(PLACES.map((p) => [p.key, p]));
+  const actOf = (place) => ACTS.find((a) => a.key === place.act);
+  let current = byKey.get(store.get(PLACE_KEY, "")) ?? PLACES.find((p) => p.host === "home");
+  let query = "";
+
+  function rowOf(item) {
+    const what = item.sealed ? WORDS.sealed : item.title || "—";
+    return element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}` },
+      element("span", { className: "pr-when", textContent: when(item.at) }),
+      element("span", { className: "pr-what", textContent: what }),
+      element("span", { className: "pr-who", textContent: item.who || DOMAINS[item.domain] || "" }));
+  }
+
+  function paintList() {
+    const list = $("pr-list");
+    let shown = items.filter((item) => current.domains.includes(item.domain));
+    if (current.show === "search") {
+      const words = query.toLowerCase().split(/\s+/).filter(Boolean);
+      shown = words.length ? items.filter((item) => words.every((w) => `${item.title} ${item.who} ${item.text}`.toLowerCase().includes(w))) : [];
+    }
+    $("pr-count").textContent = shown.length ? String(shown.length) : "";
+    if (current.show === "search" && !query) { list.replaceChildren(); return; }
+    list.replaceChildren(...(shown.length ? shown.slice(0, 200).map(rowOf) : [element("li", { className: "pr-empty", textContent: WORDS.empty })]));
+  }
+
+  // One act per place, as PrismSurface names it. Outbound acts are prepared,
+  // shown word for word, and leave only on the owner's Send.
+  function actForm(place) {
+    const act = actOf(place);
+    const host = $("pr-act");
+    if (place.show === "search") {
+      const field = element("input", { type: "search", placeholder: WORDS.search, value: query, autocomplete: "off" });
+      field.setAttribute("aria-label", WORDS.search);
+      field.addEventListener("input", () => { query = field.value; paintList(); });
+      host.replaceChildren(element("div", { className: "pr-row" }, field));
+      return;
+    }
+    if (!act || act.key === "none") { host.replaceChildren(); return; }
+    if (act.key === "note") return host.replaceChildren(noteForm(place));
+    host.replaceChildren(outboundForm(place, act));
+  }
+
+  function noteForm(place) {
+    const field = element("input", { type: "text", placeholder: WORDS["note.placeholder"], autocomplete: "off" });
+    field.setAttribute("aria-label", WORDS["note.placeholder"]);
+    const keep = element("button", { type: "submit", textContent: WORDS.keep });
+    const form = element("form", { className: "pr-row pr-note" }, field, keep);
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const text = field.value.trim();
+      if (!text || !vault) return;
+      // The note's label is its domain's floor in the design model, never chosen here.
+      const domain = place.domains[0];
+      const label = LABELS[FLOORS[domain]].toLowerCase();
+      keep.disabled = true;
+      try {
+        const result = await vault.put(encoder.encode(text), { label, about: { domain, media: "plainText", at: Date.now() } });
+        const kept = result.outcome === "store" ? WORDS.kept : result.outcome === "storehash" ? WORDS["kept.sealed"] : WORDS.refused;
+        say(kept, result.outcome?.startsWith("store") ? "good" : "bad");
+        remember(`${place.name} · ${WORDS["note.placeholder"]}`, result.outcome);
+        if (result.outcome?.startsWith("store")) {
+          field.value = "";
+          await load();
+          paintList();
+        }
+      } finally {
+        keep.disabled = false;
+      }
+    });
+    return form;
+  }
+
+  function outboundForm(place, act) {
+    const fields = [];
+    const input = (props, label) => {
+      const node = element(props.rows ? "textarea" : "input", { autocomplete: "off", ...props });
+      node.setAttribute("aria-label", label);
+      node.placeholder = props.type === "datetime-local" ? "" : label;
+      fields.push(node);
+      return node;
+    };
+    let to = null, body, at = null;
+    if (act.target === "mail") { to = input({ type: "email" }, WORDS["write.to"]); body = input({ rows: 3 }, WORDS["write.body"]); }
+    if (act.target === "calendar") { at = input({ type: "datetime-local" }, WORDS["event.when"]); body = input({ type: "text" }, WORDS["event.what"]); }
+    if (act.target === "platform") body = input({ rows: 3 }, WORDS["share.what"]);
+    const review = element("button", { type: "submit", textContent: WORDS.review });
+    const send = element("button", { type: "button", className: "pr-primary", textContent: WORDS.send, hidden: true });
+    const preview = element("pre", { className: "pr-preview", hidden: true });
+    const form = element("form", { className: "pr-compose" }, ...fields, element("div", { className: "pr-row" }, review, send), preview);
+    form.setAttribute("aria-label", act.word);
+    let pending = null;
+    const itemOf = () => {
+      const text = body.value;
+      const subject = text.split("\n")[0].slice(0, 120);
+      if (act.target === "mail") return { target: "mail", cause: "owner", text, payload: { to: to.value, subject, body: text } };
+      if (act.target === "calendar") {
+        const start = at.value ? new Date(at.value) : new Date(Date.now() + 3600_000);
+        return { target: "calendar", cause: "owner", text, payload: { uid: `${crypto.randomUUID()}@me`, start, end: new Date(start.getTime() + 3600_000), summary: subject, description: text } };
+      }
+      return { target: "platform", cause: "owner", text, payload: { title: subject, text } };
+    };
+    const word = (answer) => ({ deliver: WORDS.delivered, draft: WORDS.drafted, show: WORDS.shown, hold: WORDS.held, refuse: WORDS.refused })[answer] ?? answer;
+    for (const field of fields) field.addEventListener("input", () => { pending = null; send.hidden = true; preview.hidden = true; });
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!body.value.trim()) return;
+      const r = await routerOf();
+      const item = itemOf();
+      const decided = await r.prepare(item);
+      pending = decided.answer === "draft" ? { item, seal: decided.seal } : null;
+      preview.textContent = decided.out?.bytes ?? "";
+      preview.hidden = !decided.out;
+      send.hidden = !pending;
+      say(word(decided.answer), decided.answer === "refuse" ? "bad" : "");
+      remember(`${place.name} · ${act.word}`, decided.answer);
+    });
+    send.addEventListener("click", async () => {
+      if (!pending) return;
+      send.disabled = true;
+      try {
+        const done = await (await routerOf()).send(pending.item, pending.seal);
+        say(word(done.answer), done.delivered ? "good" : "bad");
+        remember(`${place.name} · ${WORDS.send}`, done.answer);
+        if (done.delivered) { pending = null; send.hidden = true; form.reset(); preview.hidden = true; }
+      } finally {
+        send.disabled = false;
+      }
+    });
+    return form;
+  }
+
+  function go(key, focus = false) {
+    const place = byKey.get(key);
+    if (!place || place.host === "composer") return;
+    current = place;
+    store.set(PLACE_KEY, key);
+    for (const button of document.querySelectorAll(".pr-go")) {
+      if (button.dataset.place === key) button.setAttribute("aria-current", "page");
+      else button.removeAttribute("aria-current");
+    }
+    $("pr-title").textContent = place.name;
+    const settings = place.show === "settings";
+    $("pr-settings").hidden = !settings;
+    $("pr-list").hidden = settings;
+    $("pr-count").hidden = settings;
+    actForm(place);
+    if (settings) { buildSettings(); paintSettings(); }
+    else paintList();
+    if (focus) $("pr-title").focus({ preventScroll: false });
+  }
+  $("pr-title").tabIndex = -1;
+  for (const button of document.querySelectorAll(".pr-go")) button.addEventListener("click", () => go(button.dataset.place, true));
+
+  // --- The Boundary's settings: every route in and out, and the stop ---
+  // Built on the first visit to the Boundary, so an ordinary visit fetches
+  // none of the sources' or models' code and locks.
+  let paintSettings = () => {};
+  let settingsBuilt = false;
+  function buildSettings() {
+    if (settingsBuilt) return;
+    settingsBuilt = true;
+    const host = $("pr-settings");
+    const groups = new Map();
+    for (const group of GROUPS) {
+      const rows = element("div", { className: "pr-rows" });
+      host.append(element("section", { className: "pr-set" }, element("h3", { textContent: group.name }), rows));
+      groups.set(group.key, rows);
+    }
+    const settingRow = (setting, ...controls) => {
+      const state = element("span", { className: "pr-state" });
+      const row = element("div", { className: "pr-setting" }, element("span", { className: "pr-name", textContent: setting.name }), state, element("span", { className: "pr-controls" }, ...controls));
+      groups.get(setting.group).append(row);
+      return { row, state };
+    };
+    const switchFor = (checked, label, onChange) => {
+      const box = element("input", { type: "checkbox", checked, role: "switch" });
+      box.setAttribute("aria-label", label);
+      box.addEventListener("change", () => onChange(box.checked));
+      return box;
+    };
+    const named = (key) => SETTINGS.find((s) => s.key === key);
+    const painters = [];
+
+    // Sources: Google, once the platform publishes its client.
+    (async () => {
+      const gmail = settingRow(named("gmail"));
+      const gcal = settingRow(named("gcal"));
+      let platform = {};
+      try { platform = await fetch(new URL("./google/platform.json", import.meta.url), { cache: "no-cache" }).then((r) => r.json()); } catch { /* unavailable below */ }
+      if (!platform.clientId || !vault) {
+        gmail.state.textContent = WORDS.unavailable;
+        gcal.state.textContent = WORDS.unavailable;
+        return;
+      }
+      const [{ connectGoogle, popupAuthorize }, { ingestInto }] = await Promise.all([import("./google/google.mjs"), import("./google/ingest.mjs")]);
+      const google = connectGoogle({
+        decide: (rest) => line(`google ${rest}`),
+        link: (rest) => line(`googlelink ${rest}`),
+        platform,
+        authorize: popupAuthorize({ clientId: platform.clientId, redirectUri: platform.relay }),
+        ingest: ingestInto({ vault }),
+        halted,
+      });
+      await google.ready;
+      for (const [service, row, config] of [["gmail", gmail, platform.mail], ["calendar", gcal, platform.calendar]]) {
+        const connect = element("button", { type: "button", textContent: WORDS.connect });
+        const read = element("button", { type: "button", textContent: WORDS["read.now"] });
+        const forget = element("button", { type: "button", textContent: WORDS.forget });
+        row.row.querySelector(".pr-controls").append(connect, read, forget);
+        const paint = () => {
+          const s = google.status()[service];
+          row.state.textContent = s.token === "fresh" ? WORDS.on : WORDS.off;
+          connect.hidden = s.token === "fresh";
+          read.hidden = s.token !== "fresh";
+          forget.hidden = s.stage === "unprovisioned" || s.token !== "fresh";
+        };
+        const busy = (button, work) => async () => {
+          button.disabled = true;
+          try { await work(); } catch (error) { say(error?.code ?? error?.message ?? String(error), "bad"); } finally { button.disabled = false; paint(); }
+        };
+        connect.addEventListener("click", busy(connect, () => google.grant([service])));
+        read.addEventListener("click", busy(read, async () => {
+          const sync = service === "gmail" ? google.syncMail : google.syncCalendar;
+          const t = await sync({ ...config, onProgress: (p) => say(`${p.store + p.storehash + p.ask + p.refuse + p.other} / ${p.total}`, "") });
+          say(`${t.store + t.storehash} ${WORDS.items}`, "good");
+          remember(named(service === "gmail" ? "gmail" : "gcal").name, `${t.store + t.storehash}`);
+          await load();
+        }));
+        forget.addEventListener("click", busy(forget, () => google.forget()));
+        painters.push(paint);
+        paint();
+      }
+    })().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
+
+    // Models: R4, and every model the lock pins, each routed in by the owner's press.
+    const models = named("models");
+    const r4row = settingRow({ ...models, name: WORDS["model.r4"] });
+    painters.push(() => { r4row.state.textContent = r4 ? (r4.engine.state === "match" ? WORDS["model.run"] : WORDS.refused) : WORDS["model.fetch"]; });
+    (async () => {
+      const lock = await fetch(new URL("./models/models.lock.json", import.meta.url), { cache: "no-cache" }).then((r) => r.json());
+      for (const m of lock.models) {
+        const toggle = element("button", { type: "button" });
+        const row = settingRow({ ...models, name: m.title }, toggle);
+        const paint = async () => {
+          const granted = grants().includes(m.id);
+          toggle.textContent = granted ? WORDS.unroute : WORDS.route;
+          const routed = routedModels ?? null;
+          const outcome = routed ? (await routed.judge(m.id)).outcome : granted ? "fetch" : "ask";
+          row.state.textContent = WORDS[`model.${outcome}`] ?? outcome;
+        };
+        toggle.addEventListener("click", async () => {
+          const now = grants();
+          store.set(GRANT_KEY, JSON.stringify(now.includes(m.id) ? now.filter((x) => x !== m.id) : [...now, m.id]));
+          routedModels = null;
+          await paint();
+          remember(m.title, grants().includes(m.id) ? WORDS.route : WORDS.unroute);
+        });
+        painters.push(paint);
+        paint();
+      }
+    })().catch((error) => console.warn(`models: ${error?.message ?? error}`));
+
+    // Attention: Quiet holds what is not urgent.
+    settingRow(named("quiet"), switchFor(paceNow === "quiet", named("quiet").name, (on) => {
+      paceNow = on ? "quiet" : "open";
+      store.set(PACE_KEY, paceNow);
+      remember(named("quiet").name, on ? WORDS.on : WORDS.off);
+    }));
+
+    // This browser: what is kept here, and an encrypted backup of it.
+    const passphrase = element("input", { type: "password", placeholder: WORDS["passphrase.export"], autocomplete: "new-password" });
+    passphrase.setAttribute("aria-label", WORDS["passphrase.export"]);
+    const exportButton = element("button", { type: "button", textContent: WORDS.export });
+    const importFile = element("input", { type: "file", accept: ".pvx,application/octet-stream" });
+    importFile.setAttribute("aria-label", WORDS.import);
+    const importLabel = element("label", { className: "pr-file" }, element("span", { textContent: WORDS.import }), importFile);
+    const backup = settingRow(named("backup"), passphrase, exportButton, importLabel);
+    painters.push(async () => {
+      if (!vault) { backup.state.textContent = WORDS.unavailable; return; }
+      const where = await vault.persist();
+      backup.state.textContent = `${items.length} ${WORDS.items}${where?.persisted ? ` · ${WORDS.persisted}` : ""}`;
+    });
+    exportButton.addEventListener("click", async () => {
+      if (!vault) return;
+      if (!passphrase.value) { passphrase.focus(); return; }
+      const bytes = await vault.exportTo(passphrase.value);
+      const link = element("a", { href: URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" })), download: "prism-export.pvx" });
+      link.click();
+      URL.revokeObjectURL(link.href);
+      passphrase.value = "";
+      remember(WORDS.export, `${bytes.length}`);
+    });
+    importFile.addEventListener("change", async () => {
+      const file = importFile.files?.[0];
+      if (!file || !vault) return;
+      if (!passphrase.value) { importFile.value = ""; passphrase.focus(); return; }
+      const result = await vault.importFrom(new Uint8Array(await file.arrayBuffer()), passphrase.value);
+      say(result.outcome === "refuse" ? `${WORDS.refused} · ${result.reason ?? ""}` : WORDS.kept, result.outcome === "refuse" ? "bad" : "good");
+      remember(WORDS.import, result.outcome ?? "");
+      importFile.value = "";
+      passphrase.value = "";
+      await load();
+      paintSettings();
+    });
+
+    // Halt: the Boundary denies every move while it is on.
+    const halt = switchFor(haltedNow, named("halt").name, (on) => {
+      haltedNow = on;
+      store.set(HALT_KEY, on ? "yes" : "no");
+      paintHalt();
+      remember(named("halt").name, halted());
+    });
+    halt.id = "pr-halt";
+    settingRow(named("halt"), halt);
+
+    paintSettings = () => { for (const paint of painters) paint(); };
+  }
+
+  // --- Ask: R4 answers in this browser; a routed text model, if the owner routed one ---
   let r4 = null;
   async function openModel() {
     if (r4) return r4;
     const [{ openR4 }, { guestDecider }] = await Promise.all([import("./r4/r4.mjs"), import("./r4/decide.mjs")]);
     const lock = await fetch(new URL("./r4/r4.lock.json", import.meta.url)).then((response) => response.json());
-    $("me-r4-state").textContent = "Loading the language model into this browser…";
+    say(WORDS["ask.loading"], "wait");
     r4 = await openR4({
       lock,
       decide: guestDecider(app.dispatch),
       boundary: (fields) => line(`boundary ${fields}`),
     });
-    $("me-r4-state").textContent = r4.engine.state === "match" ? "The language model runs in this browser." : `The language model did not load: ${r4.engine.reasons.join(", ") || r4.engine.state}.`;
     return r4;
   }
-
-  // Models routed into the Prism (MD-01): their code loads on the owner's first press,
-  // or on a question once the owner has routed a model, never on an ordinary visit.
-  let models = null;
-  async function openModels() {
-    if (models) return models;
-    const { mountModels } = await import("./models/panel.mjs");
-    models = await mountModels($("me-models"), { line, halted });
-    return models;
+  const grants = () => { try { return JSON.parse(store.get(GRANT_KEY, "[]")).filter((x) => typeof x === "string"); } catch { return []; } };
+  let routedModels = null;
+  async function openRouted() {
+    if (routedModels) return routedModels;
+    const { openModels } = await import("./models/models.mjs");
+    const lock = await fetch(new URL("./models/models.lock.json", import.meta.url), { cache: "no-cache" }).then((r) => r.json());
+    routedModels = await openModels({ lock, decide: async (request) => ({ outcome: await line(`model ${request}`), rule: "guest" }), grant: { models: grants() }, halted });
+    return routedModels;
   }
-  const routedSomething = () => {
-    try { return JSON.parse(localStorage.getItem("me.models.grant") ?? "[]").length > 0; } catch { return false; }
-  };
-  $("me-models-open").addEventListener("click", () => {
-    openModels().catch((error) => console.warn(`models: ${error?.message ?? error}`));
-  }, { once: true });
-
-  // R4 routes the question to a text model the owner routed into the Prism, if any;
-  // else R4 answers itself. Either way the answer shows only as R4 and the Boundary allow.
   async function answer(prompt, context) {
     const r4model = await openModel();
-    if (routedSomething()) {
-      const routed = await openModels();
+    if (grants().length) {
+      const routed = await openRouted();
       const target = routed.route("text-generation");
       if (target) {
-        $("me-r4-state").textContent = "Loading the routed model into this browser…";
-        const decision = await routed.ready(target);
+        const decision = await routed.prepare(target);
         if (decision.outcome === "run") {
           routed.connect(r4model, { maxTokens: 128 });
-          $("me-r4-state").textContent = "R4 routes your question to a model running in this browser.";
           return r4model.askRouted({ target, prompt, context });
         }
       }
     }
     return r4model.ask({ prompt, context });
   }
-
-  $("me-ask").addEventListener("submit", async (event) => {
+  $("pr-ask").addEventListener("submit", async (event) => {
     event.preventDefault();
-    const prompt = $("me-prompt").value.trim();
+    const prompt = $("pr-prompt").value.trim();
     if (!prompt) return;
-    $("me-ask-go").disabled = true;
+    $("pr-ask-go").disabled = true;
     try {
       const result = await answer(prompt, { label: "confidential", halted: halted() });
       if (result.outcome === "answer") say(result.answer, "good");
-      else if (result.outcome === "ask" && result.release) say("The Boundary asks before showing this answer.", "warn");
-      else say(`No answer: ${result.outcome}.`, "bad");
+      else if (result.outcome === "ask" && result.release) say(WORDS["answer.asks"], "warn");
+      else say(`${WORDS["answer.none"]} · ${result.outcome}`, "bad");
       remember(prompt, result.outcome);
+      if (result.outcome === "answer") $("pr-prompt").value = "";
     } catch (error) {
-      say(`No answer: ${error?.message ?? error}`, "bad");
+      say(`${WORDS["answer.none"]} · ${error?.message ?? error}`, "bad");
     } finally {
-      $("me-ask-go").disabled = false;
+      $("pr-ask-go").disabled = false;
+      paintSettings();
     }
   });
+  $("pr-prompt").addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); $("pr-ask").requestSubmit(); }
+  });
+
+  go(current.key);
+  await load();
+  go(current.key);
+  root.classList.add("pr-ready");
 }

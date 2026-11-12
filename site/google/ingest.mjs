@@ -14,6 +14,9 @@
 
 export const LABEL = 'confidential';
 
+// The place an item belongs to, by its media: the surface model's media table.
+import { MEDIA as DOMAIN_OF } from '../surface/surface.mjs';
+
 // Luhn-valid 13 to 19 digit runs with a card issuer's prefix (PCI DSS 3).
 function hasCard(text) {
   for (const match of text.matchAll(/(?<![0-9])(?:[0-9][ -]?){12,18}[0-9](?![0-9])/g)) {
@@ -54,6 +57,7 @@ export function ingestInto({ vault, route = null }) {
       detector: detect(bytes),
       identifier: 'yes',
       pointer: `${frame.source}#${envelope.digest}`,
+      about: { domain: DOMAIN_OF[envelope.media] ?? 11, media: envelope.media, at: Date.parse(frame.time ?? '') || Date.now() },
     });
     return typeof result === 'string' ? { outcome: result } : result;
   };

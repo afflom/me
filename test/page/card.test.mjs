@@ -15,7 +15,7 @@ const site = resolve(process.env.PAGE_SITE ?? "site");
 const published = process.env.PAGE_URL;
 const types = { ".html": "text/html", ".mjs": "text/javascript", ".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".wasm": "application/wasm", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2", ".webmanifest": "application/manifest+json" };
 
-test("the page keeps, refuses while halted and answers only through the app (PG-01)", async () => {
+test("the Prism keeps at the model's floors, refuses while halted and drafts only through the app (PG-01)", async () => {
   const server = createServer((request, response) => {
     let path = decodeURIComponent(new URL(request.url, "http://localhost").pathname).replace(/^\/me\//, "/");
     if (path.endsWith("/")) path += "index.html";
@@ -30,31 +30,48 @@ test("the page keeps, refuses while halted and answers only through the app (PG-
     const page = await browser.newPage();
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    page.on("dialog", (dialog) => dialog.accept("a test passphrase"));
     await page.goto(published ?? `http://127.0.0.1:${server.address().port}/me/`);
-    await page.waitForFunction(() => /kept in this browser|could not open/.test(document.getElementById("me-count")?.textContent ?? ""), null, { timeout: 60000 });
-    assert.equal((await page.textContent("#me-count")).trim(), "0 kept in this browser.");
-    const out = async () => (await page.textContent("#me-out")).trim();
-    const settle = (text) => page.waitForFunction((t) => document.getElementById("me-out").textContent.trim() === t, text, { timeout: 10000 });
+    // The Prism is ready once the vault has opened and every place is drawn.
+    await page.waitForSelector("html.pr-ready", { timeout: 60000 });
+    const settle = (text) => page.waitForFunction((t) => document.getElementById("pr-out").textContent.trim() === t, text, { timeout: 10000 });
+    const rows = async () => page.locator("#pr-list .pr-item").count();
+    const note = async (place, text) => {
+      await page.click(`.pr-go[data-place="${place}"]`);
+      await page.fill("#pr-act input", text);
+      await page.click("#pr-act button");
+    };
 
-    await page.fill("#me-line", "boundary public none github owner no no");
-    await page.click("#me-check button");
-    await settle("deny");
-    await page.fill("#me-line", "when 0 60 60 120");
-    await page.click("#me-check button");
-    await settle("meets");
+    // Every owner view of the design model is one place, in the model's order.
+    const places = await page.$$eval(".pr-go", (buttons) => buttons.map((b) => b.dataset.place));
+    assert.deepEqual(places, ["today", "conversations", "people", "calendar", "tasks", "places", "money", "things", "me", "health", "work", "library", "explore", "timeline", "presence", "boundary"]);
 
-    await page.fill("#me-fact", "An example fact");
-    await page.click("#me-keep button");
-    await settle("Kept.");
-    assert.equal((await page.textContent("#me-count")).trim(), "1 kept in this browser.");
+    // A task is kept at its domain's floor (internal): the Boundary allows it, the vault keeps it.
+    await note("tasks", "An example task");
+    await settle("Kept");
+    assert.equal(await rows(), 1);
 
-    await page.check("#me-halt");
-    await page.fill("#me-fact", "Another example fact");
-    await page.click("#me-keep button");
-    await settle("Not kept: refuse.");
-    assert.equal(await out(), "Not kept: refuse.");
-    assert.equal((await page.textContent("#me-count")).trim(), "1 kept in this browser.");
+    // Health's floor is restricted: the Boundary answers hashonly, so only its digest is kept.
+    await note("health", "An example health note");
+    await settle("Kept sealed");
+    assert.equal(await page.locator("#pr-list .pr-sealed").count(), 1);
+
+    // Halted, the Boundary denies every keep.
+    await page.click('.pr-go[data-place="boundary"]');
+    await page.check("#pr-halt");
+    await settle("Halted");
+    await note("tasks", "Another example task");
+    await settle("Refused");
+    assert.equal(await rows(), 1);
+
+    // Resumed, a draft is prepared through PrismDest and nothing leaves without Send.
+    await page.click('.pr-go[data-place="boundary"]');
+    await page.uncheck("#pr-halt");
+    await page.click('.pr-go[data-place="conversations"]');
+    await page.fill('#pr-act input[type="email"]', "someone@example.org");
+    await page.fill("#pr-act textarea", "An example message");
+    await page.click('#pr-act button[type="submit"]');
+    await settle("Ready to send");
+    assert.match(await page.textContent("#pr-act pre"), /^To: someone@example\.org/);
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
