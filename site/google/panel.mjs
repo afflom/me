@@ -3,21 +3,24 @@
 // is the owner's act; each move is PrismGoogleLink's answer, each call
 // PrismGoogle's, and each item goes through the Boundary and the vault.
 //
-//   mountGoogle(root, { vault, route, halted })
+//   mountGoogle(root, { vault, line, halted })
+//
+// `line(text)` asks the Prism root guest ("<facet> <rest>"): every Google
+// decision goes through the root's google and googlelink facets, one path.
 //
 // platform.json is the platform's shared OAuth client, inherited, never a
 // setting: a Prism names no Google configuration of its own.
 
 import { connectGoogle, popupAuthorize } from './google.mjs';
-import { loadGuests } from './guest.mjs';
 import { ingestInto } from './ingest.mjs';
 
 const element = (tag, props = {}) => Object.assign(document.createElement(tag), props);
 const NAMES = { gmail: 'Gmail', calendar: 'Calendar' };
 
-export async function mountGoogle(root, { vault, route = null, halted = () => 'no', base = new URL('./', import.meta.url) } = {}) {
+export async function mountGoogle(root, { vault, line, route = null, halted = () => 'no', base = new URL('./', import.meta.url) } = {}) {
   const platform = await (await fetch(new URL('platform.json', base), { cache: 'no-cache' })).json();
-  const guests = await loadGuests(base);
+  if (typeof line !== 'function') throw new Error('mountGoogle needs line (the Prism root guest)');
+  const guests = { call: (rest) => line(`google ${rest}`), link: (rest) => line(`googlelink ${rest}`) };
   const google = connectGoogle({
     decide: guests.call,
     link: guests.link,
@@ -38,9 +41,9 @@ export async function mountGoogle(root, { vault, route = null, halted = () => 'n
     const read = element('button', { type: 'button', textContent: `Read ${NAMES[service]} now` });
     const stage = element('span', { className: 'google-stage' });
     rows[service] = { on, read, stage };
-    const line = element('div', { className: 'google-service' });
-    line.append(stage, on, read);
-    root.append(line);
+    const block = element('div', { className: 'google-service' });
+    block.append(stage, on, read);
+    root.append(block);
   }
   root.append(forget, status);
 

@@ -1,0 +1,89 @@
+\begin{lexlean}{PrismProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Prism}
+\importmodule{PrismBoundary}
+\importmodule{PrismChronology}
+\importmodule{PrismGoogle}
+\importmodule{PrismGoogleLink}
+\importmodule{PrismLearning}
+\importmodule{PrismR4}
+\importmodule{PrismVaultRestore}
+\importmodule{PrismVaultStore}
+\title{Text application model}
+\begin{semanticmodule}
+theorem{
+  name: routesBoundary,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetBoundary) rest) = (PrismBoundary::boundaryDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesLearn,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetLearn) rest) = (PrismLearning::learningDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesWhen,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetWhen) rest) = (PrismChronology::chronologyDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesStore,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetStore) rest) = (PrismVaultStore::storeDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesRestore,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetRestore) rest) = (PrismVaultRestore::restoreDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesR4,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetR4) rest) = (PrismR4::r4Dispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesGoogle,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetGoogle) rest) = (PrismGoogle::googleDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesGooglelink,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetGooglelink) rest) = (PrismGoogleLink::googleLinkDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: refusesUnknownFacet,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetUnknown) rest) = (Prism::refusal)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

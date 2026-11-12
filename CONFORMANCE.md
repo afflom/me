@@ -18,12 +18,6 @@ The three honesty levels (R2):
 `cargo xtask audit-limits` fails if any code path returns an error the
 model does not sanction.
 
-## contract
-
-| ID | Level | Statement |
-| --- | --- | --- |
-| `TC-01` | `build` | The checker answers conformant exactly when every universal policy file's observed digest equals its locked digest |
-
 ## frame
 
 | ID | Level | Statement |
@@ -38,11 +32,26 @@ model does not sanction.
 | `GG-02` | `build` | The Google connection moves between stages only as PrismGoogleLink answers: only the owner grants, a client for another origin is never used, and the kill switch or a forget revokes every grant |
 | `GG-03` | `build` | Mail and calendar items read from Google reach only the browser vault, through the detectors, the router and the Boundary, by GET to the two API hosts with the token only in the Authorization header |
 
+## prism
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PM-01` | `build` | The Prism answers a request naming a known facet with exactly that facet's decision of the rest, and refuses every other request |
+| `PM-02` | `build` | The Boundary denies every move while halted and every move to GitHub or the hosted verifier, never allows detected, restricted or identifying data out, and never sends outbound without the owner's approval |
+| `PM-03` | `build` | Learning confirms or rejects a belief only on the owner's signal, holds a confirmed or rejected belief against every other signal, and never raises a weight above 15 or lowers it below 1 |
+| `PM-04` | `build` | Chronology never names an Allen relation that the two intervals' endpoints contradict, and never calls two well-formed intervals malformed |
+
 ## privacy
 
 | ID | Level | Statement |
 | --- | --- | --- |
 | `PV-01` | `build` | Neither the tracked tree nor the built page holds personal data: every email address is at a reserved domain, and no phone, payment card or national ID number appears |
+
+## r4
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `R4-01` | `build` | The R4 language model runs in the browser only from bytes that re-derive to their pinned SHA-256, served by the page in pieces of at most 16 MiB, and shows an answer only when the proved Prism R4 decision allows it |
 
 ## vault
 

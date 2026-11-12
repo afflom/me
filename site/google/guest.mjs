@@ -1,9 +1,12 @@
-// The two Google decision guests, each the core wasm prismpm builds from a
-// proved module (as the standalone app in app/specs/<name>):
+// The page decides through the Prism root (panel.mjs). These standalone builds
+// of the same two modules let site/google/google.test.mjs run every request
+// without the holo. Each is the core wasm prismpm builds from a proved module
+// (as the standalone app in app/specs/<name>):
 //   call: app/src/PrismGoogle.lex.tex      may this one API call be made
-//   link: app/src/PrismGoogleLink.lex.tex  the connection's next stage It exports holo_alloc(len) and holo_run(ptr, len) ->
-// (outPtr << 32 | outLen), that is dispatch(bytes) -> bytes. Bytes whose
-// SHA-256 is not the pinned fingerprint are refused before they compile.
+//   link: app/src/PrismGoogleLink.lex.tex  the connection's next stage
+// It exports holo_alloc(len) and holo_run(ptr, len) -> (outPtr << 32 | outLen),
+// that is dispatch(bytes) -> bytes. Bytes whose SHA-256 is not the pinned
+// fingerprint are refused before they compile.
 
 export const GUESTS = {
   call: { path: 'guest/google.wasm', sha256: '01b86213fde2d12f91987fe146acdb1a3e5dd369c0183baa3ef9154baf8fccd9' },
