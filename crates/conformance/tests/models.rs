@@ -97,7 +97,9 @@ fn lock_problems(lock: &str) -> Vec<String> {
     }
     for revision in strings(lock, "revision") {
         if revision.len() != 40 || !revision.bytes().all(|b| b.is_ascii_hexdigit()) {
-            problems.push(format!("a model's revision `{revision}` is not a pinned commit"));
+            problems.push(format!(
+                "a model's revision `{revision}` is not a pinned commit"
+            ));
         }
     }
     if strings(lock, "revision").is_empty() {
@@ -105,7 +107,10 @@ fn lock_problems(lock: &str) -> Vec<String> {
     }
     let runtimes = strings(lock, "version").len();
     let integrity = strings(lock, "integrity");
-    if runtimes == 0 || integrity.len() != runtimes || !integrity.iter().all(|i| i.starts_with("sha512-")) {
+    if runtimes == 0
+        || integrity.len() != runtimes
+        || !integrity.iter().all(|i| i.starts_with("sha512-"))
+    {
         problems.push("every runtime package needs its sha512 registry integrity".to_string());
     }
     problems
@@ -127,23 +132,30 @@ fn models_md_01() {
         "MD-01: PrismModels is a library of the Prism, not a second application root"
     );
     assert!(
-        declaration(&model, "modelsDispatch").contains("(modelsEncodeAnswer (modelsJudge request))"),
+        declaration(&model, "modelsDispatch")
+            .contains("(modelsEncodeAnswer (modelsJudge request))"),
         "MD-01: the answer must be decided by the judge the guarantees are about"
     );
     for n in 1..=9 {
         let theorem = declaration(&proofs, &format!("modelsInv00{n}Holds"));
         assert!(
             theorem.contains("parameters: [request : PrismModels::ModelsRequest],")
-                && theorem.contains(&format!("statement: ((modelsBreaksInv00{n} request) = false),"))
+                && theorem.contains(&format!(
+                    "statement: ((modelsBreaksInv00{n} request) = false),"
+                ))
                 && theorem.contains("axioms: [Quot.sound, propext]"),
             "MD-01: guarantee {n} changed its statement or axioms:\n{theorem}"
         );
         assert!(
-            declaration(&proofs, &format!("modelsBreaksInv00{n}")).contains("(PrismModels::modelsJudge request)"),
+            declaration(&proofs, &format!("modelsBreaksInv00{n}"))
+                .contains("(PrismModels::modelsJudge request)"),
             "MD-01: guarantee {n} must be about the judge"
         );
     }
-    assert!(proofs.find("modelsInv010Holds").is_none(), "MD-01: the register counts nine guarantees");
+    assert!(
+        proofs.find("modelsInv010Holds").is_none(),
+        "MD-01: the register counts nine guarantees"
+    );
     // INV-001 and INV-005: never run while halted, never run a model the owner did not grant.
     assert!(declaration(&proofs, "modelsBreaksInv001").contains(
         "((project request halted) =? (PrismModels::modelsHaltedYes))) && ((PrismModels::modelsJudge request) =? (PrismModels::modelsAnswerRun))"
@@ -153,7 +165,10 @@ fn models_md_01() {
     ));
     let project = read("app/lexlean.toml");
     for entry in ["src/PrismModels.lex.tex", "src/PrismModelsProofs.lex.tex"] {
-        assert!(project.contains(&format!("\"{entry}\"")), "MD-01: {entry} is not an entrypoint");
+        assert!(
+            project.contains(&format!("\"{entry}\"")),
+            "MD-01: {entry} is not an entrypoint"
+        );
     }
     assert!(
         read("tools/prism_root.py").contains("(\"model\", \"PrismModels\", \"modelsDispatch\")"),
@@ -174,8 +189,9 @@ fn models_md_01() {
     );
     let worker = read("site/models/model-worker.mjs");
     assert!(
-        worker.contains("self.fetch = () => Promise.reject(new Error(\"NetworkClosedInModelWorker\"));")
-            && worker.contains("statusText: \"NotLocked\""),
+        worker.contains(
+            "self.fetch = () => Promise.reject(new Error(\"NetworkClosedInModelWorker\"));"
+        ) && worker.contains("statusText: \"NotLocked\""),
         "MD-01: the model worker must close the network and serve only locked bytes"
     );
 

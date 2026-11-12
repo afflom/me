@@ -8,7 +8,6 @@
 //   models.route("text-generation")  -> a granted model id, or null
 //   await models.ready(id)            -> fetch and load it, as the decision allows
 import { openModels } from "./models.mjs";
-import { guestDecider } from "../r4/decide.mjs";
 
 const GRANT_KEY = "me.models.grant";
 const element = (tag, props = {}) => Object.assign(document.createElement(tag), props);
@@ -29,10 +28,11 @@ function writeGrant(grant) {
 export async function mountModels(root, { line, halted = () => "no", base = new URL("./", import.meta.url) } = {}) {
   if (typeof line !== "function") throw new Error("mountModels needs line (the Prism root guest)");
   const lock = await (await fetch(new URL("models.lock.json", base), { cache: "no-cache" })).json();
-  const decide = guestDecider((bytes) => line(new TextDecoder().decode(bytes)).then((t) => new TextEncoder().encode(t)), { facet: "model" });
+  // Every decision is the Prism root's "model" facet: PrismModels, compiled into the guest.
+  const decide = async (request) => ({ outcome: await line(`model ${request}`), rule: "guest" });
   const grant = readGrant();
   let status = null;
-  let models = await openModels({ lock, decide, grant, halted, onProgress: (p) => p.fetching && say(`Fetching ${p.fetching}…`) });
+  const models = await openModels({ lock, decide, grant, halted, onProgress: (p) => p.fetching && say(`Fetching ${p.fetching}…`) });
   const say = (text) => { if (status) status.textContent = text; };
 
   root.replaceChildren(element("h3", { textContent: "Models" }));

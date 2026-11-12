@@ -18,6 +18,13 @@ The three honesty levels (R2):
 `cargo xtask audit-limits` fails if any code path returns an error the
 model does not sanction.
 
+## dest
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `DS-01` | `build` | The Prism routes an item to a destination only as PrismDest answers: nothing leaves without the owner's act on the very words they saw, nothing coercive is carried out or pushed into the owner's view, nothing without a cause is routed, restricted content never leaves, quiet is kept, and the kill switch stops every route |
+| `DS-02` | `build` | The page hands an item to the owner's calendar, mail or another platform only after the Boundary and PrismDest answer deliver for the owner's press, through an app the owner already uses, with no host called and no setup |
+
 ## frame
 
 | ID | Level | Statement |
@@ -31,6 +38,12 @@ model does not sanction.
 | `GG-01` | `build` | The page makes a Google API call only when PrismGoogle answers fetch, which it never does while halted, to any other host, without a fresh read grant, or for a write without the owner's act |
 | `GG-02` | `build` | The Google connection moves between stages only as PrismGoogleLink answers: only the owner grants, a client for another origin is never used, and the kill switch or a forget revokes every grant |
 | `GG-03` | `build` | Mail and calendar items read from Google reach only the browser vault, through the detectors, the router and the Boundary, by GET to the two API hosts with the token only in the Authorization header |
+
+## models
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `MD-01` | `build` | A language or reasoning model routed into the Prism runs in the browser only when the proved Prism Models decision says run: pinned by hub commit and SHA-256, in a format with a locked runtime, granted by the owner, and not halted; its answer is shown only through R4's routed mode and the Boundary |
 
 ## page
 

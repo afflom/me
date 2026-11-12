@@ -1,8 +1,6 @@
 // The Prism's own surface. Every decision is the verified app's: this script
 // only carries text between the page, the vault, R4 and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
-import { mountGoogle } from "./google/panel.mjs";
-import { relayConsent } from "./google/relay.mjs";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -15,6 +13,13 @@ function readHalt() {
 }
 function writeHalt(on) {
   try { localStorage.setItem(HALT_KEY, on ? "yes" : "no"); } catch { /* private window: the switch still holds for this page */ }
+}
+
+// Google's consent return, when this window is one. The relay and its sealing
+// load only then, so an ordinary visit fetches none of it.
+async function relayConsent() {
+  if (!/(?:^#|&)state=/.test(location.hash)) return false;
+  return (await import("./google/relay.mjs")).relayConsent();
 }
 
 export default async function start({ app, reason, $ }) {
@@ -86,12 +91,33 @@ export default async function start({ app, reason, $ }) {
   // Connections: one row per source, each deciding through the root.
   if (vault) {
     try {
-      await mountGoogle($("me-connections"), { vault, line, halted });
+      // The Google row loads once the platform has published its client;
+      // until then one line says so and none of the Google code is fetched.
+      const platform = await fetch(new URL("./google/platform.json", import.meta.url), { cache: "no-cache" }).then((response) => response.json());
+      if (platform.clientId) {
+        const { mountGoogle } = await import("./google/panel.mjs");
+        await mountGoogle($("me-connections"), { vault, line, halted });
+      } else {
+        const note = Object.assign(document.createElement("p"), { className: "me-note", textContent: "Gmail and Calendar turn on here once the platform publishes its Google client." });
+        $("me-connections").replaceChildren(note);
+      }
       $("me-conn").hidden = false;
     } catch (error) {
       console.warn(`connections: ${error?.message ?? error}`);
     }
   }
+
+  // Destinations: the Prism routed out, to the owner and to the apps they act in.
+  // Its code loads on the owner's first press, so an ordinary visit fetches none of it.
+  $("me-dest-sec").hidden = false;
+  $("me-dest-open").addEventListener("click", async () => {
+    try {
+      const { mountDest } = await import("./dest/panel.mjs");
+      mountDest($("me-dest"), { line, halted });
+    } catch (error) {
+      console.warn(`destinations: ${error?.message ?? error}`);
+    }
+  }, { once: true });
 
   $("me-keep").addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -147,14 +173,49 @@ export default async function start({ app, reason, $ }) {
     return r4;
   }
 
+  // Models routed into the Prism (MD-01): their code loads on the owner's first press,
+  // or on a question once the owner has routed a model, never on an ordinary visit.
+  let models = null;
+  async function openModels() {
+    if (models) return models;
+    const { mountModels } = await import("./models/panel.mjs");
+    models = await mountModels($("me-models"), { line, halted });
+    return models;
+  }
+  const routedSomething = () => {
+    try { return JSON.parse(localStorage.getItem("me.models.grant") ?? "[]").length > 0; } catch { return false; }
+  };
+  $("me-models-open").addEventListener("click", () => {
+    openModels().catch((error) => console.warn(`models: ${error?.message ?? error}`));
+  }, { once: true });
+
+  // R4 routes the question to a text model the owner routed into the Prism, if any;
+  // else R4 answers itself. Either way the answer shows only as R4 and the Boundary allow.
+  async function answer(prompt, context) {
+    const r4model = await openModel();
+    if (routedSomething()) {
+      const routed = await openModels();
+      const target = routed.route("text-generation");
+      if (target) {
+        $("me-r4-state").textContent = "Loading the routed model into this browser…";
+        const decision = await routed.ready(target);
+        if (decision.outcome === "run") {
+          routed.connect(r4model, { maxTokens: 128 });
+          $("me-r4-state").textContent = "R4 routes your question to a model running in this browser.";
+          return r4model.askRouted({ target, prompt, context });
+        }
+      }
+    }
+    return r4model.ask({ prompt, context });
+  }
+
   $("me-ask").addEventListener("submit", async (event) => {
     event.preventDefault();
     const prompt = $("me-prompt").value.trim();
     if (!prompt) return;
     $("me-ask-go").disabled = true;
     try {
-      const model = await openModel();
-      const result = await model.ask({ prompt, context: { label: "confidential", halted: halted() } });
+      const result = await answer(prompt, { label: "confidential", halted: halted() });
       if (result.outcome === "answer") say(result.answer, "good");
       else if (result.outcome === "ask" && result.release) say("The Boundary asks before showing this answer.", "warn");
       else say(`No answer: ${result.outcome}.`, "bad");

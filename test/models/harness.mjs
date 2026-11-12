@@ -78,14 +78,14 @@ try {
   const target = m1.route("text-generation");
   const routed = await r4.askRouted({ target, prompt: "Name one color.", context: { label: "public" } });
   const ok = await verifyReceipt(routed.receipt, routed.answer);
-  const confidential = await r4.askRouted({ target, prompt: "Name one color.", context: { label: "confidential" } });
+  const restricted = await r4.askRouted({ target, prompt: "Name one color.", context: { label: "restricted" } });
   const unrouted = await r4.askRouted({ target: "not-a-model", prompt: "Name one color." });
   log("S5 routed by R4: answer with a routed receipt; the Boundary still decides what shows",
     r4.engine.state === "match" && target === GEN && routed.outcome === "answer" && routed.answer.length > 0 && ok.ok &&
     routed.receipt.mode === "routed" && routed.receipt.model.id === GEN && routed.receipt.model.source.revision === lock.models[0].source.revision &&
     routed.receipt.decision.line === "routed match none granted allow" &&
-    confidential.outcome !== "answer" && unrouted.outcome === "refuse",
-    { engine: r4.engine.state, answer: routed.answer?.slice(0, 120), receipt: routed.receipt, confidential: confidential.outcome, unrouted: unrouted.outcome });
+    restricted.outcome === "receipt" && restricted.answer === null && unrouted.outcome === "refuse",
+    { engine: r4.engine.state, answer: routed.answer?.slice(0, 120), receipt: routed.receipt, restricted: restricted.outcome, unrouted: unrouted.outcome });
   r4.stop();
 
   // S6: withdrawing the grant or halting stops the next call; the decision is asked every time.

@@ -15,6 +15,8 @@ questions, the examples and the guarantees in plain words.
 | `PrismVaultRestore` | `vault-restore/` | whether the browser vault may give one stored object back: restore, hash only, or refuse | 5 |
 | `PrismGoogle` | `google/` | whether the page may make one Gmail or Calendar API call: fetch, consent, ask, or refuse | 7 |
 | `PrismGoogleLink` | `google-link/` | the Google connection's next stage: unprovisioned, registered, granted, syncing, revoked, or refuse | 9 |
+| `PrismDest` | `dest/` | where one item may go next: deliver (to the owner's calendar, mail or another platform), draft, show (to the owner), hold (quietly), or refuse | 11 |
+| `PrismModels` | `models/` | whether one language or reasoning model routed into the Prism from a hub may be fetched or run in the browser: run, fetch, ask the owner, or refuse; refuses unpinned models, unknown formats and bytes that differ from the lock, and moves nothing while halted or ungranted | 9 |
 
 Boundary guarantees: nothing moves while the Prism is halted; nothing goes to
 GitHub or the hosted verifier, even with approval; nothing a detector matched is
@@ -44,6 +46,9 @@ These modules are hand-patched after generation, so do not regenerate them from
   rules deep and Lean's `split` gives up; the first-match answers are unchanged.
 - Chronology: the judge is a decision tree, because Lean's `split` gives up on
   an if-chain 13 or more deep.
+- Models: every name carries the `models` prefix (`ModelsRequest`,
+  `modelsJudge`, `modelsDispatch`) and the application record is removed. Its
+  rules are single equalities, so it needs no De Morgan rewrite.
 - R4: rules 1 and 3 to 7 are rewritten the same way as Boundary and Learning,
   and every name carries the `r4` prefix (`R4Request`, `r4Judge`,
   `r4Dispatch`), because the holo build puts every module into one crate.

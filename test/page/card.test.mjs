@@ -1,6 +1,8 @@
 // PG-01 in headless Chromium, against the assembled page (pages.yml runs it
 // after `node bootstrap/page.mjs site`, with the verified app.holo in place).
-// usage: NODE_PATH="$(npm root --global)" [PAGE_SITE=dir] node --test test/page/card.test.mjs
+// After a deploy, pages.yml runs it again with PAGE_URL set to the published
+// page, so a site that does not work fails the run instead of shipping quietly.
+// usage: NODE_PATH="$(npm root --global)" [PAGE_SITE=dir | PAGE_URL=url] node --test test/page/card.test.mjs
 import assert from "node:assert/strict";
 import { createReadStream, existsSync } from "node:fs";
 import { createServer } from "node:http";
@@ -10,6 +12,7 @@ import test from "node:test";
 
 const { chromium } = createRequire(import.meta.url)("playwright");
 const site = resolve(process.env.PAGE_SITE ?? "site");
+const published = process.env.PAGE_URL;
 const types = { ".html": "text/html", ".mjs": "text/javascript", ".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".wasm": "application/wasm", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2", ".webmanifest": "application/manifest+json" };
 
 test("the page keeps, refuses while halted and answers only through the app (PG-01)", async () => {
@@ -21,14 +24,14 @@ test("the page keeps, refuses while halted and answers only through the app (PG-
     response.writeHead(200, { "content-type": types[extname(file)] ?? "application/octet-stream" });
     createReadStream(file).pipe(response);
   });
-  await new Promise((done) => server.listen(0, "127.0.0.1", done));
+  if (!published) await new Promise((done) => server.listen(0, "127.0.0.1", done));
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
     page.on("dialog", (dialog) => dialog.accept("a test passphrase"));
-    await page.goto(`http://127.0.0.1:${server.address().port}/me/`);
+    await page.goto(published ?? `http://127.0.0.1:${server.address().port}/me/`);
     await page.waitForFunction(() => /kept in this browser|could not open/.test(document.getElementById("me-count")?.textContent ?? ""), null, { timeout: 60000 });
     assert.equal((await page.textContent("#me-count")).trim(), "0 kept in this browser.");
     const out = async () => (await page.textContent("#me-out")).trim();
@@ -55,6 +58,6 @@ test("the page keeps, refuses while halted and answers only through the app (PG-
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
-    server.close();
+    if (server.listening) server.close();
   }
 });

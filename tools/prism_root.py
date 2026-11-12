@@ -28,9 +28,10 @@ FACETS = [
     ("restore", "PrismVaultRestore", "restoreDispatch"),
     ("r4", "PrismR4", "r4Dispatch"),
     ("route", "PrismRoute", "routeDispatch"),
-    ("model", "PrismModels", "modelsDispatch"),
     ("google", "PrismGoogle", "googleDispatch"),
     ("googlelink", "PrismGoogleLink", "googleLinkDispatch"),
+    ("dest", "PrismDest", "destDispatch"),
+    ("model", "PrismModels", "modelsDispatch"),
 ]
 REQ_MAX, RESP_MAX, ALLOC = 1107, 16384, 2214
 h = lambda s: "0x" + (s if isinstance(s, bytes) else s.encode()).hex()
@@ -58,6 +59,10 @@ VECTORS = [
  ("googlelink registered consent prism matches no", "refuse"),
  ("googlelink granted sync prism differs no", "unprovisioned"),
  ("googlelink syncing sync prism matches yes", "revoked"),
+ ("dest owner allow grounded none seen calm quiet normal no", "hold"),
+ ("dest mail ask grounded none seen calm open normal no", "draft"),
+ ("dest mail allow grounded owner seen calm open normal no", "deliver"),
+ ("dest", "invalid request"),
  ("model locked onnx match match granted no", "run"),
  ("model locked onnx missing match granted no", "fetch"),
  ("model locked onnx match match ungranted no", "ask"),
