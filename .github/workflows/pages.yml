@@ -120,10 +120,16 @@ jobs:
                 test ${#holos[@]} -eq 1
                 built=$(basename "$(dirname "${holos[0]}")")
                 if [[ $built != "$proved" ]]; then
-                  printf "the holo built here (%s) is not the build the reused proof verified (%s)\n" "$built" "$proved" >&2
-                  exit 1
+                  # Not the build the reused proof verified: that proof says
+                  # nothing about this holo, so prove this tree in full.
+                  printf "the holo built here (%s) is not the build the reused proof verified (%s): proving in full\n" "$built" "$proved" >&2
+                  rm -rf app/.prism .prism-proof
+                  PRISM_PROOF_EVENT= just app
+                  holos=(app/.prism/build/*/*.holo)
+                  test ${#holos[@]} -eq 1
+                else
+                  echo "the holo is build $built, the build the reused proof verified"
                 fi
-                echo "the holo is build $built, the build the reused proof verified"
               fi
             '
       - name: Find the holo
