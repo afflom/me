@@ -1,0 +1,253 @@
+\begin{lexlean}{PrismVaultStore}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: storeBoundaryAllow, parameters: [], result: Nat, body: 0}
+
+definition{name: storeBoundaryHashonly, parameters: [], result: Nat, body: 1}
+
+definition{name: storeBoundaryAsk, parameters: [], result: Nat, body: 2}
+
+definition{name: storeBoundaryDeny, parameters: [], result: Nat, body: 3}
+
+definition{name: storeKeyPresent, parameters: [], result: Nat, body: 0}
+
+definition{name: storeKeyMissing, parameters: [], result: Nat, body: 1}
+
+definition{name: storeAddressDerived, parameters: [], result: Nat, body: 0}
+
+definition{name: storeAddressMismatch, parameters: [], result: Nat, body: 1}
+
+definition{name: storeRoomOk, parameters: [], result: Nat, body: 0}
+
+definition{name: storeRoomFull, parameters: [], result: Nat, body: 1}
+
+definition{name: storeAnswerStore, parameters: [], result: Nat, body: 0}
+
+definition{name: storeAnswerStorehash, parameters: [], result: Nat, body: 1}
+
+definition{name: storeAnswerAsk, parameters: [], result: Nat, body: 2}
+
+definition{name: storeAnswerRefuse, parameters: [], result: Nat, body: 3}
+
+structure{
+  name: StoreRequest,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: boundary, type: Nat},
+    {name: key, type: Nat},
+    {name: address, type: Nat},
+    {name: room, type: Nat}
+  ]
+}
+
+definition{
+  name: storeByteAt,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some b => (ctor Option.some [Nat] (prim to_nat b : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: storeDigitsValue,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.some [Nat] acc)
+    | Nat.succ rest => (match (storeByteAt s i)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (storeDigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: storeParseDigits,
+  parameters: [s : Bytes],
+  result: (Option Nat),
+  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (storeByteAt s 0)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (storeDigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: storeParseNumber,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (storeParseDigits value),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: storeParseBoundary,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x616c6c6f77 : Bool) then (ctor Option.some [Nat] (storeBoundaryAllow)) else (if (prim equal value 0x686173686f6e6c79 : Bool) then (ctor Option.some [Nat] (storeBoundaryHashonly)) else (if (prim equal value 0x61736b : Bool) then (ctor Option.some [Nat] (storeBoundaryAsk)) else (if (prim equal value 0x64656e79 : Bool) then (ctor Option.some [Nat] (storeBoundaryDeny)) else (ctor Option.none [Nat])))))
+}
+
+definition{
+  name: storeParseKey,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x70726573656e74 : Bool) then (ctor Option.some [Nat] (storeKeyPresent)) else (if (prim equal value 0x6d697373696e67 : Bool) then (ctor Option.some [Nat] (storeKeyMissing)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: storeParseAddress,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x64657269766564 : Bool) then (ctor Option.some [Nat] (storeAddressDerived)) else (if (prim equal value 0x6d69736d61746368 : Bool) then (ctor Option.some [Nat] (storeAddressMismatch)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: storeParseRoom,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6f6b : Bool) then (ctor Option.some [Nat] (storeRoomOk)) else (if (prim equal value 0x66756c6c : Bool) then (ctor Option.some [Nat] (storeRoomFull)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: storeSliceOf,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: storeFieldEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match (storeByteAt s i)
+      | Option.none => i
+      | Option.some d => (if (d =? 32) then i else (storeFieldEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: storeDecodeField4,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
+  result: (Option StoreRequest),
+  body: (let e : Nat := (storeFieldEnd s start (Foundation.Bytes::byteLength s)); (match (storeParseRoom (storeSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [StoreRequest])
+    | Option.some v4 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [StoreRequest] (record StoreRequest {boundary := v1, key := v2, address := v3, room := v4})) else (ctor Option.none [StoreRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: storeDecodeField3,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
+  result: (Option StoreRequest),
+  body: (let e : Nat := (storeFieldEnd s start (Foundation.Bytes::byteLength s)); (match (storeParseAddress (storeSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [StoreRequest])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (storeDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [StoreRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: storeDecodeField2,
+  parameters: [s : Bytes, start : Nat, v1 : Nat],
+  result: (Option StoreRequest),
+  body: (let e : Nat := (storeFieldEnd s start (Foundation.Bytes::byteLength s)); (match (storeParseKey (storeSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [StoreRequest])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (storeDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [StoreRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: storeDecodeField1,
+  parameters: [s : Bytes, start : Nat],
+  result: (Option StoreRequest),
+  body: (let e : Nat := (storeFieldEnd s start (Foundation.Bytes::byteLength s)); (match (storeParseBoundary (storeSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [StoreRequest])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (storeDecodeField2 s (e + 1) v1) else (ctor Option.none [StoreRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: storeRule1,
+  parameters: [request : StoreRequest],
+  result: Bool,
+  body: ((project request key) =? (storeKeyMissing))
+}
+
+definition{
+  name: storeRule2,
+  parameters: [request : StoreRequest],
+  result: Bool,
+  body: ((project request address) =? (storeAddressMismatch))
+}
+
+definition{
+  name: storeRule3,
+  parameters: [request : StoreRequest],
+  result: Bool,
+  body: ((project request boundary) =? (storeBoundaryDeny))
+}
+
+definition{
+  name: storeRule4,
+  parameters: [request : StoreRequest],
+  result: Bool,
+  body: ((project request room) =? (storeRoomFull))
+}
+
+definition{
+  name: storeRule5,
+  parameters: [request : StoreRequest],
+  result: Bool,
+  body: ((project request boundary) =? (storeBoundaryAsk))
+}
+
+definition{
+  name: storeRule6,
+  parameters: [request : StoreRequest],
+  result: Bool,
+  body: ((project request boundary) =? (storeBoundaryHashonly))
+}
+
+definition{
+  name: storeRule7,
+  parameters: [request : StoreRequest],
+  result: Bool,
+  body: ((project request boundary) =? (storeBoundaryAllow))
+}
+
+definition{
+  name: storeJudge,
+  parameters: [request : StoreRequest],
+  result: Nat,
+  body: (if (storeRule1 request) then (storeAnswerRefuse) else (if (storeRule2 request) then (storeAnswerRefuse) else (if (storeRule3 request) then (storeAnswerRefuse) else (if (storeRule4 request) then (storeAnswerRefuse) else (if (storeRule5 request) then (storeAnswerAsk) else (if (storeRule6 request) then (storeAnswerStorehash) else (if (storeRule7 request) then (storeAnswerStore) else (storeAnswerRefuse))))))))
+}
+
+definition{
+  name: storeEncodeAnswer,
+  parameters: [code : Nat],
+  result: Bytes,
+  body: (if (code =? (storeAnswerStore)) then 0x73746f7265 else (if (code =? (storeAnswerStorehash)) then 0x73746f726568617368 else (if (code =? (storeAnswerAsk)) then 0x61736b else (if (code =? (storeAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964))))
+}
+
+definition{
+  name: storeDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (112 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (storeDecodeField1 value 0)
+    | Option.none => 0x696e76616c6964
+    | Option.some request => (storeEncodeAnswer (storeJudge request)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
