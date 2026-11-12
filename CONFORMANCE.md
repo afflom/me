@@ -39,6 +39,14 @@ model does not sanction.
 | --- | --- | --- |
 | `PV-01` | `build` | Neither the tracked tree nor the built page holds personal data: every email address is at a reserved domain, and no phone, payment card or national ID number appears |
 
+## vault
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `VS-01` | `build` | The vault keeps a value only when the Boundary and the proved store decision allow it: sealed under a non-extractable device key, filed under an address that re-derives from the value, and as a keyed hash only for card or restricted data |
+| `VS-02` | `build` | The vault restores a value only when the proved restore decision allows it: a flipped bit, a swapped object, an unknown envelope or a lost key ring is refused, and nothing is deleted |
+| `VS-03` | `build` | The owner's device key is made by the browser and never leaves it: no passphrase is asked to keep or read a value, only to make or read an encrypted export, and a wrong or tampered export is refused |
+
 ## Cited authorities
 
 Never re-derived, vendored, or gated on.

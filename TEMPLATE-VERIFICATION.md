@@ -357,9 +357,11 @@ own, because `prismpm` admits one application root per product (`PP2001`):
 | `boundary` | `PrismBoundary` | 7 (`PM-02`) |
 | `learn` | `PrismLearning` | 8 (`PM-03`) |
 | `when` | `PrismChronology` | 8 (`PM-04`) |
+| `store` | `PrismVaultStore` | 5 (`VS-01`) |
+| `restore` | `PrismVaultRestore` | 5 (`VS-02`) |
 
 `app/src/PrismProofs.lex.tex` proves `routesBoundary`, `routesLearn`,
-`routesWhen` and `refusesUnknownFacet` (`PM-01`) by reflexivity: the facet codes are literals, so `route` reduces by definition. They
+`routesWhen`, `routesStore`, `routesRestore` and `refusesUnknownFacet` (`PM-01`) by reflexivity: the facet codes are literals, so `route` reduces by definition. They
 live apart from the root, as the facets' guarantees do. `linear_arithmetic`
 failed on them (`omega` finds no constraints in an equality of `Bytes`).
 Parsing the first

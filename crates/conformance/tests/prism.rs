@@ -81,6 +81,8 @@ fn prism_pm_01() {
         ("Boundary", "PrismBoundary", "boundaryDispatch"),
         ("Learn", "PrismLearning", "learningDispatch"),
         ("When", "PrismChronology", "chronologyDispatch"),
+        ("Store", "PrismVaultStore", "storeDispatch"),
+        ("Restore", "PrismVaultRestore", "restoreDispatch"),
     ] {
         let theorem = declaration(&proofs, &format!("routes{facet}"));
         assert!(

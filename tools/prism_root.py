@@ -24,6 +24,8 @@ FACETS = [
     ("boundary", "PrismBoundary", "boundaryDispatch"),
     ("learn", "PrismLearning", "learningDispatch"),
     ("when", "PrismChronology", "chronologyDispatch"),
+    ("store", "PrismVaultStore", "storeDispatch"),
+    ("restore", "PrismVaultRestore", "restoreDispatch"),
 ]
 REQ_MAX, RESP_MAX, ALLOC = 512, 256, 1024
 h = lambda s: "0x" + s.encode().hex()
@@ -34,6 +36,11 @@ VECTORS = [
  ("boundary confidential none outbound none no no", "ask"),
  ("boundary restricted none browser owner no no", "hashonly"),
  ("boundary public none browser none no", "invalid"),
+ ("store allow present derived ok", "store"),
+ ("store hashonly present derived ok", "storehash"),
+ ("store allow present mismatch ok", "refuse"),
+ ("restore present known valid derived value", "restore"),
+ ("restore present known broken derived value", "refuse"),
  ("learn", "invalid request"),
  ("when", "invalid request"),
  ("boundary", "invalid request"),

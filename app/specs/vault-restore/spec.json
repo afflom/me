@@ -1,0 +1,252 @@
+{
+  "name": "prism-vault-restore",
+  "title": "Prism Vault Restore",
+  "purpose": "Decides whether bytes read back from the browser vault may be handed out, so that tampered, swapped or unreadable objects are refused and hash-only records never come back as values.",
+  "fields": [
+    {
+      "name": "key",
+      "kind": "choice",
+      "values": [
+        "present",
+        "missing"
+      ],
+      "means": "whether the browser still holds the vault's own non-extractable key"
+    },
+    {
+      "name": "format",
+      "kind": "choice",
+      "values": [
+        "known",
+        "unknown"
+      ],
+      "means": "whether the stored envelope has a version this vault reads"
+    },
+    {
+      "name": "seal",
+      "kind": "choice",
+      "values": [
+        "valid",
+        "broken"
+      ],
+      "means": "whether the AES-GCM seal, bound to the object's address, opened"
+    },
+    {
+      "name": "address",
+      "kind": "choice",
+      "values": [
+        "derived",
+        "mismatch"
+      ],
+      "means": "whether the opened bytes re-derive to the address they were read from"
+    },
+    {
+      "name": "kind",
+      "kind": "choice",
+      "values": [
+        "value",
+        "hash"
+      ],
+      "means": "whether the record holds a value or only a hash and pointer"
+    }
+  ],
+  "outcomes": [
+    "restore",
+    "hashonly",
+    "refuse"
+  ],
+  "rules": [
+    {
+      "id": "REQ-001",
+      "when": [
+        {
+          "field": "key",
+          "op": "is",
+          "value": "missing"
+        }
+      ],
+      "then": "refuse",
+      "says": "when key is missing then refuse",
+      "why": "it enforces INV-003"
+    },
+    {
+      "id": "REQ-002",
+      "when": [
+        {
+          "field": "format",
+          "op": "is",
+          "value": "unknown"
+        }
+      ],
+      "then": "refuse",
+      "says": "when format is unknown then refuse",
+      "why": "it enforces INV-004"
+    },
+    {
+      "id": "REQ-003",
+      "when": [
+        {
+          "field": "seal",
+          "op": "is",
+          "value": "broken"
+        }
+      ],
+      "then": "refuse",
+      "says": "when seal is broken then refuse",
+      "why": "it enforces INV-002"
+    },
+    {
+      "id": "REQ-004",
+      "when": [
+        {
+          "field": "address",
+          "op": "is",
+          "value": "mismatch"
+        }
+      ],
+      "then": "refuse",
+      "says": "when address is mismatch then refuse",
+      "why": "it enforces INV-001"
+    },
+    {
+      "id": "REQ-005",
+      "when": [
+        {
+          "field": "kind",
+          "op": "is",
+          "value": "hash"
+        }
+      ],
+      "then": "hashonly",
+      "says": "when kind is hash then hashonly",
+      "why": "it enforces INV-005"
+    },
+    {
+      "id": "REQ-006",
+      "when": [
+        {
+          "field": "kind",
+          "op": "is",
+          "value": "value"
+        }
+      ],
+      "then": "restore",
+      "says": "when kind is value then restore",
+      "why": "every check passed"
+    }
+  ],
+  "otherwise": "refuse",
+  "properties": [
+    {
+      "id": "INV-001",
+      "kind": "always",
+      "when": [
+        {
+          "field": "address",
+          "op": "is",
+          "value": "mismatch"
+        }
+      ],
+      "then": "refuse",
+      "says": "always when address is mismatch then refuse",
+      "why": "stored bytes must re-derive to their address, or they could stand in for another object"
+    },
+    {
+      "id": "INV-002",
+      "kind": "always",
+      "when": [
+        {
+          "field": "seal",
+          "op": "is",
+          "value": "broken"
+        }
+      ],
+      "then": "refuse",
+      "says": "always when seal is broken then refuse",
+      "why": "tampered ciphertext is never opened"
+    },
+    {
+      "id": "INV-003",
+      "kind": "always",
+      "when": [
+        {
+          "field": "key",
+          "op": "is",
+          "value": "missing"
+        }
+      ],
+      "then": "refuse",
+      "says": "always when key is missing then refuse",
+      "why": "nothing is readable without the key"
+    },
+    {
+      "id": "INV-004",
+      "kind": "never",
+      "when": [
+        {
+          "field": "format",
+          "op": "is",
+          "value": "unknown"
+        }
+      ],
+      "then": "restore",
+      "says": "never when format is unknown then restore",
+      "why": "an envelope the vault cannot read is never guessed at"
+    },
+    {
+      "id": "INV-005",
+      "kind": "never",
+      "when": [
+        {
+          "field": "kind",
+          "op": "is",
+          "value": "hash"
+        }
+      ],
+      "then": "restore",
+      "says": "never when kind is hash then restore",
+      "why": "a hash-only record never turns back into a value"
+    }
+  ],
+  "examples": [
+    {
+      "request": "present known valid derived value",
+      "response": "restore"
+    },
+    {
+      "request": "present known valid derived hash",
+      "response": "hashonly"
+    },
+    {
+      "request": "present known broken derived value",
+      "response": "refuse"
+    },
+    {
+      "request": "present known valid mismatch value",
+      "response": "refuse"
+    },
+    {
+      "request": "missing known valid derived value",
+      "response": "refuse"
+    },
+    {
+      "request": "present unknown valid derived value",
+      "response": "refuse"
+    },
+    {
+      "request": "present known valid mismatch hash",
+      "response": "refuse"
+    }
+  ],
+  "schema": "prism/spec/1",
+  "actors": [],
+  "meanings": {
+    "restore": "hand out the value",
+    "hashonly": "hand out only the hash and pointer",
+    "refuse": "hand out nothing and report the object as damaged"
+  },
+  "otherwiseWhy": "hand out nothing by default",
+  "limits": [
+    "It does not open the seal or hash the bytes; the adapter does that with WebCrypto and reports the result.",
+    "A refused object stays on disk for the owner to inspect; the adapter never deletes it on its own."
+  ]
+}

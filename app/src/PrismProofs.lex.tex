@@ -7,6 +7,8 @@
 \importmodule{PrismBoundary}
 \importmodule{PrismChronology}
 \importmodule{PrismLearning}
+\importmodule{PrismVaultRestore}
+\importmodule{PrismVaultStore}
 \title{Text application model}
 \begin{semanticmodule}
 theorem{
@@ -29,6 +31,22 @@ theorem{
   name: routesWhen,
   parameters: [rest : Bytes],
   statement: ((Prism::route (Prism::facetWhen) rest) = (PrismChronology::chronologyDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesStore,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetStore) rest) = (PrismVaultStore::storeDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesRestore,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetRestore) rest) = (PrismVaultRestore::restoreDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }
