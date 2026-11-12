@@ -6,6 +6,7 @@
 \importmodule{Prism}
 \importmodule{PrismBoundary}
 \importmodule{PrismChronology}
+\importmodule{PrismDest}
 \importmodule{PrismGoogle}
 \importmodule{PrismGoogleLink}
 \importmodule{PrismLearning}
@@ -74,6 +75,14 @@ theorem{
   name: routesGooglelink,
   parameters: [rest : Bytes],
   statement: ((Prism::route (Prism::facetGooglelink) rest) = (PrismGoogleLink::googleLinkDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesDest,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetDest) rest) = (PrismDest::destDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }

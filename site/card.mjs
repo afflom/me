@@ -2,6 +2,7 @@
 // only carries text between the page, the vault, R4 and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
 import { mountGoogle } from "./google/panel.mjs";
+import { mountDest } from "./dest/panel.mjs";
 import { relayConsent } from "./google/relay.mjs";
 
 const encoder = new TextEncoder();
@@ -91,6 +92,14 @@ export default async function start({ app, reason, $ }) {
     } catch (error) {
       console.warn(`connections: ${error?.message ?? error}`);
     }
+  }
+
+  // Destinations: the Prism routed out, to the owner and to the apps they act in.
+  try {
+    mountDest($("me-dest"), { line, halted });
+    $("me-dest-sec").hidden = false;
+  } catch (error) {
+    console.warn(`destinations: ${error?.message ?? error}`);
   }
 
   $("me-keep").addEventListener("submit", async (event) => {

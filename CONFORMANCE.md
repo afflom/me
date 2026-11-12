@@ -18,6 +18,13 @@ The three honesty levels (R2):
 `cargo xtask audit-limits` fails if any code path returns an error the
 model does not sanction.
 
+## dest
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `DS-01` | `build` | The Prism routes an item to a destination only as PrismDest answers: nothing leaves without the owner's act on the very words they saw, nothing coercive is carried out or pushed into the owner's view, nothing without a cause is routed, restricted content never leaves, quiet is kept, and the kill switch stops every route |
+| `DS-02` | `build` | The page hands an item to the owner's calendar, mail or another platform only after the Boundary and PrismDest answer deliver for the owner's press, through an app the owner already uses, with no host called and no setup |
+
 ## frame
 
 | ID | Level | Statement |

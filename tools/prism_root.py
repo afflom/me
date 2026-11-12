@@ -29,6 +29,7 @@ FACETS = [
     ("r4", "PrismR4", "r4Dispatch"),
     ("google", "PrismGoogle", "googleDispatch"),
     ("googlelink", "PrismGoogleLink", "googleLinkDispatch"),
+    ("dest", "PrismDest", "destDispatch"),
 ]
 REQ_MAX, RESP_MAX, ALLOC = 512, 256, 1024
 h = lambda s: "0x" + s.encode().hex()
@@ -56,6 +57,12 @@ VECTORS = [
  ("googlelink registered consent prism matches no", "refuse"),
  ("googlelink granted sync prism differs no", "unprovisioned"),
  ("googlelink syncing sync prism matches yes", "revoked"),
+ ("dest owner allow grounded none seen calm quiet normal no", "hold"),
+ ("dest mail ask grounded none seen calm open normal no", "draft"),
+ ("dest mail allow grounded owner seen calm open normal no", "deliver"),
+ ("dest mail allow grounded owner seen coercive open normal no", "draft"),
+ ("dest calendar allow orphan owner seen calm open normal no", "refuse"),
+ ("dest", "invalid request"),
  ("google", "invalid request"),
  ("learn", "invalid request"),
  ("when", "invalid request"),
