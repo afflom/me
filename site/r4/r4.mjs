@@ -161,18 +161,21 @@ export async function openR4({
     },
 
     // Mode 3: another model R4 routes the request to. The route must be locked and granted.
-    registerRoute({ id, run }) {
-      routes.set(id, { run });
+    // A route is either locked in r4.lock.json (granted by origin) or a model routed into
+    // the Prism (site/models), which carries the Prism Models decision that let it run.
+    registerRoute({ id, run, entry = null }) {
+      routes.set(id, { run, entry });
     },
     async askRouted({ target, prompt, context = { label: "public" }, detect }) {
-      const entry = lock.models.routed.find((m) => m.id === target);
-      const granted = Boolean(entry && routes.has(target) && admits(grant, entry.origin));
+      const registered = routes.get(target);
+      const entry = lock.models.routed.find((m) => m.id === target) ?? registered?.entry ?? null;
+      const granted = Boolean(entry && registered && (entry.origin ? admits(grant, entry.origin) : entry.decision === "run"));
       const weights = entry?.fingerprint ? (await open({ ...entry, path: entry.path })).state : "none";
       const router = { id: lock.engine.id, engine: lock.engine.wasm.fingerprint };
       return settle({
         mode: "routed",
         fields: { mode: "routed", engine: engine.state, weights, route: granted ? "granted" : "ungranted" },
-        model: { id: target, ...(entry?.fingerprint ? { weights: entry.fingerprint } : {}) },
+        model: { id: target, ...(entry?.fingerprint ? { weights: entry.fingerprint } : {}), ...(entry?.source ? { source: entry.source, decision: entry.line } : {}) },
         route: { router, target: { id: target, origin: entry?.origin ?? null } },
         prompt, context: { ...context, identifier: context.identifier ?? "no" }, detect,
         run: async (p) => routes.get(target).run(p),

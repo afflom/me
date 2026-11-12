@@ -39,6 +39,12 @@ model does not sanction.
 | `GG-02` | `build` | The Google connection moves between stages only as PrismGoogleLink answers: only the owner grants, a client for another origin is never used, and the kill switch or a forget revokes every grant |
 | `GG-03` | `build` | Mail and calendar items read from Google reach only the browser vault, through the detectors, the router and the Boundary, by GET to the two API hosts with the token only in the Authorization header |
 
+## models
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `MD-01` | `build` | A language or reasoning model routed into the Prism runs in the browser only when the proved Prism Models decision says run: pinned by hub commit and SHA-256, in a format with a locked runtime, granted by the owner, and not halted; its answer is shown only through R4's routed mode and the Boundary |
+
 ## page
 
 | ID | Level | Statement |

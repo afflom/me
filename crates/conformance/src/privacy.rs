@@ -167,15 +167,26 @@ pub fn scan_dir(root: &Path, dir: &Path) -> Result<Vec<Finding>, String> {
     Ok(out)
 }
 
-/// The pieces of R4's engine and weights the page serves (`R4-01`), by the
-/// path each has in the page: `r4/objects/<sha256>.gz` for every piece
-/// fingerprint `r4/r4.lock.json` names. Their content is fixed by that hash to
-/// public upstream bytes, which `bootstrap/r4-objects.mjs` checks before writing
-/// them and every browser checks again, so no personal value can enter through
-/// them; compressed, they match the text patterns by chance. Any other file
-/// there, or a piece the lock does not name, is scanned as usual.
+/// The pieces of pinned public objects the page serves, by the path each has
+/// in the page: `r4/objects/<sha256>.gz` for every piece fingerprint
+/// `r4/r4.lock.json` names (R4's engine and weights, `R4-01`), and
+/// `models/objects/<sha256>.gz` for every piece `models/models.lock.json`
+/// names (the routed models and their runtimes, `MD-01`). Their content is
+/// fixed by that hash to public upstream bytes, which `bootstrap/r4-objects.mjs`
+/// and `bootstrap/model-objects.mjs` check before writing them and every
+/// browser checks again, so no personal value can enter through them;
+/// compressed, they match the text patterns by chance. Any other file there,
+/// or a piece a lock does not name, is scanned as usual.
 fn pinned_pieces(dir: &Path) -> std::collections::BTreeSet<String> {
-    let Ok(lock) = std::fs::read_to_string(dir.join("r4").join("r4.lock.json")) else {
+    let mut out = std::collections::BTreeSet::new();
+    for (facet, file) in [("r4", "r4.lock.json"), ("models", "models.lock.json")] {
+        out.extend(lock_pieces(dir, facet, file));
+    }
+    out
+}
+
+fn lock_pieces(dir: &Path, facet: &str, file: &str) -> std::collections::BTreeSet<String> {
+    let Ok(lock) = std::fs::read_to_string(dir.join(facet).join(file)) else {
         return std::collections::BTreeSet::new();
     };
     lock.split("\"pieces\": [")
@@ -189,7 +200,7 @@ fn pinned_pieces(dir: &Path) -> std::collections::BTreeSet<String> {
         })
         .map(|hex| {
             format!(
-                "r4{sep}objects{sep}{hex}.gz",
+                "{facet}{sep}objects{sep}{hex}.gz",
                 sep = std::path::MAIN_SEPARATOR
             )
         })

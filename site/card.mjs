@@ -173,14 +173,49 @@ export default async function start({ app, reason, $ }) {
     return r4;
   }
 
+  // Models routed into the Prism (MD-01): their code loads on the owner's first press,
+  // or on a question once the owner has routed a model, never on an ordinary visit.
+  let models = null;
+  async function openModels() {
+    if (models) return models;
+    const { mountModels } = await import("./models/panel.mjs");
+    models = await mountModels($("me-models"), { line, halted });
+    return models;
+  }
+  const routedSomething = () => {
+    try { return JSON.parse(localStorage.getItem("me.models.grant") ?? "[]").length > 0; } catch { return false; }
+  };
+  $("me-models-open").addEventListener("click", () => {
+    openModels().catch((error) => console.warn(`models: ${error?.message ?? error}`));
+  }, { once: true });
+
+  // R4 routes the question to a text model the owner routed into the Prism, if any;
+  // else R4 answers itself. Either way the answer shows only as R4 and the Boundary allow.
+  async function answer(prompt, context) {
+    const r4model = await openModel();
+    if (routedSomething()) {
+      const routed = await openModels();
+      const target = routed.route("text-generation");
+      if (target) {
+        $("me-r4-state").textContent = "Loading the routed model into this browser…";
+        const decision = await routed.ready(target);
+        if (decision.outcome === "run") {
+          routed.connect(r4model, { maxTokens: 128 });
+          $("me-r4-state").textContent = "R4 routes your question to a model running in this browser.";
+          return r4model.askRouted({ target, prompt, context });
+        }
+      }
+    }
+    return r4model.ask({ prompt, context });
+  }
+
   $("me-ask").addEventListener("submit", async (event) => {
     event.preventDefault();
     const prompt = $("me-prompt").value.trim();
     if (!prompt) return;
     $("me-ask-go").disabled = true;
     try {
-      const model = await openModel();
-      const result = await model.ask({ prompt, context: { label: "confidential", halted: halted() } });
+      const result = await answer(prompt, { label: "confidential", halted: halted() });
       if (result.outcome === "answer") say(result.answer, "good");
       else if (result.outcome === "ask" && result.release) say("The Boundary asks before showing this answer.", "warn");
       else say(`No answer: ${result.outcome}.`, "bad");

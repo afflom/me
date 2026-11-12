@@ -10,6 +10,7 @@
 \importmodule{PrismGoogle}
 \importmodule{PrismGoogleLink}
 \importmodule{PrismLearning}
+\importmodule{PrismModels}
 \importmodule{PrismR4}
 \importmodule{PrismRoute}
 \importmodule{PrismVaultRestore}
@@ -92,6 +93,14 @@ theorem{
   name: routesDest,
   parameters: [rest : Bytes],
   statement: ((Prism::route (Prism::facetDest) rest) = (PrismDest::destDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesModel,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetModel) rest) = (PrismModels::modelsDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }

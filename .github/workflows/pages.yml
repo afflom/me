@@ -134,6 +134,9 @@ jobs:
           # R4's engine and weights, fetched from their pinned commit and
           # served as SHA-256-named pieces under the 16 MiB limit (R4-01).
           node bootstrap/r4-objects.mjs site
+          # The models routed into the Prism and their runtimes, fetched from
+          # their pinned hub commit and package, served the same way (MD-01).
+          node bootstrap/model-objects.mjs site
           node bootstrap/precache.mjs site
       - name: No personal data in the assembled page (PV-01)
         # The same gate `just vv` runs over the tracked tree, here over every
