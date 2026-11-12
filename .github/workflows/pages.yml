@@ -16,18 +16,25 @@ name: pages
 on:
   push:
     branches: [main]
+  # Every gate the deploy runs also runs on a pull request, so nothing merges
+  # that main cannot publish. Only a main push or a manual run on main deploys.
+  pull_request:
+  merge_group:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# Main deploys one at a time and is never cancelled; a newer push to a pull
+# request cancels its older run.
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.event.pull_request.number) || (github.event_name == 'merge_group' && format('pages-mq-{0}', github.run_id)) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
-    name: build and verify the holo, sign its provenance, assemble the page
+    # The check a pull request must pass: the same name on every event.
+    name: page / gates
     # The template repository publishes its try page instead (try-page.yml).
     if: github.repository != 'UOR-Foundation/template'
     runs-on: ubuntu-24.04
@@ -49,8 +56,33 @@ jobs:
           node bootstrap/brand-sync.mjs --check
           python3 -I bootstrap/brand-fonts.py --check
           node bootstrap/frame-sync.mjs --check
+      # The proof is the slow part (15 to 25 minutes). This job reuses one
+      # exactly as bootstrap.yml and `just app` do: the cache key, the same
+      # one bootstrap.yml writes, only finds a candidate, and `xtask
+      # proof-reuse` accepts it only if its attestation binds this checkout,
+      # this image's Lean and Lake, the architecture and every input file. A
+      # tag or a manual run proves in full. A reused proof leaves no holo, so
+      # the holo is then built (six minutes, no proof) and must carry the very
+      # build ID the reused attestation verified, or this job fails.
+      - name: Name the SDK image digest and the Lean toolchain the proof runs on
+        id: proof-inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          sdk=$(sed -n 's/.*"sdk_image":"[^"@]*@sha256:\([0-9a-f]\{64\}\)".*/\1/p' prismpm.lock)
+          lean=$(sed -n 's/^leanprover\/lean4:\(v[0-9A-Za-z.-]*\)$/\1/p' app/lean-toolchain)
+          test -n "$sdk"
+          test -n "$lean"
+          printf 'sdk=%s\nlean=%s\n' "$sdk" "$lean" >>"$GITHUB_OUTPUT"
+      - name: The proof of these exact proof inputs, kept by an earlier run
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        with:
+          path: .prism-proof
+          key: prism-proof-${{ runner.os }}-${{ runner.arch }}-sdk-${{ steps.proof-inputs.outputs.sdk }}-lean-${{ steps.proof-inputs.outputs.lean }}-${{ hashFiles('app/**', 'prismpm.lock', 'Justfile', 'rust-toolchain.toml') }}
       - name: Build and verify the holo through the locked SDK
         shell: bash
+        env:
+          PRISM_PROOF_EVENT: ${{ github.event_name }}:${{ github.ref }}
         run: |
           set -euo pipefail
           image=$(sed -n 's/.*"sdk_image":"\([^"]*\)".*/\1/p' prismpm.lock)
@@ -73,7 +105,27 @@ jobs:
             --env BUILDX_CONFIG=/tmp/prismpm-buildx \
             --env HOME=/tmp/prismpm-home \
             --env PRISMPM_EPHEMERAL_HOME=1 \
-            "$image" just app
+            --env PRISM_PROOF_EVENT \
+            --env SDK_IMAGE="$image" \
+            "$image" bash -c '
+              set -euo pipefail
+              just app
+              shopt -s nullglob
+              holos=(app/.prism/build/*/*.holo)
+              if [[ ${#holos[@]} -eq 0 ]]; then
+                proved=$(grep -o "\"build_id\": *\"[0-9a-f]\{64\}\"" .prism-proof/verified/manifest.json | grep -o "[0-9a-f]\{64\}")
+                test -n "$proved"
+                prismpm --project app build
+                holos=(app/.prism/build/*/*.holo)
+                test ${#holos[@]} -eq 1
+                built=$(basename "$(dirname "${holos[0]}")")
+                if [[ $built != "$proved" ]]; then
+                  printf "the holo built here (%s) is not the build the reused proof verified (%s)\n" "$built" "$proved" >&2
+                  exit 1
+                fi
+                echo "the holo is build $built, the build the reused proof verified"
+              fi
+            '
       - name: Find the holo
         id: holo
         shell: bash
@@ -92,6 +144,9 @@ jobs:
           } >>"$GITHUB_OUTPUT"
       - name: Sign the holo's provenance as this repository's workflow
         id: attest
+        # Only a build that is published is signed. A pull request's page links
+        # its run instead, and is never deployed.
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: ${{ steps.holo.outputs.path }}
@@ -113,7 +168,7 @@ jobs:
         env:
           HOLO: ${{ steps.holo.outputs.path }}
           FINGERPRINT: ${{ steps.holo.outputs.fingerprint }}
-          ATTESTATION_URL: ${{ steps.attest.outputs.attestation-url }}
+          ATTESTATION_URL: ${{ steps.attest.outputs.attestation-url || format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
         run: |
           set -euo pipefail
           cp "$HOLO" site/app.holo
@@ -131,12 +186,13 @@ jobs:
             writeFileSync("site/app.json", `${JSON.stringify(app, null, 2)}\n`);
           ' "$FINGERPRINT" "$ATTESTATION_URL"
           node bootstrap/page.mjs site
-          # R4's engine and weights, fetched from their pinned commit and
-          # served as SHA-256-named pieces under the 16 MiB limit (R4-01).
-          node bootstrap/r4-objects.mjs site
-          # The models routed into the Prism and their runtimes, fetched from
-          # their pinned hub commit and package, served the same way (MD-01).
-          node bootstrap/model-objects.mjs site
+          # Every pinned object set (R4's engine and weights, R4-01, and any
+          # other `bootstrap/*-objects.mjs`), fetched from its pinned commit and
+          # served as SHA-256-named pieces under the 16 MiB limit. A new set is
+          # served, and checked below, without editing this workflow.
+          for objects in bootstrap/*-objects.mjs; do
+            node "$objects" site
+          done
           node bootstrap/precache.mjs site
       - name: No personal data in the assembled page (PV-01)
         # The same gate `just vv` runs over the tracked tree, here over every
@@ -159,16 +215,26 @@ jobs:
           npm install --no-audit --no-fund --global playwright@1.56.1
           playwright install --with-deps chromium
           node bootstrap/screens.mjs site screens
-      - name: R4 runs in the browser from the pieces this page serves (R4-01)
+      # Every browser acceptance under test/ runs here, on every pull request
+      # and before every deploy: each `test/<suite>/run.mjs` (R4-01 and the
+      # rest) and every `*.test.mjs` (PG-01 and the rest). A new suite is in CI
+      # the moment it is committed; none runs only on someone's machine.
+      - name: Every browser acceptance under test/, from the pieces this page serves
         shell: bash
         run: |
           set -euo pipefail
-          NODE_PATH="$(npm root --global)" node test/r4/run.mjs
-      - name: The page keeps, refuses while halted and answers only through the app (PG-01)
-        shell: bash
-        run: |
-          set -euo pipefail
-          NODE_PATH="$(npm root --global)" node --test test/page/card.test.mjs
+          export NODE_PATH="$(npm root --global)"
+          shopt -s nullglob globstar
+          runners=(test/*/run.mjs)
+          suites=(test/**/*.test.mjs)
+          test ${#runners[@]} -gt 0
+          test ${#suites[@]} -gt 0
+          for runner in "${runners[@]}"; do
+            echo "::group::$runner"
+            node "$runner"
+            echo "::endgroup::"
+          done
+          node --test "${suites[@]}"
       - name: Keep the screens
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -177,8 +243,10 @@ jobs:
           path: screens
           if-no-files-found: ignore
       - name: Configure Pages
+        if: steps.attest.outcome == 'success'
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
       - name: Upload the page
+        if: steps.attest.outcome == 'success'
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:
           path: site
@@ -186,6 +254,7 @@ jobs:
   deploy:
     name: publish the page
     needs: build
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:

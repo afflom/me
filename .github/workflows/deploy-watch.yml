@@ -1,0 +1,127 @@
+# Keeps the live page on main's newest commit, or says loudly that it is not.
+#
+# After every pages run, every 20 minutes, and on demand, it looks at main's
+# head and the page's runs for it:
+#   - no deploy was ever started for it (a merge that triggered nothing):
+#     start one;
+#   - the publish step failed on its first attempt (Pages or the live check
+#     can be transient): run the failed jobs once more;
+#   - a gate refused it: open, or update, one issue that names the commit, the
+#     failing step and the run, assigned to the owner, so the stall is seen;
+#   - it is live: close that issue.
+# It never re-runs a gate that refused, and never deploys anything but main.
+name: deploy watch
+
+on:
+  workflow_run:
+    workflows: [pages]
+    types: [completed]
+  schedule:
+    - cron: '7,27,47 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: deploy-watch
+  cancel-in-progress: false
+
+jobs:
+  watch:
+    name: the live page follows main
+    if: github.repository != 'UOR-Foundation/template'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: read
+      issues: write
+    steps:
+      - name: Compare main's head with what is deployed, and act
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          OWNER: ${{ github.repository_owner }}
+          SERVER: ${{ github.server_url }}
+        run: |
+          set -euo pipefail
+          label=deploy-blocked
+          title='The live page is behind main: its deploy is blocked'
+          head=$(gh api "repos/$REPO/commits/main" --jq .sha)
+          committed=$(gh api "repos/$REPO/commits/$head" --jq .commit.committer.date)
+          age=$(( $(date +%s) - $(date -d "$committed" +%s) ))
+          run=$(gh api "repos/$REPO/actions/workflows/pages.yml/runs?branch=main&head_sha=$head&per_page=20" \
+            --jq '[.workflow_runs[] | select(.event == "push" or .event == "workflow_dispatch")] | sort_by(.created_at) | last // empty')
+          issue=$(gh api "repos/$REPO/issues?state=open&labels=$label&per_page=1" --jq '.[0].number // empty')
+          say() { printf '%s\n' "$*" | tee -a "$GITHUB_STEP_SUMMARY"; }
+
+          if [[ -z $run ]]; then
+            # A push from a workflow token starts no workflow; give the push
+            # trigger five minutes, then start the deploy and the gate here.
+            if (( age < 300 )); then
+              say "main is at $head, committed ${age}s ago; its deploy has not started yet"
+              exit 0
+            fi
+            say "main is at $head and nothing deployed it: starting pages and bootstrap on main"
+            gh api -X POST "repos/$REPO/actions/workflows/pages.yml/dispatches" -f ref=main
+            if [[ -z $(gh api "repos/$REPO/actions/workflows/bootstrap.yml/runs?branch=main&head_sha=$head&per_page=1" --jq '.workflow_runs[0].id // empty') ]]; then
+              gh api -X POST "repos/$REPO/actions/workflows/bootstrap.yml/dispatches" -f ref=main
+            fi
+            exit 0
+          fi
+
+          id=$(jq -r .id <<<"$run")
+          status=$(jq -r .status <<<"$run")
+          conclusion=$(jq -r '.conclusion // ""' <<<"$run")
+          attempt=$(jq -r .run_attempt <<<"$run")
+          url=$(jq -r .html_url <<<"$run")
+
+          if [[ $status != completed ]]; then
+            say "main is at $head; its deploy is $status: $url"
+            exit 0
+          fi
+
+          if [[ $conclusion == success ]]; then
+            say "main is live at $head: $url"
+            if [[ -n $issue ]]; then
+              gh api -X POST "repos/$REPO/issues/$issue/comments" -f body="Live again at $head: $url" >/dev/null
+              gh api -X PATCH "repos/$REPO/issues/$issue" -f state=closed -f state_reason=completed >/dev/null
+            fi
+            exit 0
+          fi
+
+          # Which job and step refused, in the run's own words.
+          failed=$(gh api "repos/$REPO/actions/runs/$id/attempts/$attempt/jobs" \
+            --jq '[.jobs[] | select(.conclusion == "failure" or .conclusion == "cancelled" or .conclusion == "timed_out")] | first // empty')
+          job=$(jq -r '.name // "unknown job"' <<<"${failed:-{\}}")
+          step=$(jq -r '[.steps[]? | select(.conclusion == "failure" or .conclusion == "cancelled")] | first | .name // "unknown step"' <<<"${failed:-{\}}")
+          job_url=$(jq -r ".html_url // \"$url\"" <<<"${failed:-{\}}")
+
+          if [[ $job == 'publish the page' && $attempt -lt 2 ]]; then
+            say "main's publish failed at \"$step\" on attempt $attempt; running the failed jobs once more: $url"
+            gh api -X POST "repos/$REPO/actions/runs/$id/rerun-failed-jobs"
+            exit 0
+          fi
+
+          live=$(gh api "repos/$REPO/actions/workflows/pages.yml/runs?branch=main&status=success&per_page=1" \
+            --jq '.workflow_runs[0] | "\(.head_sha) (\(.updated_at))"' 2>/dev/null || echo unknown)
+          body=$(printf '%s\n' \
+            "main's deploy is blocked, so the live page is not main." \
+            "" \
+            "| | |" \
+            "| --- | --- |" \
+            "| main | \`$head\` |" \
+            "| refused by | **$job** / **$step** |" \
+            "| run | $job_url |" \
+            "| live page is | \`$live\` |" \
+            "" \
+            "Every gate that refused here also runs on pull requests, so the fix lands as a pull request; this issue closes itself when main is live again.")
+          say "$body"
+          gh label create "$label" --repo "$REPO" --color d93f0b --description 'The live page is behind main' --force >/dev/null
+          if [[ -n $issue ]]; then
+            last=$(gh api "repos/$REPO/issues/$issue/comments?per_page=100" --jq 'last | .body // ""')
+            [[ $last == "$body" ]] || gh api -X POST "repos/$REPO/issues/$issue/comments" -f body="$body" >/dev/null
+          else
+            gh api -X POST "repos/$REPO/issues" -f title="$title" -f body="$body" -f "labels[]=$label" -f "assignees[]=$OWNER" >/dev/null
+          fi
