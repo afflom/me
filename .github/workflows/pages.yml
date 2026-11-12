@@ -57,8 +57,8 @@ jobs:
           python3 -I bootstrap/brand-fonts.py --check
           node bootstrap/frame-sync.mjs --check
       # The proof is the slow part (15 to 25 minutes). This job reuses one
-      # exactly as bootstrap.yml and `just app` do: the cache key, the same
-      # one bootstrap.yml writes, only finds a candidate, and `xtask
+      # exactly as bootstrap.yml and `just app` do: the cache key only finds a
+      # candidate, and `xtask
       # proof-reuse` accepts it only if its attestation binds this checkout,
       # this image's Lean and Lake, the architecture and every input file. A
       # tag or a manual run proves in full. A reused proof leaves no holo, so
@@ -74,11 +74,15 @@ jobs:
           test -n "$sdk"
           test -n "$lean"
           printf 'sdk=%s\nlean=%s\n' "$sdk" "$lean" >>"$GITHUB_OUTPUT"
-      - name: The proof of these exact proof inputs, kept by an earlier run
+      # This job keeps its own proofs: bootstrap.yml proves inside `just vv`,
+      # and a holo built here never carries the build ID of a proof made
+      # there (seen on main: same inputs, different build). A page proof is
+      # reused only by a later page build, under the same read-time check.
+      - name: The proof of these exact proof inputs, kept by an earlier page build
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: .prism-proof
-          key: prism-proof-${{ runner.os }}-${{ runner.arch }}-sdk-${{ steps.proof-inputs.outputs.sdk }}-lean-${{ steps.proof-inputs.outputs.lean }}-${{ hashFiles('app/**', 'prismpm.lock', 'Justfile', 'rust-toolchain.toml') }}
+          key: prism-page-proof-${{ runner.os }}-${{ runner.arch }}-sdk-${{ steps.proof-inputs.outputs.sdk }}-lean-${{ steps.proof-inputs.outputs.lean }}-${{ hashFiles('app/**', 'prismpm.lock', 'Justfile', 'rust-toolchain.toml') }}
       - name: Build and verify the holo through the locked SDK
         shell: bash
         env:
