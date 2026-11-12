@@ -1,12 +1,18 @@
-.me { display: flex; flex-direction: column; gap: var(--space-6); width: 100%; max-width: var(--measure); padding: var(--space-4) 0; }
+/* The workspace is a stage the height of the screen and never scrolls; the
+   board-fit wrapper sizes a square board, so this surface takes its whole
+   box instead and scrolls inside it. Without paint containment the
+   scrolled content still counted toward the workspace height in Chromium. */
+.stage .board-fit > .me { width: 100%; max-width: 40rem; height: 100%; align-self: start; overflow-y: auto; overscroll-behavior: contain; contain: paint; }
+.me { display: flex; flex-direction: column; gap: var(--space-6); padding: var(--space-4) 0; }
 .me-sec { display: flex; flex-direction: column; gap: var(--space-2); }
+.me-sec[hidden] { display: none; }
 .me-sec h2 { margin: 0; font-weight: 500; }
 .me-note { margin: 0; font-size: var(--text-14); color: var(--muted-foreground); }
 .me-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: stretch; }
 .me-row > input, .me-row > textarea, .me-row > select {
   flex: 1 1 12rem;
   min-width: 0;
-  min-height: var(--control);
+  min-height: 3rem;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-control);
   border: var(--border-width) solid var(--border);
@@ -17,12 +23,14 @@
 .me-row > select { flex: 0 1 auto; }
 .me-row > textarea { resize: vertical; }
 .me-row > input:focus-visible, .me-row > textarea:focus-visible, .me-row > select:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: var(--ring-offset); }
-.me-file { font-size: var(--text-14); display: inline-flex; align-items: center; min-height: var(--control); padding: 0 var(--space-4); border-radius: var(--radius-control); border: var(--border-width) solid var(--border); background: var(--secondary); color: var(--secondary-foreground); font-weight: 500; cursor: pointer; }
+.me-file { font-size: var(--text-14); display: inline-flex; align-items: center; min-height: 3rem; padding: 0 var(--space-4); border-radius: var(--radius-control); border: var(--border-width) solid var(--border); background: var(--secondary); color: var(--secondary-foreground); font-weight: 500; cursor: pointer; }
 .me-file:hover { background: var(--accent); }
 .me-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.me-controls { display: flex; flex-direction: column; gap: var(--space-3); }
+.me-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
+.me-controls .me-row { flex: 1 1 16rem; flex-wrap: nowrap; }
 .me-controls .me-row > input { font-family: var(--font-mono); font-size: var(--text-14); }
-.me-halt { display: inline-flex; gap: var(--space-2); align-items: center; min-height: var(--touch); font-weight: 500; }
+.me-halt { display: inline-flex; gap: var(--space-2); align-items: center; min-height: 3rem; font-weight: 500; }
+.me-row > button { min-height: 3rem; }
 .me-halt input { width: 1.25rem; height: 1.25rem; accent-color: var(--destructive); }
 #me-out { white-space: pre-wrap; overflow-wrap: anywhere; }
 #me-out.good { color: var(--success); }
