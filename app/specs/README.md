@@ -15,6 +15,7 @@ questions, the examples and the guarantees in plain words.
 | `PrismVaultRestore` | `vault-restore/` | whether the browser vault may give one stored object back: restore, hash only, or refuse | 5 |
 | `PrismGoogle` | `google/` | whether the page may make one Gmail or Calendar API call: fetch, consent, ask, or refuse | 7 |
 | `PrismGoogleLink` | `google-link/` | the Google connection's next stage: unprovisioned, registered, granted, syncing, revoked, or refuse | 9 |
+| `PrismDest` | `dest/` | where one item may go next: deliver (to the owner's calendar, mail or another platform), draft, show (to the owner), hold (quietly), or refuse | 11 |
 
 Boundary guarantees: nothing moves while the Prism is halted; nothing goes to
 GitHub or the hosted verifier, even with approval; nothing a detector matched is

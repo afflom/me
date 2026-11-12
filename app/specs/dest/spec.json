@@ -1,0 +1,84 @@
+{
+  "name": "prism-dest",
+  "title": "Prism Destinations",
+  "purpose": "Decides where one thing the Prism holds may go next: shown to the owner, held quietly for the owner, prepared as a draft for the owner to act on, delivered to a destination (calendar, mail, another platform), or refused. Nothing leaves without the owner's own act on the very bytes they saw, nothing coercive is ever carried or pushed, nothing without a cause is routed, restricted content never leaves, and the owner's quiet is kept.",
+  "fields": [
+    {"name": "target", "values": ["owner", "calendar", "mail", "platform", "other"],
+     "means": "the destination: the owner's own view, their calendar, a mail reply or message, another platform they use (by the device's share sheet or a file), or anything else"},
+    {"name": "verdict", "values": ["allow", "ask", "hashonly", "deny"],
+     "means": "the Boundary's answer for this content to this destination (browser for the owner, outbound for the rest)"},
+    {"name": "cause", "values": ["grounded", "orphan"],
+     "means": "whether the item traces to a source the Prism read or to the owner's own input (grounded), or to nothing (orphan)"},
+    {"name": "act", "values": ["none", "owner"],
+     "means": "whether the owner pressed the button for this very delivery"},
+    {"name": "wording", "values": ["seen", "changed"],
+     "means": "whether the bytes that would go out are exactly the bytes the owner saw when they acted"},
+    {"name": "tone", "values": ["calm", "coercive"],
+     "means": "the tone check of the words: calm, or coercive (pressure, false urgency, guilt, threat, dark pattern)"},
+    {"name": "pace", "values": ["open", "quiet"],
+     "means": "the owner's attention right now: open, or quiet (rest, focus, sleep)"},
+    {"name": "urgency", "values": ["normal", "urgent"],
+     "means": "whether the item is one the owner marked as worth breaking quiet for"},
+    {"name": "halted", "values": ["no", "yes"],
+     "means": "whether the owner pressed the kill switch"}
+  ],
+  "outcomes": ["deliver", "draft", "show", "hold", "refuse"],
+  "tree": {
+    "if": ["halted", "yes"], "then": "refuse", "else": {
+    "if": ["target", "other"], "then": "refuse", "else": {
+    "if": ["cause", "orphan"], "then": "refuse", "else": {
+    "if": ["verdict", "deny"], "then": "refuse", "else": {
+    "if": ["target", "owner"], "then": {
+      "if": ["tone", "coercive"], "then": "hold", "else": {
+      "if": ["pace", "quiet"], "then": {
+        "if": ["urgency", "normal"], "then": "hold", "else": "show"},
+      "else": "show"}},
+    "else": {
+    "if": ["verdict", "hashonly"], "then": "refuse", "else": {
+    "if": ["tone", "coercive"], "then": "draft", "else": {
+    "if": ["act", "none"], "then": "draft", "else": {
+    "if": ["wording", "changed"], "then": "draft", "else": "deliver"}}}}}}}}
+  },
+  "guarantees": [
+    {"when": [["halted", "yes"]], "always": "refuse",
+     "why": "the kill switch stops every route, in and out (constitution P7)"},
+    {"when": [["target", "other"]], "always": "refuse",
+     "why": "the Prism routes only to destinations it models"},
+    {"when": [["cause", "orphan"]], "always": "refuse",
+     "why": "nothing arises without a cause: every routed item traces to a source or to the owner (Pratityasamutpada, no acausal phenomena)"},
+    {"when": [["verdict", "deny"]], "always": "refuse",
+     "why": "the Boundary's deny is final for every destination"},
+    {"when": [["act", "none"]], "never": ["deliver"],
+     "why": "nothing leaves without the owner's own act: the Prism prepares, the owner decides (Ahimsa, no coercion of the owner)"},
+    {"when": [["wording", "changed"]], "never": ["deliver"],
+     "why": "what goes out is exactly what the owner saw (Satya, zero drift between what is shown and what is sent)"},
+    {"when": [["tone", "coercive"]], "never": ["deliver"],
+     "why": "coercive words never leave the Prism for another person (Ahimsa; Lokasangraha, the welfare of correspondents)"},
+    {"when": [["tone", "coercive"]], "never": ["show"],
+     "why": "coercive content is never pushed into the owner's view: it waits, quietly, to be looked at (Humane: zero dark patterns)"},
+    {"when": [["verdict", "hashonly"]], "never": ["deliver", "draft"],
+     "why": "restricted content never leaves the browser, even with the owner's act (Aparigraha)"},
+    {"when": [["target", "owner"]], "never": ["deliver", "draft"],
+     "why": "the owner is reached only by being shown or by a quiet hold, never by an outbound act"},
+    {"when": [["pace", "quiet"], ["urgency", "normal"]], "never": ["show"],
+     "why": "the owner's quiet is kept: only what they marked urgent breaks it (Turiya, the silent witness)"}
+  ],
+  "examples": [
+    ["owner allow grounded none seen calm open normal no", "show"],
+    ["owner allow grounded none seen calm quiet normal no", "hold"],
+    ["owner allow grounded none seen calm quiet urgent no", "show"],
+    ["owner ask grounded none seen coercive open urgent no", "hold"],
+    ["mail ask grounded none seen calm open normal no", "draft"],
+    ["mail ask grounded owner seen calm open normal no", "deliver"],
+    ["mail ask grounded owner changed calm open normal no", "draft"],
+    ["mail allow grounded owner seen coercive open normal no", "draft"],
+    ["calendar allow grounded owner seen calm quiet normal no", "deliver"],
+    ["platform hashonly grounded owner seen calm open normal no", "refuse"],
+    ["calendar allow orphan owner seen calm open normal no", "refuse"],
+    ["mail deny grounded owner seen calm open normal no", "refuse"],
+    ["other allow grounded owner seen calm open normal no", "refuse"],
+    ["mail allow grounded owner seen calm open normal yes", "refuse"],
+    ["mail allow grounded owner seen calm open normal", "invalid"],
+    ["Mail allow grounded owner seen calm open normal no", "invalid"]
+  ]
+}

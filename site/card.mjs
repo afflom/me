@@ -107,6 +107,18 @@ export default async function start({ app, reason, $ }) {
     }
   }
 
+  // Destinations: the Prism routed out, to the owner and to the apps they act in.
+  // Its code loads on the owner's first press, so an ordinary visit fetches none of it.
+  $("me-dest-sec").hidden = false;
+  $("me-dest-open").addEventListener("click", async () => {
+    try {
+      const { mountDest } = await import("./dest/panel.mjs");
+      mountDest($("me-dest"), { line, halted });
+    } catch (error) {
+      console.warn(`destinations: ${error?.message ?? error}`);
+    }
+  }, { once: true });
+
   $("me-keep").addEventListener("submit", async (event) => {
     event.preventDefault();
     const fact = $("me-fact").value;
