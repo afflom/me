@@ -198,8 +198,10 @@ jobs:
       # The published page itself, in a real browser: it keeps, refuses while
       # halted and answers through the app, or this run fails. Pages can take
       # a minute to serve the new bytes, so the check gets four tries.
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Check out the exact event revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          fetch-depth: 0
           persist-credentials: false
       - name: The published page works (PG-01, live)
         env:
