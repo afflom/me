@@ -1,0 +1,526 @@
+{
+  "name": "prism-chronology",
+  "title": "Prism Chronology",
+  "purpose": "Decides how two time intervals relate, as one of Allen's thirteen interval relations, so the Prism can order events and find schedule conflicts exactly.",
+  "fields": [
+    {
+      "name": "astart",
+      "kind": "number",
+      "min": 0,
+      "max": 10080,
+      "means": "when interval A starts, in minutes since the start of the week"
+    },
+    {
+      "name": "aend",
+      "kind": "number",
+      "min": 0,
+      "max": 10080,
+      "means": "when interval A ends, in minutes since the start of the week"
+    },
+    {
+      "name": "bstart",
+      "kind": "number",
+      "min": 0,
+      "max": 10080,
+      "means": "when interval B starts, in minutes since the start of the week"
+    },
+    {
+      "name": "bend",
+      "kind": "number",
+      "min": 0,
+      "max": 10080,
+      "means": "when interval B ends, in minutes since the start of the week"
+    }
+  ],
+  "outcomes": [
+    "before",
+    "meets",
+    "overlaps",
+    "starts",
+    "during",
+    "finishes",
+    "equals",
+    "after",
+    "metby",
+    "overlappedby",
+    "startedby",
+    "contains",
+    "finishedby",
+    "malformed"
+  ],
+  "rules": [
+    {
+      "id": "REQ-001",
+      "when": [
+        {
+          "field": "aend",
+          "op": "<=",
+          "value": {
+            "field": "astart"
+          }
+        }
+      ],
+      "then": "malformed",
+      "says": "when aend <= astart then malformed",
+      "why": "A must end after it starts"
+    },
+    {
+      "id": "REQ-002",
+      "when": [
+        {
+          "field": "bend",
+          "op": "<=",
+          "value": {
+            "field": "bstart"
+          }
+        }
+      ],
+      "then": "malformed",
+      "says": "when bend <= bstart then malformed",
+      "why": "B must end after it starts"
+    },
+    {
+      "id": "REQ-003",
+      "when": [
+        {
+          "field": "aend",
+          "op": "<",
+          "value": {
+            "field": "bstart"
+          }
+        }
+      ],
+      "then": "before",
+      "says": "when aend < bstart then before",
+      "why": "Allen: before"
+    },
+    {
+      "id": "REQ-004",
+      "when": [
+        {
+          "field": "aend",
+          "op": "=",
+          "value": {
+            "field": "bstart"
+          }
+        }
+      ],
+      "then": "meets",
+      "says": "when aend = bstart then meets",
+      "why": "Allen: meets"
+    },
+    {
+      "id": "REQ-005",
+      "when": [
+        {
+          "field": "bend",
+          "op": "<",
+          "value": {
+            "field": "astart"
+          }
+        }
+      ],
+      "then": "after",
+      "says": "when bend < astart then after",
+      "why": "Allen: after"
+    },
+    {
+      "id": "REQ-006",
+      "when": [
+        {
+          "field": "bend",
+          "op": "=",
+          "value": {
+            "field": "astart"
+          }
+        }
+      ],
+      "then": "metby",
+      "says": "when bend = astart then metby",
+      "why": "Allen: met by"
+    },
+    {
+      "id": "REQ-007",
+      "when": [
+        {
+          "field": "astart",
+          "op": "=",
+          "value": {
+            "field": "bstart"
+          }
+        },
+        {
+          "field": "aend",
+          "op": "=",
+          "value": {
+            "field": "bend"
+          }
+        }
+      ],
+      "then": "equals",
+      "says": "when astart = bstart and aend = bend then equals",
+      "why": "Allen: equals"
+    },
+    {
+      "id": "REQ-008",
+      "when": [
+        {
+          "field": "astart",
+          "op": "=",
+          "value": {
+            "field": "bstart"
+          }
+        },
+        {
+          "field": "aend",
+          "op": "<",
+          "value": {
+            "field": "bend"
+          }
+        }
+      ],
+      "then": "starts",
+      "says": "when astart = bstart and aend < bend then starts",
+      "why": "Allen: starts"
+    },
+    {
+      "id": "REQ-009",
+      "when": [
+        {
+          "field": "astart",
+          "op": "=",
+          "value": {
+            "field": "bstart"
+          }
+        }
+      ],
+      "then": "startedby",
+      "says": "when astart = bstart then startedby",
+      "why": "Allen: started by"
+    },
+    {
+      "id": "REQ-010",
+      "when": [
+        {
+          "field": "aend",
+          "op": "=",
+          "value": {
+            "field": "bend"
+          }
+        },
+        {
+          "field": "astart",
+          "op": ">",
+          "value": {
+            "field": "bstart"
+          }
+        }
+      ],
+      "then": "finishes",
+      "says": "when aend = bend and astart > bstart then finishes",
+      "why": "Allen: finishes"
+    },
+    {
+      "id": "REQ-011",
+      "when": [
+        {
+          "field": "aend",
+          "op": "=",
+          "value": {
+            "field": "bend"
+          }
+        }
+      ],
+      "then": "finishedby",
+      "says": "when aend = bend then finishedby",
+      "why": "Allen: finished by"
+    },
+    {
+      "id": "REQ-012",
+      "when": [
+        {
+          "field": "astart",
+          "op": ">",
+          "value": {
+            "field": "bstart"
+          }
+        },
+        {
+          "field": "aend",
+          "op": "<",
+          "value": {
+            "field": "bend"
+          }
+        }
+      ],
+      "then": "during",
+      "says": "when astart > bstart and aend < bend then during",
+      "why": "Allen: during"
+    },
+    {
+      "id": "REQ-013",
+      "when": [
+        {
+          "field": "astart",
+          "op": "<",
+          "value": {
+            "field": "bstart"
+          }
+        },
+        {
+          "field": "aend",
+          "op": ">",
+          "value": {
+            "field": "bend"
+          }
+        }
+      ],
+      "then": "contains",
+      "says": "when astart < bstart and aend > bend then contains",
+      "why": "Allen: contains"
+    },
+    {
+      "id": "REQ-014",
+      "when": [
+        {
+          "field": "astart",
+          "op": "<",
+          "value": {
+            "field": "bstart"
+          }
+        }
+      ],
+      "then": "overlaps",
+      "says": "when astart < bstart then overlaps",
+      "why": "Allen: overlaps"
+    }
+  ],
+  "otherwise": "overlappedby",
+  "properties": [
+    {
+      "id": "INV-001",
+      "kind": "never",
+      "when": [
+        {
+          "field": "astart",
+          "op": "<",
+          "value": {
+            "field": "aend"
+          }
+        },
+        {
+          "field": "bstart",
+          "op": "<",
+          "value": {
+            "field": "bend"
+          }
+        }
+      ],
+      "then": "malformed",
+      "says": "never when astart < aend and bstart < bend then malformed",
+      "why": "two real intervals must always get a relation"
+    },
+    {
+      "id": "INV-002",
+      "kind": "never",
+      "when": [
+        {
+          "field": "aend",
+          "op": ">=",
+          "value": {
+            "field": "bstart"
+          }
+        }
+      ],
+      "then": "before",
+      "says": "never when aend >= bstart then before",
+      "why": "an event that runs into another must never be ordered before it"
+    },
+    {
+      "id": "INV-003",
+      "kind": "never",
+      "when": [
+        {
+          "field": "bend",
+          "op": ">=",
+          "value": {
+            "field": "astart"
+          }
+        }
+      ],
+      "then": "after",
+      "says": "never when bend >= astart then after",
+      "why": "an event another runs into must never be ordered after it"
+    },
+    {
+      "id": "INV-004",
+      "kind": "never",
+      "when": [
+        {
+          "field": "astart",
+          "op": "!=",
+          "value": {
+            "field": "bstart"
+          }
+        }
+      ],
+      "then": "equals",
+      "says": "never when astart != bstart then equals",
+      "why": "different starts must never be called the same time"
+    },
+    {
+      "id": "INV-005",
+      "kind": "never",
+      "when": [
+        {
+          "field": "aend",
+          "op": "!=",
+          "value": {
+            "field": "bend"
+          }
+        }
+      ],
+      "then": "equals",
+      "says": "never when aend != bend then equals",
+      "why": "different ends must never be called the same time"
+    },
+    {
+      "id": "INV-006",
+      "kind": "never",
+      "when": [
+        {
+          "field": "aend",
+          "op": "!=",
+          "value": {
+            "field": "bstart"
+          }
+        }
+      ],
+      "then": "meets",
+      "says": "never when aend != bstart then meets",
+      "why": "meets must mean back to back exactly"
+    },
+    {
+      "id": "INV-007",
+      "kind": "never",
+      "when": [
+        {
+          "field": "astart",
+          "op": "<=",
+          "value": {
+            "field": "bstart"
+          }
+        }
+      ],
+      "then": "during",
+      "says": "never when astart <= bstart then during",
+      "why": "during must mean strictly inside"
+    },
+    {
+      "id": "INV-008",
+      "kind": "never",
+      "when": [
+        {
+          "field": "aend",
+          "op": "<",
+          "value": {
+            "field": "bstart"
+          }
+        }
+      ],
+      "then": "overlaps",
+      "says": "never when aend < bstart then overlaps",
+      "why": "separate events must never be reported as a conflict"
+    }
+  ],
+  "examples": [
+    {
+      "request": "0 60 120 180",
+      "response": "before"
+    },
+    {
+      "request": "0 60 60 120",
+      "response": "meets"
+    },
+    {
+      "request": "0 90 60 120",
+      "response": "overlaps"
+    },
+    {
+      "request": "60 90 60 120",
+      "response": "starts"
+    },
+    {
+      "request": "70 90 60 120",
+      "response": "during"
+    },
+    {
+      "request": "90 120 60 120",
+      "response": "finishes"
+    },
+    {
+      "request": "60 120 60 120",
+      "response": "equals"
+    },
+    {
+      "request": "200 260 60 120",
+      "response": "after"
+    },
+    {
+      "request": "120 180 60 120",
+      "response": "metby"
+    },
+    {
+      "request": "90 150 60 120",
+      "response": "overlappedby"
+    },
+    {
+      "request": "60 150 60 120",
+      "response": "startedby"
+    },
+    {
+      "request": "0 200 60 120",
+      "response": "contains"
+    },
+    {
+      "request": "0 120 60 120",
+      "response": "finishedby"
+    },
+    {
+      "request": "60 60 0 30",
+      "response": "malformed"
+    },
+    {
+      "request": "0 30 90 80",
+      "response": "malformed"
+    },
+    {
+      "request": "540 600 570 630",
+      "response": "overlaps"
+    }
+  ],
+  "schema": "prism/spec/1",
+  "actors": [],
+  "meanings": {
+    "before": "A ends before B starts",
+    "meets": "A ends exactly when B starts",
+    "overlaps": "A starts first and ends inside B",
+    "starts": "both start together and A ends first",
+    "during": "A lies strictly inside B",
+    "finishes": "both end together and A starts later",
+    "equals": "same start and same end",
+    "after": "A starts after B ends",
+    "metby": "A starts exactly when B ends",
+    "overlappedby": "B starts first and ends inside A",
+    "startedby": "both start together and B ends first",
+    "contains": "B lies strictly inside A",
+    "finishedby": "both end together and B starts later",
+    "malformed": "an interval does not end after it starts"
+  },
+  "otherwiseWhy": "Allen: overlapped by, the only relation left",
+  "limits": [
+    "Times are whole minutes within one week; longer spans need a larger unit.",
+    "Intervals include their start and exclude their end, so back-to-back events meet and do not overlap.",
+    "Time zones are resolved before the request; both intervals use the same clock."
+  ]
+}

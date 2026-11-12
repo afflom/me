@@ -1,0 +1,314 @@
+\begin{lexlean}{PrismChronology}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: answerBefore, parameters: [], result: Nat, body: 0}
+
+definition{name: answerMeets, parameters: [], result: Nat, body: 1}
+
+definition{name: answerOverlaps, parameters: [], result: Nat, body: 2}
+
+definition{name: answerStarts, parameters: [], result: Nat, body: 3}
+
+definition{name: answerDuring, parameters: [], result: Nat, body: 4}
+
+definition{name: answerFinishes, parameters: [], result: Nat, body: 5}
+
+definition{name: answerEquals, parameters: [], result: Nat, body: 6}
+
+definition{name: answerAfter, parameters: [], result: Nat, body: 7}
+
+definition{name: answerMetby, parameters: [], result: Nat, body: 8}
+
+definition{name: answerOverlappedby, parameters: [], result: Nat, body: 9}
+
+definition{name: answerStartedby, parameters: [], result: Nat, body: 10}
+
+definition{name: answerContains, parameters: [], result: Nat, body: 11}
+
+definition{name: answerFinishedby, parameters: [], result: Nat, body: 12}
+
+definition{name: answerMalformed, parameters: [], result: Nat, body: 13}
+
+structure{
+  name: Request,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: astart, type: Nat},
+    {name: aend, type: Nat},
+    {name: bstart, type: Nat},
+    {name: bend, type: Nat}
+  ]
+}
+
+definition{
+  name: byteAt,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some b => (ctor Option.some [Nat] (prim to_nat b : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: digitsValue,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.some [Nat] acc)
+    | Nat.succ rest => (match (byteAt s i)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (digitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: parseDigits,
+  parameters: [s : Bytes],
+  result: (Option Nat),
+  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (byteAt s 0)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (digitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: parseNumber,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (parseDigits value),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: parseAstart,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (match (parseNumber value)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some parsed => (if (10080 <? parsed) then (ctor Option.none [Nat]) else (ctor Option.some [Nat] parsed))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: parseAend,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (match (parseNumber value)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some parsed => (if (10080 <? parsed) then (ctor Option.none [Nat]) else (ctor Option.some [Nat] parsed))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: parseBstart,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (match (parseNumber value)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some parsed => (if (10080 <? parsed) then (ctor Option.none [Nat]) else (ctor Option.some [Nat] parsed))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: parseBend,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (match (parseNumber value)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some parsed => (if (10080 <? parsed) then (ctor Option.none [Nat]) else (ctor Option.some [Nat] parsed))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sliceOf,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: fieldEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match (byteAt s i)
+      | Option.none => i
+      | Option.some d => (if (d =? 32) then i else (fieldEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: decodeField4,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
+  result: (Option Request),
+  body: (let e : Nat := (fieldEnd s start (Foundation.Bytes::byteLength s)); (match (parseBend (sliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [Request])
+    | Option.some v4 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [Request] (record Request {astart := v1, aend := v2, bstart := v3, bend := v4})) else (ctor Option.none [Request])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: decodeField3,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
+  result: (Option Request),
+  body: (let e : Nat := (fieldEnd s start (Foundation.Bytes::byteLength s)); (match (parseBstart (sliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [Request])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (decodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [Request])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: decodeField2,
+  parameters: [s : Bytes, start : Nat, v1 : Nat],
+  result: (Option Request),
+  body: (let e : Nat := (fieldEnd s start (Foundation.Bytes::byteLength s)); (match (parseAend (sliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [Request])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (decodeField3 s (e + 1) v1 v2) else (ctor Option.none [Request])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: decodeField1,
+  parameters: [s : Bytes, start : Nat],
+  result: (Option Request),
+  body: (let e : Nat := (fieldEnd s start (Foundation.Bytes::byteLength s)); (match (parseAstart (sliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [Request])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (decodeField2 s (e + 1) v1) else (ctor Option.none [Request])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rule1,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request aend) <=? (project request astart))
+}
+
+definition{
+  name: rule2,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request bend) <=? (project request bstart))
+}
+
+definition{
+  name: rule3,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request aend) <? (project request bstart))
+}
+
+definition{
+  name: rule4,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request aend) =? (project request bstart))
+}
+
+definition{
+  name: rule5,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request bend) <? (project request astart))
+}
+
+definition{
+  name: rule6,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request bend) =? (project request astart))
+}
+
+definition{
+  name: rule7,
+  parameters: [request : Request],
+  result: Bool,
+  body: (((project request astart) =? (project request bstart)) && ((project request aend) =? (project request bend)))
+}
+
+definition{
+  name: rule8,
+  parameters: [request : Request],
+  result: Bool,
+  body: (((project request astart) =? (project request bstart)) && ((project request aend) <? (project request bend)))
+}
+
+definition{
+  name: rule9,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request astart) =? (project request bstart))
+}
+
+definition{
+  name: rule10,
+  parameters: [request : Request],
+  result: Bool,
+  body: (((project request aend) =? (project request bend)) && ((project request bstart) <? (project request astart)))
+}
+
+definition{
+  name: rule11,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request aend) =? (project request bend))
+}
+
+definition{
+  name: rule12,
+  parameters: [request : Request],
+  result: Bool,
+  body: (((project request bstart) <? (project request astart)) && ((project request aend) <? (project request bend)))
+}
+
+definition{
+  name: rule13,
+  parameters: [request : Request],
+  result: Bool,
+  body: (((project request astart) <? (project request bstart)) && ((project request bend) <? (project request aend)))
+}
+
+definition{
+  name: rule14,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request astart) <? (project request bstart))
+}
+
+definition{
+  name: judge,
+  parameters: [request : Request],
+  result: Nat,
+  body: (if (rule1 request) then (answerMalformed) else (if (rule2 request) then (answerMalformed) else (if (rule3 request) then (answerBefore) else (if (rule4 request) then (answerMeets) else (if (rule5 request) then (answerAfter) else (if (rule6 request) then (answerMetby) else (if (rule9 request) then (if (rule7 request) then (answerEquals) else (if (rule8 request) then (answerStarts) else (answerStartedby))) else (if (rule11 request) then (if (rule10 request) then (answerFinishes) else (answerFinishedby)) else (if (rule12 request) then (answerDuring) else (if (rule13 request) then (answerContains) else (if (rule14 request) then (answerOverlaps) else (answerOverlappedby))))))))))))
+}
+
+definition{
+  name: encodeAnswer,
+  parameters: [code : Nat],
+  result: Bytes,
+  body: (if (code =? (answerBefore)) then 0x6265666f7265 else (if (code =? (answerMeets)) then 0x6d65657473 else (if (code =? (answerOverlaps)) then 0x6f7665726c617073 else (if (code =? (answerStarts)) then 0x737461727473 else (if (code =? (answerDuring)) then 0x647572696e67 else (if (code =? (answerFinishes)) then 0x66696e6973686573 else (if (code =? (answerEquals)) then 0x657175616c73 else (if (code =? (answerAfter)) then 0x6166746572 else (if (code =? (answerMetby)) then 0x6d65746279 else (if (code =? (answerOverlappedby)) then 0x6f7665726c61707065646279 else (if (code =? (answerStartedby)) then 0x737461727465646279 else (if (code =? (answerContains)) then 0x636f6e7461696e73 else (if (code =? (answerFinishedby)) then 0x66696e69736865646279 else (if (code =? (answerMalformed)) then 0x6d616c666f726d6564 else 0x696e76616c6964))))))))))))))
+}
+
+definition{
+  name: dispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (112 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (decodeField1 value 0)
+    | Option.none => 0x696e76616c6964
+    | Option.some request => (encodeAnswer (judge request)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

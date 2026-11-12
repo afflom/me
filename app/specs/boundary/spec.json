@@ -1,0 +1,419 @@
+{
+  "name": "prism-boundary",
+  "title": "Prism Boundary",
+  "purpose": "Decides whether one labeled fact about the owner may go to a destination, so that nothing moves while the Prism is halted, no personal fact is ever saved to GitHub or the hosted verifier, no personal identifier leaves the browser, and nothing is sent without the owner's signed approval.",
+  "fields": [
+    {
+      "name": "label",
+      "kind": "choice",
+      "values": [
+        "public",
+        "internal",
+        "confidential",
+        "restricted",
+        "unlabeled"
+      ],
+      "means": "the fact's classification label"
+    },
+    {
+      "name": "detector",
+      "kind": "choice",
+      "values": [
+        "none",
+        "pci",
+        "phi",
+        "credential",
+        "special"
+      ],
+      "means": "which regulated-data detector matched the fact: card data, health data, a credential, or a GDPR special category"
+    },
+    {
+      "name": "destination",
+      "kind": "choice",
+      "values": [
+        "browser",
+        "github",
+        "verifier",
+        "outbound"
+      ],
+      "means": "where the fact would go: the encrypted store in the owner's browser, GitHub (the Pages repository, its commits and build output), the hosted verifier, or an outbound message"
+    },
+    {
+      "name": "approval",
+      "kind": "choice",
+      "values": [
+        "none",
+        "owner"
+      ],
+      "means": "whether the owner signed an approval for this move"
+    },
+    {
+      "name": "identifier",
+      "kind": "choice",
+      "values": [
+        "no",
+        "yes"
+      ],
+      "means": "whether the fact is a personal identifier, such as a name, email address, phone number or account number"
+    },
+    {
+      "name": "halted",
+      "kind": "choice",
+      "values": [
+        "no",
+        "yes"
+      ],
+      "means": "whether the owner has pressed the kill switch"
+    }
+  ],
+  "outcomes": [
+    "allow",
+    "hashonly",
+    "ask",
+    "deny"
+  ],
+  "rules": [
+    {
+      "id": "REQ-001",
+      "when": [
+        {
+          "field": "halted",
+          "op": "is",
+          "value": "yes"
+        }
+      ],
+      "then": "deny",
+      "says": "when halted is yes then deny",
+      "why": "stop means stop (kill switch)"
+    },
+    {
+      "id": "REQ-002",
+      "when": [
+        {
+          "field": "destination",
+          "op": "is",
+          "value": "github"
+        }
+      ],
+      "then": "deny",
+      "says": "when destination is github then deny",
+      "why": "no personal fact is ever saved to GitHub"
+    },
+    {
+      "id": "REQ-003",
+      "when": [
+        {
+          "field": "destination",
+          "op": "is",
+          "value": "verifier"
+        }
+      ],
+      "then": "deny",
+      "says": "when destination is verifier then deny",
+      "why": "the verifier sees the model only, never facts"
+    },
+    {
+      "id": "REQ-004",
+      "when": [
+        {
+          "field": "detector",
+          "op": "is not",
+          "value": "none"
+        },
+        {
+          "field": "destination",
+          "op": "is",
+          "value": "browser"
+        }
+      ],
+      "then": "hashonly",
+      "says": "when detector is not none and destination is browser then hashonly",
+      "why": "regulated data is never stored as a value"
+    },
+    {
+      "id": "REQ-005",
+      "when": [
+        {
+          "field": "label",
+          "op": "is",
+          "value": "restricted"
+        },
+        {
+          "field": "destination",
+          "op": "is",
+          "value": "browser"
+        }
+      ],
+      "then": "hashonly",
+      "says": "when label is restricted and destination is browser then hashonly",
+      "why": "restricted data is never stored as a value"
+    },
+    {
+      "id": "REQ-006",
+      "when": [
+        {
+          "field": "detector",
+          "op": "is not",
+          "value": "none"
+        }
+      ],
+      "then": "deny",
+      "says": "when detector is not none then deny",
+      "why": "regulated data never leaves its source"
+    },
+    {
+      "id": "REQ-007",
+      "when": [
+        {
+          "field": "label",
+          "op": "is",
+          "value": "restricted"
+        }
+      ],
+      "then": "deny",
+      "says": "when label is restricted then deny",
+      "why": "restricted data never leaves its source"
+    },
+    {
+      "id": "REQ-008",
+      "when": [
+        {
+          "field": "identifier",
+          "op": "is",
+          "value": "yes"
+        },
+        {
+          "field": "destination",
+          "op": "is not",
+          "value": "browser"
+        }
+      ],
+      "then": "deny",
+      "says": "when identifier is yes and destination is not browser then deny",
+      "why": "no personal identifier leaves the browser (output court)"
+    },
+    {
+      "id": "REQ-009",
+      "when": [
+        {
+          "field": "destination",
+          "op": "is",
+          "value": "browser"
+        }
+      ],
+      "then": "allow",
+      "says": "when destination is browser then allow",
+      "why": "the encrypted browser store holds labeled facts"
+    },
+    {
+      "id": "REQ-010",
+      "when": [
+        {
+          "field": "approval",
+          "op": "is",
+          "value": "owner"
+        }
+      ],
+      "then": "allow",
+      "says": "when approval is owner then allow",
+      "why": "only the owner may send"
+    }
+  ],
+  "otherwise": "ask",
+  "properties": [
+    {
+      "id": "INV-001",
+      "kind": "always",
+      "when": [
+        {
+          "field": "halted",
+          "op": "is",
+          "value": "yes"
+        }
+      ],
+      "then": "deny",
+      "says": "always when halted is yes then deny",
+      "why": "when the owner presses the kill switch nothing may move (constitution P7)"
+    },
+    {
+      "id": "INV-002",
+      "kind": "always",
+      "when": [
+        {
+          "field": "destination",
+          "op": "is",
+          "value": "github"
+        }
+      ],
+      "then": "deny",
+      "says": "always when destination is github then deny",
+      "why": "the owner's personal data must never be saved to GitHub"
+    },
+    {
+      "id": "INV-003",
+      "kind": "always",
+      "when": [
+        {
+          "field": "destination",
+          "op": "is",
+          "value": "verifier"
+        }
+      ],
+      "then": "deny",
+      "says": "always when destination is verifier then deny",
+      "why": "personal data on the hosted verifier is unlisted but not private"
+    },
+    {
+      "id": "INV-004",
+      "kind": "never",
+      "when": [
+        {
+          "field": "detector",
+          "op": "is not",
+          "value": "none"
+        }
+      ],
+      "then": "allow",
+      "says": "never when detector is not none then allow",
+      "why": "card, health, credential and special-category data must never be stored or moved as a value (PCI DSS 3, HIPAA 164.312, GDPR 9)"
+    },
+    {
+      "id": "INV-005",
+      "kind": "never",
+      "when": [
+        {
+          "field": "label",
+          "op": "is",
+          "value": "restricted"
+        }
+      ],
+      "then": "allow",
+      "says": "never when label is restricted then allow",
+      "why": "restricted data must never be stored or moved as a value"
+    },
+    {
+      "id": "INV-006",
+      "kind": "never",
+      "when": [
+        {
+          "field": "destination",
+          "op": "is",
+          "value": "outbound"
+        },
+        {
+          "field": "approval",
+          "op": "is",
+          "value": "none"
+        }
+      ],
+      "then": "allow",
+      "says": "never when destination is outbound and approval is none then allow",
+      "why": "nothing is ever sent without the owner's OK"
+    },
+    {
+      "id": "INV-007",
+      "kind": "never",
+      "when": [
+        {
+          "field": "identifier",
+          "op": "is",
+          "value": "yes"
+        },
+        {
+          "field": "destination",
+          "op": "is not",
+          "value": "browser"
+        }
+      ],
+      "then": "allow",
+      "says": "never when identifier is yes and destination is not browser then allow",
+      "why": "a personal identifier must never leave the browser, even with approval (constitution P5 and the output court)"
+    }
+  ],
+  "examples": [
+    {
+      "request": "public none github owner no no",
+      "response": "deny"
+    },
+    {
+      "request": "public none browser none no no",
+      "response": "allow"
+    },
+    {
+      "request": "confidential none browser none no no",
+      "response": "allow"
+    },
+    {
+      "request": "confidential pci browser none no no",
+      "response": "hashonly"
+    },
+    {
+      "request": "restricted none browser owner no no",
+      "response": "hashonly"
+    },
+    {
+      "request": "confidential none github none no no",
+      "response": "deny"
+    },
+    {
+      "request": "public none verifier owner no no",
+      "response": "deny"
+    },
+    {
+      "request": "confidential none outbound none no no",
+      "response": "ask"
+    },
+    {
+      "request": "confidential none outbound owner no no",
+      "response": "allow"
+    },
+    {
+      "request": "internal phi outbound owner no no",
+      "response": "deny"
+    },
+    {
+      "request": "restricted none outbound owner no no",
+      "response": "deny"
+    },
+    {
+      "request": "unlabeled none browser none no no",
+      "response": "allow"
+    },
+    {
+      "request": "public none browser none no yes",
+      "response": "deny"
+    },
+    {
+      "request": "confidential none outbound owner no yes",
+      "response": "deny"
+    },
+    {
+      "request": "confidential none outbound owner yes no",
+      "response": "deny"
+    },
+    {
+      "request": "confidential none browser none yes no",
+      "response": "allow"
+    },
+    {
+      "request": "public none outbound owner yes no",
+      "response": "deny"
+    }
+  ],
+  "schema": "prism/spec/1",
+  "actors": [],
+  "meanings": {
+    "allow": "the fact may go there",
+    "hashonly": "only its hash and a pointer to the original may be kept",
+    "ask": "the owner must approve first",
+    "deny": "the fact may not go there"
+  },
+  "otherwiseWhy": "nothing is sent without the owner",
+  "limits": [
+    "It does not decide a fact's label or run the detectors; those come from the extractor.",
+    "It does not check the owner's signature; the approval field is set only after the signature verifies.",
+    "The owner's approval cannot release anything to GitHub, nor restricted or detected data anywhere.",
+    "It governs the Prism at run time; a repository check must also refuse any commit that carries personal data.",
+    "Recipient addresses of an approved outbound message are handled by the mail client, not stored as facts."
+  ]
+}

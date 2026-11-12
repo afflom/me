@@ -1,0 +1,301 @@
+\begin{lexlean}{PrismLearning}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: stateInferred, parameters: [], result: Nat, body: 0}
+
+definition{name: stateConsolidated, parameters: [], result: Nat, body: 1}
+
+definition{name: stateConfirmed, parameters: [], result: Nat, body: 2}
+
+definition{name: stateRejected, parameters: [], result: Nat, body: 3}
+
+definition{name: signalSupport, parameters: [], result: Nat, body: 0}
+
+definition{name: signalContradict, parameters: [], result: Nat, body: 1}
+
+definition{name: signalDecay, parameters: [], result: Nat, body: 2}
+
+definition{name: signalOwnerconfirm, parameters: [], result: Nat, body: 3}
+
+definition{name: signalOwnerreject, parameters: [], result: Nat, body: 4}
+
+definition{name: answerRaise, parameters: [], result: Nat, body: 0}
+
+definition{name: answerLower, parameters: [], result: Nat, body: 1}
+
+definition{name: answerHold, parameters: [], result: Nat, body: 2}
+
+definition{name: answerConsolidate, parameters: [], result: Nat, body: 3}
+
+definition{name: answerDemote, parameters: [], result: Nat, body: 4}
+
+definition{name: answerConfirm, parameters: [], result: Nat, body: 5}
+
+definition{name: answerReject, parameters: [], result: Nat, body: 6}
+
+structure{
+  name: Request,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: state, type: Nat}, {name: weight, type: Nat}, {name: signal, type: Nat}]
+}
+
+definition{
+  name: byteAt,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some b => (ctor Option.some [Nat] (prim to_nat b : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: digitsValue,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.some [Nat] acc)
+    | Nat.succ rest => (match (byteAt s i)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (digitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: parseDigits,
+  parameters: [s : Bytes],
+  result: (Option Nat),
+  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (byteAt s 0)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (digitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: parseNumber,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (parseDigits value),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: parseState,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x696e666572726564 : Bool) then (ctor Option.some [Nat] (stateInferred)) else (if (prim equal value 0x636f6e736f6c696461746564 : Bool) then (ctor Option.some [Nat] (stateConsolidated)) else (if (prim equal value 0x636f6e6669726d6564 : Bool) then (ctor Option.some [Nat] (stateConfirmed)) else (if (prim equal value 0x72656a6563746564 : Bool) then (ctor Option.some [Nat] (stateRejected)) else (ctor Option.none [Nat])))))
+}
+
+definition{
+  name: parseWeight,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (match (parseNumber value)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some parsed => (if (parsed <? 1) then (ctor Option.none [Nat]) else (if (16 <? parsed) then (ctor Option.none [Nat]) else (ctor Option.some [Nat] parsed)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: parseSignal,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x737570706f7274 : Bool) then (ctor Option.some [Nat] (signalSupport)) else (if (prim equal value 0x636f6e74726164696374 : Bool) then (ctor Option.some [Nat] (signalContradict)) else (if (prim equal value 0x6465636179 : Bool) then (ctor Option.some [Nat] (signalDecay)) else (if (prim equal value 0x6f776e6572636f6e6669726d : Bool) then (ctor Option.some [Nat] (signalOwnerconfirm)) else (if (prim equal value 0x6f776e657272656a656374 : Bool) then (ctor Option.some [Nat] (signalOwnerreject)) else (ctor Option.none [Nat]))))))
+}
+
+definition{
+  name: sliceOf,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: fieldEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match (byteAt s i)
+      | Option.none => i
+      | Option.some d => (if (d =? 32) then i else (fieldEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: decodeField3,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
+  result: (Option Request),
+  body: (let e : Nat := (fieldEnd s start (Foundation.Bytes::byteLength s)); (match (parseSignal (sliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [Request])
+    | Option.some v3 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [Request] (record Request {state := v1, weight := v2, signal := v3})) else (ctor Option.none [Request])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: decodeField2,
+  parameters: [s : Bytes, start : Nat, v1 : Nat],
+  result: (Option Request),
+  body: (let e : Nat := (fieldEnd s start (Foundation.Bytes::byteLength s)); (match (parseWeight (sliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [Request])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (decodeField3 s (e + 1) v1 v2) else (ctor Option.none [Request])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: decodeField1,
+  parameters: [s : Bytes, start : Nat],
+  result: (Option Request),
+  body: (let e : Nat := (fieldEnd s start (Foundation.Bytes::byteLength s)); (match (parseState (sliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [Request])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (decodeField2 s (e + 1) v1) else (ctor Option.none [Request])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rule1,
+  parameters: [request : Request],
+  result: Bool,
+  body: (((project request signal) =? (signalOwnerconfirm)) && (not ((project request state) =? (stateConfirmed))))
+}
+
+definition{
+  name: rule1Misses,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((((project request signal) <? (signalOwnerconfirm)) || ((signalOwnerconfirm) <? (project request signal))) || ((project request state) =? (stateConfirmed)))
+}
+
+definition{
+  name: rule2,
+  parameters: [request : Request],
+  result: Bool,
+  body: (((project request signal) =? (signalOwnerreject)) && (not ((project request state) =? (stateRejected))))
+}
+
+definition{
+  name: rule2Misses,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((((project request signal) <? (signalOwnerreject)) || ((signalOwnerreject) <? (project request signal))) || ((project request state) =? (stateRejected)))
+}
+
+definition{
+  name: rule3,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request state) =? (stateConfirmed))
+}
+
+definition{
+  name: rule4,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request state) =? (stateRejected))
+}
+
+definition{
+  name: rule5,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((((project request state) =? (stateInferred)) && ((project request signal) =? (signalSupport))) && (10 <=? (project request weight)))
+}
+
+definition{
+  name: rule5Misses,
+  parameters: [request : Request],
+  result: Bool,
+  body: (((((project request state) <? (stateInferred)) || ((stateInferred) <? (project request state))) || (((project request signal) <? (signalSupport)) || ((signalSupport) <? (project request signal)))) || ((project request weight) <? 10))
+}
+
+definition{
+  name: rule6,
+  parameters: [request : Request],
+  result: Bool,
+  body: (((project request signal) =? (signalSupport)) && (15 <=? (project request weight)))
+}
+
+definition{
+  name: rule6Misses,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((((project request signal) <? (signalSupport)) || ((signalSupport) <? (project request signal))) || ((project request weight) <? 15))
+}
+
+definition{
+  name: rule7,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request signal) =? (signalSupport))
+}
+
+definition{
+  name: rule8,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((((project request state) =? (stateConsolidated)) && ((project request signal) =? (signalContradict))) && ((project request weight) <=? 6))
+}
+
+definition{
+  name: rule8Misses,
+  parameters: [request : Request],
+  result: Bool,
+  body: (((((project request state) <? (stateConsolidated)) || ((stateConsolidated) <? (project request state))) || (((project request signal) <? (signalContradict)) || ((signalContradict) <? (project request signal)))) || (6 <? (project request weight)))
+}
+
+definition{
+  name: rule9,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request weight) <=? 1)
+}
+
+definition{
+  name: rule10,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request signal) =? (signalContradict))
+}
+
+definition{
+  name: rule11,
+  parameters: [request : Request],
+  result: Bool,
+  body: ((project request signal) =? (signalDecay))
+}
+
+definition{
+  name: judge,
+  parameters: [request : Request],
+  result: Nat,
+  body: (if (rule1Misses request) then (if (rule2Misses request) then (if (rule3 request) then (answerHold) else (if (rule4 request) then (answerHold) else (if (rule5Misses request) then (if (rule6Misses request) then (if (rule7 request) then (answerRaise) else (if (rule8Misses request) then (if (rule9 request) then (answerHold) else (if (rule10 request) then (answerLower) else (if (rule11 request) then (answerLower) else (answerHold)))) else (answerDemote))) else (answerHold)) else (answerConsolidate)))) else (answerReject)) else (answerConfirm))
+}
+
+definition{
+  name: encodeAnswer,
+  parameters: [code : Nat],
+  result: Bytes,
+  body: (if (code =? (answerRaise)) then 0x7261697365 else (if (code =? (answerLower)) then 0x6c6f776572 else (if (code =? (answerHold)) then 0x686f6c64 else (if (code =? (answerConsolidate)) then 0x636f6e736f6c6964617465 else (if (code =? (answerDemote)) then 0x64656d6f7465 else (if (code =? (answerConfirm)) then 0x636f6e6669726d else (if (code =? (answerReject)) then 0x72656a656374 else 0x696e76616c6964)))))))
+}
+
+definition{
+  name: dispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (88 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (decodeField1 value 0)
+    | Option.none => 0x696e76616c6964
+    | Option.some request => (encodeAnswer (judge request)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

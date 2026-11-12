@@ -1,0 +1,414 @@
+\begin{lexlean}{PrismBoundaryProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismBoundary}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: breaksInv001,
+  parameters: [request : PrismBoundary::Request],
+  result: Bool,
+  body: (((((((((project request label) <? 5) && ((project request detector) <? 5)) && ((project request destination) <? 4)) && ((project request approval) <? 2)) && ((project request identifier) <? 2)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismBoundary::haltedYes))) && (not ((PrismBoundary::judge request) =? (PrismBoundary::answerDeny))))
+}
+
+theorem{
+  name: inv001Holds,
+  parameters: [request : PrismBoundary::Request],
+  statement: ((breaksInv001 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismBoundary::answerAllow,
+      PrismBoundary::answerAsk,
+      PrismBoundary::answerDeny,
+      PrismBoundary::answerHashonly,
+      PrismBoundary::approvalNone,
+      PrismBoundary::approvalOwner,
+      PrismBoundary::destinationBrowser,
+      PrismBoundary::destinationGithub,
+      PrismBoundary::destinationOutbound,
+      PrismBoundary::destinationVerifier,
+      PrismBoundary::detectorCredential,
+      PrismBoundary::detectorNone,
+      PrismBoundary::detectorPci,
+      PrismBoundary::detectorPhi,
+      PrismBoundary::detectorSpecial,
+      PrismBoundary::haltedNo,
+      PrismBoundary::haltedYes,
+      PrismBoundary::identifierNo,
+      PrismBoundary::identifierYes,
+      PrismBoundary::judge,
+      PrismBoundary::labelConfidential,
+      PrismBoundary::labelInternal,
+      PrismBoundary::labelPublic,
+      PrismBoundary::labelRestricted,
+      PrismBoundary::labelUnlabeled,
+      PrismBoundary::rule1,
+      PrismBoundary::rule10,
+      PrismBoundary::rule2,
+      PrismBoundary::rule3,
+      PrismBoundary::rule4,
+      PrismBoundary::rule4Misses,
+      PrismBoundary::rule5,
+      PrismBoundary::rule5Misses,
+      PrismBoundary::rule6,
+      PrismBoundary::rule6Misses,
+      PrismBoundary::rule7,
+      PrismBoundary::rule8,
+      PrismBoundary::rule8Misses,
+      PrismBoundary::rule9,
+      breaksInv001
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv002,
+  parameters: [request : PrismBoundary::Request],
+  result: Bool,
+  body: (((((((((project request label) <? 5) && ((project request detector) <? 5)) && ((project request destination) <? 4)) && ((project request approval) <? 2)) && ((project request identifier) <? 2)) && ((project request halted) <? 2)) && ((project request destination) =? (PrismBoundary::destinationGithub))) && (not ((PrismBoundary::judge request) =? (PrismBoundary::answerDeny))))
+}
+
+theorem{
+  name: inv002Holds,
+  parameters: [request : PrismBoundary::Request],
+  statement: ((breaksInv002 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismBoundary::answerAllow,
+      PrismBoundary::answerAsk,
+      PrismBoundary::answerDeny,
+      PrismBoundary::answerHashonly,
+      PrismBoundary::approvalNone,
+      PrismBoundary::approvalOwner,
+      PrismBoundary::destinationBrowser,
+      PrismBoundary::destinationGithub,
+      PrismBoundary::destinationOutbound,
+      PrismBoundary::destinationVerifier,
+      PrismBoundary::detectorCredential,
+      PrismBoundary::detectorNone,
+      PrismBoundary::detectorPci,
+      PrismBoundary::detectorPhi,
+      PrismBoundary::detectorSpecial,
+      PrismBoundary::haltedNo,
+      PrismBoundary::haltedYes,
+      PrismBoundary::identifierNo,
+      PrismBoundary::identifierYes,
+      PrismBoundary::judge,
+      PrismBoundary::labelConfidential,
+      PrismBoundary::labelInternal,
+      PrismBoundary::labelPublic,
+      PrismBoundary::labelRestricted,
+      PrismBoundary::labelUnlabeled,
+      PrismBoundary::rule1,
+      PrismBoundary::rule10,
+      PrismBoundary::rule2,
+      PrismBoundary::rule3,
+      PrismBoundary::rule4,
+      PrismBoundary::rule4Misses,
+      PrismBoundary::rule5,
+      PrismBoundary::rule5Misses,
+      PrismBoundary::rule6,
+      PrismBoundary::rule6Misses,
+      PrismBoundary::rule7,
+      PrismBoundary::rule8,
+      PrismBoundary::rule8Misses,
+      PrismBoundary::rule9,
+      breaksInv002
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv003,
+  parameters: [request : PrismBoundary::Request],
+  result: Bool,
+  body: (((((((((project request label) <? 5) && ((project request detector) <? 5)) && ((project request destination) <? 4)) && ((project request approval) <? 2)) && ((project request identifier) <? 2)) && ((project request halted) <? 2)) && ((project request destination) =? (PrismBoundary::destinationVerifier))) && (not ((PrismBoundary::judge request) =? (PrismBoundary::answerDeny))))
+}
+
+theorem{
+  name: inv003Holds,
+  parameters: [request : PrismBoundary::Request],
+  statement: ((breaksInv003 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismBoundary::answerAllow,
+      PrismBoundary::answerAsk,
+      PrismBoundary::answerDeny,
+      PrismBoundary::answerHashonly,
+      PrismBoundary::approvalNone,
+      PrismBoundary::approvalOwner,
+      PrismBoundary::destinationBrowser,
+      PrismBoundary::destinationGithub,
+      PrismBoundary::destinationOutbound,
+      PrismBoundary::destinationVerifier,
+      PrismBoundary::detectorCredential,
+      PrismBoundary::detectorNone,
+      PrismBoundary::detectorPci,
+      PrismBoundary::detectorPhi,
+      PrismBoundary::detectorSpecial,
+      PrismBoundary::haltedNo,
+      PrismBoundary::haltedYes,
+      PrismBoundary::identifierNo,
+      PrismBoundary::identifierYes,
+      PrismBoundary::judge,
+      PrismBoundary::labelConfidential,
+      PrismBoundary::labelInternal,
+      PrismBoundary::labelPublic,
+      PrismBoundary::labelRestricted,
+      PrismBoundary::labelUnlabeled,
+      PrismBoundary::rule1,
+      PrismBoundary::rule10,
+      PrismBoundary::rule2,
+      PrismBoundary::rule3,
+      PrismBoundary::rule4,
+      PrismBoundary::rule4Misses,
+      PrismBoundary::rule5,
+      PrismBoundary::rule5Misses,
+      PrismBoundary::rule6,
+      PrismBoundary::rule6Misses,
+      PrismBoundary::rule7,
+      PrismBoundary::rule8,
+      PrismBoundary::rule8Misses,
+      PrismBoundary::rule9,
+      breaksInv003
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv004,
+  parameters: [request : PrismBoundary::Request],
+  result: Bool,
+  body: (((((((((project request label) <? 5) && ((project request detector) <? 5)) && ((project request destination) <? 4)) && ((project request approval) <? 2)) && ((project request identifier) <? 2)) && ((project request halted) <? 2)) && (not ((project request detector) =? (PrismBoundary::detectorNone)))) && ((PrismBoundary::judge request) =? (PrismBoundary::answerAllow)))
+}
+
+theorem{
+  name: inv004Holds,
+  parameters: [request : PrismBoundary::Request],
+  statement: ((breaksInv004 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismBoundary::answerAllow,
+      PrismBoundary::answerAsk,
+      PrismBoundary::answerDeny,
+      PrismBoundary::answerHashonly,
+      PrismBoundary::approvalNone,
+      PrismBoundary::approvalOwner,
+      PrismBoundary::destinationBrowser,
+      PrismBoundary::destinationGithub,
+      PrismBoundary::destinationOutbound,
+      PrismBoundary::destinationVerifier,
+      PrismBoundary::detectorCredential,
+      PrismBoundary::detectorNone,
+      PrismBoundary::detectorPci,
+      PrismBoundary::detectorPhi,
+      PrismBoundary::detectorSpecial,
+      PrismBoundary::haltedNo,
+      PrismBoundary::haltedYes,
+      PrismBoundary::identifierNo,
+      PrismBoundary::identifierYes,
+      PrismBoundary::judge,
+      PrismBoundary::labelConfidential,
+      PrismBoundary::labelInternal,
+      PrismBoundary::labelPublic,
+      PrismBoundary::labelRestricted,
+      PrismBoundary::labelUnlabeled,
+      PrismBoundary::rule1,
+      PrismBoundary::rule10,
+      PrismBoundary::rule2,
+      PrismBoundary::rule3,
+      PrismBoundary::rule4,
+      PrismBoundary::rule4Misses,
+      PrismBoundary::rule5,
+      PrismBoundary::rule5Misses,
+      PrismBoundary::rule6,
+      PrismBoundary::rule6Misses,
+      PrismBoundary::rule7,
+      PrismBoundary::rule8,
+      PrismBoundary::rule8Misses,
+      PrismBoundary::rule9,
+      breaksInv004
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv005,
+  parameters: [request : PrismBoundary::Request],
+  result: Bool,
+  body: (((((((((project request label) <? 5) && ((project request detector) <? 5)) && ((project request destination) <? 4)) && ((project request approval) <? 2)) && ((project request identifier) <? 2)) && ((project request halted) <? 2)) && ((project request label) =? (PrismBoundary::labelRestricted))) && ((PrismBoundary::judge request) =? (PrismBoundary::answerAllow)))
+}
+
+theorem{
+  name: inv005Holds,
+  parameters: [request : PrismBoundary::Request],
+  statement: ((breaksInv005 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismBoundary::answerAllow,
+      PrismBoundary::answerAsk,
+      PrismBoundary::answerDeny,
+      PrismBoundary::answerHashonly,
+      PrismBoundary::approvalNone,
+      PrismBoundary::approvalOwner,
+      PrismBoundary::destinationBrowser,
+      PrismBoundary::destinationGithub,
+      PrismBoundary::destinationOutbound,
+      PrismBoundary::destinationVerifier,
+      PrismBoundary::detectorCredential,
+      PrismBoundary::detectorNone,
+      PrismBoundary::detectorPci,
+      PrismBoundary::detectorPhi,
+      PrismBoundary::detectorSpecial,
+      PrismBoundary::haltedNo,
+      PrismBoundary::haltedYes,
+      PrismBoundary::identifierNo,
+      PrismBoundary::identifierYes,
+      PrismBoundary::judge,
+      PrismBoundary::labelConfidential,
+      PrismBoundary::labelInternal,
+      PrismBoundary::labelPublic,
+      PrismBoundary::labelRestricted,
+      PrismBoundary::labelUnlabeled,
+      PrismBoundary::rule1,
+      PrismBoundary::rule10,
+      PrismBoundary::rule2,
+      PrismBoundary::rule3,
+      PrismBoundary::rule4,
+      PrismBoundary::rule4Misses,
+      PrismBoundary::rule5,
+      PrismBoundary::rule5Misses,
+      PrismBoundary::rule6,
+      PrismBoundary::rule6Misses,
+      PrismBoundary::rule7,
+      PrismBoundary::rule8,
+      PrismBoundary::rule8Misses,
+      PrismBoundary::rule9,
+      breaksInv005
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv006,
+  parameters: [request : PrismBoundary::Request],
+  result: Bool,
+  body: ((((((((((project request label) <? 5) && ((project request detector) <? 5)) && ((project request destination) <? 4)) && ((project request approval) <? 2)) && ((project request identifier) <? 2)) && ((project request halted) <? 2)) && ((project request destination) =? (PrismBoundary::destinationOutbound))) && ((project request approval) =? (PrismBoundary::approvalNone))) && ((PrismBoundary::judge request) =? (PrismBoundary::answerAllow)))
+}
+
+theorem{
+  name: inv006Holds,
+  parameters: [request : PrismBoundary::Request],
+  statement: ((breaksInv006 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismBoundary::answerAllow,
+      PrismBoundary::answerAsk,
+      PrismBoundary::answerDeny,
+      PrismBoundary::answerHashonly,
+      PrismBoundary::approvalNone,
+      PrismBoundary::approvalOwner,
+      PrismBoundary::destinationBrowser,
+      PrismBoundary::destinationGithub,
+      PrismBoundary::destinationOutbound,
+      PrismBoundary::destinationVerifier,
+      PrismBoundary::detectorCredential,
+      PrismBoundary::detectorNone,
+      PrismBoundary::detectorPci,
+      PrismBoundary::detectorPhi,
+      PrismBoundary::detectorSpecial,
+      PrismBoundary::haltedNo,
+      PrismBoundary::haltedYes,
+      PrismBoundary::identifierNo,
+      PrismBoundary::identifierYes,
+      PrismBoundary::judge,
+      PrismBoundary::labelConfidential,
+      PrismBoundary::labelInternal,
+      PrismBoundary::labelPublic,
+      PrismBoundary::labelRestricted,
+      PrismBoundary::labelUnlabeled,
+      PrismBoundary::rule1,
+      PrismBoundary::rule10,
+      PrismBoundary::rule2,
+      PrismBoundary::rule3,
+      PrismBoundary::rule4,
+      PrismBoundary::rule4Misses,
+      PrismBoundary::rule5,
+      PrismBoundary::rule5Misses,
+      PrismBoundary::rule6,
+      PrismBoundary::rule6Misses,
+      PrismBoundary::rule7,
+      PrismBoundary::rule8,
+      PrismBoundary::rule8Misses,
+      PrismBoundary::rule9,
+      breaksInv006
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv007,
+  parameters: [request : PrismBoundary::Request],
+  result: Bool,
+  body: ((((((((((project request label) <? 5) && ((project request detector) <? 5)) && ((project request destination) <? 4)) && ((project request approval) <? 2)) && ((project request identifier) <? 2)) && ((project request halted) <? 2)) && ((project request identifier) =? (PrismBoundary::identifierYes))) && (not ((project request destination) =? (PrismBoundary::destinationBrowser)))) && ((PrismBoundary::judge request) =? (PrismBoundary::answerAllow)))
+}
+
+theorem{
+  name: inv007Holds,
+  parameters: [request : PrismBoundary::Request],
+  statement: ((breaksInv007 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismBoundary::answerAllow,
+      PrismBoundary::answerAsk,
+      PrismBoundary::answerDeny,
+      PrismBoundary::answerHashonly,
+      PrismBoundary::approvalNone,
+      PrismBoundary::approvalOwner,
+      PrismBoundary::destinationBrowser,
+      PrismBoundary::destinationGithub,
+      PrismBoundary::destinationOutbound,
+      PrismBoundary::destinationVerifier,
+      PrismBoundary::detectorCredential,
+      PrismBoundary::detectorNone,
+      PrismBoundary::detectorPci,
+      PrismBoundary::detectorPhi,
+      PrismBoundary::detectorSpecial,
+      PrismBoundary::haltedNo,
+      PrismBoundary::haltedYes,
+      PrismBoundary::identifierNo,
+      PrismBoundary::identifierYes,
+      PrismBoundary::judge,
+      PrismBoundary::labelConfidential,
+      PrismBoundary::labelInternal,
+      PrismBoundary::labelPublic,
+      PrismBoundary::labelRestricted,
+      PrismBoundary::labelUnlabeled,
+      PrismBoundary::rule1,
+      PrismBoundary::rule10,
+      PrismBoundary::rule2,
+      PrismBoundary::rule3,
+      PrismBoundary::rule4,
+      PrismBoundary::rule4Misses,
+      PrismBoundary::rule5,
+      PrismBoundary::rule5Misses,
+      PrismBoundary::rule6,
+      PrismBoundary::rule6Misses,
+      PrismBoundary::rule7,
+      PrismBoundary::rule8,
+      PrismBoundary::rule8Misses,
+      PrismBoundary::rule9,
+      breaksInv007
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

@@ -1,0 +1,426 @@
+{
+  "name": "prism-learning",
+  "title": "Prism Learning",
+  "purpose": "Decides how one fact about the owner changes when a new signal arrives, so the Prism learns from evidence within fixed bounds and only the owner can confirm or reject a fact.",
+  "fields": [
+    {
+      "name": "state",
+      "kind": "choice",
+      "values": [
+        "inferred",
+        "consolidated",
+        "confirmed",
+        "rejected"
+      ],
+      "means": "the fact's current evidence state"
+    },
+    {
+      "name": "weight",
+      "kind": "number",
+      "min": 1,
+      "max": 16,
+      "means": "the fact's current Hebbian weight, a whole number from 1 to 16"
+    },
+    {
+      "name": "signal",
+      "kind": "choice",
+      "values": [
+        "support",
+        "contradict",
+        "decay",
+        "ownerconfirm",
+        "ownerreject"
+      ],
+      "means": "the new signal: an event that supports or contradicts the fact, time passing with no evidence, or the owner confirming or rejecting it"
+    }
+  ],
+  "outcomes": [
+    "raise",
+    "lower",
+    "hold",
+    "consolidate",
+    "demote",
+    "confirm",
+    "reject"
+  ],
+  "rules": [
+    {
+      "id": "REQ-001",
+      "when": [
+        {
+          "field": "signal",
+          "op": "is",
+          "value": "ownerconfirm"
+        },
+        {
+          "field": "state",
+          "op": "is not",
+          "value": "confirmed"
+        }
+      ],
+      "then": "confirm",
+      "says": "when signal is ownerconfirm and state is not confirmed then confirm",
+      "why": "only the owner confirms"
+    },
+    {
+      "id": "REQ-002",
+      "when": [
+        {
+          "field": "signal",
+          "op": "is",
+          "value": "ownerreject"
+        },
+        {
+          "field": "state",
+          "op": "is not",
+          "value": "rejected"
+        }
+      ],
+      "then": "reject",
+      "says": "when signal is ownerreject and state is not rejected then reject",
+      "why": "only the owner rejects"
+    },
+    {
+      "id": "REQ-003",
+      "when": [
+        {
+          "field": "state",
+          "op": "is",
+          "value": "confirmed"
+        }
+      ],
+      "then": "hold",
+      "says": "when state is confirmed then hold",
+      "why": "machine evidence never overrides the owner"
+    },
+    {
+      "id": "REQ-004",
+      "when": [
+        {
+          "field": "state",
+          "op": "is",
+          "value": "rejected"
+        }
+      ],
+      "then": "hold",
+      "says": "when state is rejected then hold",
+      "why": "machine evidence never overrides the owner"
+    },
+    {
+      "id": "REQ-005",
+      "when": [
+        {
+          "field": "state",
+          "op": "is",
+          "value": "inferred"
+        },
+        {
+          "field": "signal",
+          "op": "is",
+          "value": "support"
+        },
+        {
+          "field": "weight",
+          "op": ">=",
+          "value": 10
+        }
+      ],
+      "then": "consolidate",
+      "says": "when state is inferred and signal is support and weight >= 10 then consolidate",
+      "why": "the consolidation threshold is reached"
+    },
+    {
+      "id": "REQ-006",
+      "when": [
+        {
+          "field": "signal",
+          "op": "is",
+          "value": "support"
+        },
+        {
+          "field": "weight",
+          "op": ">=",
+          "value": 15
+        }
+      ],
+      "then": "hold",
+      "says": "when signal is support and weight >= 15 then hold",
+      "why": "weights stay at most 16"
+    },
+    {
+      "id": "REQ-007",
+      "when": [
+        {
+          "field": "signal",
+          "op": "is",
+          "value": "support"
+        }
+      ],
+      "then": "raise",
+      "says": "when signal is support then raise",
+      "why": "supporting evidence strengthens"
+    },
+    {
+      "id": "REQ-008",
+      "when": [
+        {
+          "field": "state",
+          "op": "is",
+          "value": "consolidated"
+        },
+        {
+          "field": "signal",
+          "op": "is",
+          "value": "contradict"
+        },
+        {
+          "field": "weight",
+          "op": "<=",
+          "value": 6
+        }
+      ],
+      "then": "demote",
+      "says": "when state is consolidated and signal is contradict and weight <= 6 then demote",
+      "why": "enough contradiction undoes consolidation"
+    },
+    {
+      "id": "REQ-009",
+      "when": [
+        {
+          "field": "weight",
+          "op": "<=",
+          "value": 1
+        }
+      ],
+      "then": "hold",
+      "says": "when weight <= 1 then hold",
+      "why": "weights stay at least 1"
+    },
+    {
+      "id": "REQ-010",
+      "when": [
+        {
+          "field": "signal",
+          "op": "is",
+          "value": "contradict"
+        }
+      ],
+      "then": "lower",
+      "says": "when signal is contradict then lower",
+      "why": "contradicting evidence weakens"
+    },
+    {
+      "id": "REQ-011",
+      "when": [
+        {
+          "field": "signal",
+          "op": "is",
+          "value": "decay"
+        }
+      ],
+      "then": "lower",
+      "says": "when signal is decay then lower",
+      "why": "unrefreshed facts fade"
+    }
+  ],
+  "otherwise": "hold",
+  "properties": [
+    {
+      "id": "INV-001",
+      "kind": "never",
+      "when": [
+        {
+          "field": "signal",
+          "op": "is not",
+          "value": "ownerconfirm"
+        }
+      ],
+      "then": "confirm",
+      "says": "never when signal is not ownerconfirm then confirm",
+      "why": "a fact must never be confirmed except by the owner"
+    },
+    {
+      "id": "INV-002",
+      "kind": "never",
+      "when": [
+        {
+          "field": "signal",
+          "op": "is not",
+          "value": "ownerreject"
+        }
+      ],
+      "then": "reject",
+      "says": "never when signal is not ownerreject then reject",
+      "why": "a fact must never be rejected except by the owner"
+    },
+    {
+      "id": "INV-003",
+      "kind": "always",
+      "when": [
+        {
+          "field": "state",
+          "op": "is",
+          "value": "confirmed"
+        },
+        {
+          "field": "signal",
+          "op": "is not",
+          "value": "ownerreject"
+        }
+      ],
+      "then": "hold",
+      "says": "always when state is confirmed and signal is not ownerreject then hold",
+      "why": "machine learning must never change what the owner confirmed"
+    },
+    {
+      "id": "INV-004",
+      "kind": "always",
+      "when": [
+        {
+          "field": "state",
+          "op": "is",
+          "value": "rejected"
+        },
+        {
+          "field": "signal",
+          "op": "is not",
+          "value": "ownerconfirm"
+        }
+      ],
+      "then": "hold",
+      "says": "always when state is rejected and signal is not ownerconfirm then hold",
+      "why": "machine learning must never revive what the owner rejected"
+    },
+    {
+      "id": "INV-005",
+      "kind": "never",
+      "when": [
+        {
+          "field": "weight",
+          "op": "<",
+          "value": 10
+        }
+      ],
+      "then": "consolidate",
+      "says": "never when weight < 10 then consolidate",
+      "why": "weak evidence must never be consolidated"
+    },
+    {
+      "id": "INV-006",
+      "kind": "never",
+      "when": [
+        {
+          "field": "weight",
+          "op": ">",
+          "value": 14
+        }
+      ],
+      "then": "raise",
+      "says": "never when weight > 14 then raise",
+      "why": "a weight must never exceed 16"
+    },
+    {
+      "id": "INV-007",
+      "kind": "never",
+      "when": [
+        {
+          "field": "weight",
+          "op": "<",
+          "value": 2
+        }
+      ],
+      "then": "lower",
+      "says": "never when weight < 2 then lower",
+      "why": "a weight must never fall below 1"
+    },
+    {
+      "id": "INV-008",
+      "kind": "never",
+      "when": [
+        {
+          "field": "state",
+          "op": "is not",
+          "value": "consolidated"
+        }
+      ],
+      "then": "demote",
+      "says": "never when state is not consolidated then demote",
+      "why": "only a consolidated fact can be demoted"
+    }
+  ],
+  "examples": [
+    {
+      "request": "inferred 4 support",
+      "response": "raise"
+    },
+    {
+      "request": "inferred 10 support",
+      "response": "consolidate"
+    },
+    {
+      "request": "inferred 9 support",
+      "response": "raise"
+    },
+    {
+      "request": "consolidated 15 support",
+      "response": "hold"
+    },
+    {
+      "request": "consolidated 6 contradict",
+      "response": "demote"
+    },
+    {
+      "request": "consolidated 7 contradict",
+      "response": "lower"
+    },
+    {
+      "request": "inferred 1 contradict",
+      "response": "hold"
+    },
+    {
+      "request": "inferred 5 decay",
+      "response": "lower"
+    },
+    {
+      "request": "inferred 3 ownerconfirm",
+      "response": "confirm"
+    },
+    {
+      "request": "confirmed 16 contradict",
+      "response": "hold"
+    },
+    {
+      "request": "confirmed 16 ownerreject",
+      "response": "reject"
+    },
+    {
+      "request": "rejected 2 support",
+      "response": "hold"
+    },
+    {
+      "request": "rejected 2 ownerconfirm",
+      "response": "confirm"
+    },
+    {
+      "request": "consolidated 12 ownerreject",
+      "response": "reject"
+    }
+  ],
+  "schema": "prism/spec/1",
+  "actors": [],
+  "meanings": {
+    "raise": "add 2 to the weight",
+    "lower": "subtract 1 from the weight",
+    "hold": "change nothing",
+    "consolidate": "move to consolidated and add 2 to the weight, capped at 16",
+    "demote": "move back to inferred",
+    "confirm": "move to confirmed",
+    "reject": "move to rejected"
+  },
+  "otherwiseWhy": "no change by default",
+  "limits": [
+    "It does not apply the weight change; the vault does that from the answer.",
+    "It does not decide what counts as support or contradiction; the extractor does.",
+    "A consolidated fact is still not confirmed; only the owner confirms."
+  ]
+}

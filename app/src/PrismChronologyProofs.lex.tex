@@ -1,0 +1,392 @@
+\begin{lexlean}{PrismChronologyProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismChronology}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: breaksInv001,
+  parameters: [request : PrismChronology::Request],
+  result: Bool,
+  body: ((((((((project request astart) <=? 10080) && ((project request aend) <=? 10080)) && ((project request bstart) <=? 10080)) && ((project request bend) <=? 10080)) && ((project request astart) <? (project request aend))) && ((project request bstart) <? (project request bend))) && ((PrismChronology::judge request) =? (PrismChronology::answerMalformed)))
+}
+
+theorem{
+  name: inv001Holds,
+  parameters: [request : PrismChronology::Request],
+  statement: ((breaksInv001 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismChronology::answerAfter,
+      PrismChronology::answerBefore,
+      PrismChronology::answerContains,
+      PrismChronology::answerDuring,
+      PrismChronology::answerEquals,
+      PrismChronology::answerFinishedby,
+      PrismChronology::answerFinishes,
+      PrismChronology::answerMalformed,
+      PrismChronology::answerMeets,
+      PrismChronology::answerMetby,
+      PrismChronology::answerOverlappedby,
+      PrismChronology::answerOverlaps,
+      PrismChronology::answerStartedby,
+      PrismChronology::answerStarts,
+      PrismChronology::judge,
+      PrismChronology::rule1,
+      PrismChronology::rule10,
+      PrismChronology::rule11,
+      PrismChronology::rule12,
+      PrismChronology::rule13,
+      PrismChronology::rule14,
+      PrismChronology::rule2,
+      PrismChronology::rule3,
+      PrismChronology::rule4,
+      PrismChronology::rule5,
+      PrismChronology::rule6,
+      PrismChronology::rule7,
+      PrismChronology::rule8,
+      PrismChronology::rule9,
+      breaksInv001
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv002,
+  parameters: [request : PrismChronology::Request],
+  result: Bool,
+  body: (((((((project request astart) <=? 10080) && ((project request aend) <=? 10080)) && ((project request bstart) <=? 10080)) && ((project request bend) <=? 10080)) && ((project request bstart) <=? (project request aend))) && ((PrismChronology::judge request) =? (PrismChronology::answerBefore)))
+}
+
+theorem{
+  name: inv002Holds,
+  parameters: [request : PrismChronology::Request],
+  statement: ((breaksInv002 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismChronology::answerAfter,
+      PrismChronology::answerBefore,
+      PrismChronology::answerContains,
+      PrismChronology::answerDuring,
+      PrismChronology::answerEquals,
+      PrismChronology::answerFinishedby,
+      PrismChronology::answerFinishes,
+      PrismChronology::answerMalformed,
+      PrismChronology::answerMeets,
+      PrismChronology::answerMetby,
+      PrismChronology::answerOverlappedby,
+      PrismChronology::answerOverlaps,
+      PrismChronology::answerStartedby,
+      PrismChronology::answerStarts,
+      PrismChronology::judge,
+      PrismChronology::rule1,
+      PrismChronology::rule10,
+      PrismChronology::rule11,
+      PrismChronology::rule12,
+      PrismChronology::rule13,
+      PrismChronology::rule14,
+      PrismChronology::rule2,
+      PrismChronology::rule3,
+      PrismChronology::rule4,
+      PrismChronology::rule5,
+      PrismChronology::rule6,
+      PrismChronology::rule7,
+      PrismChronology::rule8,
+      PrismChronology::rule9,
+      breaksInv002
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv003,
+  parameters: [request : PrismChronology::Request],
+  result: Bool,
+  body: (((((((project request astart) <=? 10080) && ((project request aend) <=? 10080)) && ((project request bstart) <=? 10080)) && ((project request bend) <=? 10080)) && ((project request astart) <=? (project request bend))) && ((PrismChronology::judge request) =? (PrismChronology::answerAfter)))
+}
+
+theorem{
+  name: inv003Holds,
+  parameters: [request : PrismChronology::Request],
+  statement: ((breaksInv003 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismChronology::answerAfter,
+      PrismChronology::answerBefore,
+      PrismChronology::answerContains,
+      PrismChronology::answerDuring,
+      PrismChronology::answerEquals,
+      PrismChronology::answerFinishedby,
+      PrismChronology::answerFinishes,
+      PrismChronology::answerMalformed,
+      PrismChronology::answerMeets,
+      PrismChronology::answerMetby,
+      PrismChronology::answerOverlappedby,
+      PrismChronology::answerOverlaps,
+      PrismChronology::answerStartedby,
+      PrismChronology::answerStarts,
+      PrismChronology::judge,
+      PrismChronology::rule1,
+      PrismChronology::rule10,
+      PrismChronology::rule11,
+      PrismChronology::rule12,
+      PrismChronology::rule13,
+      PrismChronology::rule14,
+      PrismChronology::rule2,
+      PrismChronology::rule3,
+      PrismChronology::rule4,
+      PrismChronology::rule5,
+      PrismChronology::rule6,
+      PrismChronology::rule7,
+      PrismChronology::rule8,
+      PrismChronology::rule9,
+      breaksInv003
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv004,
+  parameters: [request : PrismChronology::Request],
+  result: Bool,
+  body: (((((((project request astart) <=? 10080) && ((project request aend) <=? 10080)) && ((project request bstart) <=? 10080)) && ((project request bend) <=? 10080)) && (not ((project request astart) =? (project request bstart)))) && ((PrismChronology::judge request) =? (PrismChronology::answerEquals)))
+}
+
+theorem{
+  name: inv004Holds,
+  parameters: [request : PrismChronology::Request],
+  statement: ((breaksInv004 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismChronology::answerAfter,
+      PrismChronology::answerBefore,
+      PrismChronology::answerContains,
+      PrismChronology::answerDuring,
+      PrismChronology::answerEquals,
+      PrismChronology::answerFinishedby,
+      PrismChronology::answerFinishes,
+      PrismChronology::answerMalformed,
+      PrismChronology::answerMeets,
+      PrismChronology::answerMetby,
+      PrismChronology::answerOverlappedby,
+      PrismChronology::answerOverlaps,
+      PrismChronology::answerStartedby,
+      PrismChronology::answerStarts,
+      PrismChronology::judge,
+      PrismChronology::rule1,
+      PrismChronology::rule10,
+      PrismChronology::rule11,
+      PrismChronology::rule12,
+      PrismChronology::rule13,
+      PrismChronology::rule14,
+      PrismChronology::rule2,
+      PrismChronology::rule3,
+      PrismChronology::rule4,
+      PrismChronology::rule5,
+      PrismChronology::rule6,
+      PrismChronology::rule7,
+      PrismChronology::rule8,
+      PrismChronology::rule9,
+      breaksInv004
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv005,
+  parameters: [request : PrismChronology::Request],
+  result: Bool,
+  body: (((((((project request astart) <=? 10080) && ((project request aend) <=? 10080)) && ((project request bstart) <=? 10080)) && ((project request bend) <=? 10080)) && (not ((project request aend) =? (project request bend)))) && ((PrismChronology::judge request) =? (PrismChronology::answerEquals)))
+}
+
+theorem{
+  name: inv005Holds,
+  parameters: [request : PrismChronology::Request],
+  statement: ((breaksInv005 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismChronology::answerAfter,
+      PrismChronology::answerBefore,
+      PrismChronology::answerContains,
+      PrismChronology::answerDuring,
+      PrismChronology::answerEquals,
+      PrismChronology::answerFinishedby,
+      PrismChronology::answerFinishes,
+      PrismChronology::answerMalformed,
+      PrismChronology::answerMeets,
+      PrismChronology::answerMetby,
+      PrismChronology::answerOverlappedby,
+      PrismChronology::answerOverlaps,
+      PrismChronology::answerStartedby,
+      PrismChronology::answerStarts,
+      PrismChronology::judge,
+      PrismChronology::rule1,
+      PrismChronology::rule10,
+      PrismChronology::rule11,
+      PrismChronology::rule12,
+      PrismChronology::rule13,
+      PrismChronology::rule14,
+      PrismChronology::rule2,
+      PrismChronology::rule3,
+      PrismChronology::rule4,
+      PrismChronology::rule5,
+      PrismChronology::rule6,
+      PrismChronology::rule7,
+      PrismChronology::rule8,
+      PrismChronology::rule9,
+      breaksInv005
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv006,
+  parameters: [request : PrismChronology::Request],
+  result: Bool,
+  body: (((((((project request astart) <=? 10080) && ((project request aend) <=? 10080)) && ((project request bstart) <=? 10080)) && ((project request bend) <=? 10080)) && (not ((project request aend) =? (project request bstart)))) && ((PrismChronology::judge request) =? (PrismChronology::answerMeets)))
+}
+
+theorem{
+  name: inv006Holds,
+  parameters: [request : PrismChronology::Request],
+  statement: ((breaksInv006 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismChronology::answerAfter,
+      PrismChronology::answerBefore,
+      PrismChronology::answerContains,
+      PrismChronology::answerDuring,
+      PrismChronology::answerEquals,
+      PrismChronology::answerFinishedby,
+      PrismChronology::answerFinishes,
+      PrismChronology::answerMalformed,
+      PrismChronology::answerMeets,
+      PrismChronology::answerMetby,
+      PrismChronology::answerOverlappedby,
+      PrismChronology::answerOverlaps,
+      PrismChronology::answerStartedby,
+      PrismChronology::answerStarts,
+      PrismChronology::judge,
+      PrismChronology::rule1,
+      PrismChronology::rule10,
+      PrismChronology::rule11,
+      PrismChronology::rule12,
+      PrismChronology::rule13,
+      PrismChronology::rule14,
+      PrismChronology::rule2,
+      PrismChronology::rule3,
+      PrismChronology::rule4,
+      PrismChronology::rule5,
+      PrismChronology::rule6,
+      PrismChronology::rule7,
+      PrismChronology::rule8,
+      PrismChronology::rule9,
+      breaksInv006
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv007,
+  parameters: [request : PrismChronology::Request],
+  result: Bool,
+  body: (((((((project request astart) <=? 10080) && ((project request aend) <=? 10080)) && ((project request bstart) <=? 10080)) && ((project request bend) <=? 10080)) && ((project request astart) <=? (project request bstart))) && ((PrismChronology::judge request) =? (PrismChronology::answerDuring)))
+}
+
+theorem{
+  name: inv007Holds,
+  parameters: [request : PrismChronology::Request],
+  statement: ((breaksInv007 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismChronology::answerAfter,
+      PrismChronology::answerBefore,
+      PrismChronology::answerContains,
+      PrismChronology::answerDuring,
+      PrismChronology::answerEquals,
+      PrismChronology::answerFinishedby,
+      PrismChronology::answerFinishes,
+      PrismChronology::answerMalformed,
+      PrismChronology::answerMeets,
+      PrismChronology::answerMetby,
+      PrismChronology::answerOverlappedby,
+      PrismChronology::answerOverlaps,
+      PrismChronology::answerStartedby,
+      PrismChronology::answerStarts,
+      PrismChronology::judge,
+      PrismChronology::rule1,
+      PrismChronology::rule10,
+      PrismChronology::rule11,
+      PrismChronology::rule12,
+      PrismChronology::rule13,
+      PrismChronology::rule14,
+      PrismChronology::rule2,
+      PrismChronology::rule3,
+      PrismChronology::rule4,
+      PrismChronology::rule5,
+      PrismChronology::rule6,
+      PrismChronology::rule7,
+      PrismChronology::rule8,
+      PrismChronology::rule9,
+      breaksInv007
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv008,
+  parameters: [request : PrismChronology::Request],
+  result: Bool,
+  body: (((((((project request astart) <=? 10080) && ((project request aend) <=? 10080)) && ((project request bstart) <=? 10080)) && ((project request bend) <=? 10080)) && ((project request aend) <? (project request bstart))) && ((PrismChronology::judge request) =? (PrismChronology::answerOverlaps)))
+}
+
+theorem{
+  name: inv008Holds,
+  parameters: [request : PrismChronology::Request],
+  statement: ((breaksInv008 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismChronology::answerAfter,
+      PrismChronology::answerBefore,
+      PrismChronology::answerContains,
+      PrismChronology::answerDuring,
+      PrismChronology::answerEquals,
+      PrismChronology::answerFinishedby,
+      PrismChronology::answerFinishes,
+      PrismChronology::answerMalformed,
+      PrismChronology::answerMeets,
+      PrismChronology::answerMetby,
+      PrismChronology::answerOverlappedby,
+      PrismChronology::answerOverlaps,
+      PrismChronology::answerStartedby,
+      PrismChronology::answerStarts,
+      PrismChronology::judge,
+      PrismChronology::rule1,
+      PrismChronology::rule10,
+      PrismChronology::rule11,
+      PrismChronology::rule12,
+      PrismChronology::rule13,
+      PrismChronology::rule14,
+      PrismChronology::rule2,
+      PrismChronology::rule3,
+      PrismChronology::rule4,
+      PrismChronology::rule5,
+      PrismChronology::rule6,
+      PrismChronology::rule7,
+      PrismChronology::rule8,
+      PrismChronology::rule9,
+      breaksInv008
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
