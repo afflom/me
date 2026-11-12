@@ -10,6 +10,7 @@ questions, the examples and the guarantees in plain words.
 | `PrismBoundary` | `boundary/` | whether one labeled fact about the owner may go to a destination: allow, hash only, ask, or deny | 7 |
 | `PrismLearning` | `learning/` | how a belief's weight (1..16) moves on a signal: raise, lower, hold, consolidate, demote, confirm, reject | 8 |
 | `PrismChronology` | `chronology/` | Allen's 13 interval relations between two spans, in minutes of the week | 8 |
+| `PrismR4` | `r4/` | whether one answer of a language model may be shown: answer, receipt only, ask, or refuse; refuses wrong engine or weight bytes and mixed model modes (compiled with Prism, a model in Prism, models routed by R4) | 7 |
 | `PrismVaultStore` | `vault-store/` | whether the browser vault may keep one value: store, store a hash only, ask, or refuse | 5 |
 | `PrismVaultRestore` | `vault-restore/` | whether the browser vault may give one stored object back: restore, hash only, or refuse | 5 |
 
@@ -38,6 +39,9 @@ These modules are hand-patched after generation, so do not regenerate them from
   module into a single crate, where two names may not meet.
 - Chronology: the judge is a decision tree, because Lean's `split` gives up on
   an if-chain 13 or more deep.
+- R4: rules 1 and 3 to 7 are rewritten the same way as Boundary and Learning,
+  and every name carries the `r4` prefix (`R4Request`, `r4Judge`,
+  `r4Dispatch`), because the holo build puts every module into one crate.
 
 The modules carry no personal value. They speak of "the owner"; the owner's
 facts live only in the browser.
