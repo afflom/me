@@ -17,6 +17,9 @@ await cp(join(root, "site"), directory, { recursive: true });
 await cp(join(root, "try/vendor"), join(directory, "vendor"), { recursive: true });
 await cp(join(root, "try/vendor/prism-code/fixtures/Calculator.holo"), join(directory, "app.holo"));
 await writeFile(join(directory, "bad.holo"), "not an archive");
+// The fixture is the Calculator, not this app: it gets the generic text
+// surface, so this app's own card (site/card.*) is left out of the scaffold.
+for (const part of ["card.html", "card.css", "card.mjs"]) await rm(join(directory, part), { force: true });
 const env = { ...process.env, GITHUB_ACTIONS: "false" };
 execFileSync(process.execPath, [join(root, "bootstrap/page.mjs"), directory], { cwd: root, env, stdio: "inherit" });
 execFileSync(process.execPath, [join(root, "bootstrap/precache.mjs"), directory], { cwd: root, env, stdio: "inherit" });

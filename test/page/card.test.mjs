@@ -1,0 +1,60 @@
+// PG-01 in headless Chromium, against the assembled page (pages.yml runs it
+// after `node bootstrap/page.mjs site`, with the verified app.holo in place).
+// usage: NODE_PATH="$(npm root --global)" [PAGE_SITE=dir] node --test test/page/card.test.mjs
+import assert from "node:assert/strict";
+import { createReadStream, existsSync } from "node:fs";
+import { createServer } from "node:http";
+import { createRequire } from "node:module";
+import { extname, join, resolve } from "node:path";
+import test from "node:test";
+
+const { chromium } = createRequire(import.meta.url)("playwright");
+const site = resolve(process.env.PAGE_SITE ?? "site");
+const types = { ".html": "text/html", ".mjs": "text/javascript", ".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".wasm": "application/wasm", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2", ".webmanifest": "application/manifest+json" };
+
+test("the page keeps, refuses while halted and answers only through the app (PG-01)", async () => {
+  const server = createServer((request, response) => {
+    let path = decodeURIComponent(new URL(request.url, "http://localhost").pathname).replace(/^\/me\//, "/");
+    if (path.endsWith("/")) path += "index.html";
+    const file = resolve(join(site, path));
+    if (!file.startsWith(site) || !existsSync(file)) return response.writeHead(404).end();
+    response.writeHead(200, { "content-type": types[extname(file)] ?? "application/octet-stream" });
+    createReadStream(file).pipe(response);
+  });
+  await new Promise((done) => server.listen(0, "127.0.0.1", done));
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    const errors = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    page.on("dialog", (dialog) => dialog.accept("a test passphrase"));
+    await page.goto(`http://127.0.0.1:${server.address().port}/me/`);
+    await page.waitForFunction(() => /kept in this browser|could not open/.test(document.getElementById("me-count")?.textContent ?? ""), null, { timeout: 60000 });
+    assert.equal((await page.textContent("#me-count")).trim(), "0 kept in this browser.");
+    const out = async () => (await page.textContent("#me-out")).trim();
+    const settle = (text) => page.waitForFunction((t) => document.getElementById("me-out").textContent.trim() === t, text, { timeout: 10000 });
+
+    await page.fill("#me-line", "boundary public none github owner no no");
+    await page.click("#me-check button");
+    await settle("deny");
+    await page.fill("#me-line", "when 0 60 60 120");
+    await page.click("#me-check button");
+    await settle("meets");
+
+    await page.fill("#me-fact", "An example fact");
+    await page.click("#me-keep button");
+    await settle("Kept.");
+    assert.equal((await page.textContent("#me-count")).trim(), "1 kept in this browser.");
+
+    await page.check("#me-halt");
+    await page.fill("#me-fact", "Another example fact");
+    await page.click("#me-keep button");
+    await settle("Not kept: refuse.");
+    assert.equal(await out(), "Not kept: refuse.");
+    assert.equal((await page.textContent("#me-count")).trim(), "1 kept in this browser.");
+    assert.deepEqual(errors, []);
+  } finally {
+    await browser.close();
+    server.close();
+  }
+});

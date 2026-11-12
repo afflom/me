@@ -17,7 +17,7 @@ template contract checker in `app/`.
 Each check runs once per `just vv`. `just bdd` runs only the meta-gate while a
 scenario is being written; `just test` already includes it.
 
-The register holds `PM-01` to `PM-04`, `VS-01` to `VS-03`, `R4-01`, `FR-01` and `PV-01`, so the meta-gate checks real rows,
+The register holds `PM-01` to `PM-04`, `PG-01`, `VS-01` to `VS-03`, `R4-01`, `FR-01` and `PV-01`, so the meta-gate checks real rows,
 scenarios and tests. It becomes an error as soon as an ID, scenario,
 or test is added without the other two.
 
@@ -28,6 +28,8 @@ or test is added without the other two.
 | `check-model` | `CONFORMANCE.md` disagrees with the register | rejected |
 | `audit-deferral` | a deferral marker in a crate and in the gate's own source | both rejected |
 | honesty meta-gate | an ID with no test | rejected |
+| `page_pg_01` | `site/card.mjs` opens the vault without the halt switch | rejected (`PG-01: the vault's decisions are the root's, and it sees the halt switch`) |
+| `test/page/card.test.mjs` | the page's halt switch always answers `no` | rejected: a fact kept while halted, the wait for `Not kept: refuse.` times out |
 | `prism_pm_01` | `routesBoundary` states that the boundary facet answers with `PrismLearning::learningDispatch` | rejected (`PM-01: routesBoundary must prove the Boundary facet answers with PrismBoundary::boundaryDispatch`); restoring the statement passes |
 | `prismpm verify` | an acceptance vector set without the exact guest-allocation boundary | rejected (PP2009); seen again on the Prism root before its 1024-byte vector was added |
 | `audit-bootstrap` | a floating/copied action, mutable SDK tag, changed universal file, narrowed boundary, shallow/credential-retaining checkout, copied project renderer, omitted standards lock, acceptance bypass, deploy-job signing privilege, incomplete release lifecycle, or a bootstrap that drops a native architecture from main or tags, cancels or replaces a main run, or skips runs by path, condition or matrix exclusion | all rejected |
@@ -385,6 +387,17 @@ for Lean's `split` depth limit; `app/specs/README.md` records the patches.
 theorem's statement and axioms, that each guarantee is about its facet's own
 `judge`, that each facet's answer is decided by that `judge`, and that the
 application's answer is decided by `route`.
+
+## The page (PG-01)
+
+`site/card.html`, `card.css` and `card.mjs` are the Prism's own surface, put in
+the workspace slots by `bootstrap/page.mjs`. They ask, keep, export and check,
+and decide nothing: every question goes to the verified root guest as
+`<facet> <rest>`. The vault's `boundary`, `store` and `restore`, R4's `r4` and
+its Boundary are all answered by the root. The halt switch is the Boundary's
+`halted` field, read on every question. A passphrase is asked only to make or
+read an encrypted export. `test/page/card.test.mjs` drives the assembled page
+in headless Chromium in `pages.yml`, and `page_pg_01` pins the wiring.
 
 ## Prism accounts: the remembered passkey
 

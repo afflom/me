@@ -1,0 +1,327 @@
+\begin{lexlean}{PrismGoogle}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: googleServiceGmail, parameters: [], result: Nat, body: 0}
+
+definition{name: googleServiceCalendar, parameters: [], result: Nat, body: 1}
+
+definition{name: googleServiceOther, parameters: [], result: Nat, body: 2}
+
+definition{name: googleMethodRead, parameters: [], result: Nat, body: 0}
+
+definition{name: googleMethodWrite, parameters: [], result: Nat, body: 1}
+
+definition{name: googleScopeNone, parameters: [], result: Nat, body: 0}
+
+definition{name: googleScopeReadonly, parameters: [], result: Nat, body: 1}
+
+definition{name: googleScopeWrite, parameters: [], result: Nat, body: 2}
+
+definition{name: googleTokenNone, parameters: [], result: Nat, body: 0}
+
+definition{name: googleTokenFresh, parameters: [], result: Nat, body: 1}
+
+definition{name: googleTokenExpired, parameters: [], result: Nat, body: 2}
+
+definition{name: googleActNone, parameters: [], result: Nat, body: 0}
+
+definition{name: googleActOwner, parameters: [], result: Nat, body: 1}
+
+definition{name: googleHaltedNo, parameters: [], result: Nat, body: 0}
+
+definition{name: googleHaltedYes, parameters: [], result: Nat, body: 1}
+
+definition{name: googleAnswerFetch, parameters: [], result: Nat, body: 0}
+
+definition{name: googleAnswerConsent, parameters: [], result: Nat, body: 1}
+
+definition{name: googleAnswerAsk, parameters: [], result: Nat, body: 2}
+
+definition{name: googleAnswerRefuse, parameters: [], result: Nat, body: 3}
+
+structure{
+  name: GoogleRequest,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: service, type: Nat},
+    {name: method, type: Nat},
+    {name: scope, type: Nat},
+    {name: token, type: Nat},
+    {name: act, type: Nat},
+    {name: halted, type: Nat}
+  ]
+}
+
+definition{
+  name: googleByteAt,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some b => (ctor Option.some [Nat] (prim to_nat b : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleDigitsValue,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.some [Nat] acc)
+    | Nat.succ rest => (match (googleByteAt s i)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (googleDigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: googleParseDigits,
+  parameters: [s : Bytes],
+  result: (Option Nat),
+  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (googleByteAt s 0)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (googleDigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleParseNumber,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (googleParseDigits value),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleParseService,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x676d61696c : Bool) then (ctor Option.some [Nat] (googleServiceGmail)) else (if (prim equal value 0x63616c656e646172 : Bool) then (ctor Option.some [Nat] (googleServiceCalendar)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (googleServiceOther)) else (ctor Option.none [Nat]))))
+}
+
+definition{
+  name: googleParseMethod,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x72656164 : Bool) then (ctor Option.some [Nat] (googleMethodRead)) else (if (prim equal value 0x7772697465 : Bool) then (ctor Option.some [Nat] (googleMethodWrite)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: googleParseScope,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f6e65 : Bool) then (ctor Option.some [Nat] (googleScopeNone)) else (if (prim equal value 0x726561646f6e6c79 : Bool) then (ctor Option.some [Nat] (googleScopeReadonly)) else (if (prim equal value 0x7772697465 : Bool) then (ctor Option.some [Nat] (googleScopeWrite)) else (ctor Option.none [Nat]))))
+}
+
+definition{
+  name: googleParseToken,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f6e65 : Bool) then (ctor Option.some [Nat] (googleTokenNone)) else (if (prim equal value 0x6672657368 : Bool) then (ctor Option.some [Nat] (googleTokenFresh)) else (if (prim equal value 0x65787069726564 : Bool) then (ctor Option.some [Nat] (googleTokenExpired)) else (ctor Option.none [Nat]))))
+}
+
+definition{
+  name: googleParseAct,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f6e65 : Bool) then (ctor Option.some [Nat] (googleActNone)) else (if (prim equal value 0x6f776e6572 : Bool) then (ctor Option.some [Nat] (googleActOwner)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: googleParseHalted,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (googleHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (googleHaltedYes)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: googleSliceOf,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: googleFieldEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match (googleByteAt s i)
+      | Option.none => i
+      | Option.some d => (if (d =? 32) then i else (googleFieldEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: googleDecodeField6,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat],
+  result: (Option GoogleRequest),
+  body: (let e : Nat := (googleFieldEnd s start (Foundation.Bytes::byteLength s)); (match (googleParseHalted (googleSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [GoogleRequest])
+    | Option.some v6 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [GoogleRequest] (record GoogleRequest {service := v1, method := v2, scope := v3, token := v4, act := v5, halted := v6})) else (ctor Option.none [GoogleRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleDecodeField5,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat],
+  result: (Option GoogleRequest),
+  body: (let e : Nat := (googleFieldEnd s start (Foundation.Bytes::byteLength s)); (match (googleParseAct (googleSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [GoogleRequest])
+    | Option.some v5 => (if (e <? (Foundation.Bytes::byteLength s)) then (googleDecodeField6 s (e + 1) v1 v2 v3 v4 v5) else (ctor Option.none [GoogleRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleDecodeField4,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
+  result: (Option GoogleRequest),
+  body: (let e : Nat := (googleFieldEnd s start (Foundation.Bytes::byteLength s)); (match (googleParseToken (googleSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [GoogleRequest])
+    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (googleDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [GoogleRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleDecodeField3,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
+  result: (Option GoogleRequest),
+  body: (let e : Nat := (googleFieldEnd s start (Foundation.Bytes::byteLength s)); (match (googleParseScope (googleSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [GoogleRequest])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (googleDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [GoogleRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleDecodeField2,
+  parameters: [s : Bytes, start : Nat, v1 : Nat],
+  result: (Option GoogleRequest),
+  body: (let e : Nat := (googleFieldEnd s start (Foundation.Bytes::byteLength s)); (match (googleParseMethod (googleSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [GoogleRequest])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (googleDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [GoogleRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleDecodeField1,
+  parameters: [s : Bytes, start : Nat],
+  result: (Option GoogleRequest),
+  body: (let e : Nat := (googleFieldEnd s start (Foundation.Bytes::byteLength s)); (match (googleParseService (googleSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [GoogleRequest])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (googleDecodeField2 s (e + 1) v1) else (ctor Option.none [GoogleRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleRule1,
+  parameters: [request : GoogleRequest],
+  result: Bool,
+  body: ((project request halted) =? (googleHaltedYes))
+}
+
+definition{
+  name: googleRule2,
+  parameters: [request : GoogleRequest],
+  result: Bool,
+  body: ((project request service) =? (googleServiceOther))
+}
+
+definition{
+  name: googleRule3,
+  parameters: [request : GoogleRequest],
+  result: Bool,
+  body: (((project request method) =? (googleMethodWrite)) && ((project request act) =? (googleActNone)))
+}
+
+definition{
+  name: googleRule3Misses,
+  parameters: [request : GoogleRequest],
+  result: Bool,
+  body: ((((project request method) <? (googleMethodWrite)) || ((googleMethodWrite) <? (project request method))) || (((project request act) <? (googleActNone)) || ((googleActNone) <? (project request act))))
+}
+
+definition{
+  name: googleRule4,
+  parameters: [request : GoogleRequest],
+  result: Bool,
+  body: (not ((project request token) =? (googleTokenFresh)))
+}
+
+definition{
+  name: googleRule4Misses,
+  parameters: [request : GoogleRequest],
+  result: Bool,
+  body: ((project request token) =? (googleTokenFresh))
+}
+
+definition{
+  name: googleRule5,
+  parameters: [request : GoogleRequest],
+  result: Bool,
+  body: ((project request scope) =? (googleScopeNone))
+}
+
+definition{
+  name: googleRule6,
+  parameters: [request : GoogleRequest],
+  result: Bool,
+  body: (((project request method) =? (googleMethodWrite)) && (not ((project request scope) =? (googleScopeWrite))))
+}
+
+definition{
+  name: googleRule6Misses,
+  parameters: [request : GoogleRequest],
+  result: Bool,
+  body: ((((project request method) <? (googleMethodWrite)) || ((googleMethodWrite) <? (project request method))) || ((project request scope) =? (googleScopeWrite)))
+}
+
+definition{
+  name: googleRule7,
+  parameters: [request : GoogleRequest],
+  result: Bool,
+  body: ((project request method) =? (googleMethodRead))
+}
+
+definition{
+  name: googleRule8,
+  parameters: [request : GoogleRequest],
+  result: Bool,
+  body: ((project request act) =? (googleActOwner))
+}
+
+definition{
+  name: googleJudge,
+  parameters: [request : GoogleRequest],
+  result: Nat,
+  body: (if (googleRule1 request) then (googleAnswerRefuse) else (if (googleRule2 request) then (googleAnswerRefuse) else (if (googleRule3Misses request) then (if (googleRule4Misses request) then (if (googleRule5 request) then (googleAnswerConsent) else (if (googleRule6Misses request) then (if (googleRule7 request) then (googleAnswerFetch) else (if (googleRule8 request) then (googleAnswerFetch) else (googleAnswerRefuse))) else (googleAnswerConsent))) else (googleAnswerConsent)) else (googleAnswerAsk))))
+}
+
+definition{
+  name: googleEncodeAnswer,
+  parameters: [code : Nat],
+  result: Bytes,
+  body: (if (code =? (googleAnswerFetch)) then 0x6665746368 else (if (code =? (googleAnswerConsent)) then 0x636f6e73656e74 else (if (code =? (googleAnswerAsk)) then 0x61736b else (if (code =? (googleAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964))))
+}
+
+definition{
+  name: googleDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (160 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (googleDecodeField1 value 0)
+    | Option.none => 0x696e76616c6964
+    | Option.some request => (googleEncodeAnswer (googleJudge request)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

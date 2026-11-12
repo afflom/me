@@ -85,6 +85,8 @@ fn prism_pm_01() {
         ("Restore", "PrismVaultRestore", "restoreDispatch"),
         ("R4", "PrismR4", "r4Dispatch"),
         ("Route", "PrismRoute", "routeDispatch"),
+        ("Google", "PrismGoogle", "googleDispatch"),
+        ("Googlelink", "PrismGoogleLink", "googleLinkDispatch"),
     ] {
         let theorem = declaration(&proofs, &format!("routes{facet}"));
         assert!(

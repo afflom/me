@@ -1,0 +1,362 @@
+{
+  "name": "prism-google",
+  "title": "Prism Google",
+  "purpose": "Decides whether the owner's browser may make one call to the Gmail or Google Calendar API, so that nothing is fetched while the Prism is halted, no other host is ever called, nothing is fetched without a fresh token the owner granted, and nothing is sent or changed without the owner's own act.",
+  "fields": [
+    {
+      "name": "service",
+      "kind": "choice",
+      "values": [
+        "gmail",
+        "calendar",
+        "other"
+      ],
+      "means": "which API the call goes to: the Gmail API, the Google Calendar API, or any other host"
+    },
+    {
+      "name": "method",
+      "kind": "choice",
+      "values": [
+        "read",
+        "write"
+      ],
+      "means": "whether the call only reads (GET) or would send, create, change or delete something"
+    },
+    {
+      "name": "scope",
+      "kind": "choice",
+      "values": [
+        "none",
+        "readonly",
+        "write"
+      ],
+      "means": "the access the owner granted Google for this service: none, read only, or read and write"
+    },
+    {
+      "name": "token",
+      "kind": "choice",
+      "values": [
+        "none",
+        "fresh",
+        "expired"
+      ],
+      "means": "the access token the page holds in memory for this service"
+    },
+    {
+      "name": "act",
+      "kind": "choice",
+      "values": [
+        "none",
+        "owner"
+      ],
+      "means": "whether the owner pressed the button for this very call"
+    },
+    {
+      "name": "halted",
+      "kind": "choice",
+      "values": [
+        "no",
+        "yes"
+      ],
+      "means": "whether the owner has pressed the kill switch"
+    }
+  ],
+  "outcomes": [
+    "fetch",
+    "consent",
+    "ask",
+    "refuse"
+  ],
+  "rules": [
+    {
+      "id": "REQ-001",
+      "when": [
+        {
+          "field": "halted",
+          "op": "is",
+          "value": "yes"
+        }
+      ],
+      "then": "refuse",
+      "says": "when halted is yes then refuse",
+      "why": "stop means stop (kill switch)"
+    },
+    {
+      "id": "REQ-002",
+      "when": [
+        {
+          "field": "service",
+          "op": "is",
+          "value": "other"
+        }
+      ],
+      "then": "refuse",
+      "says": "when service is other then refuse",
+      "why": "the page calls only the two Google APIs it names"
+    },
+    {
+      "id": "REQ-003",
+      "when": [
+        {
+          "field": "method",
+          "op": "is",
+          "value": "write"
+        },
+        {
+          "field": "act",
+          "op": "is",
+          "value": "none"
+        }
+      ],
+      "then": "ask",
+      "says": "when method is write and act is none then ask",
+      "why": "nothing is sent or changed without the owner's act"
+    },
+    {
+      "id": "REQ-004",
+      "when": [
+        {
+          "field": "token",
+          "op": "is not",
+          "value": "fresh"
+        }
+      ],
+      "then": "consent",
+      "says": "when token is not fresh then consent",
+      "why": "a call needs a fresh token the owner granted"
+    },
+    {
+      "id": "REQ-005",
+      "when": [
+        {
+          "field": "scope",
+          "op": "is",
+          "value": "none"
+        }
+      ],
+      "then": "consent",
+      "says": "when scope is none then consent",
+      "why": "a call needs the owner's grant for this service"
+    },
+    {
+      "id": "REQ-006",
+      "when": [
+        {
+          "field": "method",
+          "op": "is",
+          "value": "write"
+        },
+        {
+          "field": "scope",
+          "op": "is not",
+          "value": "write"
+        }
+      ],
+      "then": "consent",
+      "says": "when method is write and scope is not write then consent",
+      "why": "a read-only grant never covers a write"
+    },
+    {
+      "id": "REQ-007",
+      "when": [
+        {
+          "field": "method",
+          "op": "is",
+          "value": "read"
+        }
+      ],
+      "then": "fetch",
+      "says": "when method is read then fetch",
+      "why": "the owner granted reading"
+    },
+    {
+      "id": "REQ-008",
+      "when": [
+        {
+          "field": "act",
+          "op": "is",
+          "value": "owner"
+        }
+      ],
+      "then": "fetch",
+      "says": "when act is owner then fetch",
+      "why": "the owner pressed the button for this write"
+    }
+  ],
+  "otherwise": "refuse",
+  "properties": [
+    {
+      "id": "INV-001",
+      "kind": "always",
+      "when": [
+        {
+          "field": "halted",
+          "op": "is",
+          "value": "yes"
+        }
+      ],
+      "then": "refuse",
+      "says": "always when halted is yes then refuse",
+      "why": "when the owner presses the kill switch nothing may be fetched (constitution P7)"
+    },
+    {
+      "id": "INV-002",
+      "kind": "always",
+      "when": [
+        {
+          "field": "service",
+          "op": "is",
+          "value": "other"
+        }
+      ],
+      "then": "refuse",
+      "says": "always when service is other then refuse",
+      "why": "the owner's token must never reach any host but the two Google APIs"
+    },
+    {
+      "id": "INV-003",
+      "kind": "never",
+      "when": [
+        {
+          "field": "method",
+          "op": "is",
+          "value": "write"
+        },
+        {
+          "field": "act",
+          "op": "is",
+          "value": "none"
+        }
+      ],
+      "then": "fetch",
+      "says": "never when method is write and act is none then fetch",
+      "why": "no mail is sent and no calendar entry changed without the owner's act"
+    },
+    {
+      "id": "INV-004",
+      "kind": "never",
+      "when": [
+        {
+          "field": "token",
+          "op": "is",
+          "value": "none"
+        }
+      ],
+      "then": "fetch",
+      "says": "never when token is none then fetch",
+      "why": "no call is made without a token the owner granted"
+    },
+    {
+      "id": "INV-005",
+      "kind": "never",
+      "when": [
+        {
+          "field": "token",
+          "op": "is",
+          "value": "expired"
+        }
+      ],
+      "then": "fetch",
+      "says": "never when token is expired then fetch",
+      "why": "an expired grant is not the owner's consent"
+    },
+    {
+      "id": "INV-006",
+      "kind": "never",
+      "when": [
+        {
+          "field": "scope",
+          "op": "is",
+          "value": "none"
+        }
+      ],
+      "then": "fetch",
+      "says": "never when scope is none then fetch",
+      "why": "no call is made to a service the owner did not grant"
+    },
+    {
+      "id": "INV-007",
+      "kind": "never",
+      "when": [
+        {
+          "field": "method",
+          "op": "is",
+          "value": "write"
+        },
+        {
+          "field": "scope",
+          "op": "is",
+          "value": "readonly"
+        }
+      ],
+      "then": "fetch",
+      "says": "never when method is write and scope is readonly then fetch",
+      "why": "a read-only grant never sends or changes anything"
+    }
+  ],
+  "examples": [
+    {
+      "request": "gmail read readonly fresh none no",
+      "response": "fetch"
+    },
+    {
+      "request": "calendar read readonly fresh none no",
+      "response": "fetch"
+    },
+    {
+      "request": "gmail read readonly fresh none yes",
+      "response": "refuse"
+    },
+    {
+      "request": "other read readonly fresh owner no",
+      "response": "refuse"
+    },
+    {
+      "request": "gmail read readonly none none no",
+      "response": "consent"
+    },
+    {
+      "request": "calendar read readonly expired none no",
+      "response": "consent"
+    },
+    {
+      "request": "gmail read none fresh none no",
+      "response": "consent"
+    },
+    {
+      "request": "gmail write readonly fresh none no",
+      "response": "ask"
+    },
+    {
+      "request": "gmail write readonly fresh owner no",
+      "response": "consent"
+    },
+    {
+      "request": "calendar write write fresh owner no",
+      "response": "fetch"
+    },
+    {
+      "request": "calendar write write fresh none no",
+      "response": "ask"
+    },
+    {
+      "request": "gmail write write expired owner no",
+      "response": "consent"
+    }
+  ],
+  "schema": "prism/spec/1",
+  "actors": [],
+  "meanings": {
+    "fetch": "the page may make the call now",
+    "consent": "the page must first ask Google for the owner's consent and a fresh token",
+    "ask": "the owner must act first",
+    "refuse": "the call may not be made"
+  },
+  "otherwiseWhy": "deny by default",
+  "limits": [
+    "It does not hold or see the token; the page keeps it in memory and reports only whether it is fresh.",
+    "It does not decide what is kept: every fetched item still goes through the Boundary and the vault.",
+    "The act field is set only by the owner's own press of a button for that call.",
+    "The page asks only for read-only scopes today, so every write is refused for want of a write grant."
+  ]
+}

@@ -1,0 +1,358 @@
+\begin{lexlean}{PrismGoogleProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismGoogle}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: googleBreaksInv001,
+  parameters: [request : PrismGoogle::GoogleRequest],
+  result: Bool,
+  body: (((((((((project request service) <? 3) && ((project request method) <? 2)) && ((project request scope) <? 3)) && ((project request token) <? 3)) && ((project request act) <? 2)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismGoogle::googleHaltedYes))) && (not ((PrismGoogle::googleJudge request) =? (PrismGoogle::googleAnswerRefuse))))
+}
+
+theorem{
+  name: googleInv001Holds,
+  parameters: [request : PrismGoogle::GoogleRequest],
+  statement: ((googleBreaksInv001 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismGoogle::googleActNone,
+      PrismGoogle::googleActOwner,
+      PrismGoogle::googleAnswerAsk,
+      PrismGoogle::googleAnswerConsent,
+      PrismGoogle::googleAnswerFetch,
+      PrismGoogle::googleAnswerRefuse,
+      PrismGoogle::googleHaltedNo,
+      PrismGoogle::googleHaltedYes,
+      PrismGoogle::googleJudge,
+      PrismGoogle::googleMethodRead,
+      PrismGoogle::googleMethodWrite,
+      PrismGoogle::googleRule1,
+      PrismGoogle::googleRule2,
+      PrismGoogle::googleRule3,
+      PrismGoogle::googleRule3Misses,
+      PrismGoogle::googleRule4,
+      PrismGoogle::googleRule4Misses,
+      PrismGoogle::googleRule5,
+      PrismGoogle::googleRule6,
+      PrismGoogle::googleRule6Misses,
+      PrismGoogle::googleRule7,
+      PrismGoogle::googleRule8,
+      PrismGoogle::googleScopeNone,
+      PrismGoogle::googleScopeReadonly,
+      PrismGoogle::googleScopeWrite,
+      PrismGoogle::googleServiceCalendar,
+      PrismGoogle::googleServiceGmail,
+      PrismGoogle::googleServiceOther,
+      PrismGoogle::googleTokenExpired,
+      PrismGoogle::googleTokenFresh,
+      PrismGoogle::googleTokenNone,
+      googleBreaksInv001
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleBreaksInv002,
+  parameters: [request : PrismGoogle::GoogleRequest],
+  result: Bool,
+  body: (((((((((project request service) <? 3) && ((project request method) <? 2)) && ((project request scope) <? 3)) && ((project request token) <? 3)) && ((project request act) <? 2)) && ((project request halted) <? 2)) && ((project request service) =? (PrismGoogle::googleServiceOther))) && (not ((PrismGoogle::googleJudge request) =? (PrismGoogle::googleAnswerRefuse))))
+}
+
+theorem{
+  name: googleInv002Holds,
+  parameters: [request : PrismGoogle::GoogleRequest],
+  statement: ((googleBreaksInv002 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismGoogle::googleActNone,
+      PrismGoogle::googleActOwner,
+      PrismGoogle::googleAnswerAsk,
+      PrismGoogle::googleAnswerConsent,
+      PrismGoogle::googleAnswerFetch,
+      PrismGoogle::googleAnswerRefuse,
+      PrismGoogle::googleHaltedNo,
+      PrismGoogle::googleHaltedYes,
+      PrismGoogle::googleJudge,
+      PrismGoogle::googleMethodRead,
+      PrismGoogle::googleMethodWrite,
+      PrismGoogle::googleRule1,
+      PrismGoogle::googleRule2,
+      PrismGoogle::googleRule3,
+      PrismGoogle::googleRule3Misses,
+      PrismGoogle::googleRule4,
+      PrismGoogle::googleRule4Misses,
+      PrismGoogle::googleRule5,
+      PrismGoogle::googleRule6,
+      PrismGoogle::googleRule6Misses,
+      PrismGoogle::googleRule7,
+      PrismGoogle::googleRule8,
+      PrismGoogle::googleScopeNone,
+      PrismGoogle::googleScopeReadonly,
+      PrismGoogle::googleScopeWrite,
+      PrismGoogle::googleServiceCalendar,
+      PrismGoogle::googleServiceGmail,
+      PrismGoogle::googleServiceOther,
+      PrismGoogle::googleTokenExpired,
+      PrismGoogle::googleTokenFresh,
+      PrismGoogle::googleTokenNone,
+      googleBreaksInv002
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleBreaksInv003,
+  parameters: [request : PrismGoogle::GoogleRequest],
+  result: Bool,
+  body: ((((((((((project request service) <? 3) && ((project request method) <? 2)) && ((project request scope) <? 3)) && ((project request token) <? 3)) && ((project request act) <? 2)) && ((project request halted) <? 2)) && ((project request method) =? (PrismGoogle::googleMethodWrite))) && ((project request act) =? (PrismGoogle::googleActNone))) && ((PrismGoogle::googleJudge request) =? (PrismGoogle::googleAnswerFetch)))
+}
+
+theorem{
+  name: googleInv003Holds,
+  parameters: [request : PrismGoogle::GoogleRequest],
+  statement: ((googleBreaksInv003 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismGoogle::googleActNone,
+      PrismGoogle::googleActOwner,
+      PrismGoogle::googleAnswerAsk,
+      PrismGoogle::googleAnswerConsent,
+      PrismGoogle::googleAnswerFetch,
+      PrismGoogle::googleAnswerRefuse,
+      PrismGoogle::googleHaltedNo,
+      PrismGoogle::googleHaltedYes,
+      PrismGoogle::googleJudge,
+      PrismGoogle::googleMethodRead,
+      PrismGoogle::googleMethodWrite,
+      PrismGoogle::googleRule1,
+      PrismGoogle::googleRule2,
+      PrismGoogle::googleRule3,
+      PrismGoogle::googleRule3Misses,
+      PrismGoogle::googleRule4,
+      PrismGoogle::googleRule4Misses,
+      PrismGoogle::googleRule5,
+      PrismGoogle::googleRule6,
+      PrismGoogle::googleRule6Misses,
+      PrismGoogle::googleRule7,
+      PrismGoogle::googleRule8,
+      PrismGoogle::googleScopeNone,
+      PrismGoogle::googleScopeReadonly,
+      PrismGoogle::googleScopeWrite,
+      PrismGoogle::googleServiceCalendar,
+      PrismGoogle::googleServiceGmail,
+      PrismGoogle::googleServiceOther,
+      PrismGoogle::googleTokenExpired,
+      PrismGoogle::googleTokenFresh,
+      PrismGoogle::googleTokenNone,
+      googleBreaksInv003
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleBreaksInv004,
+  parameters: [request : PrismGoogle::GoogleRequest],
+  result: Bool,
+  body: (((((((((project request service) <? 3) && ((project request method) <? 2)) && ((project request scope) <? 3)) && ((project request token) <? 3)) && ((project request act) <? 2)) && ((project request halted) <? 2)) && ((project request token) =? (PrismGoogle::googleTokenNone))) && ((PrismGoogle::googleJudge request) =? (PrismGoogle::googleAnswerFetch)))
+}
+
+theorem{
+  name: googleInv004Holds,
+  parameters: [request : PrismGoogle::GoogleRequest],
+  statement: ((googleBreaksInv004 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismGoogle::googleActNone,
+      PrismGoogle::googleActOwner,
+      PrismGoogle::googleAnswerAsk,
+      PrismGoogle::googleAnswerConsent,
+      PrismGoogle::googleAnswerFetch,
+      PrismGoogle::googleAnswerRefuse,
+      PrismGoogle::googleHaltedNo,
+      PrismGoogle::googleHaltedYes,
+      PrismGoogle::googleJudge,
+      PrismGoogle::googleMethodRead,
+      PrismGoogle::googleMethodWrite,
+      PrismGoogle::googleRule1,
+      PrismGoogle::googleRule2,
+      PrismGoogle::googleRule3,
+      PrismGoogle::googleRule3Misses,
+      PrismGoogle::googleRule4,
+      PrismGoogle::googleRule4Misses,
+      PrismGoogle::googleRule5,
+      PrismGoogle::googleRule6,
+      PrismGoogle::googleRule6Misses,
+      PrismGoogle::googleRule7,
+      PrismGoogle::googleRule8,
+      PrismGoogle::googleScopeNone,
+      PrismGoogle::googleScopeReadonly,
+      PrismGoogle::googleScopeWrite,
+      PrismGoogle::googleServiceCalendar,
+      PrismGoogle::googleServiceGmail,
+      PrismGoogle::googleServiceOther,
+      PrismGoogle::googleTokenExpired,
+      PrismGoogle::googleTokenFresh,
+      PrismGoogle::googleTokenNone,
+      googleBreaksInv004
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleBreaksInv005,
+  parameters: [request : PrismGoogle::GoogleRequest],
+  result: Bool,
+  body: (((((((((project request service) <? 3) && ((project request method) <? 2)) && ((project request scope) <? 3)) && ((project request token) <? 3)) && ((project request act) <? 2)) && ((project request halted) <? 2)) && ((project request token) =? (PrismGoogle::googleTokenExpired))) && ((PrismGoogle::googleJudge request) =? (PrismGoogle::googleAnswerFetch)))
+}
+
+theorem{
+  name: googleInv005Holds,
+  parameters: [request : PrismGoogle::GoogleRequest],
+  statement: ((googleBreaksInv005 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismGoogle::googleActNone,
+      PrismGoogle::googleActOwner,
+      PrismGoogle::googleAnswerAsk,
+      PrismGoogle::googleAnswerConsent,
+      PrismGoogle::googleAnswerFetch,
+      PrismGoogle::googleAnswerRefuse,
+      PrismGoogle::googleHaltedNo,
+      PrismGoogle::googleHaltedYes,
+      PrismGoogle::googleJudge,
+      PrismGoogle::googleMethodRead,
+      PrismGoogle::googleMethodWrite,
+      PrismGoogle::googleRule1,
+      PrismGoogle::googleRule2,
+      PrismGoogle::googleRule3,
+      PrismGoogle::googleRule3Misses,
+      PrismGoogle::googleRule4,
+      PrismGoogle::googleRule4Misses,
+      PrismGoogle::googleRule5,
+      PrismGoogle::googleRule6,
+      PrismGoogle::googleRule6Misses,
+      PrismGoogle::googleRule7,
+      PrismGoogle::googleRule8,
+      PrismGoogle::googleScopeNone,
+      PrismGoogle::googleScopeReadonly,
+      PrismGoogle::googleScopeWrite,
+      PrismGoogle::googleServiceCalendar,
+      PrismGoogle::googleServiceGmail,
+      PrismGoogle::googleServiceOther,
+      PrismGoogle::googleTokenExpired,
+      PrismGoogle::googleTokenFresh,
+      PrismGoogle::googleTokenNone,
+      googleBreaksInv005
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleBreaksInv006,
+  parameters: [request : PrismGoogle::GoogleRequest],
+  result: Bool,
+  body: (((((((((project request service) <? 3) && ((project request method) <? 2)) && ((project request scope) <? 3)) && ((project request token) <? 3)) && ((project request act) <? 2)) && ((project request halted) <? 2)) && ((project request scope) =? (PrismGoogle::googleScopeNone))) && ((PrismGoogle::googleJudge request) =? (PrismGoogle::googleAnswerFetch)))
+}
+
+theorem{
+  name: googleInv006Holds,
+  parameters: [request : PrismGoogle::GoogleRequest],
+  statement: ((googleBreaksInv006 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismGoogle::googleActNone,
+      PrismGoogle::googleActOwner,
+      PrismGoogle::googleAnswerAsk,
+      PrismGoogle::googleAnswerConsent,
+      PrismGoogle::googleAnswerFetch,
+      PrismGoogle::googleAnswerRefuse,
+      PrismGoogle::googleHaltedNo,
+      PrismGoogle::googleHaltedYes,
+      PrismGoogle::googleJudge,
+      PrismGoogle::googleMethodRead,
+      PrismGoogle::googleMethodWrite,
+      PrismGoogle::googleRule1,
+      PrismGoogle::googleRule2,
+      PrismGoogle::googleRule3,
+      PrismGoogle::googleRule3Misses,
+      PrismGoogle::googleRule4,
+      PrismGoogle::googleRule4Misses,
+      PrismGoogle::googleRule5,
+      PrismGoogle::googleRule6,
+      PrismGoogle::googleRule6Misses,
+      PrismGoogle::googleRule7,
+      PrismGoogle::googleRule8,
+      PrismGoogle::googleScopeNone,
+      PrismGoogle::googleScopeReadonly,
+      PrismGoogle::googleScopeWrite,
+      PrismGoogle::googleServiceCalendar,
+      PrismGoogle::googleServiceGmail,
+      PrismGoogle::googleServiceOther,
+      PrismGoogle::googleTokenExpired,
+      PrismGoogle::googleTokenFresh,
+      PrismGoogle::googleTokenNone,
+      googleBreaksInv006
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: googleBreaksInv007,
+  parameters: [request : PrismGoogle::GoogleRequest],
+  result: Bool,
+  body: ((((((((((project request service) <? 3) && ((project request method) <? 2)) && ((project request scope) <? 3)) && ((project request token) <? 3)) && ((project request act) <? 2)) && ((project request halted) <? 2)) && ((project request method) =? (PrismGoogle::googleMethodWrite))) && ((project request scope) =? (PrismGoogle::googleScopeReadonly))) && ((PrismGoogle::googleJudge request) =? (PrismGoogle::googleAnswerFetch)))
+}
+
+theorem{
+  name: googleInv007Holds,
+  parameters: [request : PrismGoogle::GoogleRequest],
+  statement: ((googleBreaksInv007 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismGoogle::googleActNone,
+      PrismGoogle::googleActOwner,
+      PrismGoogle::googleAnswerAsk,
+      PrismGoogle::googleAnswerConsent,
+      PrismGoogle::googleAnswerFetch,
+      PrismGoogle::googleAnswerRefuse,
+      PrismGoogle::googleHaltedNo,
+      PrismGoogle::googleHaltedYes,
+      PrismGoogle::googleJudge,
+      PrismGoogle::googleMethodRead,
+      PrismGoogle::googleMethodWrite,
+      PrismGoogle::googleRule1,
+      PrismGoogle::googleRule2,
+      PrismGoogle::googleRule3,
+      PrismGoogle::googleRule3Misses,
+      PrismGoogle::googleRule4,
+      PrismGoogle::googleRule4Misses,
+      PrismGoogle::googleRule5,
+      PrismGoogle::googleRule6,
+      PrismGoogle::googleRule6Misses,
+      PrismGoogle::googleRule7,
+      PrismGoogle::googleRule8,
+      PrismGoogle::googleScopeNone,
+      PrismGoogle::googleScopeReadonly,
+      PrismGoogle::googleScopeWrite,
+      PrismGoogle::googleServiceCalendar,
+      PrismGoogle::googleServiceGmail,
+      PrismGoogle::googleServiceOther,
+      PrismGoogle::googleTokenExpired,
+      PrismGoogle::googleTokenFresh,
+      PrismGoogle::googleTokenNone,
+      googleBreaksInv007
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

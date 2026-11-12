@@ -86,3 +86,27 @@ id = "RT-01"
 level = "build"
 suite = "route"
 statement = "The vocabulary register the page reads lists schema.org 30.1's 939 types and 1,538 properties, the 12 domains and the 1,229 crosswalk rows in the order of the Lean indices, every source pinned by sha256"
+
+[[id]]
+id = "GG-01"
+level = "build"
+suite = "google"
+statement = "The page makes a Google API call only when PrismGoogle answers fetch, which it never does while halted, to any other host, without a fresh read grant, or for a write without the owner's act"
+
+[[id]]
+id = "GG-02"
+level = "build"
+suite = "google"
+statement = "The Google connection moves between stages only as PrismGoogleLink answers: only the owner grants, a client for another origin is never used, and the kill switch or a forget revokes every grant"
+
+[[id]]
+id = "GG-03"
+level = "build"
+suite = "google"
+statement = "Mail and calendar items read from Google reach only the browser vault, through the detectors, the router and the Boundary, by GET to the two API hosts with the token only in the Authorization header"
+
+[[id]]
+id = "PG-01"
+level = "build"
+suite = "page"
+statement = "The page keeps, reads and answers only through the verified app: a fact is kept only when the Boundary and the vault allow it, nothing is kept while halted, and every check is the root's own answer"
