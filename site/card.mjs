@@ -1,8 +1,6 @@
 // The Prism's own surface. Every decision is the verified app's: this script
 // only carries text between the page, the vault, R4 and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
-import { mountGoogle } from "./google/panel.mjs";
-import { relayConsent } from "./google/relay.mjs";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -15,6 +13,13 @@ function readHalt() {
 }
 function writeHalt(on) {
   try { localStorage.setItem(HALT_KEY, on ? "yes" : "no"); } catch { /* private window: the switch still holds for this page */ }
+}
+
+// Google's consent return, when this window is one. The relay and its sealing
+// load only then, so an ordinary visit fetches none of it.
+async function relayConsent() {
+  if (!/(?:^#|&)state=/.test(location.hash)) return false;
+  return (await import("./google/relay.mjs")).relayConsent();
 }
 
 export default async function start({ app, reason, $ }) {
@@ -86,7 +91,16 @@ export default async function start({ app, reason, $ }) {
   // Connections: one row per source, each deciding through the root.
   if (vault) {
     try {
-      await mountGoogle($("me-connections"), { vault, line, halted });
+      // The Google row loads once the platform has published its client;
+      // until then one line says so and none of the Google code is fetched.
+      const platform = await fetch(new URL("./google/platform.json", import.meta.url), { cache: "no-cache" }).then((response) => response.json());
+      if (platform.clientId) {
+        const { mountGoogle } = await import("./google/panel.mjs");
+        await mountGoogle($("me-connections"), { vault, line, halted });
+      } else {
+        const note = Object.assign(document.createElement("p"), { className: "me-note", textContent: "Gmail and Calendar turn on here once the platform publishes its Google client." });
+        $("me-connections").replaceChildren(note);
+      }
       $("me-conn").hidden = false;
     } catch (error) {
       console.warn(`connections: ${error?.message ?? error}`);

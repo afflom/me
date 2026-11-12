@@ -184,7 +184,7 @@ jobs:
     name: publish the page
     needs: build
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 15
     permissions:
       pages: write
       id-token: write
@@ -195,3 +195,23 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
+      # The published page itself, in a real browser: it keeps, refuses while
+      # halted and answers through the app, or this run fails. Pages can take
+      # a minute to serve the new bytes, so the check gets four tries.
+      - name: Check out the exact event revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: The published page works (PG-01, live)
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          set -euo pipefail
+          npm install --no-audit --no-fund --global playwright@1.56.1
+          playwright install --with-deps chromium
+          for attempt in 1 2 3 4; do
+            NODE_PATH="$(npm root --global)" node --test test/page/card.test.mjs && exit 0
+            sleep 30
+          done
+          exit 1
