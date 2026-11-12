@@ -15,17 +15,11 @@
 # state: a capability that is not built does not get a row, and every row in this
 # file is built.
 #
-# The first row is the template's own Prism application in `app/` (TC-01).
+# The Prism's own rows (PM-*) cover the application in `app/`.
 # A capability starts with a row here; `just new-capability` writes the row,
 # its scenario and its failing test in the order `AGENTS.md` sets out.
 
 spec = "template/1"
-
-[[id]]
-id = "TC-01"
-level = "build"
-suite = "contract"
-statement = "The checker answers conformant exactly when every universal policy file's observed digest equals its locked digest"
 
 [[id]]
 id = "FR-01"
@@ -38,3 +32,27 @@ id = "PV-01"
 level = "build"
 suite = "privacy"
 statement = "Neither the tracked tree nor the built page holds personal data: every email address is at a reserved domain, and no phone, payment card or national ID number appears"
+
+[[id]]
+id = "PM-01"
+level = "build"
+suite = "prism"
+statement = "The Prism answers a request naming a known facet with exactly that facet's decision of the rest, and refuses every other request"
+
+[[id]]
+id = "PM-02"
+level = "build"
+suite = "prism"
+statement = "The Boundary denies every move while halted and every move to GitHub or the hosted verifier, never allows detected, restricted or identifying data out, and never sends outbound without the owner's approval"
+
+[[id]]
+id = "PM-03"
+level = "build"
+suite = "prism"
+statement = "Learning confirms or rejects a belief only on the owner's signal, holds a confirmed or rejected belief against every other signal, and never raises a weight above 15 or lowers it below 1"
+
+[[id]]
+id = "PM-04"
+level = "build"
+suite = "prism"
+statement = "Chronology never names an Allen relation that the two intervals' endpoints contradict, and never calls two well-formed intervals malformed"

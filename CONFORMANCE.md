@@ -18,17 +18,20 @@ The three honesty levels (R2):
 `cargo xtask audit-limits` fails if any code path returns an error the
 model does not sanction.
 
-## contract
-
-| ID | Level | Statement |
-| --- | --- | --- |
-| `TC-01` | `build` | The checker answers conformant exactly when every universal policy file's observed digest equals its locked digest |
-
 ## frame
 
 | ID | Level | Statement |
 | --- | --- | --- |
 | `FR-01` | `build` | With a working worker, the page loads and verifies the archive only in that worker before using its identities or guest |
+
+## prism
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PM-01` | `build` | The Prism answers a request naming a known facet with exactly that facet's decision of the rest, and refuses every other request |
+| `PM-02` | `build` | The Boundary denies every move while halted and every move to GitHub or the hosted verifier, never allows detected, restricted or identifying data out, and never sends outbound without the owner's approval |
+| `PM-03` | `build` | Learning confirms or rejects a belief only on the owner's signal, holds a confirmed or rejected belief against every other signal, and never raises a weight above 15 or lowers it below 1 |
+| `PM-04` | `build` | Chronology never names an Allen relation that the two intervals' endpoints contradict, and never calls two well-formed intervals malformed |
 
 ## privacy
 
