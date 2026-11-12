@@ -1,0 +1,98 @@
+\begin{lexlean}{DesignProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Vocab.V1.SchemaOrg}
+\importmodule{Foundation.Vocab.V1.Crosswalk}
+\importmodule{Foundation.Me.V1.Anchors}
+\importmodule{Foundation.Me.V1.Model}
+\title{Prism design guarantees}
+\begin{semanticmodule}
+theorem{
+  name: nothingPublicByDefault,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designAllAtLeast 1 (Foundation.Me.V1.Model::designDomainFloors)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: healthFloorRestricted,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designFloorOf (Foundation.Me.V1.Model::designHealthDomain)) = 3),
+  proof: decide{}
+}
+
+theorem{
+  name: planSourceInvariant,
+  parameters: [
+    envelope : Foundation.Me.V1.Model::ContentEnvelope,
+    source : Foundation.Me.V1.Model::ContentSource
+  ],
+  statement: ((Foundation.Me.V1.Model::designPlan (Foundation.Me.V1.Model::designWithSource envelope source)) = (Foundation.Me.V1.Model::designPlan envelope)),
+  proof: reflexivity{}
+}
+
+theorem{
+  name: everyPlanAdmitsBeforeStore,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designPlansSound (Foundation.Me.V1.Model::designAllMedia)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: restrictedOnlyOwner,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designAudienceRule) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: viewsNumbered,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designViewsNumbered 0 (Foundation.Me.V1.Model::designViews)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: viewsWellFormed,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designViewsWellFormed (Foundation.Me.V1.Model::designViews)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: everyDomainHasOwnerView,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designEveryDomainOwned (Foundation.Me.V1.Model::designAllDomains)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: othersAvoidRestricted,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designOthersAvoidRestricted (Foundation.Me.V1.Model::designViews)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: journeysWellFormed,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designJourneysWellFormed (Foundation.Me.V1.Model::designJourneys)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: outboundNeedsOwner,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designOutboundSafe (Foundation.Me.V1.Model::designLabels)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: attentionRulesHold,
+  parameters: [],
+  statement: ((Foundation.Me.V1.Model::designAttentionAll) = true),
+  proof: decide{}
+}
+\end{semanticmodule}
+\end{lexlean}

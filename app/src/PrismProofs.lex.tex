@@ -11,6 +11,7 @@
 \importmodule{PrismGoogleLink}
 \importmodule{PrismLearning}
 \importmodule{PrismR4}
+\importmodule{PrismRoute}
 \importmodule{PrismVaultRestore}
 \importmodule{PrismVaultStore}
 \title{Text application model}
@@ -59,6 +60,14 @@ theorem{
   name: routesR4,
   parameters: [rest : Bytes],
   statement: ((Prism::route (Prism::facetR4) rest) = (PrismR4::r4Dispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesRoute,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetRoute) rest) = (PrismRoute::routeDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }

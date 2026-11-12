@@ -1,0 +1,88 @@
+\begin{lexlean}{PersonProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Person.V1.Model}
+\title{Person guarantees}
+\begin{semanticmodule}
+theorem{
+  name: propertiesNumbered,
+  parameters: [],
+  statement: ((Foundation.Person.V1.Model::personNumberedFrom 0 (Foundation.Person.V1.Model::personProperties)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: labelsDeclared,
+  parameters: [],
+  statement: ((Foundation.Person.V1.Model::personLabelsInRange (Foundation.Person.V1.Model::personProperties)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: healthAndSpecialRestricted,
+  parameters: [],
+  statement: ((Foundation.Person.V1.Model::personDetectedRestricted (Foundation.Person.V1.Model::personProperties)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: facetRoundTrip,
+  parameters: [facet : Foundation.Person.V1.Model::PersonFacet],
+  statement: ((Foundation.Person.V1.Model::personFacetOf (Foundation.Person.V1.Model::personFacetType facet)) = (ctor Option.some [Foundation.Person.V1.Model::PersonFacet] facet)),
+  proof: cases{
+    branches: [
+      {proof: reflexivity{}, binders: [], constructor: person},
+      {proof: reflexivity{}, binders: [], constructor: contactPoint},
+      {proof: reflexivity{}, binders: [], constructor: postalAddress},
+      {proof: reflexivity{}, binders: [], constructor: organization},
+      {proof: reflexivity{}, binders: [], constructor: occupation},
+      {proof: reflexivity{}, binders: [], constructor: credential},
+      {proof: reflexivity{}, binders: [], constructor: event},
+      {proof: reflexivity{}, binders: [], constructor: place},
+      {proof: reflexivity{}, binders: [], constructor: emailMessage},
+      {proof: reflexivity{}, binders: [], constructor: creativeWork},
+      {proof: reflexivity{}, binders: [], constructor: medicalCondition},
+      {proof: reflexivity{}, binders: [], constructor: invoice}
+    ],
+    scrutinee: facet
+  }
+}
+
+theorem{
+  name: frameRoundTrip,
+  parameters: [frame : Foundation.Person.V1.Model::PersonFrameKind],
+  statement: ((Foundation.Person.V1.Model::personFrameOf (Foundation.Person.V1.Model::personFrameTypeName frame)) = (ctor Option.some [Foundation.Person.V1.Model::PersonFrameKind] frame)),
+  proof: cases{
+    branches: [
+      {proof: reflexivity{}, binders: [], constructor: utteranceReceived},
+      {proof: reflexivity{}, binders: [], constructor: proseProposed},
+      {proof: reflexivity{}, binders: [], constructor: claimStated},
+      {proof: reflexivity{}, binders: [], constructor: claimConfirmed},
+      {proof: reflexivity{}, binders: [], constructor: claimRejected},
+      {proof: reflexivity{}, binders: [], constructor: mailObserved},
+      {proof: reflexivity{}, binders: [], constructor: calendarObserved}
+    ],
+    scrutinee: frame
+  }
+}
+
+theorem{
+  name: everyFrameHasSchema,
+  parameters: [frame : Foundation.Person.V1.Model::PersonFrameKind],
+  statement: ((Foundation.Person.V1.Model::personSchemaOf (Foundation.Person.V1.Model::personSchemaName (Foundation.Person.V1.Model::personFrameData frame))) = (ctor Option.some [Foundation.Person.V1.Model::PersonSchema] (Foundation.Person.V1.Model::personFrameData frame))),
+  proof: cases{
+    branches: [
+      {proof: reflexivity{}, binders: [], constructor: utteranceReceived},
+      {proof: reflexivity{}, binders: [], constructor: proseProposed},
+      {proof: reflexivity{}, binders: [], constructor: claimStated},
+      {proof: reflexivity{}, binders: [], constructor: claimConfirmed},
+      {proof: reflexivity{}, binders: [], constructor: claimRejected},
+      {proof: reflexivity{}, binders: [], constructor: mailObserved},
+      {proof: reflexivity{}, binders: [], constructor: calendarObserved}
+    ],
+    scrutinee: frame
+  }
+}
+\end{semanticmodule}
+\end{lexlean}

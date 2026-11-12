@@ -1,0 +1,964 @@
+\begin{lexlean}{Foundation.Person.V1.Model}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\title{Person model}
+\begin{semanticmodule}
+inductive{
+  name: PersonFacet,
+  type_parameters: [],
+  parameters: [],
+  constructors: [
+    {name: person, fields: []},
+    {name: contactPoint, fields: []},
+    {name: postalAddress, fields: []},
+    {name: organization, fields: []},
+    {name: occupation, fields: []},
+    {name: credential, fields: []},
+    {name: event, fields: []},
+    {name: place, fields: []},
+    {name: emailMessage, fields: []},
+    {name: creativeWork, fields: []},
+    {name: medicalCondition, fields: []},
+    {name: invoice, fields: []}
+  ]
+}
+
+inductive{
+  name: PersonValueKind,
+  type_parameters: [],
+  parameters: [],
+  constructors: [
+    {name: text, fields: []},
+    {name: email, fields: []},
+    {name: telephone, fields: []},
+    {name: uri, fields: []},
+    {name: date, fields: []},
+    {name: dateTime, fields: []},
+    {name: reference, fields: []}
+  ]
+}
+
+inductive{
+  name: PersonSchema,
+  type_parameters: [],
+  parameters: [],
+  constructors: [
+    {name: utterance, fields: []},
+    {name: prose, fields: []},
+    {name: claim, fields: []},
+    {name: observation, fields: []}
+  ]
+}
+
+inductive{
+  name: PersonFrameKind,
+  type_parameters: [],
+  parameters: [],
+  constructors: [
+    {name: utteranceReceived, fields: []},
+    {name: proseProposed, fields: []},
+    {name: claimStated, fields: []},
+    {name: claimConfirmed, fields: []},
+    {name: claimRejected, fields: []},
+    {name: mailObserved, fields: []},
+    {name: calendarObserved, fields: []}
+  ]
+}
+
+structure{
+  name: PersonProperty,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: index, type: Nat},
+    {name: facet, type: PersonFacet},
+    {name: kind, type: PersonValueKind},
+    {name: label, type: Nat},
+    {name: detector, type: Nat}
+  ]
+}
+
+definition{
+  name: personFacetNumber,
+  parameters: [facet : PersonFacet],
+  result: Nat,
+  body: (match facet
+    | PersonFacet.person => 0
+    | PersonFacet.contactPoint => 1
+    | PersonFacet.postalAddress => 2
+    | PersonFacet.organization => 3
+    | PersonFacet.occupation => 4
+    | PersonFacet.credential => 5
+    | PersonFacet.event => 6
+    | PersonFacet.place => 7
+    | PersonFacet.emailMessage => 8
+    | PersonFacet.creativeWork => 9
+    | PersonFacet.medicalCondition => 10
+    | PersonFacet.invoice => 11)
+}
+
+definition{
+  name: personFacetType,
+  parameters: [facet : PersonFacet],
+  result: String,
+  body: (match facet
+    | PersonFacet.person => "Person"
+    | PersonFacet.contactPoint => "ContactPoint"
+    | PersonFacet.postalAddress => "PostalAddress"
+    | PersonFacet.organization => "Organization"
+    | PersonFacet.occupation => "Occupation"
+    | PersonFacet.credential => "EducationalOccupationalCredential"
+    | PersonFacet.event => "Event"
+    | PersonFacet.place => "Place"
+    | PersonFacet.emailMessage => "EmailMessage"
+    | PersonFacet.creativeWork => "CreativeWork"
+    | PersonFacet.medicalCondition => "MedicalCondition"
+    | PersonFacet.invoice => "Invoice")
+}
+
+definition{
+  name: personFacetNoun,
+  parameters: [facet : PersonFacet],
+  result: String,
+  body: (match facet
+    | PersonFacet.person => "person"
+    | PersonFacet.contactPoint => "contact"
+    | PersonFacet.postalAddress => "address"
+    | PersonFacet.organization => "organization"
+    | PersonFacet.occupation => "occupation"
+    | PersonFacet.credential => "credential"
+    | PersonFacet.event => "event"
+    | PersonFacet.place => "place"
+    | PersonFacet.emailMessage => "email"
+    | PersonFacet.creativeWork => "work"
+    | PersonFacet.medicalCondition => "condition"
+    | PersonFacet.invoice => "invoice")
+}
+
+definition{
+  name: personFacetOf,
+  parameters: [text : String],
+  result: (Option PersonFacet),
+  body: (if (prim equal text "Person" : Bool) then (ctor Option.some [PersonFacet] (ctor PersonFacet.person)) else (if (prim equal text "ContactPoint" : Bool) then (ctor Option.some [PersonFacet] (ctor PersonFacet.contactPoint)) else (if (prim equal text "PostalAddress" : Bool) then (ctor Option.some [PersonFacet] (ctor PersonFacet.postalAddress)) else (if (prim equal text "Organization" : Bool) then (ctor Option.some [PersonFacet] (ctor PersonFacet.organization)) else (if (prim equal text "Occupation" : Bool) then (ctor Option.some [PersonFacet] (ctor PersonFacet.occupation)) else (if (prim equal text "EducationalOccupationalCredential" : Bool) then (ctor Option.some [PersonFacet] (ctor PersonFacet.credential)) else (if (prim equal text "Event" : Bool) then (ctor Option.some [PersonFacet] (ctor PersonFacet.event)) else (if (prim equal text "Place" : Bool) then (ctor Option.some [PersonFacet] (ctor PersonFacet.place)) else (if (prim equal text "EmailMessage" : Bool) then (ctor Option.some [PersonFacet] (ctor PersonFacet.emailMessage)) else (if (prim equal text "CreativeWork" : Bool) then (ctor Option.some [PersonFacet] (ctor PersonFacet.creativeWork)) else (if (prim equal text "MedicalCondition" : Bool) then (ctor Option.some [PersonFacet] (ctor PersonFacet.medicalCondition)) else (if (prim equal text "Invoice" : Bool) then (ctor Option.some [PersonFacet] (ctor PersonFacet.invoice)) else (ctor Option.none [PersonFacet])))))))))))))
+}
+
+definition{
+  name: personFacets,
+  parameters: [],
+  result: (List PersonFacet),
+  body: (cons (ctor PersonFacet.person) (cons (ctor PersonFacet.contactPoint) (cons (ctor PersonFacet.postalAddress) (cons (ctor PersonFacet.organization) (cons (ctor PersonFacet.occupation) (cons (ctor PersonFacet.credential) (cons (ctor PersonFacet.event) (cons (ctor PersonFacet.place) (cons (ctor PersonFacet.emailMessage) (cons (ctor PersonFacet.creativeWork) (cons (ctor PersonFacet.medicalCondition) (cons (ctor PersonFacet.invoice) (nil PersonFacet)))))))))))))
+}
+
+definition{
+  name: personKindName,
+  parameters: [kind : PersonValueKind],
+  result: String,
+  body: (match kind
+    | PersonValueKind.text => "text"
+    | PersonValueKind.email => "email"
+    | PersonValueKind.telephone => "telephone"
+    | PersonValueKind.uri => "uri"
+    | PersonValueKind.date => "date"
+    | PersonValueKind.dateTime => "dateTime"
+    | PersonValueKind.reference => "reference")
+}
+
+definition{
+  name: personKindSchema,
+  parameters: [kind : PersonValueKind],
+  result: String,
+  body: (match kind
+    | PersonValueKind.text => "{\"type\":\"string\",\"minLength\":1,\"maxLength\":512,\"pattern\":\"^[^\\\\u0000-\\\\u001f\\\\u007f]+$\"}"
+    | PersonValueKind.email => "{\"type\":\"string\",\"maxLength\":254,\"pattern\":\"^[A-Za-z0-9._\\\\x25+-]+@[A-Za-z0-9-]+(\\\\.[A-Za-z0-9-]+)+$\"}"
+    | PersonValueKind.telephone => "{\"type\":\"string\",\"pattern\":\"^\\\\+?[0-9 ()-]{3,32}$\"}"
+    | PersonValueKind.uri => "{\"type\":\"string\",\"maxLength\":512,\"pattern\":\"^(https://|http://|mailto:)[!-~]+$\"}"
+    | PersonValueKind.date => "{\"type\":\"string\",\"pattern\":\"^[0-9]{4}-[0-9]{2}-[0-9]{2}$\"}"
+    | PersonValueKind.dateTime => "{\"type\":\"string\",\"pattern\":\"^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2})?(Z|[+-][0-9]{2}:[0-9]{2})$\"}"
+    | PersonValueKind.reference => "{\"type\":\"string\",\"pattern\":\"^[a-z0-9-]{1,32}$\"}")
+}
+
+definition{
+  name: personLabelName,
+  parameters: [label : Nat],
+  result: String,
+  body: (if (label =? 0) then "public" else (if (label =? 1) then "internal" else (if (label =? 2) then "confidential" else "restricted")))
+}
+
+definition{
+  name: personDetectorName,
+  parameters: [detector : Nat],
+  result: String,
+  body: (if (detector =? 0) then "none" else (if (detector =? 1) then "pci" else (if (detector =? 2) then "phi" else (if (detector =? 3) then "credential" else "special"))))
+}
+
+definition{
+  name: personPropertyName,
+  parameters: [index : Nat],
+  result: String,
+  body: (if (index =? 0) then "name" else (if (index =? 1) then "givenName" else (if (index =? 2) then "familyName" else (if (index =? 3) then "email" else (if (index =? 4) then "telephone" else (if (index =? 5) then "birthDate" else (if (index =? 6) then "nationality" else (if (index =? 7) then "address" else (if (index =? 8) then "homeLocation" else (if (index =? 9) then "contactPoint" else (if (index =? 10) then "jobTitle" else (if (index =? 11) then "worksFor" else (if (index =? 12) then "affiliation" else (if (index =? 13) then "alumniOf" else (if (index =? 14) then "hasOccupation" else (if (index =? 15) then "hasCredential" else (if (index =? 16) then "knowsAbout" else (if (index =? 17) then "knowsLanguage" else (if (index =? 18) then "url" else (if (index =? 19) then "sameAs" else (if (index =? 20) then "knows" else (if (index =? 21) then "healthCondition" else (if (index =? 22) then "contactType" else (if (index =? 23) then "email" else (if (index =? 24) then "telephone" else (if (index =? 25) then "availableLanguage" else (if (index =? 26) then "streetAddress" else (if (index =? 27) then "postalCode" else (if (index =? 28) then "addressLocality" else (if (index =? 29) then "addressRegion" else (if (index =? 30) then "addressCountry" else (if (index =? 31) then "name" else (if (index =? 32) then "url" else (if (index =? 33) then "email" else (if (index =? 34) then "address" else (if (index =? 35) then "name" else (if (index =? 36) then "occupationLocation" else (if (index =? 37) then "name" else (if (index =? 38) then "credentialCategory" else (if (index =? 39) then "recognizedBy" else (if (index =? 40) then "expires" else (if (index =? 41) then "name" else (if (index =? 42) then "startDate" else (if (index =? 43) then "endDate" else (if (index =? 44) then "location" else (if (index =? 45) then "organizer" else (if (index =? 46) then "attendee" else (if (index =? 47) then "url" else (if (index =? 48) then "name" else (if (index =? 49) then "address" else (if (index =? 50) then "sender" else (if (index =? 51) then "recipient" else (if (index =? 52) then "dateSent" else (if (index =? 53) then "headline" else (if (index =? 54) then "text" else (if (index =? 55) then "name" else (if (index =? 56) then "url" else (if (index =? 57) then "author" else (if (index =? 58) then "datePublished" else (if (index =? 59) then "name" else (if (index =? 60) then "provider" else (if (index =? 61) then "paymentDueDate" else "totalPaymentDue"))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: personPropertyPhrase,
+  parameters: [index : Nat],
+  result: String,
+  body: (if (index =? 0) then "name" else (if (index =? 1) then "given name" else (if (index =? 2) then "family name" else (if (index =? 3) then "email" else (if (index =? 4) then "telephone" else (if (index =? 5) then "birth date" else (if (index =? 6) then "nationality" else (if (index =? 7) then "address" else (if (index =? 8) then "home" else (if (index =? 9) then "contact point" else (if (index =? 10) then "job title" else (if (index =? 11) then "employer" else (if (index =? 12) then "affiliation" else (if (index =? 13) then "alma mater" else (if (index =? 14) then "occupation" else (if (index =? 15) then "credential" else (if (index =? 16) then "expertise" else (if (index =? 17) then "language" else (if (index =? 18) then "website" else (if (index =? 19) then "profile" else (if (index =? 20) then "acquaintance" else (if (index =? 21) then "health condition" else (if (index =? 22) then "type" else (if (index =? 23) then "email" else (if (index =? 24) then "telephone" else (if (index =? 25) then "language" else (if (index =? 26) then "street" else (if (index =? 27) then "postal code" else (if (index =? 28) then "city" else (if (index =? 29) then "region" else (if (index =? 30) then "country" else (if (index =? 31) then "name" else (if (index =? 32) then "website" else (if (index =? 33) then "email" else (if (index =? 34) then "address" else (if (index =? 35) then "name" else (if (index =? 36) then "location" else (if (index =? 37) then "name" else (if (index =? 38) then "category" else (if (index =? 39) then "issuer" else (if (index =? 40) then "expiry" else (if (index =? 41) then "name" else (if (index =? 42) then "start" else (if (index =? 43) then "end" else (if (index =? 44) then "location" else (if (index =? 45) then "organizer" else (if (index =? 46) then "attendee" else (if (index =? 47) then "link" else (if (index =? 48) then "name" else (if (index =? 49) then "address" else (if (index =? 50) then "sender" else (if (index =? 51) then "recipient" else (if (index =? 52) then "sent" else (if (index =? 53) then "headline" else (if (index =? 54) then "body" else (if (index =? 55) then "title" else (if (index =? 56) then "link" else (if (index =? 57) then "author" else (if (index =? 58) then "published" else (if (index =? 59) then "name" else (if (index =? 60) then "provider" else (if (index =? 61) then "due" else "total"))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: personPropertyRange,
+  parameters: [index : Nat],
+  result: String,
+  body: (if (index =? 0) then "Text" else (if (index =? 1) then "Text" else (if (index =? 2) then "Text" else (if (index =? 3) then "Text" else (if (index =? 4) then "Text" else (if (index =? 5) then "Date" else (if (index =? 6) then "Country" else (if (index =? 7) then "PostalAddress" else (if (index =? 8) then "Place" else (if (index =? 9) then "ContactPoint" else (if (index =? 10) then "Text" else (if (index =? 11) then "Organization" else (if (index =? 12) then "Organization" else (if (index =? 13) then "Organization" else (if (index =? 14) then "Occupation" else (if (index =? 15) then "EducationalOccupationalCredential" else (if (index =? 16) then "Text" else (if (index =? 17) then "Language" else (if (index =? 18) then "URL" else (if (index =? 19) then "URL" else (if (index =? 20) then "Person" else (if (index =? 21) then "MedicalCondition" else (if (index =? 22) then "Text" else (if (index =? 23) then "Text" else (if (index =? 24) then "Text" else (if (index =? 25) then "Language" else (if (index =? 26) then "Text" else (if (index =? 27) then "Text" else (if (index =? 28) then "Text" else (if (index =? 29) then "Text" else (if (index =? 30) then "Country" else (if (index =? 31) then "Text" else (if (index =? 32) then "URL" else (if (index =? 33) then "Text" else (if (index =? 34) then "PostalAddress" else (if (index =? 35) then "Text" else (if (index =? 36) then "Place" else (if (index =? 37) then "Text" else (if (index =? 38) then "Text" else (if (index =? 39) then "Organization" else (if (index =? 40) then "Date" else (if (index =? 41) then "Text" else (if (index =? 42) then "DateTime" else (if (index =? 43) then "DateTime" else (if (index =? 44) then "Place" else (if (index =? 45) then "Person" else (if (index =? 46) then "Person" else (if (index =? 47) then "URL" else (if (index =? 48) then "Text" else (if (index =? 49) then "PostalAddress" else (if (index =? 50) then "Person" else (if (index =? 51) then "Person" else (if (index =? 52) then "DateTime" else (if (index =? 53) then "Text" else (if (index =? 54) then "Text" else (if (index =? 55) then "Text" else (if (index =? 56) then "URL" else (if (index =? 57) then "Person" else (if (index =? 58) then "Date" else (if (index =? 59) then "Text" else (if (index =? 60) then "Organization" else (if (index =? 61) then "Date" else "MonetaryAmount"))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: personProperties,
+  parameters: [],
+  result: (List PersonProperty),
+  body: (cons (record PersonProperty {index := 0, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 1, detector := 0}) (cons (record PersonProperty {index := 1, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 1, detector := 0}) (cons (record PersonProperty {index := 2, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 1, detector := 0}) (cons (record PersonProperty {index := 3, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.email), label := 2, detector := 0}) (cons (record PersonProperty {index := 4, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.telephone), label := 2, detector := 0}) (cons (record PersonProperty {index := 5, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.date), label := 3, detector := 0}) (cons (record PersonProperty {index := 6, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 7, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 8, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 9, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 10, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 0, detector := 0}) (cons (record PersonProperty {index := 11, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 0, detector := 0}) (cons (record PersonProperty {index := 12, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 0, detector := 0}) (cons (record PersonProperty {index := 13, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 0, detector := 0}) (cons (record PersonProperty {index := 14, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 0, detector := 0}) (cons (record PersonProperty {index := 15, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 1, detector := 0}) (cons (record PersonProperty {index := 16, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 0, detector := 0}) (cons (record PersonProperty {index := 17, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 0, detector := 0}) (cons (record PersonProperty {index := 18, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.uri), label := 0, detector := 0}) (cons (record PersonProperty {index := 19, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.uri), label := 0, detector := 0}) (cons (record PersonProperty {index := 20, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 21, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 3, detector := 2}) (cons (record PersonProperty {index := 22, facet := (ctor PersonFacet.contactPoint), kind := (ctor PersonValueKind.text), label := 1, detector := 0}) (cons (record PersonProperty {index := 23, facet := (ctor PersonFacet.contactPoint), kind := (ctor PersonValueKind.email), label := 2, detector := 0}) (cons (record PersonProperty {index := 24, facet := (ctor PersonFacet.contactPoint), kind := (ctor PersonValueKind.telephone), label := 2, detector := 0}) (cons (record PersonProperty {index := 25, facet := (ctor PersonFacet.contactPoint), kind := (ctor PersonValueKind.text), label := 1, detector := 0}) (cons (record PersonProperty {index := 26, facet := (ctor PersonFacet.postalAddress), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 27, facet := (ctor PersonFacet.postalAddress), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 28, facet := (ctor PersonFacet.postalAddress), kind := (ctor PersonValueKind.text), label := 1, detector := 0}) (cons (record PersonProperty {index := 29, facet := (ctor PersonFacet.postalAddress), kind := (ctor PersonValueKind.text), label := 1, detector := 0}) (cons (record PersonProperty {index := 30, facet := (ctor PersonFacet.postalAddress), kind := (ctor PersonValueKind.text), label := 1, detector := 0}) (cons (record PersonProperty {index := 31, facet := (ctor PersonFacet.organization), kind := (ctor PersonValueKind.text), label := 0, detector := 0}) (cons (record PersonProperty {index := 32, facet := (ctor PersonFacet.organization), kind := (ctor PersonValueKind.uri), label := 0, detector := 0}) (cons (record PersonProperty {index := 33, facet := (ctor PersonFacet.organization), kind := (ctor PersonValueKind.email), label := 1, detector := 0}) (cons (record PersonProperty {index := 34, facet := (ctor PersonFacet.organization), kind := (ctor PersonValueKind.reference), label := 1, detector := 0}) (cons (record PersonProperty {index := 35, facet := (ctor PersonFacet.occupation), kind := (ctor PersonValueKind.text), label := 0, detector := 0}) (cons (record PersonProperty {index := 36, facet := (ctor PersonFacet.occupation), kind := (ctor PersonValueKind.reference), label := 1, detector := 0}) (cons (record PersonProperty {index := 37, facet := (ctor PersonFacet.credential), kind := (ctor PersonValueKind.text), label := 1, detector := 0}) (cons (record PersonProperty {index := 38, facet := (ctor PersonFacet.credential), kind := (ctor PersonValueKind.text), label := 1, detector := 0}) (cons (record PersonProperty {index := 39, facet := (ctor PersonFacet.credential), kind := (ctor PersonValueKind.reference), label := 1, detector := 0}) (cons (record PersonProperty {index := 40, facet := (ctor PersonFacet.credential), kind := (ctor PersonValueKind.date), label := 1, detector := 0}) (cons (record PersonProperty {index := 41, facet := (ctor PersonFacet.event), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 42, facet := (ctor PersonFacet.event), kind := (ctor PersonValueKind.dateTime), label := 2, detector := 0}) (cons (record PersonProperty {index := 43, facet := (ctor PersonFacet.event), kind := (ctor PersonValueKind.dateTime), label := 2, detector := 0}) (cons (record PersonProperty {index := 44, facet := (ctor PersonFacet.event), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 45, facet := (ctor PersonFacet.event), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 46, facet := (ctor PersonFacet.event), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 47, facet := (ctor PersonFacet.event), kind := (ctor PersonValueKind.uri), label := 2, detector := 3}) (cons (record PersonProperty {index := 48, facet := (ctor PersonFacet.place), kind := (ctor PersonValueKind.text), label := 1, detector := 0}) (cons (record PersonProperty {index := 49, facet := (ctor PersonFacet.place), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 50, facet := (ctor PersonFacet.emailMessage), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 51, facet := (ctor PersonFacet.emailMessage), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 52, facet := (ctor PersonFacet.emailMessage), kind := (ctor PersonValueKind.dateTime), label := 2, detector := 0}) (cons (record PersonProperty {index := 53, facet := (ctor PersonFacet.emailMessage), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 54, facet := (ctor PersonFacet.emailMessage), kind := (ctor PersonValueKind.text), label := 3, detector := 0}) (cons (record PersonProperty {index := 55, facet := (ctor PersonFacet.creativeWork), kind := (ctor PersonValueKind.text), label := 0, detector := 0}) (cons (record PersonProperty {index := 56, facet := (ctor PersonFacet.creativeWork), kind := (ctor PersonValueKind.uri), label := 0, detector := 0}) (cons (record PersonProperty {index := 57, facet := (ctor PersonFacet.creativeWork), kind := (ctor PersonValueKind.reference), label := 0, detector := 0}) (cons (record PersonProperty {index := 58, facet := (ctor PersonFacet.creativeWork), kind := (ctor PersonValueKind.date), label := 0, detector := 0}) (cons (record PersonProperty {index := 59, facet := (ctor PersonFacet.medicalCondition), kind := (ctor PersonValueKind.text), label := 3, detector := 2}) (cons (record PersonProperty {index := 60, facet := (ctor PersonFacet.invoice), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 61, facet := (ctor PersonFacet.invoice), kind := (ctor PersonValueKind.date), label := 2, detector := 0}) (cons (record PersonProperty {index := 62, facet := (ctor PersonFacet.invoice), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (nil PersonProperty))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: personSchemaName,
+  parameters: [schema : PersonSchema],
+  result: String,
+  body: (match schema
+    | PersonSchema.utterance => "utterance"
+    | PersonSchema.prose => "prose"
+    | PersonSchema.claim => "claim"
+    | PersonSchema.observation => "observation")
+}
+
+definition{
+  name: personSchemaDescription,
+  parameters: [schema : PersonSchema],
+  result: String,
+  body: (match schema
+    | PersonSchema.utterance => "One thing the owner said or wrote, in natural language."
+    | PersonSchema.prose => "One controlled prose sentence a language model proposed for an utterance."
+    | PersonSchema.claim => "One structured claim the model read from a prose sentence."
+    | PersonSchema.observation => "Claims an import adapter observed in one message or calendar entry.")
+}
+
+definition{
+  name: personSchemaOf,
+  parameters: [text : String],
+  result: (Option PersonSchema),
+  body: (if (prim equal text "utterance" : Bool) then (ctor Option.some [PersonSchema] (ctor PersonSchema.utterance)) else (if (prim equal text "prose" : Bool) then (ctor Option.some [PersonSchema] (ctor PersonSchema.prose)) else (if (prim equal text "claim" : Bool) then (ctor Option.some [PersonSchema] (ctor PersonSchema.claim)) else (if (prim equal text "observation" : Bool) then (ctor Option.some [PersonSchema] (ctor PersonSchema.observation)) else (ctor Option.none [PersonSchema])))))
+}
+
+definition{
+  name: personFrameTypeName,
+  parameters: [frame : PersonFrameKind],
+  result: String,
+  body: (match frame
+    | PersonFrameKind.utteranceReceived => "foundation.person.v1.utterance.received"
+    | PersonFrameKind.proseProposed => "foundation.person.v1.prose.proposed"
+    | PersonFrameKind.claimStated => "foundation.person.v1.claim.stated"
+    | PersonFrameKind.claimConfirmed => "foundation.person.v1.claim.confirmed"
+    | PersonFrameKind.claimRejected => "foundation.person.v1.claim.rejected"
+    | PersonFrameKind.mailObserved => "foundation.person.v1.mail.observed"
+    | PersonFrameKind.calendarObserved => "foundation.person.v1.calendar.observed")
+}
+
+definition{
+  name: personFrameKey,
+  parameters: [frame : PersonFrameKind],
+  result: String,
+  body: (match frame
+    | PersonFrameKind.utteranceReceived => "utteranceReceived"
+    | PersonFrameKind.proseProposed => "proseProposed"
+    | PersonFrameKind.claimStated => "claimStated"
+    | PersonFrameKind.claimConfirmed => "claimConfirmed"
+    | PersonFrameKind.claimRejected => "claimRejected"
+    | PersonFrameKind.mailObserved => "mailObserved"
+    | PersonFrameKind.calendarObserved => "calendarObserved")
+}
+
+definition{
+  name: personFrameSummary,
+  parameters: [frame : PersonFrameKind],
+  result: String,
+  body: (match frame
+    | PersonFrameKind.utteranceReceived => "The owner said or wrote something in natural language."
+    | PersonFrameKind.proseProposed => "A language model turned an utterance into one controlled prose sentence."
+    | PersonFrameKind.claimStated => "The model read a prose sentence into one structured claim."
+    | PersonFrameKind.claimConfirmed => "The owner confirmed a claim."
+    | PersonFrameKind.claimRejected => "The owner rejected a claim."
+    | PersonFrameKind.mailObserved => "A mail adapter observed claims in one message."
+    | PersonFrameKind.calendarObserved => "A calendar adapter observed claims in one calendar entry.")
+}
+
+definition{
+  name: personFrameData,
+  parameters: [frame : PersonFrameKind],
+  result: PersonSchema,
+  body: (match frame
+    | PersonFrameKind.utteranceReceived => (ctor PersonSchema.utterance)
+    | PersonFrameKind.proseProposed => (ctor PersonSchema.prose)
+    | PersonFrameKind.claimStated => (ctor PersonSchema.claim)
+    | PersonFrameKind.claimConfirmed => (ctor PersonSchema.claim)
+    | PersonFrameKind.claimRejected => (ctor PersonSchema.claim)
+    | PersonFrameKind.mailObserved => (ctor PersonSchema.observation)
+    | PersonFrameKind.calendarObserved => (ctor PersonSchema.observation))
+}
+
+definition{
+  name: personFrameOf,
+  parameters: [text : String],
+  result: (Option PersonFrameKind),
+  body: (if (prim equal text "foundation.person.v1.utterance.received" : Bool) then (ctor Option.some [PersonFrameKind] (ctor PersonFrameKind.utteranceReceived)) else (if (prim equal text "foundation.person.v1.prose.proposed" : Bool) then (ctor Option.some [PersonFrameKind] (ctor PersonFrameKind.proseProposed)) else (if (prim equal text "foundation.person.v1.claim.stated" : Bool) then (ctor Option.some [PersonFrameKind] (ctor PersonFrameKind.claimStated)) else (if (prim equal text "foundation.person.v1.claim.confirmed" : Bool) then (ctor Option.some [PersonFrameKind] (ctor PersonFrameKind.claimConfirmed)) else (if (prim equal text "foundation.person.v1.claim.rejected" : Bool) then (ctor Option.some [PersonFrameKind] (ctor PersonFrameKind.claimRejected)) else (if (prim equal text "foundation.person.v1.mail.observed" : Bool) then (ctor Option.some [PersonFrameKind] (ctor PersonFrameKind.mailObserved)) else (if (prim equal text "foundation.person.v1.calendar.observed" : Bool) then (ctor Option.some [PersonFrameKind] (ctor PersonFrameKind.calendarObserved)) else (ctor Option.none [PersonFrameKind]))))))))
+}
+
+definition{
+  name: personFrames,
+  parameters: [],
+  result: (List PersonFrameKind),
+  body: (cons (ctor PersonFrameKind.utteranceReceived) (cons (ctor PersonFrameKind.proseProposed) (cons (ctor PersonFrameKind.claimStated) (cons (ctor PersonFrameKind.claimConfirmed) (cons (ctor PersonFrameKind.claimRejected) (cons (ctor PersonFrameKind.mailObserved) (cons (ctor PersonFrameKind.calendarObserved) (nil PersonFrameKind))))))))
+}
+
+definition{
+  name: personSchemas,
+  parameters: [],
+  result: (List PersonSchema),
+  body: (cons (ctor PersonSchema.utterance) (cons (ctor PersonSchema.prose) (cons (ctor PersonSchema.claim) (cons (ctor PersonSchema.observation) (nil PersonSchema)))))
+}
+
+definition{
+  name: personSchemaBase,
+  parameters: [],
+  result: String,
+  body: "https://afflom.github.io/me/schema/person/v1/"
+}
+
+definition{
+  name: personSchemaUri,
+  parameters: [schema : PersonSchema],
+  result: String,
+  body: (prim join (cons (personSchemaBase) (cons (personSchemaName schema) (cons ".json" (nil String)))) "" : String),
+  axioms: [propext]
+}
+
+definition{
+  name: personFrameUri,
+  parameters: [frame : PersonFrameKind],
+  result: String,
+  body: (prim join (cons (personSchemaBase) (cons "frame/" (cons (personFrameTypeName frame) (cons ".json" (nil String))))) "" : String),
+  axioms: [propext]
+}
+
+definition{
+  name: personQuoted,
+  parameters: [text : String],
+  result: String,
+  body: (prim join (cons "\"" (cons text (cons "\"" (nil String)))) "" : String),
+  axioms: [propext]
+}
+
+definition{
+  name: personLabelEnum,
+  parameters: [],
+  result: String,
+  body: (prim join (cons "[" (cons (personQuoted (personLabelName 0)) (cons "," (cons (personQuoted (personLabelName 1)) (cons "," (cons (personQuoted (personLabelName 2)) (cons "," (cons (personQuoted (personLabelName 3)) (cons "]" (nil String)))))))))) "" : String),
+  axioms: [propext]
+}
+
+definition{
+  name: personDetectorEnum,
+  parameters: [],
+  result: String,
+  body: (prim join (cons "[" (cons (personQuoted (personDetectorName 0)) (cons "," (cons (personQuoted (personDetectorName 1)) (cons "," (cons (personQuoted (personDetectorName 2)) (cons "," (cons (personQuoted (personDetectorName 3)) (cons "," (cons (personQuoted (personDetectorName 4)) (cons "]" (nil String)))))))))))) "" : String),
+  axioms: [propext]
+}
+
+definition{
+  name: personFacetTypesFrom,
+  parameters: [items : (List PersonFacet)],
+  result: String,
+  body: (match items
+    | List.nil => ""
+    | List.cons head rest => (match rest
+      | List.nil => (personQuoted (personFacetType head))
+      | List.cons next more => (prim join (cons (personQuoted (personFacetType head)) (cons "," (cons (personFacetTypesFrom rest) (nil String)))) "" : String))),
+  axioms: [propext],
+  recursive_argument: items
+}
+
+definition{
+  name: personSubjectSchema,
+  parameters: [],
+  result: String,
+  body: "{\"type\":\"string\",\"pattern\":\"^[a-z0-9-]{1,32}$\"}"
+}
+
+definition{
+  name: personBranch,
+  parameters: [item : PersonProperty],
+  result: String,
+  body: (prim join (cons "{\"properties\":{\"facet\":{\"const\":\"" (cons (personFacetType (project item facet)) (cons "\"},\"property\":{\"const\":\"" (cons (personPropertyName (project item index)) (cons "\"},\"label\":{\"const\":\"" (cons (personLabelName (project item label)) (cons "\"},\"detector\":{\"const\":\"" (cons (personDetectorName (project item detector)) (cons "\"},\"value\":" (cons (personKindSchema (project item kind)) (cons (if ((personFacetNumber (project item facet)) =? 0) then "" else ",\"subject\":{\"not\":{\"const\":\"owner\"}}") (cons "}}" (nil String))))))))))))) "" : String),
+  axioms: [propext]
+}
+
+definition{
+  name: personBranchesFrom,
+  parameters: [items : (List PersonProperty)],
+  result: String,
+  body: (match items
+    | List.nil => ""
+    | List.cons head rest => (match rest
+      | List.nil => (personBranch head)
+      | List.cons next more => (prim join (cons (personBranch head) (cons "," (cons (personBranchesFrom rest) (nil String)))) "" : String))),
+  axioms: [propext],
+  recursive_argument: items
+}
+
+definition{
+  name: personSchemaHead,
+  parameters: [schema : PersonSchema],
+  result: String,
+  body: (prim join (cons "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"$id\":\"" (cons (personSchemaUri schema) (cons "\",\"title\":\"" (cons (personSchemaName schema) (cons "\",\"description\":\"" (cons (personSchemaDescription schema) (cons "\",\"type\":\"object\"" (nil String)))))))) "" : String),
+  axioms: [propext]
+}
+
+definition{
+  name: personSchemaDoc,
+  parameters: [schema : PersonSchema],
+  result: String,
+  body: (prim join (cons (personSchemaHead schema) (cons (match schema
+    | PersonSchema.utterance => ",\"required\":[\"text\",\"channel\"],\"additionalProperties\":false,\"properties\":{\"text\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":4096},\"channel\":{\"enum\":[\"typed\",\"spoken\"]}}}"
+    | PersonSchema.prose => ",\"required\":[\"prose\",\"mode\",\"model\",\"cause\"],\"additionalProperties\":false,\"properties\":{\"prose\":{\"type\":\"string\",\"maxLength\":1024,\"pattern\":\"^.+\\\\.$\"},\"mode\":{\"enum\":[\"compiled\",\"embedded\",\"routed\"]},\"model\":{\"type\":\"string\",\"pattern\":\"^[0-9a-f]{64}$\"},\"cause\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128}}}"
+    | PersonSchema.claim => (prim join (cons ",\"required\":[\"subject\",\"facet\",\"property\",\"label\",\"detector\",\"value\"],\"additionalProperties\":false,\"properties\":{\"subject\":" (cons (personSubjectSchema) (cons ",\"facet\":{\"enum\":[" (cons (personFacetTypesFrom (personFacets)) (cons "]},\"property\":{\"type\":\"string\"},\"label\":{\"enum\":" (cons (personLabelEnum) (cons "},\"detector\":{\"enum\":" (cons (personDetectorEnum) (cons "},\"value\":{\"type\":\"string\"}},\"oneOf\":[" (cons (personBranchesFrom (personProperties)) (cons "]}" (nil String)))))))))))) "" : String)
+    | PersonSchema.observation => (prim join (cons ",\"required\":[\"source\",\"claims\"],\"additionalProperties\":false,\"properties\":{\"source\":{\"enum\":[\"gmail\",\"google-calendar\",\"proton-mail\",\"proton-calendar\"]},\"claims\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":256,\"items\":{\"$ref\":\"" (cons (personSchemaUri (ctor PersonSchema.claim)) (cons "\"}}}}" (nil String)))) "" : String)) (nil String))) "" : String),
+  axioms: [propext]
+}
+
+definition{
+  name: personFrameDoc,
+  parameters: [frame : PersonFrameKind],
+  result: String,
+  body: (prim join (cons "{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"$id\":\"" (cons (personFrameUri frame) (cons "\",\"title\":\"" (cons (personFrameTypeName frame) (cons "\",\"description\":\"" (cons (personFrameSummary frame) (cons "\",\"type\":\"object\",\"required\":[\"specversion\",\"id\",\"source\",\"type\",\"time\",\"datacontenttype\",\"dataschema\",\"prismlabel\",\"data\"],\"additionalProperties\":false,\"properties\":{\"specversion\":{\"const\":\"1.0\"},\"id\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128},\"source\":{\"type\":\"string\",\"pattern\":\"^/prism/[a-z0-9-]+(/[a-z0-9-]+)*$\"},\"type\":{\"const\":\"" (cons (personFrameTypeName frame) (cons "\"},\"subject\":" (cons (personSubjectSchema) (cons ",\"time\":{\"type\":\"string\",\"format\":\"date-time\"},\"datacontenttype\":{\"const\":\"application/json\"},\"dataschema\":{\"const\":\"" (cons (personSchemaUri (personFrameData frame)) (cons "\"},\"prismlabel\":{\"enum\":" (cons (personLabelEnum) (cons "},\"data\":{\"$ref\":\"" (cons (personSchemaUri (personFrameData frame)) (cons "\"}}}" (nil String)))))))))))))))))) "" : String),
+  axioms: [propext]
+}
+
+definition{
+  name: personChannelsFrom,
+  parameters: [items : (List PersonFrameKind)],
+  result: String,
+  body: (match items
+    | List.nil => ""
+    | List.cons head rest => (match rest
+      | List.nil => (prim join (cons "\"" (cons (personFrameKey head) (cons "\":{\"address\":\"" (cons (personFrameTypeName head) (cons "\",\"messages\":{\"" (cons (personFrameKey head) (cons "\":{\"$ref\":\"#/components/messages/" (cons (personFrameKey head) (cons "\"}}}" (nil String)))))))))) "" : String)
+      | List.cons next more => (prim join (cons (prim join (cons "\"" (cons (personFrameKey head) (cons "\":{\"address\":\"" (cons (personFrameTypeName head) (cons "\",\"messages\":{\"" (cons (personFrameKey head) (cons "\":{\"$ref\":\"#/components/messages/" (cons (personFrameKey head) (cons "\"}}}" (nil String)))))))))) "" : String) (cons "," (cons (personChannelsFrom rest) (nil String)))) "" : String))),
+  axioms: [propext],
+  recursive_argument: items
+}
+
+definition{
+  name: personOperationsFrom,
+  parameters: [items : (List PersonFrameKind)],
+  result: String,
+  body: (match items
+    | List.nil => ""
+    | List.cons head rest => (match rest
+      | List.nil => (prim join (cons "\"" (cons (personFrameKey head) (cons "\":{\"action\":\"send\",\"channel\":{\"$ref\":\"#/channels/" (cons (personFrameKey head) (cons "\"},\"summary\":\"" (cons (personFrameSummary head) (cons "\"}" (nil String)))))))) "" : String)
+      | List.cons next more => (prim join (cons (prim join (cons "\"" (cons (personFrameKey head) (cons "\":{\"action\":\"send\",\"channel\":{\"$ref\":\"#/channels/" (cons (personFrameKey head) (cons "\"},\"summary\":\"" (cons (personFrameSummary head) (cons "\"}" (nil String)))))))) "" : String) (cons "," (cons (personOperationsFrom rest) (nil String)))) "" : String))),
+  axioms: [propext],
+  recursive_argument: items
+}
+
+definition{
+  name: personMessagesFrom,
+  parameters: [items : (List PersonFrameKind)],
+  result: String,
+  body: (match items
+    | List.nil => ""
+    | List.cons head rest => (match rest
+      | List.nil => (prim join (cons "\"" (cons (personFrameKey head) (cons "\":{\"name\":\"" (cons (personFrameTypeName head) (cons "\",\"contentType\":\"application/cloudevents+json\",\"summary\":\"" (cons (personFrameSummary head) (cons "\",\"payload\":{\"schemaFormat\":\"application/schema+json;version=draft-2020-12\",\"schema\":{\"$ref\":\"" (cons (personFrameUri head) (cons "\"}}}" (nil String)))))))))) "" : String)
+      | List.cons next more => (prim join (cons (prim join (cons "\"" (cons (personFrameKey head) (cons "\":{\"name\":\"" (cons (personFrameTypeName head) (cons "\",\"contentType\":\"application/cloudevents+json\",\"summary\":\"" (cons (personFrameSummary head) (cons "\",\"payload\":{\"schemaFormat\":\"application/schema+json;version=draft-2020-12\",\"schema\":{\"$ref\":\"" (cons (personFrameUri head) (cons "\"}}}" (nil String)))))))))) "" : String) (cons "," (cons (personMessagesFrom rest) (nil String)))) "" : String))),
+  axioms: [propext],
+  recursive_argument: items
+}
+
+definition{
+  name: personAsyncapiDoc,
+  parameters: [],
+  result: String,
+  body: (prim join (cons "{\"asyncapi\":\"3.0.0\",\"info\":{\"title\":\"Prism person frames\",\"version\":\"1.0.0\",\"description\":\"Every event the Prism records about its owner is one CloudEvents frame on one of these channels. The frames carry structure only; values exist at run time in the owner's browser.\"},\"defaultContentType\":\"application/cloudevents+json\",\"channels\":{" (cons (personChannelsFrom (personFrames)) (cons "},\"operations\":{" (cons (personOperationsFrom (personFrames)) (cons "},\"components\":{\"messages\":{" (cons (personMessagesFrom (personFrames)) (cons "}}}" (nil String)))))))) "" : String),
+  axioms: [propext]
+}
+
+definition{
+  name: personSchemaNamesFrom,
+  parameters: [items : (List PersonSchema)],
+  result: String,
+  body: (match items
+    | List.nil => ""
+    | List.cons head rest => (prim join (cons "," (cons (personQuoted (personSchemaName head)) (cons (personSchemaNamesFrom rest) (nil String)))) "" : String)),
+  axioms: [propext],
+  recursive_argument: items
+}
+
+definition{
+  name: personFrameNamesFrom,
+  parameters: [items : (List PersonFrameKind)],
+  result: String,
+  body: (match items
+    | List.nil => ""
+    | List.cons head rest => (prim join (cons "," (cons (personQuoted (personFrameTypeName head)) (cons (personFrameNamesFrom rest) (nil String)))) "" : String)),
+  axioms: [propext],
+  recursive_argument: items
+}
+
+definition{
+  name: personCatalog,
+  parameters: [],
+  result: String,
+  body: (prim join (cons "{\"schemas\":[\"asyncapi\"" (cons (personSchemaNamesFrom (personSchemas)) (cons (personFrameNamesFrom (personFrames)) (cons "]}" (nil String))))) "" : String),
+  axioms: [propext]
+}
+
+definition{
+  name: personByteAt,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some b => (ctor Option.some [Nat] (prim to_nat b : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personSliceOf,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: personStartsAt,
+  parameters: [s : Bytes, offset : Nat, prefix : Bytes],
+  result: Bool,
+  body: (match (prim slice s offset (prim length prefix : Nat) : (Option Bytes))
+    | Option.none => false
+    | Option.some part => (prim equal part prefix : Bool))
+}
+
+definition{name: personIsDigit, parameters: [d : Nat], result: Bool, body: ((47 <? d) && (d <? 58))}
+
+definition{
+  name: personIsLower,
+  parameters: [d : Nat],
+  result: Bool,
+  body: ((96 <? d) && (d <? 123))
+}
+
+definition{name: personIsUpper, parameters: [d : Nat], result: Bool, body: ((64 <? d) && (d <? 91))}
+
+definition{
+  name: personIsHandleByte,
+  parameters: [d : Nat],
+  result: Bool,
+  body: ((personIsLower d) || ((personIsDigit d) || (d =? 45)))
+}
+
+definition{
+  name: personIsTextByte,
+  parameters: [d : Nat],
+  result: Bool,
+  body: ((31 <? d) && (not (d =? 127)))
+}
+
+definition{
+  name: personIsLocalByte,
+  parameters: [d : Nat],
+  result: Bool,
+  body: ((personIsLower d) || ((personIsUpper d) || ((personIsDigit d) || ((d =? 46) || ((d =? 95) || ((d =? 37) || ((d =? 43) || (d =? 45))))))))
+}
+
+definition{
+  name: personIsLabelByte,
+  parameters: [d : Nat],
+  result: Bool,
+  body: ((personIsLower d) || ((personIsUpper d) || ((personIsDigit d) || (d =? 45))))
+}
+
+definition{
+  name: personIsPhoneByte,
+  parameters: [d : Nat],
+  result: Bool,
+  body: ((personIsDigit d) || ((d =? 32) || ((d =? 40) || ((d =? 41) || (d =? 45)))))
+}
+
+definition{
+  name: personIsUriByte,
+  parameters: [d : Nat],
+  result: Bool,
+  body: ((32 <? d) && (d <? 127))
+}
+
+definition{
+  name: personHandleFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (match (personByteAt s i)
+      | Option.none => true
+      | Option.some d => ((personIsHandleByte d) && (personHandleFrom s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: personTextFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (match (personByteAt s i)
+      | Option.none => true
+      | Option.some d => ((personIsTextByte d) && (personTextFrom s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: personLocalFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (match (personByteAt s i)
+      | Option.none => true
+      | Option.some d => ((personIsLocalByte d) && (personLocalFrom s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: personPhoneFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (match (personByteAt s i)
+      | Option.none => true
+      | Option.some d => ((personIsPhoneByte d) && (personPhoneFrom s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: personUriFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (match (personByteAt s i)
+      | Option.none => true
+      | Option.some d => ((personIsUriByte d) && (personUriFrom s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{name: personLen, parameters: [s : Bytes], result: Nat, body: (prim length s : Nat)}
+
+definition{
+  name: personHandleOk,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: ((1 <=? (personLen s)) && (((personLen s) <=? 32) && (personHandleFrom s 0 (personLen s)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personTextOk,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: ((1 <=? (personLen s)) && (((personLen s) <=? 512) && (personTextFrom s 0 (personLen s)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personFirstIndex,
+  parameters: [s : Bytes, i : Nat, target : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (match (personByteAt s i)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some d => (if (d =? target) then (ctor Option.some [Nat] i) else (personFirstIndex s (i + 1) target rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: personDomainFrom,
+  parameters: [s : Bytes, i : Nat, labelLength : Nat, dots : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => ((0 <? labelLength) && (0 <? dots))
+    | Nat.succ rest => (match (personByteAt s i)
+      | Option.none => ((0 <? labelLength) && (0 <? dots))
+      | Option.some d => (if (d =? 46) then ((0 <? labelLength) && (personDomainFrom s (i + 1) 0 (dots + 1) rest)) else ((personIsLabelByte d) && (personDomainFrom s (i + 1) (labelLength + 1) dots rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: personEmailOk,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: (if (254 <? (personLen s)) then false else (match (personFirstIndex s 0 64 (personLen s))
+    | Option.none => false
+    | Option.some at => ((0 <? at) && ((personLocalFrom (personSliceOf s 0 at) 0 at) && (personDomainFrom s (at + 1) 0 0 (personLen s)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personByteIs,
+  parameters: [s : Bytes, i : Nat, c : Nat],
+  result: Bool,
+  body: (match (personByteAt s i) | Option.none => false | Option.some d => (d =? c)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personDigitAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Bool,
+  body: (match (personByteAt s i) | Option.none => false | Option.some d => (personIsDigit d)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personPhoneOk,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: (let start : Nat := (if (personByteIs s 0 43) then 1 else 0); ((3 <=? (prim subtract (personLen s) start : Nat)) && (((prim subtract (personLen s) start : Nat) <=? 32) && (personPhoneFrom s start (personLen s))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personUriRestOk,
+  parameters: [s : Bytes, start : Nat],
+  result: Bool,
+  body: ((start <? (personLen s)) && (personUriFrom s start (personLen s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personUriOk,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: (if (512 <? (personLen s)) then false else (if (personStartsAt s 0 (prim utf8_encode "https://" : Bytes)) then (personUriRestOk s 8) else (if (personStartsAt s 0 (prim utf8_encode "http://" : Bytes)) then (personUriRestOk s 7) else (if (personStartsAt s 0 (prim utf8_encode "mailto:" : Bytes)) then (personUriRestOk s 7) else false)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personDateShape,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: ((personDigitAt s 0) && ((personDigitAt s 1) && ((personDigitAt s 2) && ((personDigitAt s 3) && ((personByteIs s 4 45) && ((personDigitAt s 5) && ((personDigitAt s 6) && ((personByteIs s 7 45) && ((personDigitAt s 8) && (personDigitAt s 9)))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personDateOk,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: (((personLen s) =? 10) && (personDateShape s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personZoneOk,
+  parameters: [s : Bytes, o : Nat],
+  result: Bool,
+  body: ((((personLen s) =? (o + 1)) && (personByteIs s o 90)) || (((personLen s) =? (o + 6)) && (((personByteIs s o 43) || (personByteIs s o 45)) && ((personDigitAt s (o + 1)) && ((personDigitAt s (o + 2)) && ((personByteIs s (o + 3) 58) && ((personDigitAt s (o + 4)) && (personDigitAt s (o + 5))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personDateTimeOk,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: ((personDateShape s) && ((personByteIs s 10 84) && ((personDigitAt s 11) && ((personDigitAt s 12) && ((personByteIs s 13 58) && ((personDigitAt s 14) && ((personDigitAt s 15) && (personZoneOk s (if ((personByteIs s 16 58) && ((personDigitAt s 17) && (personDigitAt s 18))) then 19 else 16))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personValueOk,
+  parameters: [kind : PersonValueKind, value : Bytes],
+  result: Bool,
+  body: (match kind
+    | PersonValueKind.text => (personTextOk value)
+    | PersonValueKind.email => (personEmailOk value)
+    | PersonValueKind.telephone => (personPhoneOk value)
+    | PersonValueKind.uri => (personUriOk value)
+    | PersonValueKind.date => (personDateOk value)
+    | PersonValueKind.dateTime => (personDateTimeOk value)
+    | PersonValueKind.reference => (personHandleOk value)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personEscapeOctet,
+  parameters: [d : Nat],
+  result: String,
+  body: (if (d =? 34) then "\\\"" else (if (d =? 92) then "\\\\" else ""))
+}
+
+definition{
+  name: personEscapeFrom,
+  parameters: [s : Bytes, start : Nat, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (personSliceOf s start (prim subtract i start : Nat))
+    | Nat.succ rest => (match (personByteAt s i)
+      | Option.none => (personSliceOf s start (prim subtract i start : Nat))
+      | Option.some d => (if (prim equal (personEscapeOctet d) "" : Bool) then (personEscapeFrom s start (i + 1) rest) else (prim append (personSliceOf s start (prim subtract i start : Nat)) (prim append (prim utf8_encode (personEscapeOctet d) : Bytes) (personEscapeFrom s (i + 1) (i + 1) rest) : Bytes) : Bytes)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: personClaimJson,
+  parameters: [subject : Bytes, item : PersonProperty, value : Bytes],
+  result: Bytes,
+  body: (prim append (prim utf8_encode "{\"subject\":\"" : Bytes) (prim append subject (prim append (prim utf8_encode (prim join (cons "\",\"facet\":\"" (cons (personFacetType (project item facet)) (cons "\",\"property\":\"" (cons (personPropertyName (project item index)) (cons "\",\"label\":\"" (cons (personLabelName (project item label)) (cons "\",\"detector\":\"" (cons (personDetectorName (project item detector)) (cons "\",\"value\":\"" (nil String)))))))))) "" : String) : Bytes) (prim append (personEscapeFrom value 0 0 (personLen value)) (prim utf8_encode "\"}" : Bytes) : Bytes) : Bytes) : Bytes) : Bytes),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personReadProperty,
+  parameters: [
+    body : Bytes,
+    offset : Nat,
+    facet : PersonFacet,
+    subject : Bytes,
+    items : (List PersonProperty)
+  ],
+  result: Bytes,
+  body: (match items
+    | List.nil => (prim utf8_encode "refused unknown-property" : Bytes)
+    | List.cons item rest => (let key : Bytes := (prim utf8_encode (prim join (cons (personPropertyPhrase (project item index)) (cons " is " (nil String))) "" : String) : Bytes); (if (((personFacetNumber (project item facet)) =? (personFacetNumber facet)) && (personStartsAt body offset key)) then (let value : Bytes := (personSliceOf body (offset + (personLen key)) (prim subtract (personLen body) (offset + (personLen key)) : Nat)); (if (personValueOk (project item kind) value) then (personClaimJson subject item value) else (prim utf8_encode (prim join (cons "refused malformed-value " (cons (personKindName (project item kind)) (nil String))) "" : String) : Bytes))) else (personReadProperty body offset facet subject rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: items
+}
+
+definition{
+  name: personFindPossessive,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (if (personStartsAt s i (prim utf8_encode "'s " : Bytes)) then (ctor Option.some [Nat] i) else (personFindPossessive s (i + 1) rest))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: personSubjectFrom,
+  parameters: [body : Bytes, items : (List PersonFacet)],
+  result: Bytes,
+  body: (match items
+    | List.nil => (prim utf8_encode "refused unknown-subject" : Bytes)
+    | List.cons facet rest => (let noun : Bytes := (prim utf8_encode (prim join (cons (personFacetNoun facet) (cons " " (nil String))) "" : String) : Bytes); (if (personStartsAt body 0 noun) then (match (personFindPossessive body (personLen noun) (personLen body))
+      | Option.none => (prim utf8_encode "refused unknown-subject" : Bytes)
+      | Option.some at => (let handle : Bytes := (personSliceOf body (personLen noun) (prim subtract at (personLen noun) : Nat)); (if ((personHandleOk handle) && (not (prim equal handle (prim utf8_encode "owner" : Bytes) : Bool))) then (personReadProperty body (at + 3) facet handle (personProperties)) else (prim utf8_encode "refused malformed-subject" : Bytes)))) else (personSubjectFrom body rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: items
+}
+
+definition{
+  name: personParseBody,
+  parameters: [body : Bytes],
+  result: Bytes,
+  body: (if (personStartsAt body 0 (prim utf8_encode "the owner's " : Bytes)) then (personReadProperty body 12 (ctor PersonFacet.person) (prim utf8_encode "owner" : Bytes) (personProperties)) else (personSubjectFrom body (personFacets))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personParseProse,
+  parameters: [sentence : Bytes],
+  result: Bytes,
+  body: (if ((personLen sentence) =? 0) then (prim utf8_encode "refused empty" : Bytes) else (if (1024 <? (personLen sentence)) then (prim utf8_encode "refused too-long" : Bytes) else (if (not (personByteIs sentence (prim subtract (personLen sentence) 1 : Nat) 46)) then (prim utf8_encode "refused no-final-period" : Bytes) else (personParseBody (personSliceOf sentence 0 (prim subtract (personLen sentence) 1 : Nat)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personSchemaNamed,
+  parameters: [name : Bytes, items : (List PersonSchema)],
+  result: (Option PersonSchema),
+  body: (match items
+    | List.nil => (ctor Option.none [PersonSchema])
+    | List.cons item rest => (if (prim equal name (prim utf8_encode (personSchemaName item) : Bytes) : Bool) then (ctor Option.some [PersonSchema] item) else (personSchemaNamed name rest))),
+  recursive_argument: items
+}
+
+definition{
+  name: personFrameNamed,
+  parameters: [name : Bytes, items : (List PersonFrameKind)],
+  result: (Option PersonFrameKind),
+  body: (match items
+    | List.nil => (ctor Option.none [PersonFrameKind])
+    | List.cons item rest => (if (prim equal name (prim utf8_encode (personFrameTypeName item) : Bytes) : Bool) then (ctor Option.some [PersonFrameKind] item) else (personFrameNamed name rest))),
+  recursive_argument: items
+}
+
+definition{
+  name: personSchemaAnswer,
+  parameters: [name : Bytes],
+  result: Bytes,
+  body: (match (personSchemaNamed name (personSchemas))
+    | Option.some schema => (prim utf8_encode (personSchemaDoc schema) : Bytes)
+    | Option.none => (match (personFrameNamed name (personFrames))
+      | Option.some frame => (prim utf8_encode (personFrameDoc frame) : Bytes)
+      | Option.none => (prim utf8_encode "refused unknown-schema" : Bytes))),
+  axioms: [propext]
+}
+
+definition{
+  name: personAnswer,
+  parameters: [request : Bytes],
+  result: Bytes,
+  body: (if (personStartsAt request 0 (prim utf8_encode "prose " : Bytes)) then (personParseProse (personSliceOf request 6 (prim subtract (personLen request) 6 : Nat))) else (if (personStartsAt request 0 (prim utf8_encode "schema " : Bytes)) then (personSchemaAnswer (personSliceOf request 7 (prim subtract (personLen request) 7 : Nat))) else (if (prim equal request (prim utf8_encode "asyncapi" : Bytes) : Bool) then (prim utf8_encode (personAsyncapiDoc) : Bytes) else (if (prim equal request (prim utf8_encode "catalog" : Bytes) : Bool) then (prim utf8_encode (personCatalog) : Bytes) else (prim utf8_encode "error invalid-request" : Bytes))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: personNumberedFrom,
+  parameters: [position : Nat, items : (List PersonProperty)],
+  result: Bool,
+  body: (match items
+    | List.nil => true
+    | List.cons item rest => (((project item index) =? position) && (personNumberedFrom (position + 1) rest))),
+  recursive_argument: items
+}
+
+definition{
+  name: personLabelsInRange,
+  parameters: [items : (List PersonProperty)],
+  result: Bool,
+  body: (match items
+    | List.nil => true
+    | List.cons item rest => (((project item label) <? 4) && (((project item detector) <? 5) && (personLabelsInRange rest)))),
+  recursive_argument: items
+}
+
+definition{
+  name: personDetectedRestricted,
+  parameters: [items : (List PersonProperty)],
+  result: Bool,
+  body: (match items
+    | List.nil => true
+    | List.cons item rest => (((not (((project item detector) =? 2) || ((project item detector) =? 4))) || ((project item label) =? 3)) && (personDetectedRestricted rest))),
+  recursive_argument: items
+}
+\end{semanticmodule}
+\end{lexlean}
