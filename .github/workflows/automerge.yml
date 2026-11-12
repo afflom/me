@@ -1,0 +1,48 @@
+# Every pull request from this repository merges itself once its required
+# checks pass: auto-merge is switched on when it opens, so no one has to ask
+# for the merge. A draft is left alone until it is marked ready. Nothing here
+# checks out or runs the pull request's code, so `pull_request_target` gives
+# it no more than the two API calls below.
+name: automerge
+
+on:
+  pull_request_target:
+    types: [opened, reopened, ready_for_review]
+
+permissions: {}
+
+jobs:
+  enable:
+    name: switch on auto-merge
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository
+      && !github.event.pull_request.draft
+      && github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Switch on auto-merge (merge commit, as the repository merges)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR: ${{ github.event.pull_request.node_id }}
+          NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          query='mutation($pr: ID!) { enablePullRequestAutoMerge(input: {pullRequestId: $pr, mergeMethod: MERGE}) { pullRequest { autoMergeRequest { enabledAt } } } }'
+          if out=$(gh api graphql -f query="$query" -f pr="$PR" 2>&1); then
+            echo "auto-merge is on for #$NUMBER: it merges when its required checks pass"
+            exit 0
+          fi
+          # GitHub refuses auto-merge only when the pull request could merge
+          # right now (no check is pending) or main requires no check at all.
+          # Neither is a failure of the pull request; say which, and stop.
+          printf '%s\n' "$out" >&2
+          if grep -qiE 'clean status|protected branch rules not configured|unstable status' <<<"$out"; then
+            echo "::notice::#$NUMBER: GitHub has nothing to wait for, so auto-merge is not needed ($out)"
+            exit 0
+          fi
+          exit 1

@@ -16,18 +16,25 @@ name: pages
 on:
   push:
     branches: [main]
+  # Every gate the deploy runs also runs on a pull request, so nothing merges
+  # that main cannot publish. Only a main push or a manual run on main deploys.
+  pull_request:
+  merge_group:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# Main deploys one at a time and is never cancelled; a newer push to a pull
+# request cancels its older run.
 concurrency:
-  group: pages
-  cancel-in-progress: false
+  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.event.pull_request.number) || (github.event_name == 'merge_group' && format('pages-mq-{0}', github.run_id)) || 'pages' }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
-    name: build and verify the holo, sign its provenance, assemble the page
+    # The check a pull request must pass: the same name on every event.
+    name: page / gates
     # The template repository publishes its try page instead (try-page.yml).
     if: github.repository != 'UOR-Foundation/template'
     runs-on: ubuntu-24.04
@@ -92,6 +99,9 @@ jobs:
           } >>"$GITHUB_OUTPUT"
       - name: Sign the holo's provenance as this repository's workflow
         id: attest
+        # Only a build that is published is signed. A pull request's page links
+        # its run instead, and is never deployed.
+        if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: ${{ steps.holo.outputs.path }}
@@ -113,7 +123,7 @@ jobs:
         env:
           HOLO: ${{ steps.holo.outputs.path }}
           FINGERPRINT: ${{ steps.holo.outputs.fingerprint }}
-          ATTESTATION_URL: ${{ steps.attest.outputs.attestation-url }}
+          ATTESTATION_URL: ${{ steps.attest.outputs.attestation-url || format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
         run: |
           set -euo pipefail
           cp "$HOLO" site/app.holo
@@ -131,9 +141,13 @@ jobs:
             writeFileSync("site/app.json", `${JSON.stringify(app, null, 2)}\n`);
           ' "$FINGERPRINT" "$ATTESTATION_URL"
           node bootstrap/page.mjs site
-          # R4's engine and weights, fetched from their pinned commit and
-          # served as SHA-256-named pieces under the 16 MiB limit (R4-01).
-          node bootstrap/r4-objects.mjs site
+          # Every pinned object set (R4's engine and weights, R4-01, and any
+          # other `bootstrap/*-objects.mjs`), fetched from its pinned commit and
+          # served as SHA-256-named pieces under the 16 MiB limit. A new set is
+          # served, and checked below, without editing this workflow.
+          for objects in bootstrap/*-objects.mjs; do
+            node "$objects" site
+          done
           node bootstrap/precache.mjs site
       - name: No personal data in the assembled page (PV-01)
         # The same gate `just vv` runs over the tracked tree, here over every
@@ -156,16 +170,26 @@ jobs:
           npm install --no-audit --no-fund --global playwright@1.56.1
           playwright install --with-deps chromium
           node bootstrap/screens.mjs site screens
-      - name: R4 runs in the browser from the pieces this page serves (R4-01)
+      # Every browser acceptance under test/ runs here, on every pull request
+      # and before every deploy: each `test/<suite>/run.mjs` (R4-01 and the
+      # rest) and every `*.test.mjs` (PG-01 and the rest). A new suite is in CI
+      # the moment it is committed; none runs only on someone's machine.
+      - name: Every browser acceptance under test/, from the pieces this page serves
         shell: bash
         run: |
           set -euo pipefail
-          NODE_PATH="$(npm root --global)" node test/r4/run.mjs
-      - name: The page keeps, refuses while halted and answers only through the app (PG-01)
-        shell: bash
-        run: |
-          set -euo pipefail
-          NODE_PATH="$(npm root --global)" node --test test/page/card.test.mjs
+          export NODE_PATH="$(npm root --global)"
+          shopt -s nullglob globstar
+          runners=(test/*/run.mjs)
+          suites=(test/**/*.test.mjs)
+          test ${#runners[@]} -gt 0
+          test ${#suites[@]} -gt 0
+          for runner in "${runners[@]}"; do
+            echo "::group::$runner"
+            node "$runner"
+            echo "::endgroup::"
+          done
+          node --test "${suites[@]}"
       - name: Keep the screens
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -174,8 +198,10 @@ jobs:
           path: screens
           if-no-files-found: ignore
       - name: Configure Pages
+        if: steps.attest.outcome == 'success'
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
       - name: Upload the page
+        if: steps.attest.outcome == 'success'
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:
           path: site
@@ -183,6 +209,7 @@ jobs:
   deploy:
     name: publish the page
     needs: build
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
