@@ -104,8 +104,8 @@ fn dest_ds_02() {
     );
     let card = read("site/card.mjs");
     assert!(
-        card.contains("mountDest($(\"me-dest\"), { line, halted });"),
-        "DS-02: the page mounts Destinations on the root guest"
+        card.contains("router = makeRouter({ line, halted, pace });"),
+        "DS-02: the page routes every outbound act through the destinations router on the root guest"
     );
     node_suite();
 }

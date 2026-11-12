@@ -7,7 +7,7 @@
 
 use std::path::PathBuf;
 
-/// `PG-01`: The page keeps, reads and answers only through the verified app: a fact is kept only when the Boundary and the vault allow it, nothing is kept while halted, and every check is the root's own answer
+/// `PG-01`: The page keeps, reads and answers only through the verified app: a note is kept at its domain's floor only when the Boundary and the vault allow it, nothing is kept while halted, and an outbound act is only drafted until the owner's Send
 #[test]
 fn page_pg_01() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -50,14 +50,99 @@ fn page_pg_01() {
     let test =
         std::fs::read_to_string(root.join("test/page/card.test.mjs")).expect("the browser test");
     for expected in [
-        "\"Kept.\"",
-        "\"Not kept: refuse.\"",
-        "\"deny\"",
-        "\"meets\"",
+        "settle(\"Kept\")",
+        "settle(\"Kept sealed\")",
+        "settle(\"Refused\")",
+        "settle(\"Ready to send\")",
     ] {
         assert!(
             test.contains(expected),
             "PG-01: the browser test must expect {expected}"
         );
+    }
+}
+
+/// `PG-02`: The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, and every visible word a name from the model
+#[test]
+fn page_pg_02() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .ancestors()
+        .nth(2)
+        .expect("crates/conformance is two below the root")
+        .to_path_buf();
+    let read = |path: &str| std::fs::read_to_string(root.join(path)).expect(path);
+
+    // The surface's files are what app/specs/surface/spec.json makes, and the
+    // generator refuses any visible word that is not a name.
+    let check = std::process::Command::new("python3")
+        .args(["-I", "tools/surface/gen.py", "--check"])
+        .current_dir(&root)
+        .output()
+        .expect("python3 runs the surface generator");
+    assert!(
+        check.status.success(),
+        "PG-02: the surface is stale or holds a word that is not a name: {}",
+        String::from_utf8_lossy(&check.stderr)
+    );
+
+    // Every guarantee binding the surface to the design model is in the
+    // proved project, by decide, so `prismpm verify` checks it in Lean.
+    let proofs = read("app/src/PrismSurfaceProofs.lex.tex");
+    for theorem in [
+        "surfaceEveryOwnerViewPlaced",
+        "surfacePlacesAreViews",
+        "surfaceOneHome",
+        "surfaceOneComposer",
+        "surfaceMenuByRole",
+        "surfaceActsInTheirRoles",
+        "surfaceNotesKeepTheFloor",
+        "surfaceFloorsAreTheDesign",
+        "surfaceEveryDomainNamed",
+        "surfaceEveryRoleNamed",
+        "surfaceEveryLabelNamed",
+        "surfaceEverySourceOneSetting",
+        "surfaceSettingsInGroups",
+        "surfaceNoEmptyGroup",
+    ] {
+        let at = proofs
+            .find(&format!("name: {theorem},"))
+            .unwrap_or_else(|| panic!("PG-02: {theorem} is not stated"));
+        let body = &proofs[at..];
+        let end = body.find("\n}").expect("a theorem block ends");
+        assert!(
+            body[..end].contains("parameters: [],") && body[..end].contains("proof: decide{}"),
+            "PG-02: {theorem} must be closed and proved by decide"
+        );
+    }
+    let project = read("app/lexlean.toml");
+    for entry in ["src/PrismSurface.lex.tex", "src/PrismSurfaceProofs.lex.tex"] {
+        assert!(
+            project.contains(&format!("\"{entry}\"")),
+            "PG-02: {entry} must be a proved entrypoint"
+        );
+    }
+
+    // The page draws the model's words and no words of its own.
+    let card = read("site/card.mjs");
+    assert!(
+        card.contains("from \"./surface/surface.mjs\""),
+        "PG-02: the page reads its places and words from the surface model"
+    );
+    for literal in [
+        "textContent: \"",
+        "textContent = \"",
+        "placeholder: \"",
+        "say(\"",
+        "name: \"",
+    ] {
+        let mut rest = card.as_str();
+        while let Some(at) = rest.find(literal) {
+            let after = &rest[at + literal.len()..];
+            assert!(
+                after.starts_with('"'),
+                "PG-02: site/card.mjs writes its own word after `{literal}`"
+            );
+            rest = after;
+        }
     }
 }

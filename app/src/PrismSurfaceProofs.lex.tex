@@ -1,0 +1,287 @@
+\begin{lexlean}{PrismSurfaceProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Vocab.V1.SchemaOrg}
+\importmodule{Foundation.Vocab.V1.Crosswalk}
+\importmodule{Foundation.Me.V1.Anchors}
+\importmodule{Foundation.Me.V1.Model}
+\importmodule{PrismSurface}
+\title{Prism surface guarantees}
+\begin{semanticmodule}
+definition{
+  name: surfaceStringCount,
+  parameters: [values : (List String)],
+  result: Nat,
+  body: (match values | List.nil => 0 | List.cons value rest => ((surfaceStringCount rest) + 1)),
+  recursive_argument: values
+}
+
+definition{
+  name: surfaceMember,
+  parameters: [wanted : Nat, values : (List Nat)],
+  result: Bool,
+  body: (match values
+    | List.nil => false
+    | List.cons value rest => ((value =? wanted) || (surfaceMember wanted rest))),
+  recursive_argument: values
+}
+
+definition{
+  name: surfaceSameNats,
+  parameters: [left : (List Nat), right : (List Nat)],
+  result: Bool,
+  body: (match left
+    | List.nil => (match right | List.nil => true | List.cons other more => false)
+    | List.cons value rest => (match right
+      | List.nil => false
+      | List.cons other more => ((value =? other) && (surfaceSameNats rest more)))),
+  recursive_argument: left
+}
+
+definition{
+  name: surfaceViewCount,
+  parameters: [view : Nat, places : (List PrismSurface::SurfacePlace)],
+  result: Nat,
+  body: (match places
+    | List.nil => 0
+    | List.cons place rest => (if ((project place view) =? view) then ((surfaceViewCount view rest) + 1) else (surfaceViewCount view rest))),
+  recursive_argument: places
+}
+
+definition{
+  name: surfaceHostCount,
+  parameters: [host : Nat, places : (List PrismSurface::SurfacePlace)],
+  result: Nat,
+  body: (match places
+    | List.nil => 0
+    | List.cons place rest => (if ((project place host) =? host) then ((surfaceHostCount host rest) + 1) else (surfaceHostCount host rest))),
+  recursive_argument: places
+}
+
+definition{
+  name: surfaceOwnerViewsPlaced,
+  parameters: [rows : (List Foundation.Me.V1.Model::DesignView)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => ((if ((project row audience) =? 0) then ((surfaceViewCount (project row index) (PrismSurface::surfacePlaces)) =? 1) else ((surfaceViewCount (project row index) (PrismSurface::surfacePlaces)) =? 0)) && (surfaceOwnerViewsPlaced rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: surfaceRowAgrees,
+  parameters: [
+    place : PrismSurface::SurfacePlace,
+    rows : (List Foundation.Me.V1.Model::DesignView)
+  ],
+  result: Bool,
+  body: (match rows
+    | List.nil => false
+    | List.cons row rest => (if ((project row index) =? (project place view)) then (((project row role) =? (project place role)) && (surfaceSameNats (project row domains) (project place domains))) else (surfaceRowAgrees place rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: surfacePlacesAgree,
+  parameters: [places : (List PrismSurface::SurfacePlace)],
+  result: Bool,
+  body: (match places
+    | List.nil => true
+    | List.cons place rest => ((surfaceRowAgrees place (Foundation.Me.V1.Model::designViews)) && (surfacePlacesAgree rest))),
+  recursive_argument: places
+}
+
+definition{
+  name: surfaceNavRoles,
+  parameters: [places : (List PrismSurface::SurfacePlace)],
+  result: (List Nat),
+  body: (match places
+    | List.nil => (nil Nat)
+    | List.cons place rest => (if ((project place host) =? 1) then (cons (project place role) (surfaceNavRoles rest)) else (surfaceNavRoles rest))),
+  recursive_argument: places
+}
+
+definition{
+  name: surfaceRunsContiguous,
+  parameters: [previous : Nat, seen : (List Nat), roles : (List Nat)],
+  result: Bool,
+  body: (match roles
+    | List.nil => true
+    | List.cons role rest => (if (role =? previous) then (surfaceRunsContiguous previous seen rest) else ((not (surfaceMember role seen)) && (surfaceRunsContiguous role (cons previous seen) rest)))),
+  recursive_argument: roles
+}
+
+definition{
+  name: surfaceActsSound,
+  parameters: [places : (List PrismSurface::SurfacePlace)],
+  result: Bool,
+  body: (match places
+    | List.nil => true
+    | List.cons place rest => (((not (surfaceMember (project place act) (PrismSurface::surfaceOutboundActs))) || ((((project place role) =? 1) || ((project place role) =? 2)) || ((project place role) =? 4))) && ((if ((project place act) =? 5) then ((project place host) =? 2) else (not ((project place host) =? 2))) && (surfaceActsSound rest)))),
+  recursive_argument: places
+}
+
+definition{
+  name: surfaceFirstOr,
+  parameters: [fallback : Nat, values : (List Nat)],
+  result: Nat,
+  body: (match values | List.nil => fallback | List.cons value rest => value)
+}
+
+definition{
+  name: surfaceNotesNeverPublic,
+  parameters: [places : (List PrismSurface::SurfacePlace)],
+  result: Bool,
+  body: (match places
+    | List.nil => true
+    | List.cons place rest => (((not ((project place act) =? 1)) || (1 <=? (Foundation.Me.V1.Model::designFloorOf (surfaceFirstOr 0 (project place domains))))) && (surfaceNotesNeverPublic rest))),
+  recursive_argument: places
+}
+
+definition{
+  name: surfaceSourceCount,
+  parameters: [source : Nat, settings : (List PrismSurface::SurfaceSetting)],
+  result: Nat,
+  body: (match settings
+    | List.nil => 0
+    | List.cons setting rest => (if ((project setting source) =? source) then ((surfaceSourceCount source rest) + 1) else (surfaceSourceCount source rest))),
+  recursive_argument: settings
+}
+
+definition{
+  name: surfaceSourcesSet,
+  parameters: [sources : (List Nat)],
+  result: Bool,
+  body: (match sources
+    | List.nil => true
+    | List.cons source rest => (((surfaceSourceCount source (PrismSurface::surfaceSettings)) =? 1) && (surfaceSourcesSet rest))),
+  recursive_argument: sources
+}
+
+definition{
+  name: surfaceGroupUsed,
+  parameters: [group : Nat, settings : (List PrismSurface::SurfaceSetting)],
+  result: Bool,
+  body: (match settings
+    | List.nil => false
+    | List.cons setting rest => (((project setting group) =? group) || (surfaceGroupUsed group rest))),
+  recursive_argument: settings
+}
+
+definition{
+  name: surfaceSettingsGrouped,
+  parameters: [settings : (List PrismSurface::SurfaceSetting)],
+  result: Bool,
+  body: (match settings
+    | List.nil => true
+    | List.cons setting rest => (((project setting group) <? (PrismSurface::surfaceGroupCount)) && (surfaceSettingsGrouped rest))),
+  recursive_argument: settings
+}
+
+definition{
+  name: surfaceGroupsUsed,
+  parameters: [],
+  result: Bool,
+  body: ((surfaceGroupUsed 0 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 1 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 2 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 3 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 4 (PrismSurface::surfaceSettings)) && true)))))
+}
+
+theorem{
+  name: surfaceEveryOwnerViewPlaced,
+  parameters: [],
+  statement: ((surfaceOwnerViewsPlaced (Foundation.Me.V1.Model::designViews)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfacePlacesAreViews,
+  parameters: [],
+  statement: ((surfacePlacesAgree (PrismSurface::surfacePlaces)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceOneHome,
+  parameters: [],
+  statement: ((surfaceHostCount 0 (PrismSurface::surfacePlaces)) = 1),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceOneComposer,
+  parameters: [],
+  statement: ((surfaceHostCount 2 (PrismSurface::surfacePlaces)) = 1),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceMenuByRole,
+  parameters: [],
+  statement: ((surfaceRunsContiguous 99 (nil Nat) (surfaceNavRoles (PrismSurface::surfacePlaces))) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceActsInTheirRoles,
+  parameters: [],
+  statement: ((surfaceActsSound (PrismSurface::surfacePlaces)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceNotesKeepTheFloor,
+  parameters: [],
+  statement: ((surfaceNotesNeverPublic (PrismSurface::surfacePlaces)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceFloorsAreTheDesign,
+  parameters: [],
+  statement: ((surfaceSameNats (PrismSurface::surfaceFloors) (Foundation.Me.V1.Model::designDomainFloors)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceEveryDomainNamed,
+  parameters: [],
+  statement: ((surfaceStringCount (PrismSurface::surfaceDomainNames)) = (Foundation.Me.V1.Model::designDomainCount)),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceEveryRoleNamed,
+  parameters: [],
+  statement: ((surfaceStringCount (PrismSurface::surfaceRoleNames)) = (Foundation.Me.V1.Model::designRoleCount)),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceEveryLabelNamed,
+  parameters: [],
+  statement: ((surfaceStringCount (PrismSurface::surfaceLabelNames)) = 4),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceEverySourceOneSetting,
+  parameters: [],
+  statement: ((surfaceSourcesSet (PrismSurface::surfaceRoutedSources)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceSettingsInGroups,
+  parameters: [],
+  statement: ((surfaceSettingsGrouped (PrismSurface::surfaceSettings)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceNoEmptyGroup,
+  parameters: [],
+  statement: ((surfaceGroupsUsed) = true),
+  proof: decide{}
+}
+\end{semanticmodule}
+\end{lexlean}

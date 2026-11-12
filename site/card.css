@@ -1,18 +1,43 @@
-/* The workspace is a stage the height of the screen and never scrolls; the
-   board-fit wrapper sizes a square board, so this surface takes its whole
-   box instead and scrolls inside it. Without paint containment the
-   scrolled content still counted toward the workspace height in Chromium. */
-.stage .board-fit > .me { width: 100%; max-width: 40rem; height: 100%; align-self: start; overflow-y: auto; overscroll-behavior: contain; contain: paint; }
-.me { display: flex; flex-direction: column; gap: var(--space-6); padding: var(--space-4) 0; }
-.me-sec { display: flex; flex-direction: column; gap: var(--space-2); }
-.me-sec[hidden] { display: none; }
-.me-sec h2 { margin: 0; font-weight: 500; }
-.me-note { margin: 0; font-size: var(--text-14); color: var(--muted-foreground); }
-.me-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: stretch; }
-.me-row > input, .me-row > textarea, .me-row > select {
-  flex: 1 1 12rem;
+/* The Prism's surface: places on the left, the open place beside them. The
+   stage never scrolls; the place scrolls inside its own box. Paint
+   containment keeps the scrolled content out of the workspace's height. */
+.lede:empty { display: none; }
+.stage .board-fit { place-items: stretch; }
+.stage .board-fit > .pr { width: 100%; height: 100%; max-width: none; }
+.pr { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: var(--space-6); min-height: 0; height: 100%; }
+
+.pr-nav { display: flex; flex-direction: column; gap: var(--space-3); min-height: 0; overflow-y: auto; scrollbar-width: none; padding-block: var(--space-1); }
+.pr-group { list-style: none; margin: 0; padding: 0 0 var(--space-3); display: flex; flex-direction: column; gap: 1px; border-bottom: var(--border-width) solid var(--border); }
+.pr-group:last-child { border-bottom: 0; }
+button.pr-go {
+  width: 100%;
+  min-height: 2.25rem;
+  padding: 0 var(--space-3);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: var(--text-14);
+  font-weight: 500;
+  text-align: start;
+  transition: background var(--duration) var(--ease), color var(--duration) var(--ease);
+}
+button.pr-go:hover { background: var(--accent); color: var(--foreground); }
+button.pr-go[aria-current="page"] { background: var(--secondary); color: var(--foreground); }
+
+.pr-place { min-width: 0; min-height: 0; overflow-y: auto; overscroll-behavior: contain; contain: paint; display: flex; flex-direction: column; gap: var(--space-4); max-width: 46rem; padding-bottom: var(--space-8); }
+.pr-top { display: flex; align-items: baseline; gap: var(--space-3); position: sticky; top: 0; z-index: 1; padding-block: var(--space-1) var(--space-2); background: var(--background); }
+.pr-top h2 { margin: 0; font-family: var(--font-display); font-size: var(--text-24); font-weight: 600; letter-spacing: var(--tracking-display); line-height: 1.2; }
+.pr-top h2:focus { outline: none; }
+.pr-count { font-family: var(--font-mono); font-size: var(--text-14); color: var(--muted-foreground); }
+
+.pr-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: stretch; }
+.pr-compose { display: flex; flex-direction: column; gap: var(--space-2); }
+.pr-row > input, .pr-row > textarea { flex: 1 1 12rem; }
+.pr input:not([type="checkbox"]):not([type="file"]), .pr textarea, .pr-ask textarea {
   min-width: 0;
-  min-height: 3rem;
+  min-height: 2.75rem;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-control);
   border: var(--border-width) solid var(--border);
@@ -20,24 +45,80 @@
   color: var(--foreground);
   font: inherit;
 }
-.me-row > select { flex: 0 1 auto; }
-.me-row > textarea { resize: vertical; }
-.me-row > input:focus-visible, .me-row > textarea:focus-visible, .me-row > select:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: var(--ring-offset); }
-.me-file { font-size: var(--text-14); display: inline-flex; align-items: center; min-height: 3rem; padding: 0 var(--space-4); border-radius: var(--radius-control); border: var(--border-width) solid var(--border); background: var(--secondary); color: var(--secondary-foreground); font-weight: 500; cursor: pointer; }
-.me-file:hover { background: var(--accent); }
-.me-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
-.me-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); }
-.me-controls .me-row { flex: 1 1 16rem; flex-wrap: nowrap; }
-.me-controls .me-row > input { font-family: var(--font-mono); font-size: var(--text-14); }
-.me-halt { display: inline-flex; gap: var(--space-2); align-items: center; min-height: 3rem; font-weight: 500; }
-.me-row > button { min-height: 3rem; }
-.me-halt input { width: 1.25rem; height: 1.25rem; accent-color: var(--destructive); }
-#me-out { white-space: pre-wrap; overflow-wrap: anywhere; }
-#me-out.good { color: var(--success); }
-#me-out.bad, #me-out.refuse { color: var(--destructive); }
-#me-out.warn { color: var(--warning); }
-#me-log > li { display: flex; justify-content: space-between; gap: var(--space-2); padding: var(--space-1) 0; font-size: var(--text-14); }
-#me-log .tag { font-family: var(--font-mono); color: var(--muted-foreground); }
-.me-dest pre { margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-mono); }
-.me-models .models-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: center; padding-block: var(--space-2); }
-.me-models .models-from { font-family: var(--font-mono); font-size: var(--text-14); overflow-wrap: anywhere; }
+.pr textarea, .pr-ask textarea { resize: vertical; }
+.pr input:focus-visible, .pr textarea:focus-visible, .pr-ask textarea:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: var(--ring-offset); }
+.pr .pr-row > button, .pr-compose button, .pr-setting button { min-height: 2.75rem; }
+.pr button.pr-primary { background: var(--primary); color: var(--primary-foreground); border-color: transparent; }
+.pr-preview { margin: 0; padding: var(--space-3); border-radius: var(--radius-control); background: var(--muted); font-family: var(--font-mono); font-size: var(--text-14); white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.pr-list { list-style: none; margin: 0; padding: 0; }
+.pr-item { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) minmax(0, 12rem); gap: var(--space-3); align-items: baseline; padding: var(--space-3) 0; border-top: var(--border-width) solid var(--border); }
+.pr-item:first-child { border-top: 0; }
+.pr-when { font-family: var(--font-mono); font-size: var(--text-14); color: var(--muted-foreground); }
+.pr-what { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.pr-who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-14); color: var(--muted-foreground); text-align: end; }
+.pr-sealed .pr-what { color: var(--muted-foreground); font-weight: 400; font-style: italic; }
+.pr-empty { padding: var(--space-6) 0; color: var(--muted-foreground); }
+
+.pr-settings { display: flex; flex-direction: column; gap: var(--space-6); }
+.pr-set h3 { margin: 0 0 var(--space-2); font-size: var(--text-14); font-weight: 500; color: var(--muted-foreground); }
+.pr-rows { border: var(--border-width) solid var(--border); border-radius: var(--radius); background: var(--card); }
+.pr-setting { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-3); min-height: 3.5rem; padding: var(--space-2) var(--space-4); border-top: var(--border-width) solid var(--border); }
+.pr-setting:first-child { border-top: 0; }
+.pr-name { font-weight: 500; }
+.pr-state { flex: 1; font-size: var(--text-14); color: var(--muted-foreground); }
+.pr-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2); }
+.pr-controls input[type="password"] { flex: 0 1 12rem; }
+.pr-controls [hidden] { display: none; }
+.pr input[role="switch"] {
+  appearance: none;
+  width: 2.75rem;
+  height: 1.5rem;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--muted);
+  border: var(--border-width) solid var(--border-strong);
+  position: relative;
+  cursor: pointer;
+  transition: background var(--duration) var(--ease);
+}
+.pr input[role="switch"]::after { content: ""; position: absolute; top: 2px; left: 2px; width: calc(1.5rem - 6px); height: calc(1.5rem - 6px); border-radius: 50%; background: var(--foreground); transition: transform var(--duration) var(--ease); }
+.pr input[role="switch"]:checked { background: var(--primary); }
+.pr input[role="switch"]:checked::after { transform: translateX(1.25rem); background: var(--primary-foreground); }
+#pr-halt:checked { background: var(--destructive); }
+.pr input[role="switch"]:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: var(--ring-offset); }
+.pr-file { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0 var(--space-4); border-radius: var(--radius-control); border: var(--border-width) solid var(--border); background: var(--secondary); color: var(--secondary-foreground); font-size: var(--text-14); font-weight: 500; cursor: pointer; }
+.pr-file:hover { background: var(--accent); }
+.pr-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+
+/* The rail: the Prism's word, the question, and what happened. */
+#pr-out { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--text-16); font-weight: 500; line-height: 1.45; }
+#pr-out.good { color: var(--foreground); }
+#pr-out.bad, #pr-out.refuse { color: var(--destructive); }
+#pr-out.warn { color: var(--warning); }
+#pr-out.wait { color: var(--muted-foreground); }
+.pr-ask { display: flex; flex-direction: column; gap: var(--space-2); width: 100%; }
+.pr-ask textarea { flex: none; min-height: 5.5rem; }
+.pr-ask button { min-height: 2.75rem; align-self: flex-end; padding-inline: var(--space-6); }
+#pr-log > li { display: flex; justify-content: space-between; gap: var(--space-2); padding: var(--space-1) 0; font-size: var(--text-14); }
+#pr-log .tag { font-family: var(--font-mono); color: var(--muted-foreground); }
+:root.pr-halted .ws { box-shadow: inset 0 2px 0 var(--destructive); }
+
+/* Phone and small tablet: the places become one row to swipe, the place
+   takes the screen, and the question sits in the bar under it. */
+@media (max-width: 839px) {
+  .pr { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: var(--space-3); }
+  .pr-nav { flex-direction: row; gap: var(--space-2); overflow-x: auto; overflow-y: hidden; margin-inline: calc(-1 * var(--margin)); padding-inline: var(--margin); }
+  .pr-group { flex-direction: row; gap: var(--space-1); padding: 0 var(--space-2) 0 0; border-bottom: 0; border-right: var(--border-width) solid var(--border); }
+  .pr-group:last-child { border-right: 0; }
+  button.pr-go { width: auto; white-space: nowrap; }
+  .pr-item { grid-template-columns: 3.75rem minmax(0, 1fr); }
+  .pr-who { grid-column: 2; text-align: start; }
+  .pr-ask { flex-direction: row; align-items: stretch; }
+  .pr-ask textarea { flex: 1; min-height: 2.75rem; height: 2.75rem; resize: none; }
+  .pr-ask button { align-self: stretch; padding-inline: var(--space-4); }
+}
+.pr-settings[hidden], .pr-list[hidden], .pr-count[hidden], .pr-act:empty { display: none; }
+@media (max-width: 839px) {
+  .rail .result:has(#pr-out:empty) { display: none; }
+}
