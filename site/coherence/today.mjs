@@ -51,7 +51,7 @@ export async function today(items, { now = Date.now(), relate, done, mine = () =
     }
   }
   const recent = items.filter((item) => item.media === "message").sort((a, b) => b.at - a.at).slice(0, TODAY.recent);
-  const tasks = items.filter((item) => item.media !== "calendar" && item.media !== "message" && (item.domains ?? [item.domain]).includes(9)).sort((a, b) => b.at - a.at).slice(0, TODAY.tasks);
+  const tasks = items.filter((item) => item.media !== "calendar" && item.media !== "message" && item.start == null && (item.domains ?? [item.domain]).includes(9)).sort((a, b) => b.at - a.at).slice(0, TODAY.tasks);
   return { agenda, recent, tasks, needs: needs(items, { now, done, mine }) };
 }
 

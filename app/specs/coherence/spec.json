@@ -95,6 +95,9 @@
         "settings": [
           "halt",
           "identity"
+        ],
+        "acts": [
+          "ask"
         ]
       }
     },
@@ -185,43 +188,12 @@
     {
       "key": "r4",
       "line": "r4",
-      "modules": [
-        "site/r4/decide.mjs"
-      ],
-      "in": [
-        "owner",
-        "kept",
-        "span"
-      ],
-      "out": [
-        "answer"
-      ],
-      "drives": {
-        "acts": [
-          "ask"
-        ],
-        "settings": [
-          "models"
-        ]
-      }
+      "sealed": "R4 no longer speaks on the page; it routes incoming content onto the Prism's features through the router facet"
     },
     {
       "key": "model",
       "line": "model",
-      "modules": [
-        "site/card.mjs"
-      ],
-      "in": [
-        "owner"
-      ],
-      "out": [
-        "answer"
-      ],
-      "drives": {
-        "settings": [
-          "models"
-        ]
-      }
+      "sealed": "a compiled model's bytes are admitted when the router's meaning feature first loads one; no feature needs a model's bytes yet"
     },
     {
       "key": "learn",
@@ -339,12 +311,35 @@
           "presence"
         ]
       }
+    },
+    {
+      "key": "router",
+      "line": "router",
+      "modules": [
+        "site/router/router.mjs"
+      ],
+      "in": [
+        "owner",
+        "content"
+      ],
+      "out": [
+        "item"
+      ],
+      "drives": {
+        "acts": [
+          "note"
+        ],
+        "settings": [
+          "models"
+        ]
+      }
     }
   ],
   "sinks": [
     "answer",
     "sent",
-    "kept"
+    "kept",
+    "span"
   ],
   "feeders": [
     {

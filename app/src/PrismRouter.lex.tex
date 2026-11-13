@@ -1,0 +1,205 @@
+\begin{lexlean}{PrismRouter}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: routerSourceNote, parameters: [], result: Nat, body: 0}
+
+definition{name: routerSourceMessage, parameters: [], result: Nat, body: 1}
+
+definition{name: routerSourceCalendar, parameters: [], result: Nat, body: 2}
+
+definition{name: routerSourceContact, parameters: [], result: Nat, body: 3}
+
+definition{name: routerValueText, parameters: [], result: Nat, body: 0}
+
+definition{name: routerValueSubject, parameters: [], result: Nat, body: 1}
+
+definition{name: routerValueStart, parameters: [], result: Nat, body: 2}
+
+definition{name: routerValueParty, parameters: [], result: Nat, body: 3}
+
+definition{name: routerFeatureTime, parameters: [], result: Nat, body: 0}
+
+definition{name: routerFeatureIntent, parameters: [], result: Nat, body: 1}
+
+definition{name: routerFeatureParty, parameters: [], result: Nat, body: 2}
+
+definition{name: routerFeatureMeaning, parameters: [], result: Nat, body: 3}
+
+definition{name: routerProviderCompiled, parameters: [], result: Nat, body: 0}
+
+definition{name: routerProviderAbsent, parameters: [], result: Nat, body: 1}
+
+definition{name: routerProviderMismatch, parameters: [], result: Nat, body: 2}
+
+definition{name: routerHaltedNo, parameters: [], result: Nat, body: 0}
+
+definition{name: routerHaltedYes, parameters: [], result: Nat, body: 1}
+
+definition{name: routerAnswerMap, parameters: [], result: Nat, body: 0}
+
+definition{name: routerAnswerDirect, parameters: [], result: Nat, body: 1}
+
+definition{name: routerAnswerSkip, parameters: [], result: Nat, body: 2}
+
+definition{name: routerAnswerRefuse, parameters: [], result: Nat, body: 3}
+
+structure{
+  name: RouterRequest,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: source, type: Nat},
+    {name: value, type: Nat},
+    {name: feature, type: Nat},
+    {name: provider, type: Nat},
+    {name: halted, type: Nat}
+  ]
+}
+
+definition{
+  name: routerByteAt,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some b => (ctor Option.some [Nat] (prim to_nat b : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerSliceOf,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: routerFieldEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match (routerByteAt s i)
+      | Option.none => i
+      | Option.some d => (if (d =? 32) then i else (routerFieldEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: routerParseSource,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f7465 : Bool) then (ctor Option.some [Nat] (routerSourceNote)) else (if (prim equal value 0x6d657373616765 : Bool) then (ctor Option.some [Nat] (routerSourceMessage)) else (if (prim equal value 0x63616c656e646172 : Bool) then (ctor Option.some [Nat] (routerSourceCalendar)) else (if (prim equal value 0x636f6e74616374 : Bool) then (ctor Option.some [Nat] (routerSourceContact)) else (ctor Option.none [Nat])))))
+}
+
+definition{
+  name: routerParseValue,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x74657874 : Bool) then (ctor Option.some [Nat] (routerValueText)) else (if (prim equal value 0x7375626a656374 : Bool) then (ctor Option.some [Nat] (routerValueSubject)) else (if (prim equal value 0x7374617274 : Bool) then (ctor Option.some [Nat] (routerValueStart)) else (if (prim equal value 0x7061727479 : Bool) then (ctor Option.some [Nat] (routerValueParty)) else (ctor Option.none [Nat])))))
+}
+
+definition{
+  name: routerParseFeature,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x74696d65 : Bool) then (ctor Option.some [Nat] (routerFeatureTime)) else (if (prim equal value 0x696e74656e74 : Bool) then (ctor Option.some [Nat] (routerFeatureIntent)) else (if (prim equal value 0x7061727479 : Bool) then (ctor Option.some [Nat] (routerFeatureParty)) else (if (prim equal value 0x6d65616e696e67 : Bool) then (ctor Option.some [Nat] (routerFeatureMeaning)) else (ctor Option.none [Nat])))))
+}
+
+definition{
+  name: routerParseProvider,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x636f6d70696c6564 : Bool) then (ctor Option.some [Nat] (routerProviderCompiled)) else (if (prim equal value 0x616273656e74 : Bool) then (ctor Option.some [Nat] (routerProviderAbsent)) else (if (prim equal value 0x6d69736d61746368 : Bool) then (ctor Option.some [Nat] (routerProviderMismatch)) else (ctor Option.none [Nat]))))
+}
+
+definition{
+  name: routerParseHalted,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (routerHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (routerHaltedYes)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: routerDecodeField5,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat],
+  result: (Option RouterRequest),
+  body: (let e : Nat := (routerFieldEnd s start (Foundation.Bytes::byteLength s)); (match (routerParseHalted (routerSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [RouterRequest])
+    | Option.some v5 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [RouterRequest] (record RouterRequest {source := v1, value := v2, feature := v3, provider := v4, halted := v5})) else (ctor Option.none [RouterRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerDecodeField4,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
+  result: (Option RouterRequest),
+  body: (let e : Nat := (routerFieldEnd s start (Foundation.Bytes::byteLength s)); (match (routerParseProvider (routerSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [RouterRequest])
+    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (routerDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [RouterRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerDecodeField3,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
+  result: (Option RouterRequest),
+  body: (let e : Nat := (routerFieldEnd s start (Foundation.Bytes::byteLength s)); (match (routerParseFeature (routerSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [RouterRequest])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (routerDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [RouterRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerDecodeField2,
+  parameters: [s : Bytes, start : Nat, v1 : Nat],
+  result: (Option RouterRequest),
+  body: (let e : Nat := (routerFieldEnd s start (Foundation.Bytes::byteLength s)); (match (routerParseValue (routerSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [RouterRequest])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (routerDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [RouterRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerDecodeField1,
+  parameters: [s : Bytes, start : Nat],
+  result: (Option RouterRequest),
+  body: (let e : Nat := (routerFieldEnd s start (Foundation.Bytes::byteLength s)); (match (routerParseSource (routerSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [RouterRequest])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (routerDecodeField2 s (e + 1) v1) else (ctor Option.none [RouterRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerJudge,
+  parameters: [request : RouterRequest],
+  result: Nat,
+  body: (if ((project request halted) =? (routerHaltedYes)) then (routerAnswerRefuse) else (if ((project request provider) =? (routerProviderMismatch)) then (routerAnswerRefuse) else (if ((project request value) =? (routerValueStart)) then (if ((project request feature) =? (routerFeatureTime)) then (if ((project request source) =? (routerSourceNote)) then (routerAnswerSkip) else (if ((project request source) =? (routerSourceContact)) then (routerAnswerSkip) else (routerAnswerDirect))) else (routerAnswerSkip)) else (if ((project request value) =? (routerValueParty)) then (if ((project request feature) =? (routerFeatureParty)) then (if ((project request source) =? (routerSourceNote)) then (routerAnswerSkip) else (routerAnswerDirect)) else (routerAnswerSkip)) else (if ((project request provider) =? (routerProviderAbsent)) then (routerAnswerSkip) else (routerAnswerMap))))))
+}
+
+definition{
+  name: routerEncodeAnswer,
+  parameters: [code : Nat],
+  result: Bytes,
+  body: (if (code =? (routerAnswerMap)) then 0x6d6170 else (if (code =? (routerAnswerDirect)) then 0x646972656374 else (if (code =? (routerAnswerSkip)) then 0x736b6970 else (if (code =? (routerAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964))))
+}
+
+definition{
+  name: routerDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (37 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (routerDecodeField1 value 0)
+    | Option.none => 0x696e76616c6964
+    | Option.some request => (routerEncodeAnswer (routerJudge request)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
