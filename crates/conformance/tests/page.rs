@@ -26,12 +26,8 @@ fn page_pg_01() {
             "the vault's decisions are the root's, it sees the halt switch, and it keeps values as uorc archives",
         ),
         (
-            "decide: guestDecider(app.dispatch)",
-            "R4's decision is the root's r4 facet",
-        ),
-        (
-            "boundary: (fields) => line(`boundary ${fields}`)",
-            "R4's Boundary is the root's boundary facet",
+            "const mapped = await route({ source: \"note\", values: { text }, line, halted });",
+            "the R4 router's decisions are the root's router facet, and it sees the halt switch",
         ),
         (
             "const halted = () => (haltedNow ? \"yes\" : \"no\");",

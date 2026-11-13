@@ -1,0 +1,377 @@
+\begin{lexlean}{PrismRouterProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismRouter}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: routerBreaksInv001,
+  parameters: [request : PrismRouter::RouterRequest],
+  result: Bool,
+  body: ((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedYes))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerRefuse))))
+}
+
+theorem{
+  name: routerInv001Holds,
+  parameters: [request : PrismRouter::RouterRequest],
+  statement: ((routerBreaksInv001 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismRouter::routerAnswerDirect,
+      PrismRouter::routerAnswerMap,
+      PrismRouter::routerAnswerRefuse,
+      PrismRouter::routerAnswerSkip,
+      PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureMeaning,
+      PrismRouter::routerFeatureParty,
+      PrismRouter::routerFeatureTime,
+      PrismRouter::routerHaltedNo,
+      PrismRouter::routerHaltedYes,
+      PrismRouter::routerJudge,
+      PrismRouter::routerProviderAbsent,
+      PrismRouter::routerProviderCompiled,
+      PrismRouter::routerProviderMismatch,
+      PrismRouter::routerSourceCalendar,
+      PrismRouter::routerSourceContact,
+      PrismRouter::routerSourceMessage,
+      PrismRouter::routerSourceNote,
+      PrismRouter::routerValueParty,
+      PrismRouter::routerValueStart,
+      PrismRouter::routerValueSubject,
+      PrismRouter::routerValueText,
+      routerBreaksInv001
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerBreaksInv002,
+  parameters: [request : PrismRouter::RouterRequest],
+  result: Bool,
+  body: (((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedNo))) && ((project request provider) =? (PrismRouter::routerProviderMismatch))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerRefuse))))
+}
+
+theorem{
+  name: routerInv002Holds,
+  parameters: [request : PrismRouter::RouterRequest],
+  statement: ((routerBreaksInv002 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismRouter::routerAnswerDirect,
+      PrismRouter::routerAnswerMap,
+      PrismRouter::routerAnswerRefuse,
+      PrismRouter::routerAnswerSkip,
+      PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureMeaning,
+      PrismRouter::routerFeatureParty,
+      PrismRouter::routerFeatureTime,
+      PrismRouter::routerHaltedNo,
+      PrismRouter::routerHaltedYes,
+      PrismRouter::routerJudge,
+      PrismRouter::routerProviderAbsent,
+      PrismRouter::routerProviderCompiled,
+      PrismRouter::routerProviderMismatch,
+      PrismRouter::routerSourceCalendar,
+      PrismRouter::routerSourceContact,
+      PrismRouter::routerSourceMessage,
+      PrismRouter::routerSourceNote,
+      PrismRouter::routerValueParty,
+      PrismRouter::routerValueStart,
+      PrismRouter::routerValueSubject,
+      PrismRouter::routerValueText,
+      routerBreaksInv002
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerBreaksInv003,
+  parameters: [request : PrismRouter::RouterRequest],
+  result: Bool,
+  body: ((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request provider) =? (PrismRouter::routerProviderAbsent))) && ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap)))
+}
+
+theorem{
+  name: routerInv003Holds,
+  parameters: [request : PrismRouter::RouterRequest],
+  statement: ((routerBreaksInv003 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismRouter::routerAnswerDirect,
+      PrismRouter::routerAnswerMap,
+      PrismRouter::routerAnswerRefuse,
+      PrismRouter::routerAnswerSkip,
+      PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureMeaning,
+      PrismRouter::routerFeatureParty,
+      PrismRouter::routerFeatureTime,
+      PrismRouter::routerHaltedNo,
+      PrismRouter::routerHaltedYes,
+      PrismRouter::routerJudge,
+      PrismRouter::routerProviderAbsent,
+      PrismRouter::routerProviderCompiled,
+      PrismRouter::routerProviderMismatch,
+      PrismRouter::routerSourceCalendar,
+      PrismRouter::routerSourceContact,
+      PrismRouter::routerSourceMessage,
+      PrismRouter::routerSourceNote,
+      PrismRouter::routerValueParty,
+      PrismRouter::routerValueStart,
+      PrismRouter::routerValueSubject,
+      PrismRouter::routerValueText,
+      routerBreaksInv003
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerBreaksInv004,
+  parameters: [request : PrismRouter::RouterRequest],
+  result: Bool,
+  body: ((((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedNo))) && ((project request provider) =? (PrismRouter::routerProviderCompiled))) && ((project request value) =? (PrismRouter::routerValueText))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap))))
+}
+
+theorem{
+  name: routerInv004Holds,
+  parameters: [request : PrismRouter::RouterRequest],
+  statement: ((routerBreaksInv004 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismRouter::routerAnswerDirect,
+      PrismRouter::routerAnswerMap,
+      PrismRouter::routerAnswerRefuse,
+      PrismRouter::routerAnswerSkip,
+      PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureMeaning,
+      PrismRouter::routerFeatureParty,
+      PrismRouter::routerFeatureTime,
+      PrismRouter::routerHaltedNo,
+      PrismRouter::routerHaltedYes,
+      PrismRouter::routerJudge,
+      PrismRouter::routerProviderAbsent,
+      PrismRouter::routerProviderCompiled,
+      PrismRouter::routerProviderMismatch,
+      PrismRouter::routerSourceCalendar,
+      PrismRouter::routerSourceContact,
+      PrismRouter::routerSourceMessage,
+      PrismRouter::routerSourceNote,
+      PrismRouter::routerValueParty,
+      PrismRouter::routerValueStart,
+      PrismRouter::routerValueSubject,
+      PrismRouter::routerValueText,
+      routerBreaksInv004
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerBreaksInv005,
+  parameters: [request : PrismRouter::RouterRequest],
+  result: Bool,
+  body: ((((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedNo))) && ((project request provider) =? (PrismRouter::routerProviderCompiled))) && ((project request value) =? (PrismRouter::routerValueSubject))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap))))
+}
+
+theorem{
+  name: routerInv005Holds,
+  parameters: [request : PrismRouter::RouterRequest],
+  statement: ((routerBreaksInv005 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismRouter::routerAnswerDirect,
+      PrismRouter::routerAnswerMap,
+      PrismRouter::routerAnswerRefuse,
+      PrismRouter::routerAnswerSkip,
+      PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureMeaning,
+      PrismRouter::routerFeatureParty,
+      PrismRouter::routerFeatureTime,
+      PrismRouter::routerHaltedNo,
+      PrismRouter::routerHaltedYes,
+      PrismRouter::routerJudge,
+      PrismRouter::routerProviderAbsent,
+      PrismRouter::routerProviderCompiled,
+      PrismRouter::routerProviderMismatch,
+      PrismRouter::routerSourceCalendar,
+      PrismRouter::routerSourceContact,
+      PrismRouter::routerSourceMessage,
+      PrismRouter::routerSourceNote,
+      PrismRouter::routerValueParty,
+      PrismRouter::routerValueStart,
+      PrismRouter::routerValueSubject,
+      PrismRouter::routerValueText,
+      routerBreaksInv005
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerBreaksInv006,
+  parameters: [request : PrismRouter::RouterRequest],
+  result: Bool,
+  body: ((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request value) =? (PrismRouter::routerValueStart))) && ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap)))
+}
+
+theorem{
+  name: routerInv006Holds,
+  parameters: [request : PrismRouter::RouterRequest],
+  statement: ((routerBreaksInv006 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismRouter::routerAnswerDirect,
+      PrismRouter::routerAnswerMap,
+      PrismRouter::routerAnswerRefuse,
+      PrismRouter::routerAnswerSkip,
+      PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureMeaning,
+      PrismRouter::routerFeatureParty,
+      PrismRouter::routerFeatureTime,
+      PrismRouter::routerHaltedNo,
+      PrismRouter::routerHaltedYes,
+      PrismRouter::routerJudge,
+      PrismRouter::routerProviderAbsent,
+      PrismRouter::routerProviderCompiled,
+      PrismRouter::routerProviderMismatch,
+      PrismRouter::routerSourceCalendar,
+      PrismRouter::routerSourceContact,
+      PrismRouter::routerSourceMessage,
+      PrismRouter::routerSourceNote,
+      PrismRouter::routerValueParty,
+      PrismRouter::routerValueStart,
+      PrismRouter::routerValueSubject,
+      PrismRouter::routerValueText,
+      routerBreaksInv006
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerBreaksInv007,
+  parameters: [request : PrismRouter::RouterRequest],
+  result: Bool,
+  body: ((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request value) =? (PrismRouter::routerValueParty))) && ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap)))
+}
+
+theorem{
+  name: routerInv007Holds,
+  parameters: [request : PrismRouter::RouterRequest],
+  statement: ((routerBreaksInv007 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismRouter::routerAnswerDirect,
+      PrismRouter::routerAnswerMap,
+      PrismRouter::routerAnswerRefuse,
+      PrismRouter::routerAnswerSkip,
+      PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureMeaning,
+      PrismRouter::routerFeatureParty,
+      PrismRouter::routerFeatureTime,
+      PrismRouter::routerHaltedNo,
+      PrismRouter::routerHaltedYes,
+      PrismRouter::routerJudge,
+      PrismRouter::routerProviderAbsent,
+      PrismRouter::routerProviderCompiled,
+      PrismRouter::routerProviderMismatch,
+      PrismRouter::routerSourceCalendar,
+      PrismRouter::routerSourceContact,
+      PrismRouter::routerSourceMessage,
+      PrismRouter::routerSourceNote,
+      PrismRouter::routerValueParty,
+      PrismRouter::routerValueStart,
+      PrismRouter::routerValueSubject,
+      PrismRouter::routerValueText,
+      routerBreaksInv007
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerBreaksInv008,
+  parameters: [request : PrismRouter::RouterRequest],
+  result: Bool,
+  body: ((((((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedNo))) && ((project request provider) =? (PrismRouter::routerProviderAbsent))) && ((project request source) =? (PrismRouter::routerSourceCalendar))) && ((project request value) =? (PrismRouter::routerValueStart))) && ((project request feature) =? (PrismRouter::routerFeatureTime))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerDirect))))
+}
+
+theorem{
+  name: routerInv008Holds,
+  parameters: [request : PrismRouter::RouterRequest],
+  statement: ((routerBreaksInv008 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismRouter::routerAnswerDirect,
+      PrismRouter::routerAnswerMap,
+      PrismRouter::routerAnswerRefuse,
+      PrismRouter::routerAnswerSkip,
+      PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureMeaning,
+      PrismRouter::routerFeatureParty,
+      PrismRouter::routerFeatureTime,
+      PrismRouter::routerHaltedNo,
+      PrismRouter::routerHaltedYes,
+      PrismRouter::routerJudge,
+      PrismRouter::routerProviderAbsent,
+      PrismRouter::routerProviderCompiled,
+      PrismRouter::routerProviderMismatch,
+      PrismRouter::routerSourceCalendar,
+      PrismRouter::routerSourceContact,
+      PrismRouter::routerSourceMessage,
+      PrismRouter::routerSourceNote,
+      PrismRouter::routerValueParty,
+      PrismRouter::routerValueStart,
+      PrismRouter::routerValueSubject,
+      PrismRouter::routerValueText,
+      routerBreaksInv008
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerBreaksInv009,
+  parameters: [request : PrismRouter::RouterRequest],
+  result: Bool,
+  body: (((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request source) =? (PrismRouter::routerSourceNote))) && ((project request value) =? (PrismRouter::routerValueStart))) && ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerDirect)))
+}
+
+theorem{
+  name: routerInv009Holds,
+  parameters: [request : PrismRouter::RouterRequest],
+  statement: ((routerBreaksInv009 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismRouter::routerAnswerDirect,
+      PrismRouter::routerAnswerMap,
+      PrismRouter::routerAnswerRefuse,
+      PrismRouter::routerAnswerSkip,
+      PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureMeaning,
+      PrismRouter::routerFeatureParty,
+      PrismRouter::routerFeatureTime,
+      PrismRouter::routerHaltedNo,
+      PrismRouter::routerHaltedYes,
+      PrismRouter::routerJudge,
+      PrismRouter::routerProviderAbsent,
+      PrismRouter::routerProviderCompiled,
+      PrismRouter::routerProviderMismatch,
+      PrismRouter::routerSourceCalendar,
+      PrismRouter::routerSourceContact,
+      PrismRouter::routerSourceMessage,
+      PrismRouter::routerSourceNote,
+      PrismRouter::routerValueParty,
+      PrismRouter::routerValueStart,
+      PrismRouter::routerValueSubject,
+      PrismRouter::routerValueText,
+      routerBreaksInv009
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

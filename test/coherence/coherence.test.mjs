@@ -39,8 +39,9 @@ test("the committed registry is coherent and its generated module is current (CO
 test("each planted defect is refused (CO-02)", () => {
   assert.match(planted((s) => { s.facets = s.facets.filter((f) => f.key !== "when"); }), /the root routes when/);
   assert.match(planted((s) => { facet(s, "when").modules = ["site/coherence/sense.mjs"]; }), /asks the root for 'when'/);
-  assert.match(planted((s) => { facet(s, "r4").in = ["owner", "kept"]; }), /gives 'span'/);
-  assert.match(planted((s) => { facet(s, "boundary").drives = {}; }), /setting halt is driven by no live facet/);
+  assert.match(planted((s) => { s.sinks = s.sinks.filter((port) => port !== "span"); }), /gives 'span'/);
+  assert.match(planted((s) => { facet(s, "boundary").drives = { acts: ["ask"] }; }), /setting halt is driven by no live facet/);
+  assert.match(planted((s) => { facet(s, "boundary").drives = { settings: ["halt"] }; }), /act 'ask' is driven by no live facet/);
   assert.match(planted((s) => { s.feeders[0].media.push("fax"); }), /'fax', which has no domain/);
   assert.match(planted((s) => { s.vocabulary[0] = []; }), /every domain of the design model needs its vocabulary/);
   assert.match(planted((s) => { facet(s, "google").drives = { places: ["today"] }; }), /google is sealed but drives the page/);
