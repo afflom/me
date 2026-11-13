@@ -133,6 +133,21 @@ export const walks = {
     assert.match(said, /\b(is|leaves|departs|on)\b.*\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun|\d{1,2})/i, `the answer is not a sentence with the flight's day: "${said}"`);
     assert.ok(await answer.getByRole("link").or(answer.getByRole("button", { name: /Flight to Lisbon/ })).count(), "the answer does not link to the item it came from");
   },
+  // J8: talking with my data: a sentence from my own items, where it came from, and the decision in front of me.
+  async j8(page) {
+    assert.ok(await arrived(page), "the person's day never arrives");
+    const ask = app(page).getByRole("textbox", { name: /ask/i }).or(app(page).getByPlaceholder(/ask/i)).first();
+    assert.ok(await ask.count(), "there is nowhere to talk with the Prism");
+    await ask.fill("What is going on with Robin?");
+    await ask.press("Enter");
+    await page.waitForTimeout(3000);
+    const answer = app(page).locator("[aria-live], output, #pr-out").filter({ hasText: /Robin|Lunch|Design review/ }).first();
+    assert.ok(await answer.count(), "the answer does not draw on Robin's items");
+    const said = (await answer.innerText()).trim();
+    assert.match(said, /\b(is|are|asked|asks|wrote|meets|meeting|has|wants)\b[^·]*[.?!]/i, `the answer is not a sentence: "${said}"`);
+    assert.ok(await answer.getByRole("link").count(), "the answer does not link to where it came from");
+    assert.ok(await answer.getByRole("button", { name: /reply|schedule|keep|let go|done/i }).count(), "the answer offers no decision");
+  },
   // J7: a person's page shows what is open between us.
   async j7(page) {
     assert.ok(await arrived(page), "the person's day never arrives");
