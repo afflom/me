@@ -1,0 +1,482 @@
+{
+  "name": "prism-resonance",
+  "title": "Prism Resonance",
+  "facet": {
+    "prefix": "resonance",
+    "module": "PrismResonance",
+    "request": "ResonanceRequest"
+  },
+  "purpose": "Decides how the Prism answers one gesture of the owner toward one thing it holds: it rests, it whispers, it chimes once, it blooms (the thing comes forward), it gathers a chorus (what belongs with it comes forward too), or it recedes. Stillness is answered with stillness, a dismissal is honored at once, a hurried owner is never met with more, the owner's quiet is kept, and nothing the owner rejected is ever brought forward.",
+  "fields": [
+    {
+      "name": "gesture",
+      "values": [
+        "open",
+        "dwell",
+        "keep",
+        "dismiss",
+        "still"
+      ],
+      "means": "what the owner did: opened the thing, stayed with it, kept it (a note or a pin), dismissed it, or came to rest"
+    },
+    {
+      "name": "pace",
+      "values": [
+        "still",
+        "calm",
+        "hurried"
+      ],
+      "means": "the owner's cadence over their last gestures: at rest, calm, or hurried"
+    },
+    {
+      "name": "salience",
+      "values": [
+        "near",
+        "far"
+      ],
+      "means": "whether the thing belongs to the owner's now and today (near) or not (far)"
+    },
+    {
+      "name": "phase",
+      "values": [
+        "dawn",
+        "day",
+        "dusk",
+        "night"
+      ],
+      "means": "the owner's local time of day"
+    },
+    {
+      "name": "belief",
+      "values": [
+        "inferred",
+        "consolidated",
+        "confirmed",
+        "rejected"
+      ],
+      "means": "the Learning state of the belief that ties the thing to the owner"
+    },
+    {
+      "name": "attention",
+      "values": [
+        "open",
+        "quiet"
+      ],
+      "means": "the owner's attention setting: open, or quiet (rest, focus, sleep)"
+    },
+    {
+      "name": "halted",
+      "values": [
+        "no",
+        "yes"
+      ],
+      "means": "whether the owner pressed the kill switch"
+    }
+  ],
+  "outcomes": [
+    "rest",
+    "whisper",
+    "chime",
+    "bloom",
+    "chorus",
+    "recede"
+  ],
+  "signals": {
+    "bloom": "support",
+    "chorus": "support",
+    "recede": "contradict"
+  },
+  "tree": {
+    "if": [
+      "halted",
+      "yes"
+    ],
+    "then": "rest",
+    "else": {
+      "if": [
+        "gesture",
+        "dismiss"
+      ],
+      "then": "recede",
+      "else": {
+        "if": [
+          "gesture",
+          "still"
+        ],
+        "then": "rest",
+        "else": {
+          "if": [
+            "attention",
+            "quiet"
+          ],
+          "then": "whisper",
+          "else": {
+            "if": [
+              "belief",
+              "rejected"
+            ],
+            "then": "whisper",
+            "else": {
+              "if": [
+                "pace",
+                "hurried"
+              ],
+              "then": {
+                "if": [
+                  "gesture",
+                  "keep"
+                ],
+                "then": "chime",
+                "else": "whisper"
+              },
+              "else": {
+                "if": [
+                  "gesture",
+                  "keep"
+                ],
+                "then": {
+                  "if": [
+                    "belief",
+                    "inferred"
+                  ],
+                  "then": "bloom",
+                  "else": "chorus"
+                },
+                "else": {
+                  "if": [
+                    "salience",
+                    "far"
+                  ],
+                  "then": {
+                    "if": [
+                      "phase",
+                      "night"
+                    ],
+                    "then": "whisper",
+                    "else": "chime"
+                  },
+                  "else": {
+                    "if": [
+                      "gesture",
+                      "open"
+                    ],
+                    "then": {
+                      "if": [
+                        "phase",
+                        "night"
+                      ],
+                      "then": "whisper",
+                      "else": "chime"
+                    },
+                    "else": {
+                      "if": [
+                        "belief",
+                        "inferred"
+                      ],
+                      "then": "bloom",
+                      "else": "chorus"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "guarantees": [
+    {
+      "when": [
+        [
+          "halted",
+          "yes"
+        ]
+      ],
+      "always": "rest",
+      "why": "the kill switch stills every answer"
+    },
+    {
+      "when": [
+        [
+          "halted",
+          "no"
+        ],
+        [
+          "gesture",
+          "dismiss"
+        ]
+      ],
+      "always": "recede",
+      "why": "a dismissal is honored at once and teaches the Prism (Ahimsa: the owner is never pressed)"
+    },
+    {
+      "when": [
+        [
+          "gesture",
+          "still"
+        ]
+      ],
+      "always": "rest",
+      "why": "stillness is answered with stillness (Turiya, the silent witness)"
+    },
+    {
+      "when": [
+        [
+          "attention",
+          "quiet"
+        ]
+      ],
+      "never": [
+        "chime",
+        "bloom",
+        "chorus"
+      ],
+      "why": "the owner's quiet is kept: nothing sounds or comes forward"
+    },
+    {
+      "when": [
+        [
+          "belief",
+          "rejected"
+        ]
+      ],
+      "never": [
+        "bloom",
+        "chorus"
+      ],
+      "why": "what the owner rejected is never brought forward again"
+    },
+    {
+      "when": [
+        [
+          "pace",
+          "hurried"
+        ]
+      ],
+      "never": [
+        "bloom",
+        "chorus"
+      ],
+      "why": "a hurried owner is never met with more (Humane restorative pacing)"
+    },
+    {
+      "when": [
+        [
+          "belief",
+          "inferred"
+        ]
+      ],
+      "never": [
+        "chorus"
+      ],
+      "why": "only a belief that evidence consolidated or the owner confirmed gathers what belongs with it"
+    },
+    {
+      "when": [
+        [
+          "salience",
+          "far"
+        ],
+        [
+          "gesture",
+          "dwell"
+        ]
+      ],
+      "never": [
+        "bloom",
+        "chorus"
+      ],
+      "why": "staying with a thing far from the owner's now does not bring it forward; keeping it does"
+    },
+    {
+      "when": [
+        [
+          "gesture",
+          "open"
+        ]
+      ],
+      "never": [
+        "bloom",
+        "chorus"
+      ],
+      "why": "a glance is not consent: only staying with a thing or keeping it brings it forward"
+    },
+    {
+      "when": [
+        [
+          "phase",
+          "night"
+        ],
+        [
+          "gesture",
+          "open"
+        ]
+      ],
+      "never": [
+        "chime"
+      ],
+      "why": "the night is kept soft: a glance at night is answered by a whisper"
+    }
+  ],
+  "examples": [
+    [
+      "dwell calm near day consolidated open no",
+      "chorus"
+    ],
+    [
+      "dwell calm near day inferred open no",
+      "bloom"
+    ],
+    [
+      "open calm near day inferred open no",
+      "chime"
+    ],
+    [
+      "open calm near night inferred open no",
+      "whisper"
+    ],
+    [
+      "keep hurried near day confirmed open no",
+      "chime"
+    ],
+    [
+      "dwell hurried near day confirmed open no",
+      "whisper"
+    ],
+    [
+      "keep calm far dusk inferred open no",
+      "bloom"
+    ],
+    [
+      "dwell calm far night consolidated open no",
+      "whisper"
+    ],
+    [
+      "dwell calm near day confirmed quiet no",
+      "whisper"
+    ],
+    [
+      "dwell calm near day rejected open no",
+      "whisper"
+    ],
+    [
+      "dismiss calm near day confirmed open no",
+      "recede"
+    ],
+    [
+      "still still near day confirmed open no",
+      "rest"
+    ],
+    [
+      "dwell calm near day confirmed open yes",
+      "rest"
+    ],
+    [
+      "dwell calm near day confirmed open",
+      "invalid"
+    ],
+    [
+      "Dwell calm near day confirmed open no",
+      "invalid"
+    ]
+  ],
+  "tunable": [
+    {
+      "name": "dwellMs",
+      "min": 1500,
+      "max": 12000,
+      "step": 500,
+      "initial": 4000,
+      "means": "an open becomes a dwell after this long with the thing"
+    },
+    {
+      "name": "calmGapMs",
+      "min": 20000,
+      "max": 300000,
+      "step": 5000,
+      "initial": 60000,
+      "means": "gaps between gestures longer than this read as still"
+    },
+    {
+      "name": "hurriedGapMs",
+      "min": 500,
+      "max": 10000,
+      "step": 250,
+      "initial": 2500,
+      "means": "gaps shorter than this read as hurried"
+    },
+    {
+      "name": "nearHours",
+      "min": 2,
+      "max": 72,
+      "step": 1,
+      "initial": 24,
+      "means": "a thing within this many hours of now is near"
+    },
+    {
+      "name": "dawnHour",
+      "min": 4,
+      "max": 8,
+      "step": 1,
+      "initial": 5,
+      "means": "local hour dawn begins"
+    },
+    {
+      "name": "dayHour",
+      "min": 7,
+      "max": 11,
+      "step": 1,
+      "initial": 9,
+      "means": "local hour day begins"
+    },
+    {
+      "name": "duskHour",
+      "min": 16,
+      "max": 20,
+      "step": 1,
+      "initial": 18,
+      "means": "local hour dusk begins"
+    },
+    {
+      "name": "nightHour",
+      "min": 20,
+      "max": 24,
+      "step": 1,
+      "initial": 22,
+      "means": "local hour night begins"
+    }
+  ],
+  "start": {
+    "belief": "inferred",
+    "weight": 4,
+    "means": "a thing the Prism has not yet learned about starts inferred, at weight 4 of 16"
+  },
+  "learning": {
+    "raise": [
+      "weight",
+      1
+    ],
+    "lower": [
+      "weight",
+      -1
+    ],
+    "consolidate": [
+      "belief",
+      "consolidated"
+    ],
+    "demote": [
+      "belief",
+      "inferred"
+    ],
+    "confirm": [
+      "belief",
+      "confirmed"
+    ],
+    "reject": [
+      "belief",
+      "rejected"
+    ],
+    "hold": null
+  }
+}

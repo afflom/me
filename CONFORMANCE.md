@@ -73,6 +73,13 @@ model does not sanction.
 | --- | --- | --- |
 | `R4-01` | `build` | The R4 language model runs in the browser only from bytes that re-derive to their pinned SHA-256, served by the page in pieces of at most 16 MiB, and shows an answer only when the proved Prism R4 decision allows it |
 
+## resonance
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `RS-01` | `build` | The Prism answers a gesture of the owner only as PrismResonance answers: stillness with rest, a dismissal at once with recede, the kill switch with rest; quiet never sounds or brings anything forward, nor does a hurried pace, a glance, or a belief the owner rejected; only a consolidated or confirmed belief gathers a chorus |
+| `RS-02` | `build` | The page answers the owner's gestures and learns from them only through the root guest: each answer's learning signal goes to PrismLearning, only the owner confirms or rejects, and what was learned is kept as a sealed snapshot in this browser that restores with zero drift or not at all |
+
 ## route
 
 | ID | Level | Statement |

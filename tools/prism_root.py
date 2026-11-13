@@ -32,6 +32,7 @@ FACETS = [
     ("googlelink", "PrismGoogleLink", "googleLinkDispatch"),
     ("dest", "PrismDest", "destDispatch"),
     ("model", "PrismModels", "modelsDispatch"),
+ ("resonance", "PrismResonance", "resonanceDispatch"),
 ]
 REQ_MAX, RESP_MAX, ALLOC = 1107, 16384, 2214
 h = lambda s: "0x" + (s if isinstance(s, bytes) else s.encode()).hex()
@@ -69,6 +70,12 @@ VECTORS = [
  ("model locked onnx match match granted yes", "refuse"),
  ("model unlocked gguf match match granted no", "refuse"),
  ("model", "invalid request"),
+ ("resonance dwell calm near day consolidated open no", "chorus"),
+ ("resonance open calm near night inferred open no", "whisper"),
+ ("resonance dismiss calm near day confirmed open no", "recede"),
+ ("resonance dwell calm near day confirmed open yes", "rest"),
+ ("resonance dwell calm near day confirmed open", "invalid"),
+ ("resonance", "invalid request"),
  ("google", "invalid request"),
  ("learn", "invalid request"),
  ("when", "invalid request"),

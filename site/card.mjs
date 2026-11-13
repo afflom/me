@@ -164,6 +164,40 @@ export default async function start({ app, reason, $ }) {
     items = read.sort((a, b) => b.at - a.at);
   }
 
+  // Resonance: every gesture of the owner toward a thing is answered by
+  // PrismResonance and teaches PrismLearning, through the root guest. What it
+  // learned is a sealed snapshot in this browser (addresses and weights only).
+  const RESONANCE_KEY = "me.resonance";
+  let resonance = null;
+  let resonating = null;
+  const resonanceOf = () => (resonating ??= import("./resonance/resonance.mjs")
+    .then(({ makeResonance }) => makeResonance({ line, halted, attention: pace, keep: { get: () => store.get(RESONANCE_KEY, null), set: (text) => store.set(RESONANCE_KEY, text) } }))
+    .then((made) => (resonance = made))
+    .catch(() => null));
+  const answerOn = (node, event) => {
+    if (!node || !event) return;
+    for (const name of [...node.classList]) if (name.startsWith("pr-res-")) node.classList.remove(name);
+    node.classList.add(`pr-res-${event.answer}`);
+  };
+  async function gesture(item, kind, options, node) {
+    const r = resonance ?? (await resonanceOf());
+    if (!r || !item?.address) return null;
+    const event = await r.gesture(item, kind, options);
+    answerOn(node, event);
+    return event;
+  }
+  // One open row at a time; closing it is one gesture, with how long the owner stayed.
+  let opened = null;
+  async function closeOpened() {
+    if (!opened) return;
+    const { item, node, since } = opened;
+    opened = null;
+    node.classList.remove("pr-open");
+    node.setAttribute("aria-expanded", "false");
+    await gesture(item, "open", { dwellMs: Date.now() - since }, node);
+  }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") closeOpened(); });
+
   // The destinations router: PrismDest and the Boundary decide every hand-off.
   let router = null;
   const routerOf = async () => {
@@ -181,10 +215,24 @@ export default async function start({ app, reason, $ }) {
 
   function rowOf(item) {
     const what = item.sealed ? WORDS.sealed : item.title || "—";
-    return element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}` },
+    const row = element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}`, tabIndex: 0 },
       element("span", { className: "pr-when", textContent: when(item.at) }),
       element("span", { className: "pr-what", textContent: what }),
       element("span", { className: "pr-who", textContent: item.who || DOMAINS[item.domain] || "" }));
+    if (item.sealed) return row;
+    row.setAttribute("aria-expanded", "false");
+    const toggle = async () => {
+      const was = opened?.node === row;
+      await closeOpened();
+      if (was) return;
+      row.classList.add("pr-open");
+      row.setAttribute("aria-expanded", "true");
+      if (!row.querySelector(".pr-body")) row.append(element("span", { className: "pr-body", textContent: item.text }));
+      opened = { item, node: row, since: Date.now() };
+    };
+    row.addEventListener("click", toggle);
+    row.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); toggle(); } });
+    return row;
   }
 
   function paintList() {
@@ -194,6 +242,7 @@ export default async function start({ app, reason, $ }) {
       const words = query.toLowerCase().split(/\s+/).filter(Boolean);
       shown = words.length ? items.filter((item) => words.every((w) => `${item.title} ${item.who} ${item.text}`.toLowerCase().includes(w))) : [];
     }
+    if (resonance && current.show !== "search") shown = resonance.order(shown);
     $("pr-count").textContent = shown.length ? String(shown.length) : "";
     if (current.show === "search" && !query) { list.replaceChildren(); return; }
     list.replaceChildren(...(shown.length ? shown.slice(0, 200).map(rowOf) : [element("li", { className: "pr-empty", textContent: WORDS.empty })]));
@@ -237,6 +286,7 @@ export default async function start({ app, reason, $ }) {
         if (result.outcome?.startsWith("store")) {
           field.value = "";
           await load();
+          await gesture(items.find((item) => item.address === result.address), "keep");
           paintList();
         }
       } finally {
@@ -557,4 +607,7 @@ export default async function start({ app, reason, $ }) {
   await load();
   go(current.key);
   root.classList.add("pr-ready");
+  // Resonance loads on the owner's first touch, never with the page, then orders what they resonate with first.
+  const wake = () => resonanceOf().then((made) => { if (made && current.show !== "settings") paintList(); });
+  for (const type of ["pointerdown", "keydown"]) document.addEventListener(type, wake, { once: true, capture: true });
 }

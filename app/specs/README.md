@@ -17,6 +17,7 @@ questions, the examples and the guarantees in plain words.
 | `PrismGoogleLink` | `google-link/` | the Google connection's next stage: unprovisioned, registered, granted, syncing, revoked, or refuse | 9 |
 | `PrismDest` | `dest/` | where one item may go next: deliver (to the owner's calendar, mail or another platform), draft, show (to the owner), hold (quietly), or refuse | 11 |
 | `PrismModels` | `models/` | whether one language or reasoning model routed into the Prism from a hub may be fetched or run in the browser: run, fetch, ask the owner, or refuse; refuses unpinned models, unknown formats and bytes that differ from the lock, and moves nothing while halted or ungranted | 9 |
+| `PrismResonance` | `resonance/` | how the Prism answers one gesture of the owner toward one thing it holds: rest, whisper, chime, bloom (it comes forward), chorus (what belongs with it comes too), or recede; stillness meets rest, a dismissal recedes at once, quiet and a hurried pace are never met with more, and a rejected belief never comes forward | 10 |
 
 Boundary guarantees: nothing moves while the Prism is halted; nothing goes to
 GitHub or the hosted verifier, even with approval; nothing a detector matched is
@@ -55,3 +56,8 @@ These modules are hand-patched after generation, so do not regenerate them from
 
 The modules carry no personal value. They speak of "the owner"; the owner's
 facts live only in the browser.
+- Resonance: written by the generic `tools/facet/gen.py app/specs/resonance/spec.json`
+  (the dest generator, parameterized by the spec's `facet` record). It checks every
+  request against every guarantee and example before writing, and `--check`
+  holds the outputs to the spec. Its standalone guest comes from
+  `tools/facet/standalone.py`.

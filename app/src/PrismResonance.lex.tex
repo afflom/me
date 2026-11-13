@@ -1,0 +1,255 @@
+\begin{lexlean}{PrismResonance}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: resonanceGestureOpen, parameters: [], result: Nat, body: 0}
+
+definition{name: resonanceGestureDwell, parameters: [], result: Nat, body: 1}
+
+definition{name: resonanceGestureKeep, parameters: [], result: Nat, body: 2}
+
+definition{name: resonanceGestureDismiss, parameters: [], result: Nat, body: 3}
+
+definition{name: resonanceGestureStill, parameters: [], result: Nat, body: 4}
+
+definition{name: resonancePaceStill, parameters: [], result: Nat, body: 0}
+
+definition{name: resonancePaceCalm, parameters: [], result: Nat, body: 1}
+
+definition{name: resonancePaceHurried, parameters: [], result: Nat, body: 2}
+
+definition{name: resonanceSalienceNear, parameters: [], result: Nat, body: 0}
+
+definition{name: resonanceSalienceFar, parameters: [], result: Nat, body: 1}
+
+definition{name: resonancePhaseDawn, parameters: [], result: Nat, body: 0}
+
+definition{name: resonancePhaseDay, parameters: [], result: Nat, body: 1}
+
+definition{name: resonancePhaseDusk, parameters: [], result: Nat, body: 2}
+
+definition{name: resonancePhaseNight, parameters: [], result: Nat, body: 3}
+
+definition{name: resonanceBeliefInferred, parameters: [], result: Nat, body: 0}
+
+definition{name: resonanceBeliefConsolidated, parameters: [], result: Nat, body: 1}
+
+definition{name: resonanceBeliefConfirmed, parameters: [], result: Nat, body: 2}
+
+definition{name: resonanceBeliefRejected, parameters: [], result: Nat, body: 3}
+
+definition{name: resonanceAttentionOpen, parameters: [], result: Nat, body: 0}
+
+definition{name: resonanceAttentionQuiet, parameters: [], result: Nat, body: 1}
+
+definition{name: resonanceHaltedNo, parameters: [], result: Nat, body: 0}
+
+definition{name: resonanceHaltedYes, parameters: [], result: Nat, body: 1}
+
+definition{name: resonanceAnswerRest, parameters: [], result: Nat, body: 0}
+
+definition{name: resonanceAnswerWhisper, parameters: [], result: Nat, body: 1}
+
+definition{name: resonanceAnswerChime, parameters: [], result: Nat, body: 2}
+
+definition{name: resonanceAnswerBloom, parameters: [], result: Nat, body: 3}
+
+definition{name: resonanceAnswerChorus, parameters: [], result: Nat, body: 4}
+
+definition{name: resonanceAnswerRecede, parameters: [], result: Nat, body: 5}
+
+structure{
+  name: ResonanceRequest,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: gesture, type: Nat},
+    {name: pace, type: Nat},
+    {name: salience, type: Nat},
+    {name: phase, type: Nat},
+    {name: belief, type: Nat},
+    {name: attention, type: Nat},
+    {name: halted, type: Nat}
+  ]
+}
+
+definition{
+  name: resonanceByteAt,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some b => (ctor Option.some [Nat] (prim to_nat b : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceSliceOf,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: resonanceFieldEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match (resonanceByteAt s i)
+      | Option.none => i
+      | Option.some d => (if (d =? 32) then i else (resonanceFieldEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: resonanceParseGesture,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6f70656e : Bool) then (ctor Option.some [Nat] (resonanceGestureOpen)) else (if (prim equal value 0x6477656c6c : Bool) then (ctor Option.some [Nat] (resonanceGestureDwell)) else (if (prim equal value 0x6b656570 : Bool) then (ctor Option.some [Nat] (resonanceGestureKeep)) else (if (prim equal value 0x6469736d697373 : Bool) then (ctor Option.some [Nat] (resonanceGestureDismiss)) else (if (prim equal value 0x7374696c6c : Bool) then (ctor Option.some [Nat] (resonanceGestureStill)) else (ctor Option.none [Nat]))))))
+}
+
+definition{
+  name: resonanceParsePace,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x7374696c6c : Bool) then (ctor Option.some [Nat] (resonancePaceStill)) else (if (prim equal value 0x63616c6d : Bool) then (ctor Option.some [Nat] (resonancePaceCalm)) else (if (prim equal value 0x68757272696564 : Bool) then (ctor Option.some [Nat] (resonancePaceHurried)) else (ctor Option.none [Nat]))))
+}
+
+definition{
+  name: resonanceParseSalience,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e656172 : Bool) then (ctor Option.some [Nat] (resonanceSalienceNear)) else (if (prim equal value 0x666172 : Bool) then (ctor Option.some [Nat] (resonanceSalienceFar)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: resonanceParsePhase,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6461776e : Bool) then (ctor Option.some [Nat] (resonancePhaseDawn)) else (if (prim equal value 0x646179 : Bool) then (ctor Option.some [Nat] (resonancePhaseDay)) else (if (prim equal value 0x6475736b : Bool) then (ctor Option.some [Nat] (resonancePhaseDusk)) else (if (prim equal value 0x6e69676874 : Bool) then (ctor Option.some [Nat] (resonancePhaseNight)) else (ctor Option.none [Nat])))))
+}
+
+definition{
+  name: resonanceParseBelief,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x696e666572726564 : Bool) then (ctor Option.some [Nat] (resonanceBeliefInferred)) else (if (prim equal value 0x636f6e736f6c696461746564 : Bool) then (ctor Option.some [Nat] (resonanceBeliefConsolidated)) else (if (prim equal value 0x636f6e6669726d6564 : Bool) then (ctor Option.some [Nat] (resonanceBeliefConfirmed)) else (if (prim equal value 0x72656a6563746564 : Bool) then (ctor Option.some [Nat] (resonanceBeliefRejected)) else (ctor Option.none [Nat])))))
+}
+
+definition{
+  name: resonanceParseAttention,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6f70656e : Bool) then (ctor Option.some [Nat] (resonanceAttentionOpen)) else (if (prim equal value 0x7175696574 : Bool) then (ctor Option.some [Nat] (resonanceAttentionQuiet)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: resonanceParseHalted,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (resonanceHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (resonanceHaltedYes)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: resonanceDecodeField7,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat, v6 : Nat],
+  result: (Option ResonanceRequest),
+  body: (let e : Nat := (resonanceFieldEnd s start (Foundation.Bytes::byteLength s)); (match (resonanceParseHalted (resonanceSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [ResonanceRequest])
+    | Option.some v7 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [ResonanceRequest] (record ResonanceRequest {gesture := v1, pace := v2, salience := v3, phase := v4, belief := v5, attention := v6, halted := v7})) else (ctor Option.none [ResonanceRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceDecodeField6,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat],
+  result: (Option ResonanceRequest),
+  body: (let e : Nat := (resonanceFieldEnd s start (Foundation.Bytes::byteLength s)); (match (resonanceParseAttention (resonanceSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [ResonanceRequest])
+    | Option.some v6 => (if (e <? (Foundation.Bytes::byteLength s)) then (resonanceDecodeField7 s (e + 1) v1 v2 v3 v4 v5 v6) else (ctor Option.none [ResonanceRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceDecodeField5,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat],
+  result: (Option ResonanceRequest),
+  body: (let e : Nat := (resonanceFieldEnd s start (Foundation.Bytes::byteLength s)); (match (resonanceParseBelief (resonanceSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [ResonanceRequest])
+    | Option.some v5 => (if (e <? (Foundation.Bytes::byteLength s)) then (resonanceDecodeField6 s (e + 1) v1 v2 v3 v4 v5) else (ctor Option.none [ResonanceRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceDecodeField4,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
+  result: (Option ResonanceRequest),
+  body: (let e : Nat := (resonanceFieldEnd s start (Foundation.Bytes::byteLength s)); (match (resonanceParsePhase (resonanceSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [ResonanceRequest])
+    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (resonanceDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [ResonanceRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceDecodeField3,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
+  result: (Option ResonanceRequest),
+  body: (let e : Nat := (resonanceFieldEnd s start (Foundation.Bytes::byteLength s)); (match (resonanceParseSalience (resonanceSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [ResonanceRequest])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (resonanceDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [ResonanceRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceDecodeField2,
+  parameters: [s : Bytes, start : Nat, v1 : Nat],
+  result: (Option ResonanceRequest),
+  body: (let e : Nat := (resonanceFieldEnd s start (Foundation.Bytes::byteLength s)); (match (resonanceParsePace (resonanceSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [ResonanceRequest])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (resonanceDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [ResonanceRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceDecodeField1,
+  parameters: [s : Bytes, start : Nat],
+  result: (Option ResonanceRequest),
+  body: (let e : Nat := (resonanceFieldEnd s start (Foundation.Bytes::byteLength s)); (match (resonanceParseGesture (resonanceSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [ResonanceRequest])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (resonanceDecodeField2 s (e + 1) v1) else (ctor Option.none [ResonanceRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceJudge,
+  parameters: [request : ResonanceRequest],
+  result: Nat,
+  body: (if ((project request halted) =? (resonanceHaltedYes)) then (resonanceAnswerRest) else (if ((project request gesture) =? (resonanceGestureDismiss)) then (resonanceAnswerRecede) else (if ((project request gesture) =? (resonanceGestureStill)) then (resonanceAnswerRest) else (if ((project request attention) =? (resonanceAttentionQuiet)) then (resonanceAnswerWhisper) else (if ((project request belief) =? (resonanceBeliefRejected)) then (resonanceAnswerWhisper) else (if ((project request pace) =? (resonancePaceHurried)) then (if ((project request gesture) =? (resonanceGestureKeep)) then (resonanceAnswerChime) else (resonanceAnswerWhisper)) else (if ((project request gesture) =? (resonanceGestureKeep)) then (if ((project request belief) =? (resonanceBeliefInferred)) then (resonanceAnswerBloom) else (resonanceAnswerChorus)) else (if ((project request salience) =? (resonanceSalienceFar)) then (if ((project request phase) =? (resonancePhaseNight)) then (resonanceAnswerWhisper) else (resonanceAnswerChime)) else (if ((project request gesture) =? (resonanceGestureOpen)) then (if ((project request phase) =? (resonancePhaseNight)) then (resonanceAnswerWhisper) else (resonanceAnswerChime)) else (if ((project request belief) =? (resonanceBeliefInferred)) then (resonanceAnswerBloom) else (resonanceAnswerChorus)))))))))))
+}
+
+definition{
+  name: resonanceEncodeAnswer,
+  parameters: [code : Nat],
+  result: Bytes,
+  body: (if (code =? (resonanceAnswerRest)) then 0x72657374 else (if (code =? (resonanceAnswerWhisper)) then 0x77686973706572 else (if (code =? (resonanceAnswerChime)) then 0x6368696d65 else (if (code =? (resonanceAnswerBloom)) then 0x626c6f6f6d else (if (code =? (resonanceAnswerChorus)) then 0x63686f727573 else (if (code =? (resonanceAnswerRecede)) then 0x726563656465 else 0x696e76616c6964))))))
+}
+
+definition{
+  name: resonanceDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (49 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (resonanceDecodeField1 value 0)
+    | Option.none => 0x696e76616c6964
+    | Option.some request => (resonanceEncodeAnswer (resonanceJudge request)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

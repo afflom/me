@@ -57,6 +57,9 @@ button.pr-go[aria-current="page"] { background: var(--secondary); color: var(--f
 .pr-when { font-family: var(--font-mono); font-size: var(--text-14); color: var(--muted-foreground); }
 .pr-what { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
 .pr-who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-14); color: var(--muted-foreground); text-align: end; }
+.pr-item:not(.pr-sealed) { cursor: pointer; }
+.pr-body { display: none; }
+.pr-open .pr-body { display: block; grid-column: 1 / -1; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--foreground); }
 .pr-sealed .pr-what { color: var(--muted-foreground); font-weight: 400; font-style: italic; }
 .pr-empty { padding: var(--space-6) 0; color: var(--muted-foreground); }
 
