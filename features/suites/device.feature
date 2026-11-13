@@ -37,3 +37,11 @@ Feature: device
     Then every request is a GET to mail.google.com or calendar.google.com with the owner's own sign-in, a message is read once, and nothing is read while halted
     And another page or Gmail itself is never answered, and the written extension names only the page that wrote it
     And each item is kept by its own first bytes through PrismFolder and the vault, and anything else is passed over
+
+  @DV-05 @build
+  Scenario: Every service the owner uses is a declaration in the model, read only as PrismSource answers: by what its web app shows the owner, by its own pages with the owner's own sign-in, or by its own data download; never while halted, never written to, never undeclared, and never through a private interface
+    Given the PrismSource guest built from app/src/PrismSource.lex.tex, refused unless its SHA-256 is the pinned one, and the declarations in app/specs/source/services.json
+    When every one of its 72 requests is decided and the page writes the extension from the declarations
+    Then a declared service is read by every route but a private interface, nothing is read while halted, written to, or undeclared
+    And the extension carries exactly the declarations, may reach exactly their origins, and fetches nothing off a service's own origins
+    And Lean proves the six guarantees with exactly the axioms Quot.sound and propext

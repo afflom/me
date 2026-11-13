@@ -1,0 +1,272 @@
+\begin{lexlean}{PrismSourceProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismSource}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: sourceBreaksInv001,
+  parameters: [request : PrismSource::SourceRequest],
+  result: Bool,
+  body: (((((((project request service) <? 6) && ((project request route) <? 3)) && ((project request act) <? 2)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismSource::sourceHaltedYes))) && (not ((PrismSource::sourceJudge request) =? (PrismSource::sourceAnswerRefuse))))
+}
+
+theorem{
+  name: sourceInv001Holds,
+  parameters: [request : PrismSource::SourceRequest],
+  statement: ((sourceBreaksInv001 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismSource::sourceActRead,
+      PrismSource::sourceActWrite,
+      PrismSource::sourceAnswerRead,
+      PrismSource::sourceAnswerRefuse,
+      PrismSource::sourceHaltedNo,
+      PrismSource::sourceHaltedYes,
+      PrismSource::sourceJudge,
+      PrismSource::sourceRouteExport,
+      PrismSource::sourceRouteOwn,
+      PrismSource::sourceRouteSeen,
+      PrismSource::sourceRule1,
+      PrismSource::sourceRule2,
+      PrismSource::sourceRule3,
+      PrismSource::sourceRule4,
+      PrismSource::sourceRule4Misses,
+      PrismSource::sourceRule5,
+      PrismSource::sourceRule5Misses,
+      PrismSource::sourceRule6,
+      PrismSource::sourceRule6Misses,
+      PrismSource::sourceServiceCalendar,
+      PrismSource::sourceServiceDiscord,
+      PrismSource::sourceServiceGmail,
+      PrismSource::sourceServiceLinkedin,
+      PrismSource::sourceServiceOther,
+      PrismSource::sourceServiceWhatsapp,
+      sourceBreaksInv001
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sourceBreaksInv002,
+  parameters: [request : PrismSource::SourceRequest],
+  result: Bool,
+  body: (((((((project request service) <? 6) && ((project request route) <? 3)) && ((project request act) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismSource::sourceActWrite))) && (not ((PrismSource::sourceJudge request) =? (PrismSource::sourceAnswerRefuse))))
+}
+
+theorem{
+  name: sourceInv002Holds,
+  parameters: [request : PrismSource::SourceRequest],
+  statement: ((sourceBreaksInv002 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismSource::sourceActRead,
+      PrismSource::sourceActWrite,
+      PrismSource::sourceAnswerRead,
+      PrismSource::sourceAnswerRefuse,
+      PrismSource::sourceHaltedNo,
+      PrismSource::sourceHaltedYes,
+      PrismSource::sourceJudge,
+      PrismSource::sourceRouteExport,
+      PrismSource::sourceRouteOwn,
+      PrismSource::sourceRouteSeen,
+      PrismSource::sourceRule1,
+      PrismSource::sourceRule2,
+      PrismSource::sourceRule3,
+      PrismSource::sourceRule4,
+      PrismSource::sourceRule4Misses,
+      PrismSource::sourceRule5,
+      PrismSource::sourceRule5Misses,
+      PrismSource::sourceRule6,
+      PrismSource::sourceRule6Misses,
+      PrismSource::sourceServiceCalendar,
+      PrismSource::sourceServiceDiscord,
+      PrismSource::sourceServiceGmail,
+      PrismSource::sourceServiceLinkedin,
+      PrismSource::sourceServiceOther,
+      PrismSource::sourceServiceWhatsapp,
+      sourceBreaksInv002
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sourceBreaksInv003,
+  parameters: [request : PrismSource::SourceRequest],
+  result: Bool,
+  body: (((((((project request service) <? 6) && ((project request route) <? 3)) && ((project request act) <? 2)) && ((project request halted) <? 2)) && ((project request service) =? (PrismSource::sourceServiceOther))) && ((PrismSource::sourceJudge request) =? (PrismSource::sourceAnswerRead)))
+}
+
+theorem{
+  name: sourceInv003Holds,
+  parameters: [request : PrismSource::SourceRequest],
+  statement: ((sourceBreaksInv003 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismSource::sourceActRead,
+      PrismSource::sourceActWrite,
+      PrismSource::sourceAnswerRead,
+      PrismSource::sourceAnswerRefuse,
+      PrismSource::sourceHaltedNo,
+      PrismSource::sourceHaltedYes,
+      PrismSource::sourceJudge,
+      PrismSource::sourceRouteExport,
+      PrismSource::sourceRouteOwn,
+      PrismSource::sourceRouteSeen,
+      PrismSource::sourceRule1,
+      PrismSource::sourceRule2,
+      PrismSource::sourceRule3,
+      PrismSource::sourceRule4,
+      PrismSource::sourceRule4Misses,
+      PrismSource::sourceRule5,
+      PrismSource::sourceRule5Misses,
+      PrismSource::sourceRule6,
+      PrismSource::sourceRule6Misses,
+      PrismSource::sourceServiceCalendar,
+      PrismSource::sourceServiceDiscord,
+      PrismSource::sourceServiceGmail,
+      PrismSource::sourceServiceLinkedin,
+      PrismSource::sourceServiceOther,
+      PrismSource::sourceServiceWhatsapp,
+      sourceBreaksInv003
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sourceBreaksInv004,
+  parameters: [request : PrismSource::SourceRequest],
+  result: Bool,
+  body: ((((((((project request service) <? 6) && ((project request route) <? 3)) && ((project request act) <? 2)) && ((project request halted) <? 2)) && ((project request service) =? (PrismSource::sourceServiceWhatsapp))) && ((project request route) =? (PrismSource::sourceRouteOwn))) && ((PrismSource::sourceJudge request) =? (PrismSource::sourceAnswerRead)))
+}
+
+theorem{
+  name: sourceInv004Holds,
+  parameters: [request : PrismSource::SourceRequest],
+  statement: ((sourceBreaksInv004 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismSource::sourceActRead,
+      PrismSource::sourceActWrite,
+      PrismSource::sourceAnswerRead,
+      PrismSource::sourceAnswerRefuse,
+      PrismSource::sourceHaltedNo,
+      PrismSource::sourceHaltedYes,
+      PrismSource::sourceJudge,
+      PrismSource::sourceRouteExport,
+      PrismSource::sourceRouteOwn,
+      PrismSource::sourceRouteSeen,
+      PrismSource::sourceRule1,
+      PrismSource::sourceRule2,
+      PrismSource::sourceRule3,
+      PrismSource::sourceRule4,
+      PrismSource::sourceRule4Misses,
+      PrismSource::sourceRule5,
+      PrismSource::sourceRule5Misses,
+      PrismSource::sourceRule6,
+      PrismSource::sourceRule6Misses,
+      PrismSource::sourceServiceCalendar,
+      PrismSource::sourceServiceDiscord,
+      PrismSource::sourceServiceGmail,
+      PrismSource::sourceServiceLinkedin,
+      PrismSource::sourceServiceOther,
+      PrismSource::sourceServiceWhatsapp,
+      sourceBreaksInv004
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sourceBreaksInv005,
+  parameters: [request : PrismSource::SourceRequest],
+  result: Bool,
+  body: ((((((((project request service) <? 6) && ((project request route) <? 3)) && ((project request act) <? 2)) && ((project request halted) <? 2)) && ((project request service) =? (PrismSource::sourceServiceDiscord))) && ((project request route) =? (PrismSource::sourceRouteOwn))) && ((PrismSource::sourceJudge request) =? (PrismSource::sourceAnswerRead)))
+}
+
+theorem{
+  name: sourceInv005Holds,
+  parameters: [request : PrismSource::SourceRequest],
+  statement: ((sourceBreaksInv005 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismSource::sourceActRead,
+      PrismSource::sourceActWrite,
+      PrismSource::sourceAnswerRead,
+      PrismSource::sourceAnswerRefuse,
+      PrismSource::sourceHaltedNo,
+      PrismSource::sourceHaltedYes,
+      PrismSource::sourceJudge,
+      PrismSource::sourceRouteExport,
+      PrismSource::sourceRouteOwn,
+      PrismSource::sourceRouteSeen,
+      PrismSource::sourceRule1,
+      PrismSource::sourceRule2,
+      PrismSource::sourceRule3,
+      PrismSource::sourceRule4,
+      PrismSource::sourceRule4Misses,
+      PrismSource::sourceRule5,
+      PrismSource::sourceRule5Misses,
+      PrismSource::sourceRule6,
+      PrismSource::sourceRule6Misses,
+      PrismSource::sourceServiceCalendar,
+      PrismSource::sourceServiceDiscord,
+      PrismSource::sourceServiceGmail,
+      PrismSource::sourceServiceLinkedin,
+      PrismSource::sourceServiceOther,
+      PrismSource::sourceServiceWhatsapp,
+      sourceBreaksInv005
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sourceBreaksInv006,
+  parameters: [request : PrismSource::SourceRequest],
+  result: Bool,
+  body: ((((((((project request service) <? 6) && ((project request route) <? 3)) && ((project request act) <? 2)) && ((project request halted) <? 2)) && ((project request service) =? (PrismSource::sourceServiceLinkedin))) && ((project request route) =? (PrismSource::sourceRouteOwn))) && ((PrismSource::sourceJudge request) =? (PrismSource::sourceAnswerRead)))
+}
+
+theorem{
+  name: sourceInv006Holds,
+  parameters: [request : PrismSource::SourceRequest],
+  statement: ((sourceBreaksInv006 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismSource::sourceActRead,
+      PrismSource::sourceActWrite,
+      PrismSource::sourceAnswerRead,
+      PrismSource::sourceAnswerRefuse,
+      PrismSource::sourceHaltedNo,
+      PrismSource::sourceHaltedYes,
+      PrismSource::sourceJudge,
+      PrismSource::sourceRouteExport,
+      PrismSource::sourceRouteOwn,
+      PrismSource::sourceRouteSeen,
+      PrismSource::sourceRule1,
+      PrismSource::sourceRule2,
+      PrismSource::sourceRule3,
+      PrismSource::sourceRule4,
+      PrismSource::sourceRule4Misses,
+      PrismSource::sourceRule5,
+      PrismSource::sourceRule5Misses,
+      PrismSource::sourceRule6,
+      PrismSource::sourceRule6Misses,
+      PrismSource::sourceServiceCalendar,
+      PrismSource::sourceServiceDiscord,
+      PrismSource::sourceServiceGmail,
+      PrismSource::sourceServiceLinkedin,
+      PrismSource::sourceServiceOther,
+      PrismSource::sourceServiceWhatsapp,
+      sourceBreaksInv006
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

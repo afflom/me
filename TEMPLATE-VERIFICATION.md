@@ -30,10 +30,12 @@ or test is added without the other two.
 | honesty meta-gate | an ID with no test | rejected |
 | `page_pg_01` | `site/card.mjs` opens the vault without the halt switch | rejected (`PG-01: the vault's decisions are the root's, and it sees the halt switch`) |
 | `test/page/card.test.mjs` | the page's halt switch always answers `no` | rejected: a task kept while halted, the wait for `Refused` times out |
-| `prismpm verify` (`PG-02`) | the Today place drops Money from its domains in `PrismSurface` | rejected (LLV7002: `decide` proved `surfacePlacesAgree PrismSurface.surfacePlaces = true` false); restoring the row proves all 14 surface guarantees |
+| `prismpm verify` (`PG-02`) | the Today place drops Money from its domains in `PrismSurface` | rejected (LLV7002: `decide` proved `surfacePlacesAgree PrismSurface.surfacePlaces = true` false); restoring the row proves all 18 surface guarantees |
 | `page_pg_02` | an explanatory sentence as the empty-place word in `app/specs/surface/spec.json`; a word of its own in `site/card.mjs` (`say("Kept.", …)`) | both rejected (`the empty word … is not a name`; `site/card.mjs writes its own word after say("`) |
 | `tools/realize/gate.py --check` (`RZ-01`) | a boundary field no rule reads (`mood`); the vault store's redundant `deny` rule put back; the Quiet setting bound to a field that does not exist, then to nothing; the destinations' `verdict` read as R4's outcomes; a destination outcome with its meaning removed; a spec edited without rewriting the model | all rejected (`field \`mood\` changes no answer` with the Lean structure mismatch; `rule REQ-003 changes no answer`; `setting \`quiet\` drives dest.urgencyx, which is not a sensitive field`, `drives no field of any facet`; `field \`verdict\` reads r4, but its values are not r4's outcomes`; `vocabulary has 13 of 14`; `PrismRealizability.lex.tex is not what app/specs says`); restoring each passes |
 | `lexlean verify` (`RZ-01`) | the vault store's judge answers `storehash` where its spec says `store` | rejected (LLV7002 on `PrismRealizabilityProofs`: `rfl` failed on the witness pairs); restoring the judge verifies all 64 realizability theorems with no axioms |
+| `tools/surface/gen.py --check` (`PG-02`) | the look's dark `muted` tone darkened to `#3a4a42` in `app/specs/surface/spec.json` | rejected (`surface: muted on ground reads at 2.03 in dark, under its 4.5`); restoring the tone reports `surface: current` |
+| `test/page/voice.test.mjs` (`VO-01`) | `site/voice.mjs` sounds an answer under Quiet (`if (true) sound(`) | rejected (`Quiet sounds nothing`); restoring `if (!quiet) sound(` passes |
 | `prism_pm_01` | `routesBoundary` states that the boundary facet answers with `PrismLearning::learningDispatch` | rejected (`PM-01: routesBoundary must prove the Boundary facet answers with PrismBoundary::boundaryDispatch`); restoring the statement passes |
 | `prismpm verify` | an acceptance vector set without the exact guest-allocation boundary | rejected (PP2009); seen again on the Prism root before its 1024-byte vector was added |
 | `audit-bootstrap` | a floating/copied action, mutable SDK tag, changed universal file, narrowed boundary, shallow/credential-retaining checkout, copied project renderer, omitted standards lock, acceptance bypass, deploy-job signing privilege, incomplete release lifecycle, or a bootstrap that drops a native architecture from main or tags, cancels or replaces a main run, or skips runs by path, condition or matrix exclusion | all rejected |
@@ -398,12 +400,20 @@ application's answer is decided by `route`.
 the workspace slots by `bootstrap/page.mjs`. The places, acts, settings and
 every visible word are `PrismSurface` (`app/specs/surface/spec.json`, written
 by `tools/surface/gen.py` into the LexLean model, `site/surface/surface.mjs`
-and `site/card.html`). Its 14 guarantees, proved by `decide` against
+and `site/card.html`; the look's tones into the token block of `site/card.css`). Its 18 guarantees, proved by `decide` against
 `Foundation.Me.V1.Model`, place every owner view exactly once, give each place
 exactly its view's role and domains, group the menu by role, keep outbound
-acts in the Correspondent, Planner and Publisher roles, and keep a note at its
-domain's floor, never public. The generator refuses a word that is not a
-name (more than four words or 28 characters, or a sentence).
+acts in the Correspondent, Planner and Publisher roles, keep a note at its
+domain's floor, never public, give every list place a feeder (a source that
+reads into one of its domains, or an act that keeps into it), and read every named pair of the look's tones at
+its contrast in both themes. The look follows verdant resonance's interface
+without its world: a luminous green ground, verdant, solar and crystal accents,
+and a self-hosted display serif (Cormorant Garamond, OFL). Today is the home:
+a card per place with its count, its latest item and its feeder's button, so
+an empty place offers the act that fills it. The generator
+refuses a word that is not a name (more than four words or 28 characters, or
+a sentence), a list place with no feeder, a tone that sets a brand variable the brand does not define or
+that another tone sets, and a pair below its WCAG 2.2 contrast.
 
 The surface decides nothing: every question goes to the verified root guest as
 `<facet> <rest>`. The vault's `boundary`, `store` and `restore`, R4's `r4`,
@@ -413,6 +423,21 @@ field, read on every question. A passphrase is asked only to make or read an
 encrypted backup. `test/page/card.test.mjs` drives the assembled page in
 headless Chromium in `pages.yml`; `page_pg_01` pins the wiring and
 `page_pg_02` the model.
+
+The voice (`VO-01`) answers a gesture in tone and colour, after verdant
+resonance's soundscape without its garden. `PrismSurface` holds its numbers:
+a 5-limit just scale over one base, each ratio written as its prime factors,
+five partials, a loudness ceiling, attack, release and a rest between
+answers, and the answers of PrismResonance (rest, whisper, chime, bloom,
+chorus, recede), each with its degrees, level and a tone of the look. Five
+guarantees by `decide`: every ratio is 5-limit, the scale rises within one
+octave, every answer sounds degrees of the scale in at most a triad, a rest
+is silent, and the ceiling, attack, release and rest are humane.
+`site/voice.mjs` loads on the owner's first gesture, never before; it sounds
+nothing under Quiet and only colours the result. It listens to
+`onResonance` when the page carries it, and until then to the page's own
+outcomes, mapped onto the same answers. `test/page/voice.test.mjs` hears the
+model's exact frequencies in headless Chromium.
 
 ## Prism accounts: the remembered passkey
 

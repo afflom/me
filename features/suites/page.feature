@@ -11,10 +11,10 @@ Feature: page
     And crates/conformance/tests/page.rs holds every decision in site/card.mjs to the app guest
 
   @PG-02 @build
-  Scenario: The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, and every visible word a name from the model
+  Scenario: The page is PrismSurface made visible: one place per owner view of the design model, drawn only when it is in the person's view and never when it is the system's, showing that view's domains under its role, every act and setting in its modeled place, every visible word a name from the model, every list place fed by a source or an act, and every colour a tone of its modeled look read at its contrast
     Given the fixture PG-02 needs
     When the suite exercises PG-02
-    Then The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, and every visible word a name from the model
+    Then The page is PrismSurface made visible: one place per owner view of the design model, drawn only when it is in the person's view and never when it is the system's, showing that view's domains under its role, every act and setting in its modeled place, every visible word a name from the model, every list place fed by a source or an act, and every colour a tone of its modeled look read at its contrast
 
   @PG-03 @build
   Scenario: Every act on the page completes end to end: what the owner sends is the very event or message they reviewed and is kept in the place it left from at that domain's floor, every kept item opens to its words, and Ask draws on the kept items that share its words, never while halted, under the highest label it drew on
@@ -22,3 +22,9 @@ Feature: page
     When test/page/acts.test.mjs keeps a task, reviews and sends an event and a message, opens the message, and asks a question, then asks again while halted, in headless Chromium
     Then the event and the message are sent to the owner's apps and kept in Calendar and Conversations, the message opens to its body, the question draws on the task, and the question asked while halted draws on nothing
     And crates/conformance/tests/page.rs holds the event's stamp to Review, the keep of what was sent to the domain's floor and the Ask's label to what it drew on
+
+  @VO-01 @build
+  Scenario: The Prism answers a gesture in tone and colour from PrismSurface's voice: 5-limit just ratios within one octave, a loudness ceiling, a rest between answers, silent under Quiet, and nothing loaded before the owner's first gesture
+    Given the fixture VO-01 needs
+    When the suite exercises VO-01
+    Then The Prism answers a gesture in tone and colour from PrismSurface's voice: 5-limit just ratios within one octave, a loudness ceiling, a rest between answers, silent under Quiet, and nothing loaded before the owner's first gesture

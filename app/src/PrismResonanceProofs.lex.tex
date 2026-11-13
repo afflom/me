@@ -1,0 +1,488 @@
+\begin{lexlean}{PrismResonanceProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismResonance}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: resonanceBreaksInv001,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  result: Bool,
+  body: ((((((((((project request gesture) <? 5) && ((project request pace) <? 3)) && ((project request salience) <? 2)) && ((project request phase) <? 4)) && ((project request belief) <? 4)) && ((project request attention) <? 2)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismResonance::resonanceHaltedYes))) && (not ((PrismResonance::resonanceJudge request) =? (PrismResonance::resonanceAnswerRest))))
+}
+
+theorem{
+  name: resonanceInv001Holds,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  statement: ((resonanceBreaksInv001 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismResonance::resonanceAnswerBloom,
+      PrismResonance::resonanceAnswerChime,
+      PrismResonance::resonanceAnswerChorus,
+      PrismResonance::resonanceAnswerRecede,
+      PrismResonance::resonanceAnswerRest,
+      PrismResonance::resonanceAnswerWhisper,
+      PrismResonance::resonanceAttentionOpen,
+      PrismResonance::resonanceAttentionQuiet,
+      PrismResonance::resonanceBeliefConfirmed,
+      PrismResonance::resonanceBeliefConsolidated,
+      PrismResonance::resonanceBeliefInferred,
+      PrismResonance::resonanceBeliefRejected,
+      PrismResonance::resonanceGestureDismiss,
+      PrismResonance::resonanceGestureDwell,
+      PrismResonance::resonanceGestureKeep,
+      PrismResonance::resonanceGestureOpen,
+      PrismResonance::resonanceGestureStill,
+      PrismResonance::resonanceHaltedNo,
+      PrismResonance::resonanceHaltedYes,
+      PrismResonance::resonanceJudge,
+      PrismResonance::resonancePaceCalm,
+      PrismResonance::resonancePaceHurried,
+      PrismResonance::resonancePaceStill,
+      PrismResonance::resonancePhaseDawn,
+      PrismResonance::resonancePhaseDay,
+      PrismResonance::resonancePhaseDusk,
+      PrismResonance::resonancePhaseNight,
+      PrismResonance::resonanceSalienceFar,
+      PrismResonance::resonanceSalienceNear,
+      resonanceBreaksInv001
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceBreaksInv002,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  result: Bool,
+  body: (((((((((((project request gesture) <? 5) && ((project request pace) <? 3)) && ((project request salience) <? 2)) && ((project request phase) <? 4)) && ((project request belief) <? 4)) && ((project request attention) <? 2)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismResonance::resonanceHaltedNo))) && ((project request gesture) =? (PrismResonance::resonanceGestureDismiss))) && (not ((PrismResonance::resonanceJudge request) =? (PrismResonance::resonanceAnswerRecede))))
+}
+
+theorem{
+  name: resonanceInv002Holds,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  statement: ((resonanceBreaksInv002 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismResonance::resonanceAnswerBloom,
+      PrismResonance::resonanceAnswerChime,
+      PrismResonance::resonanceAnswerChorus,
+      PrismResonance::resonanceAnswerRecede,
+      PrismResonance::resonanceAnswerRest,
+      PrismResonance::resonanceAnswerWhisper,
+      PrismResonance::resonanceAttentionOpen,
+      PrismResonance::resonanceAttentionQuiet,
+      PrismResonance::resonanceBeliefConfirmed,
+      PrismResonance::resonanceBeliefConsolidated,
+      PrismResonance::resonanceBeliefInferred,
+      PrismResonance::resonanceBeliefRejected,
+      PrismResonance::resonanceGestureDismiss,
+      PrismResonance::resonanceGestureDwell,
+      PrismResonance::resonanceGestureKeep,
+      PrismResonance::resonanceGestureOpen,
+      PrismResonance::resonanceGestureStill,
+      PrismResonance::resonanceHaltedNo,
+      PrismResonance::resonanceHaltedYes,
+      PrismResonance::resonanceJudge,
+      PrismResonance::resonancePaceCalm,
+      PrismResonance::resonancePaceHurried,
+      PrismResonance::resonancePaceStill,
+      PrismResonance::resonancePhaseDawn,
+      PrismResonance::resonancePhaseDay,
+      PrismResonance::resonancePhaseDusk,
+      PrismResonance::resonancePhaseNight,
+      PrismResonance::resonanceSalienceFar,
+      PrismResonance::resonanceSalienceNear,
+      resonanceBreaksInv002
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceBreaksInv003,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  result: Bool,
+  body: ((((((((((project request gesture) <? 5) && ((project request pace) <? 3)) && ((project request salience) <? 2)) && ((project request phase) <? 4)) && ((project request belief) <? 4)) && ((project request attention) <? 2)) && ((project request halted) <? 2)) && ((project request gesture) =? (PrismResonance::resonanceGestureStill))) && (not ((PrismResonance::resonanceJudge request) =? (PrismResonance::resonanceAnswerRest))))
+}
+
+theorem{
+  name: resonanceInv003Holds,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  statement: ((resonanceBreaksInv003 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismResonance::resonanceAnswerBloom,
+      PrismResonance::resonanceAnswerChime,
+      PrismResonance::resonanceAnswerChorus,
+      PrismResonance::resonanceAnswerRecede,
+      PrismResonance::resonanceAnswerRest,
+      PrismResonance::resonanceAnswerWhisper,
+      PrismResonance::resonanceAttentionOpen,
+      PrismResonance::resonanceAttentionQuiet,
+      PrismResonance::resonanceBeliefConfirmed,
+      PrismResonance::resonanceBeliefConsolidated,
+      PrismResonance::resonanceBeliefInferred,
+      PrismResonance::resonanceBeliefRejected,
+      PrismResonance::resonanceGestureDismiss,
+      PrismResonance::resonanceGestureDwell,
+      PrismResonance::resonanceGestureKeep,
+      PrismResonance::resonanceGestureOpen,
+      PrismResonance::resonanceGestureStill,
+      PrismResonance::resonanceHaltedNo,
+      PrismResonance::resonanceHaltedYes,
+      PrismResonance::resonanceJudge,
+      PrismResonance::resonancePaceCalm,
+      PrismResonance::resonancePaceHurried,
+      PrismResonance::resonancePaceStill,
+      PrismResonance::resonancePhaseDawn,
+      PrismResonance::resonancePhaseDay,
+      PrismResonance::resonancePhaseDusk,
+      PrismResonance::resonancePhaseNight,
+      PrismResonance::resonanceSalienceFar,
+      PrismResonance::resonanceSalienceNear,
+      resonanceBreaksInv003
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceBreaksInv004,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  result: Bool,
+  body: ((((((((((project request gesture) <? 5) && ((project request pace) <? 3)) && ((project request salience) <? 2)) && ((project request phase) <? 4)) && ((project request belief) <? 4)) && ((project request attention) <? 2)) && ((project request halted) <? 2)) && ((project request attention) =? (PrismResonance::resonanceAttentionQuiet))) && ((((PrismResonance::resonanceJudge request) =? (PrismResonance::resonanceAnswerChime)) || ((PrismResonance::resonanceJudge request) =? (PrismResonance::resonanceAnswerBloom))) || ((PrismResonance::resonanceJudge request) =? (PrismResonance::resonanceAnswerChorus))))
+}
+
+theorem{
+  name: resonanceInv004Holds,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  statement: ((resonanceBreaksInv004 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismResonance::resonanceAnswerBloom,
+      PrismResonance::resonanceAnswerChime,
+      PrismResonance::resonanceAnswerChorus,
+      PrismResonance::resonanceAnswerRecede,
+      PrismResonance::resonanceAnswerRest,
+      PrismResonance::resonanceAnswerWhisper,
+      PrismResonance::resonanceAttentionOpen,
+      PrismResonance::resonanceAttentionQuiet,
+      PrismResonance::resonanceBeliefConfirmed,
+      PrismResonance::resonanceBeliefConsolidated,
+      PrismResonance::resonanceBeliefInferred,
+      PrismResonance::resonanceBeliefRejected,
+      PrismResonance::resonanceGestureDismiss,
+      PrismResonance::resonanceGestureDwell,
+      PrismResonance::resonanceGestureKeep,
+      PrismResonance::resonanceGestureOpen,
+      PrismResonance::resonanceGestureStill,
+      PrismResonance::resonanceHaltedNo,
+      PrismResonance::resonanceHaltedYes,
+      PrismResonance::resonanceJudge,
+      PrismResonance::resonancePaceCalm,
+      PrismResonance::resonancePaceHurried,
+      PrismResonance::resonancePaceStill,
+      PrismResonance::resonancePhaseDawn,
+      PrismResonance::resonancePhaseDay,
+      PrismResonance::resonancePhaseDusk,
+      PrismResonance::resonancePhaseNight,
+      PrismResonance::resonanceSalienceFar,
+      PrismResonance::resonanceSalienceNear,
+      resonanceBreaksInv004
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceBreaksInv005,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  result: Bool,
+  body: ((((((((((project request gesture) <? 5) && ((project request pace) <? 3)) && ((project request salience) <? 2)) && ((project request phase) <? 4)) && ((project request belief) <? 4)) && ((project request attention) <? 2)) && ((project request halted) <? 2)) && ((project request belief) =? (PrismResonance::resonanceBeliefRejected))) && (((PrismResonance::resonanceJudge request) =? (PrismResonance::resonanceAnswerBloom)) || ((PrismResonance::resonanceJudge request) =? (PrismResonance::resonanceAnswerChorus))))
+}
+
+theorem{
+  name: resonanceInv005Holds,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  statement: ((resonanceBreaksInv005 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismResonance::resonanceAnswerBloom,
+      PrismResonance::resonanceAnswerChime,
+      PrismResonance::resonanceAnswerChorus,
+      PrismResonance::resonanceAnswerRecede,
+      PrismResonance::resonanceAnswerRest,
+      PrismResonance::resonanceAnswerWhisper,
+      PrismResonance::resonanceAttentionOpen,
+      PrismResonance::resonanceAttentionQuiet,
+      PrismResonance::resonanceBeliefConfirmed,
+      PrismResonance::resonanceBeliefConsolidated,
+      PrismResonance::resonanceBeliefInferred,
+      PrismResonance::resonanceBeliefRejected,
+      PrismResonance::resonanceGestureDismiss,
+      PrismResonance::resonanceGestureDwell,
+      PrismResonance::resonanceGestureKeep,
+      PrismResonance::resonanceGestureOpen,
+      PrismResonance::resonanceGestureStill,
+      PrismResonance::resonanceHaltedNo,
+      PrismResonance::resonanceHaltedYes,
+      PrismResonance::resonanceJudge,
+      PrismResonance::resonancePaceCalm,
+      PrismResonance::resonancePaceHurried,
+      PrismResonance::resonancePaceStill,
+      PrismResonance::resonancePhaseDawn,
+      PrismResonance::resonancePhaseDay,
+      PrismResonance::resonancePhaseDusk,
+      PrismResonance::resonancePhaseNight,
+      PrismResonance::resonanceSalienceFar,
+      PrismResonance::resonanceSalienceNear,
+      resonanceBreaksInv005
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceBreaksInv006,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  result: Bool,
+  body: ((((((((((project request gesture) <? 5) && ((project request pace) <? 3)) && ((project request salience) <? 2)) && ((project request phase) <? 4)) && ((project request belief) <? 4)) && ((project request attention) <? 2)) && ((project request halted) <? 2)) && ((project request pace) =? (PrismResonance::resonancePaceHurried))) && (((PrismResonance::resonanceJudge request) =? (PrismResonance::resonanceAnswerBloom)) || ((PrismResonance::resonanceJudge request) =? (PrismResonance::resonanceAnswerChorus))))
+}
+
+theorem{
+  name: resonanceInv006Holds,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  statement: ((resonanceBreaksInv006 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismResonance::resonanceAnswerBloom,
+      PrismResonance::resonanceAnswerChime,
+      PrismResonance::resonanceAnswerChorus,
+      PrismResonance::resonanceAnswerRecede,
+      PrismResonance::resonanceAnswerRest,
+      PrismResonance::resonanceAnswerWhisper,
+      PrismResonance::resonanceAttentionOpen,
+      PrismResonance::resonanceAttentionQuiet,
+      PrismResonance::resonanceBeliefConfirmed,
+      PrismResonance::resonanceBeliefConsolidated,
+      PrismResonance::resonanceBeliefInferred,
+      PrismResonance::resonanceBeliefRejected,
+      PrismResonance::resonanceGestureDismiss,
+      PrismResonance::resonanceGestureDwell,
+      PrismResonance::resonanceGestureKeep,
+      PrismResonance::resonanceGestureOpen,
+      PrismResonance::resonanceGestureStill,
+      PrismResonance::resonanceHaltedNo,
+      PrismResonance::resonanceHaltedYes,
+      PrismResonance::resonanceJudge,
+      PrismResonance::resonancePaceCalm,
+      PrismResonance::resonancePaceHurried,
+      PrismResonance::resonancePaceStill,
+      PrismResonance::resonancePhaseDawn,
+      PrismResonance::resonancePhaseDay,
+      PrismResonance::resonancePhaseDusk,
+      PrismResonance::resonancePhaseNight,
+      PrismResonance::resonanceSalienceFar,
+      PrismResonance::resonanceSalienceNear,
+      resonanceBreaksInv006
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceBreaksInv007,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  result: Bool,
+  body: ((((((((((project request gesture) <? 5) && ((project request pace) <? 3)) && ((project request salience) <? 2)) && ((project request phase) <? 4)) && ((project request belief) <? 4)) && ((project request attention) <? 2)) && ((project request halted) <? 2)) && ((project request belief) =? (PrismResonance::resonanceBeliefInferred))) && ((PrismResonance::resonanceJudge request) =? (PrismResonance::resonanceAnswerChorus)))
+}
+
+theorem{
+  name: resonanceInv007Holds,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  statement: ((resonanceBreaksInv007 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismResonance::resonanceAnswerBloom,
+      PrismResonance::resonanceAnswerChime,
+      PrismResonance::resonanceAnswerChorus,
+      PrismResonance::resonanceAnswerRecede,
+      PrismResonance::resonanceAnswerRest,
+      PrismResonance::resonanceAnswerWhisper,
+      PrismResonance::resonanceAttentionOpen,
+      PrismResonance::resonanceAttentionQuiet,
+      PrismResonance::resonanceBeliefConfirmed,
+      PrismResonance::resonanceBeliefConsolidated,
+      PrismResonance::resonanceBeliefInferred,
+      PrismResonance::resonanceBeliefRejected,
+      PrismResonance::resonanceGestureDismiss,
+      PrismResonance::resonanceGestureDwell,
+      PrismResonance::resonanceGestureKeep,
+      PrismResonance::resonanceGestureOpen,
+      PrismResonance::resonanceGestureStill,
+      PrismResonance::resonanceHaltedNo,
+      PrismResonance::resonanceHaltedYes,
+      PrismResonance::resonanceJudge,
+      PrismResonance::resonancePaceCalm,
+      PrismResonance::resonancePaceHurried,
+      PrismResonance::resonancePaceStill,
+      PrismResonance::resonancePhaseDawn,
+      PrismResonance::resonancePhaseDay,
+      PrismResonance::resonancePhaseDusk,
+      PrismResonance::resonancePhaseNight,
+      PrismResonance::resonanceSalienceFar,
+      PrismResonance::resonanceSalienceNear,
+      resonanceBreaksInv007
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceBreaksInv008,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  result: Bool,
+  body: (((((((((((project request gesture) <? 5) && ((project request pace) <? 3)) && ((project request salience) <? 2)) && ((project request phase) <? 4)) && ((project request belief) <? 4)) && ((project request attention) <? 2)) && ((project request halted) <? 2)) && ((project request salience) =? (PrismResonance::resonanceSalienceFar))) && ((project request gesture) =? (PrismResonance::resonanceGestureDwell))) && (((PrismResonance::resonanceJudge request) =? (PrismResonance::resonanceAnswerBloom)) || ((PrismResonance::resonanceJudge request) =? (PrismResonance::resonanceAnswerChorus))))
+}
+
+theorem{
+  name: resonanceInv008Holds,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  statement: ((resonanceBreaksInv008 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismResonance::resonanceAnswerBloom,
+      PrismResonance::resonanceAnswerChime,
+      PrismResonance::resonanceAnswerChorus,
+      PrismResonance::resonanceAnswerRecede,
+      PrismResonance::resonanceAnswerRest,
+      PrismResonance::resonanceAnswerWhisper,
+      PrismResonance::resonanceAttentionOpen,
+      PrismResonance::resonanceAttentionQuiet,
+      PrismResonance::resonanceBeliefConfirmed,
+      PrismResonance::resonanceBeliefConsolidated,
+      PrismResonance::resonanceBeliefInferred,
+      PrismResonance::resonanceBeliefRejected,
+      PrismResonance::resonanceGestureDismiss,
+      PrismResonance::resonanceGestureDwell,
+      PrismResonance::resonanceGestureKeep,
+      PrismResonance::resonanceGestureOpen,
+      PrismResonance::resonanceGestureStill,
+      PrismResonance::resonanceHaltedNo,
+      PrismResonance::resonanceHaltedYes,
+      PrismResonance::resonanceJudge,
+      PrismResonance::resonancePaceCalm,
+      PrismResonance::resonancePaceHurried,
+      PrismResonance::resonancePaceStill,
+      PrismResonance::resonancePhaseDawn,
+      PrismResonance::resonancePhaseDay,
+      PrismResonance::resonancePhaseDusk,
+      PrismResonance::resonancePhaseNight,
+      PrismResonance::resonanceSalienceFar,
+      PrismResonance::resonanceSalienceNear,
+      resonanceBreaksInv008
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceBreaksInv009,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  result: Bool,
+  body: ((((((((((project request gesture) <? 5) && ((project request pace) <? 3)) && ((project request salience) <? 2)) && ((project request phase) <? 4)) && ((project request belief) <? 4)) && ((project request attention) <? 2)) && ((project request halted) <? 2)) && ((project request gesture) =? (PrismResonance::resonanceGestureOpen))) && (((PrismResonance::resonanceJudge request) =? (PrismResonance::resonanceAnswerBloom)) || ((PrismResonance::resonanceJudge request) =? (PrismResonance::resonanceAnswerChorus))))
+}
+
+theorem{
+  name: resonanceInv009Holds,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  statement: ((resonanceBreaksInv009 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismResonance::resonanceAnswerBloom,
+      PrismResonance::resonanceAnswerChime,
+      PrismResonance::resonanceAnswerChorus,
+      PrismResonance::resonanceAnswerRecede,
+      PrismResonance::resonanceAnswerRest,
+      PrismResonance::resonanceAnswerWhisper,
+      PrismResonance::resonanceAttentionOpen,
+      PrismResonance::resonanceAttentionQuiet,
+      PrismResonance::resonanceBeliefConfirmed,
+      PrismResonance::resonanceBeliefConsolidated,
+      PrismResonance::resonanceBeliefInferred,
+      PrismResonance::resonanceBeliefRejected,
+      PrismResonance::resonanceGestureDismiss,
+      PrismResonance::resonanceGestureDwell,
+      PrismResonance::resonanceGestureKeep,
+      PrismResonance::resonanceGestureOpen,
+      PrismResonance::resonanceGestureStill,
+      PrismResonance::resonanceHaltedNo,
+      PrismResonance::resonanceHaltedYes,
+      PrismResonance::resonanceJudge,
+      PrismResonance::resonancePaceCalm,
+      PrismResonance::resonancePaceHurried,
+      PrismResonance::resonancePaceStill,
+      PrismResonance::resonancePhaseDawn,
+      PrismResonance::resonancePhaseDay,
+      PrismResonance::resonancePhaseDusk,
+      PrismResonance::resonancePhaseNight,
+      PrismResonance::resonanceSalienceFar,
+      PrismResonance::resonanceSalienceNear,
+      resonanceBreaksInv009
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceBreaksInv010,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  result: Bool,
+  body: (((((((((((project request gesture) <? 5) && ((project request pace) <? 3)) && ((project request salience) <? 2)) && ((project request phase) <? 4)) && ((project request belief) <? 4)) && ((project request attention) <? 2)) && ((project request halted) <? 2)) && ((project request phase) =? (PrismResonance::resonancePhaseNight))) && ((project request gesture) =? (PrismResonance::resonanceGestureOpen))) && ((PrismResonance::resonanceJudge request) =? (PrismResonance::resonanceAnswerChime)))
+}
+
+theorem{
+  name: resonanceInv010Holds,
+  parameters: [request : PrismResonance::ResonanceRequest],
+  statement: ((resonanceBreaksInv010 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismResonance::resonanceAnswerBloom,
+      PrismResonance::resonanceAnswerChime,
+      PrismResonance::resonanceAnswerChorus,
+      PrismResonance::resonanceAnswerRecede,
+      PrismResonance::resonanceAnswerRest,
+      PrismResonance::resonanceAnswerWhisper,
+      PrismResonance::resonanceAttentionOpen,
+      PrismResonance::resonanceAttentionQuiet,
+      PrismResonance::resonanceBeliefConfirmed,
+      PrismResonance::resonanceBeliefConsolidated,
+      PrismResonance::resonanceBeliefInferred,
+      PrismResonance::resonanceBeliefRejected,
+      PrismResonance::resonanceGestureDismiss,
+      PrismResonance::resonanceGestureDwell,
+      PrismResonance::resonanceGestureKeep,
+      PrismResonance::resonanceGestureOpen,
+      PrismResonance::resonanceGestureStill,
+      PrismResonance::resonanceHaltedNo,
+      PrismResonance::resonanceHaltedYes,
+      PrismResonance::resonanceJudge,
+      PrismResonance::resonancePaceCalm,
+      PrismResonance::resonancePaceHurried,
+      PrismResonance::resonancePaceStill,
+      PrismResonance::resonancePhaseDawn,
+      PrismResonance::resonancePhaseDay,
+      PrismResonance::resonancePhaseDusk,
+      PrismResonance::resonancePhaseNight,
+      PrismResonance::resonanceSalienceFar,
+      PrismResonance::resonanceSalienceNear,
+      resonanceBreaksInv010
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

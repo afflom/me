@@ -22,16 +22,12 @@ fn page_pg_01() {
             "every question goes to the verified root guest",
         ),
         (
-            "openVault({ decide: routerDecide(line), halted })",
-            "the vault's decisions are the root's, and it sees the halt switch",
+            "openVault({ decide: routerDecide(line), halted, objects })",
+            "the vault's decisions are the root's, it sees the halt switch, and it keeps values as uorc archives",
         ),
         (
-            "decide: guestDecider(app.dispatch)",
-            "R4's decision is the root's r4 facet",
-        ),
-        (
-            "boundary: (fields) => line(`boundary ${fields}`)",
-            "R4's Boundary is the root's boundary facet",
+            "const mapped = await route({ source: \"note\", values: { text }, line, halted });",
+            "the R4 router's decisions are the root's router facet, and it sees the halt switch",
         ),
         (
             "const halted = () => (haltedNow ? \"yes\" : \"no\");",
@@ -51,7 +47,8 @@ fn page_pg_01() {
         std::fs::read_to_string(root.join("test/page/card.test.mjs")).expect("the browser test");
     for expected in [
         "settle(\"Kept\")",
-        "settle(\"Kept sealed\")",
+        "settle(\"Paused\")",
+        ".pr-go[data-place=\"health\"]').count(), 0",
         "settle(\"Refused\")",
         "settle(\"Ready to send\")",
     ] {
@@ -62,7 +59,7 @@ fn page_pg_01() {
     }
 }
 
-/// `PG-02`: The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, and every visible word a name from the model
+/// `PG-02`: The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, every visible word a name from the model, every list place fed by a source or an act, and every colour a tone of its modeled look read at its contrast
 #[test]
 fn page_pg_02() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -93,7 +90,11 @@ fn page_pg_02() {
         "surfacePlacesAreViews",
         "surfaceOneHome",
         "surfaceOneComposer",
-        "surfaceMenuByRole",
+        "surfaceOneSheet",
+        "surfaceEverySettingInOneSection",
+        "surfaceSectionsAreFewAndShort",
+        "surfacePageIsThePersonsView",
+        "surfaceMenuIsShort",
         "surfaceActsInTheirRoles",
         "surfaceNotesKeepTheFloor",
         "surfaceFloorsAreTheDesign",
@@ -103,6 +104,10 @@ fn page_pg_02() {
         "surfaceEverySourceOneSetting",
         "surfaceSettingsInGroups",
         "surfaceNoEmptyGroup",
+        "surfaceEveryPairReads",
+        "surfaceTonesAreColours",
+        "surfaceTwoThemes",
+        "surfaceEveryPlaceIsFed",
     ] {
         let at = proofs
             .find(&format!("name: {theorem},"))
@@ -171,16 +176,8 @@ fn page_pg_03() {
             "what was sent is kept as its exact bytes at its domain's floor",
         ),
         (
-            "const used = haltedNow ? [] : drawOn(items, prompt);",
+            "items: haltedNow ? [] : items",
             "Ask draws on nothing kept while halted",
-        ),
-        (
-            "used.reduce((at, item) => higher(at, item.label ?? \"confidential\"), \"confidential\")",
-            "Ask's answer carries the highest label it drew on",
-        ),
-        (
-            "if (item.sealed) continue;",
-            "a sealed item is never drawn on",
         ),
     ] {
         assert!(
@@ -188,11 +185,22 @@ fn page_pg_03() {
             "PG-03: {why}: site/card.mjs must contain `{wiring}`"
         );
     }
-    let r4 = read("site/r4/r4.mjs");
-    assert!(
-        r4.contains("{ role: \"system\", content: grounds.join(\"\\n\") }"),
-        "PG-03: the kept words Ask drew on reach R4 as context"
-    );
+    let answer = read("site/router/answer.mjs");
+    for (wiring, why) in [
+        (
+            "used.reduce((at, item) => higher(at, item.label ?? \"confidential\"), \"confidential\")",
+            "Ask's answer carries the highest label it drew on",
+        ),
+        (
+            "from \"../coherence/sense.mjs\"",
+            "Ask draws through the coherence registry, which never draws on a sealed item (CO-03)",
+        ),
+    ] {
+        assert!(
+            answer.contains(wiring),
+            "PG-03: {why}: site/router/answer.mjs must contain `{wiring}`"
+        );
+    }
     let test = read("test/page/acts.test.mjs");
     for expected in ["Dentist checkup", "aria-expanded", ".pr-drawn", "#pr-halt"] {
         assert!(
@@ -200,4 +208,80 @@ fn page_pg_03() {
             "PG-03: the browser test must exercise {expected}"
         );
     }
+}
+
+/// `VO-01`: The Prism answers a gesture in tone and colour from PrismSurface's voice: 5-limit just ratios within one octave, a loudness ceiling, a rest between answers, silent under Quiet, and nothing loaded before the owner's first gesture
+#[test]
+fn page_vo_01() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .ancestors()
+        .nth(2)
+        .expect("crates/conformance is two below the root")
+        .to_path_buf();
+    let read =
+        |path: &str| std::fs::read_to_string(root.join(path)).unwrap_or_else(|_| panic!("{path}"));
+    // The voice's numbers are the model's, each guarantee closed by decide.
+    let proofs = read("app/src/PrismSurfaceProofs.lex.tex");
+    for theorem in [
+        "surfaceVoiceIsJust",
+        "surfaceScaleIsOneOctave",
+        "surfaceAnswersInTheScale",
+        "surfaceVoiceHasRest",
+        "surfaceVoiceIsHumane",
+    ] {
+        let at = proofs
+            .find(&format!("name: {theorem},"))
+            .unwrap_or_else(|| panic!("VO-01: {theorem} is not stated"));
+        let body = &proofs[at..];
+        let end = body.find("\n}").expect("a theorem block ends");
+        assert!(
+            body[..end].contains("parameters: []") && body[..end].contains("proof: decide{}"),
+            "VO-01: {theorem} must be closed and proved by decide"
+        );
+    }
+    let voice = read("site/voice.mjs");
+    for (wiring, why) in [
+        (
+            "import { VOICE, WORDS } from \"./surface/surface.mjs\";",
+            "every number is PrismSurface's",
+        ),
+        (
+            "master.gain.value = VOICE.ceiling / 100;",
+            "the ceiling is the model's",
+        ),
+        (
+            "if (now - last < VOICE.refractory) return;",
+            "a rest between answers",
+        ),
+        ("if (!quiet) sound(", "silent under Quiet"),
+        (
+            "onResonance((signal) => answer(signal.answer",
+            "PrismResonance decides the answer",
+        ),
+    ] {
+        assert!(voice.contains(wiring), "VO-01: {why} ({wiring})");
+    }
+    for number in ["220", "0.06", "Math.pow"] {
+        assert!(
+            !voice.contains(number),
+            "VO-01: site/voice.mjs holds a number of its own ({number})"
+        );
+    }
+    // Nothing of the voice loads before the owner's first gesture.
+    let card = read("site/card.mjs");
+    assert!(
+        card.contains("addEventListener(\"pointerdown\", voice, { once: true, capture: true });")
+            && card
+                .contains("addEventListener(\"keydown\", voice, { once: true, capture: true });"),
+        "VO-01: the voice loads on the owner's first gesture"
+    );
+    assert_eq!(
+        card.matches("./voice.mjs").count(),
+        1,
+        "VO-01: the voice is imported once, lazily"
+    );
+    assert!(
+        root.join("test/page/voice.test.mjs").exists(),
+        "VO-01: the browser test exists"
+    );
 }

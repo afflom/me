@@ -170,7 +170,8 @@ def audit():
         if k not in MODEL["facets"].values() and k not in MODEL.get("unspecified", {}):
             fail.append(f"facet `{k}` is routed by the root but has no spec in app/specs/realizability/spec.json")
     for d in sorted(p.parent.name for p in SPECS.glob("*/spec.json")):
-        if d not in specs and d not in ("surface", "realizability"):
+        decides = "outcomes" in json.loads((SPECS / d / "spec.json").read_text())
+        if d not in specs and decides:
             fail.append(f"app/specs/{d} is not named in app/specs/realizability/spec.json")
     for d, s in specs.items():
         where = f"{d}"
@@ -306,7 +307,7 @@ def lean(out, settings):
     for d, r in out.items():
         elems = ", ".join(f"{e} := (record RealizabilityElement {{have := {r['desc'][e][0]}, need := {r['desc'][e][1]}}})" for e in ELEMENTS)
         w("definition{\n  name: realizability%s,\n  parameters: [],\n  result: RealizabilityDescriptor,\n  body: (record RealizabilityDescriptor {facet := %d, digest := %d, %s})\n}\n\n"
-          % (camel(d), r["desc"]["identity"][0], int(r["digest"][:12], 16), elems))
+          % (camel(d), r["desc"]["identity"][0], int(r["digest"][:8], 16), elems))
     w("definition{name: realizabilitySettingsBound, parameters: [], result: Nat, body: %d}\n\n" % settings[0])
     w("definition{name: realizabilitySettingsCount, parameters: [], result: Nat, body: %d}\n" % settings[1])
     w("\\end{semanticmodule}\n\\end{lexlean}\n")

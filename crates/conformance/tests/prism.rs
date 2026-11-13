@@ -90,10 +90,14 @@ fn prism_pm_01() {
         ("Dest", "PrismDest", "destDispatch"),
         ("Folder", "PrismFolder", "folderDispatch"),
         ("Host", "PrismHost", "hostDispatch"),
+        ("Source", "PrismSource", "sourceDispatch"),
         ("Model", "PrismModels", "modelsDispatch"),
         ("Kappa", "PrismKappa", "kappaDispatch"),
+        ("Uorc", "PrismUorc", "uorcDispatch"),
         ("Holon", "PrismHolon", "holonDispatch"),
         ("Curate", "PrismCurate", "curateDispatch"),
+        ("Resonance", "PrismResonance", "resonanceDispatch"),
+        ("Router", "PrismRouter", "routerDispatch"),
     ] {
         let theorem = declaration(&proofs, &format!("routes{facet}"));
         assert!(

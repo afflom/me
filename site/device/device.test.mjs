@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { openGuest } from '../google/guest.mjs';
 import { ingestInto } from '../google/ingest.mjs';
-import { GUEST, HOST_GUEST, openDevice, formatOf, formatOfText, contactCards, mboxMessages, calendarItems, contactItems, LIMIT } from './device.mjs';
+import { GUEST, HOST_GUEST, SOURCE_GUEST, openDevice, formatOf, formatOfText, contactCards, mboxMessages, calendarItems, contactItems, LIMIT } from './device.mjs';
 import { HOST, SURFACES, present, lanes, plan } from './host.mjs';
 
 const folder = await openGuest(new Uint8Array(await readFile(new URL(GUEST.path, import.meta.url))), GUEST.sha256);
@@ -164,7 +164,7 @@ for (const [surface, here, act, grant, halted] of product(SURFACES, ['yes', 'no'
   if (halted === 'no' && here === 'yes' && !['mail', 'calendar'].includes(surface)) ok(answer === 'use' || answer === 'offer', `every reported surface is used or offered ${why}`);
 }
 ok(hostRequests === 144, 'every host request is decided');
-const browser = { showDirectoryPicker() {}, indexedDB: {}, File: function () {}, DataTransfer: function () {}, ClipboardEvent: function () {}, document: {}, Worker: function () {}, navigator: { hardwareConcurrency: 4, contacts: { select() {} } } };
+const browser = { showDirectoryPicker() {}, indexedDB: {}, File: function () {}, DataTransfer: function () {}, ClipboardEvent: function () {}, document: {}, Worker: function () {}, navigator: { hardwareConcurrency: 4, contacts: { select() {} }, userAgentData: { mobile: false, brands: [{ brand: 'Google Chrome' }, { brand: 'Chromium' }] } } };
 const bare = { navigator: {} };
 ok(Object.values(present(browser)).every((v) => v === 'yes') && present(bare).folder === 'no' && present(bare).contacts === 'no' && present(bare).mail === 'yes', 'the surfaces this browser reports');
 const visit = await plan({ decide: hostGuest, halted: () => 'no', grant: { folder: 'kept' }, g: browser });
@@ -176,8 +176,10 @@ ok(Object.values(await plan({ decide: hostGuest, halted: () => 'yes', act: { pas
 
 ok(visit.extension === 'offer' && (await plan({ decide: hostGuest, halted: () => 'no', grant: { extension: 'kept' }, g: browser })).extension === 'use', 'the extension is offered, and used once installed');
 ok(present({ document: {}, navigator: { userAgentData: { mobile: true } } }).extension === 'no' && present({ document: {}, navigator: { userAgent: 'Mozilla/5.0 (Linux; Android 14) Mobile' } }).extension === 'no', 'a phone is not offered the extension');
+ok(present({ document: {}, navigator: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0' } }).extension === 'no' && present({ document: {}, navigator: { userAgent: 'Mozilla/5.0 (Macintosh) AppleWebKit/605.1.15 Version/18.0 Safari/605.1.15' } }).extension === 'no', 'Firefox and Safari are not offered the extension');
+ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: [{ brand: 'Microsoft Edge' }, { brand: 'Chromium' }] } } }).extension === 'yes' && present({ document: {}, navigator: { userAgentData: { mobile: false, brands: [{ brand: 'Other' }] } } }).extension === 'no', 'a Chromium browser is offered it, an undeclared brand is not');
 
-// DV-04: the extension reads by GET with the owner's own sign-in, and only the Prism page it was written for is answered.
+// DV-04: the extension carries the declared services by GET with the owner's own sign-in, and only the Prism page it was written for is answered.
 {
   const store = {};
   const listeners = [];
@@ -198,16 +200,35 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: true } } }).ext
     if (u.pathname.endsWith('/exporticalzip')) return { ok: true, status: 200, arrayBuffer: async () => calendarZip.buffer };
     return body('', 404);
   };
-  ok((await bg.unzip(calendarZip)).length === 1, 'a calendar export unzips to its iCalendar files');
-  ok((await bg.original('18c0ffee00000001', null, google)) === RAW, 'a message original is read from Gmail\'s own page, unescaped');
-  await chrome.storage.local.set({ ids: ['18c0ffee00000002'], ik: 'abcdef0123' });
-  const first = await bg.pull({ halted: 'no' }, google);
-  ok(first.items.filter((i) => i.format === 'eml').length === 2 && first.items.some((i) => i.format === 'ics' && i.text === ICS), `a pull reads unread and seen mail and the calendars: ${first.items.length}`);
-  ok(requests.every(({ url, init }) => init.method === 'GET' && init.credentials === 'include' && /^https:\/\/(mail|calendar)\.google\.com\//.test(url)), 'only GET, with the owner\'s own sign-in, to Gmail and Calendar');
-  const again = await bg.pull({ halted: 'no' }, google);
-  ok(again.items.filter((i) => i.format === 'eml').length === 0, 'a message already handed over is not read again');
+  const declared = JSON.parse(await readFile(new URL('../extension/services.json', import.meta.url), 'utf8')).services;
+  bg.declare(declared);
+  const gmail = declared.find((s) => s.key === 'gmail');
+  ok((await bg.unzip(calendarZip, '.ics')).length === 1, 'a calendar export unzips to its iCalendar files');
+  ok((await bg.item(gmail, gmail.own[0], { id: '18c0ffee00000001', decimal: '', key: '' }, google))[0] === RAW, 'a message original is read from Gmail\'s own page, unescaped');
+  ok((await bg.item({ ...gmail, origins: ['https://elsewhere.example/'] }, gmail.own[0], { id: '18c0ffee00000001' }, google)).length === 0, 'a declared URL off its service\'s origins is never fetched');
+  await bg.seen('gmail', { ids: ['18c0ffee00000002'], key: 'abcdef0123' });
+  ok((await bg.round(google)) === 3, 'a round reads unread and seen mail and the calendars');
+  const first = await bg.take({ halted: 'no' });
+  ok(first.items.filter((i) => i.format === 'eml' && i.service === 'gmail' && i.route === 'own').length === 2 && first.items.some((i) => i.format === 'ics' && i.service === 'calendar' && i.text === ICS), `the page takes what the round held: ${first.items.length}`);
+  ok((await bg.take({ halted: 'no' })).items.length === 0, 'what was taken is not held again');
+  ok(requests.every(({ url, init }) => init.method === 'GET' && init.credentials === 'include' && /^https:\/\/(mail|calendar)\.google\.com\//.test(url)), 'only GET, with the owner\'s own sign-in, to the declared origins');
+  await bg.round(google);
+  ok((await bg.take({ halted: 'no' })).items.filter((i) => i.format === 'eml').length === 0, 'a message already handed over is not read again');
+  ok((await bg.take({ halted: 'yes' })).items.length === 0, 'a halted page takes nothing');
   const before = requests.length;
-  ok((await bg.pull({ halted: 'yes' }, google)).items.length === 0 && requests.length === before, 'nothing is read while halted');
+  ok((await bg.round(google)) === 0 && requests.length === before, 'nothing is read while halted, not even on the quarter hour');
+  await bg.take({ halted: 'no' });
+  // A sign-in page instead of the service's own content: not signed in, and nothing read.
+  const signedOut = async (url, init) => ({ ok: true, status: 200, url: 'https://accounts.google.com/signin', text: async () => html(RAW), arrayBuffer: async () => new ArrayBuffer(0) });
+  ok((await bg.item(gmail, gmail.own[0], { id: '18c0ffee00000001' }, signedOut)).length === 0, 'a page that left the service\'s origins is never read');
+  await bg.round(google);
+  const tabs = { list: [{ id: 1, url: 'https://mail.google.com/mail/u/0/#inbox', pinned: false }, { id: 2, url: 'https://news.example/', pinned: true }], query: async () => tabs.list, update: async (id, change) => Object.assign(tabs.list.find((x) => x.id === id), change), create: async (tab) => tabs.list.push({ id: 3, ...tab }) };
+  const st = await bg.status(tabs);
+  ok(st.services.gmail.open && !st.services.gmail.pinned && st.services.gmail.signedIn && !st.services.discord.open, `status reports each service's tab and sign-in: ${JSON.stringify(st.services.gmail)}`);
+  await bg.pin('gmail', tabs);
+  await bg.pin('calendar', tabs);
+  ok(tabs.list[0].pinned && tabs.list.some((x) => x.url === 'https://calendar.google.com/' && x.pinned && x.active === false) && !tabs.list[1].url.includes('google'), 'keeping a service open pins its own tab, or opens it pinned in the background');
+  await bg.take({ halted: 'no' });
   const answer = (url, message) => new Promise((resolve) => { const kept = listeners[0](message, { url }, resolve); if (!kept) resolve('unanswered'); });
   ok((await answer('https://other.example/', { prism: 'pull', halted: 'no' })) === 'unanswered', 'another page is never answered');
   ok((await answer('https://mail.google.com/mail/u/0/', { prism: 'pull', halted: 'no' })) === 'unanswered', 'Gmail itself cannot pull');
@@ -215,10 +236,10 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: true } } }).ext
   // The page's side: the extension written for this page's own address, the hello and the pull.
   const local = async (url) => ({ ok: true, status: 200, text: async () => readFile(new URL(url), 'utf8') });
   const packed = await pack('https://owner.example/me/', new URL('../extension/', import.meta.url), local);
-  const unpacked = await bg.unzip(packed.slice()); // .ics only: none
-  ok(unpacked.length === 0, 'the extension zip holds no calendar');
+  const manifest = JSON.parse((await bg.unzip(packed.slice(), 'manifest.json'))[0]);
+  ok(manifest.host_permissions.join() === 'https://mail.google.com/*,https://calendar.google.com/*' && manifest.content_scripts[1].matches.join() === 'https://mail.google.com/*', `the extension may reach exactly the declared origins: ${manifest.host_permissions}`);
   const text = new TextDecoder().decode(packed);
-  ok(text.includes('"matches": ["https://owner.example/me/*"]') && text.includes("const PRISM = 'https://owner.example/me/';") && !text.includes('__PRISM__'), 'the page writes the extension for its own address');
+  ok(manifest.content_scripts[0].matches.join() === 'https://owner.example/me/*' && text.includes("const PRISM = 'https://owner.example/me/';") && !text.includes('__PRISM__') && !text.includes('__ORIGINS__'), 'the page writes the extension for its own address');
   await assert.rejects(pack('https://owner.example/me', undefined, local), (e) => e.code === 'extension.address');
   checks += 1;
   const win = new EventTarget();
@@ -238,6 +259,39 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: true } } }).ext
   const read = await device.readItems(items);
   ok(read.store === 1 && read.skip === 1, `an item is kept by its own first bytes, never its claim: ${JSON.stringify(read)}`);
   delete globalThis.chrome;
+}
+
+// DV-05: PrismSource, every request: a declared service by every route the browser offers, read only.
+{
+  const source = await openGuest(new Uint8Array(await readFile(new URL(SOURCE_GUEST.path, import.meta.url))), SOURCE_GUEST.sha256);
+  let n = 0;
+  for (const [service, route, act, halted] of product(['gmail', 'calendar', 'discord', 'whatsapp', 'linkedin', 'other'], ['seen', 'own', 'export'], ['read', 'write'], ['no', 'yes'])) {
+    const answer = await source(`${service} ${route} ${act} ${halted}`);
+    const why = `${service} ${route} ${act} ${halted} -> ${answer}`;
+    n += 1;
+    ok(answer === 'read' || answer === 'refuse', why);
+    if (halted === 'yes' || act === 'write' || service === 'other') ok(answer === 'refuse', `halted, write or undeclared ${why}`);
+    if (route === 'own' && ['discord', 'whatsapp', 'linkedin'].includes(service)) ok(answer === 'refuse', `no private interface ${why}`);
+    if (halted === 'no' && act === 'read' && service !== 'other' && !(route === 'own' && ['discord', 'whatsapp', 'linkedin'].includes(service))) ok(answer === 'read', `a declared service is read by every other route ${why}`);
+  }
+  ok(n === 72, 'every source request is decided');
+  // The Connections setting: a state and a next step per service, from the declarations.
+  const conn = await import('../source/services.mjs');
+  const spec = JSON.parse(await readFile(new URL('../../app/specs/source/services.json', import.meta.url), 'utf8'));
+  ok(JSON.stringify(conn.SERVICES) === JSON.stringify(spec.services), 'the page reads exactly the declarations');
+  ok(conn.SERVICES.every((s) => s.connect.every((step) => conn.KINDS.includes(step.kind) && step.word.length <= 28 && step.word.split(' ').length <= 4 && step.how.length > 0)), 'every connect step is a declared kind, named in at most four words, with its how');
+  ok(conn.state('gmail', { extension: false }).next === 'extension', 'without the extension, the next step is to add it');
+  ok(conn.state('gmail', { extension: true, services: { gmail: { signedIn: false } } }).next === 'sign-in', 'then to sign in');
+  ok(conn.state('gmail', { extension: true, services: { gmail: { signedIn: true, pinned: false } } }).next === 'pin-tab', 'then to keep it open');
+  ok(conn.state('gmail', { extension: true, services: { gmail: { signedIn: true, pinned: true } } }).state === 'live', 'then it is live');
+  ok(conn.state('gmail', { extension: true }, { halted: 'yes' }).state === 'paused' && conn.state('nothing', {}).state === 'refused', 'paused while halted; an undeclared service is refused');
+  ok(['discord', 'whatsapp', 'linkedin'].every((k) => conn.state(k, { extension: true }).state === 'off' && conn.SERVICES.find((s) => s.key === k).out === 'refused'), 'a service the extension cannot carry yet is off, and sends nothing');
+  const declared = JSON.parse(await readFile(new URL('../extension/services.json', import.meta.url), 'utf8')).services;
+  ok(JSON.stringify(declared) === JSON.stringify(JSON.parse(await readFile(new URL('../../app/specs/source/services.json', import.meta.url), 'utf8')).services), 'the extension carries the model\'s declarations');
+  for (const s of declared) {
+    for (const route of s.own ?? []) ok((await source(`${s.key} own read no`)) === 'read', `a declared own route is one PrismSource reads: ${s.key}`);
+    ok(s.origins.every((o) => /^https:\/\/[a-z.]+\/$/.test(o)), `${s.key} names https origins only`);
+  }
 }
 
 console.log(`device: ${checks} checks passed`);

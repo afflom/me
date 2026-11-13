@@ -3,7 +3,12 @@
 // the verified app's: this script only carries bytes between the page, the
 // vault, R4, the routed models and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
-import { PLACES, ACTS, LABELS, FLOORS, GROUPS, SETTINGS, WORDS, DOMAINS } from "./surface/surface.mjs";
+import { PLACES, ACTS, LABELS, FLOORS, SETTINGS, SECTIONS, WORDS, DOMAINS, FEEDERS, FONTS } from "./surface/surface.mjs";
+// The coherence registry's runtime: what an item is about, what an Ask is
+// after, and Today. Loaded once there is something kept or asked, so an
+// ordinary first visit fetches none of it.
+let coherenceOpen = null;
+const coherence = () => (coherenceOpen ??= Promise.all([import("./coherence/sense.mjs"), import("./coherence/today.mjs"), import("./coherence/people.mjs")]).then(([sense, day, people]) => ({ ...sense, ...day, ...people })));
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -21,7 +26,6 @@ const store = {
 // question, so the Boundary sees "halted yes" the moment it is set.
 const HALT_KEY = "me.halted";
 const PACE_KEY = "me.pace";
-const GRANT_KEY = "me.models.grant";
 const PLACE_KEY = "me.place";
 
 // Google's consent return, when this window is one. The relay and its sealing
@@ -83,6 +87,10 @@ function icsTime(value) {
 function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
   const about = meta.about ?? {};
   const base = { address, domain: about.domain ?? 11, media: about.media ?? "plainText", label: meta.label, at: about.at ?? at };
+  // What the R4 router mapped it onto when it came in: its time, its intent and its places.
+  if (Number.isFinite(about.start)) Object.assign(base, { at: about.start, start: about.start, allDay: Boolean(about.allDay) });
+  if (about.intent) base.intent = about.intent;
+  if (Array.isArray(about.domains) && about.domains.length) base.mapped = about.domains;
   if (outcome !== "restore") return { ...base, sealed: true, title: "", who: "", text: "", body: "" };
   const text = lenient.decode(bytes);
   if (base.media === "message") {
@@ -95,47 +103,70 @@ function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
   if (base.media === "calendar") {
     const start = icsTime(calendarField(text, "DTSTART"));
     const title = calendarField(text, "SUMMARY");
-    return { ...base, at: Number.isNaN(start) ? base.at : start, title, who: calendarField(text, "LOCATION"), text, body: calendarField(text, "DESCRIPTION") || title };
+    const allDay = /^\d{8}$/.test(calendarField(text, "DTSTART"));
+    return { ...base, at: Number.isNaN(start) ? base.at : start, allDay, title, who: calendarField(text, "LOCATION"), text, body: calendarField(text, "DESCRIPTION") || title };
+  }
+  if (base.media === "contactCard") {
+    const field = (name) => calendarField(text, name);
+    return { ...base, title: field("FN") || field("N").split(";").filter(Boolean).reverse().join(" "), who: field("EMAIL") || field("TEL") || field("ORG"), text, body: [field("EMAIL"), field("TEL"), field("ORG"), field("ADR").replace(/;+/g, " ").trim()].filter(Boolean).join("\n") };
   }
   const first = text.split(/\r?\n/).find((line) => line.trim()) ?? "";
   return { ...base, title: first.trim(), who: "", text, body: text.trim() };
 }
 
-// The kept items an Ask draws on: those sharing the most words with it.
-// Sealed items have no words to share, so they are never drawn on.
-const QUIET_WORDS = new Set("the and for are but not you your yours with what when where which who whom why how does did have has had was were will would can could should may might this that these those there their them they from into onto about over under just than then also any all some its it's i'm i've me my mine our ours out off get got need needs want wants".split(" "));
-const termsOf = (text) => text.toLowerCase().match(/[\p{L}\p{N}]+/gu)?.filter((w) => w.length > 2 && !QUIET_WORDS.has(w)) ?? [];
-const RANK = ["public", "internal", "confidential", "restricted"];
-const higher = (a, b) => (RANK.indexOf(b) > RANK.indexOf(a) ? b : a);
-
-export function drawOn(items, prompt, most = 5) {
-  const asked = new Set(termsOf(prompt));
-  if (!asked.size) return [];
-  const scored = [];
-  for (const item of items) {
-    if (item.sealed) continue;
-    const have = new Set(termsOf(`${item.title} ${item.who} ${item.body ?? item.text}`));
-    let score = 0;
-    for (const term of asked) if ([...have].some((w) => w === term || (term.length > 3 && (w.startsWith(term) || term.startsWith(w)) && w.length > 3))) score += 1;
-    if (score) scored.push({ item, score });
-  }
-  return scored.sort((a, b) => b.score - a.score || b.item.at - a.item.at).slice(0, most).map((s) => s.item);
-}
 
 const short = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" });
 const clock = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
+// Something that happens at a time (an event, or a jot the router gave a time) shows its day and clock.
+const dayClock = new Intl.DateTimeFormat(undefined, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+const dayOnly = new Intl.DateTimeFormat(undefined, { weekday: "short", day: "numeric", month: "short" });
+const scheduled = (item) => (item.start != null || item.media === "calendar") && item.at;
+const whenOfItem = (item) => (scheduled(item) ? (item.allDay ? dayOnly : dayClock).format(new Date(item.at)) : when(item.at));
 const when = (at) => {
   if (!at) return "";
   const date = new Date(at);
   return date.toDateString() === new Date().toDateString() ? clock.format(date) : short.format(date);
 };
 
+// A browser that kept an earlier deploy runs it until its service worker is
+// replaced, and the worker's script is the same bytes on every deploy, so the
+// browser never replaces it: a returning owner got today's page around an
+// earlier deploy's code, whose buttons have no handlers. Each deploy's
+// precache.json names its version, and the worker keeps its files under
+// prism-<version>. When the version served differs from every cache this page
+// keeps, the kept deploy is dropped and the page loads once more, fresh.
+const HEALED_KEY = "me.healed";
+export async function heal({ caches: store = globalThis.caches, sw = globalThis.navigator?.serviceWorker, reload = () => location.reload() } = {}) {
+  try {
+    if (!store || !sw?.controller) return false;
+    const manifest = new URL("./precache.json", import.meta.url).href;
+    const ours = [];
+    for (const name of await store.keys()) {
+      if (name.startsWith("prism-") && (await (await store.open(name)).match(manifest))) ours.push(name);
+    }
+    if (!ours.length) return false;
+    const served = await fetch(manifest, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null));
+    if (!served?.version || ours.includes(`prism-${served.version}`)) return false;
+    // Once per version and tab, so a failure can never loop.
+    if (sessionStorage.getItem(HEALED_KEY) === served.version) return false;
+    sessionStorage.setItem(HEALED_KEY, served.version);
+    for (const registration of await sw.getRegistrations()) {
+      if (new URL(registration.scope).href === new URL("./", import.meta.url).href) await registration.unregister();
+    }
+    for (const name of ours) await store.delete(name);
+    reload();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export default async function start({ app, reason, $ }) {
+  if (await heal()) return;
   // This window may be Google's return with the owner's consent: hand it back and close.
   if (await relayConsent()) return;
   const root = document.documentElement;
   const out = $("pr-out");
-  const log = $("pr-log");
   let haltedNow = store.get(HALT_KEY, "no") === "yes";
   const halted = () => (haltedNow ? "yes" : "no");
   let paceNow = store.get(PACE_KEY, "open") === "quiet" ? "quiet" : "open";
@@ -144,11 +175,6 @@ export default async function start({ app, reason, $ }) {
   function say(text, state = "") {
     out.textContent = text;
     out.className = state;
-  }
-  function remember(what, answer) {
-    const row = element("li", {}, element("span", { textContent: what.length > 28 ? `${what.slice(0, 26)}…` : what }), element("span", { className: "tag", textContent: answer }));
-    log.prepend(row);
-    while (log.children.length > 30) log.lastChild.remove();
   }
   const paintHalt = () => {
     root.classList.toggle("pr-halted", haltedNow);
@@ -169,7 +195,12 @@ export default async function start({ app, reason, $ }) {
   // The vault: kept in this browser, every keep and read decided by the app.
   let vault = null;
   try {
-    vault = await openVault({ decide: routerDecide(line), halted });
+    // Every value is kept as its uorc archive, named by its kappa label; the
+    // client and the two facets' adapters load only when a value is first kept or opened.
+    let made = null;
+    const made$ = () => (made ??= import("./uorc/objects.mjs").then((m) => m.makeObjects({ client: () => m.loadClient(), decide: m.rootDecide(line), halted })));
+    const objects = { keep: async (bytes) => (await made$()).keep(bytes), open: async (archive, kappa) => (await made$()).open(archive, kappa) };
+    vault = await openVault({ decide: routerDecide(line), halted, objects });
   } catch (error) {
     say(`${WORDS.unavailable} · ${error?.message ?? error}`, "bad");
   }
@@ -180,13 +211,53 @@ export default async function start({ app, reason, $ }) {
   async function load() {
     if (!vault) return;
     const rows = await vault.list();
+    const { domainsOf, peopleOf, peoplePlace, between, selfOf, fromMe } = rows.length ? await coherence() : {};
     const read = [];
     for (const row of rows) {
       const got = await vault.get(row.address);
-      if (got.outcome === "restore" || got.outcome === "hashonly") read.push(readItem({ address: row.address, outcome: got.outcome, bytes: got.bytes, meta: got.meta, at: row.at }));
+      if (got.outcome !== "restore" && got.outcome !== "hashonly") continue;
+      const item = readItem({ address: row.address, outcome: got.outcome, bytes: got.bytes, meta: got.meta, at: row.at });
+      // Its domains: its media's, and each one its words name (the coherence registry's vocabulary).
+      item.domains = item.mapped ?? domainsOf(item);
+      read.push(item);
     }
     items = read.sort((a, b) => b.at - a.at);
+    // The people in what is kept, for the place that lists them.
+    if (selfOf) { inferred = selfOf(items); mineOf = fromMe; }
+    people = peopleOf ? { place: peoplePlace, all: peopleOf(items, meNow()), between } : null;
   }
+
+  // Resonance: every gesture of the owner toward a thing is answered by
+  // PrismResonance and teaches PrismLearning, through the root guest. What it
+  // learned is a sealed snapshot in this browser (addresses and weights only).
+  const RESONANCE_KEY = "me.resonance";
+  let resonance = null;
+  let resonating = null;
+  const resonanceOf = () => (resonating ??= import("./resonance/resonance.mjs")
+    .then(({ makeResonance }) => makeResonance({ line, halted, attention: pace, keep: { get: () => store.get(RESONANCE_KEY, null), set: (text) => store.set(RESONANCE_KEY, text) } }))
+    .then((made) => (resonance = made))
+    .catch(() => null));
+  const answerOn = (node, event) => {
+    if (!node || !event) return;
+    for (const name of [...node.classList]) if (name.startsWith("pr-res-")) node.classList.remove(name);
+    node.classList.add(`pr-res-${event.answer}`);
+  };
+  async function gesture(item, kind, options, node) {
+    const r = resonance ?? (await resonanceOf());
+    if (!r || !item?.address) return null;
+    const event = await r.gesture(item, kind, options);
+    answerOn(node, event);
+    return event;
+  }
+  // Each open row is one gesture when it closes, with how long the owner stayed.
+  const opened = new Map();
+  async function closeOpened(node) {
+    const open = opened.get(node);
+    if (!open) return;
+    opened.delete(node);
+    await gesture(open.item, "open", { dwellMs: Date.now() - open.since }, node);
+  }
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") for (const node of [...opened.keys()]) closeOpened(node); });
 
   // The destinations router: PrismDest and the Boundary decide every hand-off.
   let router = null;
@@ -210,7 +281,6 @@ export default async function start({ app, reason, $ }) {
   async function reportDevice(t) {
     const got = t.store + t.storehash;
     say(`${got} ${WORDS.items}`, got ? "good" : "");
-    remember(SETTINGS.find((s) => s.key === "device").name, `${got}`);
     await load();
     if (current.show !== "settings") paintList();
     paintSettings();
@@ -225,7 +295,10 @@ export default async function start({ app, reason, $ }) {
     (async () => {
       const d = await deviceOf();
       if ((await d.ask({ act: { paste: "owner" } })).paste !== "use") return;
-      await reportDevice(files.length ? await d.source.readFiles(files) : await d.source.readText(text));
+      const t = files.length ? await d.source.readFiles(files) : await d.source.readText(text);
+      // Plain words pasted are the owner's note, kept in this place (or Topics).
+      if (!files.length && t.skip && !(t.store + t.storehash)) await keepNote(current.act === "note" ? current : byKey.get("library"), text.trim(), current.act === "note" ? current.domains[0] : 11);
+      else await reportDevice(t);
     })().catch((error) => say(error?.code ?? error?.message ?? String(error), "bad"));
   });
   document.addEventListener("dragover", (event) => { if (event.dataTransfer?.types?.includes("Files")) event.preventDefault(); });
@@ -246,15 +319,26 @@ export default async function start({ app, reason, $ }) {
   });
   window.postMessage({ prism: "hello", from: "page" }, location.origin);
   const extensionGrant = () => (extensionHere ? "kept" : "none");
-  // Live mail and calendar, read by the installed extension with the owner's own sign-in.
+  // The declared services, carried by the installed extension with the
+  // owner's own sign-in; PrismSource decides each item by its service and route.
   async function pullExtension(d) {
     const { pull } = await import("./device/extension.mjs");
-    return d.source.readItems(await pull(window, { halted: halted() }));
+    const items = [];
+    for (const item of await pull(window, { halted: halted() })) {
+      if ((await line(`source ${item.service} ${item.route} read ${halted()}`)) === "read") items.push(item);
+    }
+    return d.source.readItems(items);
   }
-  // On every visit: a folder the owner granted is re-read while the browser
-  // keeps the grant, and the installed extension is pulled.
+  // On every visit, and every few minutes while the page is open: a folder the
+  // owner granted is re-read while the browser keeps the grant, and what the
+  // installed extension carried is taken. Nothing to press.
+  const ARRIVAL_MINUTES = 5;
   async function readOnVisit() {
     await new Promise((resolve) => setTimeout(resolve, 500));
+    setInterval(() => { if (halted() === "no") arrive().catch((error) => console.warn(`sources: ${error?.message ?? error}`)); }, ARRIVAL_MINUTES * 60000);
+    await arrive();
+  }
+  async function arrive() {
     const folder = vault && typeof indexedDB?.databases === "function" && (await indexedDB.databases()).some((db) => db.name === "prism-device");
     if (!vault || (!folder && !extensionHere)) return;
     const d = await deviceOf();
@@ -273,14 +357,15 @@ export default async function start({ app, reason, $ }) {
   // --- Places ---
   const byKey = new Map(PLACES.map((p) => [p.key, p]));
   const actOf = (place) => ACTS.find((a) => a.key === place.act);
-  let current = byKey.get(store.get(PLACE_KEY, "")) ?? PLACES.find((p) => p.host === "home");
+  const onPage = (p) => p && p.host !== "none" && p.host !== "composer";
+  let current = [byKey.get(store.get(PLACE_KEY, ""))].find(onPage) ?? PLACES.find((p) => p.host === "home");
   let query = "";
 
   // A row opens to the item's full words, and closes again.
   function rowOf(item) {
     const what = item.sealed ? WORDS.sealed : item.title || "—";
     const row = element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}` },
-      element("span", { className: "pr-when", textContent: when(item.at) }),
+      element("span", { className: "pr-when", textContent: whenOfItem(item) }),
       element("span", { className: "pr-what", textContent: what }),
       element("span", { className: "pr-who", textContent: item.who || DOMAINS[item.domain] || "" }));
     if (item.sealed || !item.body) return row;
@@ -290,8 +375,8 @@ export default async function start({ app, reason, $ }) {
     const toggle = () => {
       const open = row.getAttribute("aria-expanded") === "true";
       row.setAttribute("aria-expanded", String(!open));
-      if (open) row.querySelector(".pr-preview")?.remove();
-      else row.append(element("pre", { className: "pr-preview", textContent: item.body }));
+      if (open) { row.querySelector(".pr-preview")?.remove(); closeOpened(row); }
+      else { row.append(element("pre", { className: "pr-preview", textContent: item.body })); opened.set(row, { item, since: Date.now() }); }
     };
     row.addEventListener("click", (event) => { if (!event.target.closest(".pr-preview")) toggle(); });
     row.addEventListener("keydown", (event) => {
@@ -300,16 +385,168 @@ export default async function start({ app, reason, $ }) {
     return row;
   }
 
+  // What the device row's file picker takes: zips (Takeout) and the formats PrismFolder reads.
+  const FILE_TYPES = ".zip,.mbox,.mbx,.eml,.ics,.ical,.vcf,.vcard";
+  const emptyRow = () => element("li", { className: "pr-empty", textContent: WORDS.empty });
+
+  // Today: the agenda ahead (PrismChronology says what falls today and what
+  // clashes), then what came in lately, then what is to do.
+  const relate = async (a, b, c, d) => line(`when ${a} ${b} ${c} ${d}`);
+  let painting = 0;
+  async function paintToday(list) {
+    const turn = ++painting;
+    // The home's cards count every place and offer each one's feeder.
+    homeCards();
+    list.hidden = !items.length;
+    if (!items.length) { list.replaceChildren(emptyRow()); return; }
+    const { today, lineOf } = await coherence();
+    const me = meNow();
+    const { agenda, recent, tasks, needs } = await today(items, { relate, done: doneSet(), mine: (item) => mineOf(item, me) });
+    if (turn !== painting || current.host !== "home") return;
+    const rows = [selfRow()].filter(Boolean);
+    const section = (domain, made) => {
+      if (!made.length) return;
+      rows.push(element("li", { className: "pr-section", textContent: DOMAINS[domain] }), ...made);
+    };
+    section(5, agenda.map(({ item, today: now, clash }) => {
+      const row = rowOf(item);
+      row.classList.toggle("pr-now", now);
+      if (clash.length) { row.classList.add("pr-clash"); row.title = clash.map(lineOf).join("\n"); }
+      return row;
+    }));
+    if (needs.length) rows.push(needsOf(needs));
+    section(4, recent.map(rowOf));
+    section(9, tasks.map(rowOf));
+    $("pr-count").textContent = "";
+    list.hidden = !rows.length;
+    list.replaceChildren(...(rows.length ? rows : [emptyRow()]));
+  }
+
+  // Needs me: what asks the person something or names a deadline, each with
+  // one gesture that clears it. What the person cleared is kept as addresses only.
+  const DONE_KEY = "me.done";
+  const doneSet = () => { try { return new Set(JSON.parse(store.get(DONE_KEY, "[]"))); } catch { return new Set(); } };
+  function clear(item) {
+    const done = [...doneSet(), item.address].slice(-500);
+    store.set(DONE_KEY, JSON.stringify(done));
+    paintList();
+  }
+  function needsOf(needs) {
+    const name = WORDS.needs;
+    const list = element("ul", { className: "pr-needs-list" });
+    list.setAttribute("aria-label", name);
+    for (const { item, phrase } of needs) {
+      const button = element("button", { type: "button", className: "pr-done", textContent: WORDS.done });
+      button.setAttribute("aria-label", `${WORDS.done}: ${item.title || item.who}`);
+      button.addEventListener("click", () => clear(item));
+      const why = phrase ? phrase[0].toUpperCase() + phrase.slice(1) : item.who || "";
+      list.append(element("li", { className: "pr-item pr-need" },
+        button,
+        element("span", { className: "pr-what", textContent: item.title || "—" }),
+        element("span", { className: "pr-who", textContent: why })));
+    }
+    return element("li", { className: "pr-needs" }, element("h3", { className: "pr-section", textContent: name }), list);
+  }
+
+  // Who you are: what the person declared, else what their mail says, until
+  // they confirm it. It is how the Prism tells the person from everyone else;
+  // it stays in this browser.
+  const IDENTITY_KEY = "me.identity";
+  let inferred = { names: [], addresses: [] };
+  let mineOf = () => false;
+  const declared = () => { try { return JSON.parse(store.get(IDENTITY_KEY, "null")); } catch { return null; } };
+  const meNow = () => declared() ?? inferred;
+  const listOf = (text) => [...new Set(String(text).split(/[,;\n]/).map((x) => x.trim()).filter(Boolean))];
+  const meLine = (me) => [...me.names, ...me.addresses].join(" · ");
+  async function declare(me) {
+    store.set(IDENTITY_KEY, JSON.stringify({ names: me.names, addresses: me.addresses.map((a) => a.toLowerCase()) }));
+    await load();
+    paintList();
+    paintSettings();
+  }
+  function selfRow() {
+    if (declared() || !inferred.addresses.length) return null;
+    const button = element("button", { type: "button", className: "pr-done", textContent: WORDS["identity.confirm"] });
+    button.addEventListener("click", () => declare(inferred));
+    return element("li", { className: "pr-me" },
+      element("h3", { className: "pr-section", textContent: SETTINGS.find((s) => s.key === "identity").name }),
+      element("div", { className: "pr-item pr-need" }, button, element("span", { className: "pr-what", textContent: meLine(inferred) })));
+  }
+
+  // People: one row per person; pressing one opens their page, with what is
+  // open between you first (the next meeting, the latest message).
+  let people = null;
+  let personOpen = null;
+  function paintPeople(list) {
+    const one = personOpen && people.all.find((p) => p.key === personOpen);
+    if (one) {
+      $("pr-count").textContent = "";
+      const head = element("li", { className: "pr-person-head" }, element("h3", { className: "pr-person-name", textContent: one.name }));
+      return list.replaceChildren(head, ...people.between(one).map(rowOf));
+    }
+    $("pr-count").textContent = people.all.length ? String(people.all.length) : "";
+    list.replaceChildren(...(people.all.length ? people.all.slice(0, 200).map((p) => {
+      const latest = people.between(p)[0];
+      const row = element("li", { className: "pr-item pr-person" },
+        element("span", { className: "pr-when", textContent: latest ? when(latest.at) : "" }),
+        element("button", { type: "button", className: "pr-what pr-person-go", textContent: p.name }),
+        element("span", { className: "pr-who", textContent: latest?.title ?? "" }));
+      row.querySelector("button").addEventListener("click", () => { personOpen = p.key; paintList(); });
+      return row;
+    }) : [emptyRow()]));
+    // Notes kept here stay here, after the people.
+    const notes = items.filter((item) => item.media === "plainText" && (item.domains ?? [item.domain]).some((d) => current.domains.includes(d)));
+    list.append(...notes.slice(0, 50).map(rowOf));
+  }
+
   function paintList() {
     const list = $("pr-list");
-    let shown = items.filter((item) => current.domains.includes(item.domain));
+    if (current.host === "home") { paintToday(list).catch((error) => say(error?.message ?? String(error), "bad")); return; }
+    if (people && current.key === people.place) { paintPeople(list); return; }
+    let shown = items.filter((item) => (item.domains ?? [item.domain]).some((d) => current.domains.includes(d)));
     if (current.show === "search") {
       const words = query.toLowerCase().split(/\s+/).filter(Boolean);
       shown = words.length ? items.filter((item) => words.every((w) => `${item.title} ${item.who} ${item.text}`.toLowerCase().includes(w))) : [];
     }
+    if (resonance && current.show !== "search") shown = resonance.order(shown);
     $("pr-count").textContent = shown.length ? String(shown.length) : "";
     if (current.show === "search" && !query) { list.replaceChildren(); return; }
-    list.replaceChildren(...(shown.length ? shown.slice(0, 200).map(rowOf) : [element("li", { className: "pr-empty", textContent: WORDS.empty })]));
+    list.replaceChildren(...(shown.length ? shown.slice(0, 200).map(rowOf) : [emptyRow()]));
+  }
+
+  // The home: a card per place, its count and latest item, and the feeder
+  // PrismSurface binds to it, so an empty place offers what fills it.
+  function homeCards() {
+    for (const card of document.querySelectorAll("#pr-home .pr-card")) {
+      const place = byKey.get(card.querySelector(".pr-card-go").dataset.place);
+      const held = items.filter((item) => (item.domains ?? [item.domain]).some((d) => place.domains.includes(d)));
+      card.querySelector(".pr-card-count").textContent = held.length ? String(held.length) : "";
+      card.querySelector(".pr-card-latest").textContent = held.length ? (held[0].sealed ? WORDS.sealed : held[0].title || "") : "";
+      card.classList.toggle("pr-card-empty", !held.length);
+    }
+  }
+  for (const button of document.querySelectorAll("#pr-home .pr-card-go")) button.addEventListener("click", () => go(button.dataset.place, true));
+  for (const button of document.querySelectorAll("#pr-home .pr-card-feed")) {
+    button.addEventListener("click", () => {
+      const feeder = FEEDERS.find((f) => f.key === button.dataset.feed);
+      if (feeder.act !== "none") {
+        go(button.dataset.place);
+        $("pr-act").querySelector("input, textarea")?.focus();
+        return;
+      }
+      go(PLACES.find((p) => p.show === "settings").key);
+      const name = SETTINGS.find((s) => s.key === feeder.setting).name;
+      // The source's row is drawn once its code arrives: wait for it, then bring it to hand.
+      const reach = (tries) => {
+        const row = [...document.querySelectorAll("#pr-settings .pr-setting")].find((r) => r.querySelector(".pr-name")?.textContent === name);
+        const control = row?.querySelector("label.pr-file");
+        if (!control) return tries > 0 && setTimeout(reach, 50, tries - 1);
+        row.scrollIntoView({ block: "center" });
+        // The owner's press on the card is the press on the source's own act: its picker opens.
+        control.querySelector("input").click();
+      };
+      reach(40);
+    });
   }
 
   // One act per place, as PrismSurface names it. Outbound acts are prepared,
@@ -317,6 +554,8 @@ export default async function start({ app, reason, $ }) {
   function actForm(place) {
     const act = actOf(place);
     const host = $("pr-act");
+    // The act's room is held while it is drawn, and given back when the place has none.
+    if (act && act.key !== "none" && place.show !== "search") host.dataset.act = act.key; else delete host.dataset.act;
     if (place.show === "search") {
       const field = element("input", { type: "search", placeholder: WORDS.search, value: query, autocomplete: "off" });
       field.setAttribute("aria-label", WORDS.search);
@@ -329,6 +568,29 @@ export default async function start({ app, reason, $ }) {
     host.replaceChildren(outboundForm(place, act));
   }
 
+  // A note is kept at its domain's floor label in the design model, never chosen here.
+  // The owner's words go through the R4 router first, which maps them onto the
+  // Prism's features: when, what it asks of them, and so the places it lands in.
+  async function keepNote(place, text, domain = place.domains[0]) {
+    if (!vault || !text) return false;
+    const { route } = await import("./router/router.mjs");
+    const mapped = await route({ source: "note", values: { text }, line, halted });
+    if (mapped.refused) { say(WORDS.refused, "bad"); return false; }
+    if (mapped.domains.length) domain = mapped.domains[0];
+    const label = LABELS[Math.max(...mapped.domains.concat(domain).map((d) => FLOORS[d]))].toLowerCase();
+    const about = { domain, media: "plainText", at: Date.now(), domains: mapped.domains, ...(mapped.intent ? { intent: mapped.intent } : {}), ...(mapped.start != null ? { start: mapped.start, allDay: mapped.allDay } : {}) };
+    const result = await vault.put(encoder.encode(text), { label, about });
+    const kept = result.outcome === "store" ? WORDS.kept : result.outcome === "storehash" ? WORDS["kept.sealed"] : WORDS.refused;
+    if (!result.outcome?.startsWith("store")) { say(kept, "bad"); return false; }
+    // The place shows the note before the page says it is kept.
+    await load();
+    if (current.show !== "settings") paintList();
+    say(kept, "good");
+    // Keeping is a gesture: the Prism answers it and learns from it, after the page has said it is kept.
+    gesture(items.find((item) => item.address === result.address), "keep").catch(() => {});
+    return true;
+  }
+
   function noteForm(place) {
     const field = element("input", { type: "text", placeholder: WORDS["note.placeholder"], autocomplete: "off" });
     field.setAttribute("aria-label", WORDS["note.placeholder"]);
@@ -338,20 +600,9 @@ export default async function start({ app, reason, $ }) {
       event.preventDefault();
       const text = field.value.trim();
       if (!text || !vault) return;
-      // The note's label is its domain's floor in the design model, never chosen here.
-      const domain = place.domains[0];
-      const label = LABELS[FLOORS[domain]].toLowerCase();
       keep.disabled = true;
       try {
-        const result = await vault.put(encoder.encode(text), { label, about: { domain, media: "plainText", at: Date.now() } });
-        const kept = result.outcome === "store" ? WORDS.kept : result.outcome === "storehash" ? WORDS["kept.sealed"] : WORDS.refused;
-        say(kept, result.outcome?.startsWith("store") ? "good" : "bad");
-        remember(`${place.name} · ${WORDS["note.placeholder"]}`, result.outcome);
-        if (result.outcome?.startsWith("store")) {
-          field.value = "";
-          await load();
-          paintList();
-        }
+        if (await keepNote(place, text)) field.value = "";
       } finally {
         keep.disabled = false;
       }
@@ -402,7 +653,6 @@ export default async function start({ app, reason, $ }) {
       preview.hidden = !decided.out;
       send.hidden = !pending;
       say(word(decided.answer), decided.answer === "refuse" ? "bad" : "");
-      remember(`${place.name} · ${act.word}`, decided.answer);
     });
     send.addEventListener("click", async () => {
       if (!pending) return;
@@ -410,7 +660,6 @@ export default async function start({ app, reason, $ }) {
       try {
         const done = await (await routerOf()).send(pending.item, pending.seal);
         say(word(done.answer), done.delivered ? "good" : "bad");
-        remember(`${place.name} · ${WORDS.send}`, done.answer);
         if (done.delivered) {
           pending = null; send.hidden = true; form.reset(); preview.hidden = true;
           await keepSent(place, act, done.out);
@@ -430,14 +679,14 @@ export default async function start({ app, reason, $ }) {
     const domain = place.domains[0];
     const label = LABELS[FLOORS[domain]].toLowerCase();
     const result = await vault.put(encoder.encode(out.bytes), { label, about: { domain, media: SENT_MEDIA[act.target], at: Date.now() } });
-    remember(`${place.name} · ${WORDS.keep}`, result.outcome);
     if (result.outcome?.startsWith("store")) { await load(); paintList(); }
   }
 
   function go(key, focus = false) {
     const place = byKey.get(key);
-    if (!place || place.host === "composer") return;
+    if (!onPage(place)) return;
     current = place;
+    personOpen = null;
     store.set(PLACE_KEY, key);
     for (const button of document.querySelectorAll(".pr-go")) {
       if (button.dataset.place === key) button.setAttribute("aria-current", "page");
@@ -448,6 +697,9 @@ export default async function start({ app, reason, $ }) {
     $("pr-settings").hidden = !settings;
     $("pr-list").hidden = settings;
     $("pr-count").hidden = settings;
+    $("pr-home").hidden = place.host !== "home";
+    // The home's cards hold their latest items only while the home is shown, so an item is in one place at a time.
+    if (place.host !== "home") for (const latest of document.querySelectorAll("#pr-home .pr-card-latest")) latest.textContent = "";
     actForm(place);
     if (settings) { buildSettings(); paintSettings(); }
     else paintList();
@@ -464,19 +716,109 @@ export default async function start({ app, reason, $ }) {
   function buildSettings() {
     if (settingsBuilt) return;
     settingsBuilt = true;
-    const host = $("pr-settings");
-    const groups = new Map();
-    for (const group of GROUPS) {
+    // One panel of the person's settings, in the model's sections and order; a
+    // setting in the system view runs on its own and gets no row. A section
+    // shows its detail always, until the person has done what it asks, or only
+    // on a tap, as the model says.
+    const sectionOf = new Map();
+    for (const section of SECTIONS) {
+      const heading = element("h3", { id: `pr-set-${section.key}`, textContent: section.name });
       const rows = element("div", { className: "pr-rows" });
-      host.append(element("section", { className: "pr-set" }, element("h3", { textContent: group.name }), rows));
-      groups.set(group.key, rows);
+      const node = element("section", { className: "pr-set" }, heading, rows);
+      node.setAttribute("aria-labelledby", heading.id);
+      $("pr-settings").append(node);
+      for (const key of section.settings) sectionOf.set(key, { section, rows });
+      if (section.rows === "services") buildServices(section, rows);
     }
     const settingRow = (setting, ...controls) => {
       const state = element("span", { className: "pr-state" });
-      const row = element("div", { className: "pr-setting" }, element("span", { className: "pr-name", textContent: setting.name }), state, element("span", { className: "pr-controls" }, ...controls));
-      groups.get(setting.group).append(row);
-      return { row, state };
+      const name = element("span", { className: "pr-name", textContent: setting.name });
+      const tools = element("span", { className: "pr-controls" }, ...controls);
+      const home = sectionOf.get(setting.key);
+      const reveal = home?.section.reveal ?? "always";
+      if (setting.kind === "switch" || reveal === "always") {
+        const row = element("div", { className: "pr-setting" }, name, state, tools);
+        if (home && setting.viewpoint === "person") home.rows.append(row);
+        return { row, state, done() {} };
+      }
+      // A detail row: its name and state, and the controls one tap away.
+      const row = element("details", { className: "pr-setting pr-detail" }, element("summary", {}, name, state), tools);
+      row.setAttribute("aria-label", setting.name);
+      let touched = false;
+      row.querySelector("summary").addEventListener("click", () => { touched = true; });
+      if (home && setting.viewpoint === "person") home.rows.append(row);
+      return { row, state, done(flag) { if (reveal === "until-done" && !touched) row.open = !flag; } };
     };
+    // Connections: a row per service the Prism declares, drawn from its
+    // declaration (app/specs/source/services.json): its state, the steps that
+    // connect it with the next one to press, and how to do it.
+    let servicesShown = false;
+    let repaintDevice = null;
+    function buildServices(section, rows) {
+      const holder = element("div", { className: "pr-services" });
+      rows.prepend(holder);
+      (async () => {
+        const services = await import("./source/services.mjs");
+        const save = (bytes, name) => {
+          const link = element("a", { href: URL.createObjectURL(new Blob([bytes], { type: "application/zip" })), download: name });
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        };
+        const drawn = services.SERVICES.map((service) => {
+          const state = element("span", { className: "pr-state" });
+          const steps = element("ol", { className: "pr-steps" });
+          const row = element("details", { className: "pr-setting pr-detail pr-service" }, element("summary", {}, element("span", { className: "pr-name", textContent: service.name }), state), steps);
+          row.setAttribute("aria-label", service.name);
+          row.hidden = true;
+          let touched = false;
+          row.querySelector("summary").addEventListener("click", () => { touched = true; });
+          holder.append(row);
+          const paint = (report, first) => {
+            const now = services.state(service.key, report, { halted: halted() });
+            row.hidden = now.state === "off";
+            const next = service.connect.find((s) => s.key === now.next);
+            state.textContent = now.state === "live" ? WORDS["service.live"] : now.state === "paused" ? WORDS.halted : now.state === "refused" ? WORDS["service.refused"] : next?.word ?? "";
+            // Only the first service that needs a step opens, so the person meets one thing to do.
+            if (section.reveal === "until-done" && !touched) row.open = now.state === "step" && first;
+            const doneSteps = new Set(service.connect.filter((s) => services.done(service, s, report)).map((s) => s.key));
+            steps.replaceChildren(...service.connect.map((step) => {
+              const item = element("li", { className: doneSteps.has(step.key) ? "pr-step pr-step-done" : step === next ? "pr-step pr-step-next" : "pr-step" });
+              if (step !== next) { item.append(element("span", { textContent: step.word })); return item; }
+              const press = element("button", { type: "button", textContent: step.word });
+              press.addEventListener("click", async () => {
+                press.disabled = true;
+                try { await services.run(service.key, step.key, { save }); } catch (error) { say(error?.message ?? String(error), "bad"); } finally { press.disabled = false; await paintServices(); }
+              });
+              item.append(press);
+              if (step.how?.length > 1) item.append(element("ol", { className: "pr-how" }, ...step.how.map((line) => element("li", { textContent: line }))));
+              return item;
+            }));
+            return now.state === "step";
+          };
+          return paint;
+        });
+        // What the browser reports, or nothing yet if it has not answered within a moment.
+        let last = { extension: false, services: {} };
+        const paintWith = async (report) => {
+          let first = true;
+          for (const paint of drawn) if (paint(report, first)) first = false;
+          servicesShown = Boolean(holder.querySelector(".pr-service:not([hidden])"));
+          await repaintDevice?.();
+        };
+        const paintServices = async () => {
+          await paintWith(last);
+          const late = new Promise((done) => setTimeout(() => done(null), 3000));
+          const report = await Promise.race([services.probe().catch(() => null), late]);
+          if (report) { last = report; await paintWith(report); }
+        };
+        painters.push(paintServices);
+        // The rows arrive after the panel may already be painted; paint them now.
+        paintServices();
+        // Coming back from the extension page or the service's tab, the rows say where things stand.
+        addEventListener("focus", () => { if (!$("pr-settings").hidden) paintServices(); });
+        await paintServices();
+      })().catch((error) => console.warn(`connections: ${error?.message ?? error}`));
+    }
     const switchFor = (checked, label, onChange) => {
       const box = element("input", { type: "checkbox", checked, role: "switch" });
       box.setAttribute("aria-label", label);
@@ -486,6 +828,23 @@ export default async function start({ app, reason, $ }) {
     const named = (key) => SETTINGS.find((s) => s.key === key);
     const painters = [];
 
+    // Who you are: first, because every "from me" and "to me" depends on it.
+    {
+      const names = element("input", { type: "text", placeholder: WORDS["identity.names"], autocomplete: "name" });
+      names.setAttribute("aria-label", WORDS["identity.names"]);
+      const addresses = element("input", { type: "text", placeholder: WORDS["identity.addresses"], autocomplete: "email" });
+      addresses.setAttribute("aria-label", WORDS["identity.addresses"]);
+      const confirm = element("button", { type: "button", textContent: WORDS["identity.confirm"] });
+      const self = settingRow(named("identity"), names, addresses, confirm);
+      painters.push(() => {
+        const me = meNow();
+        if (document.activeElement !== names) names.value = me.names.join(", ");
+        if (document.activeElement !== addresses) addresses.value = me.addresses.join(", ");
+        self.state.textContent = declared() ? meLine(me) : "";
+      });
+      confirm.addEventListener("click", () => declare({ names: listOf(names.value), addresses: listOf(addresses.value) }));
+    }
+
     // Sources: this device, through every surface the browser reports. Each
     // control shows only where PrismHost offers it, each read is asked of
     // PrismFolder, and each item is kept through the detectors and the vault.
@@ -493,15 +852,19 @@ export default async function start({ app, reason, $ }) {
       const device = named("device");
       const addFolder = element("button", { type: "button", textContent: WORDS["device.folder"] });
       const contacts = element("button", { type: "button", textContent: WORDS["device.contacts"] });
-      const getExtension = element("button", { type: "button", textContent: WORDS["device.extension"] });
       const allow = element("button", { type: "button", textContent: WORDS["device.allow"] });
-      const read = element("button", { type: "button", textContent: WORDS["read.now"] });
       const forget = element("button", { type: "button", textContent: WORDS.forget });
-      const files = element("input", { type: "file", multiple: true, accept: ".mbox,.mbx,.eml,.ics,.ical,.vcf,.vcard" });
+      const files = element("input", { type: "file", multiple: true, accept: FILE_TYPES });
       files.setAttribute("aria-label", WORDS["device.files"]);
+      // Listening from the moment the picker exists: a card's press can open it before the source's code arrives.
+      let onFiles = null;
+      files.addEventListener("change", async () => {
+        while (!onFiles) await new Promise((done) => setTimeout(done, 50));
+        await onFiles();
+      });
       const filesLabel = element("label", { className: "pr-file" }, element("span", { textContent: WORDS["device.files"] }), files);
-      const row = settingRow(device, addFolder, filesLabel, contacts, getExtension, allow, read, forget);
-      if (!vault) { row.state.textContent = WORDS.unavailable; row.row.querySelector(".pr-controls").hidden = true; return; }
+      const row = settingRow(device, addFolder, filesLabel, contacts, allow, forget);
+      if (!vault) { onFiles = async () => {}; row.state.textContent = WORDS.unavailable; row.row.querySelector(".pr-controls").hidden = true; return; }
       const d = await deviceOf();
       let kept = [];
       const paint = async () => {
@@ -509,12 +872,11 @@ export default async function start({ app, reason, $ }) {
         const plan = await d.ask({ grant: { folder: kept.some((f) => f.grant === "granted") ? "kept" : "none", extension: extensionGrant() } });
         const shown = (surface) => plan[surface] === "offer" || plan[surface] === "use";
         row.state.textContent = kept.length ? kept.map((f) => f.name).join(", ") : WORDS["device.none"];
+        row.done(kept.length > 0 || items.length > 0 || servicesShown);
         addFolder.hidden = !shown("folder");
         filesLabel.hidden = !shown("files");
         contacts.hidden = !shown("contacts");
-        getExtension.hidden = plan.extension !== "offer";
         allow.hidden = !shown("folder") || !kept.some((f) => f.grant === "prompt");
-        read.hidden = plan.folder !== "use" && plan.extension !== "use";
         forget.hidden = !kept.length;
       };
       const owner = (surface) => async () => (await d.ask({ act: { [surface]: "owner" } }))[surface] === "use";
@@ -524,62 +886,21 @@ export default async function start({ app, reason, $ }) {
       };
       addFolder.addEventListener("click", busy(addFolder, owner("folder"), async () => { await d.source.addFolder(); await reportDevice(await d.source.readFolders()); }));
       allow.addEventListener("click", busy(allow, owner("folder"), async () => { await d.source.allow(); await reportDevice(await d.source.readFolders()); }));
-      read.addEventListener("click", busy(read, async () => true, async () => {
-        const plan = await d.ask({ act: { folder: "owner", extension: "owner" }, grant: { extension: extensionGrant() } });
-        if (plan.folder === "use") await reportDevice(await d.source.readFolders());
-        if (plan.extension === "use" && extensionHere) await reportDevice(await pullExtension(d));
-      }));
-      // The extension, written by this page for its own address: one download.
-      getExtension.addEventListener("click", busy(getExtension, async () => true, async () => {
-        const { pack } = await import("./device/extension.mjs");
-        const bytes = await pack(new URL("./", location.href).href);
-        const link = element("a", { href: URL.createObjectURL(new Blob([bytes], { type: "application/zip" })), download: "prism-extension.zip" });
-        link.click();
-        URL.revokeObjectURL(link.href);
-      }));
       forget.addEventListener("click", busy(forget, async () => true, async () => { for (const f of kept) await d.source.forget(f.id); }));
-      files.addEventListener("change", busy(files, owner("files"), async () => { await reportDevice(await d.source.readFiles([...(files.files ?? [])])); files.value = ""; }));
+      onFiles = busy(files, owner("files"), async () => { await reportDevice(await d.source.readFiles([...(files.files ?? [])])); files.value = ""; });
       contacts.addEventListener("click", busy(contacts, owner("contacts"), async () => {
         const picked = await navigator.contacts.select(["name", "email", "tel"], { multiple: true });
         await reportDevice(await d.source.readContacts(picked));
       }));
       painters.push(paint);
+      repaintDevice = paint;
       await paint();
     })().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
-
-    // Models: R4, and every model the lock pins, each routed in by the owner's press.
-    const models = named("models");
-    const r4row = settingRow({ ...models, name: WORDS["model.r4"] });
-    painters.push(() => { r4row.state.textContent = r4 ? (r4.engine.state === "match" ? WORDS["model.run"] : WORDS.refused) : WORDS["model.fetch"]; });
-    (async () => {
-      const lock = await fetch(new URL("./models/models.lock.json", import.meta.url), { cache: "no-cache" }).then((r) => r.json());
-      for (const m of lock.models) {
-        const toggle = element("button", { type: "button" });
-        const row = settingRow({ ...models, name: m.title }, toggle);
-        const paint = async () => {
-          const granted = grants().includes(m.id);
-          toggle.textContent = granted ? WORDS.unroute : WORDS.route;
-          const routed = routedModels ?? null;
-          const outcome = routed ? (await routed.judge(m.id)).outcome : granted ? "fetch" : "ask";
-          row.state.textContent = WORDS[`model.${outcome}`] ?? outcome;
-        };
-        toggle.addEventListener("click", async () => {
-          const now = grants();
-          store.set(GRANT_KEY, JSON.stringify(now.includes(m.id) ? now.filter((x) => x !== m.id) : [...now, m.id]));
-          routedModels = null;
-          await paint();
-          remember(m.title, grants().includes(m.id) ? WORDS.route : WORDS.unroute);
-        });
-        painters.push(paint);
-        paint();
-      }
-    })().catch((error) => console.warn(`models: ${error?.message ?? error}`));
 
     // Attention: Quiet holds what is not urgent.
     settingRow(named("quiet"), switchFor(paceNow === "quiet", named("quiet").name, (on) => {
       paceNow = on ? "quiet" : "open";
       store.set(PACE_KEY, paceNow);
-      remember(named("quiet").name, on ? WORDS.on : WORDS.off);
     }));
 
     // This browser: what is kept here, and an encrypted backup of it.
@@ -603,7 +924,6 @@ export default async function start({ app, reason, $ }) {
       link.click();
       URL.revokeObjectURL(link.href);
       passphrase.value = "";
-      remember(WORDS.export, `${bytes.length}`);
     });
     importFile.addEventListener("change", async () => {
       const file = importFile.files?.[0];
@@ -611,7 +931,6 @@ export default async function start({ app, reason, $ }) {
       if (!passphrase.value) { importFile.value = ""; passphrase.focus(); return; }
       const result = await vault.importFrom(new Uint8Array(await file.arrayBuffer()), passphrase.value);
       say(result.outcome === "refuse" ? `${WORDS.refused} · ${result.reason ?? ""}` : WORDS.kept, result.outcome === "refuse" ? "bad" : "good");
-      remember(WORDS.import, result.outcome ?? "");
       importFile.value = "";
       passphrase.value = "";
       await load();
@@ -623,7 +942,6 @@ export default async function start({ app, reason, $ }) {
       haltedNow = on;
       store.set(HALT_KEY, on ? "yes" : "no");
       paintHalt();
-      remember(named("halt").name, halted());
     });
     halt.id = "pr-halt";
     settingRow(named("halt"), halt);
@@ -631,66 +949,82 @@ export default async function start({ app, reason, $ }) {
     paintSettings = () => { for (const paint of painters) paint(); };
   }
 
-  // --- Ask: R4 answers in this browser; a routed text model, if the owner routed one ---
-  let r4 = null;
-  async function openModel() {
-    if (r4) return r4;
-    const [{ openR4 }, { guestDecider }] = await Promise.all([import("./r4/r4.mjs"), import("./r4/decide.mjs")]);
-    const lock = await fetch(new URL("./r4/r4.lock.json", import.meta.url)).then((response) => response.json());
-    say(WORDS["ask.loading"], "wait");
-    r4 = await openR4({
-      lock,
-      decide: guestDecider(app.dispatch),
-      boundary: (fields) => line(`boundary ${fields}`),
-    });
-    return r4;
-  }
-  const grants = () => { try { return JSON.parse(store.get(GRANT_KEY, "[]")).filter((x) => typeof x === "string"); } catch { return []; } };
-  let routedModels = null;
-  async function openRouted() {
-    if (routedModels) return routedModels;
-    const { openModels } = await import("./models/models.mjs");
-    const lock = await fetch(new URL("./models/models.lock.json", import.meta.url), { cache: "no-cache" }).then((r) => r.json());
-    routedModels = await openModels({ lock, decide: async (request) => ({ outcome: await line(`model ${request}`), rule: "guest" }), grant: { models: grants() }, halted });
-    return routedModels;
-  }
-  async function answer(prompt, context, grounds) {
-    const r4model = await openModel();
-    if (grants().length) {
-      const routed = await openRouted();
-      const target = routed.route("text-generation");
-      if (target) {
-        const decision = await routed.prepare(target);
-        if (decision.outcome === "run") {
-          routed.connect(r4model, { maxTokens: 128 });
-          return r4model.askRouted({ target, prompt, context, grounds });
-        }
-      }
-    }
-    return r4model.ask({ prompt, context, grounds });
-  }
-  // The kept items an Ask drew on, under its answer; each opens like a row.
+  // Ask: the answer is the owner's own kept items that meet the question
+  // (its words, the span it names, the domains it names), shown only as the
+  // Boundary allows at the highest label among them.
   const drawn = element("ol", { className: "pr-list pr-drawn" });
   drawn.setAttribute("aria-label", WORDS["ask.placeholder"]);
-  out.after(drawn);
+  // The chat: earlier turns above, the answer now in the result, then where
+  // it came from (each a link that opens it) and the decision it offers.
+  const chat = element("ol", { className: "pr-chat" });
+  chat.setAttribute("aria-label", PLACES.find((p) => p.host === "composer")?.name ?? WORDS["ask.placeholder"]);
+  const more = element("div", { className: "pr-said-more" });
+  out.before(chat);
+  out.after(more);
+  more.after(drawn);
+  let lastTurn = null;
+  const writePlace = () => PLACES.find((p) => p.act === "write" && onPage(p));
+  const notePlace = () => (current.act === "note" ? current : PLACES.find((p) => p.act === "note" && onPage(p)));
+  async function offer(kind, item, prompt) {
+    if (kind === "done" && item) { clear(item); say(WORDS.done, "good"); return; }
+    if (kind === "keep") { const place = notePlace(); if (place) await keepNote(place, prompt); return; }
+    if (kind === "reply" && item) {
+      const place = writePlace();
+      if (!place) return;
+      go(place.key, true);
+      const { partiesOf } = await coherence();
+      const to = partiesOf(item)[0]?.address ?? "";
+      const field = $("pr-act").querySelector("input[type=email]");
+      if (field) field.value = to;
+      $("pr-act").querySelector("textarea")?.focus();
+    }
+  }
+  function turn(prompt, said) {
+    // The turn before moves up with what was said; this one shows its words above the answer.
+    if (lastTurn) lastTurn.node.append(element("p", { className: "pr-said", textContent: lastTurn.said }));
+    const node = element("li", { className: "pr-turn" }, element("p", { className: "pr-you", textContent: prompt }));
+    chat.append(node);
+    node.scrollIntoView({ block: "nearest" });
+    lastTurn = { node, said: said.sentences.join(" ") };
+    const rows = said.sources.map(rowOf);
+    drawn.replaceChildren(...rows);
+    const links = said.sources.map((item, i) => {
+      const link = element("a", { href: "#", className: "pr-source", textContent: item.title || item.who || "—" });
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        const row = rows[i];
+        if (row.getAttribute("aria-expanded") === "false") row.click();
+        row.scrollIntoView({ block: "nearest" });
+      });
+      return link;
+    });
+    const offers = (said.offers ?? []).map(({ kind, item }) => {
+      const label = { reply: WORDS.reply, done: WORDS.done, keep: WORDS.keep }[kind];
+      if (!label) return null;
+      const button = element("button", { type: "button", className: "pr-offer", textContent: label });
+      button.addEventListener("click", () => { button.disabled = true; offer(kind, item, prompt).catch((error) => say(error?.message ?? String(error), "bad")); });
+      return button;
+    }).filter(Boolean);
+    more.replaceChildren(...(links.length ? [element("p", { className: "pr-sources" }, ...links)] : []), ...(offers.length ? [element("div", { className: "pr-offers" }, ...offers)] : []));
+  }
+  out.style.whiteSpace = "pre-line";
+  out.style.minWidth = "0";
+  if (out.parentElement) Object.assign(out.parentElement.style, { minWidth: "0", flex: "1 1 0" });
   $("pr-ask").addEventListener("submit", async (event) => {
     event.preventDefault();
     const prompt = $("pr-prompt").value.trim();
     if (!prompt) return;
     $("pr-ask-go").disabled = true;
-    // While halted nothing kept is drawn on; the model's own decision refuses too.
-    const used = haltedNow ? [] : drawOn(items, prompt);
-    drawn.replaceChildren(...used.map(rowOf));
-    // The answer carries the highest label of what it drew on.
-    const label = used.reduce((at, item) => higher(at, item.label ?? "confidential"), "confidential");
-    const grounds = used.map((item) => [when(item.at), item.title, item.who, item.body].filter(Boolean).join(" · ").slice(0, 600));
     try {
-      const result = await answer(prompt, { label, halted: halted() }, grounds);
-      if (result.outcome === "answer") say(result.answer, "good");
-      else if (result.outcome === "ask" && result.release) say(WORDS["answer.asks"], "warn");
-      else say(`${WORDS["answer.none"]} · ${result.outcome}`, "bad");
-      remember(prompt, result.outcome);
-      if (result.outcome === "answer") $("pr-prompt").value = "";
+      // The person's words go through the R4 router; a question is answered in
+      // sentences from what is held, under the Boundary, with what it drew on.
+      const { answer } = await import("./router/answer.mjs");
+      const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: false });
+      turn(prompt, said);
+      if (said.sentences.length) { say(said.sentences.join(" "), "good"); $("pr-prompt").value = ""; }
+      else if (haltedNow) say(WORDS.halted, "bad");
+      else if (said.refused) say(WORDS["answer.asks"], "warn");
+      else say(WORDS["answer.none"], "");
     } catch (error) {
       say(`${WORDS["answer.none"]} · ${error?.message ?? error}`, "bad");
     } finally {
@@ -705,6 +1039,25 @@ export default async function start({ app, reason, $ }) {
   go(current.key);
   await load();
   go(current.key);
+  // The voice comes with the owner's first gesture, never before it.
+  const voice = () => import("./voice.mjs").catch((error) => console.warn(`voice: ${error?.message ?? error}`));
+  addEventListener("pointerdown", voice, { once: true, capture: true });
+  addEventListener("keydown", voice, { once: true, capture: true });
   root.classList.add("pr-ready");
+  // The look's gesture fonts (FONTS): the page opens in their metric-matched
+  // fallback and fetches nothing for them; they come with the first touch, or
+  // at once when this browser already keeps them.
+  const fonts = () => Promise.all(FONTS.map(async (f) => {
+    const face = new FontFace(f.family, `url(${new URL(`./fonts/${f.file}`, import.meta.url).href})`, { weight: String(f.weight), display: "swap" });
+    document.fonts.add(await face.load());
+  })).catch(() => {});
+  (async () => {
+    const kept = globalThis.caches && (await Promise.all(FONTS.map((f) => caches.match(new URL(`./fonts/${f.file}`, import.meta.url).href)))).every(Boolean);
+    if (FONTS.length && kept) fonts();
+    else for (const type of ["pointerdown", "keydown"]) document.addEventListener(type, fonts, { once: true, capture: true });
+  })().catch(() => {});
+  // Resonance loads on the owner's first touch, never with the page, then orders what they resonate with first.
+  const wake = () => resonanceOf().then((made) => { if (made && current.show !== "settings") paintList(); });
+  for (const type of ["pointerdown", "keydown"]) document.addEventListener(type, wake, { once: true, capture: true });
   readOnVisit().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
 }

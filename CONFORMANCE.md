@@ -18,6 +18,16 @@ The three honesty levels (R2):
 `cargo xtask audit-limits` fails if any code path returns an error the
 model does not sanction.
 
+## coherence
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `CO-01` | `build` | The owner brings content in through the feeders the coherence registry names and every place that lists things lists it: Today shows the agenda ahead with what falls today and what clashes as PrismChronology answers, and Ask answers at once with the owner's own kept items that meet it, only as the Boundary allows, never while halted |
+| `CO-02` | `build` | Every facet the Prism root routes is one model in the coherence registry with typed ports, live with the page modules that ask it or sealed by a PrismHost surface, and the build refuses a registry whose flow leaves a port unproduced or untaken, a place unfed, an act or setting undriven, a feeder's media without a domain or a domain without vocabulary |
+| `CO-03` | `build` | A kept item belongs to its media's domain and to every domain whose vocabulary in the coherence registry it uses, and an Ask finds the span its intent words name |
+| `CO-04` | `build` | A zip the owner picks or drops, such as a Google Takeout export, opens in the browser to its entries, stored or deflated and ZIP64 included, each judged by PrismFolder by its own format |
+| `CO-05` | `build` | A returning owner gets the deploy that is served: when the version precache.json names differs from every cache the page keeps, the page drops the kept deploy and loads once more, and every button on Today does something when pressed |
+
 ## dest
 
 | ID | Level | Statement |
@@ -33,6 +43,7 @@ model does not sanction.
 | `DV-02` | `build` | Mail, calendar and contacts read from the owner's device reach only the browser vault, through the detectors and the Boundary, from a folder opened read-only or files the owner picked or dropped |
 | `DV-03` | `build` | The page uses each surface the browser reports for the owner's content only as PrismHost answers: every reported surface is used or offered, nothing is used while halted, a paste, drop, pick or contact list only on the owner's act, a folder only on the owner's act or a grant the browser keeps, and a live account on another origin is named sealed |
 | `DV-04` | `build` | Live Gmail and Google Calendar reach the Prism only through the extension the owner installed, written by the page for its own address: it reads by GET with the owner's own sign-in, answers only that Prism page, reads nothing while halted, and each item it hands over is kept only through PrismHost, PrismFolder, the detectors and the vault |
+| `DV-05` | `build` | Every service the owner uses is a declaration in the model, read only as PrismSource answers: by what its web app shows the owner, by its own pages with the owner's own sign-in, or by its own data download; never while halted, never written to, never undeclared, and never through a private interface |
 
 ## frame
 
@@ -74,8 +85,9 @@ model does not sanction.
 | ID | Level | Statement |
 | --- | --- | --- |
 | `PG-01` | `build` | The page keeps, reads and answers only through the verified app: a note is kept at its domain's floor only when the Boundary and the vault allow it, nothing is kept while halted, and an outbound act is only drafted until the owner's Send |
-| `PG-02` | `build` | The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, and every visible word a name from the model |
+| `PG-02` | `build` | The page is PrismSurface made visible: one place per owner view of the design model, drawn only when it is in the person's view and never when it is the system's, showing that view's domains under its role, every act and setting in its modeled place, every visible word a name from the model, every list place fed by a source or an act, and every colour a tone of its modeled look read at its contrast |
 | `PG-03` | `build` | Every act on the page completes end to end: what the owner sends is the very event or message they reviewed and is kept in the place it left from at that domain's floor, every kept item opens to its words, and Ask draws on the kept items that share its words, never while halted, under the highest label it drew on |
+| `VO-01` | `build` | The Prism answers a gesture in tone and colour from PrismSurface's voice: 5-limit just ratios within one octave, a loudness ceiling, a rest between answers, silent under Quiet, and nothing loaded before the owner's first gesture |
 
 ## prism
 
@@ -92,6 +104,14 @@ model does not sanction.
 | --- | --- | --- |
 | `PV-01` | `build` | Neither the tracked tree nor the built page holds personal data: every email address is at a reserved domain, and no phone, payment card or national ID number appears |
 
+## product
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PD-01` | `build` | Every journey of the product record is walked by a synthetic person whose device holds a day of mail and calendar: a journey recorded as working passes in a fresh and a returning browser on every pull request and on the published page, and a journey that passes while recorded as not yet fails until the record says it works |
+| `PD-02` | `build` | No word or control the product record assigns to the system view is on the screen, in any place, fresh, returning, or with the person's day arrived and an item opened, beyond the debt the record lists; a word not listed fails, and a listed word that no longer shows fails until it is removed, so the debt only shrinks |
+| `PD-03` | `build` | The product record places every part the Prism has: every surface entry in the person's or the system view, every root facet in the system view serving at least one journey, every journey with its goal, done-state, usability measure, status and walk, and every setting in the person's view one the Prism requires of the person; the gate refuses a record that leaves any part unplaced |
+
 ## r4
 
 | ID | Level | Statement |
@@ -104,11 +124,33 @@ model does not sanction.
 | --- | --- | --- |
 | `RZ-01` | `build` | Every Prism setting does something: every field of every facet spec changes some answer, every rule decides a request no other rule would, every setting drives such a field, and every facet carries a complete eleven-element descriptor, with every witness pair answered by the facet judge as its spec says |
 
+## resonance
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `RS-01` | `build` | The Prism answers a gesture of the owner only as PrismResonance answers: stillness with rest, a dismissal at once with recede, the kill switch with rest; quiet never sounds or brings anything forward, nor does a hurried pace, a glance, or a belief the owner rejected; only a consolidated or confirmed belief gathers a chorus |
+| `RS-02` | `build` | The page answers the owner's gestures and learns from them only through the root guest: each answer's learning signal goes to PrismLearning, only the owner confirms or rejects, and what was learned is kept as a sealed snapshot in this browser that restores with zero drift or not at all |
+
 ## route
 
 | ID | Level | Statement |
 | --- | --- | --- |
 | `RT-01` | `build` | The vocabulary register the page reads lists schema.org 30.1's 939 types and 1,538 properties, the 12 domains and the 1,229 crosswalk rows in the order of the Lean indices, every source pinned by sha256 |
+
+## router
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `RU-01` | `build` | Every value of incoming content reaches a Prism feature only as PrismRouter answers: the kill switch and bytes that are not the compiled model refuse every mapping, a value the source's schema types is mapped straight and never re-read, the owner's free text is read by every compiled feature, and no feature runs without its compiled model |
+| `RU-02` | `build` | The owner's words are mapped by the R4 router before they are kept: a jot that names a day and a clock lands once, at that time, in the places its intent and its time name, and nothing reaches the vault while the router refuses |
+
+## uorc
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `UO-01` | `build` | The Prism keeps or opens an object as a UORC archive only when the proved Prism UORC decision says so, from the archive's structure alone: never while halted, never with a broken seal, an unknown format, a basis the browser does not hold or more than one object, never when it does not restore within the work bound to the very bytes its kappa label names, and never for an object the kappa facet did not admit |
+| `UO-02` | `build` | The page runs only the uorc client of UOR-Foundation/compression release v0.4.0, fetched from the release asset pinned by SHA-256 with each served file pinned again by SHA-256 and size, checked in the browser before it compiles, and loaded only when a value is first kept or opened |
+| `UO-03` | `build` | The vault keeps every value as its uorc archive, sealed under the device key with the value's kappa label in its record and filed under the value's own keyed address, and gives a value back only when the archive opens through the proved decisions to bytes that re-derive to that address |
 
 ## vault
 

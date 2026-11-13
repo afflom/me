@@ -93,23 +93,13 @@ definition{
 }
 
 definition{
-  name: surfaceNavRoles,
+  name: surfacePageIsPersonView,
   parameters: [places : (List PrismSurface::SurfacePlace)],
-  result: (List Nat),
-  body: (match places
-    | List.nil => (nil Nat)
-    | List.cons place rest => (if ((project place host) =? 1) then (cons (project place role) (surfaceNavRoles rest)) else (surfaceNavRoles rest))),
-  recursive_argument: places
-}
-
-definition{
-  name: surfaceRunsContiguous,
-  parameters: [previous : Nat, seen : (List Nat), roles : (List Nat)],
   result: Bool,
-  body: (match roles
+  body: (match places
     | List.nil => true
-    | List.cons role rest => (if (role =? previous) then (surfaceRunsContiguous previous seen rest) else ((not (surfaceMember role seen)) && (surfaceRunsContiguous role (cons previous seen) rest)))),
-  recursive_argument: roles
+    | List.cons place rest => ((if ((project place viewpoint) =? 1) then ((project place host) =? 4) else (not ((project place host) =? 4))) && (surfacePageIsPersonView rest))),
+  recursive_argument: places
 }
 
 definition{
@@ -180,10 +170,214 @@ definition{
 }
 
 definition{
+  name: surfacePairsRead,
+  parameters: [pairs : (List PrismSurface::SurfaceContrast)],
+  result: Bool,
+  body: (match pairs
+    | List.nil => true
+    | List.cons pair rest => (((project pair floor) <=? (project pair ratio)) && (((project pair theme) <? (PrismSurface::surfaceThemeCount)) && (surfacePairsRead rest)))),
+  recursive_argument: pairs
+}
+
+definition{
+  name: surfaceColoursInRange,
+  parameters: [tones : (List PrismSurface::SurfaceTone)],
+  result: Bool,
+  body: (match tones
+    | List.nil => true
+    | List.cons tone rest => (((project tone dark) <? 16777216) && (((project tone light) <? 16777216) && (surfaceColoursInRange rest)))),
+  recursive_argument: tones
+}
+
+definition{
+  name: surfaceThemesDiffer,
+  parameters: [tones : (List PrismSurface::SurfaceTone)],
+  result: Bool,
+  body: (match tones
+    | List.nil => false
+    | List.cons tone rest => ((not ((project tone dark) =? (project tone light))) || (surfaceThemesDiffer rest))),
+  recursive_argument: tones
+}
+
+definition{
+  name: surfaceDomainFed,
+  parameters: [domain : Nat, feeders : (List PrismSurface::SurfaceFeeder)],
+  result: Bool,
+  body: (match feeders
+    | List.nil => false
+    | List.cons f rest => ((surfaceMember domain (project f domains)) || (surfaceDomainFed domain rest))),
+  recursive_argument: feeders
+}
+
+definition{
+  name: surfaceAnyFed,
+  parameters: [domains : (List Nat)],
+  result: Bool,
+  body: (match domains
+    | List.nil => false
+    | List.cons d rest => ((surfaceDomainFed d (PrismSurface::surfaceFeeders)) || (surfaceAnyFed rest))),
+  recursive_argument: domains
+}
+
+definition{
+  name: surfacePlacesFed,
+  parameters: [places : (List PrismSurface::SurfacePlace)],
+  result: Bool,
+  body: (match places
+    | List.nil => true
+    | List.cons place rest => (((not ((project place kind) =? 0)) || (surfaceAnyFed (project place domains))) && (surfacePlacesFed rest))),
+  recursive_argument: places
+}
+
+definition{
+  name: surfaceTimes,
+  parameters: [a : Nat, b : Nat],
+  result: Nat,
+  body: (match b | Nat.zero => 0 | Nat.succ k => (a + (surfaceTimes a k))),
+  recursive_argument: b
+}
+
+definition{
+  name: surfaceProduct,
+  parameters: [factors : (List Nat)],
+  result: Nat,
+  body: (match factors
+    | List.nil => 1
+    | List.cons f rest => (surfaceTimes f (surfaceProduct rest))),
+  recursive_argument: factors
+}
+
+definition{
+  name: surfaceFactorsFiveLimit,
+  parameters: [factors : (List Nat)],
+  result: Bool,
+  body: (match factors
+    | List.nil => true
+    | List.cons f rest => ((((f =? 2) || (f =? 3)) || (f =? 5)) && (surfaceFactorsFiveLimit rest))),
+  recursive_argument: factors
+}
+
+definition{
+  name: surfaceRatiosJust,
+  parameters: [ratios : (List PrismSurface::SurfaceRatio)],
+  result: Bool,
+  body: (match ratios
+    | List.nil => true
+    | List.cons r rest => ((surfaceFactorsFiveLimit (project r num)) && ((surfaceFactorsFiveLimit (project r den)) && (surfaceRatiosJust rest)))),
+  recursive_argument: ratios
+}
+
+definition{
+  name: surfaceInOctave,
+  parameters: [ratios : (List PrismSurface::SurfaceRatio)],
+  result: Bool,
+  body: (match ratios
+    | List.nil => true
+    | List.cons r rest => ((((surfaceProduct (project r den)) <=? (surfaceProduct (project r num))) && ((surfaceProduct (project r num)) <=? ((surfaceProduct (project r den)) + (surfaceProduct (project r den))))) && (surfaceInOctave rest))),
+  recursive_argument: ratios
+}
+
+definition{
+  name: surfaceRising,
+  parameters: [pn : Nat, pd : Nat, ratios : (List PrismSurface::SurfaceRatio)],
+  result: Bool,
+  body: (match ratios
+    | List.nil => true
+    | List.cons r rest => (((surfaceTimes pn (surfaceProduct (project r den))) <? (surfaceTimes (surfaceProduct (project r num)) pd)) && (surfaceRising (surfaceProduct (project r num)) (surfaceProduct (project r den)) rest))),
+  recursive_argument: ratios
+}
+
+definition{
+  name: surfaceDegreesIn,
+  parameters: [bound : Nat, degrees : (List Nat)],
+  result: Bool,
+  body: (match degrees
+    | List.nil => true
+    | List.cons d rest => ((d <? bound) && (surfaceDegreesIn bound rest))),
+  recursive_argument: degrees
+}
+
+definition{
+  name: surfaceRatioCount,
+  parameters: [ratios : (List PrismSurface::SurfaceRatio)],
+  result: Nat,
+  body: (match ratios | List.nil => 0 | List.cons r rest => ((surfaceRatioCount rest) + 1)),
+  recursive_argument: ratios
+}
+
+definition{
+  name: surfaceNatCount,
+  parameters: [values : (List Nat)],
+  result: Nat,
+  body: (match values | List.nil => 0 | List.cons v rest => ((surfaceNatCount rest) + 1)),
+  recursive_argument: values
+}
+
+definition{
+  name: surfaceAnswersSound,
+  parameters: [answers : (List PrismSurface::SurfaceAnswer)],
+  result: Bool,
+  body: (match answers
+    | List.nil => true
+    | List.cons a rest => ((surfaceDegreesIn (surfaceRatioCount (PrismSurface::surfaceScale)) (project a degrees)) && (((surfaceNatCount (project a degrees)) <=? 3) && (((project a level) <=? 100) && (((project a tone) <? (PrismSurface::surfaceToneCount)) && (surfaceAnswersSound rest)))))),
+  recursive_argument: answers
+}
+
+definition{
+  name: surfaceRestSilent,
+  parameters: [answers : (List PrismSurface::SurfaceAnswer)],
+  result: Bool,
+  body: (match answers
+    | List.nil => false
+    | List.cons a rest => ((((project a level) =? 0) && ((surfaceNatCount (project a degrees)) =? 0)) || (surfaceRestSilent rest))),
+  recursive_argument: answers
+}
+
+definition{
+  name: surfaceSectionsHolding,
+  parameters: [setting : Nat, sections : (List PrismSurface::SurfaceSection)],
+  result: Nat,
+  body: (match sections
+    | List.nil => 0
+    | List.cons section rest => (if (surfaceMember setting (project section settings)) then ((surfaceSectionsHolding setting rest) + 1) else (surfaceSectionsHolding setting rest))),
+  recursive_argument: sections
+}
+
+definition{
+  name: surfaceSettingsSectioned,
+  parameters: [index : Nat, settings : (List PrismSurface::SurfaceSetting)],
+  result: Bool,
+  body: (match settings
+    | List.nil => true
+    | List.cons setting rest => (((surfaceSectionsHolding index (PrismSurface::surfaceSections)) =? (if ((project setting viewpoint) =? 1) then 0 else 1)) && (surfaceSettingsSectioned (index + 1) rest))),
+  recursive_argument: settings
+}
+
+definition{
+  name: surfaceSectionsShort,
+  parameters: [sections : (List PrismSurface::SurfaceSection)],
+  result: Bool,
+  body: (match sections
+    | List.nil => true
+    | List.cons section rest => (((1 <=? (surfaceNatCount (project section settings))) && (((surfaceNatCount (project section settings)) <=? 3) && (1 <=? (project section serves)))) && (surfaceSectionsShort rest))),
+  recursive_argument: sections
+}
+
+definition{
+  name: surfaceSectionCount,
+  parameters: [sections : (List PrismSurface::SurfaceSection)],
+  result: Nat,
+  body: (match sections
+    | List.nil => 0
+    | List.cons section rest => ((surfaceSectionCount rest) + 1)),
+  recursive_argument: sections
+}
+
+definition{
   name: surfaceGroupsUsed,
   parameters: [],
   result: Bool,
-  body: ((surfaceGroupUsed 0 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 1 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 2 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 3 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 4 (PrismSurface::surfaceSettings)) && true)))))
+  body: ((surfaceGroupUsed 0 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 1 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 2 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 3 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 4 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 5 (PrismSurface::surfaceSettings)) && true))))))
 }
 
 theorem{
@@ -215,9 +409,37 @@ theorem{
 }
 
 theorem{
-  name: surfaceMenuByRole,
+  name: surfaceOneSheet,
   parameters: [],
-  statement: ((surfaceRunsContiguous 99 (nil Nat) (surfaceNavRoles (PrismSurface::surfacePlaces))) = true),
+  statement: ((surfaceHostCount 3 (PrismSurface::surfacePlaces)) = 1),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceEverySettingInOneSection,
+  parameters: [],
+  statement: ((surfaceSettingsSectioned 0 (PrismSurface::surfaceSettings)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceSectionsAreFewAndShort,
+  parameters: [],
+  statement: (((surfaceSectionsShort (PrismSurface::surfaceSections)) && ((surfaceSectionCount (PrismSurface::surfaceSections)) <=? 4)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfacePageIsThePersonsView,
+  parameters: [],
+  statement: ((surfacePageIsPersonView (PrismSurface::surfacePlaces)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceMenuIsShort,
+  parameters: [],
+  statement: (((surfaceHostCount 1 (PrismSurface::surfacePlaces)) <=? 4) = true),
   proof: decide{}
 }
 
@@ -281,6 +503,69 @@ theorem{
   name: surfaceNoEmptyGroup,
   parameters: [],
   statement: ((surfaceGroupsUsed) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceEveryPairReads,
+  parameters: [],
+  statement: ((surfacePairsRead (PrismSurface::surfaceContrasts)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceTonesAreColours,
+  parameters: [],
+  statement: ((surfaceColoursInRange (PrismSurface::surfaceTones)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceEveryPlaceIsFed,
+  parameters: [],
+  statement: ((surfacePlacesFed (PrismSurface::surfacePlaces)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceTwoThemes,
+  parameters: [],
+  statement: ((surfaceThemesDiffer (PrismSurface::surfaceTones)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceVoiceIsJust,
+  parameters: [],
+  statement: (((surfaceRatiosJust (PrismSurface::surfaceScale)) && (surfaceRatiosJust (PrismSurface::surfacePartials))) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceScaleIsOneOctave,
+  parameters: [],
+  statement: (((surfaceInOctave (PrismSurface::surfaceScale)) && (surfaceRising 0 1 (PrismSurface::surfaceScale))) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceAnswersInTheScale,
+  parameters: [],
+  statement: ((surfaceAnswersSound (PrismSurface::surfaceAnswers)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceVoiceHasRest,
+  parameters: [],
+  statement: ((surfaceRestSilent (PrismSurface::surfaceAnswers)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceVoiceIsHumane,
+  parameters: [],
+  statement: ((((PrismSurface::surfaceVoiceCeiling) <=? 10) && ((5 <=? (PrismSurface::surfaceVoiceAttack)) && (((PrismSurface::surfaceVoiceRelease) <=? 1500) && (150 <=? (PrismSurface::surfaceVoiceRefractory))))) = true),
   proof: decide{}
 }
 \end{semanticmodule}

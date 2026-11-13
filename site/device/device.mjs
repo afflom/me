@@ -20,6 +20,8 @@
 // (device.test.mjs); the page asks the same module through the Prism root.
 export const GUEST = { path: 'guest/folder.wasm', sha256: '6fdaec9f0b96478c68d82695ff91a2e927f1430395ca59661633c795934188c0' };
 // And of app/src/PrismHost.lex.tex, for the same suite.
+// And of app/src/PrismSource.lex.tex.
+export const SOURCE_GUEST = { path: 'guest/source.wasm', sha256: '86ba238e418c0e959ec51efe653adcd617fbca4b2dde824901ed2074f9bfc080' };
 export const HOST_GUEST = { path: 'guest/host.wasm', sha256: '72f4852426d91c15d6322cc33a08f0fe2f54f2be85b7f68ef031d8e5f4db783b' };
 
 export const LIMIT = 32 * 1024 * 1024; // one read at a time, at most
@@ -27,6 +29,8 @@ const DEPTH = 6;
 const DB = 'prism-device';
 const encoder = new TextEncoder();
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
+import { isZip, zipEntries } from './zip.mjs';
+
 const sha256 = async (bytes) => hex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
 const fail = (code, message) => Object.assign(new Error(message ?? code), { code });
 
@@ -58,7 +62,7 @@ export async function* mboxMessages(chunks) {
     const lines = carry.split('\n');
     carry = lines.pop();
     for (const line of lines) {
-      if (line.startsWith('From ') && (message === null || message.endsWith('\n\n') || message === '')) {
+      if (line.startsWith('From ') && (message === null || /\r?\n\r?\n$/.test(message) || message === '')) {
         yield* finish();
         message = '';
       } else if (message !== null) {
@@ -264,8 +268,14 @@ export function openDevice({ decide, ingest, store = handleStore(), halted = () 
     // Files the owner picked or dropped: the act itself is the grant for these.
     async readFiles(files) {
       const tally = tallyOf();
+      const opened = [];
       for (const file of files) {
-        const format = formatOf(file.name);
+        // A zip (a Takeout or calendar export) is opened; each entry is judged by its own format.
+        if (isZip(file)) opened.push(...(await zipEntries(file)));
+        else opened.push(file);
+      }
+      for (const file of opened) {
+        const format = formatOf(file.name, file.parent ?? '');
         if (format === 'other') { tally.skip += 1; continue; }
         await readFile(file, format, 'granted', tally);
       }

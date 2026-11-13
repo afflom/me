@@ -69,12 +69,77 @@ export const FACETS = [
  {
   "id": "resonance",
   "kind": "facet",
-  "name": "resonance",
+  "name": "Prism Resonance",
   "floor": 800,
-  "directive": "Answer each of the owner's gestures humanely: bring forward what they keep, and keep quiet what they would dismiss.",
+  "directive": "Decides how the Prism answers one gesture of the owner toward one thing it holds: it rests, it whispers, it chimes once, it blooms (the thing comes forward), it gathers a chorus (what belongs with it comes forward too), or it recedes. Stillness is answered with stillness, a dismissal is honored at once, a hurried owner is never met with more, the owner's quiet is kept, and nothing the owner rejected is ever brought forward.",
   "objective": "Nothing the owner dismisses was brought forward, nothing they keep was kept quiet, and nothing interrupts them while hurried.",
   "kpi": "the share of what the Prism brought forward that the owner kept",
-  "tunable": []
+  "tunable": [
+   {
+    "name": "dwellMs",
+    "min": 1500,
+    "max": 12000,
+    "step": 500,
+    "initial": 4000,
+    "means": "an open becomes a dwell after this long with the thing"
+   },
+   {
+    "name": "calmGapMs",
+    "min": 20000,
+    "max": 300000,
+    "step": 5000,
+    "initial": 60000,
+    "means": "gaps between gestures longer than this read as still"
+   },
+   {
+    "name": "hurriedGapMs",
+    "min": 500,
+    "max": 10000,
+    "step": 250,
+    "initial": 2500,
+    "means": "gaps shorter than this read as hurried"
+   },
+   {
+    "name": "nearHours",
+    "min": 2,
+    "max": 72,
+    "step": 1,
+    "initial": 24,
+    "means": "a thing within this many hours of now is near"
+   },
+   {
+    "name": "dawnHour",
+    "min": 4,
+    "max": 8,
+    "step": 1,
+    "initial": 5,
+    "means": "local hour dawn begins"
+   },
+   {
+    "name": "dayHour",
+    "min": 7,
+    "max": 11,
+    "step": 1,
+    "initial": 9,
+    "means": "local hour day begins"
+   },
+   {
+    "name": "duskHour",
+    "min": 16,
+    "max": 20,
+    "step": 1,
+    "initial": 18,
+    "means": "local hour dusk begins"
+   },
+   {
+    "name": "nightHour",
+    "min": 20,
+    "max": 24,
+    "step": 1,
+    "initial": 22,
+    "means": "local hour night begins"
+   }
+  ]
  },
  {
   "id": "today",
@@ -89,21 +154,11 @@ export const FACETS = [
  {
   "id": "conversations",
   "kind": "place",
-  "name": "Conversations",
+  "name": "Messages",
   "floor": 800,
-  "directive": "Bring forward in Conversations only what the owner keeps.",
-  "objective": "The owner keeps what Conversations brings forward.",
-  "kpi": "the share of what Conversations brought forward that the owner kept",
-  "tunable": []
- },
- {
-  "id": "people",
-  "kind": "place",
-  "name": "People",
-  "floor": 800,
-  "directive": "Bring forward in People only what the owner keeps.",
-  "objective": "The owner keeps what People brings forward.",
-  "kpi": "the share of what People brought forward that the owner kept",
+  "directive": "Bring forward in Messages only what the owner keeps.",
+  "objective": "The owner keeps what Messages brings forward.",
+  "kpi": "the share of what Messages brought forward that the owner kept",
   "tunable": []
  },
  {
@@ -117,13 +172,23 @@ export const FACETS = [
   "tunable": []
  },
  {
+  "id": "people",
+  "kind": "place",
+  "name": "People",
+  "floor": 800,
+  "directive": "Bring forward in People only what the owner keeps.",
+  "objective": "The owner keeps what People brings forward.",
+  "kpi": "the share of what People brought forward that the owner kept",
+  "tunable": []
+ },
+ {
   "id": "tasks",
   "kind": "place",
-  "name": "Tasks",
+  "name": "Notes",
   "floor": 800,
-  "directive": "Bring forward in Tasks only what the owner keeps.",
-  "objective": "The owner keeps what Tasks brings forward.",
-  "kpi": "the share of what Tasks brought forward that the owner kept",
+  "directive": "Bring forward in Notes only what the owner keeps.",
+  "objective": "The owner keeps what Notes brings forward.",
+  "kpi": "the share of what Notes brought forward that the owner kept",
   "tunable": []
  },
  {
@@ -229,11 +294,11 @@ export const FACETS = [
  {
   "id": "boundary",
   "kind": "place",
-  "name": "Boundary",
+  "name": "Settings",
   "floor": 800,
-  "directive": "Bring forward in Boundary only what the owner keeps.",
-  "objective": "The owner keeps what Boundary brings forward.",
-  "kpi": "the share of what Boundary brought forward that the owner kept",
+  "directive": "Bring forward in Settings only what the owner keeps.",
+  "objective": "The owner keeps what Settings brings forward.",
+  "kpi": "the share of what Settings brought forward that the owner kept",
   "tunable": []
  },
  {

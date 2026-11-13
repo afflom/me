@@ -16,6 +16,10 @@
 \importmodule{PrismModels}
 \importmodule{PrismR4}
 \importmodule{PrismRealizability}
+\importmodule{PrismResonance}
+\importmodule{PrismRouter}
+\importmodule{PrismSource}
+\importmodule{PrismUorc}
 \importmodule{PrismVaultRestore}
 \importmodule{PrismVaultStore}
 \title{Text application model}
@@ -128,6 +132,38 @@ theorem{
   name: realizabilityKappaComplete,
   parameters: [],
   statement: ((PrismRealizability::realizabilityDescriptorComplete (PrismRealizability::realizabilityKappa)) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilitySourceComplete,
+  parameters: [],
+  statement: ((PrismRealizability::realizabilityDescriptorComplete (PrismRealizability::realizabilitySource)) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityUorcComplete,
+  parameters: [],
+  statement: ((PrismRealizability::realizabilityDescriptorComplete (PrismRealizability::realizabilityUorc)) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityResonanceComplete,
+  parameters: [],
+  statement: ((PrismRealizability::realizabilityDescriptorComplete (PrismRealizability::realizabilityResonance)) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityRouterComplete,
+  parameters: [],
+  statement: ((PrismRealizability::realizabilityDescriptorComplete (PrismRealizability::realizabilityRouter)) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -760,6 +796,198 @@ theorem{
   name: realizabilityKappaDigestMatters,
   parameters: [],
   statement: ((((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerAdmit)) && ((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMismatch)})) =? (PrismKappa::kappaAnswerMismatch))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilitySourceServiceMatters,
+  parameters: [],
+  statement: ((((PrismSource::sourceJudge (record PrismSource::SourceRequest {service := (PrismSource::sourceServiceGmail), route := (PrismSource::sourceRouteOwn), act := (PrismSource::sourceActRead), halted := (PrismSource::sourceHaltedNo)})) =? (PrismSource::sourceAnswerRead)) && ((PrismSource::sourceJudge (record PrismSource::SourceRequest {service := (PrismSource::sourceServiceDiscord), route := (PrismSource::sourceRouteOwn), act := (PrismSource::sourceActRead), halted := (PrismSource::sourceHaltedNo)})) =? (PrismSource::sourceAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilitySourceRouteMatters,
+  parameters: [],
+  statement: ((((PrismSource::sourceJudge (record PrismSource::SourceRequest {service := (PrismSource::sourceServiceDiscord), route := (PrismSource::sourceRouteSeen), act := (PrismSource::sourceActRead), halted := (PrismSource::sourceHaltedNo)})) =? (PrismSource::sourceAnswerRead)) && ((PrismSource::sourceJudge (record PrismSource::SourceRequest {service := (PrismSource::sourceServiceDiscord), route := (PrismSource::sourceRouteOwn), act := (PrismSource::sourceActRead), halted := (PrismSource::sourceHaltedNo)})) =? (PrismSource::sourceAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilitySourceActMatters,
+  parameters: [],
+  statement: ((((PrismSource::sourceJudge (record PrismSource::SourceRequest {service := (PrismSource::sourceServiceGmail), route := (PrismSource::sourceRouteOwn), act := (PrismSource::sourceActRead), halted := (PrismSource::sourceHaltedNo)})) =? (PrismSource::sourceAnswerRead)) && ((PrismSource::sourceJudge (record PrismSource::SourceRequest {service := (PrismSource::sourceServiceGmail), route := (PrismSource::sourceRouteOwn), act := (PrismSource::sourceActWrite), halted := (PrismSource::sourceHaltedNo)})) =? (PrismSource::sourceAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilitySourceHaltedMatters,
+  parameters: [],
+  statement: ((((PrismSource::sourceJudge (record PrismSource::SourceRequest {service := (PrismSource::sourceServiceGmail), route := (PrismSource::sourceRouteOwn), act := (PrismSource::sourceActRead), halted := (PrismSource::sourceHaltedNo)})) =? (PrismSource::sourceAnswerRead)) && ((PrismSource::sourceJudge (record PrismSource::SourceRequest {service := (PrismSource::sourceServiceGmail), route := (PrismSource::sourceRouteOwn), act := (PrismSource::sourceActRead), halted := (PrismSource::sourceHaltedYes)})) =? (PrismSource::sourceAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityUorcActMatters,
+  parameters: [],
+  statement: ((((PrismUorc::uorcJudge (record PrismUorc::UorcRequest {act := (PrismUorc::uorcActKeep), halted := (PrismUorc::uorcHaltedNo), seal := (PrismUorc::uorcSealOk), format := (PrismUorc::uorcFormatKnown), scope := (PrismUorc::uorcScopeStandard), objects := (PrismUorc::uorcObjectsOne), restore := (PrismUorc::uorcRestoreSame), kappa := (PrismUorc::uorcKappaAdmit)})) =? (PrismUorc::uorcAnswerKeep)) && ((PrismUorc::uorcJudge (record PrismUorc::UorcRequest {act := (PrismUorc::uorcActOpen), halted := (PrismUorc::uorcHaltedNo), seal := (PrismUorc::uorcSealOk), format := (PrismUorc::uorcFormatKnown), scope := (PrismUorc::uorcScopeStandard), objects := (PrismUorc::uorcObjectsOne), restore := (PrismUorc::uorcRestoreSame), kappa := (PrismUorc::uorcKappaAdmit)})) =? (PrismUorc::uorcAnswerOpen))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityUorcHaltedMatters,
+  parameters: [],
+  statement: ((((PrismUorc::uorcJudge (record PrismUorc::UorcRequest {act := (PrismUorc::uorcActKeep), halted := (PrismUorc::uorcHaltedNo), seal := (PrismUorc::uorcSealOk), format := (PrismUorc::uorcFormatKnown), scope := (PrismUorc::uorcScopeStandard), objects := (PrismUorc::uorcObjectsOne), restore := (PrismUorc::uorcRestoreSame), kappa := (PrismUorc::uorcKappaAdmit)})) =? (PrismUorc::uorcAnswerKeep)) && ((PrismUorc::uorcJudge (record PrismUorc::UorcRequest {act := (PrismUorc::uorcActKeep), halted := (PrismUorc::uorcHaltedYes), seal := (PrismUorc::uorcSealOk), format := (PrismUorc::uorcFormatKnown), scope := (PrismUorc::uorcScopeStandard), objects := (PrismUorc::uorcObjectsOne), restore := (PrismUorc::uorcRestoreSame), kappa := (PrismUorc::uorcKappaAdmit)})) =? (PrismUorc::uorcAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityUorcSealMatters,
+  parameters: [],
+  statement: ((((PrismUorc::uorcJudge (record PrismUorc::UorcRequest {act := (PrismUorc::uorcActKeep), halted := (PrismUorc::uorcHaltedNo), seal := (PrismUorc::uorcSealOk), format := (PrismUorc::uorcFormatKnown), scope := (PrismUorc::uorcScopeStandard), objects := (PrismUorc::uorcObjectsOne), restore := (PrismUorc::uorcRestoreSame), kappa := (PrismUorc::uorcKappaAdmit)})) =? (PrismUorc::uorcAnswerKeep)) && ((PrismUorc::uorcJudge (record PrismUorc::UorcRequest {act := (PrismUorc::uorcActKeep), halted := (PrismUorc::uorcHaltedNo), seal := (PrismUorc::uorcSealBroken), format := (PrismUorc::uorcFormatKnown), scope := (PrismUorc::uorcScopeStandard), objects := (PrismUorc::uorcObjectsOne), restore := (PrismUorc::uorcRestoreSame), kappa := (PrismUorc::uorcKappaAdmit)})) =? (PrismUorc::uorcAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityUorcFormatMatters,
+  parameters: [],
+  statement: ((((PrismUorc::uorcJudge (record PrismUorc::UorcRequest {act := (PrismUorc::uorcActKeep), halted := (PrismUorc::uorcHaltedNo), seal := (PrismUorc::uorcSealOk), format := (PrismUorc::uorcFormatKnown), scope := (PrismUorc::uorcScopeStandard), objects := (PrismUorc::uorcObjectsOne), restore := (PrismUorc::uorcRestoreSame), kappa := (PrismUorc::uorcKappaAdmit)})) =? (PrismUorc::uorcAnswerKeep)) && ((PrismUorc::uorcJudge (record PrismUorc::UorcRequest {act := (PrismUorc::uorcActKeep), halted := (PrismUorc::uorcHaltedNo), seal := (PrismUorc::uorcSealOk), format := (PrismUorc::uorcFormatOther), scope := (PrismUorc::uorcScopeStandard), objects := (PrismUorc::uorcObjectsOne), restore := (PrismUorc::uorcRestoreSame), kappa := (PrismUorc::uorcKappaAdmit)})) =? (PrismUorc::uorcAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityUorcScopeMatters,
+  parameters: [],
+  statement: ((((PrismUorc::uorcJudge (record PrismUorc::UorcRequest {act := (PrismUorc::uorcActKeep), halted := (PrismUorc::uorcHaltedNo), seal := (PrismUorc::uorcSealOk), format := (PrismUorc::uorcFormatKnown), scope := (PrismUorc::uorcScopeStandard), objects := (PrismUorc::uorcObjectsOne), restore := (PrismUorc::uorcRestoreSame), kappa := (PrismUorc::uorcKappaAdmit)})) =? (PrismUorc::uorcAnswerKeep)) && ((PrismUorc::uorcJudge (record PrismUorc::UorcRequest {act := (PrismUorc::uorcActKeep), halted := (PrismUorc::uorcHaltedNo), seal := (PrismUorc::uorcSealOk), format := (PrismUorc::uorcFormatKnown), scope := (PrismUorc::uorcScopeOther), objects := (PrismUorc::uorcObjectsOne), restore := (PrismUorc::uorcRestoreSame), kappa := (PrismUorc::uorcKappaAdmit)})) =? (PrismUorc::uorcAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityUorcObjectsMatters,
+  parameters: [],
+  statement: ((((PrismUorc::uorcJudge (record PrismUorc::UorcRequest {act := (PrismUorc::uorcActKeep), halted := (PrismUorc::uorcHaltedNo), seal := (PrismUorc::uorcSealOk), format := (PrismUorc::uorcFormatKnown), scope := (PrismUorc::uorcScopeStandard), objects := (PrismUorc::uorcObjectsOne), restore := (PrismUorc::uorcRestoreSame), kappa := (PrismUorc::uorcKappaAdmit)})) =? (PrismUorc::uorcAnswerKeep)) && ((PrismUorc::uorcJudge (record PrismUorc::UorcRequest {act := (PrismUorc::uorcActKeep), halted := (PrismUorc::uorcHaltedNo), seal := (PrismUorc::uorcSealOk), format := (PrismUorc::uorcFormatKnown), scope := (PrismUorc::uorcScopeStandard), objects := (PrismUorc::uorcObjectsMany), restore := (PrismUorc::uorcRestoreSame), kappa := (PrismUorc::uorcKappaAdmit)})) =? (PrismUorc::uorcAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityUorcRestoreMatters,
+  parameters: [],
+  statement: ((((PrismUorc::uorcJudge (record PrismUorc::UorcRequest {act := (PrismUorc::uorcActKeep), halted := (PrismUorc::uorcHaltedNo), seal := (PrismUorc::uorcSealOk), format := (PrismUorc::uorcFormatKnown), scope := (PrismUorc::uorcScopeStandard), objects := (PrismUorc::uorcObjectsOne), restore := (PrismUorc::uorcRestoreSame), kappa := (PrismUorc::uorcKappaAdmit)})) =? (PrismUorc::uorcAnswerKeep)) && ((PrismUorc::uorcJudge (record PrismUorc::UorcRequest {act := (PrismUorc::uorcActKeep), halted := (PrismUorc::uorcHaltedNo), seal := (PrismUorc::uorcSealOk), format := (PrismUorc::uorcFormatKnown), scope := (PrismUorc::uorcScopeStandard), objects := (PrismUorc::uorcObjectsOne), restore := (PrismUorc::uorcRestoreDiffers), kappa := (PrismUorc::uorcKappaAdmit)})) =? (PrismUorc::uorcAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityUorcKappaMatters,
+  parameters: [],
+  statement: ((((PrismUorc::uorcJudge (record PrismUorc::UorcRequest {act := (PrismUorc::uorcActKeep), halted := (PrismUorc::uorcHaltedNo), seal := (PrismUorc::uorcSealOk), format := (PrismUorc::uorcFormatKnown), scope := (PrismUorc::uorcScopeStandard), objects := (PrismUorc::uorcObjectsOne), restore := (PrismUorc::uorcRestoreSame), kappa := (PrismUorc::uorcKappaAdmit)})) =? (PrismUorc::uorcAnswerKeep)) && ((PrismUorc::uorcJudge (record PrismUorc::UorcRequest {act := (PrismUorc::uorcActKeep), halted := (PrismUorc::uorcHaltedNo), seal := (PrismUorc::uorcSealOk), format := (PrismUorc::uorcFormatKnown), scope := (PrismUorc::uorcScopeStandard), objects := (PrismUorc::uorcObjectsOne), restore := (PrismUorc::uorcRestoreSame), kappa := (PrismUorc::uorcKappaOther)})) =? (PrismUorc::uorcAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityResonanceGestureMatters,
+  parameters: [],
+  statement: ((((PrismResonance::resonanceJudge (record PrismResonance::ResonanceRequest {gesture := (PrismResonance::resonanceGestureDwell), pace := (PrismResonance::resonancePaceCalm), salience := (PrismResonance::resonanceSalienceNear), phase := (PrismResonance::resonancePhaseDay), belief := (PrismResonance::resonanceBeliefConsolidated), attention := (PrismResonance::resonanceAttentionOpen), halted := (PrismResonance::resonanceHaltedNo)})) =? (PrismResonance::resonanceAnswerChorus)) && ((PrismResonance::resonanceJudge (record PrismResonance::ResonanceRequest {gesture := (PrismResonance::resonanceGestureOpen), pace := (PrismResonance::resonancePaceCalm), salience := (PrismResonance::resonanceSalienceNear), phase := (PrismResonance::resonancePhaseDay), belief := (PrismResonance::resonanceBeliefConsolidated), attention := (PrismResonance::resonanceAttentionOpen), halted := (PrismResonance::resonanceHaltedNo)})) =? (PrismResonance::resonanceAnswerChime))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityResonancePaceMatters,
+  parameters: [],
+  statement: ((((PrismResonance::resonanceJudge (record PrismResonance::ResonanceRequest {gesture := (PrismResonance::resonanceGestureDwell), pace := (PrismResonance::resonancePaceCalm), salience := (PrismResonance::resonanceSalienceNear), phase := (PrismResonance::resonancePhaseDay), belief := (PrismResonance::resonanceBeliefConsolidated), attention := (PrismResonance::resonanceAttentionOpen), halted := (PrismResonance::resonanceHaltedNo)})) =? (PrismResonance::resonanceAnswerChorus)) && ((PrismResonance::resonanceJudge (record PrismResonance::ResonanceRequest {gesture := (PrismResonance::resonanceGestureDwell), pace := (PrismResonance::resonancePaceHurried), salience := (PrismResonance::resonanceSalienceNear), phase := (PrismResonance::resonancePhaseDay), belief := (PrismResonance::resonanceBeliefConsolidated), attention := (PrismResonance::resonanceAttentionOpen), halted := (PrismResonance::resonanceHaltedNo)})) =? (PrismResonance::resonanceAnswerWhisper))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityResonanceSalienceMatters,
+  parameters: [],
+  statement: ((((PrismResonance::resonanceJudge (record PrismResonance::ResonanceRequest {gesture := (PrismResonance::resonanceGestureDwell), pace := (PrismResonance::resonancePaceCalm), salience := (PrismResonance::resonanceSalienceNear), phase := (PrismResonance::resonancePhaseDay), belief := (PrismResonance::resonanceBeliefConsolidated), attention := (PrismResonance::resonanceAttentionOpen), halted := (PrismResonance::resonanceHaltedNo)})) =? (PrismResonance::resonanceAnswerChorus)) && ((PrismResonance::resonanceJudge (record PrismResonance::ResonanceRequest {gesture := (PrismResonance::resonanceGestureDwell), pace := (PrismResonance::resonancePaceCalm), salience := (PrismResonance::resonanceSalienceFar), phase := (PrismResonance::resonancePhaseDay), belief := (PrismResonance::resonanceBeliefConsolidated), attention := (PrismResonance::resonanceAttentionOpen), halted := (PrismResonance::resonanceHaltedNo)})) =? (PrismResonance::resonanceAnswerChime))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityResonancePhaseMatters,
+  parameters: [],
+  statement: ((((PrismResonance::resonanceJudge (record PrismResonance::ResonanceRequest {gesture := (PrismResonance::resonanceGestureOpen), pace := (PrismResonance::resonancePaceCalm), salience := (PrismResonance::resonanceSalienceNear), phase := (PrismResonance::resonancePhaseDay), belief := (PrismResonance::resonanceBeliefInferred), attention := (PrismResonance::resonanceAttentionOpen), halted := (PrismResonance::resonanceHaltedNo)})) =? (PrismResonance::resonanceAnswerChime)) && ((PrismResonance::resonanceJudge (record PrismResonance::ResonanceRequest {gesture := (PrismResonance::resonanceGestureOpen), pace := (PrismResonance::resonancePaceCalm), salience := (PrismResonance::resonanceSalienceNear), phase := (PrismResonance::resonancePhaseNight), belief := (PrismResonance::resonanceBeliefInferred), attention := (PrismResonance::resonanceAttentionOpen), halted := (PrismResonance::resonanceHaltedNo)})) =? (PrismResonance::resonanceAnswerWhisper))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityResonanceBeliefMatters,
+  parameters: [],
+  statement: ((((PrismResonance::resonanceJudge (record PrismResonance::ResonanceRequest {gesture := (PrismResonance::resonanceGestureDwell), pace := (PrismResonance::resonancePaceCalm), salience := (PrismResonance::resonanceSalienceNear), phase := (PrismResonance::resonancePhaseDay), belief := (PrismResonance::resonanceBeliefConsolidated), attention := (PrismResonance::resonanceAttentionOpen), halted := (PrismResonance::resonanceHaltedNo)})) =? (PrismResonance::resonanceAnswerChorus)) && ((PrismResonance::resonanceJudge (record PrismResonance::ResonanceRequest {gesture := (PrismResonance::resonanceGestureDwell), pace := (PrismResonance::resonancePaceCalm), salience := (PrismResonance::resonanceSalienceNear), phase := (PrismResonance::resonancePhaseDay), belief := (PrismResonance::resonanceBeliefInferred), attention := (PrismResonance::resonanceAttentionOpen), halted := (PrismResonance::resonanceHaltedNo)})) =? (PrismResonance::resonanceAnswerBloom))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityResonanceAttentionMatters,
+  parameters: [],
+  statement: ((((PrismResonance::resonanceJudge (record PrismResonance::ResonanceRequest {gesture := (PrismResonance::resonanceGestureDwell), pace := (PrismResonance::resonancePaceCalm), salience := (PrismResonance::resonanceSalienceNear), phase := (PrismResonance::resonancePhaseDay), belief := (PrismResonance::resonanceBeliefConsolidated), attention := (PrismResonance::resonanceAttentionOpen), halted := (PrismResonance::resonanceHaltedNo)})) =? (PrismResonance::resonanceAnswerChorus)) && ((PrismResonance::resonanceJudge (record PrismResonance::ResonanceRequest {gesture := (PrismResonance::resonanceGestureDwell), pace := (PrismResonance::resonancePaceCalm), salience := (PrismResonance::resonanceSalienceNear), phase := (PrismResonance::resonancePhaseDay), belief := (PrismResonance::resonanceBeliefConsolidated), attention := (PrismResonance::resonanceAttentionQuiet), halted := (PrismResonance::resonanceHaltedNo)})) =? (PrismResonance::resonanceAnswerWhisper))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityResonanceHaltedMatters,
+  parameters: [],
+  statement: ((((PrismResonance::resonanceJudge (record PrismResonance::ResonanceRequest {gesture := (PrismResonance::resonanceGestureDwell), pace := (PrismResonance::resonancePaceCalm), salience := (PrismResonance::resonanceSalienceNear), phase := (PrismResonance::resonancePhaseDay), belief := (PrismResonance::resonanceBeliefConsolidated), attention := (PrismResonance::resonanceAttentionOpen), halted := (PrismResonance::resonanceHaltedNo)})) =? (PrismResonance::resonanceAnswerChorus)) && ((PrismResonance::resonanceJudge (record PrismResonance::ResonanceRequest {gesture := (PrismResonance::resonanceGestureDwell), pace := (PrismResonance::resonancePaceCalm), salience := (PrismResonance::resonanceSalienceNear), phase := (PrismResonance::resonancePhaseDay), belief := (PrismResonance::resonanceBeliefConsolidated), attention := (PrismResonance::resonanceAttentionOpen), halted := (PrismResonance::resonanceHaltedYes)})) =? (PrismResonance::resonanceAnswerRest))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityRouterSourceMatters,
+  parameters: [],
+  statement: ((((PrismRouter::routerJudge (record PrismRouter::RouterRequest {source := (PrismRouter::routerSourceCalendar), value := (PrismRouter::routerValueStart), feature := (PrismRouter::routerFeatureTime), provider := (PrismRouter::routerProviderCompiled), halted := (PrismRouter::routerHaltedNo)})) =? (PrismRouter::routerAnswerDirect)) && ((PrismRouter::routerJudge (record PrismRouter::RouterRequest {source := (PrismRouter::routerSourceNote), value := (PrismRouter::routerValueStart), feature := (PrismRouter::routerFeatureTime), provider := (PrismRouter::routerProviderCompiled), halted := (PrismRouter::routerHaltedNo)})) =? (PrismRouter::routerAnswerSkip))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityRouterValueMatters,
+  parameters: [],
+  statement: ((((PrismRouter::routerJudge (record PrismRouter::RouterRequest {source := (PrismRouter::routerSourceNote), value := (PrismRouter::routerValueText), feature := (PrismRouter::routerFeatureTime), provider := (PrismRouter::routerProviderCompiled), halted := (PrismRouter::routerHaltedNo)})) =? (PrismRouter::routerAnswerMap)) && ((PrismRouter::routerJudge (record PrismRouter::RouterRequest {source := (PrismRouter::routerSourceNote), value := (PrismRouter::routerValueStart), feature := (PrismRouter::routerFeatureTime), provider := (PrismRouter::routerProviderCompiled), halted := (PrismRouter::routerHaltedNo)})) =? (PrismRouter::routerAnswerSkip))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityRouterFeatureMatters,
+  parameters: [],
+  statement: ((((PrismRouter::routerJudge (record PrismRouter::RouterRequest {source := (PrismRouter::routerSourceCalendar), value := (PrismRouter::routerValueStart), feature := (PrismRouter::routerFeatureTime), provider := (PrismRouter::routerProviderCompiled), halted := (PrismRouter::routerHaltedNo)})) =? (PrismRouter::routerAnswerDirect)) && ((PrismRouter::routerJudge (record PrismRouter::RouterRequest {source := (PrismRouter::routerSourceCalendar), value := (PrismRouter::routerValueStart), feature := (PrismRouter::routerFeatureIntent), provider := (PrismRouter::routerProviderCompiled), halted := (PrismRouter::routerHaltedNo)})) =? (PrismRouter::routerAnswerSkip))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityRouterProviderMatters,
+  parameters: [],
+  statement: ((((PrismRouter::routerJudge (record PrismRouter::RouterRequest {source := (PrismRouter::routerSourceNote), value := (PrismRouter::routerValueText), feature := (PrismRouter::routerFeatureTime), provider := (PrismRouter::routerProviderCompiled), halted := (PrismRouter::routerHaltedNo)})) =? (PrismRouter::routerAnswerMap)) && ((PrismRouter::routerJudge (record PrismRouter::RouterRequest {source := (PrismRouter::routerSourceNote), value := (PrismRouter::routerValueText), feature := (PrismRouter::routerFeatureTime), provider := (PrismRouter::routerProviderAbsent), halted := (PrismRouter::routerHaltedNo)})) =? (PrismRouter::routerAnswerSkip))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityRouterHaltedMatters,
+  parameters: [],
+  statement: ((((PrismRouter::routerJudge (record PrismRouter::RouterRequest {source := (PrismRouter::routerSourceNote), value := (PrismRouter::routerValueText), feature := (PrismRouter::routerFeatureTime), provider := (PrismRouter::routerProviderCompiled), halted := (PrismRouter::routerHaltedNo)})) =? (PrismRouter::routerAnswerMap)) && ((PrismRouter::routerJudge (record PrismRouter::RouterRequest {source := (PrismRouter::routerSourceNote), value := (PrismRouter::routerValueText), feature := (PrismRouter::routerFeatureTime), provider := (PrismRouter::routerProviderCompiled), halted := (PrismRouter::routerHaltedYes)})) =? (PrismRouter::routerAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
