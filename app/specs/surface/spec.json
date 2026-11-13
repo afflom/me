@@ -41,15 +41,14 @@
     {"key": "halt", "name": "Halt", "direction": "local"}
   ],
   "settings": [
-    {"key": "gmail", "group": "sources", "name": "Gmail", "source": "gmail"},
-    {"key": "gcal", "group": "sources", "name": "Google Calendar", "source": "googleCalendar"},
+    {"key": "device", "group": "sources", "name": "This device", "source": "file"},
     {"key": "models", "group": "models", "name": "Language models", "source": "none"},
     {"key": "quiet", "group": "attention", "name": "Quiet", "source": "none"},
     {"key": "backup", "group": "storage", "name": "Backup", "source": "none"},
     {"key": "halt", "group": "halt", "name": "Halt everything", "source": "none"}
   ],
   "sources": ["gmail", "protonMail", "googleCalendar", "protonCalendar", "website", "feed", "file", "activityPub", "ownerUtterance", "otherSource"],
-  "routed": ["gmail", "googleCalendar", "ownerUtterance"],
+  "routed": ["file", "ownerUtterance"],
   "media": {"message": 4, "calendar": 5, "plainText": 11},
   "words": {
     "ask.placeholder": "Ask",
@@ -103,6 +102,10 @@
     "offline": "Offline",
     "places": "Places",
     "recent": "Recent",
-    "prism": "Prism"
+    "prism": "Prism",
+    "device.folder": "Add a folder",
+    "device.files": "Add files",
+    "device.allow": "Allow again",
+    "device.none": "No folder yet", "device.contacts": "Add contacts"
   }
 }
