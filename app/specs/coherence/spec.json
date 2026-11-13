@@ -36,6 +36,14 @@
     {
       "key": "object",
       "means": "an object named by its kappa label, sha256:<hex>, re-derived in this browser"
+    },
+    {
+      "key": "verdict",
+      "means": "what the observer does next for one facet: hold, reconcile, curate, restore or refuse"
+    },
+    {
+      "key": "tuning",
+      "means": "parameters a facet marks tunable, adopted by the observer under a kappa-named claim"
     }
   ],
   "facets": [
@@ -291,12 +299,29 @@
     {
       "key": "holon",
       "line": "holon",
-      "sealed": "reconciles owner and Prism from resonance signals; no page caller yet; the observer wires to resonance's onResonance next"
+      "modules": [
+        "site/holon/page.mjs"
+      ],
+      "in": [
+        "answer"
+      ],
+      "out": [
+        "verdict"
+      ]
     },
     {
       "key": "curate",
       "line": "curate",
-      "sealed": "tunes the parameters a facet marks tunable from resonance signals; no page caller yet; the observer wires to resonance's onResonance next"
+      "modules": [
+        "site/holon/page.mjs"
+      ],
+      "in": [
+        "verdict",
+        "object"
+      ],
+      "out": [
+        "tuning"
+      ]
     },
     {
       "key": "resonance",
@@ -306,7 +331,8 @@
       ],
       "in": [
         "owner",
-        "kept"
+        "kept",
+        "tuning"
       ],
       "out": [
         "answer"
