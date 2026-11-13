@@ -1,6 +1,7 @@
 // The synthetic person: a day of mail and calendar on their device, and
 // nothing real. The device answers the page the way the person's installed
-// Prism extension does (site/device/extension.mjs), so the day arrives with no
+// Prism extension does (site/extension/background.js: each item names its declared
+// service and route), so the day arrives with no
 // gesture, as it does for the person. Every address is at example.org.
 const pad = (n) => String(n).padStart(2, "0");
 const utc = (d) => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
@@ -21,11 +22,11 @@ export function today(now = new Date()) {
     `Message-ID: <${subject.replace(/\W/g, "").toLowerCase()}@example.org>`, "Content-Type: text/plain; charset=utf-8", "", body, "",
   ].join("\r\n");
   return [
-    { format: "ics", text: calendar(event("review", start, end, "Design review", "Studio", { name: "Robin Example", address: "robin@example.org" })) },
-    { format: "ics", text: calendar(event("flight", day(3, 8), day(3, 11), "Flight to Lisbon", "Airport")) },
-    { format: "eml", text: mail("Robin Example <robin@example.org>", "Lunch on Thursday?", "Shall we meet at the usual place at noon on Thursday? Let me know.", 0) },
-    { format: "eml", text: mail("Sam Example <sam@example.org>", "Time next week", "Could we meet for 30 minutes next week to go over the draft?", 0) },
-    { format: "eml", text: mail('"Example Bank" <statements@bank.example.org>', "Your November statement", "Your statement is ready. Payment is due on the 28th.", -1) },
+    { service: "calendar", route: "own", kind: "event", format: "ics", text: calendar(event("review", start, end, "Design review", "Studio", { name: "Robin Example", address: "robin@example.org" })) },
+    { service: "calendar", route: "own", kind: "event", format: "ics", text: calendar(event("flight", day(3, 8), day(3, 11), "Flight to Lisbon", "Airport")) },
+    { service: "gmail", route: "own", kind: "message", format: "eml", text: mail("Robin Example <robin@example.org>", "Lunch on Thursday?", "Shall we meet at the usual place at noon on Thursday? Let me know.", 0) },
+    { service: "gmail", route: "own", kind: "message", format: "eml", text: mail("Sam Example <sam@example.org>", "Time next week", "Could we meet for 30 minutes next week to go over the draft?", 0) },
+    { service: "gmail", route: "own", kind: "message", format: "eml", text: mail('"Example Bank" <statements@bank.example.org>', "Your November statement", "Your statement is ready. Payment is due on the 28th.", -1) },
   ];
 }
 
