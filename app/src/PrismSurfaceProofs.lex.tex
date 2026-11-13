@@ -364,6 +364,16 @@ definition{
 }
 
 definition{
+  name: surfaceSetupCovers,
+  parameters: [index : Nat, sections : (List PrismSurface::SurfaceSection)],
+  result: Bool,
+  body: (match sections
+    | List.nil => true
+    | List.cons section rest => ((if ((project section reveal) =? 1) then (surfaceMember index (PrismSurface::surfaceSetup)) else true) && (surfaceSetupCovers (index + 1) rest))),
+  recursive_argument: sections
+}
+
+definition{
   name: surfaceSectionCount,
   parameters: [sections : (List PrismSurface::SurfaceSection)],
   result: Nat,
@@ -426,6 +436,13 @@ theorem{
   name: surfaceSectionsAreFewAndShort,
   parameters: [],
   statement: (((surfaceSectionsShort (PrismSurface::surfaceSections)) && ((surfaceSectionCount (PrismSurface::surfaceSections)) <=? 4)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceSetupIsShortAndWhole,
+  parameters: [],
+  statement: (((surfaceSetupCovers 0 (PrismSurface::surfaceSections)) && ((1 <=? (surfaceNatCount (PrismSurface::surfaceSetup))) && ((surfaceNatCount (PrismSurface::surfaceSetup)) <=? 3))) = true),
   proof: decide{}
 }
 

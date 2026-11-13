@@ -205,4 +205,30 @@ export const walks = {
     await go(page, settings);
     assert.ok(await app(page).getByRole("switch", { name: /^quiet$/i }).first().isChecked(), "Quiet does not stay on");
   },
+  // J12: a fresh profile meets one Set up card naming the steps; Continue opens
+  // the next step alone, numbered, with Next; finishing every step takes the card away.
+  async j12(page) {
+    const W = surface.words;
+    assert.ok(await arrived(page), "the person's day never arrives");
+    const card = app(page).getByRole("region", { name: new RegExp(`^${W.setup}$`, "i") }).filter({ visible: true }).first();
+    assert.ok(await card.count(), "Today has no Set up card");
+    const said = await card.innerText();
+    for (const step of surface.setup) assert.ok(said.includes(W[step.word]), `Set up does not name "${W[step.word]}"`);
+    await card.getByRole("button", { name: W["setup.continue"], exact: true }).click();
+    await page.waitForTimeout(300);
+    assert.ok(await seen(page, `1 ${W["setup.of"]} ${surface.setup.length}`, 3000), "the step is not numbered");
+    const other = surface.sections.find((x) => !surface.setup.some((step) => step.section === x.key));
+    assert.equal(await app(page).getByRole("region", { name: other.name, exact: true }).filter({ visible: true }).count(), 0, "the step is not shown alone");
+    // Say who you are: one press.
+    await app(page).getByRole("button", { name: W["identity.confirm"], exact: true }).filter({ visible: true }).first().click();
+    await page.waitForTimeout(300);
+    for (let i = 1; i < surface.setup.length; i++) {
+      await app(page).getByRole("button", { name: W["setup.next"], exact: true }).click();
+      await page.waitForTimeout(300);
+      assert.ok(await seen(page, W[surface.setup[i].word], 3000), `Next does not open "${W[surface.setup[i].word]}"`);
+    }
+    await app(page).getByRole("button", { name: W.done, exact: true }).filter({ visible: true }).first().click();
+    await page.waitForTimeout(500);
+    assert.equal(await app(page).getByRole("region", { name: new RegExp(`^${W.setup}$`, "i") }).filter({ visible: true }).count(), 0, "the Set up card stays after every step is done");
+  },
 };

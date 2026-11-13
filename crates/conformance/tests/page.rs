@@ -93,6 +93,7 @@ fn page_pg_02() {
         "surfaceOneSheet",
         "surfaceEverySettingInOneSection",
         "surfaceSectionsAreFewAndShort",
+        "surfaceSetupIsShortAndWhole",
         "surfacePageIsThePersonsView",
         "surfaceMenuIsShort",
         "surfaceActsInTheirRoles",
