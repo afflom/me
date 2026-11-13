@@ -1,0 +1,217 @@
+\begin{lexlean}{PrismHolon}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: holonHaltedNo, parameters: [], result: Nat, body: 0}
+
+definition{name: holonHaltedYes, parameters: [], result: Nat, body: 1}
+
+definition{name: holonFloorHeld, parameters: [], result: Nat, body: 0}
+
+definition{name: holonFloorRegressed, parameters: [], result: Nat, body: 1}
+
+definition{name: holonSignalOwner, parameters: [], result: Nat, body: 0}
+
+definition{name: holonSignalSelf, parameters: [], result: Nat, body: 1}
+
+definition{name: holonTunableYes, parameters: [], result: Nat, body: 0}
+
+definition{name: holonTunableNo, parameters: [], result: Nat, body: 1}
+
+definition{name: holonDissonanceNone, parameters: [], result: Nat, body: 0}
+
+definition{name: holonDissonanceSome, parameters: [], result: Nat, body: 1}
+
+definition{name: holonDissonanceHigh, parameters: [], result: Nat, body: 2}
+
+definition{name: holonKpiMet, parameters: [], result: Nat, body: 0}
+
+definition{name: holonKpiMissed, parameters: [], result: Nat, body: 1}
+
+definition{name: holonAnswerHold, parameters: [], result: Nat, body: 0}
+
+definition{name: holonAnswerReconcile, parameters: [], result: Nat, body: 1}
+
+definition{name: holonAnswerCurate, parameters: [], result: Nat, body: 2}
+
+definition{name: holonAnswerRestore, parameters: [], result: Nat, body: 3}
+
+definition{name: holonAnswerRefuse, parameters: [], result: Nat, body: 4}
+
+structure{
+  name: HolonRequest,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: halted, type: Nat},
+    {name: floor, type: Nat},
+    {name: signal, type: Nat},
+    {name: tunable, type: Nat},
+    {name: dissonance, type: Nat},
+    {name: kpi, type: Nat}
+  ]
+}
+
+definition{
+  name: holonByteAt,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some b => (ctor Option.some [Nat] (prim to_nat b : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonSliceOf,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: holonFieldEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match (holonByteAt s i)
+      | Option.none => i
+      | Option.some d => (if (d =? 32) then i else (holonFieldEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: holonParseHalted,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (holonHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (holonHaltedYes)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: holonParseFloor,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x68656c64 : Bool) then (ctor Option.some [Nat] (holonFloorHeld)) else (if (prim equal value 0x726567726573736564 : Bool) then (ctor Option.some [Nat] (holonFloorRegressed)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: holonParseSignal,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6f776e6572 : Bool) then (ctor Option.some [Nat] (holonSignalOwner)) else (if (prim equal value 0x73656c66 : Bool) then (ctor Option.some [Nat] (holonSignalSelf)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: holonParseTunable,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (holonTunableYes)) else (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (holonTunableNo)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: holonParseDissonance,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f6e65 : Bool) then (ctor Option.some [Nat] (holonDissonanceNone)) else (if (prim equal value 0x736f6d65 : Bool) then (ctor Option.some [Nat] (holonDissonanceSome)) else (if (prim equal value 0x68696768 : Bool) then (ctor Option.some [Nat] (holonDissonanceHigh)) else (ctor Option.none [Nat]))))
+}
+
+definition{
+  name: holonParseKpi,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6d6574 : Bool) then (ctor Option.some [Nat] (holonKpiMet)) else (if (prim equal value 0x6d6973736564 : Bool) then (ctor Option.some [Nat] (holonKpiMissed)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: holonDecodeField6,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat],
+  result: (Option HolonRequest),
+  body: (let e : Nat := (holonFieldEnd s start (Foundation.Bytes::byteLength s)); (match (holonParseKpi (holonSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [HolonRequest])
+    | Option.some v6 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [HolonRequest] (record HolonRequest {halted := v1, floor := v2, signal := v3, tunable := v4, dissonance := v5, kpi := v6})) else (ctor Option.none [HolonRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonDecodeField5,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat],
+  result: (Option HolonRequest),
+  body: (let e : Nat := (holonFieldEnd s start (Foundation.Bytes::byteLength s)); (match (holonParseDissonance (holonSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [HolonRequest])
+    | Option.some v5 => (if (e <? (Foundation.Bytes::byteLength s)) then (holonDecodeField6 s (e + 1) v1 v2 v3 v4 v5) else (ctor Option.none [HolonRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonDecodeField4,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
+  result: (Option HolonRequest),
+  body: (let e : Nat := (holonFieldEnd s start (Foundation.Bytes::byteLength s)); (match (holonParseTunable (holonSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [HolonRequest])
+    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (holonDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [HolonRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonDecodeField3,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
+  result: (Option HolonRequest),
+  body: (let e : Nat := (holonFieldEnd s start (Foundation.Bytes::byteLength s)); (match (holonParseSignal (holonSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [HolonRequest])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (holonDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [HolonRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonDecodeField2,
+  parameters: [s : Bytes, start : Nat, v1 : Nat],
+  result: (Option HolonRequest),
+  body: (let e : Nat := (holonFieldEnd s start (Foundation.Bytes::byteLength s)); (match (holonParseFloor (holonSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [HolonRequest])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (holonDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [HolonRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonDecodeField1,
+  parameters: [s : Bytes, start : Nat],
+  result: (Option HolonRequest),
+  body: (let e : Nat := (holonFieldEnd s start (Foundation.Bytes::byteLength s)); (match (holonParseHalted (holonSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [HolonRequest])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (holonDecodeField2 s (e + 1) v1) else (ctor Option.none [HolonRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonJudge,
+  parameters: [request : HolonRequest],
+  result: Nat,
+  body: (if ((project request halted) =? (holonHaltedYes)) then (holonAnswerRefuse) else (if ((project request floor) =? (holonFloorRegressed)) then (holonAnswerRestore) else (if ((project request signal) =? (holonSignalSelf)) then (holonAnswerHold) else (if ((project request tunable) =? (holonTunableNo)) then (holonAnswerHold) else (if ((project request dissonance) =? (holonDissonanceHigh)) then (holonAnswerReconcile) else (if ((project request kpi) =? (holonKpiMissed)) then (holonAnswerCurate) else (if ((project request dissonance) =? (holonDissonanceSome)) then (holonAnswerCurate) else (holonAnswerHold))))))))
+}
+
+definition{
+  name: holonEncodeAnswer,
+  parameters: [code : Nat],
+  result: Bytes,
+  body: (if (code =? (holonAnswerHold)) then 0x686f6c64 else (if (code =? (holonAnswerReconcile)) then 0x7265636f6e63696c65 else (if (code =? (holonAnswerCurate)) then 0x637572617465 else (if (code =? (holonAnswerRestore)) then 0x726573746f7265 else (if (code =? (holonAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964)))))
+}
+
+definition{
+  name: holonDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (35 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (holonDecodeField1 value 0)
+    | Option.none => 0x696e76616c6964
+    | Option.some request => (holonEncodeAnswer (holonJudge request)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

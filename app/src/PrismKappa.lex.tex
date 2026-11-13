@@ -1,0 +1,194 @@
+\begin{lexlean}{PrismKappa}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: kappaColonPresent, parameters: [], result: Nat, body: 0}
+
+definition{name: kappaColonAbsent, parameters: [], result: Nat, body: 1}
+
+definition{name: kappaAxisSha256, parameters: [], result: Nat, body: 0}
+
+definition{name: kappaAxisSha512, parameters: [], result: Nat, body: 1}
+
+definition{name: kappaAxisBlake3, parameters: [], result: Nat, body: 2}
+
+definition{name: kappaAxisSha1, parameters: [], result: Nat, body: 3}
+
+definition{name: kappaAxisSha3x256, parameters: [], result: Nat, body: 4}
+
+definition{name: kappaAxisKeccak256, parameters: [], result: Nat, body: 5}
+
+definition{name: kappaAxisOther, parameters: [], result: Nat, body: 6}
+
+definition{name: kappaDigitsRight, parameters: [], result: Nat, body: 0}
+
+definition{name: kappaDigitsWrong, parameters: [], result: Nat, body: 1}
+
+definition{name: kappaHexLower, parameters: [], result: Nat, body: 0}
+
+definition{name: kappaHexBad, parameters: [], result: Nat, body: 1}
+
+definition{name: kappaDigestMatch, parameters: [], result: Nat, body: 0}
+
+definition{name: kappaDigestMismatch, parameters: [], result: Nat, body: 1}
+
+definition{name: kappaDigestUncomputed, parameters: [], result: Nat, body: 2}
+
+definition{name: kappaDigestCollision, parameters: [], result: Nat, body: 3}
+
+definition{name: kappaAnswerAdmit, parameters: [], result: Nat, body: 0}
+
+definition{name: kappaAnswerUnverified, parameters: [], result: Nat, body: 1}
+
+definition{name: kappaAnswerMismatch, parameters: [], result: Nat, body: 2}
+
+definition{name: kappaAnswerCollision, parameters: [], result: Nat, body: 3}
+
+definition{name: kappaAnswerNocolon, parameters: [], result: Nat, body: 4}
+
+definition{name: kappaAnswerUnknownaxis, parameters: [], result: Nat, body: 5}
+
+definition{name: kappaAnswerDigits, parameters: [], result: Nat, body: 6}
+
+definition{name: kappaAnswerBadhex, parameters: [], result: Nat, body: 7}
+
+structure{
+  name: KappaRequest,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: colon, type: Nat},
+    {name: axis, type: Nat},
+    {name: digits, type: Nat},
+    {name: hex, type: Nat},
+    {name: digest, type: Nat}
+  ]
+}
+
+definition{
+  name: kappaByteAt,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some b => (ctor Option.some [Nat] (prim to_nat b : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kappaSliceOf,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: kappaStopAt,
+  parameters: [s : Bytes, stop : Nat, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match (kappaByteAt s i)
+      | Option.none => i
+      | Option.some d => (if (d =? stop) then i else (kappaStopAt s stop (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: kappaAllHex,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (match (kappaByteAt s i)
+      | Option.none => true
+      | Option.some d => (if ((d <? 48) || (102 <? d)) then false else (if ((57 <? d) && (d <? 97)) then false else (kappaAllHex s (i + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: kappaParseAxis,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x736861323536 : Bool) then (ctor Option.some [Nat] (kappaAxisSha256)) else (if (prim equal value 0x736861353132 : Bool) then (ctor Option.some [Nat] (kappaAxisSha512)) else (if (prim equal value 0x626c616b6533 : Bool) then (ctor Option.some [Nat] (kappaAxisBlake3)) else (if (prim equal value 0x73686131 : Bool) then (ctor Option.some [Nat] (kappaAxisSha1)) else (if (prim equal value 0x736861332d323536 : Bool) then (ctor Option.some [Nat] (kappaAxisSha3x256)) else (if (prim equal value 0x6b656363616b323536 : Bool) then (ctor Option.some [Nat] (kappaAxisKeccak256)) else (ctor Option.none [Nat])))))))
+}
+
+definition{
+  name: kappaParseDigest,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6d61746368 : Bool) then (ctor Option.some [Nat] (kappaDigestMatch)) else (if (prim equal value 0x6d69736d61746368 : Bool) then (ctor Option.some [Nat] (kappaDigestMismatch)) else (if (prim equal value 0x756e636f6d7075746564 : Bool) then (ctor Option.some [Nat] (kappaDigestUncomputed)) else (if (prim equal value 0x636f6c6c6973696f6e : Bool) then (ctor Option.some [Nat] (kappaDigestCollision)) else (ctor Option.none [Nat])))))
+}
+
+definition{
+  name: kappaHexLength,
+  parameters: [axis : Nat],
+  result: Nat,
+  body: (if (axis =? (kappaAxisSha256)) then 64 else (if (axis =? (kappaAxisSha512)) then 128 else (if (axis =? (kappaAxisBlake3)) then 64 else (if (axis =? (kappaAxisSha1)) then 40 else (if (axis =? (kappaAxisSha3x256)) then 64 else (if (axis =? (kappaAxisKeccak256)) then 64 else 0))))))
+}
+
+definition{
+  name: kappaAxisWords,
+  parameters: [axis : Nat],
+  result: Bytes,
+  body: (if (axis =? (kappaAxisSha256)) then 0x207368613235362030203332 else (if (axis =? (kappaAxisSha512)) then 0x207368613531322031203634 else (if (axis =? (kappaAxisBlake3)) then 0x20626c616b65332032203332 else (if (axis =? (kappaAxisSha1)) then 0x20736861312033203230 else (if (axis =? (kappaAxisSha3x256)) then 0x20736861332d3235362034203332 else (if (axis =? (kappaAxisKeccak256)) then 0x206b656363616b3235362035203332 else 0x))))))
+}
+
+definition{
+  name: kappaAxisOf,
+  parameters: [value : Bytes],
+  result: Nat,
+  body: (match (kappaParseAxis value) | Option.none => (kappaAxisOther) | Option.some v => v)
+}
+
+definition{
+  name: kappaReadLabel,
+  parameters: [label : Bytes, digest : Nat],
+  result: KappaRequest,
+  body: (let n : Nat := (Foundation.Bytes::byteLength label); (let c : Nat := (kappaStopAt label 58 0 n); (if (c =? n) then (record KappaRequest {colon := (kappaColonAbsent), axis := (kappaAxisOther), digits := (kappaDigitsWrong), hex := (kappaHexBad), digest := digest}) else (let a : Nat := (kappaAxisOf (kappaSliceOf label 0 c)); (record KappaRequest {colon := (kappaColonPresent), axis := a, digits := (if ((prim subtract n (c + 1) : Nat) =? (kappaHexLength a)) then (kappaDigitsRight) else (kappaDigitsWrong)), hex := (if (kappaAllHex label (c + 1) n) then (kappaHexLower) else (kappaHexBad)), digest := digest}))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kappaDecode,
+  parameters: [s : Bytes],
+  result: (Option KappaRequest),
+  body: (let n : Nat := (Foundation.Bytes::byteLength s); (let e : Nat := (kappaStopAt s 32 0 n); (if (e <? n) then (match (kappaParseDigest (kappaSliceOf s (e + 1) (prim subtract n (e + 1) : Nat)))
+    | Option.none => (ctor Option.none [KappaRequest])
+    | Option.some d => (ctor Option.some [KappaRequest] (kappaReadLabel (kappaSliceOf s 0 e) d))) else (ctor Option.none [KappaRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kappaJudge,
+  parameters: [request : KappaRequest],
+  result: Nat,
+  body: (if ((project request colon) =? (kappaColonAbsent)) then (kappaAnswerNocolon) else (if ((project request axis) =? (kappaAxisOther)) then (kappaAnswerUnknownaxis) else (if ((project request digits) =? (kappaDigitsWrong)) then (kappaAnswerDigits) else (if ((project request hex) =? (kappaHexBad)) then (kappaAnswerBadhex) else (if ((project request digest) =? (kappaDigestCollision)) then (kappaAnswerCollision) else (if ((project request digest) =? (kappaDigestMismatch)) then (kappaAnswerMismatch) else (if ((project request digest) =? (kappaDigestUncomputed)) then (kappaAnswerUnverified) else (kappaAnswerAdmit))))))))
+}
+
+definition{
+  name: kappaEncodeAnswer,
+  parameters: [code : Nat, axis : Nat],
+  result: Bytes,
+  body: (if (code =? (kappaAnswerAdmit)) then (Foundation.Bytes::appendBytes 0x61646d6974 (kappaAxisWords axis)) else (if (code =? (kappaAnswerUnverified)) then (Foundation.Bytes::appendBytes 0x756e7665726966696564 (kappaAxisWords axis)) else (if (code =? (kappaAnswerMismatch)) then 0x6d69736d61746368 else (if (code =? (kappaAnswerCollision)) then 0x636f6c6c6973696f6e else (if (code =? (kappaAnswerNocolon)) then 0x6e6f636f6c6f6e else (if (code =? (kappaAnswerUnknownaxis)) then 0x756e6b6e6f776e61786973 else (if (code =? (kappaAnswerDigits)) then 0x646967697473 else (if (code =? (kappaAnswerBadhex)) then 0x626164686578 else 0x696e76616c6964))))))))
+}
+
+definition{
+  name: kappaDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (146 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (kappaDecode value)
+    | Option.none => 0x696e76616c6964
+    | Option.some request => (kappaEncodeAnswer (kappaJudge request) (project request axis)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
