@@ -7,7 +7,8 @@ the screen. This gate refuses the record when the Prism has a part the record
 does not place:
 
 - a surface entry (place, act, group, setting, feeder, word, lexicon) with no
-  viewpoint, or with one that is neither person nor system;
+  viewpoint, or with one that is neither person nor system, or placed both in
+  the surface model and in the record;
 - a person-view place whose act, or a person-view feeder whose setting, is in
   the system view (a person's control that drives machinery);
 - a root facet in the coherence registry with no product entry, an entry for no
@@ -41,14 +42,23 @@ def refusals(product, surface, coherence, walks):
         "words": list(surface["words"]),
         "lexicons": ["labels", "roles"],
     }
+    # An entry that carries its own viewpoint in the surface model (PrismSurface)
+    # is placed there, once; the record places only the entries that do not.
+    own = {kind: {x["key"]: x["viewpoint"] for x in surface[kind] if isinstance(x, dict) and "viewpoint" in x} for kind in ("places", "acts", "groups", "settings", "feeders")}
     for kind, have in keys.items():
         given = view.get(kind, {})
         for key in have:
-            if given.get(key) not in VIEWS:
+            if key in own.get(kind, {}):
+                if own[kind][key] not in VIEWS:
+                    out.append(f"surface {kind[:-1]} '{key}' has viewpoint {own[kind][key]!r}, not person or system")
+                if key in given:
+                    out.append(f"surface {kind[:-1]} '{key}' carries its viewpoint in the surface model; remove the copy from the product record")
+            elif given.get(key) not in VIEWS:
                 out.append(f"surface {kind[:-1]} '{key}' has no viewpoint in the product record (person or system)")
         for key in given:
             if key not in have:
                 out.append(f"the product record places surface {kind[:-1]} '{key}', which the surface does not have")
+    view = {kind: {**view.get(kind, {}), **own.get(kind, {})} for kind in set(view) | set(own)}
     for p in surface["places"]:
         if view.get("places", {}).get(p["key"]) == "person" and view.get("acts", {}).get(p["act"]) == "system":
             out.append(f"person place '{p['key']}' offers act '{p['act']}', which is in the system view")

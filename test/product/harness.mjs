@@ -37,7 +37,10 @@ export async function open(page, url) {
 // Every word the system view would put on the screen, from the surface entries
 // the product record assigns to it and the record's own machinery terms.
 export function systemWords() {
-  const view = product.surface;
+  // An entry's own viewpoint in the surface model wins; the record places the rest.
+  const own = (kind) => Object.fromEntries(surface[kind].filter((x) => x?.viewpoint).map((x) => [x.key, x.viewpoint]));
+  const view = { ...product.surface };
+  for (const kind of ["places", "acts", "groups", "settings", "feeders"]) view[kind] = { ...product.surface[kind], ...own(kind) };
   const words = new Map();
   const add = (text, from) => { if (text) words.set(text, from); };
   const word = (key) => surface.words[key] ?? "";
