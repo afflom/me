@@ -1,0 +1,75 @@
+{
+  "name": "prism-kappa",
+  "title": "Prism Kappa",
+  "purpose": "Decides whether one object may enter the Prism under its kappa label, the content address of UOR-Foundation/kappa-registry (feat/rewrite-after-poc, commit 618f477745e601f1bf1bd5cc62aed6fea4c8936d): an axis name, a colon and the digest in lowercase hex. A label is read as kappa-registry's Kappa::parse reads it, and an object is admitted only when the browser re-derived the very digest the label names.",
+  "authority": {
+    "repository": "https://github.com/UOR-Foundation/kappa-registry",
+    "branch": "feat/rewrite-after-poc",
+    "commit": "618f477745e601f1bf1bd5cc62aed6fea4c8936d",
+    "files": ["crates/kappa-types/src/v1/axis.rs", "crates/kappa-types/src/v1/kappa.rs", "crates/kappa-conformance/tests/v1/kappa_label.rs"]
+  },
+  "axes": [
+    {"id": "sha256", "wire": "sha256", "discriminant": 0, "digestBytes": 32, "host": "SHA-256"},
+    {"id": "sha512", "wire": "sha512", "discriminant": 1, "digestBytes": 64, "host": "SHA-512"},
+    {"id": "blake3", "wire": "blake3", "discriminant": 2, "digestBytes": 32, "host": null},
+    {"id": "sha1", "wire": "sha1", "discriminant": 3, "digestBytes": 20, "host": null},
+    {"id": "sha3x256", "wire": "sha3-256", "discriminant": 4, "digestBytes": 32, "host": null},
+    {"id": "keccak256", "wire": "keccak256", "discriminant": 5, "digestBytes": 32, "host": null}
+  ],
+  "fields": [
+    {"name": "colon", "values": ["present", "absent"],
+     "means": "whether the label has the colon that separates its axis from its digest"},
+    {"name": "axis", "values": ["sha256", "sha512", "blake3", "sha1", "sha3x256", "keccak256", "other"],
+     "means": "the axis the label names before its colon, one of kappa-registry's six, or anything else"},
+    {"name": "digits", "values": ["right", "wrong"],
+     "means": "whether the digest has exactly twice its axis's digest length in hex digits"},
+    {"name": "hex", "values": ["lower", "bad"],
+     "means": "whether every digest digit is lowercase hex (0-9, a-f)"},
+    {"name": "digest", "values": ["match", "mismatch", "uncomputed", "collision"],
+     "means": "the one word the request carries: the browser re-derived the label's digest from the object's bytes (match), derived another (mismatch), could not derive it on this host (uncomputed), or found a SHA-1 collision"}
+  ],
+  "read": "colon, axis, digits and hex are read by the model from the label itself; only digest is a word on the request line",
+  "outcomes": ["admit", "unverified", "mismatch", "collision", "nocolon", "unknownaxis", "digits", "badhex"],
+  "tree": {"if": ["colon", "absent"], "then": "nocolon", "else":
+           {"if": ["axis", "other"], "then": "unknownaxis", "else":
+            {"if": ["digits", "wrong"], "then": "digits", "else":
+             {"if": ["hex", "bad"], "then": "badhex", "else":
+              {"if": ["digest", "collision"], "then": "collision", "else":
+               {"if": ["digest", "mismatch"], "then": "mismatch", "else":
+                {"if": ["digest", "uncomputed"], "then": "unverified", "else": "admit"}}}}}}},
+  "guarantees": [
+    {"when": [["colon", "absent"]], "always": "nocolon",
+     "why": "a label without its colon names no axis (KappaParseError::NoColon)"},
+    {"when": [["colon", "present"], ["axis", "other"]], "always": "unknownaxis",
+     "why": "only kappa-registry's six axes are content addresses (KappaParseError::UnknownAxis)"},
+    {"when": [["digits", "wrong"]], "never": ["admit", "unverified"],
+     "why": "a digest of the wrong length for its axis is no address on it (KappaParseError::WrongDigitCount)"},
+    {"when": [["hex", "bad"]], "never": ["admit", "unverified"],
+     "why": "the wire form is lowercase hex only; any other digit refuses (KappaParseError::BadHex)"},
+    {"when": [["digest", "mismatch"]], "never": ["admit", "unverified"],
+     "why": "bytes that do not re-derive to their label never enter under it (KappaParseError::DigestMismatch)"},
+    {"when": [["digest", "collision"]], "never": ["admit", "unverified"],
+     "why": "content that collides on SHA-1 is refused (KappaParseError::CollisionDetected)"},
+    {"when": [["digest", "uncomputed"]], "never": ["admit"],
+     "why": "a digest the browser could not re-derive is never taken as verified"},
+    {"when": [["colon", "present"], ["digits", "right"], ["hex", "lower"], ["digest", "match"]], "never": ["nocolon", "digits", "badhex", "mismatch", "collision", "unverified"],
+     "why": "a well-formed label whose digest the browser re-derived is refused only for naming an unknown axis"}
+  ],
+  "examples": [
+    ["sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 match", "admit sha256 0 32"],
+    ["sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 mismatch", "mismatch"],
+    ["sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 uncomputed", "unverified sha256 0 32"],
+    ["sha256:B94D27B9934D3E08A52E52D7DA7DABFAC484EFE37A5380EE9088F7ACE2EFCDE9 match", "badhex"],
+    ["sha256:abcd match", "digits"],
+    ["nocolon match", "nocolon"],
+    ["md5:d41d8cd98f00b204e9800998ecf8427e match", "unknownaxis"],
+    ["blake3:d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24 uncomputed", "unverified blake3 2 32"],
+    ["sha1:2aae6c35c94fcfb415dbe95f408b9ce91ee846ed collision", "collision"],
+    ["sha1:2aae6c35c94fcfb415dbe95f408b9ce91ee846ed uncomputed", "unverified sha1 3 20"],
+    ["sha3-256:644bcc7e564373040999aac89e7622f3ca71fba1d972fd94a31c3bfbf24e3938 uncomputed", "unverified sha3-256 4 32"],
+    ["keccak256:47173285a8d7341e5e972fc677286384f802f8ef42a5ec5f03bbfa254cb01fad uncomputed", "unverified keccak256 5 32"],
+    ["sha512:309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f match", "admit sha512 1 64"],
+    ["sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 maybe", "invalid"],
+    ["sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9", "invalid"]
+  ]
+}

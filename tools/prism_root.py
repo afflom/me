@@ -35,6 +35,9 @@ FACETS = [
     ("folder", "PrismFolder", "folderDispatch"),
     ("host", "PrismHost", "hostDispatch"),
     ("model", "PrismModels", "modelsDispatch"),
+    ("kappa", "PrismKappa", "kappaDispatch"),
+    ("holon", "PrismHolon", "holonDispatch"),
+    ("curate", "PrismCurate", "curateDispatch"),
 ]
 REQ_MAX, RESP_MAX, ALLOC = 1107, 16384, 2214
 h = lambda s: "0x" + (s if isinstance(s, bytes) else s.encode()).hex()
@@ -72,6 +75,28 @@ VECTORS = [
  ("model locked onnx match match granted yes", "refuse"),
  ("model unlocked gguf match match granted no", "refuse"),
  ("model", "invalid request"),
+ ("kappa sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 match", "admit sha256 0 32"),
+ ("kappa sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 mismatch", "mismatch"),
+ ("kappa blake3:d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24 uncomputed", "unverified blake3 2 32"),
+ ("kappa md5:d41d8cd98f00b204e9800998ecf8427e match", "unknownaxis"),
+ ("kappa", "invalid request"),
+ ("kappa ", "invalid request"),
+ ("holon no held owner yes none met", "hold"),
+ ("holon no held owner yes high met", "reconcile"),
+ ("holon no held owner yes some met", "curate"),
+ ("holon no regressed owner yes none met", "restore"),
+ ("holon yes held owner yes some missed", "refuse"),
+ ("holon no held owner yes none", "invalid"),
+ ("holon", "invalid request"),
+ ("holon ", "invalid request"),
+ ("curate no yes admit zero owner kept explore yes dominates new", "adopt"),
+ ("curate no yes admit zero owner kept explore yes dominates known", "recall"),
+ ("curate no yes admit zero owner kept explore yes incomparable new", "keep"),
+ ("curate no yes admit some owner kept explore yes dominates new", "keep"),
+ ("curate no yes other zero owner kept explore yes dominates new", "refuse"),
+ ("curate no yes admit zero owner kept explore yes dominates", "invalid"),
+ ("curate", "invalid request"),
+ ("curate ", "invalid request"),
  ("folder granted mbox read small no", "read"),
  ("host mail yes owner kept no", "sealed"),
  ("google", "invalid request"),
@@ -209,9 +234,24 @@ proofs.append("""theorem{
 }
 
 """)
-vec = "(nil Foundation.View.Text.V1.Model::AcceptanceVector)"
-for req, resp in reversed(VECTORS):
-    vec = "(cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := %s, response := %s}) %s)" % (h(req), h(resp), vec)
+# The vectors go in chunks of CHUNK, each its own definition ending in the
+# next, so no one body nests deeper than LexLean's semantic-module JSON reader
+# allows (LLT4001 "recursion limit exceeded" past about 60 conses).
+CHUNK = 24
+chunks = [VECTORS[i:i + CHUNK] for i in range(0, len(VECTORS), CHUNK)]
+for n in range(len(chunks) - 1, -1, -1):
+    vec = "(acceptanceVectors%d)" % (n + 1) if n + 1 < len(chunks) else "(nil Foundation.View.Text.V1.Model::AcceptanceVector)"
+    for req, resp in reversed(chunks[n]):
+        vec = "(cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := %s, response := %s}) %s)" % (h(req), h(resp), vec)
+    w("""definition{
+  name: acceptanceVectors%d,
+  parameters: [],
+  result: (List Foundation.View.Text.V1.Model::AcceptanceVector),
+  body: %s
+}
+
+""" % (n, vec))
+vec = "(acceptanceVectors0)"
 w("""definition{
   name: application,
   parameters: [],
