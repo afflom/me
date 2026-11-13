@@ -1,0 +1,369 @@
+{
+  "name": "prism-holon",
+  "title": "Prism Holon",
+  "purpose": "Decides what the Prism's observer does next for one of its facets, the Prism itself and the owner among them: hold the facet as it is, reconcile it toward the owner, curate it (try a Rule-30 hypothesis), restore its floor, or refuse. The observer turns its attention to the Prism including the owner: it changes a facet only on the owner's own gestures, never on its own measures alone, never while halted, never below the floor, and never for the sake of change when the owner and the Prism agree.",
+  "authority": {
+    "repository": "https://github.com/afflom/verdant-resonance",
+    "commit": "2c6cd0751f46c593357d163c1ae03909c57d79e6",
+    "files": [
+      "prism/src/Foundation/Teleology/V1/Model.lex.tex",
+      "src/game/autonomousObjectivesEngine.ts"
+    ],
+    "taken": "the reflexive holon: every facet has a directive, an objective and a KPI floor, the whole is a facet of itself, the co-observer is a facet, self-reference alone is bounded, and the observer reconciles the dissonance between the co-observer and the whole"
+  },
+  "fields": [
+    {
+      "name": "halted",
+      "values": [
+        "no",
+        "yes"
+      ],
+      "means": "whether the owner pressed the kill switch"
+    },
+    {
+      "name": "floor",
+      "values": [
+        "held",
+        "regressed"
+      ],
+      "means": "whether the facet's floor (its parameters as first modeled) Pareto-dominates what the facet runs now (regressed) or not (held)"
+    },
+    {
+      "name": "signal",
+      "values": [
+        "owner",
+        "self"
+      ],
+      "means": "whether the window holds at least the minimum of the owner's own gestures on this facet (owner) or only the Prism's own measures (self)"
+    },
+    {
+      "name": "tunable",
+      "values": [
+        "yes",
+        "no"
+      ],
+      "means": "whether the facet's spec marks any parameter tunable"
+    },
+    {
+      "name": "dissonance",
+      "values": [
+        "none",
+        "some",
+        "high"
+      ],
+      "means": "the share of what the facet brought forward that the owner undid or dismissed: none, below the high band, or at or above it"
+    },
+    {
+      "name": "kpi",
+      "values": [
+        "met",
+        "missed"
+      ],
+      "means": "whether the facet's measured KPI (the share of what it brought forward that the owner kept) is at or above the facet's floor"
+    }
+  ],
+  "outcomes": [
+    "hold",
+    "reconcile",
+    "curate",
+    "restore",
+    "refuse"
+  ],
+  "meanings": {"hold": "the facet stays as it is", "reconcile": "the facet moves toward the owner", "curate": "the facet tries one Rule-30 hypothesis", "restore": "the facet returns to its floor", "refuse": "the observer changes nothing"},
+  "tree": {
+    "if": [
+      "halted",
+      "yes"
+    ],
+    "then": "refuse",
+    "else": {
+      "if": [
+        "floor",
+        "regressed"
+      ],
+      "then": "restore",
+      "else": {
+        "if": [
+          "signal",
+          "self"
+        ],
+        "then": "hold",
+        "else": {
+          "if": [
+            "tunable",
+            "no"
+          ],
+          "then": "hold",
+          "else": {
+            "if": [
+              "dissonance",
+              "high"
+            ],
+            "then": "reconcile",
+            "else": {
+              "if": [
+                "kpi",
+                "missed"
+              ],
+              "then": "curate",
+              "else": {
+                "if": [
+                  "dissonance",
+                  "some"
+                ],
+                "then": "curate",
+                "else": "hold"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "guarantees": [
+    {
+      "when": [
+        [
+          "halted",
+          "yes"
+        ]
+      ],
+      "always": "refuse",
+      "why": "the kill switch stops the observer too: nothing changes while halted"
+    },
+    {
+      "when": [
+        [
+          "halted",
+          "no"
+        ]
+      ],
+      "never": [
+        "refuse"
+      ],
+      "why": "the observer refuses only while halted; otherwise it always answers for the facet"
+    },
+    {
+      "when": [
+        [
+          "halted",
+          "no"
+        ],
+        [
+          "floor",
+          "regressed"
+        ]
+      ],
+      "always": "restore",
+      "why": "the floor never regresses: when the first-modeled parameters dominate what runs, they come back"
+    },
+    {
+      "when": [
+        [
+          "signal",
+          "self"
+        ]
+      ],
+      "never": [
+        "reconcile",
+        "curate"
+      ],
+      "why": "self-reference alone is bounded: the Prism never changes itself on its own measures without the owner's gestures"
+    },
+    {
+      "when": [
+        [
+          "tunable",
+          "no"
+        ]
+      ],
+      "never": [
+        "reconcile",
+        "curate"
+      ],
+      "why": "only parameters a facet's spec marks tunable are ever changed"
+    },
+    {
+      "when": [
+        [
+          "halted",
+          "no"
+        ],
+        [
+          "floor",
+          "held"
+        ],
+        [
+          "signal",
+          "owner"
+        ],
+        [
+          "tunable",
+          "yes"
+        ],
+        [
+          "dissonance",
+          "high"
+        ]
+      ],
+      "always": "reconcile",
+      "why": "high dissonance between the owner and the Prism is reconciled toward the owner before anything is explored"
+    },
+    {
+      "when": [
+        [
+          "dissonance",
+          "high"
+        ]
+      ],
+      "never": [
+        "curate"
+      ],
+      "why": "the Prism never experiments on an owner it is already at odds with"
+    },
+    {
+      "when": [
+        [
+          "dissonance",
+          "none"
+        ],
+        [
+          "kpi",
+          "met"
+        ]
+      ],
+      "never": [
+        "reconcile",
+        "curate"
+      ],
+      "why": "nothing changes for the sake of change when the owner and the Prism agree"
+    },
+    {
+      "when": [
+        [
+          "floor",
+          "held"
+        ]
+      ],
+      "never": [
+        "restore"
+      ],
+      "why": "a floor that still holds is never restored over what the owner has shaped"
+    }
+  ],
+  "bands": {
+    "window": 64,
+    "every": 8,
+    "minOwnerGestures": 8,
+    "highDissonancePermille": 250
+  },
+  "gestures": {
+    "brought": [
+      "bloom",
+      "chorus"
+    ],
+    "quiet": [
+      "whisper",
+      "rest"
+    ],
+    "dissonant": "a dismiss on an item after the Prism answered bloom or chorus on it",
+    "missed": "a keep on an item after the Prism answered whisper or rest on it",
+    "owner": [
+      "open",
+      "dwell",
+      "keep",
+      "dismiss",
+      "still"
+    ]
+  },
+  "facets": [
+    {
+      "id": "resonance",
+      "spec": "resonance",
+      "floor": 800
+    },
+    {
+      "id": "places",
+      "spec": "surface",
+      "floor": 800,
+      "directive": "Bring forward in {name} only what the owner keeps.",
+      "objective": "The owner keeps what {name} brings forward.",
+      "kpi": "the share of what {name} brought forward that the owner kept"
+    },
+    {
+      "id": "owner",
+      "spec": null,
+      "floor": 850,
+      "directive": "The owner is a facet of the Prism, its co-observer: their own gestures are the reference every other facet is measured against.",
+      "objective": "The owner keeps what the Prism brings them, and nothing they reached for was kept quiet.",
+      "kpi": "the share of the owner's keeps that the Prism had brought forward"
+    },
+    {
+      "id": "prism",
+      "spec": null,
+      "floor": 800,
+      "directive": "The Prism is a facet of itself: it measures itself, the owner included, and improves only its own tunable parameters, in the browser.",
+      "objective": "Every facet holds its floor with the owner's gestures as the reference.",
+      "kpi": "the share of measured facets whose KPI is at or above their floor"
+    }
+  ],
+  "examples": [
+    [
+      "no held owner yes none met",
+      "hold"
+    ],
+    [
+      "no held owner yes some met",
+      "curate"
+    ],
+    [
+      "no held owner yes none missed",
+      "curate"
+    ],
+    [
+      "no held owner yes high met",
+      "reconcile"
+    ],
+    [
+      "no held owner yes high missed",
+      "reconcile"
+    ],
+    [
+      "no held self yes high missed",
+      "hold"
+    ],
+    [
+      "no held owner no high missed",
+      "hold"
+    ],
+    [
+      "no regressed owner yes none met",
+      "restore"
+    ],
+    [
+      "no regressed self no none met",
+      "restore"
+    ],
+    [
+      "yes held owner yes some missed",
+      "refuse"
+    ],
+    [
+      "yes regressed owner yes high missed",
+      "refuse"
+    ],
+    [
+      "no held owner yes none",
+      "invalid"
+    ],
+    [
+      "No held owner yes none met",
+      "invalid"
+    ]
+  ],
+  "resonanceDefault": {
+    "directive": "Answer each of the owner's gestures humanely: bring forward what they keep, and keep quiet what they would dismiss.",
+    "objective": "Nothing the owner dismisses was brought forward, nothing they keep was kept quiet, and nothing interrupts them while hurried.",
+    "kpi": "the share of what the Prism brought forward that the owner kept"
+  }
+}

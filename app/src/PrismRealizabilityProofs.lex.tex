@@ -4,11 +4,14 @@
 \useglossary{prism.arch@1.0.0}
 \importmodule{PrismBoundary}
 \importmodule{PrismChronology}
+\importmodule{PrismCurate}
 \importmodule{PrismDest}
 \importmodule{PrismFolder}
 \importmodule{PrismGoogle}
 \importmodule{PrismGoogleLink}
+\importmodule{PrismHolon}
 \importmodule{PrismHost}
+\importmodule{PrismKappa}
 \importmodule{PrismLearning}
 \importmodule{PrismModels}
 \importmodule{PrismR4}
@@ -101,6 +104,30 @@ theorem{
   name: realizabilityHostComplete,
   parameters: [],
   statement: ((PrismRealizability::realizabilityDescriptorComplete (PrismRealizability::realizabilityHost)) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityHolonComplete,
+  parameters: [],
+  statement: ((PrismRealizability::realizabilityDescriptorComplete (PrismRealizability::realizabilityHolon)) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityCurateComplete,
+  parameters: [],
+  statement: ((PrismRealizability::realizabilityDescriptorComplete (PrismRealizability::realizabilityCurate)) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityKappaComplete,
+  parameters: [],
+  statement: ((PrismRealizability::realizabilityDescriptorComplete (PrismRealizability::realizabilityKappa)) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -565,6 +592,174 @@ theorem{
   name: realizabilityHostHaltedMatters,
   parameters: [],
   statement: ((((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantKept), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerUse)) && ((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantKept), halted := (PrismHost::hostHaltedYes)})) =? (PrismHost::hostAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityHolonHaltedMatters,
+  parameters: [],
+  statement: ((((PrismHolon::holonJudge (record PrismHolon::HolonRequest {halted := (PrismHolon::holonHaltedNo), floor := (PrismHolon::holonFloorHeld), signal := (PrismHolon::holonSignalOwner), tunable := (PrismHolon::holonTunableYes), dissonance := (PrismHolon::holonDissonanceNone), kpi := (PrismHolon::holonKpiMet)})) =? (PrismHolon::holonAnswerHold)) && ((PrismHolon::holonJudge (record PrismHolon::HolonRequest {halted := (PrismHolon::holonHaltedYes), floor := (PrismHolon::holonFloorHeld), signal := (PrismHolon::holonSignalOwner), tunable := (PrismHolon::holonTunableYes), dissonance := (PrismHolon::holonDissonanceNone), kpi := (PrismHolon::holonKpiMet)})) =? (PrismHolon::holonAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityHolonFloorMatters,
+  parameters: [],
+  statement: ((((PrismHolon::holonJudge (record PrismHolon::HolonRequest {halted := (PrismHolon::holonHaltedNo), floor := (PrismHolon::holonFloorHeld), signal := (PrismHolon::holonSignalOwner), tunable := (PrismHolon::holonTunableYes), dissonance := (PrismHolon::holonDissonanceNone), kpi := (PrismHolon::holonKpiMet)})) =? (PrismHolon::holonAnswerHold)) && ((PrismHolon::holonJudge (record PrismHolon::HolonRequest {halted := (PrismHolon::holonHaltedNo), floor := (PrismHolon::holonFloorRegressed), signal := (PrismHolon::holonSignalOwner), tunable := (PrismHolon::holonTunableYes), dissonance := (PrismHolon::holonDissonanceNone), kpi := (PrismHolon::holonKpiMet)})) =? (PrismHolon::holonAnswerRestore))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityHolonSignalMatters,
+  parameters: [],
+  statement: ((((PrismHolon::holonJudge (record PrismHolon::HolonRequest {halted := (PrismHolon::holonHaltedNo), floor := (PrismHolon::holonFloorHeld), signal := (PrismHolon::holonSignalOwner), tunable := (PrismHolon::holonTunableYes), dissonance := (PrismHolon::holonDissonanceSome), kpi := (PrismHolon::holonKpiMet)})) =? (PrismHolon::holonAnswerCurate)) && ((PrismHolon::holonJudge (record PrismHolon::HolonRequest {halted := (PrismHolon::holonHaltedNo), floor := (PrismHolon::holonFloorHeld), signal := (PrismHolon::holonSignalSelf), tunable := (PrismHolon::holonTunableYes), dissonance := (PrismHolon::holonDissonanceSome), kpi := (PrismHolon::holonKpiMet)})) =? (PrismHolon::holonAnswerHold))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityHolonTunableMatters,
+  parameters: [],
+  statement: ((((PrismHolon::holonJudge (record PrismHolon::HolonRequest {halted := (PrismHolon::holonHaltedNo), floor := (PrismHolon::holonFloorHeld), signal := (PrismHolon::holonSignalOwner), tunable := (PrismHolon::holonTunableYes), dissonance := (PrismHolon::holonDissonanceSome), kpi := (PrismHolon::holonKpiMet)})) =? (PrismHolon::holonAnswerCurate)) && ((PrismHolon::holonJudge (record PrismHolon::HolonRequest {halted := (PrismHolon::holonHaltedNo), floor := (PrismHolon::holonFloorHeld), signal := (PrismHolon::holonSignalOwner), tunable := (PrismHolon::holonTunableNo), dissonance := (PrismHolon::holonDissonanceSome), kpi := (PrismHolon::holonKpiMet)})) =? (PrismHolon::holonAnswerHold))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityHolonDissonanceMatters,
+  parameters: [],
+  statement: ((((PrismHolon::holonJudge (record PrismHolon::HolonRequest {halted := (PrismHolon::holonHaltedNo), floor := (PrismHolon::holonFloorHeld), signal := (PrismHolon::holonSignalOwner), tunable := (PrismHolon::holonTunableYes), dissonance := (PrismHolon::holonDissonanceNone), kpi := (PrismHolon::holonKpiMet)})) =? (PrismHolon::holonAnswerHold)) && ((PrismHolon::holonJudge (record PrismHolon::HolonRequest {halted := (PrismHolon::holonHaltedNo), floor := (PrismHolon::holonFloorHeld), signal := (PrismHolon::holonSignalOwner), tunable := (PrismHolon::holonTunableYes), dissonance := (PrismHolon::holonDissonanceSome), kpi := (PrismHolon::holonKpiMet)})) =? (PrismHolon::holonAnswerCurate))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityHolonKpiMatters,
+  parameters: [],
+  statement: ((((PrismHolon::holonJudge (record PrismHolon::HolonRequest {halted := (PrismHolon::holonHaltedNo), floor := (PrismHolon::holonFloorHeld), signal := (PrismHolon::holonSignalOwner), tunable := (PrismHolon::holonTunableYes), dissonance := (PrismHolon::holonDissonanceNone), kpi := (PrismHolon::holonKpiMet)})) =? (PrismHolon::holonAnswerHold)) && ((PrismHolon::holonJudge (record PrismHolon::HolonRequest {halted := (PrismHolon::holonHaltedNo), floor := (PrismHolon::holonFloorHeld), signal := (PrismHolon::holonSignalOwner), tunable := (PrismHolon::holonTunableYes), dissonance := (PrismHolon::holonDissonanceNone), kpi := (PrismHolon::holonKpiMissed)})) =? (PrismHolon::holonAnswerCurate))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityCurateHaltedMatters,
+  parameters: [],
+  statement: ((((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceDominates), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerAdopt)) && ((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedYes), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceDominates), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityCurateTunableMatters,
+  parameters: [],
+  statement: ((((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceDominates), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerAdopt)) && ((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableNo), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceDominates), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityCurateLabelMatters,
+  parameters: [],
+  statement: ((((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceDominates), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerAdopt)) && ((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelOther), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceDominates), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityCurateDefectMatters,
+  parameters: [],
+  statement: ((((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceDominates), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerAdopt)) && ((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectSome), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceDominates), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerKeep))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityCurateEvidenceMatters,
+  parameters: [],
+  statement: ((((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceDominates), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerAdopt)) && ((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceSelf), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceDominates), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerKeep))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityCurateFloorMatters,
+  parameters: [],
+  statement: ((((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceDominates), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerAdopt)) && ((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorRegressed), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceDominates), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerKeep))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityCurateMoveMatters,
+  parameters: [],
+  statement: ((((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceEqual), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerKeep)) && ((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveReconcile), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceEqual), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerAdopt))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityCurateEasedMatters,
+  parameters: [],
+  statement: ((((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveReconcile), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceIncomparable), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerAdopt)) && ((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveReconcile), eased := (PrismCurate::curateEasedNo), dominance := (PrismCurate::curateDominanceIncomparable), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerKeep))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityCurateDominanceMatters,
+  parameters: [],
+  statement: ((((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceDominates), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerAdopt)) && ((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceEqual), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerKeep))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityCurateClaimMatters,
+  parameters: [],
+  statement: ((((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceDominates), claim := (PrismCurate::curateClaimNew)})) =? (PrismCurate::curateAnswerAdopt)) && ((PrismCurate::curateJudge (record PrismCurate::CurateRequest {halted := (PrismCurate::curateHaltedNo), tunable := (PrismCurate::curateTunableYes), label := (PrismCurate::curateLabelAdmit), defect := (PrismCurate::curateDefectZero), evidence := (PrismCurate::curateEvidenceOwner), floor := (PrismCurate::curateFloorKept), move := (PrismCurate::curateMoveExplore), eased := (PrismCurate::curateEasedYes), dominance := (PrismCurate::curateDominanceDominates), claim := (PrismCurate::curateClaimKnown)})) =? (PrismCurate::curateAnswerRecall))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityKappaColonMatters,
+  parameters: [],
+  statement: ((((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerAdmit)) && ((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonAbsent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerNocolon))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityKappaAxisMatters,
+  parameters: [],
+  statement: ((((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerAdmit)) && ((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisOther), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerUnknownaxis))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityKappaDigitsMatters,
+  parameters: [],
+  statement: ((((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerAdmit)) && ((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsWrong), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerDigits))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityKappaHexMatters,
+  parameters: [],
+  statement: ((((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerAdmit)) && ((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexBad), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerBadhex))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityKappaDigestMatters,
+  parameters: [],
+  statement: ((((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerAdmit)) && ((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMismatch)})) =? (PrismKappa::kappaAnswerMismatch))) = true),
   proof: reflexivity{},
   axioms: []
 }

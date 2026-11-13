@@ -198,13 +198,17 @@ def audit():
         for b in dead:
             fail.append(f"{where}: {'rule' if s.shape == 'rules' else 'leaf'} {b} changes no answer")
         branches = len(s.raw["rules"]) if s.shape == "rules" else len(s.branches())
-        valid = [(q, r) for q, r in s.examples() if s.parse(q) is not None]
+        # A spec with `read` derives its fields from the request (kappa reads
+        # them from the label), so its examples are not field lines: the
+        # root's acceptance vectors replay them in the guest instead.
+        lines = not s.raw.get("read")
+        valid = [(q, r) for q, r in s.examples() if lines and s.parse(q) is not None]
         agree = [(q, r) for q, r in valid if s.answer(s.parse(q)) == r]
         for q, r in valid:
             if (q, r) not in agree:
                 fail.append(f"{where}: example `{q}` says {r!r}, the spec answers {s.answer(s.parse(q))!r}")
         for q, r in s.examples():
-            if s.parse(q) is None and r != "invalid":
+            if lines and s.parse(q) is None and r != "invalid":
                 fail.append(f"{where}: example `{q}` is not a request of this spec, yet says {r!r}")
         meanings = s.raw.get("meanings", {})
         means = sum(1 for f in s.fields if f.get("means")) + sum(1 for o in s.outcomes if meanings.get(o))
