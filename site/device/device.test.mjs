@@ -164,7 +164,7 @@ for (const [surface, here, act, grant, halted] of product(SURFACES, ['yes', 'no'
   if (halted === 'no' && here === 'yes' && !['mail', 'calendar'].includes(surface)) ok(answer === 'use' || answer === 'offer', `every reported surface is used or offered ${why}`);
 }
 ok(hostRequests === 144, 'every host request is decided');
-const browser = { showDirectoryPicker() {}, indexedDB: {}, File: function () {}, DataTransfer: function () {}, ClipboardEvent: function () {}, document: {}, Worker: function () {}, navigator: { hardwareConcurrency: 4, contacts: { select() {} } } };
+const browser = { showDirectoryPicker() {}, indexedDB: {}, File: function () {}, DataTransfer: function () {}, ClipboardEvent: function () {}, document: {}, Worker: function () {}, navigator: { hardwareConcurrency: 4, contacts: { select() {} }, userAgentData: { mobile: false, brands: [{ brand: 'Google Chrome' }, { brand: 'Chromium' }] } } };
 const bare = { navigator: {} };
 ok(Object.values(present(browser)).every((v) => v === 'yes') && present(bare).folder === 'no' && present(bare).contacts === 'no' && present(bare).mail === 'yes', 'the surfaces this browser reports');
 const visit = await plan({ decide: hostGuest, halted: () => 'no', grant: { folder: 'kept' }, g: browser });
@@ -176,6 +176,8 @@ ok(Object.values(await plan({ decide: hostGuest, halted: () => 'yes', act: { pas
 
 ok(visit.extension === 'offer' && (await plan({ decide: hostGuest, halted: () => 'no', grant: { extension: 'kept' }, g: browser })).extension === 'use', 'the extension is offered, and used once installed');
 ok(present({ document: {}, navigator: { userAgentData: { mobile: true } } }).extension === 'no' && present({ document: {}, navigator: { userAgent: 'Mozilla/5.0 (Linux; Android 14) Mobile' } }).extension === 'no', 'a phone is not offered the extension');
+ok(present({ document: {}, navigator: { userAgent: 'Mozilla/5.0 (X11; Linux x86_64; rv:140.0) Gecko/20100101 Firefox/140.0' } }).extension === 'no' && present({ document: {}, navigator: { userAgent: 'Mozilla/5.0 (Macintosh) AppleWebKit/605.1.15 Version/18.0 Safari/605.1.15' } }).extension === 'no', 'Firefox and Safari are not offered the extension');
+ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: [{ brand: 'Microsoft Edge' }, { brand: 'Chromium' }] } } }).extension === 'yes' && present({ document: {}, navigator: { userAgentData: { mobile: false, brands: [{ brand: 'Other' }] } } }).extension === 'no', 'a Chromium browser is offered it, an undeclared brand is not');
 
 // DV-04: the extension carries the declared services by GET with the owner's own sign-in, and only the Prism page it was written for is answered.
 {
