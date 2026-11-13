@@ -891,10 +891,12 @@ export default async function start({ app, reason, $ }) {
     }
   }
   function turn(prompt, said) {
-    if (lastTurn) chat.append(lastTurn);
-    lastTurn = element("li", { className: "pr-turn" },
-      element("p", { className: "pr-you", textContent: prompt }),
-      element("p", { className: "pr-said", textContent: said.sentences.join(" ") }));
+    // The turn before moves up with what was said; this one shows its words above the answer.
+    if (lastTurn) lastTurn.node.append(element("p", { className: "pr-said", textContent: lastTurn.said }));
+    const node = element("li", { className: "pr-turn" }, element("p", { className: "pr-you", textContent: prompt }));
+    chat.append(node);
+    node.scrollIntoView({ block: "nearest" });
+    lastTurn = { node, said: said.sentences.join(" ") };
     const rows = said.sources.map(rowOf);
     drawn.replaceChildren(...rows);
     const links = said.sources.map((item, i) => {
