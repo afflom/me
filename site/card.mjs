@@ -559,7 +559,6 @@ export default async function start({ app, reason, $ }) {
   // the next; Continue opens that step alone in Settings, numbered, with Back,
   // Later and Next. An empty place offers the step that fills it.
   let servicesLive = false;
-  let probedAt = 0;
   const SECTION_DONE = {
     self: () => Boolean(declared()),
     sources: () => servicesLive || items.length > 0,
@@ -571,18 +570,6 @@ export default async function start({ app, reason, $ }) {
   setupCard.setAttribute("aria-labelledby", "pr-setup-title");
   setupCard.hidden = true;
   $("pr-home").before(setupCard);
-  async function probeServices() {
-    if (Date.now() - probedAt < 15000) return;
-    probedAt = Date.now();
-    try {
-      const services = await import("./source/services.mjs");
-      const late = new Promise((done) => setTimeout(() => done(null), 3000));
-      const report = await Promise.race([services.probe().catch(() => null), late]);
-      if (!report) return;
-      const live = services.SERVICES.some((s) => services.state(s.key, report).state === "live");
-      if (live !== servicesLive) { servicesLive = live; paintSetup(); }
-    } catch {}
-  }
   function paintSetup() {
     const left = setupLeft();
     const shown = current.host === "home" && left.length > 0;
@@ -591,7 +578,6 @@ export default async function start({ app, reason, $ }) {
     $("pr-home").hidden = current.host !== "home" || (shown && !items.length);
     $("pr-ask").hidden = !items.length;
     if (!shown) return false;
-    if (left.some((step) => step.section === "sources")) probeServices();
     const next = left[0];
     const steps = element("ol", { className: "pr-steps" }, ...SETUP.map((step) => element("li", {
       className: stepDone(step) ? "pr-step pr-step-done" : step === next ? "pr-step pr-step-next" : "pr-step",
