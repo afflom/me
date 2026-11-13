@@ -122,6 +122,13 @@ model does not sanction.
 | --- | --- | --- |
 | `RT-01` | `build` | The vocabulary register the page reads lists schema.org 30.1's 939 types and 1,538 properties, the 12 domains and the 1,229 crosswalk rows in the order of the Lean indices, every source pinned by sha256 |
 
+## router
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `RU-01` | `build` | Every value of incoming content reaches a Prism feature only as PrismRouter answers: the kill switch and bytes that are not the compiled model refuse every mapping, a value the source's schema types is mapped straight and never re-read, the owner's free text is read by every compiled feature, and no feature runs without its compiled model |
+| `RU-02` | `build` | The owner's words are mapped by the R4 router before they are kept: a jot that names a day and a clock lands once, at that time, in the places its intent and its time name, and nothing reaches the vault while the router refuses |
+
 ## vault
 
 | ID | Level | Statement |

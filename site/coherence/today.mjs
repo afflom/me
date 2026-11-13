@@ -31,7 +31,8 @@ export async function today(items, { now = Date.now(), relate }) {
   };
   const horizon = base + TODAY.ahead * DAY;
   const events = items
-    .filter((item) => item.media === "calendar" && !item.sealed && item.at < horizon && endOf(item) > now)
+    // An event, or anything the R4 router mapped onto a time.
+    .filter((item) => (item.media === "calendar" || item.start != null) && !item.sealed && item.at < horizon && endOf(item) > now)
     .sort((a, b) => a.at - b.at);
   const agenda = [];
   for (const item of events) {
@@ -51,6 +52,6 @@ export async function today(items, { now = Date.now(), relate }) {
     }
   }
   const recent = items.filter((item) => item.media === "message").sort((a, b) => b.at - a.at).slice(0, TODAY.recent);
-  const tasks = items.filter((item) => item.media !== "calendar" && item.media !== "message" && (item.domains ?? [item.domain]).includes(9)).sort((a, b) => b.at - a.at).slice(0, TODAY.tasks);
+  const tasks = items.filter((item) => item.media !== "calendar" && item.media !== "message" && item.start == null && (item.domains ?? [item.domain]).includes(9)).sort((a, b) => b.at - a.at).slice(0, TODAY.tasks);
   return { agenda, recent, tasks };
 }

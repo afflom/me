@@ -36,8 +36,8 @@ fn coherence_co_01() {
         &card,
         &[
             (
-                "item.domains = domainsOf(item);",
-                "every kept item is placed by the registry's domains",
+                "item.domains = item.mapped ?? domainsOf(item);",
+                "every kept item is placed where the R4 router mapped it, else by the registry's domains",
             ),
             (
                 "(item.domains ?? [item.domain]).some((d) => current.domains.includes(d))",

@@ -39,6 +39,7 @@ FACETS = [
     ("holon", "PrismHolon", "holonDispatch"),
     ("curate", "PrismCurate", "curateDispatch"),
     ("resonance", "PrismResonance", "resonanceDispatch"),
+    ("router", "PrismRouter", "routerDispatch"),
 ]
 REQ_MAX, RESP_MAX, ALLOC = 1107, 16384, 2214
 h = lambda s: "0x" + (s if isinstance(s, bytes) else s.encode()).hex()
@@ -82,6 +83,10 @@ VECTORS = [
  ("resonance dwell calm near day confirmed open yes", "rest"),
  ("resonance dwell calm near day confirmed open", "invalid"),
  ("resonance", "invalid request"),
+ ("router note text time compiled no", "map"),
+ ("router calendar start time absent no", "direct"),
+ ("router note text time mismatch no", "refuse"),
+ ("router", "invalid request"),
  ("kappa sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 match", "admit sha256 0 32"),
  ("kappa sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 mismatch", "mismatch"),
  ("kappa blake3:d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24 uncomputed", "unverified blake3 2 32"),
