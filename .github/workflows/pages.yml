@@ -225,6 +225,11 @@ jobs:
           npm install --no-audit --no-fund --global playwright@1.56.1
           playwright install --with-deps chromium
           node bootstrap/screens.mjs site screens
+      - name: A first visit's weight, counted once the page has started (FR-03)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node bootstrap/weight.mjs site
       # Every browser acceptance under test/ runs here, on every pull request
       # and before every deploy: each `test/<suite>/run.mjs` (R4-01 and the
       # rest) and every `*.test.mjs` (PG-01 and the rest). A new suite is in CI

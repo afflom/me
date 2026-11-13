@@ -167,7 +167,7 @@ test("the owner brings content in, every place shows it, Today and Ask answer fr
     await ask("When is my flight?", /Flight to Lisbon/);
     await ask("Did the bank send a statement?", /November statement/);
     await ask("When is lunch with Robin?", /Lunch on Thursday/);
-    await ask("zebra quantum marmalade", /^No answer$/);
+    await ask("zebra quantum marmalade", /^Nothing you hold mentions “zebra quantum marmalade”\./u);
 
     // Halted, Ask shows nothing kept.
     await page.click('.pr-go[data-place="boundary"]');

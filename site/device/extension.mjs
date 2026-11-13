@@ -2,7 +2,7 @@
 // pull of the items it read, and the extension itself, written for this page.
 // The page decides what is kept; the extension only reads, by GET.
 
-const FILES = ['services.json', 'manifest.json', 'background.js', 'bridge.js', 'seen.js'];
+const FILES = ['manifest.json', 'background.js', 'bridge.js', 'seen.js'];
 
 const send = (win, data) => win.postMessage({ ...data, from: 'page' }, win.location.origin);
 const answers = (win, test, ms) => new Promise((resolve) => {
@@ -15,18 +15,28 @@ const answers = (win, test, ms) => new Promise((resolve) => {
   win.addEventListener('message', on);
 });
 
-// 'kept' when the owner's extension answers on this page, else 'none'.
+import { EXTENSION } from '../source/declared.mjs';
+
+// The extension this page writes (its declared version); one written by an
+// earlier page answers with a lower version, and is then put in place again.
+export const VERSION = EXTENSION.version;
+
+// 'kept' when the owner's extension answers on this page, 'old' when it is
+// one an earlier page wrote, else 'none'.
 export async function installed(win = globalThis.window, ms = 400) {
   const answer = answers(win, (d) => d.prism === 'extension', ms);
   send(win, { prism: 'hello' });
-  return (await answer) ? 'kept' : 'none';
+  const got = await answer;
+  if (!got) return 'none';
+  return (got.version ?? 0) >= VERSION ? 'kept' : 'old';
 }
 
 // The items the extension read: [{format, text}].
-export async function pull(win = globalThis.window, { halted, ms = 120000 } = {}) {
+// `services` are the page's declarations, carried to the extension as data.
+export async function pull(win = globalThis.window, { halted, services, ms = 120000 } = {}) {
   const id = Math.random().toString(36).slice(2);
   const answer = answers(win, (d) => d.prism === 'items' && d.id === id, ms);
-  send(win, { prism: 'pull', id, halted });
+  send(win, { prism: 'pull', id, halted, ...(services ? { services } : {}) });
   const got = await answer;
   if (!got) throw Object.assign(new Error('the extension did not answer'), { code: 'extension.silent' });
   if (got.error) throw Object.assign(new Error(got.error), { code: 'extension.error' });
@@ -76,26 +86,17 @@ export function zip(files) {
   return out;
 }
 
-// The extension, written for the Prism page at `prism` (origin and path). Its
-// permissions are exactly the origins of the services the model declares with
-// a route the extension carries (seen or own).
-export function permissions(services) {
-  const reached = services.filter((s) => s.seen || (s.own ?? []).length);
-  return {
-    origins: [...new Set(reached.flatMap((s) => s.origins.map((o) => `${o}*`)))],
-    seen: [...new Set(services.filter((s) => s.seen).flatMap((s) => s.origins.map((o) => `${o}*`)))],
-  };
-}
-
+// The extension, written for the Prism page at `prism` (origin and path): the
+// Prism's fixed carrier, installed once and blank. It holds no services of its
+// own; the page sends the model's declarations as data with every pull, and
+// the extension reads only what they declare, by GET, as PrismSource allows.
 export async function pack(prism, base = new URL('../extension/', import.meta.url), fetchImpl = globalThis.fetch) {
   if (!/^https:\/\/[^/]+\/(?:[^?#]*\/)?$/.test(prism)) throw Object.assign(new Error('a Prism page address ends in /'), { code: 'extension.address' });
   const texts = {};
   for (const name of FILES) {
     const response = await fetchImpl(new URL(name, base), { cache: 'no-cache' });
     if (!response.ok) throw Object.assign(new Error(`${name}: HTTP ${response.status}`), { code: 'extension.file' });
-    texts[name] = (await response.text()).replaceAll('__PRISM__', prism);
+    texts[name] = (await response.text()).replaceAll('__PRISM__', prism).replaceAll('__VERSION__', String(VERSION));
   }
-  const { origins, seen } = permissions(JSON.parse(texts['services.json']).services);
-  texts['manifest.json'] = texts['manifest.json'].replace('"__ORIGINS__"', JSON.stringify(origins)).replace('"__SEEN__"', JSON.stringify(seen));
   return zip(FILES.map((name) => ({ name: `prism-extension/${name}`, bytes: new TextEncoder().encode(texts[name]) })));
 }
