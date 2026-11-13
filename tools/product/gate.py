@@ -19,7 +19,7 @@ does not place:
   test/product/journeys.mjs does not define;
 - a person-view setting the Prism does not require of the person (beyond the
   shrinking 'unrequired' list), or a required setting without its name, reason,
-  status, or the surface setting that shows it once it works;
+  status, or the surface setting or section that shows it once it works;
 - a debt entry that is not a system word.
 
 usage: python3 -I tools/product/gate.py [product.json surface.json coherence.json journeys.mjs]
@@ -93,12 +93,21 @@ def refusals(product, surface, coherence, walks):
                 out.append(f"required setting {r.get('key')!r} has no {field}")
         if r.get("status") not in STATUS:
             out.append(f"required setting {r.get('key')!r} has status {r.get('status')!r}, not works or not yet")
+        # A required setting is shown by one surface setting, or by a whole
+        # settings section (a surface group) whose rows all serve it, such as
+        # Connections: one row per service, each with its own guided flow.
         if r.get("setting") is not None:
             if r["setting"] not in keys["settings"]:
                 out.append(f"required setting {r['key']!r} is shown by setting {r['setting']!r}, which the surface does not have")
             shown_by[r["setting"]] = r["key"]
-        elif r.get("status") == "works":
-            out.append(f"required setting {r['key']!r} works but names no surface setting that shows it")
+        if r.get("section") is not None:
+            if r["section"] not in keys["groups"]:
+                out.append(f"required setting {r['key']!r} is shown by section {r['section']!r}, which the surface does not have")
+            for s in surface["settings"]:
+                if s.get("group") == r["section"]:
+                    shown_by[s["key"]] = r["key"]
+        if r.get("setting") is None and r.get("section") is None and r.get("status") == "works":
+            out.append(f"required setting {r['key']!r} works but names no surface setting or section that shows it")
     unrequired = set(requires.get("unrequired", []))
     for key in keys["settings"]:
         person = view.get("settings", {}).get(key) == "person"
