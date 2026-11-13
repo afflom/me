@@ -1,0 +1,459 @@
+{
+  "name": "prism-uorc",
+  "title": "Prism UORC",
+  "purpose": "Decides whether one object may be kept in, or opened from, the owner's browser as a UORC archive (UOR-Foundation/compression): the archive is the object's reference, a lossless executable structure sealed by UORC-SHA256-CHAIN-v1, named by the kappa label of the bytes it restores. The decision reads only the archive's structure (its seal, format, scope, object count, whether it restored to the very bytes its label names, and the kappa facet's answer), never the content: values are projected only when the decision says open.",
+  "authority": {
+    "repository": "https://github.com/UOR-Foundation/compression",
+    "release": "v0.4.0",
+    "asset": "uorc-v0.4.0-wasm.tar.gz",
+    "files": [
+      "crates/uorc/src/frame.rs",
+      "web/uorc.js"
+    ]
+  },
+  "fields": [
+    {
+      "name": "act",
+      "values": [
+        "keep",
+        "open"
+      ],
+      "means": "keep: the vault is about to keep the object as this archive; open: the vault is about to give the object back from this archive"
+    },
+    {
+      "name": "halted",
+      "values": [
+        "no",
+        "yes"
+      ],
+      "means": "the kill switch"
+    },
+    {
+      "name": "seal",
+      "values": [
+        "ok",
+        "broken"
+      ],
+      "means": "the archive's UORC-SHA256-CHAIN-v1 integrity seal checks (inspect's integrity_ok), read without decoding"
+    },
+    {
+      "name": "format",
+      "values": [
+        "known",
+        "other"
+      ],
+      "means": "the archive's format and machine profile are the ones the pinned client writes (format 2, profile 1)"
+    },
+    {
+      "name": "scope",
+      "values": [
+        "self",
+        "standard",
+        "other"
+      ],
+      "means": "self-contained; conditional on the standard basis the pinned client carries (named by its identity in site/uorc/uorc.lock.json); or conditional on any other basis, which the browser does not hold"
+    },
+    {
+      "name": "objects",
+      "values": [
+        "one",
+        "many"
+      ],
+      "means": "the archive restores exactly one object, the one its kappa label names"
+    },
+    {
+      "name": "restore",
+      "values": [
+        "same",
+        "differs",
+        "failed"
+      ],
+      "means": "the archive decoded within the client's work bound to the very bytes its kappa label names (same), to other bytes, or not at all"
+    },
+    {
+      "name": "kappa",
+      "values": [
+        "admit",
+        "other"
+      ],
+      "means": "the kappa facet's answer for the restored bytes under their label: admit, or anything else"
+    }
+  ],
+  "outcomes": [
+    "keep",
+    "open",
+    "refuse"
+  ],
+  "tree": {
+    "if": [
+      "halted",
+      "yes"
+    ],
+    "then": "refuse",
+    "else": {
+      "if": [
+        "seal",
+        "broken"
+      ],
+      "then": "refuse",
+      "else": {
+        "if": [
+          "format",
+          "other"
+        ],
+        "then": "refuse",
+        "else": {
+          "if": [
+            "scope",
+            "other"
+          ],
+          "then": "refuse",
+          "else": {
+            "if": [
+              "objects",
+              "many"
+            ],
+            "then": "refuse",
+            "else": {
+              "if": [
+                "restore",
+                "differs"
+              ],
+              "then": "refuse",
+              "else": {
+                "if": [
+                  "restore",
+                  "failed"
+                ],
+                "then": "refuse",
+                "else": {
+                  "if": [
+                    "kappa",
+                    "other"
+                  ],
+                  "then": "refuse",
+                  "else": {
+                    "if": [
+                      "act",
+                      "keep"
+                    ],
+                    "then": "keep",
+                    "else": "open"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "guarantees": [
+    {
+      "when": [
+        [
+          "halted",
+          "yes"
+        ]
+      ],
+      "always": "refuse",
+      "why": "the kill switch stops every keep and open"
+    },
+    {
+      "when": [
+        [
+          "seal",
+          "broken"
+        ]
+      ],
+      "always": "refuse",
+      "why": "an archive whose seal does not check is no reference"
+    },
+    {
+      "when": [
+        [
+          "format",
+          "other"
+        ]
+      ],
+      "always": "refuse",
+      "why": "only the pinned client's format and profile are read"
+    },
+    {
+      "when": [
+        [
+          "scope",
+          "other"
+        ]
+      ],
+      "always": "refuse",
+      "why": "an archive conditional on a basis the browser does not hold cannot be checked here"
+    },
+    {
+      "when": [
+        [
+          "objects",
+          "many"
+        ]
+      ],
+      "always": "refuse",
+      "why": "one archive is one object under one kappa label"
+    },
+    {
+      "when": [
+        [
+          "restore",
+          "differs"
+        ]
+      ],
+      "always": "refuse",
+      "why": "an archive that restores other bytes than its label names is never kept or opened"
+    },
+    {
+      "when": [
+        [
+          "restore",
+          "failed"
+        ]
+      ],
+      "always": "refuse",
+      "why": "an archive that does not decode within the work bound is never kept or opened"
+    },
+    {
+      "when": [
+        [
+          "kappa",
+          "other"
+        ]
+      ],
+      "always": "refuse",
+      "why": "an object the kappa facet did not admit has no reference in the Prism"
+    },
+    {
+      "when": [
+        [
+          "act",
+          "keep"
+        ]
+      ],
+      "never": [
+        "open"
+      ],
+      "why": "keeping never projects the object's values"
+    },
+    {
+      "when": [
+        [
+          "act",
+          "open"
+        ]
+      ],
+      "never": [
+        "keep"
+      ],
+      "why": "opening never writes"
+    },
+    {
+      "when": [
+        [
+          "act",
+          "keep"
+        ],
+        [
+          "halted",
+          "no"
+        ],
+        [
+          "seal",
+          "ok"
+        ],
+        [
+          "format",
+          "known"
+        ],
+        [
+          "scope",
+          "standard"
+        ],
+        [
+          "objects",
+          "one"
+        ],
+        [
+          "restore",
+          "same"
+        ],
+        [
+          "kappa",
+          "admit"
+        ]
+      ],
+      "always": "keep",
+      "why": "a sound archive of an admitted object is kept"
+    },
+    {
+      "when": [
+        [
+          "act",
+          "open"
+        ],
+        [
+          "halted",
+          "no"
+        ],
+        [
+          "seal",
+          "ok"
+        ],
+        [
+          "format",
+          "known"
+        ],
+        [
+          "scope",
+          "standard"
+        ],
+        [
+          "objects",
+          "one"
+        ],
+        [
+          "restore",
+          "same"
+        ],
+        [
+          "kappa",
+          "admit"
+        ]
+      ],
+      "always": "open",
+      "why": "a sound archive of an admitted object is opened"
+    },
+    {
+      "when": [
+        [
+          "act",
+          "keep"
+        ],
+        [
+          "halted",
+          "no"
+        ],
+        [
+          "seal",
+          "ok"
+        ],
+        [
+          "format",
+          "known"
+        ],
+        [
+          "scope",
+          "self"
+        ],
+        [
+          "objects",
+          "one"
+        ],
+        [
+          "restore",
+          "same"
+        ],
+        [
+          "kappa",
+          "admit"
+        ]
+      ],
+      "always": "keep",
+      "why": "a sound archive of an admitted object is kept"
+    },
+    {
+      "when": [
+        [
+          "act",
+          "open"
+        ],
+        [
+          "halted",
+          "no"
+        ],
+        [
+          "seal",
+          "ok"
+        ],
+        [
+          "format",
+          "known"
+        ],
+        [
+          "scope",
+          "self"
+        ],
+        [
+          "objects",
+          "one"
+        ],
+        [
+          "restore",
+          "same"
+        ],
+        [
+          "kappa",
+          "admit"
+        ]
+      ],
+      "always": "open",
+      "why": "a sound archive of an admitted object is opened"
+    }
+  ],
+  "examples": [
+    [
+      "keep no ok known standard one same admit",
+      "keep"
+    ],
+    [
+      "open no ok known standard one same admit",
+      "open"
+    ],
+    [
+      "keep no ok known self one same admit",
+      "keep"
+    ],
+    [
+      "keep yes ok known self one same admit",
+      "refuse"
+    ],
+    [
+      "open no broken known self one same admit",
+      "refuse"
+    ],
+    [
+      "keep no ok other self one same admit",
+      "refuse"
+    ],
+    [
+      "keep no ok known other one same admit",
+      "refuse"
+    ],
+    [
+      "keep no ok known self many same admit",
+      "refuse"
+    ],
+    [
+      "open no ok known self one differs admit",
+      "refuse"
+    ],
+    [
+      "open no ok known self one failed admit",
+      "refuse"
+    ],
+    [
+      "keep no ok known self one same other",
+      "refuse"
+    ],
+    [
+      "keep no ok known self one same",
+      "invalid"
+    ]
+  ]
+}
