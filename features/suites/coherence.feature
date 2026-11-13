@@ -27,3 +27,9 @@ Feature: coherence
     Given a zip with one deflated and one stored entry, and a file that is not a zip
     When test/coherence/coherence.test.mjs opens both with site/device/zip.mjs
     Then the entries come back by name and folder with their exact bytes, and the other file is refused
+
+  @CO-05 @build
+  Scenario: A returning owner gets the deploy that is served: when the version precache.json names differs from every cache the page keeps, the page drops the kept deploy and loads once more, and every button on Today does something when pressed
+    Given the assembled page with its service worker and precache.json
+    When test/page/returning.test.mjs presses every card and feeder on Today, then renames the kept cache to an earlier version and reloads, in headless Chromium
+    Then each press opens its place, its note field or the file picker, and the earlier cache is dropped once and the page loads ready

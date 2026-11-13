@@ -123,7 +123,41 @@ const when = (at) => {
   return date.toDateString() === new Date().toDateString() ? clock.format(date) : short.format(date);
 };
 
+// A browser that kept an earlier deploy runs it until its service worker is
+// replaced, and the worker's script is the same bytes on every deploy, so the
+// browser never replaces it: a returning owner got today's page around an
+// earlier deploy's code, whose buttons have no handlers. Each deploy's
+// precache.json names its version, and the worker keeps its files under
+// prism-<version>. When the version served differs from every cache this page
+// keeps, the kept deploy is dropped and the page loads once more, fresh.
+const HEALED_KEY = "me.healed";
+export async function heal({ caches: store = globalThis.caches, sw = globalThis.navigator?.serviceWorker, reload = () => location.reload() } = {}) {
+  try {
+    if (!store || !sw?.controller) return false;
+    const manifest = new URL("./precache.json", import.meta.url).href;
+    const ours = [];
+    for (const name of await store.keys()) {
+      if (name.startsWith("prism-") && (await (await store.open(name)).match(manifest))) ours.push(name);
+    }
+    if (!ours.length) return false;
+    const served = await fetch(manifest, { cache: "no-store" }).then((r) => (r.ok ? r.json() : null));
+    if (!served?.version || ours.includes(`prism-${served.version}`)) return false;
+    // Once per version and tab, so a failure can never loop.
+    if (sessionStorage.getItem(HEALED_KEY) === served.version) return false;
+    sessionStorage.setItem(HEALED_KEY, served.version);
+    for (const registration of await sw.getRegistrations()) {
+      if (new URL(registration.scope).href === new URL("./", import.meta.url).href) await registration.unregister();
+    }
+    for (const name of ours) await store.delete(name);
+    reload();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export default async function start({ app, reason, $ }) {
+  if (await heal()) return;
   // This window may be Google's return with the owner's consent: hand it back and close.
   if (await relayConsent()) return;
   const root = document.documentElement;
@@ -611,9 +645,15 @@ export default async function start({ app, reason, $ }) {
       const forget = element("button", { type: "button", textContent: WORDS.forget });
       const files = element("input", { type: "file", multiple: true, accept: FILE_TYPES });
       files.setAttribute("aria-label", WORDS["device.files"]);
+      // Listening from the moment the picker exists: a card's press can open it before the source's code arrives.
+      let onFiles = null;
+      files.addEventListener("change", async () => {
+        while (!onFiles) await new Promise((done) => setTimeout(done, 50));
+        await onFiles();
+      });
       const filesLabel = element("label", { className: "pr-file" }, element("span", { textContent: WORDS["device.files"] }), files);
       const row = settingRow(device, addFolder, filesLabel, contacts, getExtension, allow, read, forget);
-      if (!vault) { row.state.textContent = WORDS.unavailable; row.row.querySelector(".pr-controls").hidden = true; return; }
+      if (!vault) { onFiles = async () => {}; row.state.textContent = WORDS.unavailable; row.row.querySelector(".pr-controls").hidden = true; return; }
       const d = await deviceOf();
       let kept = [];
       const paint = async () => {
@@ -650,7 +690,7 @@ export default async function start({ app, reason, $ }) {
         URL.revokeObjectURL(link.href);
       }));
       forget.addEventListener("click", busy(forget, async () => true, async () => { for (const f of kept) await d.source.forget(f.id); }));
-      files.addEventListener("change", busy(files, owner("files"), async () => { await reportDevice(await d.source.readFiles([...(files.files ?? [])])); files.value = ""; }));
+      onFiles = busy(files, owner("files"), async () => { await reportDevice(await d.source.readFiles([...(files.files ?? [])])); files.value = ""; });
       contacts.addEventListener("click", busy(contacts, owner("contacts"), async () => {
         const picked = await navigator.contacts.select(["name", "email", "tel"], { multiple: true });
         await reportDevice(await d.source.readContacts(picked));
