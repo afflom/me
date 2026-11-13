@@ -24,9 +24,14 @@ does not place:
 
 usage: python3 -I tools/product/gate.py [product.json surface.json coherence.json journeys.mjs]
 """
-import json
+import importlib.util
+import pathlib
 import re
 import sys
+
+_spec = importlib.util.spec_from_file_location("record", pathlib.Path(__file__).resolve().parents[1] / "specs/record.py")
+record = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(record)
 
 KINDS = {"effectiveness", "efficiency", "satisfaction"}
 STATUS = {"works", "not yet"}
@@ -155,7 +160,7 @@ def refusals(product, surface, coherence, walks):
 
 def main(argv):
     paths = argv[1:] or ["app/specs/product/spec.json", "app/specs/surface/spec.json", "app/specs/coherence/spec.json", "test/product/journeys.mjs"]
-    product, surface, coherence = (json.load(open(p, encoding="utf-8")) for p in paths[:3])
+    product, surface, coherence = (record.load(p) for p in paths[:3])
     source = open(paths[3], encoding="utf-8").read()
     body = source.split("export const walks = {", 1)[1] if "export const walks = {" in source else ""
     walks = set(re.findall(r"^  async (\w+)\(", body, re.M))

@@ -7,8 +7,9 @@ import { mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
+import { load } from "../../tools/specs/record.mjs";
 
-const read = (path) => JSON.parse(readFileSync(path, "utf8"));
+const read = (path) => load(path);
 const PRODUCT = "app/specs/product/spec.json";
 const SURFACE = "app/specs/surface/spec.json";
 const COHERENCE = "app/specs/coherence/spec.json";

@@ -2,13 +2,89 @@
 // Every facet of the root as one model with typed ports, and the flow that
 // binds them: the page reads domains, vocabulary and intents from here only.
 
-export const PORTS = ["owner", "content", "item", "kept", "span", "draft", "sent", "answer", "object"];
-export const FACETS = [{"key": "host", "line": "host", "in": ["owner"], "out": ["content"], "drives": {"settings": ["device"]}}, {"key": "folder", "line": "folder", "in": ["content"], "out": ["item"], "drives": {"settings": ["device"]}}, {"key": "boundary", "line": "boundary", "in": ["item", "draft", "answer"], "out": ["kept", "answer"], "drives": {"settings": ["halt", "identity"], "acts": ["ask"]}}, {"key": "store", "line": "store", "in": ["item", "object"], "out": ["kept"], "drives": {"settings": ["backup"], "acts": ["note"]}}, {"key": "restore", "line": "restore", "in": ["kept", "object"], "out": ["item"], "drives": {"settings": ["backup"]}}, {"key": "when", "line": "when", "in": ["item"], "out": ["span"], "drives": {"places": ["today"]}}, {"key": "dest", "line": "dest", "in": ["owner", "item"], "out": ["draft", "sent"], "drives": {"acts": ["write", "event", "share"], "settings": ["quiet"]}}, {"key": "learn", "line": "learn", "in": ["answer"], "out": ["answer"], "drives": {"places": ["today", "conversations", "people", "calendar", "tasks", "places", "money", "things", "me", "health", "work", "library", "timeline", "presence"]}}, {"key": "kappa", "line": "kappa", "in": ["object"], "out": ["object"]}, {"key": "uorc", "line": "uorc", "in": ["item", "kept"], "out": ["object"]}, {"key": "resonance", "line": "resonance", "in": ["owner", "kept"], "out": ["answer"], "drives": {"places": ["today", "conversations", "people", "calendar", "tasks", "places", "money", "things", "me", "health", "work", "library", "timeline", "presence"]}}, {"key": "router", "line": "router", "in": ["owner", "content"], "out": ["item"], "drives": {"acts": ["note"], "settings": ["models"]}}];
-export const SEALED = [{"key": "r4", "sealed": "R4 no longer speaks on the page; it routes incoming content onto the Prism's features through the router facet"}, {"key": "model", "sealed": "a compiled model's bytes are admitted when the router's meaning feature first loads one; no feature needs a model's bytes yet"}, {"key": "route", "sealed": "the route plan takes the design model's binary envelope, which no browser source yet emits"}, {"key": "google", "sealed": "mail"}, {"key": "googlelink", "sealed": "calendar"}, {"key": "holon", "sealed": "reconciles owner and Prism from resonance signals; no page caller yet; the observer wires to resonance's onResonance next"}, {"key": "curate", "sealed": "tunes the parameters a facet marks tunable from resonance signals; no page caller yet; the observer wires to resonance's onResonance next"}];
-export const FLOW = [[[], ["content"], [], [], [], [], [], [], [], [], [], ["content"]], [[], [], ["item"], ["item"], [], ["item"], ["item"], [], [], ["item"], [], []], [[], [], ["answer"], [], ["kept"], [], [], ["answer"], [], ["kept"], ["kept"], []], [[], [], [], [], ["kept"], [], [], [], [], ["kept"], ["kept"], []], [[], [], ["item"], ["item"], [], ["item"], ["item"], [], [], ["item"], [], []], [[], [], [], [], [], [], [], [], [], [], [], []], [[], [], ["draft"], [], [], [], [], [], [], [], [], []], [[], [], ["answer"], [], [], [], [], ["answer"], [], [], [], []], [[], [], [], ["object"], ["object"], [], [], [], ["object"], [], [], []], [[], [], [], ["object"], ["object"], [], [], [], ["object"], [], [], []], [[], [], ["answer"], [], [], [], [], ["answer"], [], [], [], []], [[], [], ["item"], ["item"], [], ["item"], ["item"], [], [], ["item"], [], []]];
-export const FEEDERS = [{"key": "files", "surface": "files", "media": ["message", "calendar", "contactCard", "plainText"]}, {"key": "folder", "surface": "folder", "media": ["message", "calendar", "contactCard", "plainText"]}, {"key": "drop", "surface": "drop", "media": ["message", "calendar", "contactCard", "plainText"]}, {"key": "paste", "surface": "paste", "media": ["message", "calendar", "contactCard", "plainText"]}, {"key": "contacts", "surface": "contacts", "media": ["contactCard"]}, {"key": "note", "act": "note", "media": ["plainText"]}, {"key": "sent", "act": "write", "media": ["message"]}, {"key": "event", "act": "event", "media": ["calendar"]}];
-export const MEDIA = {"message": 4, "calendar": 5, "contactCard": 3, "plainText": 11};
-export const VOCABULARY = [["doctor", "dentist", "clinic", "hospital", "pharmacy", "prescription", "appointment", "therapy", "health", "medical", "vaccine", "checkup", "insurance claim", "workout", "sleep"], ["invoice", "receipt", "payment", "paid", "bank", "statement", "bill", "refund", "transfer", "tax", "budget", "salary", "subscription", "price", "charge", "$", "€", "£"], ["passport", "license", "birthday", "address change", "profile", "account", "identity", "my name"], ["contact", "phone", "family", "friend", "mom", "dad", "brother", "sister", "wife", "husband", "partner"], ["reply", "re:", "fwd:", "message", "thread", "wrote", "chat"], ["meeting", "call", "event", "schedule", "today", "tomorrow", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "calendar", "invite", "invitation", "reschedule"], ["street", "avenue", "road", "airport", "hotel", "flight", "trip", "travel", "booking", "reservation", "restaurant", "address", "venue", "office"], ["project", "deadline", "review", "proposal", "contract", "client", "team", "standup", "report", "roadmap", "release", "research", "paper", "draft"], ["order", "shipped", "delivery", "package", "tracking", "purchase", "warranty", "return", "device", "repair"], ["todo", "to do", "remember", "remind", "buy", "call", "pick up", "renew", "due", "follow up", "need to", "must"], ["book", "article", "newsletter", "read", "paper", "notes", "chapter", "library", "course", "video", "podcast"], ["idea", "topic", "question", "learn", "explore"]];
-export const INTENTS = {"today": {"from": 0, "days": 1}, "tonight": {"from": 0, "days": 1}, "tomorrow": {"from": 1, "days": 1}, "yesterday": {"from": -1, "days": 1}, "week": {"from": 0, "days": 7}, "next": {"from": 0, "days": 14}, "upcoming": {"from": 0, "days": 14}, "soon": {"from": 0, "days": 7}};
-export const TODAY = {"ahead": 7, "recent": 5, "tasks": 5, "needs": {"days": 14, "most": 8, "asks": ["?", "let me know", "can you", "could you", "would you", "please confirm", "get back to me"], "due": ["due", "deadline", "overdue", "expires", "by tomorrow", "by today"]}};
-export const PEOPLE = {"place": "people", "comment": "The place that lists the person's people, one row each; pressing one opens what is open between them (site/coherence/people.mjs)."};
+export const PORTS = [
+  "owner",
+  "content",
+  "item",
+  "kept",
+  "span",
+  "draft",
+  "sent",
+  "answer",
+  "object",
+];
+export const FACETS = [
+  {"key": "boundary", "line": "boundary", "in": ["item", "draft", "answer"], "out": ["kept", "answer"], "drives": {"settings": ["halt", "identity"], "acts": ["ask"]}},
+  {"key": "learn", "line": "learn", "in": ["answer"], "out": ["answer"], "drives": {"places": ["today", "conversations", "people", "calendar", "tasks", "places", "money", "things", "me", "health", "work", "library", "timeline", "presence"]}},
+  {"key": "when", "line": "when", "in": ["item"], "out": ["span"], "drives": {"places": ["today"]}},
+  {"key": "store", "line": "store", "in": ["item", "object"], "out": ["kept"], "drives": {"settings": ["backup"], "acts": ["note"]}},
+  {"key": "restore", "line": "restore", "in": ["kept", "object"], "out": ["item"], "drives": {"settings": ["backup"]}},
+  {"key": "dest", "line": "dest", "in": ["owner", "item"], "out": ["draft", "sent"], "drives": {"acts": ["write", "event", "share"], "settings": ["quiet"]}},
+  {"key": "folder", "line": "folder", "in": ["content"], "out": ["item"], "drives": {"settings": ["device"]}},
+  {"key": "host", "line": "host", "in": ["owner"], "out": ["content"], "drives": {"settings": ["device"]}},
+  {"key": "kappa", "line": "kappa", "in": ["object"], "out": ["object"]},
+  {"key": "uorc", "line": "uorc", "in": ["item", "kept"], "out": ["object"]},
+  {"key": "resonance", "line": "resonance", "in": ["owner", "kept"], "out": ["answer"], "drives": {"places": ["today", "conversations", "people", "calendar", "tasks", "places", "money", "things", "me", "health", "work", "library", "timeline", "presence"]}},
+  {"key": "router", "line": "router", "in": ["owner", "content"], "out": ["item"], "drives": {"acts": ["note"], "settings": ["models"]}},
+];
+export const SEALED = [
+  {"key": "r4", "sealed": "R4 no longer speaks on the page; it routes incoming content onto the Prism's features through the router facet"},
+  {"key": "route", "sealed": "the route plan takes the design model's binary envelope, which no browser source yet emits"},
+  {"key": "google", "sealed": "mail"},
+  {"key": "googlelink", "sealed": "calendar"},
+  {"key": "model", "sealed": "a compiled model's bytes are admitted when the router's meaning feature first loads one; no feature needs a model's bytes yet"},
+  {"key": "holon", "sealed": "reconciles owner and Prism from resonance signals; no page caller yet; the observer wires to resonance's onResonance next"},
+  {"key": "curate", "sealed": "tunes the parameters a facet marks tunable from resonance signals; no page caller yet; the observer wires to resonance's onResonance next"},
+];
+// Facet a feeds facet b where a's outputs meet b's inputs (computed here, so a new facet changes one line).
+export const FLOW = FACETS.map((a) => FACETS.map((b) => [...new Set(a.out.filter((p) => b.in.includes(p)))].sort()));
+export const FEEDERS = [
+  {"key": "files", "surface": "files", "media": ["message", "calendar", "contactCard", "plainText"]},
+  {"key": "folder", "surface": "folder", "media": ["message", "calendar", "contactCard", "plainText"]},
+  {"key": "drop", "surface": "drop", "media": ["message", "calendar", "contactCard", "plainText"]},
+  {"key": "paste", "surface": "paste", "media": ["message", "calendar", "contactCard", "plainText"]},
+  {"key": "contacts", "surface": "contacts", "media": ["contactCard"]},
+  {"key": "note", "act": "note", "media": ["plainText"]},
+  {"key": "sent", "act": "write", "media": ["message"]},
+  {"key": "event", "act": "event", "media": ["calendar"]},
+];
+export const MEDIA = {
+  "message": 4,
+  "calendar": 5,
+  "contactCard": 3,
+  "plainText": 11,
+};
+export const VOCABULARY = [
+  ["doctor", "dentist", "clinic", "hospital", "pharmacy", "prescription", "appointment", "therapy", "health", "medical", "vaccine", "checkup", "insurance claim", "workout", "sleep"],
+  ["invoice", "receipt", "payment", "paid", "bank", "statement", "bill", "refund", "transfer", "tax", "budget", "salary", "subscription", "price", "charge", "$", "€", "£"],
+  ["passport", "license", "birthday", "address change", "profile", "account", "identity", "my name"],
+  ["contact", "phone", "family", "friend", "mom", "dad", "brother", "sister", "wife", "husband", "partner"],
+  ["reply", "re:", "fwd:", "message", "thread", "wrote", "chat"],
+  ["meeting", "call", "event", "schedule", "today", "tomorrow", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "calendar", "invite", "invitation", "reschedule"],
+  ["street", "avenue", "road", "airport", "hotel", "flight", "trip", "travel", "booking", "reservation", "restaurant", "address", "venue", "office"],
+  ["project", "deadline", "review", "proposal", "contract", "client", "team", "standup", "report", "roadmap", "release", "research", "paper", "draft"],
+  ["order", "shipped", "delivery", "package", "tracking", "purchase", "warranty", "return", "device", "repair"],
+  ["todo", "to do", "remember", "remind", "buy", "call", "pick up", "renew", "due", "follow up", "need to", "must"],
+  ["book", "article", "newsletter", "read", "paper", "notes", "chapter", "library", "course", "video", "podcast"],
+  ["idea", "topic", "question", "learn", "explore"],
+];
+export const INTENTS = {
+  "today": {"from": 0, "days": 1},
+  "tonight": {"from": 0, "days": 1},
+  "tomorrow": {"from": 1, "days": 1},
+  "yesterday": {"from": -1, "days": 1},
+  "week": {"from": 0, "days": 7},
+  "next": {"from": 0, "days": 14},
+  "upcoming": {"from": 0, "days": 14},
+  "soon": {"from": 0, "days": 7},
+};
+export const TODAY = {
+  "ahead": 7,
+  "recent": 5,
+  "tasks": 5,
+  "needs": {"days": 14, "most": 8, "asks": ["?", "let me know", "can you", "could you", "would you", "please confirm", "get back to me"], "due": ["due", "deadline", "overdue", "expires", "by tomorrow", "by today"]},
+};
+export const PEOPLE = {
+  "place": "people",
+  "comment": "The place that lists the person's people, one row each; pressing one opens what is open between them (site/coherence/people.mjs).",
+};
