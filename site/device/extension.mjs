@@ -2,7 +2,7 @@
 // pull of the items it read, and the extension itself, written for this page.
 // The page decides what is kept; the extension only reads, by GET.
 
-const FILES = ['manifest.json', 'background.js', 'bridge.js', 'gmail.js'];
+const FILES = ['services.json', 'manifest.json', 'background.js', 'bridge.js', 'seen.js'];
 
 const send = (win, data) => win.postMessage({ ...data, from: 'page' }, win.location.origin);
 const answers = (win, test, ms) => new Promise((resolve) => {
@@ -31,6 +31,16 @@ export async function pull(win = globalThis.window, { halted, ms = 120000 } = {}
   if (!got) throw Object.assign(new Error('the extension did not answer'), { code: 'extension.silent' });
   if (got.error) throw Object.assign(new Error(got.error), { code: 'extension.error' });
   return Array.isArray(got.items) ? got.items.filter((i) => typeof i?.text === 'string') : [];
+}
+
+// Any other ask of the extension (status, pin): its answer, or null when it is not here.
+export async function ask(win = globalThis.window, prism, data = {}, ms = 5000) {
+  const id = Math.random().toString(36).slice(2);
+  const answer = answers(win, (d) => d.prism === 'answer' && d.id === id, ms);
+  send(win, { ...data, prism, id });
+  const got = await answer;
+  if (got?.error) throw Object.assign(new Error(got.error), { code: 'extension.error' });
+  return got;
 }
 
 // CRC-32 (IEEE), for the zip.
@@ -66,15 +76,26 @@ export function zip(files) {
   return out;
 }
 
-// The extension, written for the Prism page at `prism` (origin and path).
+// The extension, written for the Prism page at `prism` (origin and path). Its
+// permissions are exactly the origins of the services the model declares with
+// a route the extension carries (seen or own).
+export function permissions(services) {
+  const reached = services.filter((s) => s.seen || (s.own ?? []).length);
+  return {
+    origins: [...new Set(reached.flatMap((s) => s.origins.map((o) => `${o}*`)))],
+    seen: [...new Set(services.filter((s) => s.seen).flatMap((s) => s.origins.map((o) => `${o}*`)))],
+  };
+}
+
 export async function pack(prism, base = new URL('../extension/', import.meta.url), fetchImpl = globalThis.fetch) {
   if (!/^https:\/\/[^/]+\/(?:[^?#]*\/)?$/.test(prism)) throw Object.assign(new Error('a Prism page address ends in /'), { code: 'extension.address' });
-  const files = [];
+  const texts = {};
   for (const name of FILES) {
     const response = await fetchImpl(new URL(name, base), { cache: 'no-cache' });
     if (!response.ok) throw Object.assign(new Error(`${name}: HTTP ${response.status}`), { code: 'extension.file' });
-    const text = (await response.text()).replaceAll('__PRISM__', prism);
-    files.push({ name: `prism-extension/${name}`, bytes: new TextEncoder().encode(text) });
+    texts[name] = (await response.text()).replaceAll('__PRISM__', prism);
   }
-  return zip(files);
+  const { origins, seen } = permissions(JSON.parse(texts['services.json']).services);
+  texts['manifest.json'] = texts['manifest.json'].replace('"__ORIGINS__"', JSON.stringify(origins)).replace('"__SEEN__"', JSON.stringify(seen));
+  return zip(FILES.map((name) => ({ name: `prism-extension/${name}`, bytes: new TextEncoder().encode(texts[name]) })));
 }

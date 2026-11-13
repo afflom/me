@@ -43,6 +43,7 @@ model does not sanction.
 | `DV-02` | `build` | Mail, calendar and contacts read from the owner's device reach only the browser vault, through the detectors and the Boundary, from a folder opened read-only or files the owner picked or dropped |
 | `DV-03` | `build` | The page uses each surface the browser reports for the owner's content only as PrismHost answers: every reported surface is used or offered, nothing is used while halted, a paste, drop, pick or contact list only on the owner's act, a folder only on the owner's act or a grant the browser keeps, and a live account on another origin is named sealed |
 | `DV-04` | `build` | Live Gmail and Google Calendar reach the Prism only through the extension the owner installed, written by the page for its own address: it reads by GET with the owner's own sign-in, answers only that Prism page, reads nothing while halted, and each item it hands over is kept only through PrismHost, PrismFolder, the detectors and the vault |
+| `DV-05` | `build` | Every service the owner uses is a declaration in the model, read only as PrismSource answers: by what its web app shows the owner, by its own pages with the owner's own sign-in, or by its own data download; never while halted, never written to, never undeclared, and never through a private interface |
 
 ## frame
 

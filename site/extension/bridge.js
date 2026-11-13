@@ -1,14 +1,16 @@
 // On the owner's Prism page only: says the extension is here, and passes the
-// page's pull to the extension and the items back. It reads nothing itself.
+// page's asks (pull, status, pin) to the extension and its answers back. It
+// reads nothing itself.
 (() => {
-  const say = (data) => window.postMessage({ ...data, prism: data.prism, from: 'extension' }, location.origin);
-  say({ prism: 'extension', version: 1 });
+  const ASKS = ['pull', 'status', 'pin'];
+  const say = (data) => window.postMessage({ ...data, from: 'extension' }, location.origin);
+  say({ prism: 'extension', version: 2 });
   window.addEventListener('message', (event) => {
     if (event.source !== window || event.origin !== location.origin || event.data?.from !== 'page') return;
-    if (event.data.prism === 'hello') say({ prism: 'extension', version: 1 });
-    if (event.data.prism !== 'pull') return;
-    chrome.runtime.sendMessage({ prism: 'pull', halted: event.data.halted }, (answer) => {
-      say({ prism: 'items', id: event.data.id, items: answer?.items ?? [], error: answer?.error ?? chrome.runtime.lastError?.message ?? null });
+    if (event.data.prism === 'hello') say({ prism: 'extension', version: 2 });
+    if (!ASKS.includes(event.data.prism)) return;
+    chrome.runtime.sendMessage({ ...event.data, from: undefined }, (answer) => {
+      say({ ...(answer ?? {}), prism: event.data.prism === 'pull' ? 'items' : 'answer', id: event.data.id, error: answer?.error ?? chrome.runtime.lastError?.message ?? null });
     });
   });
 })();

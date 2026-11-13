@@ -319,15 +319,26 @@ export default async function start({ app, reason, $ }) {
   });
   window.postMessage({ prism: "hello", from: "page" }, location.origin);
   const extensionGrant = () => (extensionHere ? "kept" : "none");
-  // Live mail and calendar, read by the installed extension with the owner's own sign-in.
+  // The declared services, carried by the installed extension with the
+  // owner's own sign-in; PrismSource decides each item by its service and route.
   async function pullExtension(d) {
     const { pull } = await import("./device/extension.mjs");
-    return d.source.readItems(await pull(window, { halted: halted() }));
+    const items = [];
+    for (const item of await pull(window, { halted: halted() })) {
+      if ((await line(`source ${item.service} ${item.route} read ${halted()}`)) === "read") items.push(item);
+    }
+    return d.source.readItems(items);
   }
-  // On every visit: a folder the owner granted is re-read while the browser
-  // keeps the grant, and the installed extension is pulled.
+  // On every visit, and every few minutes while the page is open: a folder the
+  // owner granted is re-read while the browser keeps the grant, and what the
+  // installed extension carried is taken. Nothing to press.
+  const ARRIVAL_MINUTES = 5;
   async function readOnVisit() {
     await new Promise((resolve) => setTimeout(resolve, 500));
+    setInterval(() => { if (halted() === "no") arrive().catch((error) => console.warn(`sources: ${error?.message ?? error}`)); }, ARRIVAL_MINUTES * 60000);
+    await arrive();
+  }
+  async function arrive() {
     const folder = vault && typeof indexedDB?.databases === "function" && (await indexedDB.databases()).some((db) => db.name === "prism-device");
     if (!vault || (!folder && !extensionHere)) return;
     const d = await deviceOf();
@@ -750,7 +761,6 @@ export default async function start({ app, reason, $ }) {
       const contacts = element("button", { type: "button", textContent: WORDS["device.contacts"] });
       const getExtension = element("button", { type: "button", textContent: WORDS["device.extension"] });
       const allow = element("button", { type: "button", textContent: WORDS["device.allow"] });
-      const read = element("button", { type: "button", textContent: WORDS["read.now"] });
       const forget = element("button", { type: "button", textContent: WORDS.forget });
       const files = element("input", { type: "file", multiple: true, accept: FILE_TYPES });
       files.setAttribute("aria-label", WORDS["device.files"]);
@@ -761,7 +771,7 @@ export default async function start({ app, reason, $ }) {
         await onFiles();
       });
       const filesLabel = element("label", { className: "pr-file" }, element("span", { textContent: WORDS["device.files"] }), files);
-      const row = settingRow(device, addFolder, filesLabel, contacts, getExtension, allow, read, forget);
+      const row = settingRow(device, addFolder, filesLabel, contacts, getExtension, allow, forget);
       if (!vault) { onFiles = async () => {}; row.state.textContent = WORDS.unavailable; row.row.querySelector(".pr-controls").hidden = true; return; }
       const d = await deviceOf();
       let kept = [];
@@ -775,7 +785,6 @@ export default async function start({ app, reason, $ }) {
         contacts.hidden = !shown("contacts");
         getExtension.hidden = plan.extension !== "offer";
         allow.hidden = !shown("folder") || !kept.some((f) => f.grant === "prompt");
-        read.hidden = plan.folder !== "use" && plan.extension !== "use";
         forget.hidden = !kept.length;
       };
       const owner = (surface) => async () => (await d.ask({ act: { [surface]: "owner" } }))[surface] === "use";
@@ -785,11 +794,6 @@ export default async function start({ app, reason, $ }) {
       };
       addFolder.addEventListener("click", busy(addFolder, owner("folder"), async () => { await d.source.addFolder(); await reportDevice(await d.source.readFolders()); }));
       allow.addEventListener("click", busy(allow, owner("folder"), async () => { await d.source.allow(); await reportDevice(await d.source.readFolders()); }));
-      read.addEventListener("click", busy(read, async () => true, async () => {
-        const plan = await d.ask({ act: { folder: "owner", extension: "owner" }, grant: { extension: extensionGrant() } });
-        if (plan.folder === "use") await reportDevice(await d.source.readFolders());
-        if (plan.extension === "use" && extensionHere) await reportDevice(await pullExtension(d));
-      }));
       // The extension, written by this page for its own address: one download.
       getExtension.addEventListener("click", busy(getExtension, async () => true, async () => {
         const { pack } = await import("./device/extension.mjs");
