@@ -1,0 +1,156 @@
+{
+  "name": "prism-router",
+  "title": "Prism R4 Router",
+  "facet": {
+    "prefix": "router",
+    "module": "PrismRouter",
+    "request": "RouterRequest"
+  },
+  "purpose": "Decides, for one value of one piece of content coming into the Prism, whether one feature of the Prism maps it: the R4 router sends each value of the content's own schema through the features compiled into the Prism, so the Prism holds the owner's data in its own terms. A value the source's schema already types is mapped straight, free text is read by every compiled feature, a feature whose compiled model is missing is skipped, bytes that are not the compiled model never touch the owner's data, and the kill switch stops every mapping.",
+  "fields": [
+    {
+      "name": "source",
+      "values": ["note", "message", "calendar", "contact"],
+      "means": "the schema the content arrived in: the owner's own words, a mail message, a calendar event, or a contact card"
+    },
+    {
+      "name": "value",
+      "values": ["text", "subject", "start", "party"],
+      "means": "which value of that schema: free text, a subject or summary line, a start time the schema types, or the person the schema names"
+    },
+    {
+      "name": "feature",
+      "values": ["time", "intent", "party", "meaning"],
+      "means": "the Prism feature to map it onto: when it happens, what it asks of the owner (a task, an event, a question or a fact), who it is with, and what it means"
+    },
+    {
+      "name": "provider",
+      "values": ["compiled", "absent", "mismatch"],
+      "means": "the model compiled into the Prism that provides the feature: present with its pinned bytes, absent, or present with other bytes"
+    },
+    {
+      "name": "halted",
+      "values": ["no", "yes"],
+      "means": "whether the owner pressed the kill switch"
+    }
+  ],
+  "outcomes": ["map", "direct", "skip", "refuse"],
+  "providers": {
+    "time": {
+      "kind": "compiled",
+      "model": "prism-chronology-reader",
+      "maps": "startTime",
+      "days": {"today": 0, "tonight": 0, "tomorrow": 1},
+      "weekdays": ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"],
+      "short": {"sun": 0, "mon": 1, "tue": 2, "tues": 2, "wed": 3, "thu": 4, "thur": 4, "thurs": 4, "fri": 5, "sat": 6},
+      "named": {"noon": 720, "midday": 720, "midnight": 0, "morning": 540, "afternoon": 900, "evening": 1080, "tonight": 1200},
+      "bareHourAfternoonBelow": 8,
+      "allDayWithoutClock": true
+    },
+    "intent": {
+      "kind": "compiled",
+      "model": "prism-intent-reader",
+      "maps": "additionalType",
+      "question": ["who", "what", "when", "where", "why", "how", "which", "is", "are", "do", "does", "did", "can", "could", "will", "should"],
+      "event": ["meeting", "meet", "lunch", "dinner", "breakfast", "coffee", "appointment", "flight", "call with", "party", "interview", "class", "concert"],
+      "task": ["call", "email", "text", "buy", "pay", "send", "book", "renew", "pick up", "drop off", "remind", "remember", "ask", "tell", "fix", "finish", "write", "schedule", "cancel", "order", "return", "check", "follow up", "todo", "to do", "need to", "must"],
+      "domains": {"task": [9], "event": [5], "question": [9, 11], "fact": [9, 11]},
+      "timed": 5
+    },
+    "party": {
+      "kind": "absent",
+      "model": "none",
+      "maps": "participant"
+    },
+    "meaning": {
+      "kind": "absent",
+      "model": "all-minilm-l6-v2",
+      "maps": "about"
+    }
+  },
+  "tree": {
+    "if": ["halted", "yes"], "then": "refuse",
+    "else": {
+      "if": ["provider", "mismatch"], "then": "refuse",
+      "else": {
+        "if": ["value", "start"],
+        "then": {
+          "if": ["feature", "time"],
+          "then": {
+            "if": ["source", "note"], "then": "skip",
+            "else": {"if": ["source", "contact"], "then": "skip", "else": "direct"}
+          },
+          "else": "skip"
+        },
+        "else": {
+          "if": ["value", "party"],
+          "then": {
+            "if": ["feature", "party"],
+            "then": {"if": ["source", "note"], "then": "skip", "else": "direct"},
+            "else": "skip"
+          },
+          "else": {"if": ["provider", "absent"], "then": "skip", "else": "map"}
+        }
+      }
+    }
+  },
+  "guarantees": [
+    {
+      "when": [["halted", "yes"]],
+      "always": "refuse",
+      "why": "the kill switch stops every mapping"
+    },
+    {
+      "when": [["halted", "no"], ["provider", "mismatch"]],
+      "always": "refuse",
+      "why": "bytes that are not the compiled model never touch the owner's data"
+    },
+    {
+      "when": [["provider", "absent"]],
+      "never": ["map"],
+      "why": "no feature runs without the model compiled into the Prism for it"
+    },
+    {
+      "when": [["halted", "no"], ["provider", "compiled"], ["value", "text"]],
+      "always": "map",
+      "why": "the owner's free text is read by every compiled feature, so nothing they wrote is held as a bare string"
+    },
+    {
+      "when": [["halted", "no"], ["provider", "compiled"], ["value", "subject"]],
+      "always": "map",
+      "why": "a subject line is free text too"
+    },
+    {
+      "when": [["value", "start"]],
+      "never": ["map"],
+      "why": "a time the source's schema already types is never re-read by a model"
+    },
+    {
+      "when": [["value", "party"]],
+      "never": ["map"],
+      "why": "a person the source's schema already names is never re-read by a model"
+    },
+    {
+      "when": [["halted", "no"], ["provider", "absent"], ["source", "calendar"], ["value", "start"], ["feature", "time"]],
+      "always": "direct",
+      "why": "a calendar event's own start lands on the Prism's time feature even with no model"
+    },
+    {
+      "when": [["source", "note"], ["value", "start"]],
+      "never": ["direct"],
+      "why": "the owner's words carry no typed start: their time is read, never assumed"
+    }
+  ],
+  "examples": [
+    ["note text time compiled no", "map"],
+    ["note text intent compiled no", "map"],
+    ["note text meaning absent no", "skip"],
+    ["note text time mismatch no", "refuse"],
+    ["note text time compiled yes", "refuse"],
+    ["calendar start time compiled no", "direct"],
+    ["calendar start intent compiled no", "skip"],
+    ["message party party absent no", "direct"],
+    ["message subject time compiled no", "map"],
+    ["contact start time compiled no", "skip"]
+  ]
+}

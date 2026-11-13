@@ -26,9 +26,7 @@ const store = {
 // question, so the Boundary sees "halted yes" the moment it is set.
 const HALT_KEY = "me.halted";
 const PACE_KEY = "me.pace";
-const GRANT_KEY = "me.models.grant";
 const PLACE_KEY = "me.place";
-const R4_KEY = "me.r4";
 
 // Google's consent return, when this window is one. The relay and its sealing
 // load only then, so an ordinary visit fetches none of it.
@@ -89,6 +87,10 @@ function icsTime(value) {
 function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
   const about = meta.about ?? {};
   const base = { address, domain: about.domain ?? 11, media: about.media ?? "plainText", label: meta.label, at: about.at ?? at };
+  // What the R4 router mapped it onto when it came in: its time, its intent and its places.
+  if (Number.isFinite(about.start)) Object.assign(base, { at: about.start, start: about.start, allDay: Boolean(about.allDay) });
+  if (about.intent) base.intent = about.intent;
+  if (Array.isArray(about.domains) && about.domains.length) base.mapped = about.domains;
   if (outcome !== "restore") return { ...base, sealed: true, title: "", who: "", text: "", body: "" };
   const text = lenient.decode(bytes);
   if (base.media === "message") {
@@ -117,6 +119,11 @@ const higher = (a, b) => (RANK.indexOf(b) > RANK.indexOf(a) ? b : a);
 
 const short = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" });
 const clock = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
+// Something that happens at a time (an event, or a jot the router gave a time) shows its day and clock.
+const dayClock = new Intl.DateTimeFormat(undefined, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+const dayOnly = new Intl.DateTimeFormat(undefined, { weekday: "short", day: "numeric", month: "short" });
+const scheduled = (item) => (item.start != null || item.media === "calendar") && item.at;
+const whenOfItem = (item) => (scheduled(item) ? (item.allDay ? dayOnly : dayClock).format(new Date(item.at)) : when(item.at));
 const when = (at) => {
   if (!at) return "";
   const date = new Date(at);
@@ -213,7 +220,7 @@ export default async function start({ app, reason, $ }) {
       if (got.outcome !== "restore" && got.outcome !== "hashonly") continue;
       const item = readItem({ address: row.address, outcome: got.outcome, bytes: got.bytes, meta: got.meta, at: row.at });
       // Its domains: its media's, and each one its words name (the coherence registry's vocabulary).
-      item.domains = domainsOf(item);
+      item.domains = item.mapped ?? domainsOf(item);
       read.push(item);
     }
     items = read.sort((a, b) => b.at - a.at);
@@ -348,7 +355,7 @@ export default async function start({ app, reason, $ }) {
   function rowOf(item) {
     const what = item.sealed ? WORDS.sealed : item.title || "—";
     const row = element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}` },
-      element("span", { className: "pr-when", textContent: when(item.at) }),
+      element("span", { className: "pr-when", textContent: whenOfItem(item) }),
       element("span", { className: "pr-what", textContent: what }),
       element("span", { className: "pr-who", textContent: item.who || DOMAINS[item.domain] || "" }));
     if (item.sealed || !item.body) return row;
@@ -511,6 +518,8 @@ export default async function start({ app, reason, $ }) {
   function actForm(place) {
     const act = actOf(place);
     const host = $("pr-act");
+    // The act's room is held while it is drawn, and given back when the place has none.
+    if (act && act.key !== "none" && place.show !== "search") host.dataset.act = act.key; else delete host.dataset.act;
     if (place.show === "search") {
       const field = element("input", { type: "search", placeholder: WORDS.search, value: query, autocomplete: "off" });
       field.setAttribute("aria-label", WORDS.search);
@@ -524,10 +533,17 @@ export default async function start({ app, reason, $ }) {
   }
 
   // A note is kept at its domain's floor label in the design model, never chosen here.
+  // The owner's words go through the R4 router first, which maps them onto the
+  // Prism's features: when, what it asks of them, and so the places it lands in.
   async function keepNote(place, text, domain = place.domains[0]) {
     if (!vault || !text) return false;
-    const label = LABELS[FLOORS[domain]].toLowerCase();
-    const result = await vault.put(encoder.encode(text), { label, about: { domain, media: "plainText", at: Date.now() } });
+    const { route } = await import("./router/router.mjs");
+    const mapped = await route({ source: "note", values: { text }, line, halted });
+    if (mapped.refused) { say(WORDS.refused, "bad"); return false; }
+    if (mapped.domains.length) domain = mapped.domains[0];
+    const label = LABELS[Math.max(...mapped.domains.concat(domain).map((d) => FLOORS[d]))].toLowerCase();
+    const about = { domain, media: "plainText", at: Date.now(), domains: mapped.domains, ...(mapped.intent ? { intent: mapped.intent } : {}), ...(mapped.start != null ? { start: mapped.start, allDay: mapped.allDay } : {}) };
+    const result = await vault.put(encoder.encode(text), { label, about });
     const kept = result.outcome === "store" ? WORDS.kept : result.outcome === "storehash" ? WORDS["kept.sealed"] : WORDS.refused;
     if (!result.outcome?.startsWith("store")) { say(kept, "bad"); return false; }
     // The place shows the note before the page says it is kept.
@@ -646,6 +662,8 @@ export default async function start({ app, reason, $ }) {
     $("pr-list").hidden = settings;
     $("pr-count").hidden = settings;
     $("pr-home").hidden = place.host !== "home";
+    // The home's cards hold their latest items only while the home is shown, so an item is in one place at a time.
+    if (place.host !== "home") for (const latest of document.querySelectorAll("#pr-home .pr-card-latest")) latest.textContent = "";
     actForm(place);
     if (settings) { buildSettings(); paintSettings(); }
     else paintList();
@@ -748,46 +766,6 @@ export default async function start({ app, reason, $ }) {
       await paint();
     })().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
 
-    // Models: R4, and every model the lock pins, each routed in by the owner's
-    // press while the model puts them in the person's view.
-    const models = named("models");
-    if (models.viewpoint === "person") {
-      const r4toggle = element("button", { type: "button" });
-      const r4row = settingRow({ ...models, name: WORDS["model.r4"] }, r4toggle);
-      painters.push(() => {
-        const on = store.get(R4_KEY, "off") === "on";
-        r4toggle.textContent = on ? WORDS.unroute : WORDS.route;
-        r4row.state.textContent = !on ? WORDS["model.ask"] : r4 ? (r4.engine.state === "match" ? WORDS["model.run"] : WORDS.refused) : WORDS["model.fetch"];
-      });
-      r4toggle.addEventListener("click", () => {
-        const on = store.get(R4_KEY, "off") !== "on";
-        store.set(R4_KEY, on ? "on" : "off");
-        paintSettings();
-      });
-      (async () => {
-        const lock = await fetch(new URL("./models/models.lock.json", import.meta.url), { cache: "no-cache" }).then((r) => r.json());
-        for (const m of lock.models) {
-          const toggle = element("button", { type: "button" });
-          const row = settingRow({ ...models, name: m.title }, toggle);
-          const paint = async () => {
-            const granted = grants().includes(m.id);
-            toggle.textContent = granted ? WORDS.unroute : WORDS.route;
-            const routed = routedModels ?? null;
-            const outcome = routed ? (await routed.judge(m.id)).outcome : granted ? "fetch" : "ask";
-            row.state.textContent = WORDS[`model.${outcome}`] ?? outcome;
-          };
-          toggle.addEventListener("click", async () => {
-            const now = grants();
-            store.set(GRANT_KEY, JSON.stringify(now.includes(m.id) ? now.filter((x) => x !== m.id) : [...now, m.id]));
-            routedModels = null;
-            await paint();
-          });
-          painters.push(paint);
-          paint();
-        }
-      })().catch((error) => console.warn(`models: ${error?.message ?? error}`));
-    }
-
     // Attention: Quiet holds what is not urgent.
     settingRow(named("quiet"), switchFor(paceNow === "quiet", named("quiet").name, (on) => {
       paceNow = on ? "quiet" : "open";
@@ -840,55 +818,15 @@ export default async function start({ app, reason, $ }) {
     paintSettings = () => { for (const paint of painters) paint(); };
   }
 
-  // --- Ask: R4 answers in this browser; a routed text model, if the owner routed one ---
-  let r4 = null;
-  async function openModel() {
-    if (r4) return r4;
-    const [{ openR4 }, { guestDecider }] = await Promise.all([import("./r4/r4.mjs"), import("./r4/decide.mjs")]);
-    const lock = await fetch(new URL("./r4/r4.lock.json", import.meta.url)).then((response) => response.json());
-    say(WORDS["ask.loading"], "wait");
-    r4 = await openR4({
-      lock,
-      decide: guestDecider(app.dispatch),
-      boundary: (fields) => line(`boundary ${fields}`),
-    });
-    return r4;
-  }
-  const grants = () => { try { return JSON.parse(store.get(GRANT_KEY, "[]")).filter((x) => typeof x === "string"); } catch { return []; } };
-  let routedModels = null;
-  async function openRouted() {
-    if (routedModels) return routedModels;
-    const { openModels } = await import("./models/models.mjs");
-    const lock = await fetch(new URL("./models/models.lock.json", import.meta.url), { cache: "no-cache" }).then((r) => r.json());
-    routedModels = await openModels({ lock, decide: async (request) => ({ outcome: await line(`model ${request}`), rule: "guest" }), grant: { models: grants() }, halted });
-    return routedModels;
-  }
-  async function answer(prompt, context, grounds) {
-    const r4model = await openModel();
-    if (grants().length) {
-      const routed = await openRouted();
-      const target = routed.route("text-generation");
-      if (target) {
-        const decision = await routed.prepare(target);
-        if (decision.outcome === "run") {
-          routed.connect(r4model, { maxTokens: 128 });
-          return r4model.askRouted({ target, prompt, context, grounds });
-        }
-      }
-    }
-    return r4model.ask({ prompt, context, grounds });
-  }
   // Ask: the answer is the owner's own kept items that meet the question
   // (its words, the span it names, the domains it names), shown only as the
-  // Boundary allows at the highest label among them. A language model speaks
-  // too only once the owner routed one in, under the R4 decision.
+  // Boundary allows at the highest label among them.
   const drawn = element("ol", { className: "pr-list pr-drawn" });
   drawn.setAttribute("aria-label", WORDS["ask.placeholder"]);
   out.after(drawn);
   out.style.whiteSpace = "pre-line";
   out.style.minWidth = "0";
   if (out.parentElement) Object.assign(out.parentElement.style, { minWidth: "0", flex: "1 1 0" });
-  const modelsOn = () => store.get(R4_KEY, "off") === "on" || grants().length > 0;
   $("pr-ask").addEventListener("submit", async (event) => {
     event.preventDefault();
     const prompt = $("pr-prompt").value.trim();
@@ -911,17 +849,6 @@ export default async function start({ app, reason, $ }) {
         else text = WORDS["answer.none"];
       }
       say(text, state);
-      if (modelsOn() && !haltedNow) {
-        // The model's words follow the person's own; a model that cannot load leaves those as they were.
-        try {
-          const grounds = shown.map((item) => lineOf(item).slice(0, 600));
-          const result = await answer(prompt, { label, halted: halted() }, grounds);
-          say(result.outcome === "answer" && result.answer?.trim() ? `${text}\n\n${result.answer.trim()}` : text, result.outcome === "answer" ? state || "good" : state);
-        } catch (error) {
-          console.warn(`ask: ${error?.message ?? error}`);
-          say(text, state);
-        }
-      }
       if (shown.length) $("pr-prompt").value = "";
     } catch (error) {
       say(`${WORDS["answer.none"]} · ${error?.message ?? error}`, "bad");

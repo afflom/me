@@ -68,3 +68,10 @@ facts live only in the browser.
   request against every guarantee and example before writing, and `--check`
   holds the outputs to the spec. Its standalone guest comes from
   `tools/facet/standalone.py`.
+- Router (the R4 router): written by `tools/facet/gen.py app/specs/router/spec.json`.
+  It decides, for one value of incoming content in its own schema and one Prism
+  feature, whether that feature's compiled reader maps it (`map`), the schema's
+  own typed value is taken (`direct`), or nothing happens (`skip`, `refuse`).
+  The spec's `providers` record names each feature's compiled model and its
+  rules; the generator carries it into `site/router/table.mjs` for
+  `site/router/features.mjs`. There is no routing control on the page.
