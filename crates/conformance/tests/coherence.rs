@@ -40,7 +40,7 @@ fn coherence_co_01() {
                 "Ask shows kept items only as the Boundary allows",
             ),
             (
-                "if (word !== \"allow\" || !used.length) return",
+                "if (word !== \"allow\") return { ...none, mapped, refused: true };",
                 "nothing is shown that the Boundary did not allow",
             ),
         ],
