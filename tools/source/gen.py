@@ -1,6 +1,6 @@
 """Writes the declared services where the page and the extension read them.
 
-    python3 -I tools/source/gen.py          write site/source/declared.mjs and site/extension/services.json
+    python3 -I tools/source/gen.py          write site/source/declared.mjs
     python3 -I tools/source/gen.py --check  refuse unless both are current
 
 from app/specs/source/services.json, after checking each declaration: a key,
@@ -23,6 +23,9 @@ def refuse(why):
 
 
 kinds = set(spec["kinds"])
+ext = spec.get("extension", {})
+if not isinstance(ext.get("version"), int) or ext["version"] < 1 or not ext.get("update"):
+    refuse("extension must give its version and how to update it")
 if not spec.get("browsers") or not all(isinstance(b, str) and b for b in spec["browsers"]):
     refuse("browsers must name at least one browser brand that can load the extension")
 seen_keys = set()
@@ -47,7 +50,7 @@ for s in spec["services"]:
     if s.get("out") not in ("approve", "refused"):
         refuse(f"{s['key']} out must be approve or refused")
     for route in s.get("own", []):
-        for url in [route.get("list", {}).get("url")] + route["item"]["urls"]:
+        for url in [route.get("list", {}).get("url"), route.get("key", {}).get("url")] + route["item"]["urls"]:
             if url and not any(url.startswith(o) for o in s["origins"]):
                 refuse(f"{s['key']} own route URL {url} is off its origins")
 
@@ -57,8 +60,9 @@ declared = (
     f"export const KINDS = {json.dumps(spec['kinds'])};\n"
     f"export const STATES = {json.dumps(spec['states'])};\n"
     f"export const BROWSERS = {json.dumps(spec['browsers'])};\n"
+    f"export const EXTENSION = {json.dumps(spec['extension'])};\n"
 )
-outputs = {ROOT / "site/source/declared.mjs": declared, ROOT / "site/extension/services.json": text}
+outputs = {ROOT / "site/source/declared.mjs": declared}
 if "--check" in sys.argv:
     for path, want in outputs.items():
         if not path.exists() or path.read_text() != want:
@@ -67,4 +71,4 @@ if "--check" in sys.argv:
 else:
     for path, want in outputs.items():
         path.write_text(want)
-    print(f"source: wrote site/source/declared.mjs and site/extension/services.json for {len(spec['services'])} services")
+    print(f"source: wrote site/source/declared.mjs for {len(spec['services'])} services")

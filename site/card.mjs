@@ -325,17 +325,28 @@ export default async function start({ app, reason, $ }) {
   const importedNow = () => Object.fromEntries(Object.entries(arrivedNow()).filter(([, a]) => a.n > 0).map(([key]) => [key, true]));
   // The owner's Prism extension, if installed, answers a hello on this page.
   let extensionHere = false;
+  // An extension added while this page is open answers later: what it carries is taken at once.
   window.addEventListener("message", (event) => {
-    if (event.source === window && event.origin === location.origin && event.data?.from === "extension" && event.data.prism === "extension") extensionHere = true;
+    if (event.source !== window || event.origin !== location.origin || event.data?.from !== "extension" || event.data.prism !== "extension") return;
+    const fresh = !extensionHere;
+    extensionHere = true;
+    if (fresh && arriving) arrive().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
   });
-  window.postMessage({ prism: "hello", from: "page" }, location.origin);
+  const hello = () => window.postMessage({ prism: "hello", from: "page" }, location.origin);
+  hello();
+  addEventListener("focus", hello);
+  let arriving = false;
   const extensionGrant = () => (extensionHere ? "kept" : "none");
   // The declared services, carried by the installed extension with the
   // owner's own sign-in; PrismSource decides each item by its service and route.
   async function pullExtension(d) {
     const { pull } = await import("./device/extension.mjs");
     const by = new Map();
-    for (const item of await pull(window, { halted: halted() })) {
+    const { SERVICES } = await import("./source/declared.mjs");
+    // The declarations go to the extension as data, each own route only where PrismSource reads it.
+    const sent = [];
+    for (const service of SERVICES) sent.push({ ...service, own: (await line(`source ${service.key} own read ${halted()}`)) === "read" ? service.own ?? [] : [] });
+    for (const item of await pull(window, { halted: halted(), services: sent })) {
       if ((await line(`source ${item.service} ${item.route} read ${halted()}`)) !== "read") continue;
       if (!by.has(item.service)) by.set(item.service, []);
       by.get(item.service).push(item);
@@ -354,6 +365,7 @@ export default async function start({ app, reason, $ }) {
   const ARRIVAL_MINUTES = 5;
   async function readOnVisit() {
     await new Promise((resolve) => setTimeout(resolve, 500));
+    arriving = true;
     setInterval(() => { if (halted() === "no") arrive().catch((error) => console.warn(`sources: ${error?.message ?? error}`)); }, ARRIVAL_MINUTES * 60000);
     await arrive();
   }
@@ -797,7 +809,7 @@ export default async function start({ app, reason, $ }) {
             row.hidden = now.state === "off";
             const next = service.connect.find((s) => s.key === now.next);
             const got = report.arrived?.[service.key]?.n ?? 0;
-            state.textContent = now.state === "live" ? (got ? `${got} ${WORDS.items}` : WORDS["service.live"]) : now.state === "paused" ? WORDS.halted : now.state === "refused" ? WORDS["service.refused"] : next?.word ?? "";
+            state.textContent = now.state === "checking" ? WORDS["service.checking"] : now.state === "live" ? (got ? `${got} ${WORDS.items}` : WORDS["service.live"]) : now.state === "paused" ? WORDS.halted : now.state === "refused" ? WORDS["service.refused"] : next?.word ?? "";
             // Only the first service that needs a step opens, so the person meets one thing to do.
             if (section.reveal === "until-done" && !touched) row.open = now.state === "step" && first;
             const doneSteps = new Set(service.connect.filter((s) => services.done(service, s, report)).map((s) => s.key));
@@ -810,7 +822,8 @@ export default async function start({ app, reason, $ }) {
                 try { await services.run(service.key, step.key, { save }); } catch (error) { say(error?.message ?? String(error), "bad"); } finally { press.disabled = false; await paintServices(); }
               });
               item.append(press);
-              if (step.how?.length > 1) item.append(element("ol", { className: "pr-how" }, ...step.how.map((line) => element("li", { textContent: line }))));
+              const how = services.howOf(step, report);
+              if (how.length > 1) item.append(element("ol", { className: "pr-how" }, ...how.map((line) => element("li", { textContent: line }))));
               return item;
             }));
             return now.state === "step";

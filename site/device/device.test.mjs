@@ -200,7 +200,7 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
     if (u.pathname.endsWith('/exporticalzip')) return { ok: true, status: 200, arrayBuffer: async () => calendarZip.buffer };
     return body('', 404);
   };
-  const declared = JSON.parse(await readFile(new URL('../extension/services.json', import.meta.url), 'utf8')).services;
+  const declared = JSON.parse(await readFile(new URL('../../app/specs/source/services.json', import.meta.url), 'utf8')).services;
   bg.declare(declared);
   const gmail = declared.find((s) => s.key === 'gmail');
   ok((await bg.unzip(calendarZip, '.ics')).length === 1, 'a calendar export unzips to its iCalendar files');
@@ -228,16 +228,46 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
   await bg.pin('gmail', tabs);
   await bg.pin('calendar', tabs);
   ok(tabs.list[0].pinned && tabs.list.some((x) => x.url === 'https://calendar.google.com/' && x.pinned && x.active === false) && !tabs.list[1].url.includes('google'), 'keeping a service open pins its own tab, or opens it pinned in the background');
+  // The Gmail key from Gmail's own app page, when no open tab noted it.
+  const appPage = async (url, init) => ({ ok: true, status: 200, url, text: async () => 'x<script>var GLOBALS=[null,null,1,"a","b","c","d","e","f","0123abcd9f",1];</script>' });
+  ok((await bg.keyOf(gmail, gmail.own[0], appPage)) === '0123abcd9f' && gmail.own[0].key.url === 'https://mail.google.com/mail/u/0/', 'the key is read from the service\'s own app page by the declared pattern');
+  ok((await bg.keyOf(gmail, gmail.own[0], signedOut)) === null, 'a sign-in page gives no key');
+  // One service failing leaves the others read, and the failure is reported.
+  const broken = async (url, init) => { if (String(url).includes('calendar')) throw new Error('offline'); return google(url, init); };
+  await bg.seen('gmail', { ids: ['18c0ffee000000aa'] });
+  await bg.round(broken);
+  const st2 = await bg.status({ query: async () => [] });
+  ok(st2.services.calendar.error === 'offline' && st2.services.calendar.checked > 0 && st2.services.gmail.error === null && st2.services.gmail.read >= 2, `a failing service is reported and the others are still read: ${JSON.stringify(st2.services.calendar)}`);
+  await bg.take({ halted: 'no' });
+  // The declarations as data: taken only within the extension's site access, and never widened.
+  const allowed = ['https://mail.google.com/*', 'https://calendar.google.com/*'];
+  ok(bg.reachable(declared, allowed).map((x) => x.key).join() === 'gmail,calendar' && bg.reachable(declared, ['<all_urls>']).length === 5 && bg.reachable([{ ...gmail, origins: ['http://mail.google.com/'] }], ['<all_urls>']).length === 0, 'the page\'s declarations are taken only for https origins the extension may reach');
+  ok(bg.reachable([{ ...gmail, own: [{ ...gmail.own[0], list: { url: 'https://evil.example/feed', id: 'x' } }] }], allowed).length === 0 && bg.reachable('nonsense', allowed).length === 0, 'a declaration with a route off its origins, or not a list, is refused');
+  ok((await bg.adopt([{ ...gmail, own: [] }, declared.find((x) => x.key === 'calendar')], allowed)) === 2 && (await bg.services()).find((x) => x.key === 'gmail').own.length === 0, 'the page can change what the extension reads without a new extension');
+  const registered = [];
+  const scriptingFake = { unregisterContentScripts: async () => {}, registerContentScripts: async (list) => { registered.push(...list); } };
+  await bg.adopt(declared, ['<all_urls>'], scriptingFake);
+  ok(registered.length === 1 && registered[0].matches.join() === 'https://mail.google.com/*' && registered[0].js[0] === 'seen.js', `seen.js goes only on the pages of services declared with a seen route: ${JSON.stringify(registered)}`);
+  bg.declare([]);
+  const quiet = requests.length;
+  ok((await bg.round(google)) === 0 && requests.length === quiet, 'a blank extension, not yet told anything by the Prism, reads nothing');
+  bg.declare(declared);
+  // Tabs open before the extension get its scripts.
+  const injected = [];
+  const n = await bg.attach({ query: async () => [{ id: 1, url: 'https://owner.example/me/' }, { id: 2, url: 'https://mail.google.com/mail/u/0/' }, { id: 3, url: 'https://news.example/' }] }, { executeScript: async (x) => { injected.push(x); } });
+  ok(n === 1 && injected[0].files[0] === 'seen.js' && injected[0].target.tabId === 2, `a declared service's open tab is given seen.js: ${JSON.stringify(injected)}`);
   await bg.take({ halted: 'no' });
   const answer = (url, message) => new Promise((resolve) => { const kept = listeners[0](message, { url }, resolve); if (!kept) resolve('unanswered'); });
   ok((await answer('https://other.example/', { prism: 'pull', halted: 'no' })) === 'unanswered', 'another page is never answered');
   ok((await answer('https://mail.google.com/mail/u/0/', { prism: 'pull', halted: 'no' })) === 'unanswered', 'Gmail itself cannot pull');
 
+  const text0 = (bytes) => new TextDecoder().decode(bytes);
   // The page's side: the extension written for this page's own address, the hello and the pull.
   const local = async (url) => ({ ok: true, status: 200, text: async () => readFile(new URL(url), 'utf8') });
   const packed = await pack('https://owner.example/me/', new URL('../extension/', import.meta.url), local);
   const manifest = JSON.parse((await bg.unzip(packed.slice(), 'manifest.json'))[0]);
-  ok(manifest.host_permissions.join() === 'https://mail.google.com/*,https://calendar.google.com/*' && manifest.content_scripts[1].matches.join() === 'https://mail.google.com/*', `the extension may reach exactly the declared origins: ${manifest.host_permissions}`);
+  ok(manifest.host_permissions.join() === '<all_urls>' && manifest.content_scripts.length === 1 && !new TextDecoder().decode(packed).includes('"services"'), 'the extension is a blank carrier: no services of its own, reaching only what the Prism declares');
+  ok(manifest.permissions.includes('scripting') && text0(packed).includes("version: Number('3')") && !text0(packed).includes('__VERSION__'), 'the extension carries the declared version, and may give already open tabs their scripts');
   const text = new TextDecoder().decode(packed);
   ok(manifest.content_scripts[0].matches.join() === 'https://owner.example/me/*' && text.includes("const PRISM = 'https://owner.example/me/';") && !text.includes('__PRISM__') && !text.includes('__ORIGINS__'), 'the page writes the extension for its own address');
   await assert.rejects(pack('https://owner.example/me', undefined, local), (e) => e.code === 'extension.address');
@@ -250,7 +280,14 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
     if (data.from === 'page' && data.prism === 'hello') win.postMessage({ prism: 'extension', from: 'extension', version: 1 });
     if (data.from === 'page' && data.prism === 'pull') win.postMessage({ prism: 'items', from: 'extension', id: data.id, items: [{ format: 'eml', text: RAW }, { format: 'eml', text: 'not mail' }, 7] });
   });
-  ok((await installed(win, 50)) === 'kept', 'the installed extension answers the page');
+  ok((await installed(win, 50)) === 'old', 'an extension an earlier page wrote answers with its older version');
+  const current = new EventTarget();
+  current.location = win.location;
+  current.postMessage = (data) => queueMicrotask(() => {
+    current.dispatchEvent(Object.assign(new Event('message'), { data, source: current, origin: current.location.origin }));
+    if (data.from === 'page' && data.prism === 'hello') current.postMessage({ prism: 'extension', from: 'extension', version: 3 });
+  });
+  ok((await installed(current, 50)) === 'kept', 'the installed extension answers the page with the version it writes');
   const silent = new EventTarget();
   silent.location = win.location; silent.postMessage = () => {};
   ok((await installed(silent, 20)) === 'none', 'no extension, no answer');
@@ -281,9 +318,11 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
   ok(JSON.stringify(conn.SERVICES) === JSON.stringify(spec.services), 'the page reads exactly the declarations');
   ok(conn.SERVICES.every((s) => s.connect.every((step) => conn.KINDS.includes(step.kind) && step.word.length <= 28 && step.word.split(' ').length <= 4 && step.how.length > 0)), 'every connect step is a declared kind, named in at most four words, with its how');
   ok(conn.state('gmail', { extension: false }).next === 'extension', 'without the extension, the next step is to add it');
-  ok(conn.state('gmail', { extension: true, services: { gmail: { signedIn: false } } }).next === 'sign-in', 'then to sign in');
-  ok(conn.state('gmail', { extension: true, services: { gmail: { signedIn: true, pinned: false } } }).next === 'pin-tab', 'then to keep it open');
-  ok(conn.state('gmail', { extension: true, services: { gmail: { signedIn: true, pinned: true } } }).state === 'live', 'then it is live');
+  ok(conn.state('gmail', { extension: true, services: { gmail: { checked: 1, signedIn: false } } }).next === 'sign-in', 'then to sign in');
+  ok(conn.state('gmail', { extension: true, services: { gmail: { checked: 1, signedIn: true, pinned: false } } }).next === 'pin-tab', 'then to keep it open');
+  ok(conn.state('gmail', { extension: true, services: { gmail: { checked: 1, signedIn: true, pinned: true } } }).state === 'live', 'then it is live');
+  ok(conn.state('gmail', { extension: true, services: {} }).state === 'checking' && conn.state('gmail', { extension: true, services: { gmail: { checked: 1 } } }).state === 'step', 'until the extension has read a service, its row says it is checking, not that the person must sign in');
+  ok(conn.howOf(conn.SERVICES[0].connect.find((x) => x.kind === 'extension'), { outdated: true }) === conn.EXTENSION.update && conn.howOf(conn.SERVICES[0].connect.find((x) => x.kind === 'extension'), {}).includes('Load unpacked'), 'an older extension is put in place by the declared update steps; a first one is added');
   ok(conn.state('gmail', { extension: true }, { halted: 'yes' }).state === 'paused' && conn.state('nothing', {}).state === 'refused', 'paused while halted; an undeclared service is refused');
   ok(['discord', 'whatsapp', 'linkedin'].every((k) => conn.state(k, { extension: true }).next === 'history' && conn.state(k, { extension: true, imported: { [k]: true } }).state === 'live' && conn.SERVICES.find((s) => s.key === k).out === 'refused'), 'a service no live route carries yet is brought in by its own download, and sends nothing');
   ok(conn.state('gmail', { extension: false }).next === 'extension' && conn.SERVICES.filter((s) => ['discord', 'linkedin'].includes(s.key)).every((s) => s.connect[0].url.startsWith(s.origins[0])), 'a history step opens only a page on its service\'s own origin');
@@ -291,8 +330,7 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
     const opened = [];
     ok(await conn.run('linkedin', 'history', { win: {}, open: (u) => opened.push(u) }) && opened[0] === 'https://www.linkedin.com/mypreferences/d/download-my-data' && !(await conn.run('whatsapp', 'history', { win: {}, open: (u) => opened.push(u) })) && opened.length === 1, 'the history step opens the service\'s own download page, and WhatsApp\'s is on the phone');
   }
-  const declared = JSON.parse(await readFile(new URL('../extension/services.json', import.meta.url), 'utf8')).services;
-  ok(JSON.stringify(declared) === JSON.stringify(JSON.parse(await readFile(new URL('../../app/specs/source/services.json', import.meta.url), 'utf8')).services), 'the extension carries the model\'s declarations');
+  const declared = spec.services;
   for (const s of declared) {
     for (const route of s.own ?? []) ok((await source(`${s.key} own read no`)) === 'read', `a declared own route is one PrismSource reads: ${s.key}`);
     ok(s.origins.every((o) => /^https:\/\/[a-z.]+\/$/.test(o)), `${s.key} names https origins only`);
