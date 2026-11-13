@@ -9,7 +9,7 @@ definition{
   name: hostBreaksInv001,
   parameters: [request : PrismHost::HostRequest],
   result: Bool,
-  body: ((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismHost::hostHaltedYes))) && (not ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerRefuse))))
+  body: ((((((((project request surface) <? 9) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismHost::hostHaltedYes))) && (not ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerRefuse))))
 }
 
 theorem{
@@ -39,9 +39,12 @@ theorem{
       PrismHost::hostRule6,
       PrismHost::hostRule7,
       PrismHost::hostRule7Misses,
+      PrismHost::hostRule8,
+      PrismHost::hostRule8Misses,
       PrismHost::hostSurfaceCalendar,
       PrismHost::hostSurfaceContacts,
       PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceExtension,
       PrismHost::hostSurfaceFiles,
       PrismHost::hostSurfaceFolder,
       PrismHost::hostSurfaceMail,
@@ -57,7 +60,7 @@ definition{
   name: hostBreaksInv002,
   parameters: [request : PrismHost::HostRequest],
   result: Bool,
-  body: ((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request surface) =? (PrismHost::hostSurfaceMail))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+  body: ((((((((project request surface) <? 9) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request surface) =? (PrismHost::hostSurfaceMail))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
 }
 
 theorem{
@@ -87,9 +90,12 @@ theorem{
       PrismHost::hostRule6,
       PrismHost::hostRule7,
       PrismHost::hostRule7Misses,
+      PrismHost::hostRule8,
+      PrismHost::hostRule8Misses,
       PrismHost::hostSurfaceCalendar,
       PrismHost::hostSurfaceContacts,
       PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceExtension,
       PrismHost::hostSurfaceFiles,
       PrismHost::hostSurfaceFolder,
       PrismHost::hostSurfaceMail,
@@ -105,7 +111,7 @@ definition{
   name: hostBreaksInv003,
   parameters: [request : PrismHost::HostRequest],
   result: Bool,
-  body: ((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request surface) =? (PrismHost::hostSurfaceCalendar))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+  body: ((((((((project request surface) <? 9) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request surface) =? (PrismHost::hostSurfaceCalendar))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
 }
 
 theorem{
@@ -135,9 +141,12 @@ theorem{
       PrismHost::hostRule6,
       PrismHost::hostRule7,
       PrismHost::hostRule7Misses,
+      PrismHost::hostRule8,
+      PrismHost::hostRule8Misses,
       PrismHost::hostSurfaceCalendar,
       PrismHost::hostSurfaceContacts,
       PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceExtension,
       PrismHost::hostSurfaceFiles,
       PrismHost::hostSurfaceFolder,
       PrismHost::hostSurfaceMail,
@@ -153,7 +162,7 @@ definition{
   name: hostBreaksInv004,
   parameters: [request : PrismHost::HostRequest],
   result: Bool,
-  body: ((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request present) =? (PrismHost::hostPresentNo))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+  body: ((((((((project request surface) <? 9) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request present) =? (PrismHost::hostPresentNo))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
 }
 
 theorem{
@@ -183,9 +192,12 @@ theorem{
       PrismHost::hostRule6,
       PrismHost::hostRule7,
       PrismHost::hostRule7Misses,
+      PrismHost::hostRule8,
+      PrismHost::hostRule8Misses,
       PrismHost::hostSurfaceCalendar,
       PrismHost::hostSurfaceContacts,
       PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceExtension,
       PrismHost::hostSurfaceFiles,
       PrismHost::hostSurfaceFolder,
       PrismHost::hostSurfaceMail,
@@ -201,7 +213,7 @@ definition{
   name: hostBreaksInv005,
   parameters: [request : PrismHost::HostRequest],
   result: Bool,
-  body: ((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request present) =? (PrismHost::hostPresentNo))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerOffer)))
+  body: ((((((((project request surface) <? 9) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request present) =? (PrismHost::hostPresentNo))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerOffer)))
 }
 
 theorem{
@@ -231,9 +243,12 @@ theorem{
       PrismHost::hostRule6,
       PrismHost::hostRule7,
       PrismHost::hostRule7Misses,
+      PrismHost::hostRule8,
+      PrismHost::hostRule8Misses,
       PrismHost::hostSurfaceCalendar,
       PrismHost::hostSurfaceContacts,
       PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceExtension,
       PrismHost::hostSurfaceFiles,
       PrismHost::hostSurfaceFolder,
       PrismHost::hostSurfaceMail,
@@ -249,7 +264,7 @@ definition{
   name: hostBreaksInv006,
   parameters: [request : PrismHost::HostRequest],
   result: Bool,
-  body: ((((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismHost::hostActNone))) && ((project request grant) =? (PrismHost::hostGrantNone))) && ((project request surface) =? (PrismHost::hostSurfaceFolder))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+  body: ((((((((((project request surface) <? 9) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismHost::hostActNone))) && ((project request grant) =? (PrismHost::hostGrantNone))) && ((project request surface) =? (PrismHost::hostSurfaceFolder))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
 }
 
 theorem{
@@ -279,9 +294,12 @@ theorem{
       PrismHost::hostRule6,
       PrismHost::hostRule7,
       PrismHost::hostRule7Misses,
+      PrismHost::hostRule8,
+      PrismHost::hostRule8Misses,
       PrismHost::hostSurfaceCalendar,
       PrismHost::hostSurfaceContacts,
       PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceExtension,
       PrismHost::hostSurfaceFiles,
       PrismHost::hostSurfaceFolder,
       PrismHost::hostSurfaceMail,
@@ -297,7 +315,7 @@ definition{
   name: hostBreaksInv007,
   parameters: [request : PrismHost::HostRequest],
   result: Bool,
-  body: (((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismHost::hostActNone))) && ((project request surface) =? (PrismHost::hostSurfaceContacts))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+  body: (((((((((project request surface) <? 9) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismHost::hostActNone))) && ((project request surface) =? (PrismHost::hostSurfaceContacts))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
 }
 
 theorem{
@@ -327,9 +345,12 @@ theorem{
       PrismHost::hostRule6,
       PrismHost::hostRule7,
       PrismHost::hostRule7Misses,
+      PrismHost::hostRule8,
+      PrismHost::hostRule8Misses,
       PrismHost::hostSurfaceCalendar,
       PrismHost::hostSurfaceContacts,
       PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceExtension,
       PrismHost::hostSurfaceFiles,
       PrismHost::hostSurfaceFolder,
       PrismHost::hostSurfaceMail,
@@ -345,7 +366,7 @@ definition{
   name: hostBreaksInv008,
   parameters: [request : PrismHost::HostRequest],
   result: Bool,
-  body: (((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismHost::hostActNone))) && ((project request surface) =? (PrismHost::hostSurfacePaste))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+  body: (((((((((project request surface) <? 9) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismHost::hostActNone))) && ((project request surface) =? (PrismHost::hostSurfacePaste))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
 }
 
 theorem{
@@ -375,9 +396,12 @@ theorem{
       PrismHost::hostRule6,
       PrismHost::hostRule7,
       PrismHost::hostRule7Misses,
+      PrismHost::hostRule8,
+      PrismHost::hostRule8Misses,
       PrismHost::hostSurfaceCalendar,
       PrismHost::hostSurfaceContacts,
       PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceExtension,
       PrismHost::hostSurfaceFiles,
       PrismHost::hostSurfaceFolder,
       PrismHost::hostSurfaceMail,
@@ -393,7 +417,7 @@ definition{
   name: hostBreaksInv009,
   parameters: [request : PrismHost::HostRequest],
   result: Bool,
-  body: (((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismHost::hostActNone))) && ((project request surface) =? (PrismHost::hostSurfaceFiles))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+  body: (((((((((project request surface) <? 9) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismHost::hostActNone))) && ((project request surface) =? (PrismHost::hostSurfaceFiles))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
 }
 
 theorem{
@@ -423,9 +447,12 @@ theorem{
       PrismHost::hostRule6,
       PrismHost::hostRule7,
       PrismHost::hostRule7Misses,
+      PrismHost::hostRule8,
+      PrismHost::hostRule8Misses,
       PrismHost::hostSurfaceCalendar,
       PrismHost::hostSurfaceContacts,
       PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceExtension,
       PrismHost::hostSurfaceFiles,
       PrismHost::hostSurfaceFolder,
       PrismHost::hostSurfaceMail,
@@ -441,7 +468,7 @@ definition{
   name: hostBreaksInv010,
   parameters: [request : PrismHost::HostRequest],
   result: Bool,
-  body: (((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismHost::hostActNone))) && ((project request surface) =? (PrismHost::hostSurfaceDrop))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+  body: (((((((((project request surface) <? 9) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismHost::hostActNone))) && ((project request surface) =? (PrismHost::hostSurfaceDrop))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
 }
 
 theorem{
@@ -471,15 +498,69 @@ theorem{
       PrismHost::hostRule6,
       PrismHost::hostRule7,
       PrismHost::hostRule7Misses,
+      PrismHost::hostRule8,
+      PrismHost::hostRule8Misses,
       PrismHost::hostSurfaceCalendar,
       PrismHost::hostSurfaceContacts,
       PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceExtension,
       PrismHost::hostSurfaceFiles,
       PrismHost::hostSurfaceFolder,
       PrismHost::hostSurfaceMail,
       PrismHost::hostSurfacePaste,
       PrismHost::hostSurfaceWorkers,
       hostBreaksInv010
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostBreaksInv011,
+  parameters: [request : PrismHost::HostRequest],
+  result: Bool,
+  body: ((((((((((project request surface) <? 9) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismHost::hostActNone))) && ((project request grant) =? (PrismHost::hostGrantNone))) && ((project request surface) =? (PrismHost::hostSurfaceExtension))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+}
+
+theorem{
+  name: hostInv011Holds,
+  parameters: [request : PrismHost::HostRequest],
+  statement: ((hostBreaksInv011 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHost::hostActNone,
+      PrismHost::hostActOwner,
+      PrismHost::hostAnswerOffer,
+      PrismHost::hostAnswerRefuse,
+      PrismHost::hostAnswerSealed,
+      PrismHost::hostAnswerUse,
+      PrismHost::hostGrantKept,
+      PrismHost::hostGrantNone,
+      PrismHost::hostHaltedNo,
+      PrismHost::hostHaltedYes,
+      PrismHost::hostJudge,
+      PrismHost::hostPresentNo,
+      PrismHost::hostPresentYes,
+      PrismHost::hostRule1,
+      PrismHost::hostRule2,
+      PrismHost::hostRule3,
+      PrismHost::hostRule4,
+      PrismHost::hostRule5,
+      PrismHost::hostRule6,
+      PrismHost::hostRule7,
+      PrismHost::hostRule7Misses,
+      PrismHost::hostRule8,
+      PrismHost::hostRule8Misses,
+      PrismHost::hostSurfaceCalendar,
+      PrismHost::hostSurfaceContacts,
+      PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceExtension,
+      PrismHost::hostSurfaceFiles,
+      PrismHost::hostSurfaceFolder,
+      PrismHost::hostSurfaceMail,
+      PrismHost::hostSurfacePaste,
+      PrismHost::hostSurfaceWorkers,
+      hostBreaksInv011
     ]
   },
   axioms: [Quot.sound, propext]
