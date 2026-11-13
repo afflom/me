@@ -27,6 +27,8 @@ const DEPTH = 6;
 const DB = 'prism-device';
 const encoder = new TextEncoder();
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
+import { isZip, zipEntries } from './zip.mjs';
+
 const sha256 = async (bytes) => hex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
 const fail = (code, message) => Object.assign(new Error(message ?? code), { code });
 
@@ -58,7 +60,7 @@ export async function* mboxMessages(chunks) {
     const lines = carry.split('\n');
     carry = lines.pop();
     for (const line of lines) {
-      if (line.startsWith('From ') && (message === null || message.endsWith('\n\n') || message === '')) {
+      if (line.startsWith('From ') && (message === null || /\r?\n\r?\n$/.test(message) || message === '')) {
         yield* finish();
         message = '';
       } else if (message !== null) {
@@ -264,8 +266,14 @@ export function openDevice({ decide, ingest, store = handleStore(), halted = () 
     // Files the owner picked or dropped: the act itself is the grant for these.
     async readFiles(files) {
       const tally = tallyOf();
+      const opened = [];
       for (const file of files) {
-        const format = formatOf(file.name);
+        // A zip (a Takeout or calendar export) is opened; each entry is judged by its own format.
+        if (isZip(file)) opened.push(...(await zipEntries(file)));
+        else opened.push(file);
+      }
+      for (const file of opened) {
+        const format = formatOf(file.name, file.parent ?? '');
         if (format === 'other') { tally.skip += 1; continue; }
         await readFile(file, format, 'granted', tally);
       }
