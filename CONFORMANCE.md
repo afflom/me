@@ -104,6 +104,14 @@ model does not sanction.
 | --- | --- | --- |
 | `RT-01` | `build` | The vocabulary register the page reads lists schema.org 30.1's 939 types and 1,538 properties, the 12 domains and the 1,229 crosswalk rows in the order of the Lean indices, every source pinned by sha256 |
 
+## uorc
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `UO-01` | `build` | The Prism keeps or opens an object as a UORC archive only when the proved Prism UORC decision says so, from the archive's structure alone: never while halted, never with a broken seal, an unknown format, a basis the browser does not hold or more than one object, never when it does not restore within the work bound to the very bytes its kappa label names, and never for an object the kappa facet did not admit |
+| `UO-02` | `build` | The page runs only the uorc client of UOR-Foundation/compression release v0.4.0, fetched from the release asset pinned by SHA-256 with each served file pinned again by SHA-256 and size, checked in the browser before it compiles, and loaded only when a value is first kept or opened |
+| `UO-03` | `build` | The vault keeps every value as its uorc archive, sealed under the device key with the value's kappa label in its record and filed under the value's own keyed address, and gives a value back only when the archive opens through the proved decisions to bytes that re-derive to that address |
+
 ## vault
 
 | ID | Level | Statement |

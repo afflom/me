@@ -1,0 +1,269 @@
+\begin{lexlean}{PrismUorc}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: uorcActKeep, parameters: [], result: Nat, body: 0}
+
+definition{name: uorcActOpen, parameters: [], result: Nat, body: 1}
+
+definition{name: uorcHaltedNo, parameters: [], result: Nat, body: 0}
+
+definition{name: uorcHaltedYes, parameters: [], result: Nat, body: 1}
+
+definition{name: uorcSealOk, parameters: [], result: Nat, body: 0}
+
+definition{name: uorcSealBroken, parameters: [], result: Nat, body: 1}
+
+definition{name: uorcFormatKnown, parameters: [], result: Nat, body: 0}
+
+definition{name: uorcFormatOther, parameters: [], result: Nat, body: 1}
+
+definition{name: uorcScopeSelf, parameters: [], result: Nat, body: 0}
+
+definition{name: uorcScopeStandard, parameters: [], result: Nat, body: 1}
+
+definition{name: uorcScopeOther, parameters: [], result: Nat, body: 2}
+
+definition{name: uorcObjectsOne, parameters: [], result: Nat, body: 0}
+
+definition{name: uorcObjectsMany, parameters: [], result: Nat, body: 1}
+
+definition{name: uorcRestoreSame, parameters: [], result: Nat, body: 0}
+
+definition{name: uorcRestoreDiffers, parameters: [], result: Nat, body: 1}
+
+definition{name: uorcRestoreFailed, parameters: [], result: Nat, body: 2}
+
+definition{name: uorcKappaAdmit, parameters: [], result: Nat, body: 0}
+
+definition{name: uorcKappaOther, parameters: [], result: Nat, body: 1}
+
+definition{name: uorcAnswerKeep, parameters: [], result: Nat, body: 0}
+
+definition{name: uorcAnswerOpen, parameters: [], result: Nat, body: 1}
+
+definition{name: uorcAnswerRefuse, parameters: [], result: Nat, body: 2}
+
+structure{
+  name: UorcRequest,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: act, type: Nat},
+    {name: halted, type: Nat},
+    {name: seal, type: Nat},
+    {name: format, type: Nat},
+    {name: scope, type: Nat},
+    {name: objects, type: Nat},
+    {name: restore, type: Nat},
+    {name: kappa, type: Nat}
+  ]
+}
+
+definition{
+  name: uorcByteAt,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some b => (ctor Option.some [Nat] (prim to_nat b : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcSliceOf,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: uorcFieldEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match (uorcByteAt s i)
+      | Option.none => i
+      | Option.some d => (if (d =? 32) then i else (uorcFieldEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: uorcParseAct,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6b656570 : Bool) then (ctor Option.some [Nat] (uorcActKeep)) else (if (prim equal value 0x6f70656e : Bool) then (ctor Option.some [Nat] (uorcActOpen)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: uorcParseHalted,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (uorcHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (uorcHaltedYes)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: uorcParseSeal,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6f6b : Bool) then (ctor Option.some [Nat] (uorcSealOk)) else (if (prim equal value 0x62726f6b656e : Bool) then (ctor Option.some [Nat] (uorcSealBroken)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: uorcParseFormat,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6b6e6f776e : Bool) then (ctor Option.some [Nat] (uorcFormatKnown)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (uorcFormatOther)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: uorcParseScope,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x73656c66 : Bool) then (ctor Option.some [Nat] (uorcScopeSelf)) else (if (prim equal value 0x7374616e64617264 : Bool) then (ctor Option.some [Nat] (uorcScopeStandard)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (uorcScopeOther)) else (ctor Option.none [Nat]))))
+}
+
+definition{
+  name: uorcParseObjects,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6f6e65 : Bool) then (ctor Option.some [Nat] (uorcObjectsOne)) else (if (prim equal value 0x6d616e79 : Bool) then (ctor Option.some [Nat] (uorcObjectsMany)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: uorcParseRestore,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x73616d65 : Bool) then (ctor Option.some [Nat] (uorcRestoreSame)) else (if (prim equal value 0x64696666657273 : Bool) then (ctor Option.some [Nat] (uorcRestoreDiffers)) else (if (prim equal value 0x6661696c6564 : Bool) then (ctor Option.some [Nat] (uorcRestoreFailed)) else (ctor Option.none [Nat]))))
+}
+
+definition{
+  name: uorcParseKappa,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x61646d6974 : Bool) then (ctor Option.some [Nat] (uorcKappaAdmit)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (uorcKappaOther)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: uorcDecodeField8,
+  parameters: [
+    s : Bytes,
+    start : Nat,
+    v1 : Nat,
+    v2 : Nat,
+    v3 : Nat,
+    v4 : Nat,
+    v5 : Nat,
+    v6 : Nat,
+    v7 : Nat
+  ],
+  result: (Option UorcRequest),
+  body: (let e : Nat := (uorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (uorcParseKappa (uorcSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [UorcRequest])
+    | Option.some v8 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [UorcRequest] (record UorcRequest {act := v1, halted := v2, seal := v3, format := v4, scope := v5, objects := v6, restore := v7, kappa := v8})) else (ctor Option.none [UorcRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcDecodeField7,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat, v6 : Nat],
+  result: (Option UorcRequest),
+  body: (let e : Nat := (uorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (uorcParseRestore (uorcSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [UorcRequest])
+    | Option.some v7 => (if (e <? (Foundation.Bytes::byteLength s)) then (uorcDecodeField8 s (e + 1) v1 v2 v3 v4 v5 v6 v7) else (ctor Option.none [UorcRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcDecodeField6,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat],
+  result: (Option UorcRequest),
+  body: (let e : Nat := (uorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (uorcParseObjects (uorcSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [UorcRequest])
+    | Option.some v6 => (if (e <? (Foundation.Bytes::byteLength s)) then (uorcDecodeField7 s (e + 1) v1 v2 v3 v4 v5 v6) else (ctor Option.none [UorcRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcDecodeField5,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat],
+  result: (Option UorcRequest),
+  body: (let e : Nat := (uorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (uorcParseScope (uorcSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [UorcRequest])
+    | Option.some v5 => (if (e <? (Foundation.Bytes::byteLength s)) then (uorcDecodeField6 s (e + 1) v1 v2 v3 v4 v5) else (ctor Option.none [UorcRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcDecodeField4,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
+  result: (Option UorcRequest),
+  body: (let e : Nat := (uorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (uorcParseFormat (uorcSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [UorcRequest])
+    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (uorcDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [UorcRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcDecodeField3,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
+  result: (Option UorcRequest),
+  body: (let e : Nat := (uorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (uorcParseSeal (uorcSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [UorcRequest])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (uorcDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [UorcRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcDecodeField2,
+  parameters: [s : Bytes, start : Nat, v1 : Nat],
+  result: (Option UorcRequest),
+  body: (let e : Nat := (uorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (uorcParseHalted (uorcSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [UorcRequest])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (uorcDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [UorcRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcDecodeField1,
+  parameters: [s : Bytes, start : Nat],
+  result: (Option UorcRequest),
+  body: (let e : Nat := (uorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (uorcParseAct (uorcSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [UorcRequest])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (uorcDecodeField2 s (e + 1) v1) else (ctor Option.none [UorcRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcJudge,
+  parameters: [request : UorcRequest],
+  result: Nat,
+  body: (if ((project request halted) =? (uorcHaltedYes)) then (uorcAnswerRefuse) else (if ((project request seal) =? (uorcSealBroken)) then (uorcAnswerRefuse) else (if ((project request format) =? (uorcFormatOther)) then (uorcAnswerRefuse) else (if ((project request scope) =? (uorcScopeOther)) then (uorcAnswerRefuse) else (if ((project request objects) =? (uorcObjectsMany)) then (uorcAnswerRefuse) else (if ((project request restore) =? (uorcRestoreDiffers)) then (uorcAnswerRefuse) else (if ((project request restore) =? (uorcRestoreFailed)) then (uorcAnswerRefuse) else (if ((project request kappa) =? (uorcKappaOther)) then (uorcAnswerRefuse) else (if ((project request act) =? (uorcActKeep)) then (uorcAnswerKeep) else (uorcAnswerOpen))))))))))
+}
+
+definition{
+  name: uorcEncodeAnswer,
+  parameters: [code : Nat],
+  result: Bytes,
+  body: (if (code =? (uorcAnswerKeep)) then 0x6b656570 else (if (code =? (uorcAnswerOpen)) then 0x6f70656e else (if (code =? (uorcAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964)))
+}
+
+definition{
+  name: uorcDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (49 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (uorcDecodeField1 value 0)
+    | Option.none => 0x696e76616c6964
+    | Option.some request => (uorcEncodeAnswer (uorcJudge request)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

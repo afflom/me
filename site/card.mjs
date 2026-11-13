@@ -169,7 +169,12 @@ export default async function start({ app, reason, $ }) {
   // The vault: kept in this browser, every keep and read decided by the app.
   let vault = null;
   try {
-    vault = await openVault({ decide: routerDecide(line), halted });
+    // Every value is kept as its uorc archive, named by its kappa label; the
+    // client and the two facets' adapters load only when a value is first kept or opened.
+    let made = null;
+    const made$ = () => (made ??= import("./uorc/objects.mjs").then((m) => m.makeObjects({ client: () => m.loadClient(), decide: m.rootDecide(line), halted })));
+    const objects = { keep: async (bytes) => (await made$()).keep(bytes), open: async (archive, kappa) => (await made$()).open(archive, kappa) };
+    vault = await openVault({ decide: routerDecide(line), halted, objects });
   } catch (error) {
     say(`${WORDS.unavailable} · ${error?.message ?? error}`, "bad");
   }

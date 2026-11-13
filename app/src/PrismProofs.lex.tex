@@ -18,6 +18,7 @@
 \importmodule{PrismModels}
 \importmodule{PrismR4}
 \importmodule{PrismRoute}
+\importmodule{PrismUorc}
 \importmodule{PrismVaultRestore}
 \importmodule{PrismVaultStore}
 \title{Text application model}
@@ -130,6 +131,14 @@ theorem{
   name: routesKappa,
   parameters: [rest : Bytes],
   statement: ((Prism::route (Prism::facetKappa) rest) = (PrismKappa::kappaDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesUorc,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetUorc) rest) = (PrismUorc::uorcDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }

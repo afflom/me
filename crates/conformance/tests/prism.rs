@@ -92,6 +92,7 @@ fn prism_pm_01() {
         ("Host", "PrismHost", "hostDispatch"),
         ("Model", "PrismModels", "modelsDispatch"),
         ("Kappa", "PrismKappa", "kappaDispatch"),
+        ("Uorc", "PrismUorc", "uorcDispatch"),
         ("Holon", "PrismHolon", "holonDispatch"),
         ("Curate", "PrismCurate", "curateDispatch"),
     ] {
