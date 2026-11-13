@@ -1,0 +1,125 @@
+\begin{lexlean}{PrismRealizability}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\title{Text application model}
+\begin{semanticmodule}
+structure{
+  name: RealizabilityElement,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: have, type: Nat}, {name: need, type: Nat}]
+}
+
+structure{
+  name: RealizabilityDescriptor,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: facet, type: Nat},
+    {name: digest, type: Nat},
+    {name: identity, type: RealizabilityElement},
+    {name: vocabulary, type: RealizabilityElement},
+    {name: capability, type: RealizabilityElement},
+    {name: interfaceSpec, type: RealizabilityElement},
+    {name: composition, type: RealizabilityElement},
+    {name: dynamics, type: RealizabilityElement},
+    {name: fidelity, type: RealizabilityElement},
+    {name: resources, type: RealizabilityElement},
+    {name: authority, type: RealizabilityElement},
+    {name: evidence, type: RealizabilityElement},
+    {name: projection, type: RealizabilityElement}
+  ]
+}
+
+definition{name: realizabilityElementCount, parameters: [], result: Nat, body: 11}
+
+definition{
+  name: realizabilityElementComplete,
+  parameters: [e : RealizabilityElement],
+  result: Bool,
+  body: ((project e need) <=? (project e have))
+}
+
+definition{
+  name: realizabilityDescriptorComplete,
+  parameters: [d : RealizabilityDescriptor],
+  result: Bool,
+  body: ((((((((((((1 <=? (project d facet)) && (realizabilityElementComplete (project d identity))) && (realizabilityElementComplete (project d vocabulary))) && (realizabilityElementComplete (project d capability))) && (realizabilityElementComplete (project d interfaceSpec))) && (realizabilityElementComplete (project d composition))) && (realizabilityElementComplete (project d dynamics))) && (realizabilityElementComplete (project d fidelity))) && (realizabilityElementComplete (project d resources))) && (realizabilityElementComplete (project d authority))) && (realizabilityElementComplete (project d evidence))) && (realizabilityElementComplete (project d projection)))
+}
+
+definition{
+  name: realizabilityBoundary,
+  parameters: [],
+  result: RealizabilityDescriptor,
+  body: (record RealizabilityDescriptor {facet := 1, digest := 258784406152970, identity := (record RealizabilityElement {have := 1, need := 1}), vocabulary := (record RealizabilityElement {have := 10, need := 10}), capability := (record RealizabilityElement {have := 4, need := 4}), interfaceSpec := (record RealizabilityElement {have := 6, need := 6}), composition := (record RealizabilityElement {have := 0, need := 0}), dynamics := (record RealizabilityElement {have := 10, need := 10}), fidelity := (record RealizabilityElement {have := 17, need := 17}), resources := (record RealizabilityElement {have := 1107, need := 55}), authority := (record RealizabilityElement {have := 18, need := 18}), evidence := (record RealizabilityElement {have := 7, need := 7}), projection := (record RealizabilityElement {have := 6, need := 6})})
+}
+
+definition{
+  name: realizabilityLearning,
+  parameters: [],
+  result: RealizabilityDescriptor,
+  body: (record RealizabilityDescriptor {facet := 2, digest := 221529686581518, identity := (record RealizabilityElement {have := 2, need := 1}), vocabulary := (record RealizabilityElement {have := 10, need := 10}), capability := (record RealizabilityElement {have := 7, need := 7}), interfaceSpec := (record RealizabilityElement {have := 3, need := 3}), composition := (record RealizabilityElement {have := 0, need := 0}), dynamics := (record RealizabilityElement {have := 11, need := 11}), fidelity := (record RealizabilityElement {have := 14, need := 14}), resources := (record RealizabilityElement {have := 1107, need := 34}), authority := (record RealizabilityElement {have := 20, need := 20}), evidence := (record RealizabilityElement {have := 8, need := 8}), projection := (record RealizabilityElement {have := 3, need := 3})})
+}
+
+definition{
+  name: realizabilityChronology,
+  parameters: [],
+  result: RealizabilityDescriptor,
+  body: (record RealizabilityDescriptor {facet := 3, digest := 18506628456496, identity := (record RealizabilityElement {have := 3, need := 1}), vocabulary := (record RealizabilityElement {have := 18, need := 18}), capability := (record RealizabilityElement {have := 14, need := 14}), interfaceSpec := (record RealizabilityElement {have := 4, need := 4}), composition := (record RealizabilityElement {have := 0, need := 0}), dynamics := (record RealizabilityElement {have := 14, need := 14}), fidelity := (record RealizabilityElement {have := 16, need := 16}), resources := (record RealizabilityElement {have := 1107, need := 28}), authority := (record RealizabilityElement {have := 23, need := 23}), evidence := (record RealizabilityElement {have := 8, need := 8}), projection := (record RealizabilityElement {have := 4, need := 4})})
+}
+
+definition{
+  name: realizabilityVaultStore,
+  parameters: [],
+  result: RealizabilityDescriptor,
+  body: (record RealizabilityDescriptor {facet := 4, digest := 81326255226106, identity := (record RealizabilityElement {have := 4, need := 1}), vocabulary := (record RealizabilityElement {have := 8, need := 8}), capability := (record RealizabilityElement {have := 4, need := 4}), interfaceSpec := (record RealizabilityElement {have := 4, need := 4}), composition := (record RealizabilityElement {have := 1, need := 1}), dynamics := (record RealizabilityElement {have := 6, need := 6}), fidelity := (record RealizabilityElement {have := 8, need := 8}), resources := (record RealizabilityElement {have := 1107, need := 36}), authority := (record RealizabilityElement {have := 12, need := 12}), evidence := (record RealizabilityElement {have := 5, need := 5}), projection := (record RealizabilityElement {have := 4, need := 4})})
+}
+
+definition{
+  name: realizabilityVaultRestore,
+  parameters: [],
+  result: RealizabilityDescriptor,
+  body: (record RealizabilityDescriptor {facet := 5, digest := 259309605460317, identity := (record RealizabilityElement {have := 5, need := 1}), vocabulary := (record RealizabilityElement {have := 8, need := 8}), capability := (record RealizabilityElement {have := 3, need := 3}), interfaceSpec := (record RealizabilityElement {have := 5, need := 5}), composition := (record RealizabilityElement {have := 0, need := 0}), dynamics := (record RealizabilityElement {have := 6, need := 6}), fidelity := (record RealizabilityElement {have := 7, need := 7}), resources := (record RealizabilityElement {have := 1107, need := 45}), authority := (record RealizabilityElement {have := 12, need := 12}), evidence := (record RealizabilityElement {have := 5, need := 5}), projection := (record RealizabilityElement {have := 5, need := 5})})
+}
+
+definition{
+  name: realizabilityR4,
+  parameters: [],
+  result: RealizabilityDescriptor,
+  body: (record RealizabilityDescriptor {facet := 6, digest := 141336962043699, identity := (record RealizabilityElement {have := 6, need := 1}), vocabulary := (record RealizabilityElement {have := 9, need := 9}), capability := (record RealizabilityElement {have := 4, need := 4}), interfaceSpec := (record RealizabilityElement {have := 5, need := 5}), composition := (record RealizabilityElement {have := 1, need := 1}), dynamics := (record RealizabilityElement {have := 11, need := 11}), fidelity := (record RealizabilityElement {have := 18, need := 18}), resources := (record RealizabilityElement {have := 1107, need := 48}), authority := (record RealizabilityElement {have := 19, need := 19}), evidence := (record RealizabilityElement {have := 7, need := 7}), projection := (record RealizabilityElement {have := 5, need := 5})})
+}
+
+definition{
+  name: realizabilityGoogle,
+  parameters: [],
+  result: RealizabilityDescriptor,
+  body: (record RealizabilityDescriptor {facet := 8, digest := 165583040284994, identity := (record RealizabilityElement {have := 8, need := 1}), vocabulary := (record RealizabilityElement {have := 10, need := 10}), capability := (record RealizabilityElement {have := 4, need := 4}), interfaceSpec := (record RealizabilityElement {have := 6, need := 6}), composition := (record RealizabilityElement {have := 0, need := 0}), dynamics := (record RealizabilityElement {have := 8, need := 8}), fidelity := (record RealizabilityElement {have := 12, need := 12}), resources := (record RealizabilityElement {have := 1107, need := 48}), authority := (record RealizabilityElement {have := 16, need := 16}), evidence := (record RealizabilityElement {have := 7, need := 7}), projection := (record RealizabilityElement {have := 6, need := 6})})
+}
+
+definition{
+  name: realizabilityGoogleLink,
+  parameters: [],
+  result: RealizabilityDescriptor,
+  body: (record RealizabilityDescriptor {facet := 9, digest := 182649132682569, identity := (record RealizabilityElement {have := 9, need := 1}), vocabulary := (record RealizabilityElement {have := 11, need := 11}), capability := (record RealizabilityElement {have := 6, need := 6}), interfaceSpec := (record RealizabilityElement {have := 5, need := 5}), composition := (record RealizabilityElement {have := 0, need := 0}), dynamics := (record RealizabilityElement {have := 12, need := 12}), fidelity := (record RealizabilityElement {have := 14, need := 14}), resources := (record RealizabilityElement {have := 1107, need := 55}), authority := (record RealizabilityElement {have := 22, need := 22}), evidence := (record RealizabilityElement {have := 9, need := 9}), projection := (record RealizabilityElement {have := 5, need := 5})})
+}
+
+definition{
+  name: realizabilityDest,
+  parameters: [],
+  result: RealizabilityDescriptor,
+  body: (record RealizabilityDescriptor {facet := 10, digest := 159586928982578, identity := (record RealizabilityElement {have := 10, need := 1}), vocabulary := (record RealizabilityElement {have := 14, need := 14}), capability := (record RealizabilityElement {have := 5, need := 5}), interfaceSpec := (record RealizabilityElement {have := 9, need := 9}), composition := (record RealizabilityElement {have := 1, need := 1}), dynamics := (record RealizabilityElement {have := 13, need := 13}), fidelity := (record RealizabilityElement {have := 14, need := 14}), resources := (record RealizabilityElement {have := 1107, need := 71}), authority := (record RealizabilityElement {have := 12, need := 12}), evidence := (record RealizabilityElement {have := 11, need := 11}), projection := (record RealizabilityElement {have := 9, need := 9})})
+}
+
+definition{
+  name: realizabilityModels,
+  parameters: [],
+  result: RealizabilityDescriptor,
+  body: (record RealizabilityDescriptor {facet := 11, digest := 216610936769839, identity := (record RealizabilityElement {have := 11, need := 1}), vocabulary := (record RealizabilityElement {have := 10, need := 10}), capability := (record RealizabilityElement {have := 4, need := 4}), interfaceSpec := (record RealizabilityElement {have := 6, need := 6}), composition := (record RealizabilityElement {have := 0, need := 0}), dynamics := (record RealizabilityElement {have := 8, need := 8}), fidelity := (record RealizabilityElement {have := 14, need := 14}), resources := (record RealizabilityElement {have := 1107, need := 52}), authority := (record RealizabilityElement {have := 18, need := 18}), evidence := (record RealizabilityElement {have := 9, need := 9}), projection := (record RealizabilityElement {have := 6, need := 6})})
+}
+
+definition{name: realizabilitySettingsBound, parameters: [], result: Nat, body: 6}
+
+definition{name: realizabilitySettingsCount, parameters: [], result: Nat, body: 6}
+\end{semanticmodule}
+\end{lexlean}

@@ -1,0 +1,31 @@
+{
+  "comment": "The Prism's realizability: every spec field changes some answer, every rule answers somewhere it alone decides, and every facet carries a complete eleven-element descriptor. tools/realize/gate.py reads this file and every app/specs/*/spec.json, writes PrismRealizability(.Proofs).lex.tex, and gives tools/prism_root.py one witness pair per field, which the compiled guest replays as acceptance vectors.",
+  "facets": {
+    "boundary": "boundary",
+    "learning": "learn",
+    "chronology": "when",
+    "vault-store": "store",
+    "vault-restore": "restore",
+    "r4": "r4",
+    "google": "google",
+    "google-link": "googlelink",
+    "dest": "dest",
+    "models": "model"
+  },
+  "unspecified": {
+    "route": "Foundation.Me.V1.Model"
+  },
+  "reads": {
+    "vault-store": {"boundary": "boundary"},
+    "r4": {"boundary": "boundary"},
+    "dest": {"verdict": "boundary"}
+  },
+  "settings": {
+    "gmail": [["google-link", "event"], ["google", "token"]],
+    "gcal": [["google-link", "event"], ["google", "token"]],
+    "models": [["models", "route"]],
+    "quiet": [["dest", "pace"]],
+    "backup": [["vault-restore", "key"], ["vault-restore", "seal"]],
+    "halt": [["boundary", "halted"], ["dest", "halted"], ["google", "halted"], ["google-link", "halted"], ["models", "halted"]]
+  }
+}

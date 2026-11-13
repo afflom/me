@@ -30,7 +30,7 @@ Verified: to be proved by Lean for every request (INV-002, theorem `inv002Holds`
 
 - **WHEN** the request is `deny present derived ok` (an acceptance example)
 - **THEN** the answer SHALL be `refuse`
-- **AND** the app answers `refuse`, decided by REQ-003
+- **AND** the app answers `refuse`, decided by no rule: the default keeps nothing
 
 ### Requirement: Never store when boundary is hashonly
 
@@ -90,17 +90,6 @@ Verified: tested by the acceptance vectors (`rule2`).
 - **WHEN** the request is `allow present mismatch ok` (an acceptance example)
 - **THEN** the answer SHALL be `refuse`, decided by REQ-002
 
-### Requirement: REQ-003 refuse when boundary is deny
-
-The app SHALL answer `refuse` when boundary is deny and no earlier rule matches, because it enforces INV-002.
-
-Verified: tested by the acceptance vectors (`rule3`).
-
-#### Scenario: REQ-003 decides
-
-- **WHEN** the request is `deny present derived ok` (an acceptance example)
-- **THEN** the answer SHALL be `refuse`, decided by REQ-003
-
 ### Requirement: REQ-004 refuse when room is full
 
 The app SHALL answer `refuse` when room is full and no earlier rule matches, because a partial write is never kept.
@@ -158,7 +147,7 @@ Verified: tested by the acceptance vectors.
 
 ### Requirement: The first matching rule decides
 
-The app SHALL try REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007 in that order, and the first rule that matches SHALL decide.
+The app SHALL try REQ-001, REQ-002, REQ-004, REQ-005, REQ-006, REQ-007 in that order, and the first rule that matches SHALL decide.
 
 Verified: tested by the acceptance vectors.
 

@@ -73,6 +73,12 @@ model does not sanction.
 | --- | --- | --- |
 | `R4-01` | `build` | The R4 language model runs in the browser only from bytes that re-derive to their pinned SHA-256, served by the page in pieces of at most 16 MiB, and shows an answer only when the proved Prism R4 decision allows it |
 
+## realize
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `RZ-01` | `build` | Every Prism setting does something: every field of every facet spec changes some answer, every rule decides a request no other rule would, every setting drives such a field, and every facet carries a complete eleven-element descriptor, with every witness pair answered by the facet judge as its spec says |
+
 ## route
 
 | ID | Level | Statement |

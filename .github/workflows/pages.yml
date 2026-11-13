@@ -56,6 +56,11 @@ jobs:
           node bootstrap/brand-sync.mjs --check
           python3 -I bootstrap/brand-fonts.py --check
           node bootstrap/frame-sync.mjs --check
+      # RZ-01 before the slow proof: a spec field, rule or setting that changes
+      # no answer fails here in a second, not after twenty minutes of proving.
+      - name: Check that every spec field, rule and setting changes an answer
+        shell: bash
+        run: python3 -I tools/realize/gate.py --check
       # The proof is the slow part (15 to 25 minutes). This job reuses one
       # exactly as bootstrap.yml and `just app` do: the cache key only finds a
       # candidate, and `xtask
