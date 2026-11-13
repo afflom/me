@@ -575,8 +575,14 @@ def look_css():
         fallback = f"{font['family']} Fallback"
         out.append(f'@font-face {{ font-family: "{fallback}"; src: local("{font["fallback"]}"); size-adjust: {m["size"]}; '
                    f'ascent-override: {m["ascent"]}; descent-override: {m["descent"]}; line-gap-override: 0%; }}')
-        out.append(f'@font-face {{ font-family: "{font["family"]}"; src: url("./fonts/{font["file"]}") format("woff2"); '
-                   f'font-weight: {font["weight"]}; font-style: normal; font-display: optional; }}')
+        # A font loaded with the gesture is not fetched with the page: the page
+        # opens in its metric-matched fallback, and card.mjs adds the font on
+        # the person's first touch, or at once when this browser already keeps it.
+        if font.get("load", "page") not in ("page", "gesture"):
+            refuse(f"font {font['key']} loads with 'page' or 'gesture', not {font.get('load')!r}")
+        if font.get("load", "page") == "page":
+            out.append(f'@font-face {{ font-family: "{font["family"]}"; src: url("./fonts/{font["file"]}") format("woff2"); '
+                       f'font-weight: {font["weight"]}; font-style: normal; font-display: optional; }}')
     fonts = "; ".join(f'--font-{f["key"]}: "{f["family"]}", "{f["family"]} Fallback", {f["fallback"]}, serif' for f in LOOK["fonts"])
     radius = LOOK["radius"]
     for theme, selector in (("light", ":root"), ("dark", ".dark")):
@@ -615,6 +621,7 @@ mirror = {
     "media": SPEC["media"],
     "words": SPEC["words"],
     "feeders": FEEDERS,
+    "fonts": [{"family": f["family"], "file": f["file"], "weight": f["weight"]} for f in LOOK["fonts"] if f.get("load") == "gesture"],
     # The resonance signal is listened to only when the page carries it, so a
     # page without it never asks for a module it does not have.
     "voice": {**{k: v for k, v in VOICE.items() if k != "comment"},
