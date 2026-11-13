@@ -38,6 +38,7 @@ FACETS = [
     ("kappa", "PrismKappa", "kappaDispatch"),
     ("holon", "PrismHolon", "holonDispatch"),
     ("curate", "PrismCurate", "curateDispatch"),
+    ("resonance", "PrismResonance", "resonanceDispatch"),
 ]
 REQ_MAX, RESP_MAX, ALLOC = 1107, 16384, 2214
 h = lambda s: "0x" + (s if isinstance(s, bytes) else s.encode()).hex()
@@ -75,6 +76,12 @@ VECTORS = [
  ("model locked onnx match match granted yes", "refuse"),
  ("model unlocked gguf match match granted no", "refuse"),
  ("model", "invalid request"),
+ ("resonance dwell calm near day consolidated open no", "chorus"),
+ ("resonance open calm near night inferred open no", "whisper"),
+ ("resonance dismiss calm near day confirmed open no", "recede"),
+ ("resonance dwell calm near day confirmed open yes", "rest"),
+ ("resonance dwell calm near day confirmed open", "invalid"),
+ ("resonance", "invalid request"),
  ("kappa sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 match", "admit sha256 0 32"),
  ("kappa sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 mismatch", "mismatch"),
  ("kappa blake3:d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24 uncomputed", "unverified blake3 2 32"),

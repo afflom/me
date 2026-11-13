@@ -84,23 +84,19 @@ export function answer(key, { salience = "near", attention } = {}) {
   if (!quiet) sound(chosen, (VOICE.salience[salience] ?? VOICE.salience.near) / 100);
 }
 
-// The page's own outcomes, until the resonance signal arrives: the word the
-// result shows names the answer.
+// The page's own outcomes: the word the result shows names the answer.
 const outcome = new Map(Object.entries(VOICE.outcomes).map(([word, key]) => [WORDS[word], key]));
 const out = document.getElementById("pr-out");
-let resonance = false;
 if (out) {
   new MutationObserver(() => {
-    if (resonance) return;
     const key = outcome.get(out.textContent);
     if (key) answer(key);
   }).observe(out, { childList: true, characterData: true, subtree: true });
 }
 
-// The resonance signal, when the page carries it: PrismResonance decides the
-// answer, salience and attention; the voice only sounds and colours it.
+// The resonance signal, for the owner's gestures on items: PrismResonance
+// decides the answer, salience and attention; the voice only sounds and colours it.
 if (VOICE.resonance) import(new URL(VOICE.resonance, new URL("./surface/surface.mjs", import.meta.url)).href).then(({ onResonance }) => {
   if (typeof onResonance !== "function") return;
-  resonance = true;
   onResonance((signal) => answer(signal.answer, { salience: signal.salience, attention: signal.attention }));
 }).catch(() => {});

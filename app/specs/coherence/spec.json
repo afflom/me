@@ -223,7 +223,33 @@
     {
       "key": "learn",
       "line": "learn",
-      "sealed": "learn has no page signal until the resonance facet lands"
+      "modules": [
+        "site/resonance/resonance.mjs"
+      ],
+      "in": [
+        "answer"
+      ],
+      "out": [
+        "answer"
+      ],
+      "drives": {
+        "places": [
+          "today",
+          "conversations",
+          "people",
+          "calendar",
+          "tasks",
+          "places",
+          "money",
+          "things",
+          "me",
+          "health",
+          "work",
+          "library",
+          "timeline",
+          "presence"
+        ]
+      }
     },
     {
       "key": "route",
@@ -250,12 +276,44 @@
     {
       "key": "holon",
       "line": "holon",
-      "sealed": "reconciles owner and Prism from resonance signals; no page signal until the resonance facet lands"
+      "sealed": "reconciles owner and Prism from resonance signals; no page caller yet; the observer wires to resonance's onResonance next"
     },
     {
       "key": "curate",
       "line": "curate",
-      "sealed": "tunes the parameters a facet marks tunable from resonance signals; no page signal until the resonance facet lands"
+      "sealed": "tunes the parameters a facet marks tunable from resonance signals; no page caller yet; the observer wires to resonance's onResonance next"
+    },
+    {
+      "key": "resonance",
+      "line": "resonance",
+      "modules": [
+        "site/resonance/resonance.mjs"
+      ],
+      "in": [
+        "owner",
+        "kept"
+      ],
+      "out": [
+        "answer"
+      ],
+      "drives": {
+        "places": [
+          "today",
+          "conversations",
+          "people",
+          "calendar",
+          "tasks",
+          "places",
+          "money",
+          "things",
+          "me",
+          "health",
+          "work",
+          "library",
+          "timeline",
+          "presence"
+        ]
+      }
     }
   ],
   "sinks": [

@@ -294,7 +294,7 @@ jobs:
           npm install --no-audit --no-fund --global playwright@1.56.1
           playwright install --with-deps chromium
           for attempt in 1 2 3 4; do
-            NODE_PATH="$(npm root --global)" node --test test/page/card.test.mjs test/page/person.test.mjs && exit 0
+            NODE_PATH="$(npm root --global)" node --test test/page/card.test.mjs test/page/person.test.mjs test/page/returning.test.mjs && exit 0
             sleep 30
           done
           exit 1

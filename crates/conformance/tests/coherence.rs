@@ -203,3 +203,36 @@ fn coherence_co_04() {
         "CO-04: each entry is judged by its own format"
     );
 }
+
+/// `CO-05`: A returning owner gets the deploy that is served: when the version precache.json names differs from every cache the page keeps, the page drops the kept deploy and loads once more, and every button on Today does something when pressed
+#[test]
+fn coherence_co_05() {
+    let card = read("site/card.mjs");
+    holds("CO-05", "site/card.mjs", &card, &[
+        ("export default async function start({ app, reason, $ }) {\n  if (await heal()) return;", "the page heals before anything else runs"),
+        ("ours.includes(`prism-${served.version}`)", "a kept cache of the served version is left alone"),
+        ("sessionStorage.getItem(HEALED_KEY) === served.version", "the heal happens once per version and tab"),
+        ("await registration.unregister();", "the kept worker is let go"),
+    ]);
+    let test = read("test/page/returning.test.mjs");
+    holds(
+        "CO-05",
+        "test/page/returning.test.mjs",
+        &test,
+        &[
+            (
+                "prism-0000000000000000",
+                "a kept earlier deploy is simulated",
+            ),
+            (
+                "buttons that did nothing",
+                "every Today button must respond",
+            ),
+        ],
+    );
+    let pages = read(".github/workflows/pages.yml");
+    assert!(
+        pages.contains("test/page/returning.test.mjs"),
+        "CO-05: the published page runs the returning walk"
+    );
+}

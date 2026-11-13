@@ -94,6 +94,7 @@ fn prism_pm_01() {
         ("Kappa", "PrismKappa", "kappaDispatch"),
         ("Holon", "PrismHolon", "holonDispatch"),
         ("Curate", "PrismCurate", "curateDispatch"),
+        ("Resonance", "PrismResonance", "resonanceDispatch"),
     ] {
         let theorem = declaration(&proofs, &format!("routes{facet}"));
         assert!(

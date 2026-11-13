@@ -55,6 +55,14 @@ test("the Prism keeps at the model's floors, refuses while halted and drafts onl
     await settle("Kept");
     assert.equal(await rows(), 1);
 
+    // Resonance: keeping the note, opening its row and closing it are each answered by the app.
+    const row = page.locator("#pr-list .pr-item").first();
+    await row.click();
+    assert.equal(await row.getAttribute("aria-expanded"), "true");
+    await row.click();
+    await page.waitForFunction(() => /\bpr-res-(rest|whisper|chime|bloom|chorus|recede)\b/.test(document.querySelector("#pr-list .pr-item")?.className ?? ""), null, { timeout: 10000 });
+    assert.equal(await row.getAttribute("aria-expanded"), "false");
+
     // Health's floor is restricted: the Boundary answers hashonly, so only its digest is kept.
     await note("health", "An example health note");
     await settle("Kept sealed");
