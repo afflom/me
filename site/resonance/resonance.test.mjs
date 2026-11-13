@@ -125,6 +125,12 @@ ok((await restore('not json')) === null && (await restore(JSON.stringify({ v: 2,
 assert.throws(() => paramsOf({ dwellMs: 999 }), /outside/); checks += 1;
 assert.throws(() => paramsOf({ hurriedGapMs: 10000, calmGapMs: 20000, dwellMs: 4000 }) && paramsOf({ dayHour: 11, duskHour: 16, dawnHour: 8, nightHour: 20 }) && paramsOf({ dawnHour: 8, dayHour: 7 }), /order|outside/); checks += 1;
 ok(paramsOf({}).dwellMs === DEFAULTS.dwellMs, 'defaults');
+assert.throws(() => res.tune({ dwellMs: 1 }), /outside/); checks += 1;
+ok(res.params().dwellMs === DEFAULTS.dwellMs, 'a refused tune keeps the old tunables');
+ok(res.tune({ ...DEFAULTS, dwellMs: 12000 }).dwellMs === 12000, 'tune');
+e = await step({ address: 'k1:cc', at: clock }, 'open', { dwellMs: 6000 });
+ok(e.gesture === 'open', 'tuned dwell applies from the next gesture');
+res.tune(DEFAULTS);
 
 // Replay: the same answers, pure, under a candidate's tunables.
 const r0 = replay(DEFAULTS, events);

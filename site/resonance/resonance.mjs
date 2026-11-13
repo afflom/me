@@ -91,7 +91,7 @@ export async function restore(text) {
 // line: the root guest ("<facet> <rest>" -> answer). halted/attention: the
 // owner's switches. keep: {get() -> text|null, set(text)} for the snapshot.
 export async function makeResonance({ line, halted = () => 'no', attention = () => 'open', keep = null, params = DEFAULTS, now = () => Date.now(), hourOf = (at) => new Date(at).getHours() }) {
-  const tunables = paramsOf(params);
+  let tunables = paramsOf(params);
   const listeners = new Set();
   const beliefs = (keep && (await restore(keep.get() ?? ''))) || new Map();
   let last = 0;
@@ -141,6 +141,9 @@ export async function makeResonance({ line, halted = () => 'no', attention = () 
 
   return {
     gesture, confirm, reject, order, beliefOf,
+    // New tunables from the next gesture on, inside the spec's bounds, or refused (the old ones stay).
+    tune(candidate) { tunables = paramsOf(candidate); return { ...tunables }; },
+    params: () => ({ ...tunables }),
     onResonance(fn) { listeners.add(fn); return () => listeners.delete(fn); },
     snapshot: () => persist(beliefs),
     settled: () => saving,
