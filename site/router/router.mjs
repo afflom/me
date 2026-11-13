@@ -38,7 +38,7 @@ function take(out, feature, got) {
   if (got == null) return;
   if (feature === "time" && out.start == null) {
     if (typeof got === "number") out.start = got;
-    else { out.start = got.start; out.allDay = got.allDay; }
+    else { out.start = got.start; out.allDay = got.allDay; out.spans = got.spans ?? []; }
   } else if (feature === "intent" && out.intent == null) out.intent = got;
   else if (feature === "party" && out.party == null) out.party = got;
 }
