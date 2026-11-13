@@ -1,5 +1,5 @@
 {
-  "comment": "The Prism's surface: every place, act, setting and visible word of the page. tools/surface/gen.py writes PrismSurface.lex.tex, its proofs and site/surface/surface.mjs from this file. Indices refer to Foundation.Me.V1.Model: views, roles, domains, labels. Two viewpoints, after ISO/IEC 42010: the person's view is the page; the system view is what runs on its own and is never drawn, so a place or setting in the system view has no host on the page.",
+  "comment": "The Prism's surface: every place, act, setting and visible word of the page. tools/surface/gen.py writes PrismSurface.lex.tex, its proofs and site/surface/surface.mjs from this file. Indices refer to Foundation.Me.V1.Model: views, roles, domains, labels. Two viewpoints, after ISO/IEC 42010: the person's view is the page; the system view is what runs on its own and is never drawn, so a place or setting in the system view has no host on the page. All of the person's settings are one panel in a few sections, in the order a person needs them; each section names the journeys it serves (app/specs/product/spec.json), and reveals its detail always, until the person has done what it asks, or only on a tap.",
   "domains": ["Health", "Money", "Identity", "People", "Conversations", "Time", "Places", "Work", "Things", "Tasks", "Library", "Topics"],
   "floors": [3, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1],
   "labels": ["Public", "Internal", "Confidential", "Restricted"],
@@ -43,12 +43,18 @@
     {"key": "self", "name": "You", "direction": "local"}
   ],
   "settings": [
-    {"key": "device", "viewpoint": "person", "group": "sources", "name": "This device", "source": "file"},
-    {"key": "models", "viewpoint": "system", "group": "models", "name": "Language models", "source": "none"},
-    {"key": "quiet", "viewpoint": "person", "group": "attention", "name": "Quiet", "source": "none"},
-    {"key": "backup", "viewpoint": "person", "group": "storage", "name": "Backup", "source": "none"},
-    {"key": "halt", "viewpoint": "person", "group": "halt", "name": "Pause", "source": "none"},
-    {"key": "identity", "viewpoint": "person", "group": "self", "name": "Who you are", "source": "none"}
+    {"key": "device", "viewpoint": "person", "kind": "detail", "group": "sources", "name": "This device", "source": "file"},
+    {"key": "models", "viewpoint": "system", "kind": "detail", "group": "models", "name": "Language models", "source": "none"},
+    {"key": "quiet", "viewpoint": "person", "kind": "switch", "group": "attention", "name": "Quiet", "source": "none"},
+    {"key": "backup", "viewpoint": "person", "kind": "detail", "group": "storage", "name": "Backup", "source": "none"},
+    {"key": "halt", "viewpoint": "person", "kind": "switch", "group": "halt", "name": "Pause", "source": "none"},
+    {"key": "identity", "viewpoint": "person", "kind": "detail", "group": "self", "name": "Who you are", "source": "none"}
+  ],
+  "sections": [
+    {"key": "self", "name": "You", "settings": ["identity"], "reveal": "always", "serves": ["J9"]},
+    {"key": "sources", "name": "Connections", "settings": ["device"], "reveal": "until-done", "serves": ["J0", "J10"]},
+    {"key": "attention", "name": "Attention", "settings": ["quiet", "halt"], "reveal": "always", "serves": ["J11", "mine"]},
+    {"key": "storage", "name": "Your data", "settings": ["backup"], "reveal": "on-tap", "serves": ["mine"]}
   ],
   "sources": ["gmail", "protonMail", "googleCalendar", "protonCalendar", "website", "feed", "file", "activityPub", "ownerUtterance", "otherSource"],
   "routed": ["file", "ownerUtterance"],

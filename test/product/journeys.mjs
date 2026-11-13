@@ -162,4 +162,28 @@ export const walks = {
     assert.ok(shown.includes("Lunch on Thursday"), "Robin's page does not show their latest message");
     assert.ok(shown.includes("Design review"), "Robin's page does not show the next meeting with them");
   },
+  // J10: Settings has a Connections section; each service the person uses has a
+  // row with its state and the one next step, and the steps leave it live.
+  async j10(page) {
+    await go(page, surface.places.find((p) => p.show === "settings").key);
+    const section = app(page).getByRole("region", { name: /^connections$/i }).first();
+    assert.ok(await section.count(), "the settings have no Connections section");
+    for (const service of ["Gmail", "Calendar"]) {
+      const row = section.getByRole("group", { name: new RegExp(service) }).first();
+      assert.ok(await row.count(), `Connections has no row for ${service}`);
+      assert.ok(await row.getByRole("button").count(), `${service}'s row offers no next step`);
+    }
+  },
+  // J11: Quiet is one switch in Settings, and it stays on until the person turns it off.
+  async j11(page) {
+    const settings = surface.places.find((p) => p.show === "settings").key;
+    await go(page, settings);
+    const quiet = app(page).getByRole("switch", { name: /^quiet$/i }).first();
+    assert.ok(await quiet.count(), "the settings have no Quiet switch");
+    await quiet.check();
+    await page.reload();
+    await page.waitForSelector("html.pr-ready", { timeout: 60000 });
+    await go(page, settings);
+    assert.ok(await app(page).getByRole("switch", { name: /^quiet$/i }).first().isChecked(), "Quiet does not stay on");
+  },
 };
