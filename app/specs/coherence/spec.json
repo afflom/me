@@ -1,0 +1,601 @@
+{
+  "comment": "The Prism's coherence: every facet as one high-definition model with typed ports, and the flow that binds them into one runtime, after verdant resonance's MetaModel interface/composition elements and its functor bus. tools/coherence/gen.py checks the flow (every port produced and consumed, every root facet live or sealed by PrismHost, every place fed, every act and setting driven) and writes site/coherence/coherence.mjs, which the page runs on.",
+  "ports": [
+    {
+      "key": "owner",
+      "means": "the owner's own press, words or files"
+    },
+    {
+      "key": "content",
+      "means": "bytes the owner brought into this browser"
+    },
+    {
+      "key": "item",
+      "means": "one item with its media, domains and time"
+    },
+    {
+      "key": "kept",
+      "means": "an item kept in the vault under its label"
+    },
+    {
+      "key": "span",
+      "means": "how two intervals relate"
+    },
+    {
+      "key": "draft",
+      "means": "an outbound item shown word for word"
+    },
+    {
+      "key": "sent",
+      "means": "what left for the owner's own app"
+    },
+    {
+      "key": "answer",
+      "means": "what the owner is shown"
+    },
+    {
+      "key": "object",
+      "means": "an object named by its kappa label, sha256:<hex>, re-derived in this browser"
+    }
+  ],
+  "facets": [
+    {
+      "key": "host",
+      "line": "host",
+      "modules": [
+        "site/card.mjs"
+      ],
+      "in": [
+        "owner"
+      ],
+      "out": [
+        "content"
+      ],
+      "drives": {
+        "settings": [
+          "device"
+        ]
+      }
+    },
+    {
+      "key": "folder",
+      "line": "folder",
+      "modules": [
+        "site/card.mjs"
+      ],
+      "in": [
+        "content"
+      ],
+      "out": [
+        "item"
+      ],
+      "drives": {
+        "settings": [
+          "device"
+        ]
+      }
+    },
+    {
+      "key": "boundary",
+      "line": "boundary",
+      "modules": [
+        "site/card.mjs",
+        "site/vault/vault.mjs"
+      ],
+      "in": [
+        "item",
+        "draft",
+        "answer"
+      ],
+      "out": [
+        "kept",
+        "answer"
+      ],
+      "drives": {
+        "settings": [
+          "halt"
+        ]
+      }
+    },
+    {
+      "key": "store",
+      "line": "store",
+      "modules": [
+        "site/vault/vault.mjs"
+      ],
+      "in": [
+        "item"
+      ],
+      "out": [
+        "kept"
+      ],
+      "drives": {
+        "settings": [
+          "backup"
+        ],
+        "acts": [
+          "note"
+        ]
+      }
+    },
+    {
+      "key": "restore",
+      "line": "restore",
+      "modules": [
+        "site/vault/vault.mjs"
+      ],
+      "in": [
+        "kept"
+      ],
+      "out": [
+        "item"
+      ],
+      "drives": {
+        "settings": [
+          "backup"
+        ]
+      }
+    },
+    {
+      "key": "when",
+      "line": "when",
+      "modules": [
+        "site/card.mjs"
+      ],
+      "in": [
+        "item"
+      ],
+      "out": [
+        "span"
+      ],
+      "drives": {
+        "places": [
+          "today"
+        ]
+      }
+    },
+    {
+      "key": "dest",
+      "line": "dest",
+      "modules": [
+        "site/dest/dest.mjs"
+      ],
+      "in": [
+        "owner",
+        "item"
+      ],
+      "out": [
+        "draft",
+        "sent"
+      ],
+      "drives": {
+        "acts": [
+          "write",
+          "event",
+          "share"
+        ],
+        "settings": [
+          "quiet"
+        ]
+      }
+    },
+    {
+      "key": "r4",
+      "line": "r4",
+      "modules": [
+        "site/r4/decide.mjs"
+      ],
+      "in": [
+        "owner",
+        "kept",
+        "span"
+      ],
+      "out": [
+        "answer"
+      ],
+      "drives": {
+        "acts": [
+          "ask"
+        ],
+        "settings": [
+          "models"
+        ]
+      }
+    },
+    {
+      "key": "model",
+      "line": "model",
+      "modules": [
+        "site/card.mjs"
+      ],
+      "in": [
+        "owner"
+      ],
+      "out": [
+        "answer"
+      ],
+      "drives": {
+        "settings": [
+          "models"
+        ]
+      }
+    },
+    {
+      "key": "learn",
+      "line": "learn",
+      "modules": [
+        "site/resonance/resonance.mjs"
+      ],
+      "in": [
+        "answer"
+      ],
+      "out": [
+        "answer"
+      ],
+      "drives": {
+        "places": [
+          "today",
+          "conversations",
+          "people",
+          "calendar",
+          "tasks",
+          "places",
+          "money",
+          "things",
+          "me",
+          "health",
+          "work",
+          "library",
+          "timeline",
+          "presence"
+        ]
+      }
+    },
+    {
+      "key": "route",
+      "line": "route",
+      "sealed": "the route plan takes the design model's binary envelope, which no browser source yet emits"
+    },
+    {
+      "key": "google",
+      "line": "google",
+      "sealed": "mail",
+      "sealedBy": "host"
+    },
+    {
+      "key": "googlelink",
+      "line": "googlelink",
+      "sealed": "calendar",
+      "sealedBy": "host"
+    },
+    {
+      "key": "kappa",
+      "line": "kappa",
+      "sealed": "admits an object under its kappa label; no page caller until the uorc ingest facet lands"
+    },
+    {
+      "key": "holon",
+      "line": "holon",
+      "sealed": "reconciles owner and Prism from resonance signals; no page caller yet; the observer wires to resonance's onResonance next"
+    },
+    {
+      "key": "curate",
+      "line": "curate",
+      "sealed": "tunes the parameters a facet marks tunable from resonance signals; no page caller yet; the observer wires to resonance's onResonance next"
+    },
+    {
+      "key": "resonance",
+      "line": "resonance",
+      "modules": [
+        "site/resonance/resonance.mjs"
+      ],
+      "in": [
+        "owner",
+        "kept"
+      ],
+      "out": [
+        "answer"
+      ],
+      "drives": {
+        "places": [
+          "today",
+          "conversations",
+          "people",
+          "calendar",
+          "tasks",
+          "places",
+          "money",
+          "things",
+          "me",
+          "health",
+          "work",
+          "library",
+          "timeline",
+          "presence"
+        ]
+      }
+    }
+  ],
+  "sinks": [
+    "answer",
+    "sent",
+    "kept"
+  ],
+  "feeders": [
+    {
+      "key": "files",
+      "surface": "files",
+      "media": [
+        "message",
+        "calendar",
+        "contactCard",
+        "plainText"
+      ]
+    },
+    {
+      "key": "folder",
+      "surface": "folder",
+      "media": [
+        "message",
+        "calendar",
+        "contactCard",
+        "plainText"
+      ]
+    },
+    {
+      "key": "drop",
+      "surface": "drop",
+      "media": [
+        "message",
+        "calendar",
+        "contactCard",
+        "plainText"
+      ]
+    },
+    {
+      "key": "paste",
+      "surface": "paste",
+      "media": [
+        "message",
+        "calendar",
+        "contactCard",
+        "plainText"
+      ]
+    },
+    {
+      "key": "contacts",
+      "surface": "contacts",
+      "media": [
+        "contactCard"
+      ]
+    },
+    {
+      "key": "note",
+      "act": "note",
+      "media": [
+        "plainText"
+      ]
+    },
+    {
+      "key": "sent",
+      "act": "write",
+      "media": [
+        "message"
+      ]
+    },
+    {
+      "key": "event",
+      "act": "event",
+      "media": [
+        "calendar"
+      ]
+    }
+  ],
+  "vocabulary": [
+    [
+      "doctor",
+      "dentist",
+      "clinic",
+      "hospital",
+      "pharmacy",
+      "prescription",
+      "appointment",
+      "therapy",
+      "health",
+      "medical",
+      "vaccine",
+      "checkup",
+      "insurance claim",
+      "workout",
+      "sleep"
+    ],
+    [
+      "invoice",
+      "receipt",
+      "payment",
+      "paid",
+      "bank",
+      "statement",
+      "bill",
+      "refund",
+      "transfer",
+      "tax",
+      "budget",
+      "salary",
+      "subscription",
+      "price",
+      "charge",
+      "$",
+      "€",
+      "£"
+    ],
+    [
+      "passport",
+      "license",
+      "birthday",
+      "address change",
+      "profile",
+      "account",
+      "identity",
+      "my name"
+    ],
+    [
+      "contact",
+      "phone",
+      "family",
+      "friend",
+      "mom",
+      "dad",
+      "brother",
+      "sister",
+      "wife",
+      "husband",
+      "partner"
+    ],
+    [
+      "reply",
+      "re:",
+      "fwd:",
+      "message",
+      "thread",
+      "wrote",
+      "chat"
+    ],
+    [
+      "meeting",
+      "call",
+      "event",
+      "schedule",
+      "today",
+      "tomorrow",
+      "monday",
+      "tuesday",
+      "wednesday",
+      "thursday",
+      "friday",
+      "saturday",
+      "sunday",
+      "calendar",
+      "invite",
+      "invitation",
+      "reschedule"
+    ],
+    [
+      "street",
+      "avenue",
+      "road",
+      "airport",
+      "hotel",
+      "flight",
+      "trip",
+      "travel",
+      "booking",
+      "reservation",
+      "restaurant",
+      "address",
+      "venue",
+      "office"
+    ],
+    [
+      "project",
+      "deadline",
+      "review",
+      "proposal",
+      "contract",
+      "client",
+      "team",
+      "standup",
+      "report",
+      "roadmap",
+      "release",
+      "research",
+      "paper",
+      "draft"
+    ],
+    [
+      "order",
+      "shipped",
+      "delivery",
+      "package",
+      "tracking",
+      "purchase",
+      "warranty",
+      "return",
+      "device",
+      "repair"
+    ],
+    [
+      "todo",
+      "to do",
+      "remember",
+      "remind",
+      "buy",
+      "call",
+      "pick up",
+      "renew",
+      "due",
+      "follow up",
+      "need to",
+      "must"
+    ],
+    [
+      "book",
+      "article",
+      "newsletter",
+      "read",
+      "paper",
+      "notes",
+      "chapter",
+      "library",
+      "course",
+      "video",
+      "podcast"
+    ],
+    [
+      "idea",
+      "topic",
+      "question",
+      "learn",
+      "explore"
+    ]
+  ],
+  "intents": {
+    "today": {
+      "from": 0,
+      "days": 1
+    },
+    "tonight": {
+      "from": 0,
+      "days": 1
+    },
+    "tomorrow": {
+      "from": 1,
+      "days": 1
+    },
+    "yesterday": {
+      "from": -1,
+      "days": 1
+    },
+    "week": {
+      "from": 0,
+      "days": 7
+    },
+    "next": {
+      "from": 0,
+      "days": 14
+    },
+    "upcoming": {
+      "from": 0,
+      "days": 14
+    },
+    "soon": {
+      "from": 0,
+      "days": 7
+    }
+  },
+  "today": {
+    "ahead": 7,
+    "recent": 5,
+    "tasks": 5
+  }
+}

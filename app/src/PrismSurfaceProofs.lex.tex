@@ -180,6 +180,66 @@ definition{
 }
 
 definition{
+  name: surfacePairsRead,
+  parameters: [pairs : (List PrismSurface::SurfaceContrast)],
+  result: Bool,
+  body: (match pairs
+    | List.nil => true
+    | List.cons pair rest => (((project pair floor) <=? (project pair ratio)) && (((project pair theme) <? (PrismSurface::surfaceThemeCount)) && (surfacePairsRead rest)))),
+  recursive_argument: pairs
+}
+
+definition{
+  name: surfaceColoursInRange,
+  parameters: [tones : (List PrismSurface::SurfaceTone)],
+  result: Bool,
+  body: (match tones
+    | List.nil => true
+    | List.cons tone rest => (((project tone dark) <? 16777216) && (((project tone light) <? 16777216) && (surfaceColoursInRange rest)))),
+  recursive_argument: tones
+}
+
+definition{
+  name: surfaceThemesDiffer,
+  parameters: [tones : (List PrismSurface::SurfaceTone)],
+  result: Bool,
+  body: (match tones
+    | List.nil => false
+    | List.cons tone rest => ((not ((project tone dark) =? (project tone light))) || (surfaceThemesDiffer rest))),
+  recursive_argument: tones
+}
+
+definition{
+  name: surfaceDomainFed,
+  parameters: [domain : Nat, feeders : (List PrismSurface::SurfaceFeeder)],
+  result: Bool,
+  body: (match feeders
+    | List.nil => false
+    | List.cons f rest => ((surfaceMember domain (project f domains)) || (surfaceDomainFed domain rest))),
+  recursive_argument: feeders
+}
+
+definition{
+  name: surfaceAnyFed,
+  parameters: [domains : (List Nat)],
+  result: Bool,
+  body: (match domains
+    | List.nil => false
+    | List.cons d rest => ((surfaceDomainFed d (PrismSurface::surfaceFeeders)) || (surfaceAnyFed rest))),
+  recursive_argument: domains
+}
+
+definition{
+  name: surfacePlacesFed,
+  parameters: [places : (List PrismSurface::SurfacePlace)],
+  result: Bool,
+  body: (match places
+    | List.nil => true
+    | List.cons place rest => (((not ((project place kind) =? 0)) || (surfaceAnyFed (project place domains))) && (surfacePlacesFed rest))),
+  recursive_argument: places
+}
+
+definition{
   name: surfaceGroupsUsed,
   parameters: [],
   result: Bool,
@@ -281,6 +341,34 @@ theorem{
   name: surfaceNoEmptyGroup,
   parameters: [],
   statement: ((surfaceGroupsUsed) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceEveryPairReads,
+  parameters: [],
+  statement: ((surfacePairsRead (PrismSurface::surfaceContrasts)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceTonesAreColours,
+  parameters: [],
+  statement: ((surfaceColoursInRange (PrismSurface::surfaceTones)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceEveryPlaceIsFed,
+  parameters: [],
+  statement: ((surfacePlacesFed (PrismSurface::surfacePlaces)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceTwoThemes,
+  parameters: [],
+  statement: ((surfaceThemesDiffer (PrismSurface::surfaceTones)) = true),
   proof: decide{}
 }
 \end{semanticmodule}
