@@ -83,19 +83,43 @@ function icsTime(value) {
 function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
   const about = meta.about ?? {};
   const base = { address, domain: about.domain ?? 11, media: about.media ?? "plainText", label: meta.label, at: about.at ?? at };
-  if (outcome !== "restore") return { ...base, sealed: true, title: "", who: "", text: "" };
+  if (outcome !== "restore") return { ...base, sealed: true, title: "", who: "", text: "", body: "" };
   const text = lenient.decode(bytes);
   if (base.media === "message") {
     const h = headers(text);
     const when = Date.parse(h.date ?? "");
-    return { ...base, at: Number.isNaN(when) ? base.at : when, title: words(h.subject ?? ""), who: person(h.from), text };
+    // A message the owner sent has no From: the other party is its To.
+    const body = text.split(/\r?\n\r?\n/).slice(1).join("\n\n").trim();
+    return { ...base, at: Number.isNaN(when) ? base.at : when, title: words(h.subject ?? ""), who: person(h.from || h.to), text, body };
   }
   if (base.media === "calendar") {
     const start = icsTime(calendarField(text, "DTSTART"));
-    return { ...base, at: Number.isNaN(start) ? base.at : start, title: calendarField(text, "SUMMARY"), who: calendarField(text, "LOCATION"), text };
+    const title = calendarField(text, "SUMMARY");
+    return { ...base, at: Number.isNaN(start) ? base.at : start, title, who: calendarField(text, "LOCATION"), text, body: calendarField(text, "DESCRIPTION") || title };
   }
   const first = text.split(/\r?\n/).find((line) => line.trim()) ?? "";
-  return { ...base, title: first.trim(), who: "", text };
+  return { ...base, title: first.trim(), who: "", text, body: text.trim() };
+}
+
+// The kept items an Ask draws on: those sharing the most words with it.
+// Sealed items have no words to share, so they are never drawn on.
+const QUIET_WORDS = new Set("the and for are but not you your yours with what when where which who whom why how does did have has had was were will would can could should may might this that these those there their them they from into onto about over under just than then also any all some its it's i'm i've me my mine our ours out off get got need needs want wants".split(" "));
+const termsOf = (text) => text.toLowerCase().match(/[\p{L}\p{N}]+/gu)?.filter((w) => w.length > 2 && !QUIET_WORDS.has(w)) ?? [];
+const RANK = ["public", "internal", "confidential", "restricted"];
+const higher = (a, b) => (RANK.indexOf(b) > RANK.indexOf(a) ? b : a);
+
+export function drawOn(items, prompt, most = 5) {
+  const asked = new Set(termsOf(prompt));
+  if (!asked.size) return [];
+  const scored = [];
+  for (const item of items) {
+    if (item.sealed) continue;
+    const have = new Set(termsOf(`${item.title} ${item.who} ${item.body ?? item.text}`));
+    let score = 0;
+    for (const term of asked) if ([...have].some((w) => w === term || (term.length > 3 && (w.startsWith(term) || term.startsWith(w)) && w.length > 3))) score += 1;
+    if (score) scored.push({ item, score });
+  }
+  return scored.sort((a, b) => b.score - a.score || b.item.at - a.item.at).slice(0, most).map((s) => s.item);
 }
 
 const short = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" });
@@ -232,12 +256,28 @@ export default async function start({ app, reason, $ }) {
   let current = byKey.get(store.get(PLACE_KEY, "")) ?? PLACES.find((p) => p.host === "home");
   let query = "";
 
+  // A row opens to the item's full words, and closes again.
   function rowOf(item) {
     const what = item.sealed ? WORDS.sealed : item.title || "—";
-    return element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}` },
+    const row = element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}` },
       element("span", { className: "pr-when", textContent: when(item.at) }),
       element("span", { className: "pr-what", textContent: what }),
       element("span", { className: "pr-who", textContent: item.who || DOMAINS[item.domain] || "" }));
+    if (item.sealed || !item.body) return row;
+    row.tabIndex = 0;
+    row.setAttribute("role", "button");
+    row.setAttribute("aria-expanded", "false");
+    const toggle = () => {
+      const open = row.getAttribute("aria-expanded") === "true";
+      row.setAttribute("aria-expanded", String(!open));
+      if (open) row.querySelector(".pr-preview")?.remove();
+      else row.append(element("pre", { className: "pr-preview", textContent: item.body }));
+    };
+    row.addEventListener("click", (event) => { if (!event.target.closest(".pr-preview")) toggle(); });
+    row.addEventListener("keydown", (event) => {
+      if (event.target === row && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); toggle(); }
+    });
+    return row;
   }
 
   function paintList() {
@@ -324,7 +364,8 @@ export default async function start({ app, reason, $ }) {
       if (act.target === "mail") return { target: "mail", cause: "owner", text, payload: { to: to.value, subject, body: text } };
       if (act.target === "calendar") {
         const start = at.value ? new Date(at.value) : new Date(Date.now() + 3600_000);
-        return { target: "calendar", cause: "owner", text, payload: { uid: `${crypto.randomUUID()}@me`, start, end: new Date(start.getTime() + 3600_000), summary: subject, description: text } };
+        // The stamp is fixed here, so the event the owner reviewed is the event that leaves.
+        return { target: "calendar", cause: "owner", text, payload: { uid: `${crypto.randomUUID()}@me`, start, end: new Date(start.getTime() + 3600_000), summary: subject, description: text, now: Date.now() } };
       }
       return { target: "platform", cause: "owner", text, payload: { title: subject, text } };
     };
@@ -350,12 +391,27 @@ export default async function start({ app, reason, $ }) {
         const done = await (await routerOf()).send(pending.item, pending.seal);
         say(word(done.answer), done.delivered ? "good" : "bad");
         remember(`${place.name} · ${WORDS.send}`, done.answer);
-        if (done.delivered) { pending = null; send.hidden = true; form.reset(); preview.hidden = true; }
+        if (done.delivered) {
+          pending = null; send.hidden = true; form.reset(); preview.hidden = true;
+          await keepSent(place, act, done.out);
+        }
       } finally {
         send.disabled = false;
       }
     });
     return form;
+  }
+
+  // What left is kept in the place it left from, at that domain's floor, as
+  // the exact bytes that went out; the Boundary and the vault decide the keep.
+  const SENT_MEDIA = { mail: "message", calendar: "calendar", platform: "plainText" };
+  async function keepSent(place, act, out) {
+    if (!vault || !out) return;
+    const domain = place.domains[0];
+    const label = LABELS[FLOORS[domain]].toLowerCase();
+    const result = await vault.put(encoder.encode(out.bytes), { label, about: { domain, media: SENT_MEDIA[act.target], at: Date.now() } });
+    remember(`${place.name} · ${WORDS.keep}`, result.outcome);
+    if (result.outcome?.startsWith("store")) { await load(); paintList(); }
   }
 
   function go(key, focus = false) {
@@ -564,7 +620,7 @@ export default async function start({ app, reason, $ }) {
     routedModels = await openModels({ lock, decide: async (request) => ({ outcome: await line(`model ${request}`), rule: "guest" }), grant: { models: grants() }, halted });
     return routedModels;
   }
-  async function answer(prompt, context) {
+  async function answer(prompt, context, grounds) {
     const r4model = await openModel();
     if (grants().length) {
       const routed = await openRouted();
@@ -573,19 +629,29 @@ export default async function start({ app, reason, $ }) {
         const decision = await routed.prepare(target);
         if (decision.outcome === "run") {
           routed.connect(r4model, { maxTokens: 128 });
-          return r4model.askRouted({ target, prompt, context });
+          return r4model.askRouted({ target, prompt, context, grounds });
         }
       }
     }
-    return r4model.ask({ prompt, context });
+    return r4model.ask({ prompt, context, grounds });
   }
+  // The kept items an Ask drew on, under its answer; each opens like a row.
+  const drawn = element("ol", { className: "pr-list pr-drawn" });
+  drawn.setAttribute("aria-label", WORDS["ask.placeholder"]);
+  out.after(drawn);
   $("pr-ask").addEventListener("submit", async (event) => {
     event.preventDefault();
     const prompt = $("pr-prompt").value.trim();
     if (!prompt) return;
     $("pr-ask-go").disabled = true;
+    // While halted nothing kept is drawn on; the model's own decision refuses too.
+    const used = haltedNow ? [] : drawOn(items, prompt);
+    drawn.replaceChildren(...used.map(rowOf));
+    // The answer carries the highest label of what it drew on.
+    const label = used.reduce((at, item) => higher(at, item.label ?? "confidential"), "confidential");
+    const grounds = used.map((item) => [when(item.at), item.title, item.who, item.body].filter(Boolean).join(" · ").slice(0, 600));
     try {
-      const result = await answer(prompt, { label: "confidential", halted: halted() });
+      const result = await answer(prompt, { label, halted: halted() }, grounds);
       if (result.outcome === "answer") say(result.answer, "good");
       else if (result.outcome === "ask" && result.release) say(WORDS["answer.asks"], "warn");
       else say(`${WORDS["answer.none"]} · ${result.outcome}`, "bad");
