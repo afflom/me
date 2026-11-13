@@ -36,6 +36,7 @@ jobs:
       actions: write
       contents: read
       issues: write
+      pull-requests: write
     steps:
       - name: Compare main's head with what is deployed, and act
         shell: bash
@@ -104,6 +105,17 @@ jobs:
             exit 0
           fi
 
+          # The checks that refused, by name, from the job's own log.
+          job_id=$(jq -r '.id // empty' <<<"${failed:-{\}}")
+          tests=""
+          if [[ -n $job_id ]]; then
+            tests=$(gh api "repos/$REPO/actions/jobs/$job_id/logs" 2>/dev/null \
+              | sed -nE 's/^[0-9TZ:.-]+ +not ok [0-9]+ - (.*)$/- \1/p' | sort -u | head -n 10 || true)
+          fi
+          # The pull requests whose merge made main's head: the thread that merged
+          # one hears about it on its own pull request, not only in the issue.
+          prs=$(gh api "repos/$REPO/commits/$head/pulls" --jq '[.[] | select(.merged_at != null) | .number] | join(" ")' 2>/dev/null || true)
+
           live=$(gh api "repos/$REPO/actions/workflows/pages.yml/runs?branch=main&status=success&per_page=1" \
             --jq '.workflow_runs[0] | "\(.head_sha) (\(.updated_at))"' 2>/dev/null || echo unknown)
           body=$(printf '%s\n' \
@@ -115,6 +127,10 @@ jobs:
             "| refused by | **$job** / **$step** |" \
             "| run | $job_url |" \
             "| live page is | \`$live\` |" \
+            "| merged by | ${prs:+#${prs// / #}} |" \
+            "" \
+            "${tests:+Checks that refused:}" \
+            "${tests}" \
             "" \
             "Every gate that refused here also runs on pull requests, so the fix lands as a pull request; this issue closes itself when main is live again.")
           say "$body"
@@ -125,3 +141,18 @@ jobs:
           else
             gh api -X POST "repos/$REPO/issues" -f title="$title" -f body="$body" -f "labels[]=$label" -f "assignees[]=$OWNER" >/dev/null
           fi
+          # Once per pull request and commit: the PR whose merge was refused is told
+          # on its own page. The same merge result already passed there, so a refusal
+          # now means a check that does not decide the same way twice.
+          for pr in $prs; do
+            seen=$(gh api "repos/$REPO/issues/$pr/comments?per_page=100" --jq "[.[] | select(.body | contains(\"$head\"))] | length")
+            [[ $seen == 0 ]] || continue
+            gh api -X POST "repos/$REPO/issues/$pr/comments" -f body="$(printf '%s\n' \
+              "Merging this pull request made main \`$head\`, and main's deploy refused it, so the live page is not this change." \
+              "" \
+              "Refused by **$job** / **$step**: $job_url" \
+              "${tests:+}" \
+              "${tests}" \
+              "" \
+              "These are the same gates this pull request passed. If its checks ran on the same merge result, the refusal comes from a check that does not decide the same way every run: make that check deterministic in a new pull request.")" >/dev/null
+          done
