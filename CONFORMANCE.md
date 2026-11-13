@@ -26,6 +26,7 @@ model does not sanction.
 | `CO-02` | `build` | Every facet the Prism root routes is one model in the coherence registry with typed ports, live with the page modules that ask it or sealed by a PrismHost surface, and the build refuses a registry whose flow leaves a port unproduced or untaken, a place unfed, an act or setting undriven, a feeder's media without a domain or a domain without vocabulary |
 | `CO-03` | `build` | A kept item belongs to its media's domain and to every domain whose vocabulary in the coherence registry it uses, and an Ask finds the span its intent words name |
 | `CO-04` | `build` | A zip the owner picks or drops, such as a Google Takeout export, opens in the browser to its entries, stored or deflated and ZIP64 included, each judged by PrismFolder by its own format |
+| `CO-05` | `build` | A returning owner gets the deploy that is served: when the version precache.json names differs from every cache the page keeps, the page drops the kept deploy and loads once more, and every button on Today does something when pressed |
 
 ## dest
 
@@ -85,6 +86,7 @@ model does not sanction.
 | `PG-01` | `build` | The page keeps, reads and answers only through the verified app: a note is kept at its domain's floor only when the Boundary and the vault allow it, nothing is kept while halted, and an outbound act is only drafted until the owner's Send |
 | `PG-02` | `build` | The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, every visible word a name from the model, every list place fed by a source or an act, and every colour a tone of its modeled look read at its contrast |
 | `PG-03` | `build` | Every act on the page completes end to end: what the owner sends is the very event or message they reviewed and is kept in the place it left from at that domain's floor, every kept item opens to its words, and Ask draws on the kept items that share its words, never while halted, under the highest label it drew on |
+| `VO-01` | `build` | The Prism answers a gesture in tone and colour from PrismSurface's voice: 5-limit just ratios within one octave, a loudness ceiling, a rest between answers, silent under Quiet, and nothing loaded before the owner's first gesture |
 
 ## prism
 
@@ -106,6 +108,13 @@ model does not sanction.
 | ID | Level | Statement |
 | --- | --- | --- |
 | `R4-01` | `build` | The R4 language model runs in the browser only from bytes that re-derive to their pinned SHA-256, served by the page in pieces of at most 16 MiB, and shows an answer only when the proved Prism R4 decision allows it |
+
+## resonance
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `RS-01` | `build` | The Prism answers a gesture of the owner only as PrismResonance answers: stillness with rest, a dismissal at once with recede, the kill switch with rest; quiet never sounds or brings anything forward, nor does a hurried pace, a glance, or a belief the owner rejected; only a consolidated or confirmed belief gathers a chorus |
+| `RS-02` | `build` | The page answers the owner's gestures and learns from them only through the root guest: each answer's learning signal goes to PrismLearning, only the owner confirms or rejects, and what was learned is kept as a sealed snapshot in this browser that restores with zero drift or not at all |
 
 ## route
 

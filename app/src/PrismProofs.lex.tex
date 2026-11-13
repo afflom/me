@@ -17,6 +17,7 @@
 \importmodule{PrismLearning}
 \importmodule{PrismModels}
 \importmodule{PrismR4}
+\importmodule{PrismResonance}
 \importmodule{PrismRoute}
 \importmodule{PrismUorc}
 \importmodule{PrismVaultRestore}
@@ -155,6 +156,14 @@ theorem{
   name: routesCurate,
   parameters: [rest : Bytes],
   statement: ((Prism::route (Prism::facetCurate) rest) = (PrismCurate::curateDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesResonance,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetResonance) rest) = (PrismResonance::resonanceDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }

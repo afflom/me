@@ -21,6 +21,7 @@ questions, the examples and the guarantees in plain words.
 | `PrismUorc` | `uorc/` | whether one value may be kept in, or opened from, the vault as its UORC archive, from the archive's structure alone (seal, format, basis, object count, restore, kappa): keep, open, or refuse | 14 |
 | `PrismHolon` | `holon/` | what the Prism's observer does next for one facet (the resonance engine, each place, the owner, the Prism itself), each with a directive, an objective and a KPI floor: hold, reconcile toward the owner, curate, restore the floor, or refuse | 9 |
 | `PrismCurate` | `curate/` | whether one candidate set of a facet's tunable parameters (a Rule-30 hypothesis or a reconciliation) replaces what runs: adopt under a new kappa-named claim, recall, keep, or refuse | 13 |
+| `PrismResonance` | `resonance/` | how the Prism answers one gesture of the owner toward one thing it holds: rest, whisper, chime, bloom (it comes forward), chorus (what belongs with it comes too), or recede; stillness meets rest, a dismissal recedes at once, quiet and a hurried pace are never met with more, and a rejected belief never comes forward | 10 |
 
 Boundary guarantees: nothing moves while the Prism is halted; nothing goes to
 GitHub or the hosted verifier, even with approval; nothing a detector matched is
@@ -62,3 +63,8 @@ These modules are hand-patched after generation, so do not regenerate them from
 
 The modules carry no personal value. They speak of "the owner"; the owner's
 facts live only in the browser.
+- Resonance: written by the generic `tools/facet/gen.py app/specs/resonance/spec.json`
+  (the dest generator, parameterized by the spec's `facet` record). It checks every
+  request against every guarantee and example before writing, and `--check`
+  holds the outputs to the spec. Its standalone guest comes from
+  `tools/facet/standalone.py`.
