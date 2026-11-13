@@ -119,6 +119,11 @@ const higher = (a, b) => (RANK.indexOf(b) > RANK.indexOf(a) ? b : a);
 
 const short = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" });
 const clock = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
+// Something that happens at a time (an event, or a jot the router gave a time) shows its day and clock.
+const dayClock = new Intl.DateTimeFormat(undefined, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+const dayOnly = new Intl.DateTimeFormat(undefined, { weekday: "short", day: "numeric", month: "short" });
+const scheduled = (item) => (item.start != null || item.media === "calendar") && item.at;
+const whenOfItem = (item) => (scheduled(item) ? (item.allDay ? dayOnly : dayClock).format(new Date(item.at)) : when(item.at));
 const when = (at) => {
   if (!at) return "";
   const date = new Date(at);
@@ -343,7 +348,7 @@ export default async function start({ app, reason, $ }) {
   function rowOf(item) {
     const what = item.sealed ? WORDS.sealed : item.title || "—";
     const row = element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}` },
-      element("span", { className: "pr-when", textContent: when(item.at) }),
+      element("span", { className: "pr-when", textContent: whenOfItem(item) }),
       element("span", { className: "pr-what", textContent: what }),
       element("span", { className: "pr-who", textContent: item.who || DOMAINS[item.domain] || "" }));
     if (item.sealed || !item.body) return row;
