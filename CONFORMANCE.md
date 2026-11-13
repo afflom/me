@@ -102,6 +102,14 @@ model does not sanction.
 | --- | --- | --- |
 | `PV-01` | `build` | Neither the tracked tree nor the built page holds personal data: every email address is at a reserved domain, and no phone, payment card or national ID number appears |
 
+## product
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PD-01` | `build` | Every journey of the product record is walked by a synthetic person whose device holds a day of mail and calendar: a journey recorded as working passes in a fresh and a returning browser on every pull request and on the published page, and a journey that passes while recorded as not yet fails until the record says it works |
+| `PD-02` | `build` | No word or control the product record assigns to the system view is on the screen, in any place, fresh, returning, or with the person's day arrived and an item opened, beyond the debt the record lists; a word not listed fails, and a listed word that no longer shows fails until it is removed, so the debt only shrinks |
+| `PD-03` | `build` | The product record places every part the Prism has: every surface entry in the person's or the system view, every root facet in the system view serving at least one journey, and every journey with its goal, done-state, usability measure, status and walk; the gate refuses a record that leaves any part unplaced |
+
 ## r4
 
 | ID | Level | Statement |
