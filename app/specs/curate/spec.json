@@ -1,0 +1,463 @@
+{
+  "name": "prism-curate",
+  "title": "Prism Curate",
+  "purpose": "Decides whether one candidate set of a facet's tunable parameters, a deterministic Rule-30 hypothesis or the observer's reconciliation toward the owner, replaces the parameters the facet runs now: adopt it under a new kappa-named claim, recall it under a claim already made, keep what runs, or refuse. A candidate is adopted only with zero humane defects, on the owner's own gestures, without falling below the facet's floor, and only when it Pareto-dominates what runs (a hypothesis) or eases the owner's dismissals (a reconciliation).",
+  "authority": {
+    "repository": "https://github.com/afflom/verdant-resonance",
+    "commit": "2c6cd0751f46c593357d163c1ae03909c57d79e6",
+    "files": [
+      "src/game/conservatoryCurationEngine.ts",
+      "src/game/parametricCompressionEngine.ts"
+    ],
+    "taken": "autonomous curation: the 64-cell cyclic Rule-30 register proposes hypotheses, the defect = 0 gate refuses any humane defect, strict Pareto dominance admits a new incumbent, every admission is a kappa-named claim minted once, and the floor never regresses"
+  },
+  "fields": [
+    {
+      "name": "halted",
+      "values": [
+        "no",
+        "yes"
+      ],
+      "means": "whether the owner pressed the kill switch"
+    },
+    {
+      "name": "tunable",
+      "values": [
+        "yes",
+        "no"
+      ],
+      "means": "whether every parameter the candidate sets is one the facet's spec marks tunable, on its step and within its bounds"
+    },
+    {
+      "name": "label",
+      "values": [
+        "admit",
+        "other"
+      ],
+      "means": "the kappa facet's answer on the candidate's claim label (admit), or any other answer"
+    },
+    {
+      "name": "defect",
+      "values": [
+        "zero",
+        "some"
+      ],
+      "means": "the candidate's humane defects on replay of the window: answers that break a guarantee of the facet's spec"
+    },
+    {
+      "name": "evidence",
+      "values": [
+        "owner",
+        "self"
+      ],
+      "means": "whether the window the candidate was replayed on holds at least the minimum of the owner's own gestures"
+    },
+    {
+      "name": "floor",
+      "values": [
+        "kept",
+        "regressed"
+      ],
+      "means": "whether the facet's floor Pareto-dominates the candidate (regressed) or not (kept)"
+    },
+    {
+      "name": "move",
+      "values": [
+        "explore",
+        "reconcile"
+      ],
+      "means": "whether the candidate is a Rule-30 hypothesis (explore) or the observer's reconciliation (reconcile): the one step of one tunable that most lowers the owner's dismissals on replay"
+    },
+    {
+      "name": "eased",
+      "values": [
+        "yes",
+        "no"
+      ],
+      "means": "whether the candidate, on replay, brings forward fewer items the owner dismissed than what runs"
+    },
+    {
+      "name": "dominance",
+      "values": [
+        "dominates",
+        "equal",
+        "dominated",
+        "incomparable"
+      ],
+      "means": "the candidate against what runs, on the facet's objectives (each minimized): no worse on all and better on one, the same on all, no better on all and worse on one, or neither"
+    },
+    {
+      "name": "claim",
+      "values": [
+        "new",
+        "known"
+      ],
+      "means": "whether the candidate's claim label is already in the facet's ledger"
+    }
+  ],
+  "outcomes": [
+    "adopt",
+    "recall",
+    "keep",
+    "refuse"
+  ],
+  "tree": {
+    "if": [
+      "halted",
+      "yes"
+    ],
+    "then": "refuse",
+    "else": {
+      "if": [
+        "tunable",
+        "no"
+      ],
+      "then": "refuse",
+      "else": {
+        "if": [
+          "label",
+          "other"
+        ],
+        "then": "refuse",
+        "else": {
+          "if": [
+            "defect",
+            "some"
+          ],
+          "then": "keep",
+          "else": {
+            "if": [
+              "evidence",
+              "self"
+            ],
+            "then": "keep",
+            "else": {
+              "if": [
+                "floor",
+                "regressed"
+              ],
+              "then": "keep",
+              "else": {
+                "if": [
+                  "move",
+                  "reconcile"
+                ],
+                "then": {
+                  "if": [
+                    "eased",
+                    "no"
+                  ],
+                  "then": "keep",
+                  "else": {
+                    "if": [
+                      "claim",
+                      "known"
+                    ],
+                    "then": "recall",
+                    "else": "adopt"
+                  }
+                },
+                "else": {
+                  "if": [
+                    "dominance",
+                    "dominates"
+                  ],
+                  "then": {
+                    "if": [
+                      "claim",
+                      "known"
+                    ],
+                    "then": "recall",
+                    "else": "adopt"
+                  },
+                  "else": "keep"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "guarantees": [
+    {
+      "when": [
+        [
+          "halted",
+          "yes"
+        ]
+      ],
+      "always": "refuse",
+      "why": "the kill switch stops curation: nothing is adopted while halted"
+    },
+    {
+      "when": [
+        [
+          "tunable",
+          "no"
+        ]
+      ],
+      "always": "refuse",
+      "why": "a parameter the spec does not mark tunable, or a value off its step or bounds, is never set"
+    },
+    {
+      "when": [
+        [
+          "label",
+          "other"
+        ]
+      ],
+      "always": "refuse",
+      "why": "every adoption is named by a kappa label the kappa facet admitted"
+    },
+    {
+      "when": [
+        [
+          "defect",
+          "some"
+        ]
+      ],
+      "never": [
+        "adopt",
+        "recall"
+      ],
+      "why": "the humane gate: a candidate with any defect is never adopted (defect = 0)"
+    },
+    {
+      "when": [
+        [
+          "evidence",
+          "self"
+        ]
+      ],
+      "never": [
+        "adopt",
+        "recall"
+      ],
+      "why": "self-reference alone is bounded: no candidate is adopted without the owner's gestures"
+    },
+    {
+      "when": [
+        [
+          "floor",
+          "regressed"
+        ]
+      ],
+      "never": [
+        "adopt",
+        "recall"
+      ],
+      "why": "the floor never regresses: no candidate the floor dominates is adopted"
+    },
+    {
+      "when": [
+        [
+          "move",
+          "explore"
+        ],
+        [
+          "dominance",
+          "equal"
+        ]
+      ],
+      "never": [
+        "adopt",
+        "recall"
+      ],
+      "why": "a hypothesis that changes nothing measurable is not adopted (strict dominance)"
+    },
+    {
+      "when": [
+        [
+          "move",
+          "explore"
+        ],
+        [
+          "dominance",
+          "dominated"
+        ]
+      ],
+      "never": [
+        "adopt",
+        "recall"
+      ],
+      "why": "a hypothesis worse than what runs is never adopted"
+    },
+    {
+      "when": [
+        [
+          "move",
+          "explore"
+        ],
+        [
+          "dominance",
+          "incomparable"
+        ]
+      ],
+      "never": [
+        "adopt",
+        "recall"
+      ],
+      "why": "a hypothesis that trades one objective for another is not adopted: improvement is strict Pareto dominance"
+    },
+    {
+      "when": [
+        [
+          "move",
+          "reconcile"
+        ],
+        [
+          "eased",
+          "no"
+        ]
+      ],
+      "never": [
+        "adopt",
+        "recall"
+      ],
+      "why": "a reconciliation is adopted only when it eases the owner's dismissals"
+    },
+    {
+      "when": [
+        [
+          "claim",
+          "known"
+        ]
+      ],
+      "never": [
+        "adopt"
+      ],
+      "why": "a claim is minted once: a known claim is recalled, never minted again"
+    },
+    {
+      "when": [
+        [
+          "claim",
+          "new"
+        ]
+      ],
+      "never": [
+        "recall"
+      ],
+      "why": "only a claim in the ledger can be recalled"
+    },
+    {
+      "when": [
+        [
+          "halted",
+          "no"
+        ],
+        [
+          "tunable",
+          "yes"
+        ],
+        [
+          "label",
+          "admit"
+        ]
+      ],
+      "never": [
+        "refuse"
+      ],
+      "why": "a well-formed, kappa-named candidate is weighed, never refused"
+    }
+  ],
+  "objectives": [
+    "dissonant",
+    "missed",
+    "interruptions"
+  ],
+  "rule30": {
+    "cells": 64,
+    "seed": "11400714819323198485",
+    "lanes": 4,
+    "vectors": [
+      [
+        "11400714819323198485",
+        "8170733857868071477"
+      ],
+      [
+        "0",
+        "8170733857868071477"
+      ],
+      [
+        "1",
+        "9223372036854775811"
+      ]
+    ],
+    "step": "next(i) = cell(i + 1) XOR (cell(i) OR cell(i - 1)), on Z/64Z; the all-zero register is seeded first",
+    "lane": "lane g is bits 16g .. 16g + 7 of the stepped register: bits 0-3 pick the tunable (mod their count), bit 4 the direction, bits 5-6 one to four steps"
+  },
+  "claim": {
+    "profile": "prism/curate-claim/1",
+    "form": "profile|facet|parameters as name=value joined by ,|objectives joined by ,|move",
+    "axis": "sha256",
+    "ledger": 64
+  },
+  "examples": [
+    [
+      "no yes admit zero owner kept explore yes dominates new",
+      "adopt"
+    ],
+    [
+      "no yes admit zero owner kept explore yes dominates known",
+      "recall"
+    ],
+    [
+      "no yes admit zero owner kept explore yes equal new",
+      "keep"
+    ],
+    [
+      "no yes admit zero owner kept explore yes dominated new",
+      "keep"
+    ],
+    [
+      "no yes admit zero owner kept explore yes incomparable new",
+      "keep"
+    ],
+    [
+      "no yes admit zero owner kept reconcile yes incomparable new",
+      "adopt"
+    ],
+    [
+      "no yes admit zero owner kept reconcile yes dominated known",
+      "recall"
+    ],
+    [
+      "no yes admit zero owner kept reconcile no dominates new",
+      "keep"
+    ],
+    [
+      "no yes admit zero owner regressed reconcile yes dominates new",
+      "keep"
+    ],
+    [
+      "no yes admit zero self kept explore yes dominates new",
+      "keep"
+    ],
+    [
+      "no yes admit some owner kept explore yes dominates new",
+      "keep"
+    ],
+    [
+      "no yes other zero owner kept explore yes dominates new",
+      "refuse"
+    ],
+    [
+      "no no admit zero owner kept explore yes dominates new",
+      "refuse"
+    ],
+    [
+      "yes yes admit zero owner kept explore yes dominates new",
+      "refuse"
+    ],
+    [
+      "no yes admit zero owner kept explore dominates",
+      "invalid"
+    ],
+    [
+      "no yes admit zero owner kept explore yes Dominates new",
+      "invalid"
+    ]
+  ]
+}

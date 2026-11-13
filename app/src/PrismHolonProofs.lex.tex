@@ -1,0 +1,350 @@
+\begin{lexlean}{PrismHolonProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismHolon}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: holonBreaksInv001,
+  parameters: [request : PrismHolon::HolonRequest],
+  result: Bool,
+  body: (((((((((project request halted) <? 2) && ((project request floor) <? 2)) && ((project request signal) <? 2)) && ((project request tunable) <? 2)) && ((project request dissonance) <? 3)) && ((project request kpi) <? 2)) && ((project request halted) =? (PrismHolon::holonHaltedYes))) && (not ((PrismHolon::holonJudge request) =? (PrismHolon::holonAnswerRefuse))))
+}
+
+theorem{
+  name: holonInv001Holds,
+  parameters: [request : PrismHolon::HolonRequest],
+  statement: ((holonBreaksInv001 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHolon::holonAnswerCurate,
+      PrismHolon::holonAnswerHold,
+      PrismHolon::holonAnswerReconcile,
+      PrismHolon::holonAnswerRefuse,
+      PrismHolon::holonAnswerRestore,
+      PrismHolon::holonDissonanceHigh,
+      PrismHolon::holonDissonanceNone,
+      PrismHolon::holonDissonanceSome,
+      PrismHolon::holonFloorHeld,
+      PrismHolon::holonFloorRegressed,
+      PrismHolon::holonHaltedNo,
+      PrismHolon::holonHaltedYes,
+      PrismHolon::holonJudge,
+      PrismHolon::holonKpiMet,
+      PrismHolon::holonKpiMissed,
+      PrismHolon::holonSignalOwner,
+      PrismHolon::holonSignalSelf,
+      PrismHolon::holonTunableNo,
+      PrismHolon::holonTunableYes,
+      holonBreaksInv001
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonBreaksInv002,
+  parameters: [request : PrismHolon::HolonRequest],
+  result: Bool,
+  body: (((((((((project request halted) <? 2) && ((project request floor) <? 2)) && ((project request signal) <? 2)) && ((project request tunable) <? 2)) && ((project request dissonance) <? 3)) && ((project request kpi) <? 2)) && ((project request halted) =? (PrismHolon::holonHaltedNo))) && ((PrismHolon::holonJudge request) =? (PrismHolon::holonAnswerRefuse)))
+}
+
+theorem{
+  name: holonInv002Holds,
+  parameters: [request : PrismHolon::HolonRequest],
+  statement: ((holonBreaksInv002 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHolon::holonAnswerCurate,
+      PrismHolon::holonAnswerHold,
+      PrismHolon::holonAnswerReconcile,
+      PrismHolon::holonAnswerRefuse,
+      PrismHolon::holonAnswerRestore,
+      PrismHolon::holonDissonanceHigh,
+      PrismHolon::holonDissonanceNone,
+      PrismHolon::holonDissonanceSome,
+      PrismHolon::holonFloorHeld,
+      PrismHolon::holonFloorRegressed,
+      PrismHolon::holonHaltedNo,
+      PrismHolon::holonHaltedYes,
+      PrismHolon::holonJudge,
+      PrismHolon::holonKpiMet,
+      PrismHolon::holonKpiMissed,
+      PrismHolon::holonSignalOwner,
+      PrismHolon::holonSignalSelf,
+      PrismHolon::holonTunableNo,
+      PrismHolon::holonTunableYes,
+      holonBreaksInv002
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonBreaksInv003,
+  parameters: [request : PrismHolon::HolonRequest],
+  result: Bool,
+  body: ((((((((((project request halted) <? 2) && ((project request floor) <? 2)) && ((project request signal) <? 2)) && ((project request tunable) <? 2)) && ((project request dissonance) <? 3)) && ((project request kpi) <? 2)) && ((project request halted) =? (PrismHolon::holonHaltedNo))) && ((project request floor) =? (PrismHolon::holonFloorRegressed))) && (not ((PrismHolon::holonJudge request) =? (PrismHolon::holonAnswerRestore))))
+}
+
+theorem{
+  name: holonInv003Holds,
+  parameters: [request : PrismHolon::HolonRequest],
+  statement: ((holonBreaksInv003 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHolon::holonAnswerCurate,
+      PrismHolon::holonAnswerHold,
+      PrismHolon::holonAnswerReconcile,
+      PrismHolon::holonAnswerRefuse,
+      PrismHolon::holonAnswerRestore,
+      PrismHolon::holonDissonanceHigh,
+      PrismHolon::holonDissonanceNone,
+      PrismHolon::holonDissonanceSome,
+      PrismHolon::holonFloorHeld,
+      PrismHolon::holonFloorRegressed,
+      PrismHolon::holonHaltedNo,
+      PrismHolon::holonHaltedYes,
+      PrismHolon::holonJudge,
+      PrismHolon::holonKpiMet,
+      PrismHolon::holonKpiMissed,
+      PrismHolon::holonSignalOwner,
+      PrismHolon::holonSignalSelf,
+      PrismHolon::holonTunableNo,
+      PrismHolon::holonTunableYes,
+      holonBreaksInv003
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonBreaksInv004,
+  parameters: [request : PrismHolon::HolonRequest],
+  result: Bool,
+  body: (((((((((project request halted) <? 2) && ((project request floor) <? 2)) && ((project request signal) <? 2)) && ((project request tunable) <? 2)) && ((project request dissonance) <? 3)) && ((project request kpi) <? 2)) && ((project request signal) =? (PrismHolon::holonSignalSelf))) && (((PrismHolon::holonJudge request) =? (PrismHolon::holonAnswerReconcile)) || ((PrismHolon::holonJudge request) =? (PrismHolon::holonAnswerCurate))))
+}
+
+theorem{
+  name: holonInv004Holds,
+  parameters: [request : PrismHolon::HolonRequest],
+  statement: ((holonBreaksInv004 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHolon::holonAnswerCurate,
+      PrismHolon::holonAnswerHold,
+      PrismHolon::holonAnswerReconcile,
+      PrismHolon::holonAnswerRefuse,
+      PrismHolon::holonAnswerRestore,
+      PrismHolon::holonDissonanceHigh,
+      PrismHolon::holonDissonanceNone,
+      PrismHolon::holonDissonanceSome,
+      PrismHolon::holonFloorHeld,
+      PrismHolon::holonFloorRegressed,
+      PrismHolon::holonHaltedNo,
+      PrismHolon::holonHaltedYes,
+      PrismHolon::holonJudge,
+      PrismHolon::holonKpiMet,
+      PrismHolon::holonKpiMissed,
+      PrismHolon::holonSignalOwner,
+      PrismHolon::holonSignalSelf,
+      PrismHolon::holonTunableNo,
+      PrismHolon::holonTunableYes,
+      holonBreaksInv004
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonBreaksInv005,
+  parameters: [request : PrismHolon::HolonRequest],
+  result: Bool,
+  body: (((((((((project request halted) <? 2) && ((project request floor) <? 2)) && ((project request signal) <? 2)) && ((project request tunable) <? 2)) && ((project request dissonance) <? 3)) && ((project request kpi) <? 2)) && ((project request tunable) =? (PrismHolon::holonTunableNo))) && (((PrismHolon::holonJudge request) =? (PrismHolon::holonAnswerReconcile)) || ((PrismHolon::holonJudge request) =? (PrismHolon::holonAnswerCurate))))
+}
+
+theorem{
+  name: holonInv005Holds,
+  parameters: [request : PrismHolon::HolonRequest],
+  statement: ((holonBreaksInv005 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHolon::holonAnswerCurate,
+      PrismHolon::holonAnswerHold,
+      PrismHolon::holonAnswerReconcile,
+      PrismHolon::holonAnswerRefuse,
+      PrismHolon::holonAnswerRestore,
+      PrismHolon::holonDissonanceHigh,
+      PrismHolon::holonDissonanceNone,
+      PrismHolon::holonDissonanceSome,
+      PrismHolon::holonFloorHeld,
+      PrismHolon::holonFloorRegressed,
+      PrismHolon::holonHaltedNo,
+      PrismHolon::holonHaltedYes,
+      PrismHolon::holonJudge,
+      PrismHolon::holonKpiMet,
+      PrismHolon::holonKpiMissed,
+      PrismHolon::holonSignalOwner,
+      PrismHolon::holonSignalSelf,
+      PrismHolon::holonTunableNo,
+      PrismHolon::holonTunableYes,
+      holonBreaksInv005
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonBreaksInv006,
+  parameters: [request : PrismHolon::HolonRequest],
+  result: Bool,
+  body: (((((((((((((project request halted) <? 2) && ((project request floor) <? 2)) && ((project request signal) <? 2)) && ((project request tunable) <? 2)) && ((project request dissonance) <? 3)) && ((project request kpi) <? 2)) && ((project request halted) =? (PrismHolon::holonHaltedNo))) && ((project request floor) =? (PrismHolon::holonFloorHeld))) && ((project request signal) =? (PrismHolon::holonSignalOwner))) && ((project request tunable) =? (PrismHolon::holonTunableYes))) && ((project request dissonance) =? (PrismHolon::holonDissonanceHigh))) && (not ((PrismHolon::holonJudge request) =? (PrismHolon::holonAnswerReconcile))))
+}
+
+theorem{
+  name: holonInv006Holds,
+  parameters: [request : PrismHolon::HolonRequest],
+  statement: ((holonBreaksInv006 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHolon::holonAnswerCurate,
+      PrismHolon::holonAnswerHold,
+      PrismHolon::holonAnswerReconcile,
+      PrismHolon::holonAnswerRefuse,
+      PrismHolon::holonAnswerRestore,
+      PrismHolon::holonDissonanceHigh,
+      PrismHolon::holonDissonanceNone,
+      PrismHolon::holonDissonanceSome,
+      PrismHolon::holonFloorHeld,
+      PrismHolon::holonFloorRegressed,
+      PrismHolon::holonHaltedNo,
+      PrismHolon::holonHaltedYes,
+      PrismHolon::holonJudge,
+      PrismHolon::holonKpiMet,
+      PrismHolon::holonKpiMissed,
+      PrismHolon::holonSignalOwner,
+      PrismHolon::holonSignalSelf,
+      PrismHolon::holonTunableNo,
+      PrismHolon::holonTunableYes,
+      holonBreaksInv006
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonBreaksInv007,
+  parameters: [request : PrismHolon::HolonRequest],
+  result: Bool,
+  body: (((((((((project request halted) <? 2) && ((project request floor) <? 2)) && ((project request signal) <? 2)) && ((project request tunable) <? 2)) && ((project request dissonance) <? 3)) && ((project request kpi) <? 2)) && ((project request dissonance) =? (PrismHolon::holonDissonanceHigh))) && ((PrismHolon::holonJudge request) =? (PrismHolon::holonAnswerCurate)))
+}
+
+theorem{
+  name: holonInv007Holds,
+  parameters: [request : PrismHolon::HolonRequest],
+  statement: ((holonBreaksInv007 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHolon::holonAnswerCurate,
+      PrismHolon::holonAnswerHold,
+      PrismHolon::holonAnswerReconcile,
+      PrismHolon::holonAnswerRefuse,
+      PrismHolon::holonAnswerRestore,
+      PrismHolon::holonDissonanceHigh,
+      PrismHolon::holonDissonanceNone,
+      PrismHolon::holonDissonanceSome,
+      PrismHolon::holonFloorHeld,
+      PrismHolon::holonFloorRegressed,
+      PrismHolon::holonHaltedNo,
+      PrismHolon::holonHaltedYes,
+      PrismHolon::holonJudge,
+      PrismHolon::holonKpiMet,
+      PrismHolon::holonKpiMissed,
+      PrismHolon::holonSignalOwner,
+      PrismHolon::holonSignalSelf,
+      PrismHolon::holonTunableNo,
+      PrismHolon::holonTunableYes,
+      holonBreaksInv007
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonBreaksInv008,
+  parameters: [request : PrismHolon::HolonRequest],
+  result: Bool,
+  body: ((((((((((project request halted) <? 2) && ((project request floor) <? 2)) && ((project request signal) <? 2)) && ((project request tunable) <? 2)) && ((project request dissonance) <? 3)) && ((project request kpi) <? 2)) && ((project request dissonance) =? (PrismHolon::holonDissonanceNone))) && ((project request kpi) =? (PrismHolon::holonKpiMet))) && (((PrismHolon::holonJudge request) =? (PrismHolon::holonAnswerReconcile)) || ((PrismHolon::holonJudge request) =? (PrismHolon::holonAnswerCurate))))
+}
+
+theorem{
+  name: holonInv008Holds,
+  parameters: [request : PrismHolon::HolonRequest],
+  statement: ((holonBreaksInv008 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHolon::holonAnswerCurate,
+      PrismHolon::holonAnswerHold,
+      PrismHolon::holonAnswerReconcile,
+      PrismHolon::holonAnswerRefuse,
+      PrismHolon::holonAnswerRestore,
+      PrismHolon::holonDissonanceHigh,
+      PrismHolon::holonDissonanceNone,
+      PrismHolon::holonDissonanceSome,
+      PrismHolon::holonFloorHeld,
+      PrismHolon::holonFloorRegressed,
+      PrismHolon::holonHaltedNo,
+      PrismHolon::holonHaltedYes,
+      PrismHolon::holonJudge,
+      PrismHolon::holonKpiMet,
+      PrismHolon::holonKpiMissed,
+      PrismHolon::holonSignalOwner,
+      PrismHolon::holonSignalSelf,
+      PrismHolon::holonTunableNo,
+      PrismHolon::holonTunableYes,
+      holonBreaksInv008
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonBreaksInv009,
+  parameters: [request : PrismHolon::HolonRequest],
+  result: Bool,
+  body: (((((((((project request halted) <? 2) && ((project request floor) <? 2)) && ((project request signal) <? 2)) && ((project request tunable) <? 2)) && ((project request dissonance) <? 3)) && ((project request kpi) <? 2)) && ((project request floor) =? (PrismHolon::holonFloorHeld))) && ((PrismHolon::holonJudge request) =? (PrismHolon::holonAnswerRestore)))
+}
+
+theorem{
+  name: holonInv009Holds,
+  parameters: [request : PrismHolon::HolonRequest],
+  statement: ((holonBreaksInv009 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHolon::holonAnswerCurate,
+      PrismHolon::holonAnswerHold,
+      PrismHolon::holonAnswerReconcile,
+      PrismHolon::holonAnswerRefuse,
+      PrismHolon::holonAnswerRestore,
+      PrismHolon::holonDissonanceHigh,
+      PrismHolon::holonDissonanceNone,
+      PrismHolon::holonDissonanceSome,
+      PrismHolon::holonFloorHeld,
+      PrismHolon::holonFloorRegressed,
+      PrismHolon::holonHaltedNo,
+      PrismHolon::holonHaltedYes,
+      PrismHolon::holonJudge,
+      PrismHolon::holonKpiMet,
+      PrismHolon::holonKpiMissed,
+      PrismHolon::holonSignalOwner,
+      PrismHolon::holonSignalSelf,
+      PrismHolon::holonTunableNo,
+      PrismHolon::holonTunableYes,
+      holonBreaksInv009
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

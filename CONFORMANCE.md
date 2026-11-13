@@ -32,6 +32,7 @@ model does not sanction.
 | `DV-01` | `build` | The page lists or reads on the owner's device only when PrismFolder answers read, which it never does while halted, without the browser's grant, for a write, for a file that is not mail, calendar or contacts, or for one too large to read at once |
 | `DV-02` | `build` | Mail, calendar and contacts read from the owner's device reach only the browser vault, through the detectors and the Boundary, from a folder opened read-only or files the owner picked or dropped |
 | `DV-03` | `build` | The page uses each surface the browser reports for the owner's content only as PrismHost answers: every reported surface is used or offered, nothing is used while halted, a paste, drop, pick or contact list only on the owner's act, a folder only on the owner's act or a grant the browser keeps, and a live account on another origin is named sealed |
+| `DV-04` | `build` | Live Gmail and Google Calendar reach the Prism only through the extension the owner installed, written by the page for its own address: it reads by GET with the owner's own sign-in, answers only that Prism page, reads nothing while halted, and each item it hands over is kept only through PrismHost, PrismFolder, the detectors and the vault |
 
 ## frame
 
@@ -46,6 +47,21 @@ model does not sanction.
 | `GG-01` | `build` | The page makes a Google API call only when PrismGoogle answers fetch, which it never does while halted, to any other host, without a fresh read grant, or for a write without the owner's act |
 | `GG-02` | `build` | The Google connection moves between stages only as PrismGoogleLink answers: only the owner grants, a client for another origin is never used, and the kill switch or a forget revokes every grant |
 | `GG-03` | `build` | Mail and calendar items read from Google reach only the browser vault, through the detectors, the router and the Boundary, by GET to the two API hosts with the token only in the Authorization header |
+
+## holon
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `HL-01` | `build` | The Prism's observer decides what to do next for each facet only as the proved PrismHolon answers: every facet, the owner and the Prism itself among them, has a directive, an objective and a KPI floor; nothing changes while halted, on the Prism's own measures alone, for a parameter no spec marks tunable, or when the owner and the Prism agree; high dissonance is reconciled toward the owner; and a floor the facet regressed below is restored |
+| `HL-02` | `build` | A candidate set of a facet's tunable parameters replaces what runs only as the proved PrismCurate answers: a Rule-30 hypothesis only when it strictly Pareto-dominates what runs, a reconciliation only when it eases the owner's dismissals, never with a humane defect, without the owner's gestures, below the floor, off its spec's bounds or step, or while halted, and always under a kappa label the kappa facet admitted, minted once |
+| `HL-03` | `build` | The observer runs in the owner's browser on the resonance engine's signals: it measures every facet's KPI from the owner's own gestures, advances the 64-cell Rule-30 register (the spec's vectors), replays each candidate on the window, carries one line to each facet through the root guest, obeys no answer it does not expect, keeps its state (parameters, register, claim labels, no content) in this browser, and hands only adopted parameters to the engine |
+
+## kappa
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `KP-01` | `build` | The Prism reads a kappa label as UOR-Foundation/kappa-registry's Kappa::parse does and admits an object under it only when the proved Prism Kappa decision says admit: a label without its colon, on an unknown axis, of the wrong digit count or not in lowercase hex is refused with its own answer, and bytes that do not re-derive, collide on SHA-1 or could not be re-derived are never admitted |
+| `KP-02` | `build` | The browser re-derives a kappa label's digest only with what its host computes (SHA-256 and SHA-512), names every object on SHA-256 as kappa-registry's mandatory secondary axis, never admits on an axis it cannot compute, and obeys no answer from the guest it does not expect |
 
 ## models
 

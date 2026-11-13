@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Prism Host: Decides how the owner's browser uses each surface it reports as a route for the owner's own content, so that every surface the browser exposes is used, nothing is used while the Prism is halted, nothing the owner holds is read without the owner's act or a grant the browser keeps, and a live account on another origin is named sealed instead of reached around.
+Prism Host: Decides how the owner's browser uses each surface it reports as a route for the owner's own content, so that every surface the browser exposes is used, nothing is used while the Prism is halted, nothing the owner holds is read without the owner's act or a grant the browser keeps, a live account on another origin is named sealed to the page itself, and is read only through the extension the owner installed.
 
 ## Requirements
 
@@ -128,6 +128,18 @@ Verified: to be proved by Lean for every request (INV-010, theorem `inv010Holds`
 - **THEN** the answer SHALL NOT be `use`
 - **AND** the app answers `offer`, decided by the fallback
 
+### Requirement: Never use when act is none and grant is none and surface is extension
+
+The app SHALL NOT answer `use` when act is none and grant is none and surface is extension, because no account is read through an extension the owner did not install.
+
+Verified: to be proved by Lean for every request (INV-011, theorem `inv011Holds`).
+
+#### Scenario: INV-011 holds
+
+- **WHEN** the request is `extension no none none no` (an acceptance example)
+- **THEN** the answer SHALL NOT be `use`
+- **AND** the app answers `refuse`, decided by REQ-004
+
 ### Requirement: REQ-001 refuse when halted is yes
 
 The app SHALL answer `refuse` when halted is yes, because stop means stop (kill switch).
@@ -205,6 +217,17 @@ Verified: tested by the acceptance vectors (`rule7`).
 - **WHEN** the request is `folder yes none kept no` (an acceptance example)
 - **THEN** the answer SHALL be `use`, decided by REQ-007
 
+### Requirement: REQ-008 use when surface is extension and grant is kept
+
+The app SHALL answer `use` when surface is extension and grant is kept and no earlier rule matches, because the extension the owner installed is the owner's kept grant to read their own accounts.
+
+Verified: tested by the acceptance vectors (`rule8`).
+
+#### Scenario: REQ-008 decides
+
+- **WHEN** the request is `extension yes none kept no` (an acceptance example)
+- **THEN** the answer SHALL be `use`, decided by REQ-008
+
 ### Requirement: Otherwise offer
 
 The app SHALL answer `offer` when no rule matches, because every surface the browser reports is offered to the owner.
@@ -218,7 +241,7 @@ Verified: tested by the acceptance vectors.
 
 ### Requirement: The first matching rule decides
 
-The app SHALL try REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007 in that order, and the first rule that matches SHALL decide.
+The app SHALL try REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008 in that order, and the first rule that matches SHALL decide.
 
 Verified: tested by the acceptance vectors.
 
@@ -233,10 +256,10 @@ The app SHALL read one request as one line of 5 fields separated by single space
 
 | Field | Accepts | Means |
 | --- | --- | --- |
-| `surface` | `folder`, `files`, `drop`, `paste`, `contacts`, `workers`, `mail`, `calendar` | the browser surface: a granted folder, picked files, dropped files, a paste, the contact picker, the device's cores and memory, or a live mail or calendar account on another origin |
+| `surface` | `folder`, `files`, `drop`, `paste`, `contacts`, `workers`, `mail`, `calendar`, `extension` | the browser surface: a granted folder, picked files, dropped files, a paste, the contact picker, the device's cores and memory, a live mail or calendar account on another origin as the page sees it, or the owner's installed Prism extension, |
 | `present` | `yes`, `no` | whether this browser reports the surface |
 | `act` | `none`, `owner` | whether the owner's own press, pick, drop or paste is this use |
-| `grant` | `none`, `kept` | whether the browser keeps the owner's grant for this surface across visits |
+| `grant` | `none`, `kept` | whether the browser keeps the owner's grant for this surface across visits: a folder's permission, or the extension the owner installed |
 | `halted` | `no`, `yes` | whether the owner has pressed the kill switch |
 
 | Answer | Means |
@@ -256,7 +279,7 @@ Verified: reading a request is tested, not proved.
 
 ## Out of scope
 
-- It does not read anything itself: each item still goes through PrismFolder, the router, the Boundary and the vault.
+- It does not read anything itself: each item still goes through PrismFolder, the router, the Boundary and the vault, and the extension only reads with GET.
 - Sharing to the Prism and opening files with it need the app manifest and service worker, which the locked frame generates without a hook.
 - The worker count is the host rule uorc states: at most one per core, sixteen, and two per GiB the browser reports.
 
@@ -274,6 +297,10 @@ Verified: reading a request is tested, not proved.
 - `calendar yes owner none no` gives `sealed`
 - `folder yes owner kept yes` gives `refuse`
 - `workers yes none none yes` gives `refuse`
+- `extension yes none kept no` gives `use`
+- `extension no none none no` gives `refuse`
+- `extension yes none none no` gives `offer`
+- `extension yes owner kept yes` gives `refuse`
 
 ## What is proved and what is tested
 

@@ -22,6 +22,8 @@ definition{name: hostSurfaceMail, parameters: [], result: Nat, body: 6}
 
 definition{name: hostSurfaceCalendar, parameters: [], result: Nat, body: 7}
 
+definition{name: hostSurfaceExtension, parameters: [], result: Nat, body: 8}
+
 definition{name: hostPresentYes, parameters: [], result: Nat, body: 0}
 
 definition{name: hostPresentNo, parameters: [], result: Nat, body: 1}
@@ -104,7 +106,7 @@ definition{
   name: hostParseSurface,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x666f6c646572 : Bool) then (ctor Option.some [Nat] (hostSurfaceFolder)) else (if (prim equal value 0x66696c6573 : Bool) then (ctor Option.some [Nat] (hostSurfaceFiles)) else (if (prim equal value 0x64726f70 : Bool) then (ctor Option.some [Nat] (hostSurfaceDrop)) else (if (prim equal value 0x7061737465 : Bool) then (ctor Option.some [Nat] (hostSurfacePaste)) else (if (prim equal value 0x636f6e7461637473 : Bool) then (ctor Option.some [Nat] (hostSurfaceContacts)) else (if (prim equal value 0x776f726b657273 : Bool) then (ctor Option.some [Nat] (hostSurfaceWorkers)) else (if (prim equal value 0x6d61696c : Bool) then (ctor Option.some [Nat] (hostSurfaceMail)) else (if (prim equal value 0x63616c656e646172 : Bool) then (ctor Option.some [Nat] (hostSurfaceCalendar)) else (ctor Option.none [Nat])))))))))
+  body: (if (prim equal value 0x666f6c646572 : Bool) then (ctor Option.some [Nat] (hostSurfaceFolder)) else (if (prim equal value 0x66696c6573 : Bool) then (ctor Option.some [Nat] (hostSurfaceFiles)) else (if (prim equal value 0x64726f70 : Bool) then (ctor Option.some [Nat] (hostSurfaceDrop)) else (if (prim equal value 0x7061737465 : Bool) then (ctor Option.some [Nat] (hostSurfacePaste)) else (if (prim equal value 0x636f6e7461637473 : Bool) then (ctor Option.some [Nat] (hostSurfaceContacts)) else (if (prim equal value 0x776f726b657273 : Bool) then (ctor Option.some [Nat] (hostSurfaceWorkers)) else (if (prim equal value 0x6d61696c : Bool) then (ctor Option.some [Nat] (hostSurfaceMail)) else (if (prim equal value 0x63616c656e646172 : Bool) then (ctor Option.some [Nat] (hostSurfaceCalendar)) else (if (prim equal value 0x657874656e73696f6e : Bool) then (ctor Option.some [Nat] (hostSurfaceExtension)) else (ctor Option.none [Nat]))))))))))
 }
 
 definition{
@@ -260,14 +262,28 @@ definition{
   name: hostRule7Misses,
   parameters: [request : HostRequest],
   result: Bool,
-  body: (((((project request surface) <? (hostSurfaceFolder)) || ((hostSurfaceFolder) <? (project request surface))) || ((project request grant) <? (hostGrantKept))) || ((hostGrantKept) <? (project request grant)))
+  body: ((((project request surface) <? (hostSurfaceFolder)) || ((hostSurfaceFolder) <? (project request surface))) || (((project request grant) <? (hostGrantKept)) || ((hostGrantKept) <? (project request grant))))
+}
+
+definition{
+  name: hostRule8,
+  parameters: [request : HostRequest],
+  result: Bool,
+  body: (((project request surface) =? (hostSurfaceExtension)) && ((project request grant) =? (hostGrantKept)))
+}
+
+definition{
+  name: hostRule8Misses,
+  parameters: [request : HostRequest],
+  result: Bool,
+  body: ((((project request surface) <? (hostSurfaceExtension)) || ((hostSurfaceExtension) <? (project request surface))) || (((project request grant) <? (hostGrantKept)) || ((hostGrantKept) <? (project request grant))))
 }
 
 definition{
   name: hostJudge,
   parameters: [request : HostRequest],
   result: Nat,
-  body: (if (hostRule1 request) then (hostAnswerRefuse) else (if (hostRule2 request) then (hostAnswerSealed) else (if (hostRule3 request) then (hostAnswerSealed) else (if (hostRule4 request) then (hostAnswerRefuse) else (if (hostRule5 request) then (hostAnswerUse) else (if (hostRule6 request) then (hostAnswerUse) else (if (hostRule7Misses request) then (hostAnswerOffer) else (hostAnswerUse))))))))
+  body: (if (hostRule1 request) then (hostAnswerRefuse) else (if (hostRule2 request) then (hostAnswerSealed) else (if (hostRule3 request) then (hostAnswerSealed) else (if (hostRule4 request) then (hostAnswerRefuse) else (if (hostRule5 request) then (hostAnswerUse) else (if (hostRule6 request) then (hostAnswerUse) else (if (hostRule7Misses request) then (if (hostRule8Misses request) then (hostAnswerOffer) else (hostAnswerUse)) else (hostAnswerUse))))))))
 }
 
 definition{
