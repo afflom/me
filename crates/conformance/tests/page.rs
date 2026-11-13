@@ -214,7 +214,8 @@ fn page_vo_01() {
         .nth(2)
         .expect("crates/conformance is two below the root")
         .to_path_buf();
-    let read = |path: &str| std::fs::read_to_string(root.join(path)).unwrap_or_else(|_| panic!("{path}"));
+    let read =
+        |path: &str| std::fs::read_to_string(root.join(path)).unwrap_or_else(|_| panic!("{path}"));
     // The voice's numbers are the model's, each guarantee closed by decide.
     let proofs = read("app/src/PrismSurfaceProofs.lex.tex");
     for theorem in [
@@ -236,24 +237,47 @@ fn page_vo_01() {
     }
     let voice = read("site/voice.mjs");
     for (wiring, why) in [
-        ("import { VOICE, WORDS } from \"./surface/surface.mjs\";", "every number is PrismSurface's"),
-        ("master.gain.value = VOICE.ceiling / 100;", "the ceiling is the model's"),
-        ("if (now - last < VOICE.refractory) return;", "a rest between answers"),
+        (
+            "import { VOICE, WORDS } from \"./surface/surface.mjs\";",
+            "every number is PrismSurface's",
+        ),
+        (
+            "master.gain.value = VOICE.ceiling / 100;",
+            "the ceiling is the model's",
+        ),
+        (
+            "if (now - last < VOICE.refractory) return;",
+            "a rest between answers",
+        ),
         ("if (!quiet) sound(", "silent under Quiet"),
-        ("onResonance((signal) => answer(signal.answer", "PrismResonance decides the answer"),
+        (
+            "onResonance((signal) => answer(signal.answer",
+            "PrismResonance decides the answer",
+        ),
     ] {
         assert!(voice.contains(wiring), "VO-01: {why} ({wiring})");
     }
     for number in ["220", "0.06", "Math.pow"] {
-        assert!(!voice.contains(number), "VO-01: site/voice.mjs holds a number of its own ({number})");
+        assert!(
+            !voice.contains(number),
+            "VO-01: site/voice.mjs holds a number of its own ({number})"
+        );
     }
     // Nothing of the voice loads before the owner's first gesture.
     let card = read("site/card.mjs");
     assert!(
         card.contains("addEventListener(\"pointerdown\", voice, { once: true, capture: true });")
-            && card.contains("addEventListener(\"keydown\", voice, { once: true, capture: true });"),
+            && card
+                .contains("addEventListener(\"keydown\", voice, { once: true, capture: true });"),
         "VO-01: the voice loads on the owner's first gesture"
     );
-    assert_eq!(card.matches("./voice.mjs").count(), 1, "VO-01: the voice is imported once, lazily");
-    assert!(root.join("test/page/voice.test.mjs").exists(), "VO-01: the browser test exists");
+    assert_eq!(
+        card.matches("./voice.mjs").count(),
+        1,
+        "VO-01: the voice is imported once, lazily"
+    );
+    assert!(
+        root.join("test/page/voice.test.mjs").exists(),
+        "VO-01: the browser test exists"
+    );
 }
