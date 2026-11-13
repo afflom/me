@@ -221,3 +221,15 @@ html:not(.immersive) body {
 .pr-list > li.pr-person-head { list-style: none; }
 .pr-person-name { margin: 0; padding: var(--space-3) 0; font-family: var(--font-display); font-size: var(--text-24, 1.5rem); font-weight: 500; }
 .pr-list > li.pr-me { list-style: none; }
+/* The chat: earlier turns above the answer, then its sources and the decision it offers. */
+.pr-chat { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-3); max-height: 40vh; overflow-y: auto; }
+.pr-chat:empty { display: none; }
+.pr-turn { display: flex; flex-direction: column; gap: var(--space-1); }
+.pr-you { margin: 0; align-self: flex-end; max-width: 85%; padding: var(--space-2) var(--space-3); border-radius: var(--radius-inner); background: var(--muted); }
+.pr-said { margin: 0; max-width: 95%; }
+.pr-said-more:empty { display: none; }
+.pr-sources { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-2) 0 0; }
+.pr-source { color: var(--link); text-decoration: underline; text-underline-offset: 0.2em; }
+.pr-offers { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
+#pr-result.result { flex-direction: column; align-items: stretch; gap: var(--space-2); min-width: 0; }
+#pr-result .pr-drawn { width: 100%; }

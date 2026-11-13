@@ -19,7 +19,7 @@ Feature: product
     Then the system words shown are exactly the listed debt
 
   @PD-03 @build
-  Scenario: The product record places every part the Prism has: every surface entry in the person's or the system view, every root facet in the system view serving at least one journey, and every journey with its goal, done-state, usability measure, status and walk; the gate refuses a record that leaves any part unplaced
+  Scenario: The product record places every part the Prism has: every surface entry in the person's or the system view, every root facet in the system view serving at least one journey, every journey with its goal, done-state, usability measure, status and walk, and every setting in the person's view one the Prism requires of the person; the gate refuses a record that leaves any part unplaced
     Given app/specs/product/spec.json, the surface, the coherence registry and the walks
     When test/product/gate.test.mjs runs tools/product/gate.py on the committed record and on each planted defect
     Then the committed record passes and every planted defect is refused with its reason
