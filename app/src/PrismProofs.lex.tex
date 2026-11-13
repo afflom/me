@@ -6,9 +6,11 @@
 \importmodule{Prism}
 \importmodule{PrismBoundary}
 \importmodule{PrismChronology}
+\importmodule{PrismCurate}
 \importmodule{PrismDest}
 \importmodule{PrismGoogle}
 \importmodule{PrismGoogleLink}
+\importmodule{PrismHolon}
 \importmodule{PrismKappa}
 \importmodule{PrismLearning}
 \importmodule{PrismModels}
@@ -110,6 +112,22 @@ theorem{
   name: routesKappa,
   parameters: [rest : Bytes],
   statement: ((Prism::route (Prism::facetKappa) rest) = (PrismKappa::kappaDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesHolon,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetHolon) rest) = (PrismHolon::holonDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesCurate,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetCurate) rest) = (PrismCurate::curateDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }

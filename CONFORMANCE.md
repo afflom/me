@@ -39,6 +39,14 @@ model does not sanction.
 | `GG-02` | `build` | The Google connection moves between stages only as PrismGoogleLink answers: only the owner grants, a client for another origin is never used, and the kill switch or a forget revokes every grant |
 | `GG-03` | `build` | Mail and calendar items read from Google reach only the browser vault, through the detectors, the router and the Boundary, by GET to the two API hosts with the token only in the Authorization header |
 
+## holon
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `HL-01` | `build` | The Prism's observer decides what to do next for each facet only as the proved PrismHolon answers: every facet, the owner and the Prism itself among them, has a directive, an objective and a KPI floor; nothing changes while halted, on the Prism's own measures alone, for a parameter no spec marks tunable, or when the owner and the Prism agree; high dissonance is reconciled toward the owner; and a floor the facet regressed below is restored |
+| `HL-02` | `build` | A candidate set of a facet's tunable parameters replaces what runs only as the proved PrismCurate answers: a Rule-30 hypothesis only when it strictly Pareto-dominates what runs, a reconciliation only when it eases the owner's dismissals, never with a humane defect, without the owner's gestures, below the floor, off its spec's bounds or step, or while halted, and always under a kappa label the kappa facet admitted, minted once |
+| `HL-03` | `build` | The observer runs in the owner's browser on the resonance engine's signals: it measures every facet's KPI from the owner's own gestures, advances the 64-cell Rule-30 register (the spec's vectors), replays each candidate on the window, carries one line to each facet through the root guest, obeys no answer it does not expect, keeps its state (parameters, register, claim labels, no content) in this browser, and hands only adopted parameters to the engine |
+
 ## kappa
 
 | ID | Level | Statement |

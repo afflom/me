@@ -267,7 +267,7 @@ export const FACETS = [
   "tunable": []
  }
 ];
-export const BANDS = {"window": 64, "minOwnerGestures": 8, "highDissonancePermille": 250};
+export const BANDS = {"window": 64, "every": 8, "minOwnerGestures": 8, "highDissonancePermille": 250};
 export const GESTURES = {"brought": ["bloom", "chorus"], "quiet": ["whisper", "rest"], "dissonant": "a dismiss on an item after the Prism answered bloom or chorus on it", "missed": "a keep on an item after the Prism answered whisper or rest on it", "owner": ["open", "dwell", "keep", "dismiss", "still"]};
 export const OBJECTIVES = ["dissonant", "missed", "interruptions"];
 export const RULE30 = {"cells": 64, "seed": "11400714819323198485", "lanes": 4, "vectors": [["11400714819323198485", "8170733857868071477"], ["0", "8170733857868071477"], ["1", "9223372036854775811"]]};
