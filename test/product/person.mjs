@@ -36,7 +36,7 @@ export async function device(context) {
     window.addEventListener("message", (event) => {
       if (event.source !== window || event.data?.from !== "page") return;
       const answer = (data) => window.postMessage({ ...data, from: "extension" }, location.origin);
-      if (event.data.prism === "hello") answer({ prism: "extension" });
+      if (event.data.prism === "hello") answer({ prism: "extension", version: 3 });
       if (event.data.prism === "pull") answer({ prism: "items", id: event.data.id, items: [true, "yes"].includes(event.data.halted) ? [] : items });
     });
   }, today());

@@ -181,8 +181,8 @@ fn device_dv_04() {
     assert!(
         background.contains("const INIT = Object.freeze({ method: 'GET', credentials: 'include', cache: 'no-store', redirect: 'follow' });")
             && background.matches("fetchImpl(").count() == 3
-            && background.matches(", INIT)").count() == 2
-            && background.contains("fetchImpl(chrome.runtime.getURL('services.json'), { method: 'GET' })")
+            && background.matches(", INIT)").count() == 3
+            && background.contains("if (!route.key?.url || !service.seen?.key || !own(service, route.key.url)) return null;")
             && background.contains("if (!own(service, url)) continue;")
             && !background.contains("POST"),
         "DV-04: every request the extension makes is the one GET"
@@ -195,17 +195,21 @@ fn device_dv_04() {
     );
     let manifest = read("site/extension/manifest.json");
     assert!(
-        manifest.contains("\"host_permissions\": \"__ORIGINS__\"")
-            && manifest
-                .contains("\"permissions\": [\"storage\", \"unlimitedStorage\", \"alarms\"]")
-            && manifest.contains("\"matches\": [\"__PRISM__*\"]"),
-        "DV-04: the extension reaches only the declared origins, and is written for one Prism page"
+        manifest.contains("\"host_permissions\": [\"<all_urls>\"]")
+            && manifest.contains(
+                "\"permissions\": [\"storage\", \"unlimitedStorage\", \"alarms\", \"scripting\"]"
+            )
+            && manifest.contains("\"matches\": [\"__PRISM__*\"]")
+            && background.contains("declared = Array.isArray(kept) ? kept : [];")
+            && background.contains("/^https:\\/\\/[a-z0-9.-]+\\/$/.test(url)"),
+        "DV-04: the extension is a blank carrier written for one Prism page, reaching only the https origins the Prism declares"
     );
     let card = read("site/card.mjs");
     assert!(
         card.contains("if (plan.extension === \"use\") {")
-            && card.contains("for (const item of await pull(window, { halted: halted() })) {")
-            && card.contains("if ((await line(`source ${item.service} ${item.route} read ${halted()}`)) === \"read\") items.push(item);"),
+            && card.contains("for (const item of await pull(window, { halted: halted(), services: sent })) {")
+            && card.contains("own: (await line(`source ${service.key} own read ${halted()}`)) === \"read\" ? service.own ?? [] : []")
+            && card.contains("if ((await line(`source ${item.service} ${item.route} read ${halted()}`)) !== \"read\") continue;"),
         "DV-04: the page pulls only on PrismHost's use and keeps each item through the device source"
     );
     let device = read("site/device/device.mjs");
@@ -227,10 +231,9 @@ fn device_dv_05() {
         6,
     );
     let declared = read("app/specs/source/services.json");
-    assert_eq!(
-        declared,
-        read("site/extension/services.json"),
-        "DV-05: the extension carries exactly the model's declarations"
+    assert!(
+        read("site/card.mjs").contains("pull(window, { halted: halted(), services: sent })"),
+        "DV-05: the extension is told the model's declarations by the page, as data"
     );
     for service in ["gmail", "calendar", "discord", "whatsapp", "linkedin"] {
         assert!(
@@ -260,9 +263,27 @@ fn device_dv_05() {
     );
     let pack = read("site/device/extension.mjs");
     assert!(
-        pack.contains(".replace('\"__ORIGINS__\"', JSON.stringify(origins))"),
-        "DV-05: the extension's permissions are written from the declarations"
+        pack.contains(".replaceAll('__VERSION__', String(VERSION))")
+            && read("site/extension/background.js").contains("s.origins.every(may)"),
+        "DV-05: the extension carries the declared version, and takes only declarations with https origins and routes on them"
     );
+    let device = read("site/device/device.mjs");
+    assert!(
+        device.contains("source(`${item.service} export read ${halted()}`)")
+            && device.contains("source = async () => 'refuse'"),
+        "DV-05: a service's own download is read only as PrismSource answers, and never without it"
+    );
+    assert!(
+        read("site/card.mjs")
+            .contains("source: (rest) => line(`source ${rest}`), arrived: noteArrived"),
+        "DV-05: the page asks PrismSource through the root"
+    );
+    for service in ["discord", "whatsapp", "linkedin"] {
+        assert!(
+            read("site/source/exports.mjs").contains(&format!("service: '{service}'")),
+            "DV-05: {service}'s own download is read"
+        );
+    }
     let root = read("tools/prism_root.py");
     assert!(
         root.contains("(\"source\", \"PrismSource\", \"sourceDispatch\")"),

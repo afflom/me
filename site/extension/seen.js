@@ -1,8 +1,9 @@
 // On a declared service's own tab: notes what the service's web app shows the
-// owner, as its declaration in services.json says, and hands it to the
+// owner, as its declaration says (sent by the Prism as data), and hands it to the
 // extension. It changes nothing on the page and sends nothing anywhere else.
 (async () => {
-  const { services } = await (await fetch(chrome.runtime.getURL('services.json'))).json();
+  // The declarations the Prism last sent; none, and nothing is noted.
+  const services = (await chrome.runtime.sendMessage({ prism: 'declared' }).catch(() => null))?.services ?? [];
   const service = services.find((s) => s.seen && s.origins.some((o) => location.href.startsWith(o)));
   if (!service) return;
   const { seen } = service;
