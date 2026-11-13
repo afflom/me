@@ -135,7 +135,7 @@ fn device_dv_03() {
         "PrismHost",
         "host",
         "HostRequest",
-        10,
+        11,
     );
     let card = read("site/card.mjs");
     assert!(
@@ -152,7 +152,8 @@ fn device_dv_03() {
         );
     }
     assert!(
-        card.contains("(await d.ask({ grant: { folder: kept ? \"kept\" : \"none\" } })).folder !== \"use\") return;"),
+        card.contains("const plan = await d.ask({ grant: { folder: kept ? \"kept\" : \"none\", extension: extensionGrant() } });")
+            && card.contains("if (plan.folder === \"use\") {\n      const t = await d.source.readFolders();"),
         "DV-03: a folder is re-read on a visit only on PrismHost's use for a kept grant"
     );
     assert!(
@@ -169,6 +170,43 @@ fn device_dv_03() {
     assert!(
         root.contains("(\"host\", \"PrismHost\", \"hostDispatch\")"),
         "DV-03: the Prism root routes host requests to PrismHost"
+    );
+    node_suite();
+}
+
+/// `DV-04`: Live Gmail and Google Calendar reach the Prism only through the extension the owner installed, written by the page for its own address: it reads by GET with the owner's own sign-in, answers only that Prism page, reads nothing while halted, and each item it hands over is kept only through PrismHost, PrismFolder, the detectors and the vault
+#[test]
+fn device_dv_04() {
+    let background = read("site/extension/background.js");
+    assert!(
+        background.contains("const INIT = Object.freeze({ method: 'GET', credentials: 'include', cache: 'no-store', redirect: 'follow' });")
+            && background.matches("fetchImpl(").count() == 3
+            && background.matches(", INIT)").count() == 3
+            && !background.contains("method: 'POST'"),
+        "DV-04: every request the extension makes is the one GET"
+    );
+    assert!(
+        background.contains("if (message?.prism === 'pull' && from.startsWith(PRISM)) {")
+            && background.contains("if (halted !== 'no') return { items: [] };"),
+        "DV-04: only the Prism page pulls, and nothing is read while halted"
+    );
+    let manifest = read("site/extension/manifest.json");
+    assert!(
+        manifest.contains("\"host_permissions\": [\"https://mail.google.com/*\", \"https://calendar.google.com/*\"]")
+            && manifest.contains("\"permissions\": [\"storage\"]")
+            && manifest.contains("\"matches\": [\"__PRISM__*\"]"),
+        "DV-04: the extension reaches only Gmail and Calendar, and is written for one Prism page"
+    );
+    let card = read("site/card.mjs");
+    assert!(
+        card.contains("if (plan.extension === \"use\") {")
+            && card.contains("return d.source.readItems(await pull(window, { halted: halted() }));"),
+        "DV-04: the page pulls only on PrismHost's use and keeps each item through the device source"
+    );
+    let device = read("site/device/device.mjs");
+    assert!(
+        device.contains("const format = formatOfText(text);"),
+        "DV-04: an item is read by its own first bytes, never by the extension's claim"
     );
     node_suite();
 }
