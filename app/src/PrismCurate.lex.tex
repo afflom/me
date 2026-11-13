@@ -180,7 +180,19 @@ definition{
 
 definition{
   name: curateDecodeField10,
-  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat, v6 : Nat, v7 : Nat, v8 : Nat, v9 : Nat],
+  parameters: [
+    s : Bytes,
+    start : Nat,
+    v1 : Nat,
+    v2 : Nat,
+    v3 : Nat,
+    v4 : Nat,
+    v5 : Nat,
+    v6 : Nat,
+    v7 : Nat,
+    v8 : Nat,
+    v9 : Nat
+  ],
   result: (Option CurateRequest),
   body: (let e : Nat := (curateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (curateParseClaim (curateSliceOf s start (prim subtract e start : Nat)))
     | Option.none => (ctor Option.none [CurateRequest])
@@ -190,7 +202,18 @@ definition{
 
 definition{
   name: curateDecodeField9,
-  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat, v6 : Nat, v7 : Nat, v8 : Nat],
+  parameters: [
+    s : Bytes,
+    start : Nat,
+    v1 : Nat,
+    v2 : Nat,
+    v3 : Nat,
+    v4 : Nat,
+    v5 : Nat,
+    v6 : Nat,
+    v7 : Nat,
+    v8 : Nat
+  ],
   result: (Option CurateRequest),
   body: (let e : Nat := (curateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (curateParseDominance (curateSliceOf s start (prim subtract e start : Nat)))
     | Option.none => (ctor Option.none [CurateRequest])
@@ -200,7 +223,17 @@ definition{
 
 definition{
   name: curateDecodeField8,
-  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat, v6 : Nat, v7 : Nat],
+  parameters: [
+    s : Bytes,
+    start : Nat,
+    v1 : Nat,
+    v2 : Nat,
+    v3 : Nat,
+    v4 : Nat,
+    v5 : Nat,
+    v6 : Nat,
+    v7 : Nat
+  ],
   result: (Option CurateRequest),
   body: (let e : Nat := (curateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (curateParseEased (curateSliceOf s start (prim subtract e start : Nat)))
     | Option.none => (ctor Option.none [CurateRequest])
