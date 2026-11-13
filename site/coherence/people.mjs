@@ -41,12 +41,43 @@ export function partiesOf(item) {
   return [];
 }
 
-// Everyone, most recent first: {key, name, items}. A kept card names its person.
-export function peopleOf(items) {
+// Who the person is, read from what arrived when they have not said: the
+// address their mail is sent to most, with the name it is sent under.
+export function selfOf(items) {
+  const counts = new Map();
+  for (const item of items) {
+    if (item.sealed || item.media !== "message") continue;
+    const head = unfold(item.text).split(/\r?\n\r?\n/, 1)[0];
+    const seen = new Set();
+    for (const field of ["Delivered-To", "To", "Cc"]) {
+      const value = new RegExp(`^${field}:\\s*(.*)$`, "mi").exec(head)?.[1] ?? "";
+      for (const part of value.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)) {
+        const one = mailbox(part);
+        if (!one?.address || seen.has(one.address)) continue;
+        seen.add(one.address);
+        const at = counts.get(one.address) ?? { address: one.address, name: "", count: 0 };
+        at.count += 1;
+        if (one.name && one.name !== one.address) at.name ||= one.name;
+        counts.set(one.address, at);
+      }
+    }
+  }
+  const top = [...counts.values()].sort((a, b) => b.count - a.count)[0];
+  return top ? { names: top.name ? [top.name] : [], addresses: [top.address] } : { names: [], addresses: [] };
+}
+
+// Whether a party is the person themself.
+export const isMe = (party, me) => Boolean(me && party && ((party.address && me.addresses?.includes(party.address)) || me.names?.some((n) => n.toLowerCase() === party.name?.toLowerCase())));
+// Whether the person sent this item.
+export const fromMe = (item, me) => item.media === "message" && partiesOf(item).some((p) => isMe(p, me));
+
+// Everyone else, most recent first: {key, name, items}. A kept card names its person.
+export function peopleOf(items, me = null) {
   const byKey = new Map();
   const byName = new Map();
   for (const item of items) {
     for (const party of partiesOf(item)) {
+      if (isMe(party, me)) continue;
       const key = party.address || party.name.toLowerCase();
       let one = byKey.get(key) ?? byName.get(party.name.toLowerCase());
       if (!one) {

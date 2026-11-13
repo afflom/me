@@ -211,7 +211,7 @@ export default async function start({ app, reason, $ }) {
   async function load() {
     if (!vault) return;
     const rows = await vault.list();
-    const { domainsOf, peopleOf, peoplePlace, between } = rows.length ? await coherence() : {};
+    const { domainsOf, peopleOf, peoplePlace, between, selfOf, fromMe } = rows.length ? await coherence() : {};
     const read = [];
     for (const row of rows) {
       const got = await vault.get(row.address);
@@ -223,7 +223,8 @@ export default async function start({ app, reason, $ }) {
     }
     items = read.sort((a, b) => b.at - a.at);
     // The people in what is kept, for the place that lists them.
-    people = peopleOf ? { place: peoplePlace, all: peopleOf(items), between } : null;
+    if (selfOf) { inferred = selfOf(items); mineOf = fromMe; }
+    people = peopleOf ? { place: peoplePlace, all: peopleOf(items, meNow()), between } : null;
   }
 
   // Resonance: every gesture of the owner toward a thing is answered by
@@ -388,9 +389,10 @@ export default async function start({ app, reason, $ }) {
     list.hidden = !items.length;
     if (!items.length) { list.replaceChildren(emptyRow()); return; }
     const { today, lineOf } = await coherence();
-    const { agenda, recent, tasks, needs } = await today(items, { relate, done: doneSet() });
+    const me = meNow();
+    const { agenda, recent, tasks, needs } = await today(items, { relate, done: doneSet(), mine: (item) => mineOf(item, me) });
     if (turn !== painting || current.host !== "home") return;
-    const rows = [];
+    const rows = [selfRow()].filter(Boolean);
     const section = (domain, made) => {
       if (!made.length) return;
       rows.push(element("li", { className: "pr-section", textContent: DOMAINS[domain] }), ...made);
@@ -433,6 +435,31 @@ export default async function start({ app, reason, $ }) {
         element("span", { className: "pr-who", textContent: why })));
     }
     return element("li", { className: "pr-needs" }, element("h3", { className: "pr-section", textContent: name }), list);
+  }
+
+  // Who you are: what the person declared, else what their mail says, until
+  // they confirm it. It is how the Prism tells the person from everyone else;
+  // it stays in this browser.
+  const IDENTITY_KEY = "me.identity";
+  let inferred = { names: [], addresses: [] };
+  let mineOf = () => false;
+  const declared = () => { try { return JSON.parse(store.get(IDENTITY_KEY, "null")); } catch { return null; } };
+  const meNow = () => declared() ?? inferred;
+  const listOf = (text) => [...new Set(String(text).split(/[,;\n]/).map((x) => x.trim()).filter(Boolean))];
+  const meLine = (me) => [...me.names, ...me.addresses].join(" · ");
+  async function declare(me) {
+    store.set(IDENTITY_KEY, JSON.stringify({ names: me.names, addresses: me.addresses.map((a) => a.toLowerCase()) }));
+    await load();
+    paintList();
+    paintSettings();
+  }
+  function selfRow() {
+    if (declared() || !inferred.addresses.length) return null;
+    const button = element("button", { type: "button", className: "pr-done", textContent: WORDS["identity.confirm"] });
+    button.addEventListener("click", () => declare(inferred));
+    return element("li", { className: "pr-me" },
+      element("h3", { className: "pr-section", textContent: SETTINGS.find((s) => s.key === "identity").name }),
+      element("div", { className: "pr-item pr-need" }, button, element("span", { className: "pr-what", textContent: meLine(inferred) })));
   }
 
   // People: one row per person; pressing one opens their page, with what is
@@ -696,6 +723,23 @@ export default async function start({ app, reason, $ }) {
     };
     const named = (key) => SETTINGS.find((s) => s.key === key);
     const painters = [];
+
+    // Who you are: first, because every "from me" and "to me" depends on it.
+    {
+      const names = element("input", { type: "text", placeholder: WORDS["identity.names"], autocomplete: "name" });
+      names.setAttribute("aria-label", WORDS["identity.names"]);
+      const addresses = element("input", { type: "text", placeholder: WORDS["identity.addresses"], autocomplete: "email" });
+      addresses.setAttribute("aria-label", WORDS["identity.addresses"]);
+      const confirm = element("button", { type: "button", textContent: WORDS["identity.confirm"] });
+      const self = settingRow(named("identity"), names, addresses, confirm);
+      painters.push(() => {
+        const me = meNow();
+        if (document.activeElement !== names) names.value = me.names.join(", ");
+        if (document.activeElement !== addresses) addresses.value = me.addresses.join(", ");
+        self.state.textContent = declared() ? meLine(me) : "";
+      });
+      confirm.addEventListener("click", () => declare({ names: listOf(names.value), addresses: listOf(addresses.value) }));
+    }
 
     // Sources: this device, through every surface the browser reports. Each
     // control shows only where PrismHost offers it, each read is asked of
