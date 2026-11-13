@@ -29,6 +29,22 @@ fn holds(id: &str, file: &str, text: &str, wiring: &[(&str, &str)]) {
 /// `CO-01`: The owner brings content in through the feeders the coherence registry names and every place that lists things lists it: Today shows the agenda ahead with what falls today and what clashes as PrismChronology answers, and Ask answers at once with the owner's own kept items that meet it, only as the Boundary allows, never while halted
 #[test]
 fn coherence_co_01() {
+    let answer = read("site/router/answer.mjs");
+    holds(
+        "CO-01",
+        "site/router/answer.mjs",
+        &answer,
+        &[
+            (
+                "const word = (await line(`boundary ${label} none browser none yes ${halted()}`)).trim();",
+                "Ask shows kept items only as the Boundary allows",
+            ),
+            (
+                "if (word !== \"allow\" || !used.length) return",
+                "nothing is shown that the Boundary did not allow",
+            ),
+        ],
+    );
     let card = read("site/card.mjs");
     holds(
         "CO-01",
@@ -48,12 +64,8 @@ fn coherence_co_01() {
                 "Today's spans are PrismChronology's answers",
             ),
             (
-                "const word = await line(`boundary ${label} none browser none yes ${halted()}`);",
-                "Ask shows kept items only as the Boundary allows",
-            ),
-            (
-                "const shown = word === \"allow\" ? used : [];",
-                "nothing is shown that the Boundary did not allow",
+                "const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, keep: false });",
+                "Ask is answered by the router's answer, from nothing kept while halted",
             ),
             (
                 "homeCards();\n    list.hidden = !items.length;",

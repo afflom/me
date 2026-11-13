@@ -174,16 +174,8 @@ fn page_pg_03() {
             "what was sent is kept as its exact bytes at its domain's floor",
         ),
         (
-            "const used = haltedNow ? [] : drawOn(items, prompt);",
+            "items: haltedNow ? [] : items",
             "Ask draws on nothing kept while halted",
-        ),
-        (
-            "used.reduce((at, item) => higher(at, item.label ?? \"confidential\"), \"confidential\")",
-            "Ask's answer carries the highest label it drew on",
-        ),
-        (
-            "import(\"./coherence/sense.mjs\")",
-            "Ask draws through the coherence registry, which never draws on a sealed item (CO-03)",
         ),
     ] {
         assert!(
@@ -191,11 +183,22 @@ fn page_pg_03() {
             "PG-03: {why}: site/card.mjs must contain `{wiring}`"
         );
     }
-    let r4 = read("site/r4/r4.mjs");
-    assert!(
-        r4.contains("{ role: \"system\", content: grounds.join(\"\\n\") }"),
-        "PG-03: the kept words Ask drew on reach R4 as context"
-    );
+    let answer = read("site/router/answer.mjs");
+    for (wiring, why) in [
+        (
+            "used.reduce((at, item) => higher(at, item.label ?? \"confidential\"), \"confidential\")",
+            "Ask's answer carries the highest label it drew on",
+        ),
+        (
+            "from \"../coherence/sense.mjs\"",
+            "Ask draws through the coherence registry, which never draws on a sealed item (CO-03)",
+        ),
+    ] {
+        assert!(
+            answer.contains(wiring),
+            "PG-03: {why}: site/router/answer.mjs must contain `{wiring}`"
+        );
+    }
     let test = read("test/page/acts.test.mjs");
     for expected in ["Dentist checkup", "aria-expanded", ".pr-drawn", "#pr-halt"] {
         assert!(
