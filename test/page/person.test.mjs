@@ -95,7 +95,7 @@ test("the owner brings content in, every place shows it, Today and Ask answer fr
 
     // A fresh profile opens on Today, which offers its feeder rather than nothing.
     assert.equal(await page.textContent("#pr-title"), PLACES.find((p) => p.host === "home").name);
-    const offered = page.locator("#pr-list .pr-empty input[type=file]");
+    const offered = page.locator("#pr-act input[type=file]");
     assert.equal(await offered.count(), 1, "an empty Today offers to add files");
     await offered.setInputFiles([ics, eml]);
     await settled(/^\d+ items$/);

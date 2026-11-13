@@ -55,7 +55,7 @@ fn coherence_co_01() {
                 "const shown = word === \"allow\" ? used : [];",
                 "nothing is shown that the Boundary did not allow",
             ),
-            ("emptyRow(true)", "an empty Today offers its feeder"),
+            ("offerFiles(!items.length);", "an empty Today offers its feeder"),
         ],
     );
     let walk = read("test/page/person.test.mjs");

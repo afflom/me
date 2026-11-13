@@ -300,7 +300,9 @@ export default async function start({ app, reason, $ }) {
     });
     return element("label", { className: "pr-file" }, element("span", { textContent: WORDS["device.files"] }), files);
   }
-  const emptyRow = (offer) => element("li", { className: "pr-empty" }, element("span", { textContent: WORDS.empty }), ...(offer && vault ? [" ", filesControl()] : []));
+  const emptyRow = () => element("li", { className: "pr-empty", textContent: WORDS.empty });
+  // An empty Today offers its feeder in its act row, the list itself unchanged.
+  const offerFiles = (empty) => $("pr-act").replaceChildren(...(empty && vault ? [element("div", { className: "pr-row" }, filesControl())] : []));
 
   // Today: the agenda ahead (PrismChronology says what falls today and what
   // clashes), then what came in lately, then what is to do.
@@ -308,7 +310,8 @@ export default async function start({ app, reason, $ }) {
   let painting = 0;
   async function paintToday(list) {
     const turn = ++painting;
-    if (!items.length) { list.replaceChildren(emptyRow(true)); return; }
+    offerFiles(!items.length);
+    if (!items.length) { list.replaceChildren(emptyRow()); return; }
     const { today, lineOf } = await coherence();
     const { agenda, recent, tasks } = await today(items, { relate });
     if (turn !== painting || current.host !== "home") return;
@@ -326,7 +329,7 @@ export default async function start({ app, reason, $ }) {
     section(4, recent.map(rowOf));
     section(9, tasks.map(rowOf));
     $("pr-count").textContent = "";
-    list.replaceChildren(...(rows.length ? rows : [emptyRow(true)]));
+    list.replaceChildren(...(rows.length ? rows : [emptyRow()]));
   }
 
   function paintList() {
@@ -339,7 +342,7 @@ export default async function start({ app, reason, $ }) {
     }
     $("pr-count").textContent = shown.length ? String(shown.length) : "";
     if (current.show === "search" && !query) { list.replaceChildren(); return; }
-    list.replaceChildren(...(shown.length ? shown.slice(0, 200).map(rowOf) : [emptyRow(current.show === "list")]));
+    list.replaceChildren(...(shown.length ? shown.slice(0, 200).map(rowOf) : [emptyRow()]));
   }
 
   // One act per place, as PrismSurface names it. Outbound acts are prepared,
