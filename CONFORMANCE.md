@@ -84,7 +84,7 @@ model does not sanction.
 | ID | Level | Statement |
 | --- | --- | --- |
 | `PG-01` | `build` | The page keeps, reads and answers only through the verified app: a note is kept at its domain's floor only when the Boundary and the vault allow it, nothing is kept while halted, and an outbound act is only drafted until the owner's Send |
-| `PG-02` | `build` | The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, every visible word a name from the model, every list place fed by a source or an act, and every colour a tone of its modeled look read at its contrast |
+| `PG-02` | `build` | The page is PrismSurface made visible: one place per owner view of the design model, drawn only when it is in the person's view and never when it is the system's, showing that view's domains under its role, every act and setting in its modeled place, every visible word a name from the model, every list place fed by a source or an act, and every colour a tone of its modeled look read at its contrast |
 | `PG-03` | `build` | Every act on the page completes end to end: what the owner sends is the very event or message they reviewed and is kept in the place it left from at that domain's floor, every kept item opens to its words, and Ask draws on the kept items that share its words, never while halted, under the highest label it drew on |
 | `VO-01` | `build` | The Prism answers a gesture in tone and colour from PrismSurface's voice: 5-limit just ratios within one octave, a loudness ceiling, a rest between answers, silent under Quiet, and nothing loaded before the owner's first gesture |
 
@@ -102,6 +102,14 @@ model does not sanction.
 | ID | Level | Statement |
 | --- | --- | --- |
 | `PV-01` | `build` | Neither the tracked tree nor the built page holds personal data: every email address is at a reserved domain, and no phone, payment card or national ID number appears |
+
+## product
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PD-01` | `build` | Every journey of the product record is walked by a synthetic person whose device holds a day of mail and calendar: a journey recorded as working passes in a fresh and a returning browser on every pull request and on the published page, and a journey that passes while recorded as not yet fails until the record says it works |
+| `PD-02` | `build` | No word or control the product record assigns to the system view is on the screen, in any place, fresh, returning, or with the person's day arrived and an item opened, beyond the debt the record lists; a word not listed fails, and a listed word that no longer shows fails until it is removed, so the debt only shrinks |
+| `PD-03` | `build` | The product record places every part the Prism has: every surface entry in the person's or the system view, every root facet in the system view serving at least one journey, and every journey with its goal, done-state, usability measure, status and walk; the gate refuses a record that leaves any part unplaced |
 
 ## r4
 

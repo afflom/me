@@ -3,7 +3,7 @@
 // the verified app's: this script only carries bytes between the page, the
 // vault, R4, the routed models and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
-import { PLACES, ACTS, LABELS, FLOORS, GROUPS, SETTINGS, WORDS, DOMAINS, FEEDERS } from "./surface/surface.mjs";
+import { PLACES, ACTS, LABELS, FLOORS, SETTINGS, WORDS, DOMAINS, FEEDERS } from "./surface/surface.mjs";
 // The coherence registry's runtime: what an item is about, what an Ask is
 // after, and Today. Loaded once there is something kept or asked, so an
 // ordinary first visit fetches none of it.
@@ -162,7 +162,6 @@ export default async function start({ app, reason, $ }) {
   if (await relayConsent()) return;
   const root = document.documentElement;
   const out = $("pr-out");
-  const log = $("pr-log");
   let haltedNow = store.get(HALT_KEY, "no") === "yes";
   const halted = () => (haltedNow ? "yes" : "no");
   let paceNow = store.get(PACE_KEY, "open") === "quiet" ? "quiet" : "open";
@@ -171,11 +170,6 @@ export default async function start({ app, reason, $ }) {
   function say(text, state = "") {
     out.textContent = text;
     out.className = state;
-  }
-  function remember(what, answer) {
-    const row = element("li", {}, element("span", { textContent: what.length > 28 ? `${what.slice(0, 26)}…` : what }), element("span", { className: "tag", textContent: answer }));
-    log.prepend(row);
-    while (log.children.length > 30) log.lastChild.remove();
   }
   const paintHalt = () => {
     root.classList.toggle("pr-halted", haltedNow);
@@ -279,7 +273,6 @@ export default async function start({ app, reason, $ }) {
   async function reportDevice(t) {
     const got = t.store + t.storehash;
     say(`${got} ${WORDS.items}`, got ? "good" : "");
-    remember(SETTINGS.find((s) => s.key === "device").name, `${got}`);
     await load();
     if (current.show !== "settings") paintList();
     paintSettings();
@@ -345,7 +338,8 @@ export default async function start({ app, reason, $ }) {
   // --- Places ---
   const byKey = new Map(PLACES.map((p) => [p.key, p]));
   const actOf = (place) => ACTS.find((a) => a.key === place.act);
-  let current = byKey.get(store.get(PLACE_KEY, "")) ?? PLACES.find((p) => p.host === "home");
+  const onPage = (p) => p && p.host !== "none" && p.host !== "composer";
+  let current = [byKey.get(store.get(PLACE_KEY, ""))].find(onPage) ?? PLACES.find((p) => p.host === "home");
   let query = "";
 
   // A row opens to the item's full words, and closes again.
@@ -479,7 +473,6 @@ export default async function start({ app, reason, $ }) {
     const label = LABELS[FLOORS[domain]].toLowerCase();
     const result = await vault.put(encoder.encode(text), { label, about: { domain, media: "plainText", at: Date.now() } });
     const kept = result.outcome === "store" ? WORDS.kept : result.outcome === "storehash" ? WORDS["kept.sealed"] : WORDS.refused;
-    remember(`${place.name} · ${WORDS["note.placeholder"]}`, result.outcome);
     if (!result.outcome?.startsWith("store")) { say(kept, "bad"); return false; }
     // The place shows the note before the page says it is kept.
     await load();
@@ -552,7 +545,6 @@ export default async function start({ app, reason, $ }) {
       preview.hidden = !decided.out;
       send.hidden = !pending;
       say(word(decided.answer), decided.answer === "refuse" ? "bad" : "");
-      remember(`${place.name} · ${act.word}`, decided.answer);
     });
     send.addEventListener("click", async () => {
       if (!pending) return;
@@ -560,7 +552,6 @@ export default async function start({ app, reason, $ }) {
       try {
         const done = await (await routerOf()).send(pending.item, pending.seal);
         say(word(done.answer), done.delivered ? "good" : "bad");
-        remember(`${place.name} · ${WORDS.send}`, done.answer);
         if (done.delivered) {
           pending = null; send.hidden = true; form.reset(); preview.hidden = true;
           await keepSent(place, act, done.out);
@@ -580,13 +571,12 @@ export default async function start({ app, reason, $ }) {
     const domain = place.domains[0];
     const label = LABELS[FLOORS[domain]].toLowerCase();
     const result = await vault.put(encoder.encode(out.bytes), { label, about: { domain, media: SENT_MEDIA[act.target], at: Date.now() } });
-    remember(`${place.name} · ${WORDS.keep}`, result.outcome);
     if (result.outcome?.startsWith("store")) { await load(); paintList(); }
   }
 
   function go(key, focus = false) {
     const place = byKey.get(key);
-    if (!place || place.host === "composer") return;
+    if (!onPage(place)) return;
     current = place;
     store.set(PLACE_KEY, key);
     for (const button of document.querySelectorAll(".pr-go")) {
@@ -615,17 +605,14 @@ export default async function start({ app, reason, $ }) {
   function buildSettings() {
     if (settingsBuilt) return;
     settingsBuilt = true;
-    const host = $("pr-settings");
-    const groups = new Map();
-    for (const group of GROUPS) {
-      const rows = element("div", { className: "pr-rows" });
-      host.append(element("section", { className: "pr-set" }, element("h3", { textContent: group.name }), rows));
-      groups.set(group.key, rows);
-    }
+    // One sheet of the person's settings, in the model's order; a setting in
+    // the system view runs on its own and gets no row.
+    const rows = element("div", { className: "pr-rows" });
+    $("pr-settings").append(element("section", { className: "pr-set" }, rows));
     const settingRow = (setting, ...controls) => {
       const state = element("span", { className: "pr-state" });
       const row = element("div", { className: "pr-setting" }, element("span", { className: "pr-name", textContent: setting.name }), state, element("span", { className: "pr-controls" }, ...controls));
-      groups.get(setting.group).append(row);
+      if (setting.viewpoint === "person") rows.append(row);
       return { row, state };
     };
     const switchFor = (checked, label, onChange) => {
@@ -704,50 +691,50 @@ export default async function start({ app, reason, $ }) {
       await paint();
     })().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
 
-    // Models: R4, and every model the lock pins, each routed in by the owner's press.
+    // Models: R4, and every model the lock pins, each routed in by the owner's
+    // press while the model puts them in the person's view.
     const models = named("models");
-    const r4toggle = element("button", { type: "button" });
-    const r4row = settingRow({ ...models, name: WORDS["model.r4"] }, r4toggle);
-    painters.push(() => {
-      const on = store.get(R4_KEY, "off") === "on";
-      r4toggle.textContent = on ? WORDS.unroute : WORDS.route;
-      r4row.state.textContent = !on ? WORDS["model.ask"] : r4 ? (r4.engine.state === "match" ? WORDS["model.run"] : WORDS.refused) : WORDS["model.fetch"];
-    });
-    r4toggle.addEventListener("click", () => {
-      const on = store.get(R4_KEY, "off") !== "on";
-      store.set(R4_KEY, on ? "on" : "off");
-      remember(WORDS["model.r4"], on ? WORDS.route : WORDS.unroute);
-      paintSettings();
-    });
-    (async () => {
-      const lock = await fetch(new URL("./models/models.lock.json", import.meta.url), { cache: "no-cache" }).then((r) => r.json());
-      for (const m of lock.models) {
-        const toggle = element("button", { type: "button" });
-        const row = settingRow({ ...models, name: m.title }, toggle);
-        const paint = async () => {
-          const granted = grants().includes(m.id);
-          toggle.textContent = granted ? WORDS.unroute : WORDS.route;
-          const routed = routedModels ?? null;
-          const outcome = routed ? (await routed.judge(m.id)).outcome : granted ? "fetch" : "ask";
-          row.state.textContent = WORDS[`model.${outcome}`] ?? outcome;
-        };
-        toggle.addEventListener("click", async () => {
-          const now = grants();
-          store.set(GRANT_KEY, JSON.stringify(now.includes(m.id) ? now.filter((x) => x !== m.id) : [...now, m.id]));
-          routedModels = null;
-          await paint();
-          remember(m.title, grants().includes(m.id) ? WORDS.route : WORDS.unroute);
-        });
-        painters.push(paint);
-        paint();
-      }
-    })().catch((error) => console.warn(`models: ${error?.message ?? error}`));
+    if (models.viewpoint === "person") {
+      const r4toggle = element("button", { type: "button" });
+      const r4row = settingRow({ ...models, name: WORDS["model.r4"] }, r4toggle);
+      painters.push(() => {
+        const on = store.get(R4_KEY, "off") === "on";
+        r4toggle.textContent = on ? WORDS.unroute : WORDS.route;
+        r4row.state.textContent = !on ? WORDS["model.ask"] : r4 ? (r4.engine.state === "match" ? WORDS["model.run"] : WORDS.refused) : WORDS["model.fetch"];
+      });
+      r4toggle.addEventListener("click", () => {
+        const on = store.get(R4_KEY, "off") !== "on";
+        store.set(R4_KEY, on ? "on" : "off");
+        paintSettings();
+      });
+      (async () => {
+        const lock = await fetch(new URL("./models/models.lock.json", import.meta.url), { cache: "no-cache" }).then((r) => r.json());
+        for (const m of lock.models) {
+          const toggle = element("button", { type: "button" });
+          const row = settingRow({ ...models, name: m.title }, toggle);
+          const paint = async () => {
+            const granted = grants().includes(m.id);
+            toggle.textContent = granted ? WORDS.unroute : WORDS.route;
+            const routed = routedModels ?? null;
+            const outcome = routed ? (await routed.judge(m.id)).outcome : granted ? "fetch" : "ask";
+            row.state.textContent = WORDS[`model.${outcome}`] ?? outcome;
+          };
+          toggle.addEventListener("click", async () => {
+            const now = grants();
+            store.set(GRANT_KEY, JSON.stringify(now.includes(m.id) ? now.filter((x) => x !== m.id) : [...now, m.id]));
+            routedModels = null;
+            await paint();
+          });
+          painters.push(paint);
+          paint();
+        }
+      })().catch((error) => console.warn(`models: ${error?.message ?? error}`));
+    }
 
     // Attention: Quiet holds what is not urgent.
     settingRow(named("quiet"), switchFor(paceNow === "quiet", named("quiet").name, (on) => {
       paceNow = on ? "quiet" : "open";
       store.set(PACE_KEY, paceNow);
-      remember(named("quiet").name, on ? WORDS.on : WORDS.off);
     }));
 
     // This browser: what is kept here, and an encrypted backup of it.
@@ -771,7 +758,6 @@ export default async function start({ app, reason, $ }) {
       link.click();
       URL.revokeObjectURL(link.href);
       passphrase.value = "";
-      remember(WORDS.export, `${bytes.length}`);
     });
     importFile.addEventListener("change", async () => {
       const file = importFile.files?.[0];
@@ -779,7 +765,6 @@ export default async function start({ app, reason, $ }) {
       if (!passphrase.value) { importFile.value = ""; passphrase.focus(); return; }
       const result = await vault.importFrom(new Uint8Array(await file.arrayBuffer()), passphrase.value);
       say(result.outcome === "refuse" ? `${WORDS.refused} · ${result.reason ?? ""}` : WORDS.kept, result.outcome === "refuse" ? "bad" : "good");
-      remember(WORDS.import, result.outcome ?? "");
       importFile.value = "";
       passphrase.value = "";
       await load();
@@ -791,7 +776,6 @@ export default async function start({ app, reason, $ }) {
       haltedNow = on;
       store.set(HALT_KEY, on ? "yes" : "no");
       paintHalt();
-      remember(named("halt").name, halted());
     });
     halt.id = "pr-halt";
     settingRow(named("halt"), halt);
@@ -870,11 +854,16 @@ export default async function start({ app, reason, $ }) {
         else text = WORDS["answer.none"];
       }
       say(text, state);
-      remember(prompt, shown.length ? String(shown.length) : word);
       if (modelsOn() && !haltedNow) {
-        const grounds = shown.map((item) => lineOf(item).slice(0, 600));
-        const result = await answer(prompt, { label, halted: halted() }, grounds);
-        if (result.outcome === "answer" && result.answer?.trim()) say(`${text}\n\n${WORDS["model.r4"]} · ${result.answer.trim()}`, state || "good");
+        // The model's words follow the person's own; a model that cannot load leaves those as they were.
+        try {
+          const grounds = shown.map((item) => lineOf(item).slice(0, 600));
+          const result = await answer(prompt, { label, halted: halted() }, grounds);
+          say(result.outcome === "answer" && result.answer?.trim() ? `${text}\n\n${result.answer.trim()}` : text, result.outcome === "answer" ? state || "good" : state);
+        } catch (error) {
+          console.warn(`ask: ${error?.message ?? error}`);
+          say(text, state);
+        }
       }
       if (shown.length) $("pr-prompt").value = "";
     } catch (error) {

@@ -121,7 +121,7 @@ test("the owner brings content in, every place shows it, Today and Ask answer fr
     assert.match(await out(), /^4 items$/);
 
     // A paste of plain words is a note.
-    await page.click('.pr-go[data-place="library"]');
+    await page.click('.pr-go[data-place="tasks"]');
     await page.evaluate(() => {
       const data = new DataTransfer();
       data.setData("text/plain", "Read the chapter on interval algebra");
@@ -130,7 +130,7 @@ test("the owner brings content in, every place shows it, Today and Ask answer fr
     await page.waitForFunction(() => document.getElementById("pr-list").innerText.includes("interval algebra"), null, { timeout: 10000 });
 
     // A note in every place that keeps notes, in its own domain's words.
-    for (const place of PLACES.filter((p) => p.act === "note")) {
+    for (const place of PLACES.filter((p) => p.act === "note" && p.viewpoint === "person")) {
       await page.click(`.pr-go[data-place="${place.key}"]`);
       const words = `${VOCABULARY[place.domains[0]][0]} for ${place.key}`;
       await page.fill("#pr-act input", words);
@@ -140,7 +140,7 @@ test("the owner brings content in, every place shows it, Today and Ask answer fr
 
     // Every place that lists things lists something now; Explore finds by its search.
     const empty = [];
-    for (const place of PLACES.filter((p) => p.host !== "composer" && p.show !== "settings")) {
+    for (const place of PLACES.filter((p) => p.viewpoint === "person" && p.host !== "composer" && p.show !== "settings")) {
       await page.click(`.pr-go[data-place="${place.key}"]`);
       if (place.show === "search") await page.fill("#pr-act input[type=search]", "statement");
       await page.waitForTimeout(300);
@@ -148,8 +148,8 @@ test("the owner brings content in, every place shows it, Today and Ask answer fr
       if (!shown) empty.push(place.key);
     }
     assert.deepEqual(empty, [], `places with nothing after every feeder ran: ${empty.join(", ")}`);
-    // The bank's mail is in Money too, by its words.
-    await page.click('.pr-go[data-place="money"]');
+    // The bank's mail is in Messages.
+    await page.click('.pr-go[data-place="conversations"]');
     assert.ok((await page.locator("#pr-list").innerText()).includes("Your November statement"));
     // The contact card is in People.
     await page.click('.pr-go[data-place="people"]');
@@ -172,7 +172,7 @@ test("the owner brings content in, every place shows it, Today and Ask answer fr
     // Halted, Ask shows nothing kept.
     await page.click('.pr-go[data-place="boundary"]');
     await page.check("#pr-halt");
-    await ask("What's on today?", /^Halted$/);
+    await ask("What's on today?", /^Paused$/);
     await page.uncheck("#pr-halt");
 
     assert.deepEqual(errors, [], `page errors: ${errors.join(" | ")}`);
