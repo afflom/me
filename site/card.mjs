@@ -114,8 +114,6 @@ function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
   return { ...base, title: first.trim(), who: "", text, body: text.trim() };
 }
 
-const RANK = ["public", "internal", "confidential", "restricted"];
-const higher = (a, b) => (RANK.indexOf(b) > RANK.indexOf(a) ? b : a);
 
 const short = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" });
 const clock = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
@@ -833,23 +831,15 @@ export default async function start({ app, reason, $ }) {
     if (!prompt) return;
     $("pr-ask-go").disabled = true;
     try {
-      const { drawOn, lineOf } = await coherence();
-      // While halted nothing kept is drawn on, and the Boundary denies.
-      const used = haltedNow ? [] : drawOn(items, prompt);
-      const label = used.reduce((at, item) => higher(at, item.label ?? "confidential"), "confidential");
-      const word = await line(`boundary ${label} none browser none yes ${halted()}`);
-      const shown = word === "allow" ? used : [];
-      drawn.replaceChildren(...shown.map(rowOf));
-      let text = shown.length ? shown.map(lineOf).join("\n") : "";
-      let state = shown.length ? "good" : "";
-      if (!shown.length) {
-        if (haltedNow) { text = WORDS.halted; state = "bad"; }
-        else if (word === "ask") { text = WORDS["answer.asks"]; state = "warn"; }
-        else if (word === "hashonly" && used.length) text = WORDS.sealed;
-        else text = WORDS["answer.none"];
-      }
-      say(text, state);
-      if (shown.length) $("pr-prompt").value = "";
+      // The person's words go through the R4 router; a question is answered in
+      // sentences from what is held, under the Boundary, with what it drew on.
+      const { answer } = await import("./router/answer.mjs");
+      const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, keep: false });
+      drawn.replaceChildren(...said.sources.map(rowOf));
+      if (said.sentences.length) { say(said.sentences.join(" "), "good"); $("pr-prompt").value = ""; }
+      else if (haltedNow) say(WORDS.halted, "bad");
+      else if (said.refused) say(WORDS["answer.asks"], "warn");
+      else say(WORDS["answer.none"], "");
     } catch (error) {
       say(`${WORDS["answer.none"]} · ${error?.message ?? error}`, "bad");
     } finally {
