@@ -4,7 +4,7 @@ The root routes a request "<facet> <rest>" to the facet module's
 `dispatch rest`, and proves one `routes<Facet>` theorem per facet plus
 `refusesUnknownFacet`. To add a facet: append (keyword, Module, dispatch name) to FACETS,
 add vectors for it below (one or two: the root's vector list nests one level per
-vector, and the SDK's IR reader stops near 110), raise the limits if its requests or answers are
+vector, and 117 overflowed the SDK's IR reader while 107 passes), raise the limits if its requests or answers are
 larger, then run
 
     python3 -I tools/prism_root.py app/src
