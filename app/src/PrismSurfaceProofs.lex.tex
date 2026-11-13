@@ -13,7 +13,9 @@ definition{
   name: surfaceStringCount,
   parameters: [values : (List String)],
   result: Nat,
-  body: (match values | List.nil => 0 | List.cons value rest => ((surfaceStringCount rest) + 1)),
+  body: (match values
+    | List.nil => 0
+    | List.cons value rest => ((surfaceStringCount rest) + 1)),
   recursive_argument: values
 }
 
@@ -32,7 +34,9 @@ definition{
   parameters: [left : (List Nat), right : (List Nat)],
   result: Bool,
   body: (match left
-    | List.nil => (match right | List.nil => true | List.cons other more => false)
+    | List.nil => (match right
+      | List.nil => true
+      | List.cons other more => false)
     | List.cons value rest => (match right
       | List.nil => false
       | List.cons other more => ((value =? other) && (surfaceSameNats rest more)))),
@@ -71,10 +75,7 @@ definition{
 
 definition{
   name: surfaceRowAgrees,
-  parameters: [
-    place : PrismSurface::SurfacePlace,
-    rows : (List Foundation.Me.V1.Model::DesignView)
-  ],
+  parameters: [place : PrismSurface::SurfacePlace, rows : (List Foundation.Me.V1.Model::DesignView)],
   result: Bool,
   body: (match rows
     | List.nil => false
@@ -126,7 +127,9 @@ definition{
   name: surfaceFirstOr,
   parameters: [fallback : Nat, values : (List Nat)],
   result: Nat,
-  body: (match values | List.nil => fallback | List.cons value rest => value)
+  body: (match values
+    | List.nil => fallback
+    | List.cons value rest => value)
 }
 
 definition{
@@ -237,6 +240,116 @@ definition{
     | List.nil => true
     | List.cons place rest => (((not ((project place kind) =? 0)) || (surfaceAnyFed (project place domains))) && (surfacePlacesFed rest))),
   recursive_argument: places
+}
+
+definition{
+  name: surfaceTimes,
+  parameters: [a : Nat, b : Nat],
+  result: Nat,
+  body: (match b
+    | Nat.zero => 0
+    | Nat.succ k => (a + (surfaceTimes a k))),
+  recursive_argument: b
+}
+
+definition{
+  name: surfaceProduct,
+  parameters: [factors : (List Nat)],
+  result: Nat,
+  body: (match factors
+    | List.nil => 1
+    | List.cons f rest => (surfaceTimes f (surfaceProduct rest))),
+  recursive_argument: factors
+}
+
+definition{
+  name: surfaceFactorsFiveLimit,
+  parameters: [factors : (List Nat)],
+  result: Bool,
+  body: (match factors
+    | List.nil => true
+    | List.cons f rest => ((((f =? 2) || (f =? 3)) || (f =? 5)) && (surfaceFactorsFiveLimit rest))),
+  recursive_argument: factors
+}
+
+definition{
+  name: surfaceRatiosJust,
+  parameters: [ratios : (List PrismSurface::SurfaceRatio)],
+  result: Bool,
+  body: (match ratios
+    | List.nil => true
+    | List.cons r rest => ((surfaceFactorsFiveLimit (project r num)) && ((surfaceFactorsFiveLimit (project r den)) && (surfaceRatiosJust rest)))),
+  recursive_argument: ratios
+}
+
+definition{
+  name: surfaceInOctave,
+  parameters: [ratios : (List PrismSurface::SurfaceRatio)],
+  result: Bool,
+  body: (match ratios
+    | List.nil => true
+    | List.cons r rest => ((((surfaceProduct (project r den)) <=? (surfaceProduct (project r num))) && ((surfaceProduct (project r num)) <=? ((surfaceProduct (project r den)) + (surfaceProduct (project r den))))) && (surfaceInOctave rest))),
+  recursive_argument: ratios
+}
+
+definition{
+  name: surfaceRising,
+  parameters: [pn : Nat, pd : Nat, ratios : (List PrismSurface::SurfaceRatio)],
+  result: Bool,
+  body: (match ratios
+    | List.nil => true
+    | List.cons r rest => (((surfaceTimes pn (surfaceProduct (project r den))) <? (surfaceTimes (surfaceProduct (project r num)) pd)) && (surfaceRising (surfaceProduct (project r num)) (surfaceProduct (project r den)) rest))),
+  recursive_argument: ratios
+}
+
+definition{
+  name: surfaceDegreesIn,
+  parameters: [bound : Nat, degrees : (List Nat)],
+  result: Bool,
+  body: (match degrees
+    | List.nil => true
+    | List.cons d rest => ((d <? bound) && (surfaceDegreesIn bound rest))),
+  recursive_argument: degrees
+}
+
+definition{
+  name: surfaceRatioCount,
+  parameters: [ratios : (List PrismSurface::SurfaceRatio)],
+  result: Nat,
+  body: (match ratios
+    | List.nil => 0
+    | List.cons r rest => ((surfaceRatioCount rest) + 1)),
+  recursive_argument: ratios
+}
+
+definition{
+  name: surfaceNatCount,
+  parameters: [values : (List Nat)],
+  result: Nat,
+  body: (match values
+    | List.nil => 0
+    | List.cons v rest => ((surfaceNatCount rest) + 1)),
+  recursive_argument: values
+}
+
+definition{
+  name: surfaceAnswersSound,
+  parameters: [answers : (List PrismSurface::SurfaceAnswer)],
+  result: Bool,
+  body: (match answers
+    | List.nil => true
+    | List.cons a rest => ((surfaceDegreesIn (surfaceRatioCount (PrismSurface::surfaceScale)) (project a degrees)) && (((surfaceNatCount (project a degrees)) <=? 3) && (((project a level) <=? 100) && (((project a tone) <? (PrismSurface::surfaceToneCount)) && (surfaceAnswersSound rest)))))),
+  recursive_argument: answers
+}
+
+definition{
+  name: surfaceRestSilent,
+  parameters: [answers : (List PrismSurface::SurfaceAnswer)],
+  result: Bool,
+  body: (match answers
+    | List.nil => false
+    | List.cons a rest => ((((project a level) =? 0) && ((surfaceNatCount (project a degrees)) =? 0)) || (surfaceRestSilent rest))),
+  recursive_argument: answers
 }
 
 definition{
@@ -371,5 +484,41 @@ theorem{
   statement: ((surfaceThemesDiffer (PrismSurface::surfaceTones)) = true),
   proof: decide{}
 }
+
+theorem{
+  name: surfaceVoiceIsJust,
+  parameters: [],
+  statement: (((surfaceRatiosJust (PrismSurface::surfaceScale)) && (surfaceRatiosJust (PrismSurface::surfacePartials))) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceScaleIsOneOctave,
+  parameters: [],
+  statement: (((surfaceInOctave (PrismSurface::surfaceScale)) && (surfaceRising 0 1 (PrismSurface::surfaceScale))) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceAnswersInTheScale,
+  parameters: [],
+  statement: ((surfaceAnswersSound (PrismSurface::surfaceAnswers)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceVoiceHasRest,
+  parameters: [],
+  statement: ((surfaceRestSilent (PrismSurface::surfaceAnswers)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceVoiceIsHumane,
+  parameters: [],
+  statement: ((((PrismSurface::surfaceVoiceCeiling) <=? 10) && ((5 <=? (PrismSurface::surfaceVoiceAttack)) && (((PrismSurface::surfaceVoiceRelease) <=? 1500) && (150 <=? (PrismSurface::surfaceVoiceRefractory))))) = true),
+  proof: decide{}
+}
+
 \end{semanticmodule}
 \end{lexlean}

@@ -185,3 +185,13 @@ html:not(.immersive) body {
 @media (pointer: coarse) {
   .pr .pr-card-go, .pr .pr-card-feed { min-height: 48px; }
 }
+/* The voice's colour: the answer's tone glows on the result and fades. */
+#pr-out.pr-glow { animation: pr-glow 1100ms var(--ease) both; }
+@keyframes pr-glow { from { text-shadow: 0 0 18px var(--pr-glow, transparent), 0 0 4px var(--pr-glow, transparent); } to { text-shadow: none; } }
+/* Today's agenda: sections named by domain, today's events marked, clashes warned. */
+.pr-list > li.pr-section { padding: var(--space-4) 0 var(--space-1); border-top: 0; font-family: var(--font-mono); font-size: var(--text-14); font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--vr-verdant); }
+.pr-item.pr-now .pr-when { color: var(--vr-solar); }
+.pr-item.pr-now { box-shadow: inset 2px 0 0 var(--vr-solar); padding-inline-start: var(--space-2); }
+.pr-item.pr-clash { box-shadow: inset 2px 0 0 var(--warning); padding-inline-start: var(--space-2); }
+.pr-item.pr-clash .pr-when { color: var(--warning); }
+.pr-drawn { color: var(--muted-foreground); font-size: var(--text-14); }

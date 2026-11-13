@@ -744,6 +744,10 @@ export default async function start({ app, reason, $ }) {
   go(current.key);
   await load();
   go(current.key);
+  // The voice comes with the owner's first gesture, never before it.
+  const voice = () => import("./voice.mjs").catch((error) => console.warn(`voice: ${error?.message ?? error}`));
+  addEventListener("pointerdown", voice, { once: true, capture: true });
+  addEventListener("keydown", voice, { once: true, capture: true });
   root.classList.add("pr-ready");
   readOnVisit().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
 }

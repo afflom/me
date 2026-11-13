@@ -34,7 +34,12 @@ test("the Prism keeps at the model's floors, refuses while halted and drafts onl
     // The Prism is ready once the vault has opened and every place is drawn.
     await page.waitForSelector("html.pr-ready", { timeout: 60000 });
     const settle = (text) => page.waitForFunction((t) => document.getElementById("pr-out").textContent.trim() === t, text, { timeout: 10000 });
-    const rows = async () => page.locator("#pr-list .pr-item").count();
+    // The list repaints after the result is said: wait for the count, then read it.
+    const count = async (selector, n) => {
+      await page.waitForFunction(([s, k]) => document.querySelectorAll(s).length === k, [selector, n], { timeout: 10000 }).catch(() => {});
+      return page.locator(selector).count();
+    };
+    const rows = async (n = 1) => count("#pr-list .pr-item", n);
     const note = async (place, text) => {
       await page.click(`.pr-go[data-place="${place}"]`);
       await page.fill("#pr-act input", text);
@@ -53,7 +58,7 @@ test("the Prism keeps at the model's floors, refuses while halted and drafts onl
     // Health's floor is restricted: the Boundary answers hashonly, so only its digest is kept.
     await note("health", "An example health note");
     await settle("Kept sealed");
-    assert.equal(await page.locator("#pr-list .pr-sealed").count(), 1);
+    assert.equal(await count("#pr-list .pr-sealed", 1), 1);
 
     // Halted, the Boundary denies every keep.
     await page.click('.pr-go[data-place="boundary"]');
