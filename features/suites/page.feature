@@ -11,7 +11,7 @@ Feature: page
     And crates/conformance/tests/page.rs holds every decision in site/card.mjs to the app guest
 
   @PG-02 @build
-  Scenario: The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, and every visible word a name from the model
+  Scenario: The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, every visible word a name from the model, and every colour a tone of its modeled look read at its contrast
     Given the fixture PG-02 needs
     When the suite exercises PG-02
-    Then The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, and every visible word a name from the model
+    Then The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, every visible word a name from the model, and every colour a tone of its modeled look read at its contrast

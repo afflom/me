@@ -180,6 +180,36 @@ definition{
 }
 
 definition{
+  name: surfacePairsRead,
+  parameters: [pairs : (List PrismSurface::SurfaceContrast)],
+  result: Bool,
+  body: (match pairs
+    | List.nil => true
+    | List.cons pair rest => (((project pair floor) <=? (project pair ratio)) && (((project pair theme) <? (PrismSurface::surfaceThemeCount)) && (surfacePairsRead rest)))),
+  recursive_argument: pairs
+}
+
+definition{
+  name: surfaceColoursInRange,
+  parameters: [tones : (List PrismSurface::SurfaceTone)],
+  result: Bool,
+  body: (match tones
+    | List.nil => true
+    | List.cons tone rest => (((project tone dark) <? 16777216) && (((project tone light) <? 16777216) && (surfaceColoursInRange rest)))),
+  recursive_argument: tones
+}
+
+definition{
+  name: surfaceThemesDiffer,
+  parameters: [tones : (List PrismSurface::SurfaceTone)],
+  result: Bool,
+  body: (match tones
+    | List.nil => false
+    | List.cons tone rest => ((not ((project tone dark) =? (project tone light))) || (surfaceThemesDiffer rest))),
+  recursive_argument: tones
+}
+
+definition{
   name: surfaceGroupsUsed,
   parameters: [],
   result: Bool,
@@ -281,6 +311,27 @@ theorem{
   name: surfaceNoEmptyGroup,
   parameters: [],
   statement: ((surfaceGroupsUsed) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceEveryPairReads,
+  parameters: [],
+  statement: ((surfacePairsRead (PrismSurface::surfaceContrasts)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceTonesAreColours,
+  parameters: [],
+  statement: ((surfaceColoursInRange (PrismSurface::surfaceTones)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceTwoThemes,
+  parameters: [],
+  statement: ((surfaceThemesDiffer (PrismSurface::surfaceTones)) = true),
   proof: decide{}
 }
 \end{semanticmodule}

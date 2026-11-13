@@ -40,6 +40,26 @@ structure{
   fields: [{name: key, type: String}, {name: text, type: String}]
 }
 
+structure{
+  name: SurfaceTone,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: name, type: String}, {name: dark, type: Nat}, {name: light, type: Nat}]
+}
+
+structure{
+  name: SurfaceContrast,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: fore, type: Nat},
+    {name: back, type: Nat},
+    {name: theme, type: Nat},
+    {name: ratio, type: Nat},
+    {name: floor, type: Nat}
+  ]
+}
+
 definition{
   name: surfaceDomainNames,
   parameters: [],
@@ -118,5 +138,21 @@ definition{
 }
 
 definition{name: surfaceGroupCount, parameters: [], result: Nat, body: 5}
+
+definition{
+  name: surfaceTones,
+  parameters: [],
+  result: (List SurfaceTone),
+  body: (cons (record SurfaceTone {name := "ground", dark := 528910, light := 15857136}) (cons (record SurfaceTone {name := "surface", dark := 990744, light := 16777215}) (cons (record SurfaceTone {name := "raised", dark := 1254942, light := 15068646}) (cons (record SurfaceTone {name := "hover", dark := 1717033, light := 14280155}) (cons (record SurfaceTone {name := "ink", dark := 15726577, light := 728341}) (cons (record SurfaceTone {name := "muted", dark := 12572873, light := 3888969}) (cons (record SurfaceTone {name := "faint", dark := 9417632, light := 5664863}) (cons (record SurfaceTone {name := "line", dark := 2638391, light := 13359566}) (cons (record SurfaceTone {name := "lineStrong", dark := 4022866, light := 10466982}) (cons (record SurfaceTone {name := "solar", dark := 16108124, light := 15184442}) (cons (record SurfaceTone {name := "solarHover", dark := 16308610, light := 15713375}) (cons (record SurfaceTone {name := "onSolar", dark := 528910, light := 728341}) (cons (record SurfaceTone {name := "verdant", dark := 4710300, light := 1143882}) (cons (record SurfaceTone {name := "crystal", dark := 6080754, light := 682640}) (cons (record SurfaceTone {name := "danger", dark := 16748416, light := 11805464}) (cons (record SurfaceTone {name := "warning", dark := 15771744, light := 9917194}) (nil SurfaceTone)))))))))))))))))
+}
+
+definition{
+  name: surfaceContrasts,
+  parameters: [],
+  result: (List SurfaceContrast),
+  body: (cons (record SurfaceContrast {fore := 4, back := 0, theme := 0, ratio := 1744, floor := 700}) (cons (record SurfaceContrast {fore := 4, back := 0, theme := 1, ratio := 1587, floor := 700}) (cons (record SurfaceContrast {fore := 4, back := 1, theme := 0, ratio := 1578, floor := 700}) (cons (record SurfaceContrast {fore := 4, back := 1, theme := 1, ratio := 1748, floor := 700}) (cons (record SurfaceContrast {fore := 4, back := 2, theme := 0, ratio := 1453, floor := 700}) (cons (record SurfaceContrast {fore := 4, back := 2, theme := 1, ratio := 1464, floor := 700}) (cons (record SurfaceContrast {fore := 4, back := 3, theme := 0, ratio := 1242, floor := 700}) (cons (record SurfaceContrast {fore := 4, back := 3, theme := 1, ratio := 1347, floor := 700}) (cons (record SurfaceContrast {fore := 5, back := 0, theme := 0, ratio := 1258, floor := 450}) (cons (record SurfaceContrast {fore := 5, back := 0, theme := 1, ratio := 720, floor := 450}) (cons (record SurfaceContrast {fore := 5, back := 1, theme := 0, ratio := 1138, floor := 450}) (cons (record SurfaceContrast {fore := 5, back := 1, theme := 1, ratio := 793, floor := 450}) (cons (record SurfaceContrast {fore := 5, back := 2, theme := 0, ratio := 1048, floor := 450}) (cons (record SurfaceContrast {fore := 5, back := 2, theme := 1, ratio := 664, floor := 450}) (cons (record SurfaceContrast {fore := 6, back := 0, theme := 0, ratio := 827, floor := 450}) (cons (record SurfaceContrast {fore := 6, back := 0, theme := 1, ratio := 491, floor := 450}) (cons (record SurfaceContrast {fore := 11, back := 9, theme := 0, ratio := 1222, floor := 450}) (cons (record SurfaceContrast {fore := 11, back := 9, theme := 1, ratio := 901, floor := 450}) (cons (record SurfaceContrast {fore := 11, back := 10, theme := 0, ratio := 1381, floor := 450}) (cons (record SurfaceContrast {fore := 11, back := 10, theme := 1, ratio := 1060, floor := 450}) (cons (record SurfaceContrast {fore := 12, back := 0, theme := 0, ratio := 1115, floor := 450}) (cons (record SurfaceContrast {fore := 12, back := 0, theme := 1, ratio := 526, floor := 450}) (cons (record SurfaceContrast {fore := 13, back := 0, theme := 0, ratio := 997, floor := 450}) (cons (record SurfaceContrast {fore := 13, back := 0, theme := 1, ratio := 548, floor := 450}) (cons (record SurfaceContrast {fore := 14, back := 0, theme := 0, ratio := 860, floor := 450}) (cons (record SurfaceContrast {fore := 14, back := 0, theme := 1, ratio := 596, floor := 450}) (cons (record SurfaceContrast {fore := 15, back := 0, theme := 0, ratio := 949, floor := 450}) (cons (record SurfaceContrast {fore := 15, back := 0, theme := 1, ratio := 535, floor := 450}) (cons (record SurfaceContrast {fore := 14, back := 1, theme := 0, ratio := 778, floor := 450}) (cons (record SurfaceContrast {fore := 14, back := 1, theme := 1, ratio := 657, floor := 450}) (cons (record SurfaceContrast {fore := 12, back := 1, theme := 0, ratio := 1009, floor := 450}) (cons (record SurfaceContrast {fore := 12, back := 1, theme := 1, ratio := 579, floor := 450}) (cons (record SurfaceContrast {fore := 9, back := 0, theme := 0, ratio := 1222, floor := 150}) (cons (record SurfaceContrast {fore := 9, back := 0, theme := 1, ratio := 176, floor := 150}) (nil SurfaceContrast)))))))))))))))))))))))))))))))))))
+}
+
+definition{name: surfaceThemeCount, parameters: [], result: Nat, body: 2}
 \end{semanticmodule}
 \end{lexlean}
