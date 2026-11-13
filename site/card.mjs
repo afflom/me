@@ -239,15 +239,35 @@ export default async function start({ app, reason, $ }) {
       await reportDevice(await d.source.readFiles(files));
     })().catch((error) => say(error?.code ?? error?.message ?? String(error), "bad"));
   });
-  // A folder the owner granted is re-read on every visit while the browser keeps the grant.
-  async function rereadFolders() {
-    if (!vault || typeof indexedDB?.databases !== "function") return;
-    if (!(await indexedDB.databases()).some((db) => db.name === "prism-device")) return;
+  // The owner's Prism extension, if installed, answers a hello on this page.
+  let extensionHere = false;
+  window.addEventListener("message", (event) => {
+    if (event.source === window && event.origin === location.origin && event.data?.from === "extension" && event.data.prism === "extension") extensionHere = true;
+  });
+  window.postMessage({ prism: "hello", from: "page" }, location.origin);
+  const extensionGrant = () => (extensionHere ? "kept" : "none");
+  // Live mail and calendar, read by the installed extension with the owner's own sign-in.
+  async function pullExtension(d) {
+    const { pull } = await import("./device/extension.mjs");
+    return d.source.readItems(await pull(window, { halted: halted() }));
+  }
+  // On every visit: a folder the owner granted is re-read while the browser
+  // keeps the grant, and the installed extension is pulled.
+  async function readOnVisit() {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const folder = vault && typeof indexedDB?.databases === "function" && (await indexedDB.databases()).some((db) => db.name === "prism-device");
+    if (!vault || (!folder && !extensionHere)) return;
     const d = await deviceOf();
-    const kept = (await d.source.folders()).some((f) => f.grant === "granted");
-    if ((await d.ask({ grant: { folder: kept ? "kept" : "none" } })).folder !== "use") return;
-    const t = await d.source.readFolders();
-    if (t.store + t.storehash) await reportDevice(t);
+    const kept = folder && (await d.source.folders()).some((f) => f.grant === "granted");
+    const plan = await d.ask({ grant: { folder: kept ? "kept" : "none", extension: extensionGrant() } });
+    if (plan.folder === "use") {
+      const t = await d.source.readFolders();
+      if (t.store + t.storehash) await reportDevice(t);
+    }
+    if (plan.extension === "use") {
+      const t = await pullExtension(d);
+      if (t.store + t.storehash) await reportDevice(t);
+    }
   }
 
   // --- Places ---
@@ -473,26 +493,28 @@ export default async function start({ app, reason, $ }) {
       const device = named("device");
       const addFolder = element("button", { type: "button", textContent: WORDS["device.folder"] });
       const contacts = element("button", { type: "button", textContent: WORDS["device.contacts"] });
+      const getExtension = element("button", { type: "button", textContent: WORDS["device.extension"] });
       const allow = element("button", { type: "button", textContent: WORDS["device.allow"] });
       const read = element("button", { type: "button", textContent: WORDS["read.now"] });
       const forget = element("button", { type: "button", textContent: WORDS.forget });
       const files = element("input", { type: "file", multiple: true, accept: ".mbox,.mbx,.eml,.ics,.ical,.vcf,.vcard" });
       files.setAttribute("aria-label", WORDS["device.files"]);
       const filesLabel = element("label", { className: "pr-file" }, element("span", { textContent: WORDS["device.files"] }), files);
-      const row = settingRow(device, addFolder, filesLabel, contacts, allow, read, forget);
+      const row = settingRow(device, addFolder, filesLabel, contacts, getExtension, allow, read, forget);
       if (!vault) { row.state.textContent = WORDS.unavailable; row.row.querySelector(".pr-controls").hidden = true; return; }
       const d = await deviceOf();
       let kept = [];
       const paint = async () => {
         kept = await d.source.folders().catch(() => []);
-        const plan = await d.ask({ grant: { folder: kept.some((f) => f.grant === "granted") ? "kept" : "none" } });
+        const plan = await d.ask({ grant: { folder: kept.some((f) => f.grant === "granted") ? "kept" : "none", extension: extensionGrant() } });
         const shown = (surface) => plan[surface] === "offer" || plan[surface] === "use";
         row.state.textContent = kept.length ? kept.map((f) => f.name).join(", ") : WORDS["device.none"];
         addFolder.hidden = !shown("folder");
         filesLabel.hidden = !shown("files");
         contacts.hidden = !shown("contacts");
+        getExtension.hidden = plan.extension !== "offer";
         allow.hidden = !shown("folder") || !kept.some((f) => f.grant === "prompt");
-        read.hidden = plan.folder !== "use";
+        read.hidden = plan.folder !== "use" && plan.extension !== "use";
         forget.hidden = !kept.length;
       };
       const owner = (surface) => async () => (await d.ask({ act: { [surface]: "owner" } }))[surface] === "use";
@@ -502,7 +524,19 @@ export default async function start({ app, reason, $ }) {
       };
       addFolder.addEventListener("click", busy(addFolder, owner("folder"), async () => { await d.source.addFolder(); await reportDevice(await d.source.readFolders()); }));
       allow.addEventListener("click", busy(allow, owner("folder"), async () => { await d.source.allow(); await reportDevice(await d.source.readFolders()); }));
-      read.addEventListener("click", busy(read, owner("folder"), async () => reportDevice(await d.source.readFolders())));
+      read.addEventListener("click", busy(read, async () => true, async () => {
+        const plan = await d.ask({ act: { folder: "owner", extension: "owner" }, grant: { extension: extensionGrant() } });
+        if (plan.folder === "use") await reportDevice(await d.source.readFolders());
+        if (plan.extension === "use" && extensionHere) await reportDevice(await pullExtension(d));
+      }));
+      // The extension, written by this page for its own address: one download.
+      getExtension.addEventListener("click", busy(getExtension, async () => true, async () => {
+        const { pack } = await import("./device/extension.mjs");
+        const bytes = await pack(new URL("./", location.href).href);
+        const link = element("a", { href: URL.createObjectURL(new Blob([bytes], { type: "application/zip" })), download: "prism-extension.zip" });
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }));
       forget.addEventListener("click", busy(forget, async () => true, async () => { for (const f of kept) await d.source.forget(f.id); }));
       files.addEventListener("change", busy(files, owner("files"), async () => { await reportDevice(await d.source.readFiles([...(files.files ?? [])])); files.value = ""; }));
       contacts.addEventListener("click", busy(contacts, owner("contacts"), async () => {
@@ -672,5 +706,5 @@ export default async function start({ app, reason, $ }) {
   await load();
   go(current.key);
   root.classList.add("pr-ready");
-  rereadFolders().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
+  readOnVisit().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
 }
