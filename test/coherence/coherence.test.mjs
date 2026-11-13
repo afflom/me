@@ -141,3 +141,13 @@ test("People are drawn from who wrote, who is invited and whose card is kept (J7
   assert.deepEqual(all.map((p) => p.name), ["Robin Example", "Jordan Example"]);
   assert.deepEqual(between(all[0], now).map((i) => i.title), ["Review", "Lunch"]);
 });
+
+test("Who you are is read from the person's own mail, and they are not one of their People (J9)", async () => {
+  const { selfOf, peopleOf, fromMe } = await import(resolve("site/coherence/people.mjs"));
+  const m = (from, to) => ({ media: "message", at: 1, text: `From: ${from}\r\nTo: ${to}\r\n\r\nx` });
+  const items = [m("Robin <robin@example.org>", "Pat Example <pat@example.org>"), m("Sam <sam@example.org>", "pat@example.org, robin@example.org"), m("Pat Example <pat@example.org>", "Robin <robin@example.org>")];
+  const me = selfOf(items);
+  assert.deepEqual(me, { names: ["Pat Example"], addresses: ["pat@example.org"] });
+  assert.deepEqual(peopleOf(items, me).map((p) => p.name), ["Robin", "Sam"]);
+  assert.deepEqual(items.map((i) => fromMe(i, me)), [false, false, true]);
+});

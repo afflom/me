@@ -38,7 +38,7 @@ const DEFECTS = [
   ["a new root facet with no product entry", (f) => f.coherence.facets.push({ key: "uorc", line: "uorc", sealed: "planted" }), /facet 'uorc' is in the Prism but not in the product record/],
   ["a facet that serves no journey", (f) => { f.product.facets.kappa.serves = []; }, /facet 'kappa' serves no journey/],
   ["a facet in the person's view", (f) => { f.product.facets.r4.view = "person"; }, /facet 'r4' is a back-end part/],
-  ["a facet serving a journey that does not exist", (f) => { f.product.facets.holon.serves = ["J9"]; }, /serves J9, which is not a journey/],
+  ["a facet serving a journey that does not exist", (f) => { f.product.facets.holon.serves = ["J99"]; }, /serves J99, which is not a journey/],
   ["a journey with no measure", (f) => { delete f.product.journeys[2].measure; }, /journey J2 has no usability measure/],
   ["a journey with an unknown status", (f) => { f.product.journeys[0].status = "done"; }, /journey J0 has status 'done'/],
   ["a journey without a done-state", (f) => { f.product.journeys[4].done = ""; }, /journey J4 has no done/],
