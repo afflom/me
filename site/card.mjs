@@ -83,19 +83,43 @@ function icsTime(value) {
 function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
   const about = meta.about ?? {};
   const base = { address, domain: about.domain ?? 11, media: about.media ?? "plainText", label: meta.label, at: about.at ?? at };
-  if (outcome !== "restore") return { ...base, sealed: true, title: "", who: "", text: "" };
+  if (outcome !== "restore") return { ...base, sealed: true, title: "", who: "", text: "", body: "" };
   const text = lenient.decode(bytes);
   if (base.media === "message") {
     const h = headers(text);
     const when = Date.parse(h.date ?? "");
-    return { ...base, at: Number.isNaN(when) ? base.at : when, title: words(h.subject ?? ""), who: person(h.from), text };
+    // A message the owner sent has no From: the other party is its To.
+    const body = text.split(/\r?\n\r?\n/).slice(1).join("\n\n").trim();
+    return { ...base, at: Number.isNaN(when) ? base.at : when, title: words(h.subject ?? ""), who: person(h.from || h.to), text, body };
   }
   if (base.media === "calendar") {
     const start = icsTime(calendarField(text, "DTSTART"));
-    return { ...base, at: Number.isNaN(start) ? base.at : start, title: calendarField(text, "SUMMARY"), who: calendarField(text, "LOCATION"), text };
+    const title = calendarField(text, "SUMMARY");
+    return { ...base, at: Number.isNaN(start) ? base.at : start, title, who: calendarField(text, "LOCATION"), text, body: calendarField(text, "DESCRIPTION") || title };
   }
   const first = text.split(/\r?\n/).find((line) => line.trim()) ?? "";
-  return { ...base, title: first.trim(), who: "", text };
+  return { ...base, title: first.trim(), who: "", text, body: text.trim() };
+}
+
+// The kept items an Ask draws on: those sharing the most words with it.
+// Sealed items have no words to share, so they are never drawn on.
+const QUIET_WORDS = new Set("the and for are but not you your yours with what when where which who whom why how does did have has had was were will would can could should may might this that these those there their them they from into onto about over under just than then also any all some its it's i'm i've me my mine our ours out off get got need needs want wants".split(" "));
+const termsOf = (text) => text.toLowerCase().match(/[\p{L}\p{N}]+/gu)?.filter((w) => w.length > 2 && !QUIET_WORDS.has(w)) ?? [];
+const RANK = ["public", "internal", "confidential", "restricted"];
+const higher = (a, b) => (RANK.indexOf(b) > RANK.indexOf(a) ? b : a);
+
+export function drawOn(items, prompt, most = 5) {
+  const asked = new Set(termsOf(prompt));
+  if (!asked.size) return [];
+  const scored = [];
+  for (const item of items) {
+    if (item.sealed) continue;
+    const have = new Set(termsOf(`${item.title} ${item.who} ${item.body ?? item.text}`));
+    let score = 0;
+    for (const term of asked) if ([...have].some((w) => w === term || (term.length > 3 && (w.startsWith(term) || term.startsWith(w)) && w.length > 3))) score += 1;
+    if (score) scored.push({ item, score });
+  }
+  return scored.sort((a, b) => b.score - a.score || b.item.at - a.item.at).slice(0, most).map((s) => s.item);
 }
 
 const short = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" });
@@ -186,17 +210,15 @@ export default async function start({ app, reason, $ }) {
     answerOn(node, event);
     return event;
   }
-  // One open row at a time; closing it is one gesture, with how long the owner stayed.
-  let opened = null;
-  async function closeOpened() {
-    if (!opened) return;
-    const { item, node, since } = opened;
-    opened = null;
-    node.classList.remove("pr-open");
-    node.setAttribute("aria-expanded", "false");
-    await gesture(item, "open", { dwellMs: Date.now() - since }, node);
+  // Each open row is one gesture when it closes, with how long the owner stayed.
+  const opened = new Map();
+  async function closeOpened(node) {
+    const open = opened.get(node);
+    if (!open) return;
+    opened.delete(node);
+    await gesture(open.item, "open", { dwellMs: Date.now() - open.since }, node);
   }
-  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") closeOpened(); });
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") for (const node of [...opened.keys()]) closeOpened(node); });
 
   // The destinations router: PrismDest and the Boundary decide every hand-off.
   let router = null;
@@ -207,31 +229,86 @@ export default async function start({ app, reason, $ }) {
     return router;
   };
 
+  // --- Sources: the browser as a host for the owner's content ---
+  // PrismHost answers, surface by surface, how this browser may be used; the
+  // device code loads only when a surface is used, so an ordinary visit
+  // fetches none of it.
+  let deviceOpen = null;
+  const deviceOf = () => (deviceOpen ??= (async () => {
+    const [{ openDevice }, { ingestInto }, host] = await Promise.all([import("./device/device.mjs"), import("./google/ingest.mjs"), import("./device/host.mjs")]);
+    const source = openDevice({ decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted, lanes: host.lanes() });
+    return { source, ask: (more = {}) => host.plan({ decide: (rest) => line(`host ${rest}`), halted, ...more }) };
+  })());
+  async function reportDevice(t) {
+    const got = t.store + t.storehash;
+    say(`${got} ${WORDS.items}`, got ? "good" : "");
+    remember(SETTINGS.find((s) => s.key === "device").name, `${got}`);
+    await load();
+    if (current.show !== "settings") paintList();
+    paintSettings();
+  }
+  // A paste or a drop anywhere on the page is the owner's own act.
+  document.addEventListener("paste", (event) => {
+    if (!vault || event.target?.closest?.("input, textarea, [contenteditable]")) return;
+    const files = [...(event.clipboardData?.files ?? [])];
+    const text = event.clipboardData?.getData("text/plain") ?? "";
+    if (!files.length && !text.trim()) return;
+    event.preventDefault();
+    (async () => {
+      const d = await deviceOf();
+      if ((await d.ask({ act: { paste: "owner" } })).paste !== "use") return;
+      await reportDevice(files.length ? await d.source.readFiles(files) : await d.source.readText(text));
+    })().catch((error) => say(error?.code ?? error?.message ?? String(error), "bad"));
+  });
+  document.addEventListener("dragover", (event) => { if (event.dataTransfer?.types?.includes("Files")) event.preventDefault(); });
+  document.addEventListener("drop", (event) => {
+    const files = [...(event.dataTransfer?.files ?? [])];
+    if (!vault || !files.length) return;
+    event.preventDefault();
+    (async () => {
+      const d = await deviceOf();
+      if ((await d.ask({ act: { drop: "owner" } })).drop !== "use") return;
+      await reportDevice(await d.source.readFiles(files));
+    })().catch((error) => say(error?.code ?? error?.message ?? String(error), "bad"));
+  });
+  // A folder the owner granted is re-read on every visit while the browser keeps the grant.
+  async function rereadFolders() {
+    if (!vault || typeof indexedDB?.databases !== "function") return;
+    if (!(await indexedDB.databases()).some((db) => db.name === "prism-device")) return;
+    const d = await deviceOf();
+    const kept = (await d.source.folders()).some((f) => f.grant === "granted");
+    if ((await d.ask({ grant: { folder: kept ? "kept" : "none" } })).folder !== "use") return;
+    const t = await d.source.readFolders();
+    if (t.store + t.storehash) await reportDevice(t);
+  }
+
   // --- Places ---
   const byKey = new Map(PLACES.map((p) => [p.key, p]));
   const actOf = (place) => ACTS.find((a) => a.key === place.act);
   let current = byKey.get(store.get(PLACE_KEY, "")) ?? PLACES.find((p) => p.host === "home");
   let query = "";
 
+  // A row opens to the item's full words, and closes again.
   function rowOf(item) {
     const what = item.sealed ? WORDS.sealed : item.title || "—";
-    const row = element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}`, tabIndex: 0 },
+    const row = element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}` },
       element("span", { className: "pr-when", textContent: when(item.at) }),
       element("span", { className: "pr-what", textContent: what }),
       element("span", { className: "pr-who", textContent: item.who || DOMAINS[item.domain] || "" }));
-    if (item.sealed) return row;
+    if (item.sealed || !item.body) return row;
+    row.tabIndex = 0;
+    row.setAttribute("role", "button");
     row.setAttribute("aria-expanded", "false");
-    const toggle = async () => {
-      const was = opened?.node === row;
-      await closeOpened();
-      if (was) return;
-      row.classList.add("pr-open");
-      row.setAttribute("aria-expanded", "true");
-      if (!row.querySelector(".pr-body")) row.append(element("span", { className: "pr-body", textContent: item.text }));
-      opened = { item, node: row, since: Date.now() };
+    const toggle = () => {
+      const open = row.getAttribute("aria-expanded") === "true";
+      row.setAttribute("aria-expanded", String(!open));
+      if (open) { row.querySelector(".pr-preview")?.remove(); closeOpened(row); }
+      else { row.append(element("pre", { className: "pr-preview", textContent: item.body })); opened.set(row, { item, since: Date.now() }); }
     };
-    row.addEventListener("click", toggle);
-    row.addEventListener("keydown", (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); toggle(); } });
+    row.addEventListener("click", (event) => { if (!event.target.closest(".pr-preview")) toggle(); });
+    row.addEventListener("keydown", (event) => {
+      if (event.target === row && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); toggle(); }
+    });
     return row;
   }
 
@@ -321,7 +398,8 @@ export default async function start({ app, reason, $ }) {
       if (act.target === "mail") return { target: "mail", cause: "owner", text, payload: { to: to.value, subject, body: text } };
       if (act.target === "calendar") {
         const start = at.value ? new Date(at.value) : new Date(Date.now() + 3600_000);
-        return { target: "calendar", cause: "owner", text, payload: { uid: `${crypto.randomUUID()}@me`, start, end: new Date(start.getTime() + 3600_000), summary: subject, description: text } };
+        // The stamp is fixed here, so the event the owner reviewed is the event that leaves.
+        return { target: "calendar", cause: "owner", text, payload: { uid: `${crypto.randomUUID()}@me`, start, end: new Date(start.getTime() + 3600_000), summary: subject, description: text, now: Date.now() } };
       }
       return { target: "platform", cause: "owner", text, payload: { title: subject, text } };
     };
@@ -347,12 +425,27 @@ export default async function start({ app, reason, $ }) {
         const done = await (await routerOf()).send(pending.item, pending.seal);
         say(word(done.answer), done.delivered ? "good" : "bad");
         remember(`${place.name} · ${WORDS.send}`, done.answer);
-        if (done.delivered) { pending = null; send.hidden = true; form.reset(); preview.hidden = true; }
+        if (done.delivered) {
+          pending = null; send.hidden = true; form.reset(); preview.hidden = true;
+          await keepSent(place, act, done.out);
+        }
       } finally {
         send.disabled = false;
       }
     });
     return form;
+  }
+
+  // What left is kept in the place it left from, at that domain's floor, as
+  // the exact bytes that went out; the Boundary and the vault decide the keep.
+  const SENT_MEDIA = { mail: "message", calendar: "calendar", platform: "plainText" };
+  async function keepSent(place, act, out) {
+    if (!vault || !out) return;
+    const domain = place.domains[0];
+    const label = LABELS[FLOORS[domain]].toLowerCase();
+    const result = await vault.put(encoder.encode(out.bytes), { label, about: { domain, media: SENT_MEDIA[act.target], at: Date.now() } });
+    remember(`${place.name} · ${WORDS.keep}`, result.outcome);
+    if (result.outcome?.startsWith("store")) { await load(); paintList(); }
   }
 
   function go(key, focus = false) {
@@ -407,55 +500,51 @@ export default async function start({ app, reason, $ }) {
     const named = (key) => SETTINGS.find((s) => s.key === key);
     const painters = [];
 
-    // Sources: Google, once the platform publishes its client.
+    // Sources: this device, through every surface the browser reports. Each
+    // control shows only where PrismHost offers it, each read is asked of
+    // PrismFolder, and each item is kept through the detectors and the vault.
     (async () => {
-      const gmail = settingRow(named("gmail"));
-      const gcal = settingRow(named("gcal"));
-      let platform = {};
-      try { platform = await fetch(new URL("./google/platform.json", import.meta.url), { cache: "no-cache" }).then((r) => r.json()); } catch { /* unavailable below */ }
-      if (!platform.clientId || !vault) {
-        gmail.state.textContent = WORDS.unavailable;
-        gcal.state.textContent = WORDS.unavailable;
-        return;
-      }
-      const [{ connectGoogle, popupAuthorize }, { ingestInto }] = await Promise.all([import("./google/google.mjs"), import("./google/ingest.mjs")]);
-      const google = connectGoogle({
-        decide: (rest) => line(`google ${rest}`),
-        link: (rest) => line(`googlelink ${rest}`),
-        platform,
-        authorize: popupAuthorize({ clientId: platform.clientId, redirectUri: platform.relay }),
-        ingest: ingestInto({ vault }),
-        halted,
-      });
-      await google.ready;
-      for (const [service, row, config] of [["gmail", gmail, platform.mail], ["calendar", gcal, platform.calendar]]) {
-        const connect = element("button", { type: "button", textContent: WORDS.connect });
-        const read = element("button", { type: "button", textContent: WORDS["read.now"] });
-        const forget = element("button", { type: "button", textContent: WORDS.forget });
-        row.row.querySelector(".pr-controls").append(connect, read, forget);
-        const paint = () => {
-          const s = google.status()[service];
-          row.state.textContent = s.token === "fresh" ? WORDS.on : WORDS.off;
-          connect.hidden = s.token === "fresh";
-          read.hidden = s.token !== "fresh";
-          forget.hidden = s.stage === "unprovisioned" || s.token !== "fresh";
-        };
-        const busy = (button, work) => async () => {
-          button.disabled = true;
-          try { await work(); } catch (error) { say(error?.code ?? error?.message ?? String(error), "bad"); } finally { button.disabled = false; paint(); }
-        };
-        connect.addEventListener("click", busy(connect, () => google.grant([service])));
-        read.addEventListener("click", busy(read, async () => {
-          const sync = service === "gmail" ? google.syncMail : google.syncCalendar;
-          const t = await sync({ ...config, onProgress: (p) => say(`${p.store + p.storehash + p.ask + p.refuse + p.other} / ${p.total}`, "") });
-          say(`${t.store + t.storehash} ${WORDS.items}`, "good");
-          remember(named(service === "gmail" ? "gmail" : "gcal").name, `${t.store + t.storehash}`);
-          await load();
-        }));
-        forget.addEventListener("click", busy(forget, () => google.forget()));
-        painters.push(paint);
-        paint();
-      }
+      const device = named("device");
+      const addFolder = element("button", { type: "button", textContent: WORDS["device.folder"] });
+      const contacts = element("button", { type: "button", textContent: WORDS["device.contacts"] });
+      const allow = element("button", { type: "button", textContent: WORDS["device.allow"] });
+      const read = element("button", { type: "button", textContent: WORDS["read.now"] });
+      const forget = element("button", { type: "button", textContent: WORDS.forget });
+      const files = element("input", { type: "file", multiple: true, accept: ".mbox,.mbx,.eml,.ics,.ical,.vcf,.vcard" });
+      files.setAttribute("aria-label", WORDS["device.files"]);
+      const filesLabel = element("label", { className: "pr-file" }, element("span", { textContent: WORDS["device.files"] }), files);
+      const row = settingRow(device, addFolder, filesLabel, contacts, allow, read, forget);
+      if (!vault) { row.state.textContent = WORDS.unavailable; row.row.querySelector(".pr-controls").hidden = true; return; }
+      const d = await deviceOf();
+      let kept = [];
+      const paint = async () => {
+        kept = await d.source.folders().catch(() => []);
+        const plan = await d.ask({ grant: { folder: kept.some((f) => f.grant === "granted") ? "kept" : "none" } });
+        const shown = (surface) => plan[surface] === "offer" || plan[surface] === "use";
+        row.state.textContent = kept.length ? kept.map((f) => f.name).join(", ") : WORDS["device.none"];
+        addFolder.hidden = !shown("folder");
+        filesLabel.hidden = !shown("files");
+        contacts.hidden = !shown("contacts");
+        allow.hidden = !shown("folder") || !kept.some((f) => f.grant === "prompt");
+        read.hidden = plan.folder !== "use";
+        forget.hidden = !kept.length;
+      };
+      const owner = (surface) => async () => (await d.ask({ act: { [surface]: "owner" } }))[surface] === "use";
+      const busy = (button, may, work) => async () => {
+        button.disabled = true;
+        try { if (await may()) await work(); } catch (error) { if (error?.name !== "AbortError") say(error?.code ?? error?.message ?? String(error), "bad"); } finally { button.disabled = false; await paint(); }
+      };
+      addFolder.addEventListener("click", busy(addFolder, owner("folder"), async () => { await d.source.addFolder(); await reportDevice(await d.source.readFolders()); }));
+      allow.addEventListener("click", busy(allow, owner("folder"), async () => { await d.source.allow(); await reportDevice(await d.source.readFolders()); }));
+      read.addEventListener("click", busy(read, owner("folder"), async () => reportDevice(await d.source.readFolders())));
+      forget.addEventListener("click", busy(forget, async () => true, async () => { for (const f of kept) await d.source.forget(f.id); }));
+      files.addEventListener("change", busy(files, owner("files"), async () => { await reportDevice(await d.source.readFiles([...(files.files ?? [])])); files.value = ""; }));
+      contacts.addEventListener("click", busy(contacts, owner("contacts"), async () => {
+        const picked = await navigator.contacts.select(["name", "email", "tel"], { multiple: true });
+        await reportDevice(await d.source.readContacts(picked));
+      }));
+      painters.push(paint);
+      await paint();
     })().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
 
     // Models: R4, and every model the lock pins, each routed in by the owner's press.
@@ -565,7 +654,7 @@ export default async function start({ app, reason, $ }) {
     routedModels = await openModels({ lock, decide: async (request) => ({ outcome: await line(`model ${request}`), rule: "guest" }), grant: { models: grants() }, halted });
     return routedModels;
   }
-  async function answer(prompt, context) {
+  async function answer(prompt, context, grounds) {
     const r4model = await openModel();
     if (grants().length) {
       const routed = await openRouted();
@@ -574,19 +663,29 @@ export default async function start({ app, reason, $ }) {
         const decision = await routed.prepare(target);
         if (decision.outcome === "run") {
           routed.connect(r4model, { maxTokens: 128 });
-          return r4model.askRouted({ target, prompt, context });
+          return r4model.askRouted({ target, prompt, context, grounds });
         }
       }
     }
-    return r4model.ask({ prompt, context });
+    return r4model.ask({ prompt, context, grounds });
   }
+  // The kept items an Ask drew on, under its answer; each opens like a row.
+  const drawn = element("ol", { className: "pr-list pr-drawn" });
+  drawn.setAttribute("aria-label", WORDS["ask.placeholder"]);
+  out.after(drawn);
   $("pr-ask").addEventListener("submit", async (event) => {
     event.preventDefault();
     const prompt = $("pr-prompt").value.trim();
     if (!prompt) return;
     $("pr-ask-go").disabled = true;
+    // While halted nothing kept is drawn on; the model's own decision refuses too.
+    const used = haltedNow ? [] : drawOn(items, prompt);
+    drawn.replaceChildren(...used.map(rowOf));
+    // The answer carries the highest label of what it drew on.
+    const label = used.reduce((at, item) => higher(at, item.label ?? "confidential"), "confidential");
+    const grounds = used.map((item) => [when(item.at), item.title, item.who, item.body].filter(Boolean).join(" · ").slice(0, 600));
     try {
-      const result = await answer(prompt, { label: "confidential", halted: halted() });
+      const result = await answer(prompt, { label, halted: halted() }, grounds);
       if (result.outcome === "answer") say(result.answer, "good");
       else if (result.outcome === "ask" && result.release) say(WORDS["answer.asks"], "warn");
       else say(`${WORDS["answer.none"]} · ${result.outcome}`, "bad");
@@ -610,4 +709,5 @@ export default async function start({ app, reason, $ }) {
   // Resonance loads on the owner's first touch, never with the page, then orders what they resonate with first.
   const wake = () => resonanceOf().then((made) => { if (made && current.show !== "settings") paintList(); });
   for (const type of ["pointerdown", "keydown"]) document.addEventListener(type, wake, { once: true, capture: true });
+  rereadFolders().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
 }

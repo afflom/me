@@ -146,3 +146,58 @@ fn page_pg_02() {
         }
     }
 }
+
+/// `PG-03`: Every act on the page completes end to end: what the owner sends is the very event or message they reviewed and is kept in the place it left from at that domain's floor, every kept item opens to its words, and Ask draws on the kept items that share its words, never while halted, under the highest label it drew on
+#[test]
+fn page_pg_03() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .ancestors()
+        .nth(2)
+        .expect("crates/conformance is two below the root")
+        .to_path_buf();
+    let read = |path: &str| std::fs::read_to_string(root.join(path)).expect(path);
+    let card = read("site/card.mjs");
+    for (wiring, why) in [
+        (
+            "description: text, now: Date.now() }",
+            "an event's stamp is fixed at Review, so the reviewed event is the sent event",
+        ),
+        (
+            "await keepSent(place, act, done.out);",
+            "what was delivered is kept in the place it left from",
+        ),
+        (
+            "const label = LABELS[FLOORS[domain]].toLowerCase();\n    const result = await vault.put(encoder.encode(out.bytes)",
+            "what was sent is kept as its exact bytes at its domain's floor",
+        ),
+        (
+            "const used = haltedNow ? [] : drawOn(items, prompt);",
+            "Ask draws on nothing kept while halted",
+        ),
+        (
+            "used.reduce((at, item) => higher(at, item.label ?? \"confidential\"), \"confidential\")",
+            "Ask's answer carries the highest label it drew on",
+        ),
+        (
+            "if (item.sealed) continue;",
+            "a sealed item is never drawn on",
+        ),
+    ] {
+        assert!(
+            card.contains(wiring),
+            "PG-03: {why}: site/card.mjs must contain `{wiring}`"
+        );
+    }
+    let r4 = read("site/r4/r4.mjs");
+    assert!(
+        r4.contains("{ role: \"system\", content: grounds.join(\"\\n\") }"),
+        "PG-03: the kept words Ask drew on reach R4 as context"
+    );
+    let test = read("test/page/acts.test.mjs");
+    for expected in ["Dentist checkup", "aria-expanded", ".pr-drawn", "#pr-halt"] {
+        assert!(
+            test.contains(expected),
+            "PG-03: the browser test must exercise {expected}"
+        );
+    }
+}
