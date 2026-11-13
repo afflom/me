@@ -34,8 +34,21 @@ structure{
   fields: [
     {name: name, type: String},
     {name: viewpoint, type: Nat},
+    {name: kind, type: Nat},
     {name: group, type: Nat},
     {name: source, type: Nat}
+  ]
+}
+
+structure{
+  name: SurfaceSection,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: name, type: String},
+    {name: settings, type: (List Nat)},
+    {name: reveal, type: Nat},
+    {name: serves, type: Nat}
   ]
 }
 
@@ -150,7 +163,14 @@ definition{
   name: surfaceSettings,
   parameters: [],
   result: (List SurfaceSetting),
-  body: (cons (record SurfaceSetting {name := "This device", viewpoint := 0, group := 0, source := 6}) (cons (record SurfaceSetting {name := "Language models", viewpoint := 1, group := 1, source := 10}) (cons (record SurfaceSetting {name := "Quiet", viewpoint := 0, group := 2, source := 10}) (cons (record SurfaceSetting {name := "Backup", viewpoint := 0, group := 3, source := 10}) (cons (record SurfaceSetting {name := "Pause", viewpoint := 0, group := 4, source := 10}) (cons (record SurfaceSetting {name := "Who you are", viewpoint := 0, group := 5, source := 10}) (nil SurfaceSetting)))))))
+  body: (cons (record SurfaceSetting {name := "This device", viewpoint := 0, kind := 1, group := 0, source := 6}) (cons (record SurfaceSetting {name := "Language models", viewpoint := 1, kind := 1, group := 1, source := 10}) (cons (record SurfaceSetting {name := "Quiet", viewpoint := 0, kind := 0, group := 2, source := 10}) (cons (record SurfaceSetting {name := "Backup", viewpoint := 0, kind := 1, group := 3, source := 10}) (cons (record SurfaceSetting {name := "Pause", viewpoint := 0, kind := 0, group := 4, source := 10}) (cons (record SurfaceSetting {name := "Who you are", viewpoint := 0, kind := 1, group := 5, source := 10}) (nil SurfaceSetting)))))))
+}
+
+definition{
+  name: surfaceSections,
+  parameters: [],
+  result: (List SurfaceSection),
+  body: (cons (record SurfaceSection {name := "You", settings := (cons 5 (nil Nat)), reveal := 0, serves := 1}) (cons (record SurfaceSection {name := "Connections", settings := (cons 0 (nil Nat)), reveal := 1, serves := 2}) (cons (record SurfaceSection {name := "Attention", settings := (cons 2 (cons 4 (nil Nat))), reveal := 0, serves := 2}) (cons (record SurfaceSection {name := "Your data", settings := (cons 3 (nil Nat)), reveal := 2, serves := 1}) (nil SurfaceSection)))))
 }
 
 definition{

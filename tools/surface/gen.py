@@ -35,6 +35,8 @@ GROUPS = [g["key"] for g in SPEC["groups"]]
 DIRECTIONS = ["in", "out", "local"]
 SOURCES = SPEC["sources"]
 VIEWPOINTS = SPEC["viewpoints"]
+SETTING_KINDS = ["switch", "detail"]
+REVEALS = ["always", "until-done", "on-tap"]
 
 
 def refuse(why):
@@ -55,6 +57,7 @@ def words():
     out += [("act", a["word"]) for a in SPEC["acts"] if a["word"]]
     out += [("group", g["name"]) for g in SPEC["groups"]]
     out += [("setting", s["name"]) for s in SPEC["settings"]]
+    out += [("section", x["name"]) for x in SPEC["sections"]]
     out += [(k, w) for k, w in SPEC["words"].items()]
     return out
 
@@ -96,7 +99,7 @@ def place_record(p):
 
 def setting_record(x):
     return (
-        f"(record SurfaceSetting {{name := {s(x['name'])}, viewpoint := {VIEWPOINTS.index(x['viewpoint'])}, group := {GROUPS.index(x['group'])}, "
+        f"(record SurfaceSetting {{name := {s(x['name'])}, viewpoint := {VIEWPOINTS.index(x['viewpoint'])}, kind := {SETTING_KINDS.index(x['kind'])}, group := {GROUPS.index(x['group'])}, "
         f"source := {SOURCES.index(x['source']) if x['source'] != 'none' else len(SOURCES)}}})"
     )
 
@@ -170,6 +173,27 @@ def contrast_record(c):
 # domains it reads into; an act fills the domain its place keeps into. A list
 # place that no feeder can fill is refused here and disproved in the proofs.
 SETTING_KEYS = [x["key"] for x in SPEC["settings"]]
+
+# The panel: every person setting in exactly one section, in the order a person
+# needs them; each section serves journeys or lasting goals the product record
+# names, so nothing is in the panel that no success of the person's asks for.
+PRODUCT = json.loads((ROOT / "app/specs/product/spec.json").read_text())
+SUCCESS = {j["key"] for j in PRODUCT["journeys"]} | {a["key"] for a in PRODUCT["always"]}
+for x in SPEC["sections"]:
+    if x["reveal"] not in REVEALS:
+        refuse(f"the section {x['key']} reveals {x['reveal']!r}, not one of {REVEALS}")
+    for k in x["settings"]:
+        if k not in SETTING_KEYS:
+            refuse(f"the section {x['key']} holds {k!r}, which is not a setting")
+    for k in x["serves"]:
+        if k not in SUCCESS:
+            refuse(f"the section {x['key']} serves {k!r}, which is neither a journey nor a lasting goal of the product record")
+
+
+def section_record(x):
+    return (f"(record SurfaceSection {{name := {s(x['name'])}, settings := {nats([SETTING_KEYS.index(k) for k in x['settings']])}, "
+            f"reveal := {REVEALS.index(x['reveal'])}, serves := {len(x['serves'])}}})")
+
 FEEDERS = []
 for f in SPEC["feeders"]:
     if f["act"] != "none":
@@ -287,7 +311,14 @@ model = [
   name: SurfaceSetting,
   type_parameters: [],
   parameters: [],
-  fields: [{name: name, type: String}, {name: viewpoint, type: Nat}, {name: group, type: Nat}, {name: source, type: Nat}]
+  fields: [{name: name, type: String}, {name: viewpoint, type: Nat}, {name: kind, type: Nat}, {name: group, type: Nat}, {name: source, type: Nat}]
+}
+""",
+    """structure{
+  name: SurfaceSection,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: name, type: String}, {name: settings, type: (List Nat)}, {name: reveal, type: Nat}, {name: serves, type: Nat}]
 }
 """,
     """structure{
@@ -340,6 +371,7 @@ model = [
     defn("surfacePlaces", "(List SurfacePlace)", records("SurfacePlace", [place_record(p) for p in SPEC["places"]])),
     defn("surfaceGroups", "(List SurfaceGroup)", records("SurfaceGroup", [group_record(g) for g in SPEC["groups"]])),
     defn("surfaceSettings", "(List SurfaceSetting)", records("SurfaceSetting", [setting_record(x) for x in SPEC["settings"]])),
+    defn("surfaceSections", "(List SurfaceSection)", records("SurfaceSection", [section_record(x) for x in SPEC["sections"]])),
     defn("surfaceWords", "(List SurfaceWord)", records("SurfaceWord", [word_record(k, w) for k, w in SPEC["words"].items()])),
     defn("surfaceRoutedSources", "(List Nat)", nats(routed)),
     defn("surfaceOutboundActs", "(List Nat)", nats(outbound)),
@@ -446,6 +478,18 @@ proofs_defs += [
     rec("surfaceRestSilent", f"[answers : (List {M}SurfaceAnswer)]", "Bool",
         "(match answers\n    | List.nil => false\n    | List.cons a rest => ((((project a level) =? 0) && ((surfaceNatCount (project a degrees)) =? 0)) || (surfaceRestSilent rest)))", "answers"),
 ]
+proofs_defs += [
+    rec("surfaceSectionsHolding", f"[setting : Nat, sections : (List {M}SurfaceSection)]", "Nat",
+        "(match sections\n    | List.nil => 0\n    | List.cons section rest => (if (surfaceMember setting (project section settings)) then ((surfaceSectionsHolding setting rest) + 1) else (surfaceSectionsHolding setting rest)))", "sections"),
+    # A person's setting is in exactly one section; the system's in none.
+    rec("surfaceSettingsSectioned", f"[index : Nat, settings : (List {M}SurfaceSetting)]", "Bool",
+        f"(match settings\n    | List.nil => true\n    | List.cons setting rest => (((surfaceSectionsHolding index ({M}surfaceSections)) =? (if ((project setting viewpoint) =? {system}) then 0 else 1)) && (surfaceSettingsSectioned (index + 1) rest)))", "settings"),
+    # A section holds one to three settings and serves at least one success of the person's.
+    rec("surfaceSectionsShort", f"[sections : (List {M}SurfaceSection)]", "Bool",
+        "(match sections\n    | List.nil => true\n    | List.cons section rest => (((1 <=? (surfaceNatCount (project section settings))) && (((surfaceNatCount (project section settings)) <=? 3) && (1 <=? (project section serves)))) && (surfaceSectionsShort rest)))", "sections"),
+    rec("surfaceSectionCount", f"[sections : (List {M}SurfaceSection)]", "Nat",
+        "(match sections\n    | List.nil => 0\n    | List.cons section rest => ((surfaceSectionCount rest) + 1))", "sections"),
+]
 groups_all = "true"
 for i in reversed(range(len(GROUPS))):
     groups_all = f"((surfaceGroupUsed {i} ({M}surfaceSettings)) && {groups_all})"
@@ -462,6 +506,8 @@ theorems = [
     theorem("surfaceOneHome", f"((surfaceHostCount {home} ({M}surfacePlaces)) = 1)"),
     theorem("surfaceOneComposer", f"((surfaceHostCount {composer} ({M}surfacePlaces)) = 1)"),
     theorem("surfaceOneSheet", f"((surfaceHostCount {sheet} ({M}surfacePlaces)) = 1)"),
+    theorem("surfaceEverySettingInOneSection", f"((surfaceSettingsSectioned 0 ({M}surfaceSettings)) = true)"),
+    theorem("surfaceSectionsAreFewAndShort", f"(((surfaceSectionsShort ({M}surfaceSections)) && ((surfaceSectionCount ({M}surfaceSections)) <=? 4)) = true)"),
     theorem("surfacePageIsThePersonsView", f"((surfacePageIsPersonView ({M}surfacePlaces)) = true)"),
     theorem("surfaceMenuIsShort", f"(((surfaceHostCount {nav} ({M}surfacePlaces)) <=? 4) = true)"),
     theorem("surfaceActsInTheirRoles", f"((surfaceActsSound ({M}surfacePlaces)) = true)"),
@@ -618,6 +664,7 @@ mirror = {
     "places": SPEC["places"],
     "groups": SPEC["groups"],
     "settings": SPEC["settings"],
+    "sections": SPEC["sections"],
     "media": SPEC["media"],
     "words": SPEC["words"],
     "feeders": FEEDERS,

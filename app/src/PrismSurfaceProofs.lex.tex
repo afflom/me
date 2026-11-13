@@ -334,6 +334,46 @@ definition{
 }
 
 definition{
+  name: surfaceSectionsHolding,
+  parameters: [setting : Nat, sections : (List PrismSurface::SurfaceSection)],
+  result: Nat,
+  body: (match sections
+    | List.nil => 0
+    | List.cons section rest => (if (surfaceMember setting (project section settings)) then ((surfaceSectionsHolding setting rest) + 1) else (surfaceSectionsHolding setting rest))),
+  recursive_argument: sections
+}
+
+definition{
+  name: surfaceSettingsSectioned,
+  parameters: [index : Nat, settings : (List PrismSurface::SurfaceSetting)],
+  result: Bool,
+  body: (match settings
+    | List.nil => true
+    | List.cons setting rest => (((surfaceSectionsHolding index (PrismSurface::surfaceSections)) =? (if ((project setting viewpoint) =? 1) then 0 else 1)) && (surfaceSettingsSectioned (index + 1) rest))),
+  recursive_argument: settings
+}
+
+definition{
+  name: surfaceSectionsShort,
+  parameters: [sections : (List PrismSurface::SurfaceSection)],
+  result: Bool,
+  body: (match sections
+    | List.nil => true
+    | List.cons section rest => (((1 <=? (surfaceNatCount (project section settings))) && (((surfaceNatCount (project section settings)) <=? 3) && (1 <=? (project section serves)))) && (surfaceSectionsShort rest))),
+  recursive_argument: sections
+}
+
+definition{
+  name: surfaceSectionCount,
+  parameters: [sections : (List PrismSurface::SurfaceSection)],
+  result: Nat,
+  body: (match sections
+    | List.nil => 0
+    | List.cons section rest => ((surfaceSectionCount rest) + 1)),
+  recursive_argument: sections
+}
+
+definition{
   name: surfaceGroupsUsed,
   parameters: [],
   result: Bool,
@@ -372,6 +412,20 @@ theorem{
   name: surfaceOneSheet,
   parameters: [],
   statement: ((surfaceHostCount 3 (PrismSurface::surfacePlaces)) = 1),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceEverySettingInOneSection,
+  parameters: [],
+  statement: ((surfaceSettingsSectioned 0 (PrismSurface::surfaceSettings)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceSectionsAreFewAndShort,
+  parameters: [],
+  statement: (((surfaceSectionsShort (PrismSurface::surfaceSections)) && ((surfaceSectionCount (PrismSurface::surfaceSections)) <=? 4)) = true),
   proof: decide{}
 }
 

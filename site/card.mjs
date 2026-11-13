@@ -3,7 +3,7 @@
 // the verified app's: this script only carries bytes between the page, the
 // vault, R4, the routed models and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
-import { PLACES, ACTS, LABELS, FLOORS, SETTINGS, WORDS, DOMAINS, FEEDERS, FONTS } from "./surface/surface.mjs";
+import { PLACES, ACTS, LABELS, FLOORS, SETTINGS, SECTIONS, WORDS, DOMAINS, FEEDERS, FONTS } from "./surface/surface.mjs";
 // The coherence registry's runtime: what an item is about, what an Ask is
 // after, and Today. Loaded once there is something kept or asked, so an
 // ordinary first visit fetches none of it.
@@ -716,15 +716,37 @@ export default async function start({ app, reason, $ }) {
   function buildSettings() {
     if (settingsBuilt) return;
     settingsBuilt = true;
-    // One sheet of the person's settings, in the model's order; a setting in
-    // the system view runs on its own and gets no row.
-    const rows = element("div", { className: "pr-rows" });
-    $("pr-settings").append(element("section", { className: "pr-set" }, rows));
+    // One panel of the person's settings, in the model's sections and order; a
+    // setting in the system view runs on its own and gets no row. A section
+    // shows its detail always, until the person has done what it asks, or only
+    // on a tap, as the model says.
+    const sectionOf = new Map();
+    for (const section of SECTIONS) {
+      const heading = element("h3", { id: `pr-set-${section.key}`, textContent: section.name });
+      const rows = element("div", { className: "pr-rows" });
+      const node = element("section", { className: "pr-set" }, heading, rows);
+      node.setAttribute("aria-labelledby", heading.id);
+      $("pr-settings").append(node);
+      for (const key of section.settings) sectionOf.set(key, { section, rows });
+    }
     const settingRow = (setting, ...controls) => {
       const state = element("span", { className: "pr-state" });
-      const row = element("div", { className: "pr-setting" }, element("span", { className: "pr-name", textContent: setting.name }), state, element("span", { className: "pr-controls" }, ...controls));
-      if (setting.viewpoint === "person") rows.append(row);
-      return { row, state };
+      const name = element("span", { className: "pr-name", textContent: setting.name });
+      const tools = element("span", { className: "pr-controls" }, ...controls);
+      const home = sectionOf.get(setting.key);
+      const reveal = home?.section.reveal ?? "always";
+      if (setting.kind === "switch" || reveal === "always") {
+        const row = element("div", { className: "pr-setting" }, name, state, tools);
+        if (home && setting.viewpoint === "person") home.rows.append(row);
+        return { row, state, done() {} };
+      }
+      // A detail row: its name and state, and the controls one tap away.
+      const row = element("details", { className: "pr-setting pr-detail" }, element("summary", {}, name, state), tools);
+      row.setAttribute("aria-label", setting.name);
+      let touched = false;
+      row.querySelector("summary").addEventListener("click", () => { touched = true; });
+      if (home && setting.viewpoint === "person") home.rows.append(row);
+      return { row, state, done(flag) { if (reveal === "until-done" && !touched) row.open = !flag; } };
     };
     const switchFor = (checked, label, onChange) => {
       const box = element("input", { type: "checkbox", checked, role: "switch" });
@@ -780,6 +802,7 @@ export default async function start({ app, reason, $ }) {
         const plan = await d.ask({ grant: { folder: kept.some((f) => f.grant === "granted") ? "kept" : "none", extension: extensionGrant() } });
         const shown = (surface) => plan[surface] === "offer" || plan[surface] === "use";
         row.state.textContent = kept.length ? kept.map((f) => f.name).join(", ") : WORDS["device.none"];
+        row.done(kept.length > 0 || items.length > 0);
         addFolder.hidden = !shown("folder");
         filesLabel.hidden = !shown("files");
         contacts.hidden = !shown("contacts");

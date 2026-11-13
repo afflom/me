@@ -121,7 +121,7 @@ fn device_dv_02() {
     );
     let surface = read("app/specs/surface/spec.json");
     assert!(
-        surface.contains("{\"key\": \"device\", \"viewpoint\": \"person\", \"group\": \"sources\", \"name\": \"This device\", \"source\": \"file\"}"),
+        surface.contains("{\"key\": \"device\", \"viewpoint\": \"person\", \"kind\": \"detail\", \"group\": \"sources\", \"name\": \"This device\", \"source\": \"file\"}"),
         "DV-02: the source is one row in the person's settings sheet"
     );
     node_suite();

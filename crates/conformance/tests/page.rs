@@ -91,6 +91,8 @@ fn page_pg_02() {
         "surfaceOneHome",
         "surfaceOneComposer",
         "surfaceOneSheet",
+        "surfaceEverySettingInOneSection",
+        "surfaceSectionsAreFewAndShort",
         "surfacePageIsThePersonsView",
         "surfaceMenuIsShort",
         "surfaceActsInTheirRoles",
