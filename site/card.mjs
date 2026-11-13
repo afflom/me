@@ -173,6 +173,59 @@ export default async function start({ app, reason, $ }) {
     return router;
   };
 
+  // --- Sources: the browser as a host for the owner's content ---
+  // PrismHost answers, surface by surface, how this browser may be used; the
+  // device code loads only when a surface is used, so an ordinary visit
+  // fetches none of it.
+  let deviceOpen = null;
+  const deviceOf = () => (deviceOpen ??= (async () => {
+    const [{ openDevice }, { ingestInto }, host] = await Promise.all([import("./device/device.mjs"), import("./google/ingest.mjs"), import("./device/host.mjs")]);
+    const source = openDevice({ decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted, lanes: host.lanes() });
+    return { source, ask: (more = {}) => host.plan({ decide: (rest) => line(`host ${rest}`), halted, ...more }) };
+  })());
+  async function reportDevice(t) {
+    const got = t.store + t.storehash;
+    say(`${got} ${WORDS.items}`, got ? "good" : "");
+    remember(SETTINGS.find((s) => s.key === "device").name, `${got}`);
+    await load();
+    if (current.show !== "settings") paintList();
+    paintSettings();
+  }
+  // A paste or a drop anywhere on the page is the owner's own act.
+  document.addEventListener("paste", (event) => {
+    if (!vault || event.target?.closest?.("input, textarea, [contenteditable]")) return;
+    const files = [...(event.clipboardData?.files ?? [])];
+    const text = event.clipboardData?.getData("text/plain") ?? "";
+    if (!files.length && !text.trim()) return;
+    event.preventDefault();
+    (async () => {
+      const d = await deviceOf();
+      if ((await d.ask({ act: { paste: "owner" } })).paste !== "use") return;
+      await reportDevice(files.length ? await d.source.readFiles(files) : await d.source.readText(text));
+    })().catch((error) => say(error?.code ?? error?.message ?? String(error), "bad"));
+  });
+  document.addEventListener("dragover", (event) => { if (event.dataTransfer?.types?.includes("Files")) event.preventDefault(); });
+  document.addEventListener("drop", (event) => {
+    const files = [...(event.dataTransfer?.files ?? [])];
+    if (!vault || !files.length) return;
+    event.preventDefault();
+    (async () => {
+      const d = await deviceOf();
+      if ((await d.ask({ act: { drop: "owner" } })).drop !== "use") return;
+      await reportDevice(await d.source.readFiles(files));
+    })().catch((error) => say(error?.code ?? error?.message ?? String(error), "bad"));
+  });
+  // A folder the owner granted is re-read on every visit while the browser keeps the grant.
+  async function rereadFolders() {
+    if (!vault || typeof indexedDB?.databases !== "function") return;
+    if (!(await indexedDB.databases()).some((db) => db.name === "prism-device")) return;
+    const d = await deviceOf();
+    const kept = (await d.source.folders()).some((f) => f.grant === "granted");
+    if ((await d.ask({ grant: { folder: kept ? "kept" : "none" } })).folder !== "use") return;
+    const t = await d.source.readFolders();
+    if (t.store + t.storehash) await reportDevice(t);
+  }
+
   // --- Places ---
   const byKey = new Map(PLACES.map((p) => [p.key, p]));
   const actOf = (place) => ACTS.find((a) => a.key === place.act);
@@ -357,55 +410,51 @@ export default async function start({ app, reason, $ }) {
     const named = (key) => SETTINGS.find((s) => s.key === key);
     const painters = [];
 
-    // Sources: Google, once the platform publishes its client.
+    // Sources: this device, through every surface the browser reports. Each
+    // control shows only where PrismHost offers it, each read is asked of
+    // PrismFolder, and each item is kept through the detectors and the vault.
     (async () => {
-      const gmail = settingRow(named("gmail"));
-      const gcal = settingRow(named("gcal"));
-      let platform = {};
-      try { platform = await fetch(new URL("./google/platform.json", import.meta.url), { cache: "no-cache" }).then((r) => r.json()); } catch { /* unavailable below */ }
-      if (!platform.clientId || !vault) {
-        gmail.state.textContent = WORDS.unavailable;
-        gcal.state.textContent = WORDS.unavailable;
-        return;
-      }
-      const [{ connectGoogle, popupAuthorize }, { ingestInto }] = await Promise.all([import("./google/google.mjs"), import("./google/ingest.mjs")]);
-      const google = connectGoogle({
-        decide: (rest) => line(`google ${rest}`),
-        link: (rest) => line(`googlelink ${rest}`),
-        platform,
-        authorize: popupAuthorize({ clientId: platform.clientId, redirectUri: platform.relay }),
-        ingest: ingestInto({ vault }),
-        halted,
-      });
-      await google.ready;
-      for (const [service, row, config] of [["gmail", gmail, platform.mail], ["calendar", gcal, platform.calendar]]) {
-        const connect = element("button", { type: "button", textContent: WORDS.connect });
-        const read = element("button", { type: "button", textContent: WORDS["read.now"] });
-        const forget = element("button", { type: "button", textContent: WORDS.forget });
-        row.row.querySelector(".pr-controls").append(connect, read, forget);
-        const paint = () => {
-          const s = google.status()[service];
-          row.state.textContent = s.token === "fresh" ? WORDS.on : WORDS.off;
-          connect.hidden = s.token === "fresh";
-          read.hidden = s.token !== "fresh";
-          forget.hidden = s.stage === "unprovisioned" || s.token !== "fresh";
-        };
-        const busy = (button, work) => async () => {
-          button.disabled = true;
-          try { await work(); } catch (error) { say(error?.code ?? error?.message ?? String(error), "bad"); } finally { button.disabled = false; paint(); }
-        };
-        connect.addEventListener("click", busy(connect, () => google.grant([service])));
-        read.addEventListener("click", busy(read, async () => {
-          const sync = service === "gmail" ? google.syncMail : google.syncCalendar;
-          const t = await sync({ ...config, onProgress: (p) => say(`${p.store + p.storehash + p.ask + p.refuse + p.other} / ${p.total}`, "") });
-          say(`${t.store + t.storehash} ${WORDS.items}`, "good");
-          remember(named(service === "gmail" ? "gmail" : "gcal").name, `${t.store + t.storehash}`);
-          await load();
-        }));
-        forget.addEventListener("click", busy(forget, () => google.forget()));
-        painters.push(paint);
-        paint();
-      }
+      const device = named("device");
+      const addFolder = element("button", { type: "button", textContent: WORDS["device.folder"] });
+      const contacts = element("button", { type: "button", textContent: WORDS["device.contacts"] });
+      const allow = element("button", { type: "button", textContent: WORDS["device.allow"] });
+      const read = element("button", { type: "button", textContent: WORDS["read.now"] });
+      const forget = element("button", { type: "button", textContent: WORDS.forget });
+      const files = element("input", { type: "file", multiple: true, accept: ".mbox,.mbx,.eml,.ics,.ical,.vcf,.vcard" });
+      files.setAttribute("aria-label", WORDS["device.files"]);
+      const filesLabel = element("label", { className: "pr-file" }, element("span", { textContent: WORDS["device.files"] }), files);
+      const row = settingRow(device, addFolder, filesLabel, contacts, allow, read, forget);
+      if (!vault) { row.state.textContent = WORDS.unavailable; row.row.querySelector(".pr-controls").hidden = true; return; }
+      const d = await deviceOf();
+      let kept = [];
+      const paint = async () => {
+        kept = await d.source.folders().catch(() => []);
+        const plan = await d.ask({ grant: { folder: kept.some((f) => f.grant === "granted") ? "kept" : "none" } });
+        const shown = (surface) => plan[surface] === "offer" || plan[surface] === "use";
+        row.state.textContent = kept.length ? kept.map((f) => f.name).join(", ") : WORDS["device.none"];
+        addFolder.hidden = !shown("folder");
+        filesLabel.hidden = !shown("files");
+        contacts.hidden = !shown("contacts");
+        allow.hidden = !shown("folder") || !kept.some((f) => f.grant === "prompt");
+        read.hidden = plan.folder !== "use";
+        forget.hidden = !kept.length;
+      };
+      const owner = (surface) => async () => (await d.ask({ act: { [surface]: "owner" } }))[surface] === "use";
+      const busy = (button, may, work) => async () => {
+        button.disabled = true;
+        try { if (await may()) await work(); } catch (error) { if (error?.name !== "AbortError") say(error?.code ?? error?.message ?? String(error), "bad"); } finally { button.disabled = false; await paint(); }
+      };
+      addFolder.addEventListener("click", busy(addFolder, owner("folder"), async () => { await d.source.addFolder(); await reportDevice(await d.source.readFolders()); }));
+      allow.addEventListener("click", busy(allow, owner("folder"), async () => { await d.source.allow(); await reportDevice(await d.source.readFolders()); }));
+      read.addEventListener("click", busy(read, owner("folder"), async () => reportDevice(await d.source.readFolders())));
+      forget.addEventListener("click", busy(forget, async () => true, async () => { for (const f of kept) await d.source.forget(f.id); }));
+      files.addEventListener("change", busy(files, owner("files"), async () => { await reportDevice(await d.source.readFiles([...(files.files ?? [])])); files.value = ""; }));
+      contacts.addEventListener("click", busy(contacts, owner("contacts"), async () => {
+        const picked = await navigator.contacts.select(["name", "email", "tel"], { multiple: true });
+        await reportDevice(await d.source.readContacts(picked));
+      }));
+      painters.push(paint);
+      await paint();
     })().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
 
     // Models: R4, and every model the lock pins, each routed in by the owner's press.
@@ -557,4 +606,5 @@ export default async function start({ app, reason, $ }) {
   await load();
   go(current.key);
   root.classList.add("pr-ready");
+  rereadFolders().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
 }

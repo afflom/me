@@ -3,7 +3,8 @@
 The root routes a request "<facet> <rest>" to the facet module's
 `dispatch rest`, and proves one `routes<Facet>` theorem per facet plus
 `refusesUnknownFacet`. To add a facet: append (keyword, Module, dispatch name) to FACETS,
-add vectors for it below, raise the limits if its requests or answers are
+add vectors for it below (one or two: the root's vector list nests one level per
+vector, and the SDK's IR reader stops near 110), raise the limits if its requests or answers are
 larger, then run
 
     python3 -I tools/prism_root.py app/src
@@ -31,6 +32,8 @@ FACETS = [
     ("google", "PrismGoogle", "googleDispatch"),
     ("googlelink", "PrismGoogleLink", "googleLinkDispatch"),
     ("dest", "PrismDest", "destDispatch"),
+    ("folder", "PrismFolder", "folderDispatch"),
+    ("host", "PrismHost", "hostDispatch"),
     ("model", "PrismModels", "modelsDispatch"),
 ]
 REQ_MAX, RESP_MAX, ALLOC = 1107, 16384, 2214
@@ -69,6 +72,8 @@ VECTORS = [
  ("model locked onnx match match granted yes", "refuse"),
  ("model unlocked gguf match match granted no", "refuse"),
  ("model", "invalid request"),
+ ("folder granted mbox read small no", "read"),
+ ("host mail yes owner kept no", "sealed"),
  ("google", "invalid request"),
  ("learn", "invalid request"),
  ("when", "invalid request"),
