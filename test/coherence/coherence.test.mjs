@@ -115,3 +115,30 @@ test("a Takeout zip opens to its entries, deflated and stored (CO-04)", async ()
   assert.equal(await got[1].text(), entries[1].raw.toString());
   await assert.rejects(zipEntries(new File([Buffer.from("not a zip")], "x.zip")), /not a zip/);
 });
+
+test("Needs me holds what asks the person or names a deadline, until cleared (J2)", async () => {
+  const { needs } = await import(resolve("site/coherence/today.mjs"));
+  const now = Date.now();
+  const items = [
+    { address: "a", media: "message", at: now, title: "Lunch on Thursday?", body: "Shall we meet at noon? Let me know." },
+    { address: "b", media: "message", at: now - 1000, title: "Your statement", body: "Payment is due on the 28th." },
+    { address: "c", media: "message", at: now, title: "Your order shipped", body: "Tracking for your package." },
+    { address: "d", media: "calendar", at: now, title: "Review?", body: "" },
+    { address: "e", media: "message", at: now, title: "Re: plans", body: "Sounds good.\n> Could you come?" },
+  ];
+  assert.deepEqual(needs(items, { now }).map((n) => [n.item.address, n.why, n.phrase]), [["a", "asks", ""], ["b", "due", "due on the 28th"]]);
+  assert.deepEqual(needs(items, { now, done: new Set(["a"]) }).map((n) => n.item.address), ["b"]);
+});
+
+test("People are drawn from who wrote, who is invited and whose card is kept (J7)", async () => {
+  const { peopleOf, between } = await import(resolve("site/coherence/people.mjs"));
+  const now = Date.now();
+  const items = [
+    { media: "message", at: now - 5, title: "Lunch", text: "From: Robin Example <robin@example.org>\r\nTo: person@example.org\r\n\r\nhi" },
+    { media: "calendar", at: now + 600000, title: "Review", text: "BEGIN:VEVENT\r\nATTENDEE;CN=Robin Example:mailto:robin@example.org\r\nEND:VEVENT" },
+    { media: "contactCard", at: 0, title: "Jordan Example", text: "BEGIN:VCARD\r\nFN:Jordan Example\r\nEMAIL:jordan@example.org\r\nEND:VCARD" },
+  ];
+  const all = peopleOf(items);
+  assert.deepEqual(all.map((p) => p.name), ["Robin Example", "Jordan Example"]);
+  assert.deepEqual(between(all[0], now).map((i) => i.title), ["Review", "Lunch"]);
+});

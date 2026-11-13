@@ -22,7 +22,7 @@ function endOf(item) {
 }
 
 // relate(astart, aend, bstart, bend) -> Allen relation, from the root's `when`.
-export async function today(items, { now = Date.now(), relate }) {
+export async function today(items, { now = Date.now(), relate, done }) {
   const base = startOfDay(now);
   const minutes = (at) => Math.max(0, Math.min(WEEK_MINUTES, Math.round((at - base) / 60_000)));
   const span = (item) => {
@@ -31,8 +31,7 @@ export async function today(items, { now = Date.now(), relate }) {
   };
   const horizon = base + TODAY.ahead * DAY;
   const events = items
-    // An event, or anything the R4 router mapped onto a time.
-    .filter((item) => (item.media === "calendar" || item.start != null) && !item.sealed && item.at < horizon && endOf(item) > now)
+    .filter((item) => item.media === "calendar" && !item.sealed && item.at < horizon && endOf(item) > now)
     .sort((a, b) => a.at - b.at);
   const agenda = [];
   for (const item of events) {
@@ -53,5 +52,32 @@ export async function today(items, { now = Date.now(), relate }) {
   }
   const recent = items.filter((item) => item.media === "message").sort((a, b) => b.at - a.at).slice(0, TODAY.recent);
   const tasks = items.filter((item) => item.media !== "calendar" && item.media !== "message" && item.start == null && (item.domains ?? [item.domain]).includes(9)).sort((a, b) => b.at - a.at).slice(0, TODAY.tasks);
-  return { agenda, recent, tasks };
+  return { agenda, recent, tasks, needs: needs(items, { now, done }) };
+}
+
+// What needs the person: a message that asks them something, and anything
+// that names a deadline, newest first, until the person clears it. The
+// words that ask and the words of a deadline are the registry's (TODAY.needs).
+const own = (text) => text.split(/\r?\n/).filter((line) => !/^\s*>/.test(line) && !/^On .+wrote:\s*$/.test(line)).join("\n").slice(0, 1200).toLowerCase();
+const phrase = (terms) => new RegExp(terms.map((t) => (/^\w/.test(t) ? "\\b" : "") + t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + (/\w$/.test(t) ? "\\b" : "")).join("|"), "i");
+export function needs(items, { now = Date.now(), done = new Set() } = {}) {
+  const rule = TODAY.needs;
+  const asks = phrase(rule.asks);
+  const due = phrase(rule.due);
+  const since = now - rule.days * DAY;
+  const out = [];
+  for (const item of items) {
+    if (item.sealed || item.media === "calendar" || item.media === "contactCard" || done.has(item.address) || item.at < since) continue;
+    const words = `${item.title ?? ""}\n${own(item.body ?? "")}`;
+    const deadline = due.exec(words);
+    if (deadline) { out.push({ item, why: "due", phrase: sentenceOf(words, deadline.index) }); continue; }
+    if (item.media === "message" && asks.test(words)) out.push({ item, why: "asks", phrase: "" });
+  }
+  return out.sort((a, b) => b.item.at - a.item.at).slice(0, rule.most);
+}
+// The clause around a match, as the person would say it: "due on the 28th".
+function sentenceOf(text, at) {
+  const start = Math.max(0, at);
+  const end = text.slice(start).search(/[.!?\n]/);
+  return text.slice(start, end < 0 ? undefined : start + end).trim().slice(0, 48);
 }
