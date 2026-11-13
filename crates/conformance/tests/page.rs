@@ -183,8 +183,8 @@ fn page_pg_03() {
             "Ask's answer carries the highest label it drew on",
         ),
         (
-            "if (item.sealed) continue;",
-            "a sealed item is never drawn on",
+            "import(\"./coherence/sense.mjs\")",
+            "Ask draws through the coherence registry, which never draws on a sealed item (CO-03)",
         ),
     ] {
         assert!(

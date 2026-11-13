@@ -4,6 +4,11 @@
 // vault, R4, the routed models and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
 import { PLACES, ACTS, LABELS, FLOORS, GROUPS, SETTINGS, WORDS, DOMAINS, FEEDERS } from "./surface/surface.mjs";
+// The coherence registry's runtime: what an item is about, what an Ask is
+// after, and Today. Loaded once there is something kept or asked, so an
+// ordinary first visit fetches none of it.
+let coherenceOpen = null;
+const coherence = () => (coherenceOpen ??= Promise.all([import("./coherence/sense.mjs"), import("./coherence/today.mjs")]).then(([sense, day]) => ({ ...sense, ...day })));
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -23,6 +28,7 @@ const HALT_KEY = "me.halted";
 const PACE_KEY = "me.pace";
 const GRANT_KEY = "me.models.grant";
 const PLACE_KEY = "me.place";
+const R4_KEY = "me.r4";
 
 // Google's consent return, when this window is one. The relay and its sealing
 // load only then, so an ordinary visit fetches none of it.
@@ -95,32 +101,19 @@ function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
   if (base.media === "calendar") {
     const start = icsTime(calendarField(text, "DTSTART"));
     const title = calendarField(text, "SUMMARY");
-    return { ...base, at: Number.isNaN(start) ? base.at : start, title, who: calendarField(text, "LOCATION"), text, body: calendarField(text, "DESCRIPTION") || title };
+    const allDay = /^\d{8}$/.test(calendarField(text, "DTSTART"));
+    return { ...base, at: Number.isNaN(start) ? base.at : start, allDay, title, who: calendarField(text, "LOCATION"), text, body: calendarField(text, "DESCRIPTION") || title };
+  }
+  if (base.media === "contactCard") {
+    const field = (name) => calendarField(text, name);
+    return { ...base, title: field("FN") || field("N").split(";").filter(Boolean).reverse().join(" "), who: field("EMAIL") || field("TEL") || field("ORG"), text, body: [field("EMAIL"), field("TEL"), field("ORG"), field("ADR").replace(/;+/g, " ").trim()].filter(Boolean).join("\n") };
   }
   const first = text.split(/\r?\n/).find((line) => line.trim()) ?? "";
   return { ...base, title: first.trim(), who: "", text, body: text.trim() };
 }
 
-// The kept items an Ask draws on: those sharing the most words with it.
-// Sealed items have no words to share, so they are never drawn on.
-const QUIET_WORDS = new Set("the and for are but not you your yours with what when where which who whom why how does did have has had was were will would can could should may might this that these those there their them they from into onto about over under just than then also any all some its it's i'm i've me my mine our ours out off get got need needs want wants".split(" "));
-const termsOf = (text) => text.toLowerCase().match(/[\p{L}\p{N}]+/gu)?.filter((w) => w.length > 2 && !QUIET_WORDS.has(w)) ?? [];
 const RANK = ["public", "internal", "confidential", "restricted"];
 const higher = (a, b) => (RANK.indexOf(b) > RANK.indexOf(a) ? b : a);
-
-export function drawOn(items, prompt, most = 5) {
-  const asked = new Set(termsOf(prompt));
-  if (!asked.size) return [];
-  const scored = [];
-  for (const item of items) {
-    if (item.sealed) continue;
-    const have = new Set(termsOf(`${item.title} ${item.who} ${item.body ?? item.text}`));
-    let score = 0;
-    for (const term of asked) if ([...have].some((w) => w === term || (term.length > 3 && (w.startsWith(term) || term.startsWith(w)) && w.length > 3))) score += 1;
-    if (score) scored.push({ item, score });
-  }
-  return scored.sort((a, b) => b.score - a.score || b.item.at - a.item.at).slice(0, most).map((s) => s.item);
-}
 
 const short = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" });
 const clock = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
@@ -180,10 +173,15 @@ export default async function start({ app, reason, $ }) {
   async function load() {
     if (!vault) return;
     const rows = await vault.list();
+    const { domainsOf } = rows.length ? await coherence() : {};
     const read = [];
     for (const row of rows) {
       const got = await vault.get(row.address);
-      if (got.outcome === "restore" || got.outcome === "hashonly") read.push(readItem({ address: row.address, outcome: got.outcome, bytes: got.bytes, meta: got.meta, at: row.at }));
+      if (got.outcome !== "restore" && got.outcome !== "hashonly") continue;
+      const item = readItem({ address: row.address, outcome: got.outcome, bytes: got.bytes, meta: got.meta, at: row.at });
+      // Its domains: its media's, and each one its words name (the coherence registry's vocabulary).
+      item.domains = domainsOf(item);
+      read.push(item);
     }
     items = read.sort((a, b) => b.at - a.at);
   }
@@ -225,7 +223,10 @@ export default async function start({ app, reason, $ }) {
     (async () => {
       const d = await deviceOf();
       if ((await d.ask({ act: { paste: "owner" } })).paste !== "use") return;
-      await reportDevice(files.length ? await d.source.readFiles(files) : await d.source.readText(text));
+      const t = files.length ? await d.source.readFiles(files) : await d.source.readText(text);
+      // Plain words pasted are the owner's note, kept in this place (or Topics).
+      if (!files.length && t.skip && !(t.store + t.storehash)) await keepNote(current.act === "note" ? current : byKey.get("library"), text.trim(), current.act === "note" ? current.domains[0] : 11);
+      else await reportDevice(t);
     })().catch((error) => say(error?.code ?? error?.message ?? String(error), "bad"));
   });
   document.addEventListener("dragover", (event) => { if (event.dataTransfer?.types?.includes("Files")) event.preventDefault(); });
@@ -300,19 +301,52 @@ export default async function start({ app, reason, $ }) {
     return row;
   }
 
+  // What the device row's file picker takes: zips (Takeout) and the formats PrismFolder reads.
+  const FILE_TYPES = ".zip,.mbox,.mbx,.eml,.ics,.ical,.vcf,.vcard";
+  const emptyRow = () => element("li", { className: "pr-empty", textContent: WORDS.empty });
+
+  // Today: the agenda ahead (PrismChronology says what falls today and what
+  // clashes), then what came in lately, then what is to do.
+  const relate = async (a, b, c, d) => line(`when ${a} ${b} ${c} ${d}`);
+  let painting = 0;
+  async function paintToday(list) {
+    const turn = ++painting;
+    // The home's cards count every place and offer each one's feeder.
+    homeCards();
+    list.hidden = !items.length;
+    if (!items.length) { list.replaceChildren(emptyRow()); return; }
+    const { today, lineOf } = await coherence();
+    const { agenda, recent, tasks } = await today(items, { relate });
+    if (turn !== painting || current.host !== "home") return;
+    const rows = [];
+    const section = (domain, made) => {
+      if (!made.length) return;
+      rows.push(element("li", { className: "pr-section", textContent: DOMAINS[domain] }), ...made);
+    };
+    section(5, agenda.map(({ item, today: now, clash }) => {
+      const row = rowOf(item);
+      row.classList.toggle("pr-now", now);
+      if (clash.length) { row.classList.add("pr-clash"); row.title = clash.map(lineOf).join("\n"); }
+      return row;
+    }));
+    section(4, recent.map(rowOf));
+    section(9, tasks.map(rowOf));
+    $("pr-count").textContent = "";
+    list.hidden = !rows.length;
+    list.replaceChildren(...(rows.length ? rows : [emptyRow()]));
+  }
+
   function paintList() {
     const list = $("pr-list");
-    let shown = items.filter((item) => current.domains.includes(item.domain));
+    if (current.host === "home") { paintToday(list).catch((error) => say(error?.message ?? String(error), "bad")); return; }
+    let shown = items.filter((item) => (item.domains ?? [item.domain]).some((d) => current.domains.includes(d)));
     if (current.show === "search") {
       const words = query.toLowerCase().split(/\s+/).filter(Boolean);
       shown = words.length ? items.filter((item) => words.every((w) => `${item.title} ${item.who} ${item.text}`.toLowerCase().includes(w))) : [];
     }
     $("pr-count").textContent = shown.length ? String(shown.length) : "";
     if (current.show === "search" && !query) { list.replaceChildren(); return; }
-    list.replaceChildren(...(shown.length ? shown.slice(0, 200).map(rowOf) : [element("li", { className: "pr-empty", textContent: WORDS.empty })]));
-    const home = current.host === "home";
-    list.hidden = home && !shown.length;
-    if (home) homeCards();
+    list.replaceChildren(...(shown.length ? shown.slice(0, 200).map(rowOf) : [emptyRow()]));
   }
 
   // The home: a card per place, its count and latest item, and the feeder
@@ -320,7 +354,7 @@ export default async function start({ app, reason, $ }) {
   function homeCards() {
     for (const card of document.querySelectorAll("#pr-home .pr-card")) {
       const place = byKey.get(card.querySelector(".pr-card-go").dataset.place);
-      const held = items.filter((item) => place.domains.includes(item.domain));
+      const held = items.filter((item) => (item.domains ?? [item.domain]).some((d) => place.domains.includes(d)));
       card.querySelector(".pr-card-count").textContent = held.length ? String(held.length) : "";
       card.querySelector(".pr-card-latest").textContent = held.length ? (held[0].sealed ? WORDS.sealed : held[0].title || "") : "";
       card.classList.toggle("pr-card-empty", !held.length);
@@ -367,6 +401,21 @@ export default async function start({ app, reason, $ }) {
     host.replaceChildren(outboundForm(place, act));
   }
 
+  // A note is kept at its domain's floor label in the design model, never chosen here.
+  async function keepNote(place, text, domain = place.domains[0]) {
+    if (!vault || !text) return false;
+    const label = LABELS[FLOORS[domain]].toLowerCase();
+    const result = await vault.put(encoder.encode(text), { label, about: { domain, media: "plainText", at: Date.now() } });
+    const kept = result.outcome === "store" ? WORDS.kept : result.outcome === "storehash" ? WORDS["kept.sealed"] : WORDS.refused;
+    remember(`${place.name} · ${WORDS["note.placeholder"]}`, result.outcome);
+    if (!result.outcome?.startsWith("store")) { say(kept, "bad"); return false; }
+    // The place shows the note before the page says it is kept.
+    await load();
+    if (current.show !== "settings") paintList();
+    say(kept, "good");
+    return true;
+  }
+
   function noteForm(place) {
     const field = element("input", { type: "text", placeholder: WORDS["note.placeholder"], autocomplete: "off" });
     field.setAttribute("aria-label", WORDS["note.placeholder"]);
@@ -376,20 +425,9 @@ export default async function start({ app, reason, $ }) {
       event.preventDefault();
       const text = field.value.trim();
       if (!text || !vault) return;
-      // The note's label is its domain's floor in the design model, never chosen here.
-      const domain = place.domains[0];
-      const label = LABELS[FLOORS[domain]].toLowerCase();
       keep.disabled = true;
       try {
-        const result = await vault.put(encoder.encode(text), { label, about: { domain, media: "plainText", at: Date.now() } });
-        const kept = result.outcome === "store" ? WORDS.kept : result.outcome === "storehash" ? WORDS["kept.sealed"] : WORDS.refused;
-        say(kept, result.outcome?.startsWith("store") ? "good" : "bad");
-        remember(`${place.name} · ${WORDS["note.placeholder"]}`, result.outcome);
-        if (result.outcome?.startsWith("store")) {
-          field.value = "";
-          await load();
-          paintList();
-        }
+        if (await keepNote(place, text)) field.value = "";
       } finally {
         keep.disabled = false;
       }
@@ -536,7 +574,7 @@ export default async function start({ app, reason, $ }) {
       const allow = element("button", { type: "button", textContent: WORDS["device.allow"] });
       const read = element("button", { type: "button", textContent: WORDS["read.now"] });
       const forget = element("button", { type: "button", textContent: WORDS.forget });
-      const files = element("input", { type: "file", multiple: true, accept: ".mbox,.mbx,.eml,.ics,.ical,.vcf,.vcard" });
+      const files = element("input", { type: "file", multiple: true, accept: FILE_TYPES });
       files.setAttribute("aria-label", WORDS["device.files"]);
       const filesLabel = element("label", { className: "pr-file" }, element("span", { textContent: WORDS["device.files"] }), files);
       const row = settingRow(device, addFolder, filesLabel, contacts, getExtension, allow, read, forget);
@@ -588,8 +626,19 @@ export default async function start({ app, reason, $ }) {
 
     // Models: R4, and every model the lock pins, each routed in by the owner's press.
     const models = named("models");
-    const r4row = settingRow({ ...models, name: WORDS["model.r4"] });
-    painters.push(() => { r4row.state.textContent = r4 ? (r4.engine.state === "match" ? WORDS["model.run"] : WORDS.refused) : WORDS["model.fetch"]; });
+    const r4toggle = element("button", { type: "button" });
+    const r4row = settingRow({ ...models, name: WORDS["model.r4"] }, r4toggle);
+    painters.push(() => {
+      const on = store.get(R4_KEY, "off") === "on";
+      r4toggle.textContent = on ? WORDS.unroute : WORDS.route;
+      r4row.state.textContent = !on ? WORDS["model.ask"] : r4 ? (r4.engine.state === "match" ? WORDS["model.run"] : WORDS.refused) : WORDS["model.fetch"];
+    });
+    r4toggle.addEventListener("click", () => {
+      const on = store.get(R4_KEY, "off") !== "on";
+      store.set(R4_KEY, on ? "on" : "off");
+      remember(WORDS["model.r4"], on ? WORDS.route : WORDS.unroute);
+      paintSettings();
+    });
     (async () => {
       const lock = await fetch(new URL("./models/models.lock.json", import.meta.url), { cache: "no-cache" }).then((r) => r.json());
       for (const m of lock.models) {
@@ -708,28 +757,46 @@ export default async function start({ app, reason, $ }) {
     }
     return r4model.ask({ prompt, context, grounds });
   }
-  // The kept items an Ask drew on, under its answer; each opens like a row.
+  // Ask: the answer is the owner's own kept items that meet the question
+  // (its words, the span it names, the domains it names), shown only as the
+  // Boundary allows at the highest label among them. A language model speaks
+  // too only once the owner routed one in, under the R4 decision.
   const drawn = element("ol", { className: "pr-list pr-drawn" });
   drawn.setAttribute("aria-label", WORDS["ask.placeholder"]);
   out.after(drawn);
+  out.style.whiteSpace = "pre-line";
+  out.style.minWidth = "0";
+  if (out.parentElement) Object.assign(out.parentElement.style, { minWidth: "0", flex: "1 1 0" });
+  const modelsOn = () => store.get(R4_KEY, "off") === "on" || grants().length > 0;
   $("pr-ask").addEventListener("submit", async (event) => {
     event.preventDefault();
     const prompt = $("pr-prompt").value.trim();
     if (!prompt) return;
     $("pr-ask-go").disabled = true;
-    // While halted nothing kept is drawn on; the model's own decision refuses too.
-    const used = haltedNow ? [] : drawOn(items, prompt);
-    drawn.replaceChildren(...used.map(rowOf));
-    // The answer carries the highest label of what it drew on.
-    const label = used.reduce((at, item) => higher(at, item.label ?? "confidential"), "confidential");
-    const grounds = used.map((item) => [when(item.at), item.title, item.who, item.body].filter(Boolean).join(" · ").slice(0, 600));
     try {
-      const result = await answer(prompt, { label, halted: halted() }, grounds);
-      if (result.outcome === "answer") say(result.answer, "good");
-      else if (result.outcome === "ask" && result.release) say(WORDS["answer.asks"], "warn");
-      else say(`${WORDS["answer.none"]} · ${result.outcome}`, "bad");
-      remember(prompt, result.outcome);
-      if (result.outcome === "answer") $("pr-prompt").value = "";
+      const { drawOn, lineOf } = await coherence();
+      // While halted nothing kept is drawn on, and the Boundary denies.
+      const used = haltedNow ? [] : drawOn(items, prompt);
+      const label = used.reduce((at, item) => higher(at, item.label ?? "confidential"), "confidential");
+      const word = await line(`boundary ${label} none browser none yes ${halted()}`);
+      const shown = word === "allow" ? used : [];
+      drawn.replaceChildren(...shown.map(rowOf));
+      let text = shown.length ? shown.map(lineOf).join("\n") : "";
+      let state = shown.length ? "good" : "";
+      if (!shown.length) {
+        if (haltedNow) { text = WORDS.halted; state = "bad"; }
+        else if (word === "ask") { text = WORDS["answer.asks"]; state = "warn"; }
+        else if (word === "hashonly" && used.length) text = WORDS.sealed;
+        else text = WORDS["answer.none"];
+      }
+      say(text, state);
+      remember(prompt, shown.length ? String(shown.length) : word);
+      if (modelsOn() && !haltedNow) {
+        const grounds = shown.map((item) => lineOf(item).slice(0, 600));
+        const result = await answer(prompt, { label, halted: halted() }, grounds);
+        if (result.outcome === "answer" && result.answer?.trim()) say(`${text}\n\n${WORDS["model.r4"]} · ${result.answer.trim()}`, state || "good");
+      }
+      if (shown.length) $("pr-prompt").value = "";
     } catch (error) {
       say(`${WORDS["answer.none"]} · ${error?.message ?? error}`, "bad");
     } finally {
