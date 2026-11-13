@@ -51,7 +51,8 @@ fn page_pg_01() {
         std::fs::read_to_string(root.join("test/page/card.test.mjs")).expect("the browser test");
     for expected in [
         "settle(\"Kept\")",
-        "settle(\"Kept sealed\")",
+        "settle(\"Paused\")",
+        ".pr-go[data-place=\"health\"]').count(), 0",
         "settle(\"Refused\")",
         "settle(\"Ready to send\")",
     ] {
