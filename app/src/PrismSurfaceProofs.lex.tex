@@ -93,23 +93,13 @@ definition{
 }
 
 definition{
-  name: surfaceNavRoles,
+  name: surfacePageIsPersonView,
   parameters: [places : (List PrismSurface::SurfacePlace)],
-  result: (List Nat),
-  body: (match places
-    | List.nil => (nil Nat)
-    | List.cons place rest => (if ((project place host) =? 1) then (cons (project place role) (surfaceNavRoles rest)) else (surfaceNavRoles rest))),
-  recursive_argument: places
-}
-
-definition{
-  name: surfaceRunsContiguous,
-  parameters: [previous : Nat, seen : (List Nat), roles : (List Nat)],
   result: Bool,
-  body: (match roles
+  body: (match places
     | List.nil => true
-    | List.cons role rest => (if (role =? previous) then (surfaceRunsContiguous previous seen rest) else ((not (surfaceMember role seen)) && (surfaceRunsContiguous role (cons previous seen) rest)))),
-  recursive_argument: roles
+    | List.cons place rest => ((if ((project place viewpoint) =? 1) then ((project place host) =? 4) else (not ((project place host) =? 4))) && (surfacePageIsPersonView rest))),
+  recursive_argument: places
 }
 
 definition{
@@ -379,9 +369,23 @@ theorem{
 }
 
 theorem{
-  name: surfaceMenuByRole,
+  name: surfaceOneSheet,
   parameters: [],
-  statement: ((surfaceRunsContiguous 99 (nil Nat) (surfaceNavRoles (PrismSurface::surfacePlaces))) = true),
+  statement: ((surfaceHostCount 3 (PrismSurface::surfacePlaces)) = 1),
+  proof: decide{}
+}
+
+theorem{
+  name: surfacePageIsThePersonsView,
+  parameters: [],
+  statement: ((surfacePageIsPersonView (PrismSurface::surfacePlaces)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceMenuIsShort,
+  parameters: [],
+  statement: (((surfaceHostCount 1 (PrismSurface::surfacePlaces)) <=? 4) = true),
   proof: decide{}
 }
 

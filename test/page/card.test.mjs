@@ -46,9 +46,9 @@ test("the Prism keeps at the model's floors, refuses while halted and drafts onl
       await page.click("#pr-act button");
     };
 
-    // Every owner view of the design model is one place, in the model's order.
+    // The page is the person's view: Today, Messages, Calendar, People, Notes, then Settings.
     const places = await page.$$eval(".pr-go", (buttons) => buttons.map((b) => b.dataset.place));
-    assert.deepEqual(places, ["today", "conversations", "people", "calendar", "tasks", "places", "money", "things", "me", "health", "work", "library", "explore", "timeline", "presence", "boundary"]);
+    assert.deepEqual(places, ["today", "conversations", "calendar", "people", "tasks", "boundary"]);
 
     // A task is kept at its domain's floor (internal): the Boundary allows it, the vault keeps it.
     await note("tasks", "An example task");
@@ -63,15 +63,15 @@ test("the Prism keeps at the model's floors, refuses while halted and drafts onl
     await page.waitForFunction(() => /\bpr-res-(rest|whisper|chime|bloom|chorus|recede)\b/.test(document.querySelector("#pr-list .pr-item")?.className ?? ""), null, { timeout: 10000 });
     assert.equal(await row.getAttribute("aria-expanded"), "false");
 
-    // Health's floor is restricted: the Boundary answers hashonly, so only its digest is kept.
-    await note("health", "An example health note");
-    await settle("Kept sealed");
-    assert.equal(await count("#pr-list .pr-sealed", 1), 1);
+    // The system's view is never drawn: no place the back end files into, no model to route.
+    assert.equal(await page.locator('.pr-go[data-place="health"]').count(), 0);
+    await page.click('.pr-go[data-place="boundary"]');
+    assert.deepEqual(await page.$$eval("#pr-settings .pr-name", (names) => names.map((n) => n.textContent)), ["This device", "Quiet", "Backup", "Pause"]);
 
     // Halted, the Boundary denies every keep.
     await page.click('.pr-go[data-place="boundary"]');
     await page.check("#pr-halt");
-    await settle("Halted");
+    await settle("Paused");
     await note("tasks", "Another example task");
     await settle("Refused");
     assert.equal(await rows(), 1);

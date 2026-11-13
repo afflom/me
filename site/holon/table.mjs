@@ -154,21 +154,11 @@ export const FACETS = [
  {
   "id": "conversations",
   "kind": "place",
-  "name": "Conversations",
+  "name": "Messages",
   "floor": 800,
-  "directive": "Bring forward in Conversations only what the owner keeps.",
-  "objective": "The owner keeps what Conversations brings forward.",
-  "kpi": "the share of what Conversations brought forward that the owner kept",
-  "tunable": []
- },
- {
-  "id": "people",
-  "kind": "place",
-  "name": "People",
-  "floor": 800,
-  "directive": "Bring forward in People only what the owner keeps.",
-  "objective": "The owner keeps what People brings forward.",
-  "kpi": "the share of what People brought forward that the owner kept",
+  "directive": "Bring forward in Messages only what the owner keeps.",
+  "objective": "The owner keeps what Messages brings forward.",
+  "kpi": "the share of what Messages brought forward that the owner kept",
   "tunable": []
  },
  {
@@ -182,13 +172,23 @@ export const FACETS = [
   "tunable": []
  },
  {
+  "id": "people",
+  "kind": "place",
+  "name": "People",
+  "floor": 800,
+  "directive": "Bring forward in People only what the owner keeps.",
+  "objective": "The owner keeps what People brings forward.",
+  "kpi": "the share of what People brought forward that the owner kept",
+  "tunable": []
+ },
+ {
   "id": "tasks",
   "kind": "place",
-  "name": "Tasks",
+  "name": "Notes",
   "floor": 800,
-  "directive": "Bring forward in Tasks only what the owner keeps.",
-  "objective": "The owner keeps what Tasks brings forward.",
-  "kpi": "the share of what Tasks brought forward that the owner kept",
+  "directive": "Bring forward in Notes only what the owner keeps.",
+  "objective": "The owner keeps what Notes brings forward.",
+  "kpi": "the share of what Notes brought forward that the owner kept",
   "tunable": []
  },
  {
@@ -294,11 +294,11 @@ export const FACETS = [
  {
   "id": "boundary",
   "kind": "place",
-  "name": "Boundary",
+  "name": "Settings",
   "floor": 800,
-  "directive": "Bring forward in Boundary only what the owner keeps.",
-  "objective": "The owner keeps what Boundary brings forward.",
-  "kpi": "the share of what Boundary brought forward that the owner kept",
+  "directive": "Bring forward in Settings only what the owner keeps.",
+  "objective": "The owner keeps what Settings brings forward.",
+  "kpi": "the share of what Settings brought forward that the owner kept",
   "tunable": []
  },
  {
