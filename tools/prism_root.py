@@ -32,6 +32,7 @@ FACETS = [
     ("googlelink", "PrismGoogleLink", "googleLinkDispatch"),
     ("dest", "PrismDest", "destDispatch"),
     ("model", "PrismModels", "modelsDispatch"),
+    ("kappa", "PrismKappa", "kappaDispatch"),
 ]
 REQ_MAX, RESP_MAX, ALLOC = 1107, 16384, 2214
 h = lambda s: "0x" + (s if isinstance(s, bytes) else s.encode()).hex()
@@ -69,6 +70,12 @@ VECTORS = [
  ("model locked onnx match match granted yes", "refuse"),
  ("model unlocked gguf match match granted no", "refuse"),
  ("model", "invalid request"),
+ ("kappa sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 match", "admit sha256 0 32"),
+ ("kappa sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 mismatch", "mismatch"),
+ ("kappa blake3:d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24 uncomputed", "unverified blake3 2 32"),
+ ("kappa md5:d41d8cd98f00b204e9800998ecf8427e match", "unknownaxis"),
+ ("kappa", "invalid request"),
+ ("kappa ", "invalid request"),
  ("google", "invalid request"),
  ("learn", "invalid request"),
  ("when", "invalid request"),

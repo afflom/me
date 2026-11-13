@@ -9,6 +9,7 @@
 \importmodule{PrismDest}
 \importmodule{PrismGoogle}
 \importmodule{PrismGoogleLink}
+\importmodule{PrismKappa}
 \importmodule{PrismLearning}
 \importmodule{PrismModels}
 \importmodule{PrismR4}
@@ -101,6 +102,14 @@ theorem{
   name: routesModel,
   parameters: [rest : Bytes],
   statement: ((Prism::route (Prism::facetModel) rest) = (PrismModels::modelsDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesKappa,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetKappa) rest) = (PrismKappa::kappaDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }

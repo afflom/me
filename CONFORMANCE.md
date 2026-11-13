@@ -39,6 +39,13 @@ model does not sanction.
 | `GG-02` | `build` | The Google connection moves between stages only as PrismGoogleLink answers: only the owner grants, a client for another origin is never used, and the kill switch or a forget revokes every grant |
 | `GG-03` | `build` | Mail and calendar items read from Google reach only the browser vault, through the detectors, the router and the Boundary, by GET to the two API hosts with the token only in the Authorization header |
 
+## kappa
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `KP-01` | `build` | The Prism reads a kappa label as UOR-Foundation/kappa-registry's Kappa::parse does and admits an object under it only when the proved Prism Kappa decision says admit: a label without its colon, on an unknown axis, of the wrong digit count or not in lowercase hex is refused with its own answer, and bytes that do not re-derive, collide on SHA-1 or could not be re-derived are never admitted |
+| `KP-02` | `build` | The browser re-derives a kappa label's digest only with what its host computes (SHA-256 and SHA-512), names every object on SHA-256 as kappa-registry's mandatory secondary axis, never admits on an axis it cannot compute, and obeys no answer from the guest it does not expect |
+
 ## models
 
 | ID | Level | Statement |
