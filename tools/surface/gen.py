@@ -185,6 +185,8 @@ for x in SPEC["sections"]:
     for k in x["settings"]:
         if k not in SETTING_KEYS:
             refuse(f"the section {x['key']} holds {k!r}, which is not a setting")
+    if x.get("rows") not in (None, "services") or (x.get("rows") and not (ROOT / "app/specs/source/services.json").exists()):
+        refuse(f"the section {x['key']} draws rows from {x.get('rows')!r}, which is not a declaration the Prism has")
     for k in x["serves"]:
         if k not in SUCCESS:
             refuse(f"the section {x['key']} serves {k!r}, which is neither a journey nor a lasting goal of the product record")

@@ -186,7 +186,10 @@ export const walks = {
     for (const service of ["Gmail", "Calendar"]) {
       const row = section.getByRole("group", { name: new RegExp(service) }).first();
       assert.ok(await row.count(), `Connections has no row for ${service}`);
-      assert.ok(await row.getByRole("button").count(), `${service}'s row offers no next step`);
+      const connected = (await row.innerText()).includes(surface.words["service.live"]);
+      // A folded row opens with a tap on its name.
+      if (!connected && !(await row.getByRole("button").count())) await row.getByText(service, { exact: true }).first().click();
+      assert.ok(connected || (await row.getByRole("button").count()), `${service}'s row is neither connected nor offers its next step`);
     }
   },
   // J11: Quiet is one switch in Settings, and it stays on until the person turns it off.
