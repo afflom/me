@@ -22,7 +22,7 @@ function endOf(item) {
 }
 
 // relate(astart, aend, bstart, bend) -> Allen relation, from the root's `when`.
-export async function today(items, { now = Date.now(), relate, done }) {
+export async function today(items, { now = Date.now(), relate, done, mine = () => false }) {
   const base = startOfDay(now);
   const minutes = (at) => Math.max(0, Math.min(WEEK_MINUTES, Math.round((at - base) / 60_000)));
   const span = (item) => {
@@ -52,7 +52,7 @@ export async function today(items, { now = Date.now(), relate, done }) {
   }
   const recent = items.filter((item) => item.media === "message").sort((a, b) => b.at - a.at).slice(0, TODAY.recent);
   const tasks = items.filter((item) => item.media !== "calendar" && item.media !== "message" && item.start == null && (item.domains ?? [item.domain]).includes(9)).sort((a, b) => b.at - a.at).slice(0, TODAY.tasks);
-  return { agenda, recent, tasks, needs: needs(items, { now, done }) };
+  return { agenda, recent, tasks, needs: needs(items, { now, done, mine }) };
 }
 
 // What needs the person: a message that asks them something, and anything
@@ -60,14 +60,14 @@ export async function today(items, { now = Date.now(), relate, done }) {
 // words that ask and the words of a deadline are the registry's (TODAY.needs).
 const own = (text) => text.split(/\r?\n/).filter((line) => !/^\s*>/.test(line) && !/^On .+wrote:\s*$/.test(line)).join("\n").slice(0, 1200).toLowerCase();
 const phrase = (terms) => new RegExp(terms.map((t) => (/^\w/.test(t) ? "\\b" : "") + t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + (/\w$/.test(t) ? "\\b" : "")).join("|"), "i");
-export function needs(items, { now = Date.now(), done = new Set() } = {}) {
+export function needs(items, { now = Date.now(), done = new Set(), mine = () => false } = {}) {
   const rule = TODAY.needs;
   const asks = phrase(rule.asks);
   const due = phrase(rule.due);
   const since = now - rule.days * DAY;
   const out = [];
   for (const item of items) {
-    if (item.sealed || item.media === "calendar" || item.media === "contactCard" || done.has(item.address) || item.at < since) continue;
+    if (item.sealed || item.media === "calendar" || item.media === "contactCard" || done.has(item.address) || item.at < since || mine(item)) continue;
     const words = `${item.title ?? ""}\n${own(item.body ?? "")}`;
     const deadline = due.exec(words);
     if (deadline) { out.push({ item, why: "due", phrase: sentenceOf(words, deadline.index) }); continue; }

@@ -48,6 +48,22 @@ async function item(page, words) {
 }
 
 export const walks = {
+  // J9: the Prism says who the person is, from their own mail; one press confirms it, and it is kept.
+  async j9(page) {
+    assert.ok(await arrived(page), "the person's day never arrives");
+    assert.ok(await seen(page, "person@example.org"), "the Prism does not say who the person is, from their own mail");
+    const confirm = app(page).getByRole("button", { name: /^this is me$/i }).first();
+    assert.ok(await confirm.count(), "there is no one press that confirms who the person is");
+    await confirm.click();
+    await page.waitForTimeout(800);
+    assert.equal(await app(page).getByRole("button", { name: /^this is me$/i }).filter({ visible: true }).count(), 0, "confirming does not settle who the person is");
+    await page.reload();
+    await page.waitForSelector("html.pr-ready", { timeout: 60000 });
+    await go(page, surface.places.find((p) => p.show === "settings").key);
+    const names = app(page).getByRole("textbox", { name: /your addresses/i }).first();
+    assert.ok(await names.count(), "the settings have no place for who the person is");
+    assert.match(await names.inputValue(), /person@example\.org/, "who the person is was not kept");
+  },
   // J0: nothing pressed; the day is on Today within a minute.
   async j0(page) {
     const by = Date.now() + 60000;
