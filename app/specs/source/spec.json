@@ -1,0 +1,315 @@
+{
+  "name": "prism-source",
+  "title": "Prism Source",
+  "purpose": "Decides whether the owner's browser may read one declared service by one route, so that every service the owner uses arrives through the same three browser routes (what the service's web app shows the owner, the service's own pages with the owner's own sign-in, and the service's own data download), nothing is read while the Prism is halted, nothing is ever written to a service, an undeclared service is never read, and no service's private interface is used.",
+  "fields": [
+    {
+      "name": "service",
+      "kind": "choice",
+      "values": [
+        "gmail",
+        "calendar",
+        "discord",
+        "whatsapp",
+        "linkedin",
+        "other"
+      ],
+      "means": "the declared service the content comes from, or any service not declared"
+    },
+    {
+      "name": "route",
+      "kind": "choice",
+      "values": [
+        "seen",
+        "own",
+        "export"
+      ],
+      "means": "how the content arrives: what the service's web app shows the owner in their signed-in tab, a page the service itself serves the owner with their own sign-in, or the service's own data download"
+    },
+    {
+      "name": "act",
+      "kind": "choice",
+      "values": [
+        "read",
+        "write"
+      ],
+      "means": "whether the browser would read from the service or write to it"
+    },
+    {
+      "name": "halted",
+      "kind": "choice",
+      "values": [
+        "no",
+        "yes"
+      ],
+      "means": "whether the owner has pressed the kill switch"
+    }
+  ],
+  "outcomes": [
+    "read",
+    "refuse"
+  ],
+  "rules": [
+    {
+      "id": "REQ-001",
+      "when": [
+        {
+          "field": "halted",
+          "op": "is",
+          "value": "yes"
+        }
+      ],
+      "then": "refuse",
+      "says": "when halted is yes then refuse",
+      "why": "stop means stop (kill switch)"
+    },
+    {
+      "id": "REQ-002",
+      "when": [
+        {
+          "field": "act",
+          "op": "is",
+          "value": "write"
+        }
+      ],
+      "then": "refuse",
+      "says": "when act is write then refuse",
+      "why": "a source is only read; anything the Prism sends goes through the destinations and the owner's own press"
+    },
+    {
+      "id": "REQ-003",
+      "when": [
+        {
+          "field": "service",
+          "op": "is",
+          "value": "other"
+        }
+      ],
+      "then": "refuse",
+      "says": "when service is other then refuse",
+      "why": "only a service the model declares is read"
+    },
+    {
+      "id": "REQ-004",
+      "when": [
+        {
+          "field": "service",
+          "op": "is",
+          "value": "whatsapp"
+        },
+        {
+          "field": "route",
+          "op": "is",
+          "value": "own"
+        }
+      ],
+      "then": "refuse",
+      "says": "when service is whatsapp and route is own then refuse",
+      "why": "WhatsApp is end to end encrypted: only what the owner's own WhatsApp Web tab has decrypted can be read"
+    },
+    {
+      "id": "REQ-005",
+      "when": [
+        {
+          "field": "service",
+          "op": "is",
+          "value": "discord"
+        },
+        {
+          "field": "route",
+          "op": "is",
+          "value": "own"
+        }
+      ],
+      "then": "refuse",
+      "says": "when service is discord and route is own then refuse",
+      "why": "Discord's own interface for a signed-in person is private, and automating it can restrict the owner's account"
+    },
+    {
+      "id": "REQ-006",
+      "when": [
+        {
+          "field": "service",
+          "op": "is",
+          "value": "linkedin"
+        },
+        {
+          "field": "route",
+          "op": "is",
+          "value": "own"
+        }
+      ],
+      "then": "refuse",
+      "says": "when service is linkedin and route is own then refuse",
+      "why": "LinkedIn's own interface for a signed-in person is private, and automating it can restrict the owner's account"
+    }
+  ],
+  "otherwise": "read",
+  "properties": [
+    {
+      "id": "INV-001",
+      "kind": "always",
+      "when": [
+        {
+          "field": "halted",
+          "op": "is",
+          "value": "yes"
+        }
+      ],
+      "then": "refuse",
+      "says": "always when halted is yes then refuse",
+      "why": "when the owner presses the kill switch no service is read (constitution P7)"
+    },
+    {
+      "id": "INV-002",
+      "kind": "always",
+      "when": [
+        {
+          "field": "act",
+          "op": "is",
+          "value": "write"
+        }
+      ],
+      "then": "refuse",
+      "says": "always when act is write then refuse",
+      "why": "the Prism never writes to a service it reads from"
+    },
+    {
+      "id": "INV-003",
+      "kind": "never",
+      "when": [
+        {
+          "field": "service",
+          "op": "is",
+          "value": "other"
+        }
+      ],
+      "then": "read",
+      "says": "never when service is other then read",
+      "why": "an undeclared service is never read"
+    },
+    {
+      "id": "INV-004",
+      "kind": "never",
+      "when": [
+        {
+          "field": "service",
+          "op": "is",
+          "value": "whatsapp"
+        },
+        {
+          "field": "route",
+          "op": "is",
+          "value": "own"
+        }
+      ],
+      "then": "read",
+      "says": "never when service is whatsapp and route is own then read",
+      "why": "no encrypted service is reached around its encryption"
+    },
+    {
+      "id": "INV-005",
+      "kind": "never",
+      "when": [
+        {
+          "field": "service",
+          "op": "is",
+          "value": "discord"
+        },
+        {
+          "field": "route",
+          "op": "is",
+          "value": "own"
+        }
+      ],
+      "then": "read",
+      "says": "never when service is discord and route is own then read",
+      "why": "no private interface is automated with the owner's account"
+    },
+    {
+      "id": "INV-006",
+      "kind": "never",
+      "when": [
+        {
+          "field": "service",
+          "op": "is",
+          "value": "linkedin"
+        },
+        {
+          "field": "route",
+          "op": "is",
+          "value": "own"
+        }
+      ],
+      "then": "read",
+      "says": "never when service is linkedin and route is own then read",
+      "why": "no private interface is automated with the owner's account"
+    }
+  ],
+  "examples": [
+    {
+      "request": "gmail own read no",
+      "response": "read"
+    },
+    {
+      "request": "calendar own read no",
+      "response": "read"
+    },
+    {
+      "request": "gmail seen read no",
+      "response": "read"
+    },
+    {
+      "request": "discord seen read no",
+      "response": "read"
+    },
+    {
+      "request": "discord own read no",
+      "response": "refuse"
+    },
+    {
+      "request": "discord export read no",
+      "response": "read"
+    },
+    {
+      "request": "whatsapp own read no",
+      "response": "refuse"
+    },
+    {
+      "request": "whatsapp seen read no",
+      "response": "read"
+    },
+    {
+      "request": "linkedin export read no",
+      "response": "read"
+    },
+    {
+      "request": "linkedin own read no",
+      "response": "refuse"
+    },
+    {
+      "request": "other seen read no",
+      "response": "refuse"
+    },
+    {
+      "request": "gmail own write no",
+      "response": "refuse"
+    },
+    {
+      "request": "gmail seen read yes",
+      "response": "refuse"
+    }
+  ],
+  "schema": "prism/spec/1",
+  "actors": [],
+  "meanings": {
+    "read": "the content may be read by this route",
+    "refuse": "it may not"
+  },
+  "otherwiseWhy": "a declared service is read by every route the browser offers it",
+  "limits": [
+    "It does not reach anything itself: the extension and the page carry each route, and PrismHost decides whether each browser surface may be used.",
+    "Each item still goes through PrismFolder, the router, the Boundary and the vault.",
+    "A service's origin, kinds and schema mapping are declared beside it in app/specs/source/services.json."
+  ]
+}
