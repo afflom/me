@@ -105,7 +105,8 @@
         "site/vault/vault.mjs"
       ],
       "in": [
-        "item"
+        "item",
+        "object"
       ],
       "out": [
         "kept"
@@ -126,7 +127,8 @@
         "site/vault/vault.mjs"
       ],
       "in": [
-        "kept"
+        "kept",
+        "object"
       ],
       "out": [
         "item"
@@ -272,7 +274,29 @@
     {
       "key": "kappa",
       "line": "kappa",
-      "sealed": "admits an object under its kappa label; no page caller until the uorc ingest facet lands"
+      "modules": [
+        "site/uorc/objects.mjs"
+      ],
+      "in": [
+        "object"
+      ],
+      "out": [
+        "object"
+      ]
+    },
+    {
+      "key": "uorc",
+      "line": "uorc",
+      "modules": [
+        "site/uorc/objects.mjs"
+      ],
+      "in": [
+        "item",
+        "kept"
+      ],
+      "out": [
+        "object"
+      ]
     },
     {
       "key": "holon",

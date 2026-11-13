@@ -125,7 +125,9 @@ function decodeRecord(plain) {
 const aadFor = (format, kind, address) => concat(new Uint8Array([format, kind]), te.encode(address));
 
 // halted: a function returning 'yes' while the owner's kill switch is on (the Boundary then refuses everything).
-export async function openVault({ decide, name = 'prism-vault', halted = () => 'no' } = {}) {
+// objects: optional, the Prism's objects (site/uorc/objects.mjs). With it, a value record's body is
+// the value's uorc archive and its meta names the value's kappa label; the address still derives from the value.
+export async function openVault({ decide, name = 'prism-vault', halted = () => 'no', objects = null } = {}) {
   if (!decide?.boundary || !decide?.store || !decide?.restore) throw new Error('openVault needs decide.boundary, decide.store and decide.restore (the guest)');
   const db = await idbOpen(name);
   const blobs = makeBlobs(db, await opfsDir(name));
@@ -182,7 +184,14 @@ export async function openVault({ decide, name = 'prism-vault', halted = () => '
     // The guest says which record, if any, may be written; a hash-only answer keeps the digest, never the value.
     const probe = await decide.store(`${boundary} present ${addr} ok`);
     if (probe === 'store') {
-      const outcome = await write(filed, 'value', encodeRecord(meta, bytes), (r) => `${boundary} present ${addr} ${r}`);
+      let body = bytes;
+      if (objects) {
+        const kept = await objects.keep(bytes);
+        if (kept.outcome !== 'keep') return { outcome: 'refuse' };
+        body = kept.archive;
+        meta.uorc = kept.kappa;
+      }
+      const outcome = await write(filed, 'value', encodeRecord(meta, body), (r) => `${boundary} present ${addr} ${r}`);
       return { outcome, address: outcome === 'store' ? filed : undefined };
     }
     if (probe === 'storehash') {
@@ -205,6 +214,11 @@ export async function openVault({ decide, name = 'prism-vault', halted = () => '
           { name: 'AES-GCM', iv: env.subarray(2, 14), additionalData: aadFor(FORMAT, env[1], address) }, keys.aead, env.subarray(14)));
         seal = 'valid';
         rec = decodeRecord(plain);
+        // A record kept as a uorc archive is opened only through the objects' proved decisions.
+        if (rec && kindName === 'value' && typeof rec.meta?.uorc === 'string') {
+          const opened = objects ? await objects.open(rec.body, rec.meta.uorc) : { outcome: 'refuse' };
+          rec = opened.outcome === 'open' ? { meta: rec.meta, body: opened.bytes } : null;
+        }
         if (rec) {
           if (kindName === 'value') addr = (await addressOf(rec.body)) === address ? 'derived' : 'mismatch';
           else addr = rec.body.length >= 32 && 'k1:' + hex(rec.body.subarray(0, 32)) === address ? 'derived' : 'mismatch';

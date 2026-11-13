@@ -35,7 +35,7 @@ const DEFECTS = [
   ["a new place with no viewpoint", (f) => { const { viewpoint, ...place } = f.surface.places[0]; f.surface.places.push({ ...place, key: "inbox", name: "Inbox" }); }, /surface place 'inbox' has no viewpoint/],
   ["a new word with no viewpoint", (f) => { f.surface.words["device.sync"] = "Sync now"; }, /surface word 'device.sync' has no viewpoint/],
   ["a person place that offers a system act", (f) => { f.product.surface.acts.note = "system"; }, /person place '[a-z]+' offers act 'note'/],
-  ["a new root facet with no product entry", (f) => f.coherence.facets.push({ key: "uorc", line: "uorc", sealed: "planted" }), /facet 'uorc' is in the Prism but not in the product record/],
+  ["a new root facet with no product entry", (f) => f.coherence.facets.push({ key: "probe", line: "probe", sealed: "planted" }), /facet 'probe' is in the Prism but not in the product record/],
   ["a facet that serves no journey", (f) => { f.product.facets.kappa.serves = []; }, /facet 'kappa' serves no journey/],
   ["a facet in the person's view", (f) => { f.product.facets.r4.view = "person"; }, /facet 'r4' is a back-end part/],
   ["a facet serving a journey that does not exist", (f) => { f.product.facets.holon.serves = ["J99"]; }, /serves J99, which is not a journey/],
