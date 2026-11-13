@@ -188,6 +188,46 @@ for p_ in SPEC["places"]:
 def feeder_record(f):
     setting = SETTING_KEYS.index(f["setting"]) if f["setting"] != "none" else len(SETTING_KEYS)
     return f"(record SurfaceFeeder {{name := {s(f['key'])}, act := {ACTS.index(f['act'])}, setting := {setting}, domains := {nats(f['domains'])}}})"
+# The voice: tones in 5-limit just intonation. A numerator or denominator is
+# written into the model as its prime factors, so the proof that the scale is
+# just is a proof about the ratios themselves, not about this script.
+VOICE = SPEC["voice"]
+ANSWERS = [a["key"] for a in VOICE["answers"]]
+
+
+def five_limit(n):
+    factors = []
+    for prime in (2, 3, 5):
+        while n % prime == 0:
+            factors.append(prime)
+            n //= prime
+    if n != 1:
+        refuse(f"the voice's ratio part has a prime above 5")
+    return factors
+
+
+def factors(n):
+    return nats(five_limit(n))
+
+
+for num, den in VOICE["scale"] + [p_[:2] for p_ in VOICE["partials"]]:
+    five_limit(num), five_limit(den)
+for a in VOICE["answers"]:
+    if a["tone"] not in TONES:
+        refuse(f"the answer {a['key']} sounds in {a['tone']}, which is not a tone of the look")
+    if any(d >= len(VOICE["scale"]) for d in a["degrees"]):
+        refuse(f"the answer {a['key']} names a degree outside the scale")
+for word, answer in VOICE["outcomes"].items():
+    if word not in SPEC["words"] or answer not in ANSWERS:
+        refuse(f"the outcome {word} -> {answer} names an unknown word or answer")
+
+
+def ratio_record(r):
+    return f"(record SurfaceRatio {{num := {factors(r[0])}, den := {factors(r[1])}}})"
+
+
+def answer_record(a):
+    return f"(record SurfaceAnswer {{name := {s(a['key'])}, degrees := {nats(a['degrees'])}, level := {a['level']}, tone := {TONE_KEYS.index(a['tone'])}}})"
 
 
 def defn(name, result, body, params="[]"):
@@ -270,6 +310,20 @@ model = [
   fields: [{name: name, type: String}, {name: act, type: Nat}, {name: setting, type: Nat}, {name: domains, type: (List Nat)}]
 }
 """,
+    """structure{
+  name: SurfaceRatio,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: num, type: (List Nat)}, {name: den, type: (List Nat)}]
+}
+""",
+    """structure{
+  name: SurfaceAnswer,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: name, type: String}, {name: degrees, type: (List Nat)}, {name: level, type: Nat}, {name: tone, type: Nat}]
+}
+""",
     defn("surfaceDomainNames", "(List String)", strings(SPEC["domains"])),
     defn("surfaceLabelNames", "(List String)", strings(SPEC["labels"])),
     defn("surfaceRoleNames", "(List String)", strings(SPEC["roles"])),
@@ -286,6 +340,14 @@ model = [
     defn("surfaceContrasts", "(List SurfaceContrast)", records("SurfaceContrast", [contrast_record(x) for x in CONTRASTS])),
     defn("surfaceThemeCount", "Nat", str(len(THEMES))),
     defn("surfaceFeeders", "(List SurfaceFeeder)", records("SurfaceFeeder", [feeder_record(f) for f in FEEDERS])),
+    defn("surfaceToneCount", "Nat", str(len(TONE_KEYS))),
+    defn("surfaceScale", "(List SurfaceRatio)", records("SurfaceRatio", [ratio_record(r) for r in VOICE["scale"]])),
+    defn("surfacePartials", "(List SurfaceRatio)", records("SurfaceRatio", [ratio_record(r) for r in VOICE["partials"]])),
+    defn("surfaceAnswers", "(List SurfaceAnswer)", records("SurfaceAnswer", [answer_record(a) for a in VOICE["answers"]])),
+    defn("surfaceVoiceCeiling", "Nat", str(VOICE["ceiling"])),
+    defn("surfaceVoiceAttack", "Nat", str(VOICE["attack"])),
+    defn("surfaceVoiceRelease", "Nat", str(VOICE["release"])),
+    defn("surfaceVoiceRefractory", "Nat", str(VOICE["refractory"])),
     "\\end{semanticmodule}",
     "\\end{lexlean}",
     "",
@@ -351,6 +413,32 @@ proofs_defs += [
     # Every list place has a facet behind it: some feeder fills one of its domains.
     rec("surfacePlacesFed", f"[places : (List {M}SurfacePlace)]", "Bool",
         "(match places\n    | List.nil => true\n    | List.cons place rest => (((not ((project place kind) =? 0)) || (surfaceAnyFed (project place domains))) && (surfacePlacesFed rest)))", "places"),
+    rec("surfaceTimes", "[a : Nat, b : Nat]", "Nat",
+        "(match b\n    | Nat.zero => 0\n    | Nat.succ k => (a + (surfaceTimes a k)))", "b"),
+    rec("surfaceProduct", "[factors : (List Nat)]", "Nat",
+        "(match factors\n    | List.nil => 1\n    | List.cons f rest => (surfaceTimes f (surfaceProduct rest)))", "factors"),
+    # Just: every prime in every ratio is 2, 3 or 5.
+    rec("surfaceFactorsFiveLimit", "[factors : (List Nat)]", "Bool",
+        "(match factors\n    | List.nil => true\n    | List.cons f rest => ((((f =? 2) || (f =? 3)) || (f =? 5)) && (surfaceFactorsFiveLimit rest)))", "factors"),
+    rec("surfaceRatiosJust", f"[ratios : (List {M}SurfaceRatio)]", "Bool",
+        "(match ratios\n    | List.nil => true\n    | List.cons r rest => ((surfaceFactorsFiveLimit (project r num)) && ((surfaceFactorsFiveLimit (project r den)) && (surfaceRatiosJust rest))))", "ratios"),
+    # Within one octave over the base, rising step by step.
+    rec("surfaceInOctave", f"[ratios : (List {M}SurfaceRatio)]", "Bool",
+        "(match ratios\n    | List.nil => true\n    | List.cons r rest => ((((surfaceProduct (project r den)) <=? (surfaceProduct (project r num))) && ((surfaceProduct (project r num)) <=? ((surfaceProduct (project r den)) + (surfaceProduct (project r den))))) && (surfaceInOctave rest)))", "ratios"),
+    rec("surfaceRising", f"[pn : Nat, pd : Nat, ratios : (List {M}SurfaceRatio)]", "Bool",
+        "(match ratios\n    | List.nil => true\n    | List.cons r rest => (((surfaceTimes pn (surfaceProduct (project r den))) <? (surfaceTimes (surfaceProduct (project r num)) pd)) && (surfaceRising (surfaceProduct (project r num)) (surfaceProduct (project r den)) rest)))", "ratios"),
+    rec("surfaceDegreesIn", "[bound : Nat, degrees : (List Nat)]", "Bool",
+        "(match degrees\n    | List.nil => true\n    | List.cons d rest => ((d <? bound) && (surfaceDegreesIn bound rest)))", "degrees"),
+    rec("surfaceRatioCount", f"[ratios : (List {M}SurfaceRatio)]", "Nat",
+        "(match ratios\n    | List.nil => 0\n    | List.cons r rest => ((surfaceRatioCount rest) + 1))", "ratios"),
+    rec("surfaceNatCount", "[values : (List Nat)]", "Nat",
+        "(match values\n    | List.nil => 0\n    | List.cons v rest => ((surfaceNatCount rest) + 1))", "values"),
+    # Every answer sounds degrees of the scale, at most a triad, at most full level, in a tone of the look.
+    rec("surfaceAnswersSound", f"[answers : (List {M}SurfaceAnswer)]", "Bool",
+        f"(match answers\n    | List.nil => true\n    | List.cons a rest => ((surfaceDegreesIn (surfaceRatioCount ({M}surfaceScale)) (project a degrees)) && (((surfaceNatCount (project a degrees)) <=? 3) && (((project a level) <=? 100) && (((project a tone) <? ({M}surfaceToneCount)) && (surfaceAnswersSound rest))))))", "answers"),
+    # A rest is silent.
+    rec("surfaceRestSilent", f"[answers : (List {M}SurfaceAnswer)]", "Bool",
+        "(match answers\n    | List.nil => false\n    | List.cons a rest => ((((project a level) =? 0) && ((surfaceNatCount (project a degrees)) =? 0)) || (surfaceRestSilent rest)))", "answers"),
 ]
 groups_all = "true"
 for i in reversed(range(len(GROUPS))):
@@ -381,6 +469,11 @@ theorems = [
     theorem("surfaceTonesAreColours", f"((surfaceColoursInRange ({M}surfaceTones)) = true)"),
     theorem("surfaceEveryPlaceIsFed", f"((surfacePlacesFed ({M}surfacePlaces)) = true)"),
     theorem("surfaceTwoThemes", f"((surfaceThemesDiffer ({M}surfaceTones)) = true)"),
+    theorem("surfaceVoiceIsJust", f"(((surfaceRatiosJust ({M}surfaceScale)) && (surfaceRatiosJust ({M}surfacePartials))) = true)"),
+    theorem("surfaceScaleIsOneOctave", f"(((surfaceInOctave ({M}surfaceScale)) && (surfaceRising 0 1 ({M}surfaceScale))) = true)"),
+    theorem("surfaceAnswersInTheScale", f"((surfaceAnswersSound ({M}surfaceAnswers)) = true)"),
+    theorem("surfaceVoiceHasRest", f"((surfaceRestSilent ({M}surfaceAnswers)) = true)"),
+    theorem("surfaceVoiceIsHumane", f"(((({M}surfaceVoiceCeiling) <=? 10) && ((5 <=? ({M}surfaceVoiceAttack)) && ((({M}surfaceVoiceRelease) <=? 1500) && (150 <=? ({M}surfaceVoiceRefractory))))) = true)"),
 ]
 
 proofs = [
@@ -520,6 +613,10 @@ mirror = {
     "media": SPEC["media"],
     "words": SPEC["words"],
     "feeders": FEEDERS,
+    # The resonance signal is listened to only when the page carries it, so a
+    # page without it never asks for a module it does not have.
+    "voice": {**{k: v for k, v in VOICE.items() if k != "comment"},
+              "resonance": "../resonance/resonance.mjs" if (ROOT / "site/resonance/resonance.mjs").exists() else None},
 }
 OUTPUTS["site/surface/surface.mjs"] = (
     "// Generated by tools/surface/gen.py from app/specs/surface/spec.json. Do not edit.\n"
