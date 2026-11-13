@@ -15,7 +15,8 @@ does not place:
   facet, a facet in the person's view, or a facet that serves no journey or a
   journey that does not exist;
 - a journey without its goal, done-state, measure (effectiveness, efficiency
-  or satisfaction, with a target), status (works or not yet) or walk, or a walk
+  or satisfaction, with a target), status (works or not yet) or walk, a walk
+  that belongs to no journey, or a walk
   test/product/journeys.mjs does not define;
 - a person-view setting the Prism does not require of the person (beyond the
   shrinking 'unrequired' list), or a required setting without its name, reason,
@@ -86,6 +87,10 @@ def refusals(product, surface, coherence, walks):
             out.append(f"journey {key} has status {j.get('status')!r}, not works or not yet")
         if j.get("walk") and j["walk"] not in walks:
             out.append(f"journey {key} names walk '{j['walk']}', which test/product/journeys.mjs does not define")
+    # A walk with no journey is a journey the record lost (a bad merge drops it).
+    named = {j.get("walk") for j in journeys.values()}
+    for walk in sorted(walks - named):
+        out.append(f"walk '{walk}' in test/product/journeys.mjs belongs to no journey: restore its journey in app/specs/product/journeys/, or remove the walk")
 
     # The front end drives the back end: the person sees only the settings the
     # Prism requires to work, and each required setting names what shows it.

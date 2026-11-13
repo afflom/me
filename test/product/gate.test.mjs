@@ -48,6 +48,7 @@ const DEFECTS = [
   ["a person setting the Prism does not require", (f) => { f.product.requires.unrequired = []; }, /setting 'backup' is in the person's view but the Prism does not require it/],
   ["a required setting shown by a section the surface does not have", (f) => { f.product.requires.settings[1].section = "connections"; }, /is shown by section 'connections', which the surface does not have/],
   ["a person setting in a required section is required", (f) => { f.product.requires.settings[1].section = "storage"; }, /setting 'backup' is listed as unrequired but no longer is/],
+  ["a journey the record lost while its walk remains", (f) => { f.product.journeys = f.product.journeys.filter((j) => j.key !== "J9"); }, /walk 'j9' in test\/product\/journeys.mjs belongs to no journey/],
   ["a stale unrequired setting", (f) => { f.product.requires.unrequired.push("quiet"); }, /setting 'quiet' is listed as unrequired but no longer is/],
   ["a required setting that works but shows nowhere", (f) => { f.product.requires.settings[0].setting = null; f.product.requires.settings[0].status = "works"; }, /required setting 'identity' works but names no surface setting or section/],
   ["a required setting shown by a setting that does not exist", (f) => { f.product.requires.settings[1].setting = "accounts"; }, /shown by setting 'accounts', which the surface does not have/],
