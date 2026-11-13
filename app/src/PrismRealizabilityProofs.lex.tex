@@ -5,8 +5,10 @@
 \importmodule{PrismBoundary}
 \importmodule{PrismChronology}
 \importmodule{PrismDest}
+\importmodule{PrismFolder}
 \importmodule{PrismGoogle}
 \importmodule{PrismGoogleLink}
+\importmodule{PrismHost}
 \importmodule{PrismLearning}
 \importmodule{PrismModels}
 \importmodule{PrismR4}
@@ -83,6 +85,22 @@ theorem{
   name: realizabilityDestComplete,
   parameters: [],
   statement: ((PrismRealizability::realizabilityDescriptorComplete (PrismRealizability::realizabilityDest)) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityFolderComplete,
+  parameters: [],
+  statement: ((PrismRealizability::realizabilityDescriptorComplete (PrismRealizability::realizabilityFolder)) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityHostComplete,
+  parameters: [],
+  statement: ((PrismRealizability::realizabilityDescriptorComplete (PrismRealizability::realizabilityHost)) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -467,6 +485,86 @@ theorem{
   name: realizabilityDestHaltedMatters,
   parameters: [],
   statement: ((((PrismDest::destJudge (record PrismDest::DestRequest {target := (PrismDest::destTargetOwner), verdict := (PrismDest::destVerdictAllow), cause := (PrismDest::destCauseGrounded), act := (PrismDest::destActNone), wording := (PrismDest::destWordingSeen), tone := (PrismDest::destToneCalm), pace := (PrismDest::destPaceOpen), urgency := (PrismDest::destUrgencyNormal), halted := (PrismDest::destHaltedNo)})) =? (PrismDest::destAnswerShow)) && ((PrismDest::destJudge (record PrismDest::DestRequest {target := (PrismDest::destTargetOwner), verdict := (PrismDest::destVerdictAllow), cause := (PrismDest::destCauseGrounded), act := (PrismDest::destActNone), wording := (PrismDest::destWordingSeen), tone := (PrismDest::destToneCalm), pace := (PrismDest::destPaceOpen), urgency := (PrismDest::destUrgencyNormal), halted := (PrismDest::destHaltedYes)})) =? (PrismDest::destAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityFolderGrantMatters,
+  parameters: [],
+  statement: ((((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerRead)) && ((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantNone), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerAsk))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityFolderFormatMatters,
+  parameters: [],
+  statement: ((((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerRead)) && ((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatOther), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerSkip))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityFolderActionMatters,
+  parameters: [],
+  statement: ((((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerRead)) && ((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionWrite), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityFolderBulkMatters,
+  parameters: [],
+  statement: ((((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerRead)) && ((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkLarge), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerSkip))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityFolderHaltedMatters,
+  parameters: [],
+  statement: ((((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerRead)) && ((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedYes)})) =? (PrismFolder::folderAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityHostSurfaceMatters,
+  parameters: [],
+  statement: ((((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantKept), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerUse)) && ((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFiles), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantKept), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerOffer))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityHostPresentMatters,
+  parameters: [],
+  statement: ((((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantKept), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerUse)) && ((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentNo), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantKept), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityHostActMatters,
+  parameters: [],
+  statement: ((((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantNone), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerOffer)) && ((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActOwner), grant := (PrismHost::hostGrantNone), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerUse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityHostGrantMatters,
+  parameters: [],
+  statement: ((((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantKept), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerUse)) && ((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantNone), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerOffer))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityHostHaltedMatters,
+  parameters: [],
+  statement: ((((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantKept), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerUse)) && ((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantKept), halted := (PrismHost::hostHaltedYes)})) =? (PrismHost::hostAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }

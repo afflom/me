@@ -1,0 +1,358 @@
+\begin{lexlean}{PrismFolderProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismFolder}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: folderBreaksInv001,
+  parameters: [request : PrismFolder::FolderRequest],
+  result: Bool,
+  body: ((((((((project request grant) <? 4) && ((project request format) <? 6)) && ((project request action) <? 3)) && ((project request bulk) <? 2)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismFolder::folderHaltedYes))) && (not ((PrismFolder::folderJudge request) =? (PrismFolder::folderAnswerRefuse))))
+}
+
+theorem{
+  name: folderInv001Holds,
+  parameters: [request : PrismFolder::FolderRequest],
+  statement: ((folderBreaksInv001 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismFolder::folderActionList,
+      PrismFolder::folderActionRead,
+      PrismFolder::folderActionWrite,
+      PrismFolder::folderAnswerAsk,
+      PrismFolder::folderAnswerRead,
+      PrismFolder::folderAnswerRefuse,
+      PrismFolder::folderAnswerSkip,
+      PrismFolder::folderBulkLarge,
+      PrismFolder::folderBulkSmall,
+      PrismFolder::folderFormatEml,
+      PrismFolder::folderFormatIcs,
+      PrismFolder::folderFormatMaildir,
+      PrismFolder::folderFormatMbox,
+      PrismFolder::folderFormatOther,
+      PrismFolder::folderFormatVcf,
+      PrismFolder::folderGrantGranted,
+      PrismFolder::folderGrantNone,
+      PrismFolder::folderGrantPrompt,
+      PrismFolder::folderGrantRevoked,
+      PrismFolder::folderHaltedNo,
+      PrismFolder::folderHaltedYes,
+      PrismFolder::folderJudge,
+      PrismFolder::folderRule1,
+      PrismFolder::folderRule2,
+      PrismFolder::folderRule3,
+      PrismFolder::folderRule4,
+      PrismFolder::folderRule5,
+      PrismFolder::folderRule6,
+      PrismFolder::folderRule7,
+      PrismFolder::folderRule8,
+      PrismFolder::folderRule9,
+      folderBreaksInv001
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderBreaksInv002,
+  parameters: [request : PrismFolder::FolderRequest],
+  result: Bool,
+  body: ((((((((project request grant) <? 4) && ((project request format) <? 6)) && ((project request action) <? 3)) && ((project request bulk) <? 2)) && ((project request halted) <? 2)) && ((project request action) =? (PrismFolder::folderActionWrite))) && (not ((PrismFolder::folderJudge request) =? (PrismFolder::folderAnswerRefuse))))
+}
+
+theorem{
+  name: folderInv002Holds,
+  parameters: [request : PrismFolder::FolderRequest],
+  statement: ((folderBreaksInv002 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismFolder::folderActionList,
+      PrismFolder::folderActionRead,
+      PrismFolder::folderActionWrite,
+      PrismFolder::folderAnswerAsk,
+      PrismFolder::folderAnswerRead,
+      PrismFolder::folderAnswerRefuse,
+      PrismFolder::folderAnswerSkip,
+      PrismFolder::folderBulkLarge,
+      PrismFolder::folderBulkSmall,
+      PrismFolder::folderFormatEml,
+      PrismFolder::folderFormatIcs,
+      PrismFolder::folderFormatMaildir,
+      PrismFolder::folderFormatMbox,
+      PrismFolder::folderFormatOther,
+      PrismFolder::folderFormatVcf,
+      PrismFolder::folderGrantGranted,
+      PrismFolder::folderGrantNone,
+      PrismFolder::folderGrantPrompt,
+      PrismFolder::folderGrantRevoked,
+      PrismFolder::folderHaltedNo,
+      PrismFolder::folderHaltedYes,
+      PrismFolder::folderJudge,
+      PrismFolder::folderRule1,
+      PrismFolder::folderRule2,
+      PrismFolder::folderRule3,
+      PrismFolder::folderRule4,
+      PrismFolder::folderRule5,
+      PrismFolder::folderRule6,
+      PrismFolder::folderRule7,
+      PrismFolder::folderRule8,
+      PrismFolder::folderRule9,
+      folderBreaksInv002
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderBreaksInv003,
+  parameters: [request : PrismFolder::FolderRequest],
+  result: Bool,
+  body: ((((((((project request grant) <? 4) && ((project request format) <? 6)) && ((project request action) <? 3)) && ((project request bulk) <? 2)) && ((project request halted) <? 2)) && ((project request grant) =? (PrismFolder::folderGrantNone))) && ((PrismFolder::folderJudge request) =? (PrismFolder::folderAnswerRead)))
+}
+
+theorem{
+  name: folderInv003Holds,
+  parameters: [request : PrismFolder::FolderRequest],
+  statement: ((folderBreaksInv003 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismFolder::folderActionList,
+      PrismFolder::folderActionRead,
+      PrismFolder::folderActionWrite,
+      PrismFolder::folderAnswerAsk,
+      PrismFolder::folderAnswerRead,
+      PrismFolder::folderAnswerRefuse,
+      PrismFolder::folderAnswerSkip,
+      PrismFolder::folderBulkLarge,
+      PrismFolder::folderBulkSmall,
+      PrismFolder::folderFormatEml,
+      PrismFolder::folderFormatIcs,
+      PrismFolder::folderFormatMaildir,
+      PrismFolder::folderFormatMbox,
+      PrismFolder::folderFormatOther,
+      PrismFolder::folderFormatVcf,
+      PrismFolder::folderGrantGranted,
+      PrismFolder::folderGrantNone,
+      PrismFolder::folderGrantPrompt,
+      PrismFolder::folderGrantRevoked,
+      PrismFolder::folderHaltedNo,
+      PrismFolder::folderHaltedYes,
+      PrismFolder::folderJudge,
+      PrismFolder::folderRule1,
+      PrismFolder::folderRule2,
+      PrismFolder::folderRule3,
+      PrismFolder::folderRule4,
+      PrismFolder::folderRule5,
+      PrismFolder::folderRule6,
+      PrismFolder::folderRule7,
+      PrismFolder::folderRule8,
+      PrismFolder::folderRule9,
+      folderBreaksInv003
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderBreaksInv004,
+  parameters: [request : PrismFolder::FolderRequest],
+  result: Bool,
+  body: ((((((((project request grant) <? 4) && ((project request format) <? 6)) && ((project request action) <? 3)) && ((project request bulk) <? 2)) && ((project request halted) <? 2)) && ((project request grant) =? (PrismFolder::folderGrantPrompt))) && ((PrismFolder::folderJudge request) =? (PrismFolder::folderAnswerRead)))
+}
+
+theorem{
+  name: folderInv004Holds,
+  parameters: [request : PrismFolder::FolderRequest],
+  statement: ((folderBreaksInv004 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismFolder::folderActionList,
+      PrismFolder::folderActionRead,
+      PrismFolder::folderActionWrite,
+      PrismFolder::folderAnswerAsk,
+      PrismFolder::folderAnswerRead,
+      PrismFolder::folderAnswerRefuse,
+      PrismFolder::folderAnswerSkip,
+      PrismFolder::folderBulkLarge,
+      PrismFolder::folderBulkSmall,
+      PrismFolder::folderFormatEml,
+      PrismFolder::folderFormatIcs,
+      PrismFolder::folderFormatMaildir,
+      PrismFolder::folderFormatMbox,
+      PrismFolder::folderFormatOther,
+      PrismFolder::folderFormatVcf,
+      PrismFolder::folderGrantGranted,
+      PrismFolder::folderGrantNone,
+      PrismFolder::folderGrantPrompt,
+      PrismFolder::folderGrantRevoked,
+      PrismFolder::folderHaltedNo,
+      PrismFolder::folderHaltedYes,
+      PrismFolder::folderJudge,
+      PrismFolder::folderRule1,
+      PrismFolder::folderRule2,
+      PrismFolder::folderRule3,
+      PrismFolder::folderRule4,
+      PrismFolder::folderRule5,
+      PrismFolder::folderRule6,
+      PrismFolder::folderRule7,
+      PrismFolder::folderRule8,
+      PrismFolder::folderRule9,
+      folderBreaksInv004
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderBreaksInv005,
+  parameters: [request : PrismFolder::FolderRequest],
+  result: Bool,
+  body: ((((((((project request grant) <? 4) && ((project request format) <? 6)) && ((project request action) <? 3)) && ((project request bulk) <? 2)) && ((project request halted) <? 2)) && ((project request grant) =? (PrismFolder::folderGrantRevoked))) && ((PrismFolder::folderJudge request) =? (PrismFolder::folderAnswerRead)))
+}
+
+theorem{
+  name: folderInv005Holds,
+  parameters: [request : PrismFolder::FolderRequest],
+  statement: ((folderBreaksInv005 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismFolder::folderActionList,
+      PrismFolder::folderActionRead,
+      PrismFolder::folderActionWrite,
+      PrismFolder::folderAnswerAsk,
+      PrismFolder::folderAnswerRead,
+      PrismFolder::folderAnswerRefuse,
+      PrismFolder::folderAnswerSkip,
+      PrismFolder::folderBulkLarge,
+      PrismFolder::folderBulkSmall,
+      PrismFolder::folderFormatEml,
+      PrismFolder::folderFormatIcs,
+      PrismFolder::folderFormatMaildir,
+      PrismFolder::folderFormatMbox,
+      PrismFolder::folderFormatOther,
+      PrismFolder::folderFormatVcf,
+      PrismFolder::folderGrantGranted,
+      PrismFolder::folderGrantNone,
+      PrismFolder::folderGrantPrompt,
+      PrismFolder::folderGrantRevoked,
+      PrismFolder::folderHaltedNo,
+      PrismFolder::folderHaltedYes,
+      PrismFolder::folderJudge,
+      PrismFolder::folderRule1,
+      PrismFolder::folderRule2,
+      PrismFolder::folderRule3,
+      PrismFolder::folderRule4,
+      PrismFolder::folderRule5,
+      PrismFolder::folderRule6,
+      PrismFolder::folderRule7,
+      PrismFolder::folderRule8,
+      PrismFolder::folderRule9,
+      folderBreaksInv005
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderBreaksInv006,
+  parameters: [request : PrismFolder::FolderRequest],
+  result: Bool,
+  body: (((((((((project request grant) <? 4) && ((project request format) <? 6)) && ((project request action) <? 3)) && ((project request bulk) <? 2)) && ((project request halted) <? 2)) && ((project request format) =? (PrismFolder::folderFormatOther))) && ((project request action) =? (PrismFolder::folderActionRead))) && ((PrismFolder::folderJudge request) =? (PrismFolder::folderAnswerRead)))
+}
+
+theorem{
+  name: folderInv006Holds,
+  parameters: [request : PrismFolder::FolderRequest],
+  statement: ((folderBreaksInv006 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismFolder::folderActionList,
+      PrismFolder::folderActionRead,
+      PrismFolder::folderActionWrite,
+      PrismFolder::folderAnswerAsk,
+      PrismFolder::folderAnswerRead,
+      PrismFolder::folderAnswerRefuse,
+      PrismFolder::folderAnswerSkip,
+      PrismFolder::folderBulkLarge,
+      PrismFolder::folderBulkSmall,
+      PrismFolder::folderFormatEml,
+      PrismFolder::folderFormatIcs,
+      PrismFolder::folderFormatMaildir,
+      PrismFolder::folderFormatMbox,
+      PrismFolder::folderFormatOther,
+      PrismFolder::folderFormatVcf,
+      PrismFolder::folderGrantGranted,
+      PrismFolder::folderGrantNone,
+      PrismFolder::folderGrantPrompt,
+      PrismFolder::folderGrantRevoked,
+      PrismFolder::folderHaltedNo,
+      PrismFolder::folderHaltedYes,
+      PrismFolder::folderJudge,
+      PrismFolder::folderRule1,
+      PrismFolder::folderRule2,
+      PrismFolder::folderRule3,
+      PrismFolder::folderRule4,
+      PrismFolder::folderRule5,
+      PrismFolder::folderRule6,
+      PrismFolder::folderRule7,
+      PrismFolder::folderRule8,
+      PrismFolder::folderRule9,
+      folderBreaksInv006
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderBreaksInv007,
+  parameters: [request : PrismFolder::FolderRequest],
+  result: Bool,
+  body: (((((((((project request grant) <? 4) && ((project request format) <? 6)) && ((project request action) <? 3)) && ((project request bulk) <? 2)) && ((project request halted) <? 2)) && ((project request bulk) =? (PrismFolder::folderBulkLarge))) && ((project request action) =? (PrismFolder::folderActionRead))) && ((PrismFolder::folderJudge request) =? (PrismFolder::folderAnswerRead)))
+}
+
+theorem{
+  name: folderInv007Holds,
+  parameters: [request : PrismFolder::FolderRequest],
+  statement: ((folderBreaksInv007 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismFolder::folderActionList,
+      PrismFolder::folderActionRead,
+      PrismFolder::folderActionWrite,
+      PrismFolder::folderAnswerAsk,
+      PrismFolder::folderAnswerRead,
+      PrismFolder::folderAnswerRefuse,
+      PrismFolder::folderAnswerSkip,
+      PrismFolder::folderBulkLarge,
+      PrismFolder::folderBulkSmall,
+      PrismFolder::folderFormatEml,
+      PrismFolder::folderFormatIcs,
+      PrismFolder::folderFormatMaildir,
+      PrismFolder::folderFormatMbox,
+      PrismFolder::folderFormatOther,
+      PrismFolder::folderFormatVcf,
+      PrismFolder::folderGrantGranted,
+      PrismFolder::folderGrantNone,
+      PrismFolder::folderGrantPrompt,
+      PrismFolder::folderGrantRevoked,
+      PrismFolder::folderHaltedNo,
+      PrismFolder::folderHaltedYes,
+      PrismFolder::folderJudge,
+      PrismFolder::folderRule1,
+      PrismFolder::folderRule2,
+      PrismFolder::folderRule3,
+      PrismFolder::folderRule4,
+      PrismFolder::folderRule5,
+      PrismFolder::folderRule6,
+      PrismFolder::folderRule7,
+      PrismFolder::folderRule8,
+      PrismFolder::folderRule9,
+      folderBreaksInv007
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

@@ -1,0 +1,488 @@
+\begin{lexlean}{PrismHostProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismHost}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: hostBreaksInv001,
+  parameters: [request : PrismHost::HostRequest],
+  result: Bool,
+  body: ((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismHost::hostHaltedYes))) && (not ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerRefuse))))
+}
+
+theorem{
+  name: hostInv001Holds,
+  parameters: [request : PrismHost::HostRequest],
+  statement: ((hostBreaksInv001 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHost::hostActNone,
+      PrismHost::hostActOwner,
+      PrismHost::hostAnswerOffer,
+      PrismHost::hostAnswerRefuse,
+      PrismHost::hostAnswerSealed,
+      PrismHost::hostAnswerUse,
+      PrismHost::hostGrantKept,
+      PrismHost::hostGrantNone,
+      PrismHost::hostHaltedNo,
+      PrismHost::hostHaltedYes,
+      PrismHost::hostJudge,
+      PrismHost::hostPresentNo,
+      PrismHost::hostPresentYes,
+      PrismHost::hostRule1,
+      PrismHost::hostRule2,
+      PrismHost::hostRule3,
+      PrismHost::hostRule4,
+      PrismHost::hostRule5,
+      PrismHost::hostRule6,
+      PrismHost::hostRule7,
+      PrismHost::hostRule7Misses,
+      PrismHost::hostSurfaceCalendar,
+      PrismHost::hostSurfaceContacts,
+      PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceFiles,
+      PrismHost::hostSurfaceFolder,
+      PrismHost::hostSurfaceMail,
+      PrismHost::hostSurfacePaste,
+      PrismHost::hostSurfaceWorkers,
+      hostBreaksInv001
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostBreaksInv002,
+  parameters: [request : PrismHost::HostRequest],
+  result: Bool,
+  body: ((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request surface) =? (PrismHost::hostSurfaceMail))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+}
+
+theorem{
+  name: hostInv002Holds,
+  parameters: [request : PrismHost::HostRequest],
+  statement: ((hostBreaksInv002 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHost::hostActNone,
+      PrismHost::hostActOwner,
+      PrismHost::hostAnswerOffer,
+      PrismHost::hostAnswerRefuse,
+      PrismHost::hostAnswerSealed,
+      PrismHost::hostAnswerUse,
+      PrismHost::hostGrantKept,
+      PrismHost::hostGrantNone,
+      PrismHost::hostHaltedNo,
+      PrismHost::hostHaltedYes,
+      PrismHost::hostJudge,
+      PrismHost::hostPresentNo,
+      PrismHost::hostPresentYes,
+      PrismHost::hostRule1,
+      PrismHost::hostRule2,
+      PrismHost::hostRule3,
+      PrismHost::hostRule4,
+      PrismHost::hostRule5,
+      PrismHost::hostRule6,
+      PrismHost::hostRule7,
+      PrismHost::hostRule7Misses,
+      PrismHost::hostSurfaceCalendar,
+      PrismHost::hostSurfaceContacts,
+      PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceFiles,
+      PrismHost::hostSurfaceFolder,
+      PrismHost::hostSurfaceMail,
+      PrismHost::hostSurfacePaste,
+      PrismHost::hostSurfaceWorkers,
+      hostBreaksInv002
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostBreaksInv003,
+  parameters: [request : PrismHost::HostRequest],
+  result: Bool,
+  body: ((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request surface) =? (PrismHost::hostSurfaceCalendar))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+}
+
+theorem{
+  name: hostInv003Holds,
+  parameters: [request : PrismHost::HostRequest],
+  statement: ((hostBreaksInv003 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHost::hostActNone,
+      PrismHost::hostActOwner,
+      PrismHost::hostAnswerOffer,
+      PrismHost::hostAnswerRefuse,
+      PrismHost::hostAnswerSealed,
+      PrismHost::hostAnswerUse,
+      PrismHost::hostGrantKept,
+      PrismHost::hostGrantNone,
+      PrismHost::hostHaltedNo,
+      PrismHost::hostHaltedYes,
+      PrismHost::hostJudge,
+      PrismHost::hostPresentNo,
+      PrismHost::hostPresentYes,
+      PrismHost::hostRule1,
+      PrismHost::hostRule2,
+      PrismHost::hostRule3,
+      PrismHost::hostRule4,
+      PrismHost::hostRule5,
+      PrismHost::hostRule6,
+      PrismHost::hostRule7,
+      PrismHost::hostRule7Misses,
+      PrismHost::hostSurfaceCalendar,
+      PrismHost::hostSurfaceContacts,
+      PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceFiles,
+      PrismHost::hostSurfaceFolder,
+      PrismHost::hostSurfaceMail,
+      PrismHost::hostSurfacePaste,
+      PrismHost::hostSurfaceWorkers,
+      hostBreaksInv003
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostBreaksInv004,
+  parameters: [request : PrismHost::HostRequest],
+  result: Bool,
+  body: ((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request present) =? (PrismHost::hostPresentNo))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+}
+
+theorem{
+  name: hostInv004Holds,
+  parameters: [request : PrismHost::HostRequest],
+  statement: ((hostBreaksInv004 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHost::hostActNone,
+      PrismHost::hostActOwner,
+      PrismHost::hostAnswerOffer,
+      PrismHost::hostAnswerRefuse,
+      PrismHost::hostAnswerSealed,
+      PrismHost::hostAnswerUse,
+      PrismHost::hostGrantKept,
+      PrismHost::hostGrantNone,
+      PrismHost::hostHaltedNo,
+      PrismHost::hostHaltedYes,
+      PrismHost::hostJudge,
+      PrismHost::hostPresentNo,
+      PrismHost::hostPresentYes,
+      PrismHost::hostRule1,
+      PrismHost::hostRule2,
+      PrismHost::hostRule3,
+      PrismHost::hostRule4,
+      PrismHost::hostRule5,
+      PrismHost::hostRule6,
+      PrismHost::hostRule7,
+      PrismHost::hostRule7Misses,
+      PrismHost::hostSurfaceCalendar,
+      PrismHost::hostSurfaceContacts,
+      PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceFiles,
+      PrismHost::hostSurfaceFolder,
+      PrismHost::hostSurfaceMail,
+      PrismHost::hostSurfacePaste,
+      PrismHost::hostSurfaceWorkers,
+      hostBreaksInv004
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostBreaksInv005,
+  parameters: [request : PrismHost::HostRequest],
+  result: Bool,
+  body: ((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request present) =? (PrismHost::hostPresentNo))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerOffer)))
+}
+
+theorem{
+  name: hostInv005Holds,
+  parameters: [request : PrismHost::HostRequest],
+  statement: ((hostBreaksInv005 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHost::hostActNone,
+      PrismHost::hostActOwner,
+      PrismHost::hostAnswerOffer,
+      PrismHost::hostAnswerRefuse,
+      PrismHost::hostAnswerSealed,
+      PrismHost::hostAnswerUse,
+      PrismHost::hostGrantKept,
+      PrismHost::hostGrantNone,
+      PrismHost::hostHaltedNo,
+      PrismHost::hostHaltedYes,
+      PrismHost::hostJudge,
+      PrismHost::hostPresentNo,
+      PrismHost::hostPresentYes,
+      PrismHost::hostRule1,
+      PrismHost::hostRule2,
+      PrismHost::hostRule3,
+      PrismHost::hostRule4,
+      PrismHost::hostRule5,
+      PrismHost::hostRule6,
+      PrismHost::hostRule7,
+      PrismHost::hostRule7Misses,
+      PrismHost::hostSurfaceCalendar,
+      PrismHost::hostSurfaceContacts,
+      PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceFiles,
+      PrismHost::hostSurfaceFolder,
+      PrismHost::hostSurfaceMail,
+      PrismHost::hostSurfacePaste,
+      PrismHost::hostSurfaceWorkers,
+      hostBreaksInv005
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostBreaksInv006,
+  parameters: [request : PrismHost::HostRequest],
+  result: Bool,
+  body: ((((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismHost::hostActNone))) && ((project request grant) =? (PrismHost::hostGrantNone))) && ((project request surface) =? (PrismHost::hostSurfaceFolder))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+}
+
+theorem{
+  name: hostInv006Holds,
+  parameters: [request : PrismHost::HostRequest],
+  statement: ((hostBreaksInv006 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHost::hostActNone,
+      PrismHost::hostActOwner,
+      PrismHost::hostAnswerOffer,
+      PrismHost::hostAnswerRefuse,
+      PrismHost::hostAnswerSealed,
+      PrismHost::hostAnswerUse,
+      PrismHost::hostGrantKept,
+      PrismHost::hostGrantNone,
+      PrismHost::hostHaltedNo,
+      PrismHost::hostHaltedYes,
+      PrismHost::hostJudge,
+      PrismHost::hostPresentNo,
+      PrismHost::hostPresentYes,
+      PrismHost::hostRule1,
+      PrismHost::hostRule2,
+      PrismHost::hostRule3,
+      PrismHost::hostRule4,
+      PrismHost::hostRule5,
+      PrismHost::hostRule6,
+      PrismHost::hostRule7,
+      PrismHost::hostRule7Misses,
+      PrismHost::hostSurfaceCalendar,
+      PrismHost::hostSurfaceContacts,
+      PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceFiles,
+      PrismHost::hostSurfaceFolder,
+      PrismHost::hostSurfaceMail,
+      PrismHost::hostSurfacePaste,
+      PrismHost::hostSurfaceWorkers,
+      hostBreaksInv006
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostBreaksInv007,
+  parameters: [request : PrismHost::HostRequest],
+  result: Bool,
+  body: (((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismHost::hostActNone))) && ((project request surface) =? (PrismHost::hostSurfaceContacts))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+}
+
+theorem{
+  name: hostInv007Holds,
+  parameters: [request : PrismHost::HostRequest],
+  statement: ((hostBreaksInv007 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHost::hostActNone,
+      PrismHost::hostActOwner,
+      PrismHost::hostAnswerOffer,
+      PrismHost::hostAnswerRefuse,
+      PrismHost::hostAnswerSealed,
+      PrismHost::hostAnswerUse,
+      PrismHost::hostGrantKept,
+      PrismHost::hostGrantNone,
+      PrismHost::hostHaltedNo,
+      PrismHost::hostHaltedYes,
+      PrismHost::hostJudge,
+      PrismHost::hostPresentNo,
+      PrismHost::hostPresentYes,
+      PrismHost::hostRule1,
+      PrismHost::hostRule2,
+      PrismHost::hostRule3,
+      PrismHost::hostRule4,
+      PrismHost::hostRule5,
+      PrismHost::hostRule6,
+      PrismHost::hostRule7,
+      PrismHost::hostRule7Misses,
+      PrismHost::hostSurfaceCalendar,
+      PrismHost::hostSurfaceContacts,
+      PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceFiles,
+      PrismHost::hostSurfaceFolder,
+      PrismHost::hostSurfaceMail,
+      PrismHost::hostSurfacePaste,
+      PrismHost::hostSurfaceWorkers,
+      hostBreaksInv007
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostBreaksInv008,
+  parameters: [request : PrismHost::HostRequest],
+  result: Bool,
+  body: (((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismHost::hostActNone))) && ((project request surface) =? (PrismHost::hostSurfacePaste))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+}
+
+theorem{
+  name: hostInv008Holds,
+  parameters: [request : PrismHost::HostRequest],
+  statement: ((hostBreaksInv008 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHost::hostActNone,
+      PrismHost::hostActOwner,
+      PrismHost::hostAnswerOffer,
+      PrismHost::hostAnswerRefuse,
+      PrismHost::hostAnswerSealed,
+      PrismHost::hostAnswerUse,
+      PrismHost::hostGrantKept,
+      PrismHost::hostGrantNone,
+      PrismHost::hostHaltedNo,
+      PrismHost::hostHaltedYes,
+      PrismHost::hostJudge,
+      PrismHost::hostPresentNo,
+      PrismHost::hostPresentYes,
+      PrismHost::hostRule1,
+      PrismHost::hostRule2,
+      PrismHost::hostRule3,
+      PrismHost::hostRule4,
+      PrismHost::hostRule5,
+      PrismHost::hostRule6,
+      PrismHost::hostRule7,
+      PrismHost::hostRule7Misses,
+      PrismHost::hostSurfaceCalendar,
+      PrismHost::hostSurfaceContacts,
+      PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceFiles,
+      PrismHost::hostSurfaceFolder,
+      PrismHost::hostSurfaceMail,
+      PrismHost::hostSurfacePaste,
+      PrismHost::hostSurfaceWorkers,
+      hostBreaksInv008
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostBreaksInv009,
+  parameters: [request : PrismHost::HostRequest],
+  result: Bool,
+  body: (((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismHost::hostActNone))) && ((project request surface) =? (PrismHost::hostSurfaceFiles))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+}
+
+theorem{
+  name: hostInv009Holds,
+  parameters: [request : PrismHost::HostRequest],
+  statement: ((hostBreaksInv009 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHost::hostActNone,
+      PrismHost::hostActOwner,
+      PrismHost::hostAnswerOffer,
+      PrismHost::hostAnswerRefuse,
+      PrismHost::hostAnswerSealed,
+      PrismHost::hostAnswerUse,
+      PrismHost::hostGrantKept,
+      PrismHost::hostGrantNone,
+      PrismHost::hostHaltedNo,
+      PrismHost::hostHaltedYes,
+      PrismHost::hostJudge,
+      PrismHost::hostPresentNo,
+      PrismHost::hostPresentYes,
+      PrismHost::hostRule1,
+      PrismHost::hostRule2,
+      PrismHost::hostRule3,
+      PrismHost::hostRule4,
+      PrismHost::hostRule5,
+      PrismHost::hostRule6,
+      PrismHost::hostRule7,
+      PrismHost::hostRule7Misses,
+      PrismHost::hostSurfaceCalendar,
+      PrismHost::hostSurfaceContacts,
+      PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceFiles,
+      PrismHost::hostSurfaceFolder,
+      PrismHost::hostSurfaceMail,
+      PrismHost::hostSurfacePaste,
+      PrismHost::hostSurfaceWorkers,
+      hostBreaksInv009
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostBreaksInv010,
+  parameters: [request : PrismHost::HostRequest],
+  result: Bool,
+  body: (((((((((project request surface) <? 8) && ((project request present) <? 2)) && ((project request act) <? 2)) && ((project request grant) <? 2)) && ((project request halted) <? 2)) && ((project request act) =? (PrismHost::hostActNone))) && ((project request surface) =? (PrismHost::hostSurfaceDrop))) && ((PrismHost::hostJudge request) =? (PrismHost::hostAnswerUse)))
+}
+
+theorem{
+  name: hostInv010Holds,
+  parameters: [request : PrismHost::HostRequest],
+  statement: ((hostBreaksInv010 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismHost::hostActNone,
+      PrismHost::hostActOwner,
+      PrismHost::hostAnswerOffer,
+      PrismHost::hostAnswerRefuse,
+      PrismHost::hostAnswerSealed,
+      PrismHost::hostAnswerUse,
+      PrismHost::hostGrantKept,
+      PrismHost::hostGrantNone,
+      PrismHost::hostHaltedNo,
+      PrismHost::hostHaltedYes,
+      PrismHost::hostJudge,
+      PrismHost::hostPresentNo,
+      PrismHost::hostPresentYes,
+      PrismHost::hostRule1,
+      PrismHost::hostRule2,
+      PrismHost::hostRule3,
+      PrismHost::hostRule4,
+      PrismHost::hostRule5,
+      PrismHost::hostRule6,
+      PrismHost::hostRule7,
+      PrismHost::hostRule7Misses,
+      PrismHost::hostSurfaceCalendar,
+      PrismHost::hostSurfaceContacts,
+      PrismHost::hostSurfaceDrop,
+      PrismHost::hostSurfaceFiles,
+      PrismHost::hostSurfaceFolder,
+      PrismHost::hostSurfaceMail,
+      PrismHost::hostSurfacePaste,
+      PrismHost::hostSurfaceWorkers,
+      hostBreaksInv010
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
