@@ -158,7 +158,8 @@ export function handleStore(indexed = globalThis.indexedDB) {
 //   lanes                                                (host.mjs lanes: the host rule)
 // `source` is PrismSource's answer for "<service> <route> <act>" (with the
 // halted word appended here); without it no service's download is read.
-export function openDevice({ decide, ingest, source = async () => 'refuse', store = handleStore(), halted = () => 'no', now = () => Date.now(), lanes = 1 }) {
+// `arrived(service, kept)` hears how many items of a service's download were kept.
+export function openDevice({ decide, ingest, source = async () => 'refuse', arrived = () => {}, store = handleStore(), halted = () => 'no', now = () => Date.now(), lanes = 1 }) {
   if (typeof decide !== 'function') throw fail('device.decide', 'openDevice needs decide (the PrismFolder guest)');
   if (typeof ingest !== 'function') throw fail('device.ingest', 'openDevice needs ingest');
   const ask = async (grant, format, action, bulk) => decide(`${grant} ${format} ${action} ${bulk} ${halted()}`);
@@ -251,7 +252,10 @@ export function openDevice({ decide, ingest, source = async () => 'refuse', stor
       if (!answers.has(item.service)) answers.set(item.service, await source(`${item.service} export read ${halted()}`));
       if (answers.get(item.service) !== 'read') { tally.refuse += 1; continue; }
       const bytes = encoder.encode(item.text);
+      const before = tally.store + tally.storehash;
       await readFile({ name: `${item.service}.${item.format}`, size: bytes.length, lastModified: now(), text: async () => item.text, stream: () => new Blob([bytes]).stream() }, item.format, grant, tally);
+      await drained();
+      if (tally.store + tally.storehash > before) arrived(item.service, tally.store + tally.storehash - before);
     }
     for (const file of rest) {
       const format = formatOf(file.name, file.parent ?? '');

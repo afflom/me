@@ -331,9 +331,11 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
   const keptBy = [];
   const vaultBy = { put: async (bytes, meta) => { keptBy.push(meta); return { outcome: 'store' }; } };
   let halt = 'no';
-  const reader = openDevice({ decide: folder, source: (rest) => source(rest), ingest: ingestInto({ vault: vaultBy }), store: memoryStore(), halted: () => halt });
+  const heard = {};
+  const reader = openDevice({ decide: folder, source: (rest) => source(rest), arrived: (svc, n) => { heard[svc] = (heard[svc] ?? 0) + n; }, ingest: ingestInto({ vault: vaultBy }), store: memoryStore(), halted: () => halt });
   const t = await reader.readFiles(files);
   ok(t.store === 7 && t.refuse === 0, `the downloads are read as PrismSource answers: ${JSON.stringify(t)}`);
+  ok(heard.whatsapp === 2 && heard.discord === 2 && heard.linkedin === 2, `the page hears what each service's download brought in: ${JSON.stringify(heard)}`);
   halt = 'yes';
   const before = keptBy.length;
   await reader.readFiles(files);

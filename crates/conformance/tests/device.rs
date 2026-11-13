@@ -205,7 +205,7 @@ fn device_dv_04() {
     assert!(
         card.contains("if (plan.extension === \"use\") {")
             && card.contains("for (const item of await pull(window, { halted: halted() })) {")
-            && card.contains("if ((await line(`source ${item.service} ${item.route} read ${halted()}`)) === \"read\") items.push(item);"),
+            && card.contains("if ((await line(`source ${item.service} ${item.route} read ${halted()}`)) !== \"read\") continue;"),
         "DV-04: the page pulls only on PrismHost's use and keeps each item through the device source"
     );
     let device = read("site/device/device.mjs");
@@ -270,7 +270,8 @@ fn device_dv_05() {
         "DV-05: a service's own download is read only as PrismSource answers, and never without it"
     );
     assert!(
-        read("site/card.mjs").contains("source: (rest) => line(`source ${rest}`)"),
+        read("site/card.mjs")
+            .contains("source: (rest) => line(`source ${rest}`), arrived: noteArrived"),
         "DV-05: the page asks PrismSource through the root"
     );
     for service in ["discord", "whatsapp", "linkedin"] {

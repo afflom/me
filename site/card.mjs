@@ -275,7 +275,7 @@ export default async function start({ app, reason, $ }) {
   let deviceOpen = null;
   const deviceOf = () => (deviceOpen ??= (async () => {
     const [{ openDevice }, { ingestInto }, host] = await Promise.all([import("./device/device.mjs"), import("./google/ingest.mjs"), import("./device/host.mjs")]);
-    const source = openDevice({ decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted, lanes: host.lanes(), source: (rest) => line(`source ${rest}`) });
+    const source = openDevice({ decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted, lanes: host.lanes(), source: (rest) => line(`source ${rest}`), arrived: noteArrived });
     return { source, ask: (more = {}) => host.plan({ decide: (rest) => line(`host ${rest}`), halted, ...more }) };
   })());
   async function reportDevice(t) {
@@ -312,6 +312,17 @@ export default async function start({ app, reason, $ }) {
       await reportDevice(await d.source.readFiles(files));
     })().catch((error) => say(error?.code ?? error?.message ?? String(error), "bad"));
   });
+  // What arrived from each declared service, kept in this browser so the
+  // Connections row can say that content is arriving: { key: { n, at } }.
+  const ARRIVED = "prism-arrived";
+  const arrivedNow = () => { try { return JSON.parse(localStorage.getItem(ARRIVED) ?? "{}") ?? {}; } catch { return {}; } };
+  function noteArrived(service, kept, seen = kept) {
+    const all = arrivedNow();
+    const was = all[service] ?? { n: 0, at: 0 };
+    all[service] = { n: was.n + kept, at: seen > 0 ? Date.now() : was.at };
+    try { localStorage.setItem(ARRIVED, JSON.stringify(all)); } catch { /* the row then says Connected */ }
+  }
+  const importedNow = () => Object.fromEntries(Object.entries(arrivedNow()).filter(([, a]) => a.n > 0).map(([key]) => [key, true]));
   // The owner's Prism extension, if installed, answers a hello on this page.
   let extensionHere = false;
   window.addEventListener("message", (event) => {
@@ -323,11 +334,19 @@ export default async function start({ app, reason, $ }) {
   // owner's own sign-in; PrismSource decides each item by its service and route.
   async function pullExtension(d) {
     const { pull } = await import("./device/extension.mjs");
-    const items = [];
+    const by = new Map();
     for (const item of await pull(window, { halted: halted() })) {
-      if ((await line(`source ${item.service} ${item.route} read ${halted()}`)) === "read") items.push(item);
+      if ((await line(`source ${item.service} ${item.route} read ${halted()}`)) !== "read") continue;
+      if (!by.has(item.service)) by.set(item.service, []);
+      by.get(item.service).push(item);
     }
-    return d.source.readItems(items);
+    const total = { files: 0, store: 0, storehash: 0, ask: 0, refuse: 0, skip: 0 };
+    for (const [service, items] of by) {
+      const t = await d.source.readItems(items);
+      for (const key of Object.keys(total)) total[key] += t[key] ?? 0;
+      noteArrived(service, t.store + t.storehash, items.length);
+    }
+    return total;
   }
   // On every visit, and every few minutes while the page is open: a folder the
   // owner granted is re-read while the browser keeps the grant, and what the
@@ -777,7 +796,8 @@ export default async function start({ app, reason, $ }) {
             const now = services.state(service.key, report, { halted: halted() });
             row.hidden = now.state === "off";
             const next = service.connect.find((s) => s.key === now.next);
-            state.textContent = now.state === "live" ? WORDS["service.live"] : now.state === "paused" ? WORDS.halted : now.state === "refused" ? WORDS["service.refused"] : next?.word ?? "";
+            const got = report.arrived?.[service.key]?.n ?? 0;
+            state.textContent = now.state === "live" ? (got ? `${got} ${WORDS.items}` : WORDS["service.live"]) : now.state === "paused" ? WORDS.halted : now.state === "refused" ? WORDS["service.refused"] : next?.word ?? "";
             // Only the first service that needs a step opens, so the person meets one thing to do.
             if (section.reveal === "until-done" && !touched) row.open = now.state === "step" && first;
             const doneSteps = new Set(service.connect.filter((s) => services.done(service, s, report)).map((s) => s.key));
@@ -809,7 +829,8 @@ export default async function start({ app, reason, $ }) {
           await paintWith(last);
           const late = new Promise((done) => setTimeout(() => done(null), 3000));
           const report = await Promise.race([services.probe().catch(() => null), late]);
-          if (report) { last = report; await paintWith(report); }
+          last = { ...(report ?? last), arrived: arrivedNow(), imported: importedNow() };
+          await paintWith(last);
         };
         painters.push(paintServices);
         // The rows arrive after the panel may already be painted; paint them now.
