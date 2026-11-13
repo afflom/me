@@ -210,6 +210,36 @@ definition{
 }
 
 definition{
+  name: surfaceDomainFed,
+  parameters: [domain : Nat, feeders : (List PrismSurface::SurfaceFeeder)],
+  result: Bool,
+  body: (match feeders
+    | List.nil => false
+    | List.cons f rest => ((surfaceMember domain (project f domains)) || (surfaceDomainFed domain rest))),
+  recursive_argument: feeders
+}
+
+definition{
+  name: surfaceAnyFed,
+  parameters: [domains : (List Nat)],
+  result: Bool,
+  body: (match domains
+    | List.nil => false
+    | List.cons d rest => ((surfaceDomainFed d (PrismSurface::surfaceFeeders)) || (surfaceAnyFed rest))),
+  recursive_argument: domains
+}
+
+definition{
+  name: surfacePlacesFed,
+  parameters: [places : (List PrismSurface::SurfacePlace)],
+  result: Bool,
+  body: (match places
+    | List.nil => true
+    | List.cons place rest => (((not ((project place kind) =? 0)) || (surfaceAnyFed (project place domains))) && (surfacePlacesFed rest))),
+  recursive_argument: places
+}
+
+definition{
   name: surfaceGroupsUsed,
   parameters: [],
   result: Bool,
@@ -325,6 +355,13 @@ theorem{
   name: surfaceTonesAreColours,
   parameters: [],
   statement: ((surfaceColoursInRange (PrismSurface::surfaceTones)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceEveryPlaceIsFed,
+  parameters: [],
+  statement: ((surfacePlacesFed (PrismSurface::surfacePlaces)) = true),
   proof: decide{}
 }
 

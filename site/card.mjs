@@ -3,7 +3,7 @@
 // the verified app's: this script only carries bytes between the page, the
 // vault, R4, the routed models and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
-import { PLACES, ACTS, LABELS, FLOORS, GROUPS, SETTINGS, WORDS, DOMAINS } from "./surface/surface.mjs";
+import { PLACES, ACTS, LABELS, FLOORS, GROUPS, SETTINGS, WORDS, DOMAINS, FEEDERS } from "./surface/surface.mjs";
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -290,6 +290,44 @@ export default async function start({ app, reason, $ }) {
     $("pr-count").textContent = shown.length ? String(shown.length) : "";
     if (current.show === "search" && !query) { list.replaceChildren(); return; }
     list.replaceChildren(...(shown.length ? shown.slice(0, 200).map(rowOf) : [element("li", { className: "pr-empty", textContent: WORDS.empty })]));
+    const home = current.host === "home";
+    list.hidden = home && !shown.length;
+    if (home) homeCards();
+  }
+
+  // The home: a card per place, its count and latest item, and the feeder
+  // PrismSurface binds to it, so an empty place offers what fills it.
+  function homeCards() {
+    for (const card of document.querySelectorAll("#pr-home .pr-card")) {
+      const place = byKey.get(card.querySelector(".pr-card-go").dataset.place);
+      const held = items.filter((item) => place.domains.includes(item.domain));
+      card.querySelector(".pr-card-count").textContent = held.length ? String(held.length) : "";
+      card.querySelector(".pr-card-latest").textContent = held.length ? (held[0].sealed ? WORDS.sealed : held[0].title || "") : "";
+      card.classList.toggle("pr-card-empty", !held.length);
+    }
+  }
+  for (const button of document.querySelectorAll("#pr-home .pr-card-go")) button.addEventListener("click", () => go(button.dataset.place, true));
+  for (const button of document.querySelectorAll("#pr-home .pr-card-feed")) {
+    button.addEventListener("click", () => {
+      const feeder = FEEDERS.find((f) => f.key === button.dataset.feed);
+      if (feeder.act !== "none") {
+        go(button.dataset.place);
+        $("pr-act").querySelector("input, textarea")?.focus();
+        return;
+      }
+      go(PLACES.find((p) => p.show === "settings").key);
+      const name = SETTINGS.find((s) => s.key === feeder.setting).name;
+      // The source's row is drawn once its code arrives: wait for it, then bring it to hand.
+      const reach = (tries) => {
+        const row = [...document.querySelectorAll("#pr-settings .pr-setting")].find((r) => r.querySelector(".pr-name")?.textContent === name);
+        const control = row?.querySelector("label.pr-file");
+        if (!control) return tries > 0 && setTimeout(reach, 50, tries - 1);
+        row.scrollIntoView({ block: "center" });
+        // The owner's press on the card is the press on the source's own act: its picker opens.
+        control.querySelector("input").click();
+      };
+      reach(40);
+    });
   }
 
   // One act per place, as PrismSurface names it. Outbound acts are prepared,
@@ -428,6 +466,7 @@ export default async function start({ app, reason, $ }) {
     $("pr-settings").hidden = !settings;
     $("pr-list").hidden = settings;
     $("pr-count").hidden = settings;
+    $("pr-home").hidden = place.host !== "home";
     actForm(place);
     if (settings) { buildSettings(); paintSettings(); }
     else paintList();

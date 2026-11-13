@@ -162,6 +162,34 @@ def contrast_record(c):
             f"theme := {THEMES.index(theme)}, ratio := {ratio}, floor := {floor}}})")
 
 
+# The feeders: the facet behind every place. A source setting fills the
+# domains it reads into; an act fills the domain its place keeps into. A list
+# place that no feeder can fill is refused here and disproved in the proofs.
+SETTING_KEYS = [x["key"] for x in SPEC["settings"]]
+FEEDERS = []
+for f in SPEC["feeders"]:
+    if f["act"] != "none":
+        if f["act"] not in ACTS:
+            refuse(f"the feeder {f['key']} names an unknown act")
+        domains = sorted({p["domains"][0] for p in SPEC["places"] if p["act"] == f["act"]})
+        word = next(a["word"] for a in SPEC["acts"] if a["key"] == f["act"])
+    else:
+        if f["setting"] not in SETTING_KEYS or f["word"] not in SPEC["words"]:
+            refuse(f"the feeder {f['key']} names an unknown setting or word")
+        domains = f["domains"]
+        word = SPEC["words"][f["word"]]
+    FEEDERS.append({"key": f["key"], "act": f["act"], "setting": f["setting"], "word": word, "domains": domains})
+fed = {d for f in FEEDERS for d in f["domains"]}
+for p_ in SPEC["places"]:
+    if p_["show"] == "list" and not fed & set(p_["domains"]):
+        refuse(f"the place {p_['key']} has no feeder for any of its domains")
+
+
+def feeder_record(f):
+    setting = SETTING_KEYS.index(f["setting"]) if f["setting"] != "none" else len(SETTING_KEYS)
+    return f"(record SurfaceFeeder {{name := {s(f['key'])}, act := {ACTS.index(f['act'])}, setting := {setting}, domains := {nats(f['domains'])}}})"
+
+
 def defn(name, result, body, params="[]"):
     return f"definition{{\n  name: {name},\n  parameters: {params},\n  result: {result},\n  body: {body}\n}}\n"
 
@@ -235,6 +263,13 @@ model = [
   fields: [{name: fore, type: Nat}, {name: back, type: Nat}, {name: theme, type: Nat}, {name: ratio, type: Nat}, {name: floor, type: Nat}]
 }
 """,
+    """structure{
+  name: SurfaceFeeder,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: name, type: String}, {name: act, type: Nat}, {name: setting, type: Nat}, {name: domains, type: (List Nat)}]
+}
+""",
     defn("surfaceDomainNames", "(List String)", strings(SPEC["domains"])),
     defn("surfaceLabelNames", "(List String)", strings(SPEC["labels"])),
     defn("surfaceRoleNames", "(List String)", strings(SPEC["roles"])),
@@ -250,6 +285,7 @@ model = [
     defn("surfaceTones", "(List SurfaceTone)", records("SurfaceTone", [tone_record(x) for x in LOOK["tones"]])),
     defn("surfaceContrasts", "(List SurfaceContrast)", records("SurfaceContrast", [contrast_record(x) for x in CONTRASTS])),
     defn("surfaceThemeCount", "Nat", str(len(THEMES))),
+    defn("surfaceFeeders", "(List SurfaceFeeder)", records("SurfaceFeeder", [feeder_record(f) for f in FEEDERS])),
     "\\end{semanticmodule}",
     "\\end{lexlean}",
     "",
@@ -307,6 +343,15 @@ proofs_defs += [
     rec("surfaceThemesDiffer", f"[tones : (List {M}SurfaceTone)]", "Bool",
         "(match tones\n    | List.nil => false\n    | List.cons tone rest => ((not ((project tone dark) =? (project tone light))) || (surfaceThemesDiffer rest)))", "tones"),
 ]
+proofs_defs += [
+    rec("surfaceDomainFed", f"[domain : Nat, feeders : (List {M}SurfaceFeeder)]", "Bool",
+        "(match feeders\n    | List.nil => false\n    | List.cons f rest => ((surfaceMember domain (project f domains)) || (surfaceDomainFed domain rest)))", "feeders"),
+    rec("surfaceAnyFed", "[domains : (List Nat)]", "Bool",
+        f"(match domains\n    | List.nil => false\n    | List.cons d rest => ((surfaceDomainFed d ({M}surfaceFeeders)) || (surfaceAnyFed rest)))", "domains"),
+    # Every list place has a facet behind it: some feeder fills one of its domains.
+    rec("surfacePlacesFed", f"[places : (List {M}SurfacePlace)]", "Bool",
+        "(match places\n    | List.nil => true\n    | List.cons place rest => (((not ((project place kind) =? 0)) || (surfaceAnyFed (project place domains))) && (surfacePlacesFed rest)))", "places"),
+]
 groups_all = "true"
 for i in reversed(range(len(GROUPS))):
     groups_all = f"((surfaceGroupUsed {i} ({M}surfaceSettings)) && {groups_all})"
@@ -334,6 +379,7 @@ theorems = [
     theorem("surfaceNoEmptyGroup", "((surfaceGroupsUsed) = true)"),
     theorem("surfaceEveryPairReads", f"((surfacePairsRead ({M}surfaceContrasts)) = true)"),
     theorem("surfaceTonesAreColours", f"((surfaceColoursInRange ({M}surfaceTones)) = true)"),
+    theorem("surfaceEveryPlaceIsFed", f"((surfacePlacesFed ({M}surfacePlaces)) = true)"),
     theorem("surfaceTwoThemes", f"((surfaceThemesDiffer ({M}surfaceTones)) = true)"),
 ]
 
@@ -382,6 +428,25 @@ def nav_html():
     return "\n".join(out)
 
 
+def feeder_of(place):
+    """A source that reads into the place's first domain comes first; else the place's own act."""
+    source = next((f for f in FEEDERS if f["act"] == "none" and place["domains"][0] in f["domains"]), None)
+    return source or next((f for f in FEEDERS if f["act"] != "none" and f["act"] == place["act"]), None)
+
+
+def home_html():
+    """The home: a card per place that holds things, each with the feeder that fills it."""
+    out = [f'    <ul id="pr-home" class="pr-home" aria-label="{e(W["places"])}">']
+    for p in SPEC["places"]:
+        if p["host"] != "nav" or p["show"] == "settings":
+            continue
+        f = feeder_of(p)
+        feed = f'<button type="button" class="pr-card-feed" data-feed="{f["key"]}" data-place="{p["key"]}">{e(f["word"])}</button>' if f else ""
+        out.append(f'      <li class="pr-card pr-card-empty"><button type="button" class="pr-card-go" data-place="{p["key"]}"><span class="pr-card-name">{e(p["name"])}</span><span class="pr-card-count"></span></button><span class="pr-card-latest"></span>{feed}</li>')
+    out.append("    </ul>")
+    return "\n".join(out)
+
+
 home_place = next(p for p in SPEC["places"] if p["host"] == "home")
 ask_place = next(p for p in SPEC["places"] if p["host"] == "composer")
 card_html = f"""<!-- Generated by tools/surface/gen.py from app/specs/surface/spec.json. Do not edit.
@@ -392,6 +457,7 @@ card_html = f"""<!-- Generated by tools/surface/gen.py from app/specs/surface/sp
   <section class="pr-place" id="pr-place" aria-labelledby="pr-title">
     <header class="pr-top"><h2 id="pr-title">{e(home_place["name"])}</h2><span id="pr-count" class="pr-count"></span></header>
     <div id="pr-act" class="pr-act"></div>
+{home_html()}
     <ol id="pr-list" class="pr-list" aria-labelledby="pr-title"><li class="pr-empty">{e(W["empty"])}</li></ol>
     <div id="pr-settings" class="pr-settings" hidden></div>
   </section>
@@ -453,6 +519,7 @@ mirror = {
     "settings": SPEC["settings"],
     "media": SPEC["media"],
     "words": SPEC["words"],
+    "feeders": FEEDERS,
 }
 OUTPUTS["site/surface/surface.mjs"] = (
     "// Generated by tools/surface/gen.py from app/specs/surface/spec.json. Do not edit.\n"
