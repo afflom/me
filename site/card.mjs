@@ -376,7 +376,7 @@ export default async function start({ app, reason, $ }) {
     list.hidden = !items.length;
     if (!items.length) { list.replaceChildren(emptyRow()); return; }
     const { today, lineOf } = await coherence();
-    const { agenda, recent, tasks } = await today(items, { relate });
+    const { agenda, recent, tasks, needs } = await today(items, { relate, done: doneSet() });
     if (turn !== painting || current.host !== "home") return;
     const rows = [];
     const section = (domain, made) => {
@@ -389,11 +389,38 @@ export default async function start({ app, reason, $ }) {
       if (clash.length) { row.classList.add("pr-clash"); row.title = clash.map(lineOf).join("\n"); }
       return row;
     }));
+    if (needs.length) rows.push(needsOf(needs));
     section(4, recent.map(rowOf));
     section(9, tasks.map(rowOf));
     $("pr-count").textContent = "";
     list.hidden = !rows.length;
     list.replaceChildren(...(rows.length ? rows : [emptyRow()]));
+  }
+
+  // Needs me: what asks the person something or names a deadline, each with
+  // one gesture that clears it. What the person cleared is kept as addresses only.
+  const DONE_KEY = "me.done";
+  const doneSet = () => { try { return new Set(JSON.parse(store.get(DONE_KEY, "[]"))); } catch { return new Set(); } };
+  function clear(item) {
+    const done = [...doneSet(), item.address].slice(-500);
+    store.set(DONE_KEY, JSON.stringify(done));
+    paintList();
+  }
+  function needsOf(needs) {
+    const name = WORDS.needs;
+    const list = element("ul", { className: "pr-needs-list" });
+    list.setAttribute("aria-label", name);
+    for (const { item, phrase } of needs) {
+      const button = element("button", { type: "button", className: "pr-done", textContent: WORDS.done });
+      button.setAttribute("aria-label", `${WORDS.done}: ${item.title || item.who}`);
+      button.addEventListener("click", () => clear(item));
+      const why = phrase ? phrase[0].toUpperCase() + phrase.slice(1) : item.who || "";
+      list.append(element("li", { className: "pr-item pr-need" },
+        button,
+        element("span", { className: "pr-what", textContent: item.title || "—" }),
+        element("span", { className: "pr-who", textContent: why })));
+    }
+    return element("li", { className: "pr-needs" }, element("h3", { className: "pr-section", textContent: name }), list);
   }
 
   function paintList() {
