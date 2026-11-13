@@ -20,6 +20,8 @@
 // (device.test.mjs); the page asks the same module through the Prism root.
 export const GUEST = { path: 'guest/folder.wasm', sha256: '6fdaec9f0b96478c68d82695ff91a2e927f1430395ca59661633c795934188c0' };
 // And of app/src/PrismHost.lex.tex, for the same suite.
+// And of app/src/PrismSource.lex.tex.
+export const SOURCE_GUEST = { path: 'guest/source.wasm', sha256: '86ba238e418c0e959ec51efe653adcd617fbca4b2dde824901ed2074f9bfc080' };
 export const HOST_GUEST = { path: 'guest/host.wasm', sha256: '72f4852426d91c15d6322cc33a08f0fe2f54f2be85b7f68ef031d8e5f4db783b' };
 
 export const LIMIT = 32 * 1024 * 1024; // one read at a time, at most
