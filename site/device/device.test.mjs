@@ -285,13 +285,65 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
   ok(conn.state('gmail', { extension: true, services: { gmail: { signedIn: true, pinned: false } } }).next === 'pin-tab', 'then to keep it open');
   ok(conn.state('gmail', { extension: true, services: { gmail: { signedIn: true, pinned: true } } }).state === 'live', 'then it is live');
   ok(conn.state('gmail', { extension: true }, { halted: 'yes' }).state === 'paused' && conn.state('nothing', {}).state === 'refused', 'paused while halted; an undeclared service is refused');
-  ok(['discord', 'whatsapp', 'linkedin'].every((k) => conn.state(k, { extension: true }).state === 'off' && conn.SERVICES.find((s) => s.key === k).out === 'refused'), 'a service the extension cannot carry yet is off, and sends nothing');
+  ok(['discord', 'whatsapp', 'linkedin'].every((k) => conn.state(k, { extension: true }).next === 'history' && conn.state(k, { extension: true, imported: { [k]: true } }).state === 'live' && conn.SERVICES.find((s) => s.key === k).out === 'refused'), 'a service no live route carries yet is brought in by its own download, and sends nothing');
+  ok(conn.state('gmail', { extension: false }).next === 'extension' && conn.SERVICES.filter((s) => ['discord', 'linkedin'].includes(s.key)).every((s) => s.connect[0].url.startsWith(s.origins[0])), 'a history step opens only a page on its service\'s own origin');
+  {
+    const opened = [];
+    ok(await conn.run('linkedin', 'history', { win: {}, open: (u) => opened.push(u) }) && opened[0] === 'https://www.linkedin.com/mypreferences/d/download-my-data' && !(await conn.run('whatsapp', 'history', { win: {}, open: (u) => opened.push(u) })) && opened.length === 1, 'the history step opens the service\'s own download page, and WhatsApp\'s is on the phone');
+  }
   const declared = JSON.parse(await readFile(new URL('../extension/services.json', import.meta.url), 'utf8')).services;
   ok(JSON.stringify(declared) === JSON.stringify(JSON.parse(await readFile(new URL('../../app/specs/source/services.json', import.meta.url), 'utf8')).services), 'the extension carries the model\'s declarations');
   for (const s of declared) {
     for (const route of s.own ?? []) ok((await source(`${s.key} own read no`)) === 'read', `a declared own route is one PrismSource reads: ${s.key}`);
     ok(s.origins.every((o) => /^https:\/\/[a-z.]+\/$/.test(o)), `${s.key} names https origins only`);
   }
+
+  // The export route: each service's own data download, read only as PrismSource answers.
+  const { exportItems, whatsappLines, csv } = await import('../source/exports.mjs');
+  const { zip } = await import('./extension.mjs');
+  const ios = '[13/11/2026, 09:41:05] Robin Example: Lunch on Thursday?\n[13/11/2026, 09:42:10] Sam Example: Yes,\nnoon works\n[13/11/2026, 09:43:00] Messages and calls are end-to-end encrypted.\n';
+  const android = '11/13/26, 9:41 PM - Robin Example: See you then\n';
+  const w = whatsappLines(ios);
+  ok(w.length === 2 && w[0].from === 'Robin Example' && w[0].at.toISOString() === '2026-11-13T09:41:05.000Z' && w[1].body === 'Yes,\nnoon works', 'a WhatsApp chat (iPhone) is read line by line, day first, continuations kept, WhatsApp\'s own lines left out');
+  ok(whatsappLines(android)[0].at.toISOString() === '2026-11-13T21:41:00.000Z', 'a WhatsApp chat (Android) is read month first, with its 12-hour clock');
+  ok(JSON.stringify(csv('a,"b,""c""\nd"\r\n1,2\n')) === JSON.stringify([['a', 'b,"c"\nd'], ['1', '2']]), 'CSV fields hold commas, quotes and newlines');
+  const discordZip = zip([
+    { name: 'package/messages/index.json', bytes: new TextEncoder().encode('{"111":"Direct Message with Robin Example"}') },
+    { name: 'package/messages/c111/messages.json', bytes: new TextEncoder().encode('[{"ID":1,"Timestamp":"2026-11-12 08:00:00.123000+00:00","Contents":"Draft is ready","Attachments":""}]') },
+    { name: 'package/messages/c222/messages.csv', bytes: new TextEncoder().encode('ID,Timestamp,Contents,Attachments\n2,2026-11-12 09:00:00.000000+00:00,"Hello, server",\n') },
+  ]);
+  const files = [
+    fileOf('WhatsApp Chat with Robin Example.txt', ios),
+    new File([discordZip], 'package.zip', { lastModified: 1 }),
+    fileOf('messages.csv', 'CONVERSATION ID,CONVERSATION TITLE,FROM,SENDER PROFILE URL,TO,RECIPIENT PROFILE URLS,DATE,SUBJECT,CONTENT,FOLDER\nc1,Robin Example,Robin Example,,Person,,2026-11-12 10:00:00 UTC,,"Could we talk, next week?",INBOX\n'),
+    fileOf('Connections.csv', 'Notes:\n"Some notes LinkedIn adds"\n\nFirst Name,Last Name,URL,Email Address,Company,Position,Connected On\nRobin,Example,https://www.linkedin.com/in/example,,Example Co,Designer,12 Nov 2026\n'),
+    fileOf('a.eml', 'From: a@example.com\r\nSubject: hi\r\n\r\nhi\r\n'),
+  ];
+  const { zipEntries } = await import('./zip.mjs');
+  const opened = [files[0], ...(await zipEntries(files[1])).map((e) => Object.assign(e, { archive: 'package.zip' })), ...files.slice(2)];
+  const { items, rest } = await exportItems(opened);
+  const by = (svc) => items.filter((i) => i.service === svc);
+  ok(by('whatsapp').length === 2 && by('discord').length === 2 && by('linkedin').length === 2 && rest.length === 1 && rest[0].name === 'a.eml', `each download is claimed by its service, and other files pass through: ${items.map((i) => i.service)}`);
+  ok(by('whatsapp').every((i) => i.format === 'eml' && formatOfText(i.text) === 'eml' && /^Subject: Robin Example$/m.test(i.text) && /@whatsapp\.invalid>/.test(i.text)), 'a WhatsApp message is kept as a message, in its chat, at an address that cannot be mailed');
+  ok(by('discord').some((i) => /^Subject: Direct Message with Robin Example$/m.test(i.text) && /^Date: Thu, 12 Nov 2026 08:00:00 GMT$/m.test(i.text)) && by('discord').some((i) => /Hello, server/.test(i.text)), 'a Discord message is kept with its channel\'s name and time, from JSON and CSV alike');
+  ok(by('linkedin').some((i) => i.format === 'eml' && /Could we talk, next week\?/.test(i.text)) && by('linkedin').some((i) => i.format === 'vcf' && /FN:Robin Example/.test(i.text) && /ORG:Example Co/.test(i.text)), 'a LinkedIn message is kept as a message, a connection as a contact card');
+  ok(new Set(by('whatsapp').map((i) => i.text.match(/^Message-ID: (.*)$/m)[1])).size === 2 && (await exportItems([files[0]])).items[0].text === by('whatsapp')[0].text, 'each message has its own id, the same on every read');
+  const keptBy = [];
+  const vaultBy = { put: async (bytes, meta) => { keptBy.push(meta); return { outcome: 'store' }; } };
+  let halt = 'no';
+  const reader = openDevice({ decide: folder, source: (rest) => source(rest), ingest: ingestInto({ vault: vaultBy }), store: memoryStore(), halted: () => halt });
+  const t = await reader.readFiles(files);
+  ok(t.store === 7 && t.refuse === 0, `the downloads are read as PrismSource answers: ${JSON.stringify(t)}`);
+  halt = 'yes';
+  const before = keptBy.length;
+  await reader.readFiles(files);
+  ok(keptBy.length === before, 'nothing is read from a download while halted');
+  const unasked = openDevice({ decide: folder, ingest: ingestInto({ vault: vaultBy }), store: memoryStore() });
+  const u = await unasked.readFiles(files.slice(0, 1));
+  ok(u.store === 0 && u.refuse === 2, 'without PrismSource no download is read');
+  const inFolder = openDevice({ decide: folder, source: (rest) => source(rest), ingest: ingestInto({ vault: vaultBy }), store: memoryStore() });
+  await inFolder.addFolder(async () => dirOf('Downloads', [entryOf(files[0]), entryOf(files[1])]));
+  ok((await inFolder.readFolders()).store === 4, 'a download that lands in a kept folder is read on the next visit');
 }
 
 console.log(`device: ${checks} checks passed`);

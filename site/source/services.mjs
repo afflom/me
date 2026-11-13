@@ -7,7 +7,8 @@ import { SERVICES, KINDS, STATES } from './declared.mjs';
 
 export { SERVICES, KINDS, STATES };
 
-// What the browser and the extension report now: { extension, services: { key: { open, pinned, signedIn, at } } }.
+// What the browser and the extension report now: { extension, services: { key: { open, pinned, signedIn, at } } },
+// with imported: { key: true } once a service's own download has been read.
 export async function probe(win = globalThis.window) {
   const ext = await import('../device/extension.mjs');
   const extension = (await ext.installed(win)) === 'kept';
@@ -27,19 +28,22 @@ export function done(service, step, report) {
   if (step.probe === 'pinned') return !!s.pinned;
   if (step.probe === 'open') return !!s.open;
   if (step.probe === 'folder') return !!report.folder;
+  if (step.probe === 'imported') return !!report.imported?.[service.key];
   return false;
 }
 
 // A service's state for the Connections row: off, step (with its next undone
 // step), live, paused (while halted) or refused (a route the model refuses).
-//   readable: whether the extension carries an inbound route for it yet
+//   readable: whether a live route carries it yet; until then its history step
 export function state(key, report, { halted = 'no' } = {}) {
   const service = SERVICES.find((s) => s.key === key);
   if (!service) return { state: 'refused', next: null };
   if (halted === 'yes') return { state: 'paused', next: null };
+  // A service no live route carries yet is brought in by its own download.
   const readable = !!service.seen || (service.own ?? []).length > 0;
-  if (!readable) return { state: 'off', next: null };
-  const next = service.connect.find((step) => !done(service, step, report));
+  const steps = readable ? service.connect.filter((step) => step.kind !== 'grant-folder') : service.connect.filter((step) => step.kind === 'grant-folder');
+  if (!steps.length) return { state: 'off', next: null };
+  const next = steps.find((step) => !done(service, step, report));
   if (next) return { state: 'step', next: next.key };
   return { state: 'live', next: null };
 }
@@ -58,5 +62,6 @@ export async function run(key, stepKey, { win = globalThis.window, save, open = 
   }
   if (step.kind === 'sign-in' || step.kind === 'open-tab') { open(service.origins[0]); return true; }
   if (step.kind === 'pin-tab') return !!(await ext.ask(win, 'pin', { service: key }))?.pinned;
+  if (step.kind === 'grant-folder') { if (step.url) open(step.url); return !!step.url; }
   return false;
 }

@@ -275,7 +275,7 @@ export default async function start({ app, reason, $ }) {
   let deviceOpen = null;
   const deviceOf = () => (deviceOpen ??= (async () => {
     const [{ openDevice }, { ingestInto }, host] = await Promise.all([import("./device/device.mjs"), import("./google/ingest.mjs"), import("./device/host.mjs")]);
-    const source = openDevice({ decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted, lanes: host.lanes() });
+    const source = openDevice({ decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted, lanes: host.lanes(), source: (rest) => line(`source ${rest}`) });
     return { source, ask: (more = {}) => host.plan({ decide: (rest) => line(`host ${rest}`), halted, ...more }) };
   })());
   async function reportDevice(t) {
@@ -386,7 +386,7 @@ export default async function start({ app, reason, $ }) {
   }
 
   // What the device row's file picker takes: zips (Takeout) and the formats PrismFolder reads.
-  const FILE_TYPES = ".zip,.mbox,.mbx,.eml,.ics,.ical,.vcf,.vcard";
+  const FILE_TYPES = ".zip,.mbox,.mbx,.eml,.ics,.ical,.vcf,.vcard,.txt,.csv";
   const emptyRow = () => element("li", { className: "pr-empty", textContent: WORDS.empty });
 
   // Today: the agenda ahead (PrismChronology says what falls today and what

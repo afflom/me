@@ -38,6 +38,10 @@ for s in spec["services"]:
     for step in s["connect"]:
         if step["kind"] not in kinds:
             refuse(f"{s['key']} step {step['key']} has kind {step['kind']!r}, which is not declared")
+        if step.get("url") and not any(step["url"].startswith(o) for o in s["origins"]):
+            refuse(f"{s['key']} step {step['key']} opens {step['url']}, which is off its origins")
+        if not step.get("how"):
+            refuse(f"{s['key']} step {step['key']} says nothing of how")
         if len(step["word"]) > 28 or len(step["word"].split()) > 4:
             refuse(f"{s['key']} step word {step['word']!r} is longer than a name")
     if s.get("out") not in ("approve", "refused"):

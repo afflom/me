@@ -263,6 +263,22 @@ fn device_dv_05() {
         pack.contains(".replace('\"__ORIGINS__\"', JSON.stringify(origins))"),
         "DV-05: the extension's permissions are written from the declarations"
     );
+    let device = read("site/device/device.mjs");
+    assert!(
+        device.contains("source(`${item.service} export read ${halted()}`)")
+            && device.contains("source = async () => 'refuse'"),
+        "DV-05: a service's own download is read only as PrismSource answers, and never without it"
+    );
+    assert!(
+        read("site/card.mjs").contains("source: (rest) => line(`source ${rest}`)"),
+        "DV-05: the page asks PrismSource through the root"
+    );
+    for service in ["discord", "whatsapp", "linkedin"] {
+        assert!(
+            read("site/source/exports.mjs").contains(&format!("service: '{service}'")),
+            "DV-05: {service}'s own download is read"
+        );
+    }
     let root = read("tools/prism_root.py");
     assert!(
         root.contains("(\"source\", \"PrismSource\", \"sourceDispatch\")"),

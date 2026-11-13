@@ -30,6 +30,7 @@ const DB = 'prism-device';
 const encoder = new TextEncoder();
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
 import { isZip, zipEntries } from './zip.mjs';
+import { exportItems, exportKind } from '../source/exports.mjs';
 
 const sha256 = async (bytes) => hex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
 const fail = (code, message) => Object.assign(new Error(message ?? code), { code });
@@ -155,7 +156,9 @@ export function handleStore(indexed = globalThis.indexedDB) {
 //   store                                                (handleStore)
 //   halted() -> 'no' | 'yes'
 //   lanes                                                (host.mjs lanes: the host rule)
-export function openDevice({ decide, ingest, store = handleStore(), halted = () => 'no', now = () => Date.now(), lanes = 1 }) {
+// `source` is PrismSource's answer for "<service> <route> <act>" (with the
+// halted word appended here); without it no service's download is read.
+export function openDevice({ decide, ingest, source = async () => 'refuse', store = handleStore(), halted = () => 'no', now = () => Date.now(), lanes = 1 }) {
   if (typeof decide !== 'function') throw fail('device.decide', 'openDevice needs decide (the PrismFolder guest)');
   if (typeof ingest !== 'function') throw fail('device.ingest', 'openDevice needs ingest');
   const ask = async (grant, format, action, bulk) => decide(`${grant} ${format} ${action} ${bulk} ${halted()}`);
@@ -219,11 +222,40 @@ export function openDevice({ decide, ingest, store = handleStore(), halted = () 
         continue;
       }
       const format = formatOf(name, dir.name);
-      if (format === 'other') continue;
+      if (format === 'other' && !isZip({ name }) && !exportKind({ name })) continue;
       const file = await entry.getFile();
       const mark = `${dir.name}/${name}:${file.size}:${file.lastModified}`;
       if (seen.has(mark)) continue;
       seen.add(mark);
+      if (format === 'other') await readOpened(await openAll([file]), grant, tally);
+      else await readFile(file, format, grant, tally);
+    }
+  }
+
+  // Zips opened, each entry carrying the name of the archive it came from.
+  async function openAll(files) {
+    const opened = [];
+    for (const file of files) {
+      if (isZip(file)) opened.push(...(await zipEntries(file)).map((entry) => Object.assign(entry, { archive: file.name })));
+      else opened.push(file);
+    }
+    return opened;
+  }
+
+  // A service's own download is read only as PrismSource answers for its
+  // export route; each item is then judged by PrismFolder by its own format.
+  async function readOpened(opened, grant, tally) {
+    const { items, rest } = await exportItems(opened);
+    const answers = new Map();
+    for (const item of items) {
+      if (!answers.has(item.service)) answers.set(item.service, await source(`${item.service} export read ${halted()}`));
+      if (answers.get(item.service) !== 'read') { tally.refuse += 1; continue; }
+      const bytes = encoder.encode(item.text);
+      await readFile({ name: `${item.service}.${item.format}`, size: bytes.length, lastModified: now(), text: async () => item.text, stream: () => new Blob([bytes]).stream() }, item.format, grant, tally);
+    }
+    for (const file of rest) {
+      const format = formatOf(file.name, file.parent ?? '');
+      if (format === 'other') { tally.skip += 1; continue; }
       await readFile(file, format, grant, tally);
     }
   }
@@ -268,17 +300,8 @@ export function openDevice({ decide, ingest, store = handleStore(), halted = () 
     // Files the owner picked or dropped: the act itself is the grant for these.
     async readFiles(files) {
       const tally = tallyOf();
-      const opened = [];
-      for (const file of files) {
-        // A zip (a Takeout or calendar export) is opened; each entry is judged by its own format.
-        if (isZip(file)) opened.push(...(await zipEntries(file)));
-        else opened.push(file);
-      }
-      for (const file of opened) {
-        const format = formatOf(file.name, file.parent ?? '');
-        if (format === 'other') { tally.skip += 1; continue; }
-        await readFile(file, format, 'granted', tally);
-      }
+      // A zip (a Takeout, a calendar export, a service's data download) is opened; each entry is judged by its own format.
+      await readOpened(await openAll(files), 'granted', tally);
       await drained();
       return tally;
     },

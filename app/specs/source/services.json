@@ -1,5 +1,5 @@
 {
-  "comment": "The services the owner's content arrives from, each a declaration: its web origin, the kinds of content it holds and their schema.org types, and how each of the three browser routes reaches it. PrismSource (app/src/PrismSource.lex.tex) decides every read by service and route; the page writes the extension from this file (site/device/extension.mjs), so the extension's permissions are exactly the declared origins. Routes: seen = what the service's web app shows the owner in their signed-in tab; own = pages the service itself serves the owner, read by GET with the owner's own sign-in; export = the service's own data download, read when it lands in a granted folder or is dropped. Connecting: each service names the steps the person takes (connect: key, word, kind, probe, how), from which the Connections setting is drawn; a service's state is off, step (its next undone step), live, paused or refused. kinds: extension, open-tab, pin-tab, sign-in, grant-folder, approve-out. out: approve (sent only after the person approves it in the Prism) or refused (not sent). browsers: the browser brands that can load the extension, as the browser reports them (navigator.userAgentData.brands); Chrome is the target, and every Chromium browser reports the Chromium brand. Any other browser, and any phone, is not offered it.",
+  "comment": "The services the owner's content arrives from, each a declaration: its web origin, the kinds of content it holds and their schema.org types, and how each of the three browser routes reaches it. PrismSource (app/src/PrismSource.lex.tex) decides every read by service and route; the page writes the extension from this file (site/device/extension.mjs), so the extension's permissions are exactly the declared origins. Routes: seen = what the service's web app shows the owner in their signed-in tab; own = pages the service itself serves the owner, read by GET with the owner's own sign-in; export = the service's own data download, read when it lands in a granted folder or is dropped. Connecting: each service names the steps the person takes (connect: key, word, kind, probe, how, and url when the step opens a page of the service's own), from which the Connections setting is drawn; a service no live route carries yet is brought in by its own data download (its history step, kind grant-folder); a service's state is off, step (its next undone step), live, paused or refused. kinds: extension, open-tab, pin-tab, sign-in, grant-folder, approve-out. out: approve (sent only after the person approves it in the Prism) or refused (not sent). browsers: the browser brands that can load the extension, as the browser reports them (navigator.userAgentData.brands); Chrome is the target, and every Chromium browser reports the Chromium brand. Any other browser, and any phone, is not offered it.",
   "browsers": ["Google Chrome", "Chromium"],
   "services": [
     {
@@ -164,6 +164,19 @@
       ],
       "connect": [
         {
+          "key": "history",
+          "word": "Bring in your history",
+          "kind": "grant-folder",
+          "probe": "imported",
+          "url": "https://discord.com/app",
+          "how": [
+            "Open User Settings, then Data & Privacy",
+            "Request all of your data",
+            "Download the package Discord emails you",
+            "Drop it here, or save it in your kept folder"
+          ]
+        },
+        {
           "key": "extension",
           "word": "Add the extension",
           "kind": "extension",
@@ -216,6 +229,17 @@
       ],
       "connect": [
         {
+          "key": "history",
+          "word": "Bring in your history",
+          "kind": "grant-folder",
+          "probe": "imported",
+          "how": [
+            "On your phone, open a chat",
+            "Tap More, then Export chat, Without media",
+            "Save it in your kept folder, or drop it here"
+          ]
+        },
+        {
           "key": "extension",
           "word": "Add the extension",
           "kind": "extension",
@@ -267,6 +291,19 @@
         "linkedin-archive"
       ],
       "connect": [
+        {
+          "key": "history",
+          "word": "Bring in your history",
+          "kind": "grant-folder",
+          "probe": "imported",
+          "url": "https://www.linkedin.com/mypreferences/d/download-my-data",
+          "how": [
+            "Open Get a copy of your data",
+            "Pick Messages and Connections",
+            "Download the archive LinkedIn emails you",
+            "Drop it here, or save it in your kept folder"
+          ]
+        },
         {
           "key": "extension",
           "word": "Add the extension",
