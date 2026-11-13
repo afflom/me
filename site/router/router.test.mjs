@@ -72,3 +72,25 @@ for (const text of asked) {
 // Features with no compiled model are asked about and skipped, never run.
 assert.ok(asked.some((t) => t.endsWith("meaning absent no")), "meaning has no compiled model yet and is skipped");
 console.log(`router: ${asked.length} decisions, all held`);
+
+// The chat's answers: a question is answered in a sentence from what is held,
+// under the Boundary; anything else is offered to keep with its confirmation.
+const { answer } = await import("./answer.mjs");
+const boundaryLine = async (text) => (text.startsWith("boundary") ? (text.trim().endsWith(" yes") ? "deny" : "allow") : line(text));
+const flight = { address: "f", media: "calendar", title: "Flight to Lisbon", who: "Airport", body: "", label: "confidential", at: new Date(2026, 10, 16, 8).getTime(), domains: [5] };
+const mail = { address: "m", media: "message", title: "Lunch on Thursday?", who: "Robin Example", body: "Are you free?", label: "confidential", at: new Date(2026, 10, 12, 9).getTime(), domains: [4] };
+const ask = (text, halted = "no") => answer(text, { items: [flight, mail], line: boundaryLine, halted: () => halted, now: WEDNESDAY });
+const flightAnswer = await ask("When is my flight?");
+assert.equal(flightAnswer.mapped.intent, "question");
+assert.deepEqual(flightAnswer.sources, [flight], "the answer draws on the flight");
+assert.match(flightAnswer.sentences[0], /^Flight to Lisbon is on Mon, Nov 16 at 8:00\s?AM, at Airport\.$/u, flightAnswer.sentences[0]);
+const lunch = await ask("what did Robin say about lunch?");
+assert.match(lunch.sentences[0], /^Robin Example wrote “Lunch on Thursday\?” on /u);
+assert.deepEqual(lunch.offers.map((o) => o.kind), ["reply"], "a message offers a reply");
+const jotted = await ask("Call the dentist Friday at 3");
+assert.deepEqual(jotted.offers, [{ kind: "keep" }]);
+assert.match(jotted.sentences[0], /^Call the dentist, Fri, Nov 13 at 3:00\s?PM$/u, jotted.sentences[0]);
+const pausedAnswer = await ask("When is my flight?", "yes");
+assert.deepEqual(pausedAnswer.sentences, [], "paused, nothing is answered");
+assert.deepEqual((await ask("When is the zebra?")).sentences, [], "nothing held, no sentence");
+console.log("answer: questions answered in sentences, jots offered to keep");
