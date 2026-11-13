@@ -80,7 +80,7 @@ fn product_pd_02() {
     live("PD-02", "test/product/screen.test.mjs");
 }
 
-/// `PD-03`: The product record places every part the Prism has: every surface entry in the person's or the system view, every root facet in the system view serving at least one journey, and every journey with its goal, done-state, usability measure, status and walk; the gate refuses a record that leaves any part unplaced
+/// `PD-03`: The product record places every part the Prism has: every surface entry in the person's or the system view, every root facet in the system view serving at least one journey, every journey with its goal, done-state, usability measure, status and walk, and every setting in the person's view one the Prism requires of the person; the gate refuses a record that leaves any part unplaced
 #[test]
 fn product_pd_03() {
     let gate = read("tools/product/gate.py");
@@ -89,6 +89,7 @@ fn product_pd_03() {
         "serves no journey",
         "has no usability measure",
         "has no viewpoint in the product record",
+        "but the Prism does not require it of the person",
     ] {
         assert!(
             gate.contains(needle),
