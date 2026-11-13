@@ -13,7 +13,9 @@ definition{
   name: surfaceStringCount,
   parameters: [values : (List String)],
   result: Nat,
-  body: (match values | List.nil => 0 | List.cons value rest => ((surfaceStringCount rest) + 1)),
+  body: (match values
+    | List.nil => 0
+    | List.cons value rest => ((surfaceStringCount rest) + 1)),
   recursive_argument: values
 }
 
@@ -32,7 +34,9 @@ definition{
   parameters: [left : (List Nat), right : (List Nat)],
   result: Bool,
   body: (match left
-    | List.nil => (match right | List.nil => true | List.cons other more => false)
+    | List.nil => (match right
+      | List.nil => true
+      | List.cons other more => false)
     | List.cons value rest => (match right
       | List.nil => false
       | List.cons other more => ((value =? other) && (surfaceSameNats rest more)))),
@@ -71,10 +75,7 @@ definition{
 
 definition{
   name: surfaceRowAgrees,
-  parameters: [
-    place : PrismSurface::SurfacePlace,
-    rows : (List Foundation.Me.V1.Model::DesignView)
-  ],
+  parameters: [place : PrismSurface::SurfacePlace, rows : (List Foundation.Me.V1.Model::DesignView)],
   result: Bool,
   body: (match rows
     | List.nil => false
@@ -116,7 +117,9 @@ definition{
   name: surfaceFirstOr,
   parameters: [fallback : Nat, values : (List Nat)],
   result: Nat,
-  body: (match values | List.nil => fallback | List.cons value rest => value)
+  body: (match values
+    | List.nil => fallback
+    | List.cons value rest => value)
 }
 
 definition{
@@ -233,7 +236,9 @@ definition{
   name: surfaceTimes,
   parameters: [a : Nat, b : Nat],
   result: Nat,
-  body: (match b | Nat.zero => 0 | Nat.succ k => (a + (surfaceTimes a k))),
+  body: (match b
+    | Nat.zero => 0
+    | Nat.succ k => (a + (surfaceTimes a k))),
   recursive_argument: b
 }
 
@@ -301,7 +306,9 @@ definition{
   name: surfaceRatioCount,
   parameters: [ratios : (List PrismSurface::SurfaceRatio)],
   result: Nat,
-  body: (match ratios | List.nil => 0 | List.cons r rest => ((surfaceRatioCount rest) + 1)),
+  body: (match ratios
+    | List.nil => 0
+    | List.cons r rest => ((surfaceRatioCount rest) + 1)),
   recursive_argument: ratios
 }
 
@@ -309,7 +316,9 @@ definition{
   name: surfaceNatCount,
   parameters: [values : (List Nat)],
   result: Nat,
-  body: (match values | List.nil => 0 | List.cons v rest => ((surfaceNatCount rest) + 1)),
+  body: (match values
+    | List.nil => 0
+    | List.cons v rest => ((surfaceNatCount rest) + 1)),
   recursive_argument: values
 }
 
@@ -568,5 +577,6 @@ theorem{
   statement: ((((PrismSurface::surfaceVoiceCeiling) <=? 10) && ((5 <=? (PrismSurface::surfaceVoiceAttack)) && (((PrismSurface::surfaceVoiceRelease) <=? 1500) && (150 <=? (PrismSurface::surfaceVoiceRefractory))))) = true),
   proof: decide{}
 }
+
 \end{semanticmodule}
 \end{lexlean}

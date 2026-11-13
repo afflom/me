@@ -728,6 +728,7 @@ export default async function start({ app, reason, $ }) {
       node.setAttribute("aria-labelledby", heading.id);
       $("pr-settings").append(node);
       for (const key of section.settings) sectionOf.set(key, { section, rows });
+      if (section.rows === "services") buildServices(section, rows);
     }
     const settingRow = (setting, ...controls) => {
       const state = element("span", { className: "pr-state" });
@@ -748,6 +749,60 @@ export default async function start({ app, reason, $ }) {
       if (home && setting.viewpoint === "person") home.rows.append(row);
       return { row, state, done(flag) { if (reveal === "until-done" && !touched) row.open = !flag; } };
     };
+    // Connections: a row per service the Prism declares, drawn from its
+    // declaration (app/specs/source/services.json): its state, the steps that
+    // connect it with the next one to press, and how to do it.
+    function buildServices(section, rows) {
+      const holder = element("div", { className: "pr-services" });
+      rows.prepend(holder);
+      (async () => {
+        const services = await import("./source/services.mjs");
+        const save = (bytes, name) => {
+          const link = element("a", { href: URL.createObjectURL(new Blob([bytes], { type: "application/zip" })), download: name });
+          link.click();
+          setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        };
+        const drawn = services.SERVICES.map((service) => {
+          const state = element("span", { className: "pr-state" });
+          const steps = element("ol", { className: "pr-steps" });
+          const row = element("details", { className: "pr-setting pr-detail pr-service" }, element("summary", {}, element("span", { className: "pr-name", textContent: service.name }), state), steps);
+          row.setAttribute("aria-label", service.name);
+          row.hidden = true;
+          let touched = false;
+          row.querySelector("summary").addEventListener("click", () => { touched = true; });
+          holder.append(row);
+          const paint = (report) => {
+            const now = services.state(service.key, report, { halted: halted() });
+            row.hidden = now.state === "off";
+            const next = service.connect.find((s) => s.key === now.next);
+            state.textContent = now.state === "live" ? WORDS["service.live"] : now.state === "paused" ? WORDS.halted : now.state === "refused" ? WORDS["service.refused"] : next?.word ?? "";
+            if (section.reveal === "until-done" && !touched) row.open = now.state === "step";
+            const doneSteps = new Set(service.connect.filter((s) => services.done(service, s, report)).map((s) => s.key));
+            steps.replaceChildren(...service.connect.map((step) => {
+              const item = element("li", { className: doneSteps.has(step.key) ? "pr-step pr-step-done" : step === next ? "pr-step pr-step-next" : "pr-step" });
+              if (step !== next) { item.append(element("span", { textContent: step.word })); return item; }
+              const press = element("button", { type: "button", textContent: step.word });
+              press.addEventListener("click", async () => {
+                press.disabled = true;
+                try { await services.run(service.key, step.key, { save }); } catch (error) { say(error?.message ?? String(error), "bad"); } finally { press.disabled = false; await paintServices(); }
+              });
+              item.append(press);
+              if (step.how?.length > 1) item.append(element("ol", { className: "pr-how" }, ...step.how.map((line) => element("li", { textContent: line }))));
+              return item;
+            }));
+          };
+          return paint;
+        });
+        const paintServices = async () => {
+          const report = await services.probe().catch(() => ({ extension: false, services: {} }));
+          for (const paint of drawn) paint(report);
+        };
+        painters.push(paintServices);
+        // Coming back from the extension page or the service's tab, the rows say where things stand.
+        addEventListener("focus", () => { if (!$("pr-settings").hidden) paintServices(); });
+        await paintServices();
+      })().catch((error) => console.warn(`connections: ${error?.message ?? error}`));
+    }
     const switchFor = (checked, label, onChange) => {
       const box = element("input", { type: "checkbox", checked, role: "switch" });
       box.setAttribute("aria-label", label);
