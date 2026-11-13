@@ -222,6 +222,8 @@ export default async function start({ app, reason, $ }) {
       read.push(item);
     }
     items = read.sort((a, b) => b.at - a.at);
+    // Ask is offered once there is something of the person's to ask about.
+    $("pr-ask").hidden = !items.length;
     // The people in what is kept, for the place that lists them.
     if (selfOf) { inferred = selfOf(items); mineOf = fromMe; }
     people = peopleOf ? { place: peoplePlace, all: peopleOf(items, meNow()), between } : null;
@@ -566,10 +568,7 @@ export default async function start({ app, reason, $ }) {
   const stepDone = (step) => (SECTION_DONE[step.section] ?? (() => false))();
   const setupLeft = () => SETUP.filter((step) => !stepDone(step));
   let setupStep = -1;
-  const setupCard = element("section", { className: "pr-setup", id: "pr-setup" });
-  setupCard.setAttribute("aria-labelledby", "pr-setup-title");
-  setupCard.hidden = true;
-  $("pr-home").before(setupCard);
+  const setupCard = $("pr-setup");
   function paintSetup() {
     const left = setupLeft();
     const shown = current.host === "home" && left.length > 0;
