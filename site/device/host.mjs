@@ -3,6 +3,8 @@
 //   "<surface> <present> <act> <grant> <halted>" -> use | offer | sealed | refuse
 // This file reports what the browser exposes; it decides nothing.
 
+import { BROWSERS } from '../source/declared.mjs';
+
 // The host rule uorc states for its page (Uorc.Page::pageWorker): one lane per
 // core, at most coreLimit, and at most workersPerGiB per GiB the browser
 // reports (unreportedGiB when it reports none).
@@ -10,10 +12,12 @@ export const HOST = { coreLimit: 16, workersPerGiB: 2, unreportedGiB: 2 };
 
 export const SURFACES = ['folder', 'files', 'drop', 'paste', 'contacts', 'workers', 'mail', 'calendar', 'extension'];
 
-// Whether this browser can run the owner's Prism extension: desktop browsers can.
-export function capable(nav = globalThis.navigator) {
-  if (nav?.userAgentData && typeof nav.userAgentData.mobile === 'boolean') return !nav.userAgentData.mobile;
-  return !/Mobi|Android|iPhone|iPad/i.test(nav?.userAgent ?? '');
+// Whether this browser can load the owner's Prism extension: a desktop browser
+// that reports one of the declared brands (app/specs/source/services.json).
+export function capable(nav = globalThis.navigator, browsers = BROWSERS) {
+  const data = nav?.userAgentData;
+  if (!data || data.mobile !== false || !Array.isArray(data.brands)) return false;
+  return data.brands.some((b) => browsers.includes(b?.brand));
 }
 
 // What this browser reports, surface by surface, as the guest's `present`.

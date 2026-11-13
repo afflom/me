@@ -23,6 +23,8 @@ def refuse(why):
 
 
 kinds = set(spec["kinds"])
+if not spec.get("browsers") or not all(isinstance(b, str) and b for b in spec["browsers"]):
+    refuse("browsers must name at least one browser brand that can load the extension")
 seen_keys = set()
 for s in spec["services"]:
     if s["key"] in seen_keys:
@@ -50,6 +52,7 @@ declared = (
     f"export const SERVICES = {json.dumps(spec['services'])};\n"
     f"export const KINDS = {json.dumps(spec['kinds'])};\n"
     f"export const STATES = {json.dumps(spec['states'])};\n"
+    f"export const BROWSERS = {json.dumps(spec['browsers'])};\n"
 )
 outputs = {ROOT / "site/source/declared.mjs": declared, ROOT / "site/extension/services.json": text}
 if "--check" in sys.argv:

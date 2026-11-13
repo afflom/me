@@ -248,6 +248,16 @@ fn device_dv_05() {
         "DV-05: the page's and the extension's declarations are current: {}",
         String::from_utf8_lossy(&gen.stderr)
     );
+    assert!(
+        declared.contains("\"browsers\": [\"Google Chrome\", \"Chromium\"]"),
+        "DV-05: the browsers that can load the extension are declared"
+    );
+    let host = read("site/device/host.mjs");
+    assert!(
+        host.contains("import { BROWSERS } from '../source/declared.mjs';")
+            && host.contains("data.brands.some((b) => browsers.includes(b?.brand))"),
+        "DV-05: the extension is offered only in a declared browser"
+    );
     let pack = read("site/device/extension.mjs");
     assert!(
         pack.contains(".replace('\"__ORIGINS__\"', JSON.stringify(origins))"),
