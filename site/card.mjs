@@ -8,7 +8,7 @@ import { PLACES, ACTS, LABELS, FLOORS, SETTINGS, WORDS, DOMAINS, FEEDERS } from 
 // after, and Today. Loaded once there is something kept or asked, so an
 // ordinary first visit fetches none of it.
 let coherenceOpen = null;
-const coherence = () => (coherenceOpen ??= Promise.all([import("./coherence/sense.mjs"), import("./coherence/today.mjs")]).then(([sense, day]) => ({ ...sense, ...day })));
+const coherence = () => (coherenceOpen ??= Promise.all([import("./coherence/sense.mjs"), import("./coherence/today.mjs"), import("./coherence/people.mjs")]).then(([sense, day, people]) => ({ ...sense, ...day, ...people })));
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -201,7 +201,7 @@ export default async function start({ app, reason, $ }) {
   async function load() {
     if (!vault) return;
     const rows = await vault.list();
-    const { domainsOf } = rows.length ? await coherence() : {};
+    const { domainsOf, peopleOf, peoplePlace, between } = rows.length ? await coherence() : {};
     const read = [];
     for (const row of rows) {
       const got = await vault.get(row.address);
@@ -212,6 +212,8 @@ export default async function start({ app, reason, $ }) {
       read.push(item);
     }
     items = read.sort((a, b) => b.at - a.at);
+    // The people in what is kept, for the place that lists them.
+    people = peopleOf ? { place: peoplePlace, all: peopleOf(items), between } : null;
   }
 
   // Resonance: every gesture of the owner toward a thing is answered by
@@ -376,7 +378,7 @@ export default async function start({ app, reason, $ }) {
     list.hidden = !items.length;
     if (!items.length) { list.replaceChildren(emptyRow()); return; }
     const { today, lineOf } = await coherence();
-    const { agenda, recent, tasks } = await today(items, { relate });
+    const { agenda, recent, tasks, needs } = await today(items, { relate, done: doneSet() });
     if (turn !== painting || current.host !== "home") return;
     const rows = [];
     const section = (domain, made) => {
@@ -389,6 +391,7 @@ export default async function start({ app, reason, $ }) {
       if (clash.length) { row.classList.add("pr-clash"); row.title = clash.map(lineOf).join("\n"); }
       return row;
     }));
+    if (needs.length) rows.push(needsOf(needs));
     section(4, recent.map(rowOf));
     section(9, tasks.map(rowOf));
     $("pr-count").textContent = "";
@@ -396,9 +399,62 @@ export default async function start({ app, reason, $ }) {
     list.replaceChildren(...(rows.length ? rows : [emptyRow()]));
   }
 
+  // Needs me: what asks the person something or names a deadline, each with
+  // one gesture that clears it. What the person cleared is kept as addresses only.
+  const DONE_KEY = "me.done";
+  const doneSet = () => { try { return new Set(JSON.parse(store.get(DONE_KEY, "[]"))); } catch { return new Set(); } };
+  function clear(item) {
+    const done = [...doneSet(), item.address].slice(-500);
+    store.set(DONE_KEY, JSON.stringify(done));
+    paintList();
+  }
+  function needsOf(needs) {
+    const name = WORDS.needs;
+    const list = element("ul", { className: "pr-needs-list" });
+    list.setAttribute("aria-label", name);
+    for (const { item, phrase } of needs) {
+      const button = element("button", { type: "button", className: "pr-done", textContent: WORDS.done });
+      button.setAttribute("aria-label", `${WORDS.done}: ${item.title || item.who}`);
+      button.addEventListener("click", () => clear(item));
+      const why = phrase ? phrase[0].toUpperCase() + phrase.slice(1) : item.who || "";
+      list.append(element("li", { className: "pr-item pr-need" },
+        button,
+        element("span", { className: "pr-what", textContent: item.title || "—" }),
+        element("span", { className: "pr-who", textContent: why })));
+    }
+    return element("li", { className: "pr-needs" }, element("h3", { className: "pr-section", textContent: name }), list);
+  }
+
+  // People: one row per person; pressing one opens their page, with what is
+  // open between you first (the next meeting, the latest message).
+  let people = null;
+  let personOpen = null;
+  function paintPeople(list) {
+    const one = personOpen && people.all.find((p) => p.key === personOpen);
+    if (one) {
+      $("pr-count").textContent = "";
+      const head = element("li", { className: "pr-person-head" }, element("h3", { className: "pr-person-name", textContent: one.name }));
+      return list.replaceChildren(head, ...people.between(one).map(rowOf));
+    }
+    $("pr-count").textContent = people.all.length ? String(people.all.length) : "";
+    list.replaceChildren(...(people.all.length ? people.all.slice(0, 200).map((p) => {
+      const latest = people.between(p)[0];
+      const row = element("li", { className: "pr-item pr-person" },
+        element("span", { className: "pr-when", textContent: latest ? when(latest.at) : "" }),
+        element("button", { type: "button", className: "pr-what pr-person-go", textContent: p.name }),
+        element("span", { className: "pr-who", textContent: latest?.title ?? "" }));
+      row.querySelector("button").addEventListener("click", () => { personOpen = p.key; paintList(); });
+      return row;
+    }) : [emptyRow()]));
+    // Notes kept here stay here, after the people.
+    const notes = items.filter((item) => item.media === "plainText" && (item.domains ?? [item.domain]).some((d) => current.domains.includes(d)));
+    list.append(...notes.slice(0, 50).map(rowOf));
+  }
+
   function paintList() {
     const list = $("pr-list");
     if (current.host === "home") { paintToday(list).catch((error) => say(error?.message ?? String(error), "bad")); return; }
+    if (people && current.key === people.place) { paintPeople(list); return; }
     let shown = items.filter((item) => (item.domains ?? [item.domain]).some((d) => current.domains.includes(d)));
     if (current.show === "search") {
       const words = query.toLowerCase().split(/\s+/).filter(Boolean);
@@ -573,6 +629,7 @@ export default async function start({ app, reason, $ }) {
     const place = byKey.get(key);
     if (!onPage(place)) return;
     current = place;
+    personOpen = null;
     store.set(PLACE_KEY, key);
     for (const button of document.querySelectorAll(".pr-go")) {
       if (button.dataset.place === key) button.setAttribute("aria-current", "page");

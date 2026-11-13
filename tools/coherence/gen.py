@@ -136,6 +136,9 @@ for setting in SURFACE["settings"]:
     if setting["key"] not in drives["settings"]:
         refuse(f"the setting {setting['key']} is driven by no live facet")
 
+if SPEC["people"]["place"] not in [p["key"] for p in SURFACE["places"] if p["show"] == "list"]:
+    refuse(f"people are listed in {SPEC['people']['place']!r}, which is not a place that lists items")
+
 # The functor matrix: facet a feeds facet b where a's outputs meet b's inputs.
 matrix = [[sorted(set(a["out"]) & set(b["in"])) for b in live] for a in live]
 
@@ -153,6 +156,7 @@ export const MEDIA = {j(media_domain)};
 export const VOCABULARY = {j(vocab)};
 export const INTENTS = {j(SPEC["intents"])};
 export const TODAY = {j(SPEC["today"])};
+export const PEOPLE = {j(SPEC["people"])};
 """
 
 if "--check" in args:
