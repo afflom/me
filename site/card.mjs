@@ -534,7 +534,7 @@ export default async function start({ app, reason, $ }) {
     if (!vault || !text) return false;
     const { route } = await import("./router/router.mjs");
     const mapped = await route({ source: "note", values: { text }, line, halted });
-    if (mapped.refused) { say(haltedNow ? WORDS.halted : WORDS.refused, "bad"); return false; }
+    if (mapped.refused) { say(WORDS.refused, "bad"); return false; }
     if (mapped.domains.length) domain = mapped.domains[0];
     const label = LABELS[Math.max(...mapped.domains.concat(domain).map((d) => FLOORS[d]))].toLowerCase();
     const about = { domain, media: "plainText", at: Date.now(), domains: mapped.domains, ...(mapped.intent ? { intent: mapped.intent } : {}), ...(mapped.start != null ? { start: mapped.start, allDay: mapped.allDay } : {}) };
