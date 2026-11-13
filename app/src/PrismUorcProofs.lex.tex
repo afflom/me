@@ -1,0 +1,582 @@
+\begin{lexlean}{PrismUorcProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismUorc}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: uorcBreaksInv001,
+  parameters: [request : PrismUorc::UorcRequest],
+  result: Bool,
+  body: (((((((((((project request act) <? 2) && ((project request halted) <? 2)) && ((project request seal) <? 2)) && ((project request format) <? 2)) && ((project request scope) <? 3)) && ((project request objects) <? 2)) && ((project request restore) <? 3)) && ((project request kappa) <? 2)) && ((project request halted) =? (PrismUorc::uorcHaltedYes))) && (not ((PrismUorc::uorcJudge request) =? (PrismUorc::uorcAnswerRefuse))))
+}
+
+theorem{
+  name: uorcInv001Holds,
+  parameters: [request : PrismUorc::UorcRequest],
+  statement: ((uorcBreaksInv001 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismUorc::uorcActKeep,
+      PrismUorc::uorcActOpen,
+      PrismUorc::uorcAnswerKeep,
+      PrismUorc::uorcAnswerOpen,
+      PrismUorc::uorcAnswerRefuse,
+      PrismUorc::uorcFormatKnown,
+      PrismUorc::uorcFormatOther,
+      PrismUorc::uorcHaltedNo,
+      PrismUorc::uorcHaltedYes,
+      PrismUorc::uorcJudge,
+      PrismUorc::uorcKappaAdmit,
+      PrismUorc::uorcKappaOther,
+      PrismUorc::uorcObjectsMany,
+      PrismUorc::uorcObjectsOne,
+      PrismUorc::uorcRestoreDiffers,
+      PrismUorc::uorcRestoreFailed,
+      PrismUorc::uorcRestoreSame,
+      PrismUorc::uorcScopeOther,
+      PrismUorc::uorcScopeSelf,
+      PrismUorc::uorcScopeStandard,
+      PrismUorc::uorcSealBroken,
+      PrismUorc::uorcSealOk,
+      uorcBreaksInv001
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcBreaksInv002,
+  parameters: [request : PrismUorc::UorcRequest],
+  result: Bool,
+  body: (((((((((((project request act) <? 2) && ((project request halted) <? 2)) && ((project request seal) <? 2)) && ((project request format) <? 2)) && ((project request scope) <? 3)) && ((project request objects) <? 2)) && ((project request restore) <? 3)) && ((project request kappa) <? 2)) && ((project request seal) =? (PrismUorc::uorcSealBroken))) && (not ((PrismUorc::uorcJudge request) =? (PrismUorc::uorcAnswerRefuse))))
+}
+
+theorem{
+  name: uorcInv002Holds,
+  parameters: [request : PrismUorc::UorcRequest],
+  statement: ((uorcBreaksInv002 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismUorc::uorcActKeep,
+      PrismUorc::uorcActOpen,
+      PrismUorc::uorcAnswerKeep,
+      PrismUorc::uorcAnswerOpen,
+      PrismUorc::uorcAnswerRefuse,
+      PrismUorc::uorcFormatKnown,
+      PrismUorc::uorcFormatOther,
+      PrismUorc::uorcHaltedNo,
+      PrismUorc::uorcHaltedYes,
+      PrismUorc::uorcJudge,
+      PrismUorc::uorcKappaAdmit,
+      PrismUorc::uorcKappaOther,
+      PrismUorc::uorcObjectsMany,
+      PrismUorc::uorcObjectsOne,
+      PrismUorc::uorcRestoreDiffers,
+      PrismUorc::uorcRestoreFailed,
+      PrismUorc::uorcRestoreSame,
+      PrismUorc::uorcScopeOther,
+      PrismUorc::uorcScopeSelf,
+      PrismUorc::uorcScopeStandard,
+      PrismUorc::uorcSealBroken,
+      PrismUorc::uorcSealOk,
+      uorcBreaksInv002
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcBreaksInv003,
+  parameters: [request : PrismUorc::UorcRequest],
+  result: Bool,
+  body: (((((((((((project request act) <? 2) && ((project request halted) <? 2)) && ((project request seal) <? 2)) && ((project request format) <? 2)) && ((project request scope) <? 3)) && ((project request objects) <? 2)) && ((project request restore) <? 3)) && ((project request kappa) <? 2)) && ((project request format) =? (PrismUorc::uorcFormatOther))) && (not ((PrismUorc::uorcJudge request) =? (PrismUorc::uorcAnswerRefuse))))
+}
+
+theorem{
+  name: uorcInv003Holds,
+  parameters: [request : PrismUorc::UorcRequest],
+  statement: ((uorcBreaksInv003 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismUorc::uorcActKeep,
+      PrismUorc::uorcActOpen,
+      PrismUorc::uorcAnswerKeep,
+      PrismUorc::uorcAnswerOpen,
+      PrismUorc::uorcAnswerRefuse,
+      PrismUorc::uorcFormatKnown,
+      PrismUorc::uorcFormatOther,
+      PrismUorc::uorcHaltedNo,
+      PrismUorc::uorcHaltedYes,
+      PrismUorc::uorcJudge,
+      PrismUorc::uorcKappaAdmit,
+      PrismUorc::uorcKappaOther,
+      PrismUorc::uorcObjectsMany,
+      PrismUorc::uorcObjectsOne,
+      PrismUorc::uorcRestoreDiffers,
+      PrismUorc::uorcRestoreFailed,
+      PrismUorc::uorcRestoreSame,
+      PrismUorc::uorcScopeOther,
+      PrismUorc::uorcScopeSelf,
+      PrismUorc::uorcScopeStandard,
+      PrismUorc::uorcSealBroken,
+      PrismUorc::uorcSealOk,
+      uorcBreaksInv003
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcBreaksInv004,
+  parameters: [request : PrismUorc::UorcRequest],
+  result: Bool,
+  body: (((((((((((project request act) <? 2) && ((project request halted) <? 2)) && ((project request seal) <? 2)) && ((project request format) <? 2)) && ((project request scope) <? 3)) && ((project request objects) <? 2)) && ((project request restore) <? 3)) && ((project request kappa) <? 2)) && ((project request scope) =? (PrismUorc::uorcScopeOther))) && (not ((PrismUorc::uorcJudge request) =? (PrismUorc::uorcAnswerRefuse))))
+}
+
+theorem{
+  name: uorcInv004Holds,
+  parameters: [request : PrismUorc::UorcRequest],
+  statement: ((uorcBreaksInv004 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismUorc::uorcActKeep,
+      PrismUorc::uorcActOpen,
+      PrismUorc::uorcAnswerKeep,
+      PrismUorc::uorcAnswerOpen,
+      PrismUorc::uorcAnswerRefuse,
+      PrismUorc::uorcFormatKnown,
+      PrismUorc::uorcFormatOther,
+      PrismUorc::uorcHaltedNo,
+      PrismUorc::uorcHaltedYes,
+      PrismUorc::uorcJudge,
+      PrismUorc::uorcKappaAdmit,
+      PrismUorc::uorcKappaOther,
+      PrismUorc::uorcObjectsMany,
+      PrismUorc::uorcObjectsOne,
+      PrismUorc::uorcRestoreDiffers,
+      PrismUorc::uorcRestoreFailed,
+      PrismUorc::uorcRestoreSame,
+      PrismUorc::uorcScopeOther,
+      PrismUorc::uorcScopeSelf,
+      PrismUorc::uorcScopeStandard,
+      PrismUorc::uorcSealBroken,
+      PrismUorc::uorcSealOk,
+      uorcBreaksInv004
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcBreaksInv005,
+  parameters: [request : PrismUorc::UorcRequest],
+  result: Bool,
+  body: (((((((((((project request act) <? 2) && ((project request halted) <? 2)) && ((project request seal) <? 2)) && ((project request format) <? 2)) && ((project request scope) <? 3)) && ((project request objects) <? 2)) && ((project request restore) <? 3)) && ((project request kappa) <? 2)) && ((project request objects) =? (PrismUorc::uorcObjectsMany))) && (not ((PrismUorc::uorcJudge request) =? (PrismUorc::uorcAnswerRefuse))))
+}
+
+theorem{
+  name: uorcInv005Holds,
+  parameters: [request : PrismUorc::UorcRequest],
+  statement: ((uorcBreaksInv005 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismUorc::uorcActKeep,
+      PrismUorc::uorcActOpen,
+      PrismUorc::uorcAnswerKeep,
+      PrismUorc::uorcAnswerOpen,
+      PrismUorc::uorcAnswerRefuse,
+      PrismUorc::uorcFormatKnown,
+      PrismUorc::uorcFormatOther,
+      PrismUorc::uorcHaltedNo,
+      PrismUorc::uorcHaltedYes,
+      PrismUorc::uorcJudge,
+      PrismUorc::uorcKappaAdmit,
+      PrismUorc::uorcKappaOther,
+      PrismUorc::uorcObjectsMany,
+      PrismUorc::uorcObjectsOne,
+      PrismUorc::uorcRestoreDiffers,
+      PrismUorc::uorcRestoreFailed,
+      PrismUorc::uorcRestoreSame,
+      PrismUorc::uorcScopeOther,
+      PrismUorc::uorcScopeSelf,
+      PrismUorc::uorcScopeStandard,
+      PrismUorc::uorcSealBroken,
+      PrismUorc::uorcSealOk,
+      uorcBreaksInv005
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcBreaksInv006,
+  parameters: [request : PrismUorc::UorcRequest],
+  result: Bool,
+  body: (((((((((((project request act) <? 2) && ((project request halted) <? 2)) && ((project request seal) <? 2)) && ((project request format) <? 2)) && ((project request scope) <? 3)) && ((project request objects) <? 2)) && ((project request restore) <? 3)) && ((project request kappa) <? 2)) && ((project request restore) =? (PrismUorc::uorcRestoreDiffers))) && (not ((PrismUorc::uorcJudge request) =? (PrismUorc::uorcAnswerRefuse))))
+}
+
+theorem{
+  name: uorcInv006Holds,
+  parameters: [request : PrismUorc::UorcRequest],
+  statement: ((uorcBreaksInv006 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismUorc::uorcActKeep,
+      PrismUorc::uorcActOpen,
+      PrismUorc::uorcAnswerKeep,
+      PrismUorc::uorcAnswerOpen,
+      PrismUorc::uorcAnswerRefuse,
+      PrismUorc::uorcFormatKnown,
+      PrismUorc::uorcFormatOther,
+      PrismUorc::uorcHaltedNo,
+      PrismUorc::uorcHaltedYes,
+      PrismUorc::uorcJudge,
+      PrismUorc::uorcKappaAdmit,
+      PrismUorc::uorcKappaOther,
+      PrismUorc::uorcObjectsMany,
+      PrismUorc::uorcObjectsOne,
+      PrismUorc::uorcRestoreDiffers,
+      PrismUorc::uorcRestoreFailed,
+      PrismUorc::uorcRestoreSame,
+      PrismUorc::uorcScopeOther,
+      PrismUorc::uorcScopeSelf,
+      PrismUorc::uorcScopeStandard,
+      PrismUorc::uorcSealBroken,
+      PrismUorc::uorcSealOk,
+      uorcBreaksInv006
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcBreaksInv007,
+  parameters: [request : PrismUorc::UorcRequest],
+  result: Bool,
+  body: (((((((((((project request act) <? 2) && ((project request halted) <? 2)) && ((project request seal) <? 2)) && ((project request format) <? 2)) && ((project request scope) <? 3)) && ((project request objects) <? 2)) && ((project request restore) <? 3)) && ((project request kappa) <? 2)) && ((project request restore) =? (PrismUorc::uorcRestoreFailed))) && (not ((PrismUorc::uorcJudge request) =? (PrismUorc::uorcAnswerRefuse))))
+}
+
+theorem{
+  name: uorcInv007Holds,
+  parameters: [request : PrismUorc::UorcRequest],
+  statement: ((uorcBreaksInv007 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismUorc::uorcActKeep,
+      PrismUorc::uorcActOpen,
+      PrismUorc::uorcAnswerKeep,
+      PrismUorc::uorcAnswerOpen,
+      PrismUorc::uorcAnswerRefuse,
+      PrismUorc::uorcFormatKnown,
+      PrismUorc::uorcFormatOther,
+      PrismUorc::uorcHaltedNo,
+      PrismUorc::uorcHaltedYes,
+      PrismUorc::uorcJudge,
+      PrismUorc::uorcKappaAdmit,
+      PrismUorc::uorcKappaOther,
+      PrismUorc::uorcObjectsMany,
+      PrismUorc::uorcObjectsOne,
+      PrismUorc::uorcRestoreDiffers,
+      PrismUorc::uorcRestoreFailed,
+      PrismUorc::uorcRestoreSame,
+      PrismUorc::uorcScopeOther,
+      PrismUorc::uorcScopeSelf,
+      PrismUorc::uorcScopeStandard,
+      PrismUorc::uorcSealBroken,
+      PrismUorc::uorcSealOk,
+      uorcBreaksInv007
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcBreaksInv008,
+  parameters: [request : PrismUorc::UorcRequest],
+  result: Bool,
+  body: (((((((((((project request act) <? 2) && ((project request halted) <? 2)) && ((project request seal) <? 2)) && ((project request format) <? 2)) && ((project request scope) <? 3)) && ((project request objects) <? 2)) && ((project request restore) <? 3)) && ((project request kappa) <? 2)) && ((project request kappa) =? (PrismUorc::uorcKappaOther))) && (not ((PrismUorc::uorcJudge request) =? (PrismUorc::uorcAnswerRefuse))))
+}
+
+theorem{
+  name: uorcInv008Holds,
+  parameters: [request : PrismUorc::UorcRequest],
+  statement: ((uorcBreaksInv008 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismUorc::uorcActKeep,
+      PrismUorc::uorcActOpen,
+      PrismUorc::uorcAnswerKeep,
+      PrismUorc::uorcAnswerOpen,
+      PrismUorc::uorcAnswerRefuse,
+      PrismUorc::uorcFormatKnown,
+      PrismUorc::uorcFormatOther,
+      PrismUorc::uorcHaltedNo,
+      PrismUorc::uorcHaltedYes,
+      PrismUorc::uorcJudge,
+      PrismUorc::uorcKappaAdmit,
+      PrismUorc::uorcKappaOther,
+      PrismUorc::uorcObjectsMany,
+      PrismUorc::uorcObjectsOne,
+      PrismUorc::uorcRestoreDiffers,
+      PrismUorc::uorcRestoreFailed,
+      PrismUorc::uorcRestoreSame,
+      PrismUorc::uorcScopeOther,
+      PrismUorc::uorcScopeSelf,
+      PrismUorc::uorcScopeStandard,
+      PrismUorc::uorcSealBroken,
+      PrismUorc::uorcSealOk,
+      uorcBreaksInv008
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcBreaksInv009,
+  parameters: [request : PrismUorc::UorcRequest],
+  result: Bool,
+  body: (((((((((((project request act) <? 2) && ((project request halted) <? 2)) && ((project request seal) <? 2)) && ((project request format) <? 2)) && ((project request scope) <? 3)) && ((project request objects) <? 2)) && ((project request restore) <? 3)) && ((project request kappa) <? 2)) && ((project request act) =? (PrismUorc::uorcActKeep))) && ((PrismUorc::uorcJudge request) =? (PrismUorc::uorcAnswerOpen)))
+}
+
+theorem{
+  name: uorcInv009Holds,
+  parameters: [request : PrismUorc::UorcRequest],
+  statement: ((uorcBreaksInv009 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismUorc::uorcActKeep,
+      PrismUorc::uorcActOpen,
+      PrismUorc::uorcAnswerKeep,
+      PrismUorc::uorcAnswerOpen,
+      PrismUorc::uorcAnswerRefuse,
+      PrismUorc::uorcFormatKnown,
+      PrismUorc::uorcFormatOther,
+      PrismUorc::uorcHaltedNo,
+      PrismUorc::uorcHaltedYes,
+      PrismUorc::uorcJudge,
+      PrismUorc::uorcKappaAdmit,
+      PrismUorc::uorcKappaOther,
+      PrismUorc::uorcObjectsMany,
+      PrismUorc::uorcObjectsOne,
+      PrismUorc::uorcRestoreDiffers,
+      PrismUorc::uorcRestoreFailed,
+      PrismUorc::uorcRestoreSame,
+      PrismUorc::uorcScopeOther,
+      PrismUorc::uorcScopeSelf,
+      PrismUorc::uorcScopeStandard,
+      PrismUorc::uorcSealBroken,
+      PrismUorc::uorcSealOk,
+      uorcBreaksInv009
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcBreaksInv010,
+  parameters: [request : PrismUorc::UorcRequest],
+  result: Bool,
+  body: (((((((((((project request act) <? 2) && ((project request halted) <? 2)) && ((project request seal) <? 2)) && ((project request format) <? 2)) && ((project request scope) <? 3)) && ((project request objects) <? 2)) && ((project request restore) <? 3)) && ((project request kappa) <? 2)) && ((project request act) =? (PrismUorc::uorcActOpen))) && ((PrismUorc::uorcJudge request) =? (PrismUorc::uorcAnswerKeep)))
+}
+
+theorem{
+  name: uorcInv010Holds,
+  parameters: [request : PrismUorc::UorcRequest],
+  statement: ((uorcBreaksInv010 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismUorc::uorcActKeep,
+      PrismUorc::uorcActOpen,
+      PrismUorc::uorcAnswerKeep,
+      PrismUorc::uorcAnswerOpen,
+      PrismUorc::uorcAnswerRefuse,
+      PrismUorc::uorcFormatKnown,
+      PrismUorc::uorcFormatOther,
+      PrismUorc::uorcHaltedNo,
+      PrismUorc::uorcHaltedYes,
+      PrismUorc::uorcJudge,
+      PrismUorc::uorcKappaAdmit,
+      PrismUorc::uorcKappaOther,
+      PrismUorc::uorcObjectsMany,
+      PrismUorc::uorcObjectsOne,
+      PrismUorc::uorcRestoreDiffers,
+      PrismUorc::uorcRestoreFailed,
+      PrismUorc::uorcRestoreSame,
+      PrismUorc::uorcScopeOther,
+      PrismUorc::uorcScopeSelf,
+      PrismUorc::uorcScopeStandard,
+      PrismUorc::uorcSealBroken,
+      PrismUorc::uorcSealOk,
+      uorcBreaksInv010
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcBreaksInv011,
+  parameters: [request : PrismUorc::UorcRequest],
+  result: Bool,
+  body: ((((((((((((((((((project request act) <? 2) && ((project request halted) <? 2)) && ((project request seal) <? 2)) && ((project request format) <? 2)) && ((project request scope) <? 3)) && ((project request objects) <? 2)) && ((project request restore) <? 3)) && ((project request kappa) <? 2)) && ((project request act) =? (PrismUorc::uorcActKeep))) && ((project request halted) =? (PrismUorc::uorcHaltedNo))) && ((project request seal) =? (PrismUorc::uorcSealOk))) && ((project request format) =? (PrismUorc::uorcFormatKnown))) && ((project request scope) =? (PrismUorc::uorcScopeStandard))) && ((project request objects) =? (PrismUorc::uorcObjectsOne))) && ((project request restore) =? (PrismUorc::uorcRestoreSame))) && ((project request kappa) =? (PrismUorc::uorcKappaAdmit))) && (not ((PrismUorc::uorcJudge request) =? (PrismUorc::uorcAnswerKeep))))
+}
+
+theorem{
+  name: uorcInv011Holds,
+  parameters: [request : PrismUorc::UorcRequest],
+  statement: ((uorcBreaksInv011 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismUorc::uorcActKeep,
+      PrismUorc::uorcActOpen,
+      PrismUorc::uorcAnswerKeep,
+      PrismUorc::uorcAnswerOpen,
+      PrismUorc::uorcAnswerRefuse,
+      PrismUorc::uorcFormatKnown,
+      PrismUorc::uorcFormatOther,
+      PrismUorc::uorcHaltedNo,
+      PrismUorc::uorcHaltedYes,
+      PrismUorc::uorcJudge,
+      PrismUorc::uorcKappaAdmit,
+      PrismUorc::uorcKappaOther,
+      PrismUorc::uorcObjectsMany,
+      PrismUorc::uorcObjectsOne,
+      PrismUorc::uorcRestoreDiffers,
+      PrismUorc::uorcRestoreFailed,
+      PrismUorc::uorcRestoreSame,
+      PrismUorc::uorcScopeOther,
+      PrismUorc::uorcScopeSelf,
+      PrismUorc::uorcScopeStandard,
+      PrismUorc::uorcSealBroken,
+      PrismUorc::uorcSealOk,
+      uorcBreaksInv011
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcBreaksInv012,
+  parameters: [request : PrismUorc::UorcRequest],
+  result: Bool,
+  body: ((((((((((((((((((project request act) <? 2) && ((project request halted) <? 2)) && ((project request seal) <? 2)) && ((project request format) <? 2)) && ((project request scope) <? 3)) && ((project request objects) <? 2)) && ((project request restore) <? 3)) && ((project request kappa) <? 2)) && ((project request act) =? (PrismUorc::uorcActOpen))) && ((project request halted) =? (PrismUorc::uorcHaltedNo))) && ((project request seal) =? (PrismUorc::uorcSealOk))) && ((project request format) =? (PrismUorc::uorcFormatKnown))) && ((project request scope) =? (PrismUorc::uorcScopeStandard))) && ((project request objects) =? (PrismUorc::uorcObjectsOne))) && ((project request restore) =? (PrismUorc::uorcRestoreSame))) && ((project request kappa) =? (PrismUorc::uorcKappaAdmit))) && (not ((PrismUorc::uorcJudge request) =? (PrismUorc::uorcAnswerOpen))))
+}
+
+theorem{
+  name: uorcInv012Holds,
+  parameters: [request : PrismUorc::UorcRequest],
+  statement: ((uorcBreaksInv012 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismUorc::uorcActKeep,
+      PrismUorc::uorcActOpen,
+      PrismUorc::uorcAnswerKeep,
+      PrismUorc::uorcAnswerOpen,
+      PrismUorc::uorcAnswerRefuse,
+      PrismUorc::uorcFormatKnown,
+      PrismUorc::uorcFormatOther,
+      PrismUorc::uorcHaltedNo,
+      PrismUorc::uorcHaltedYes,
+      PrismUorc::uorcJudge,
+      PrismUorc::uorcKappaAdmit,
+      PrismUorc::uorcKappaOther,
+      PrismUorc::uorcObjectsMany,
+      PrismUorc::uorcObjectsOne,
+      PrismUorc::uorcRestoreDiffers,
+      PrismUorc::uorcRestoreFailed,
+      PrismUorc::uorcRestoreSame,
+      PrismUorc::uorcScopeOther,
+      PrismUorc::uorcScopeSelf,
+      PrismUorc::uorcScopeStandard,
+      PrismUorc::uorcSealBroken,
+      PrismUorc::uorcSealOk,
+      uorcBreaksInv012
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcBreaksInv013,
+  parameters: [request : PrismUorc::UorcRequest],
+  result: Bool,
+  body: ((((((((((((((((((project request act) <? 2) && ((project request halted) <? 2)) && ((project request seal) <? 2)) && ((project request format) <? 2)) && ((project request scope) <? 3)) && ((project request objects) <? 2)) && ((project request restore) <? 3)) && ((project request kappa) <? 2)) && ((project request act) =? (PrismUorc::uorcActKeep))) && ((project request halted) =? (PrismUorc::uorcHaltedNo))) && ((project request seal) =? (PrismUorc::uorcSealOk))) && ((project request format) =? (PrismUorc::uorcFormatKnown))) && ((project request scope) =? (PrismUorc::uorcScopeSelf))) && ((project request objects) =? (PrismUorc::uorcObjectsOne))) && ((project request restore) =? (PrismUorc::uorcRestoreSame))) && ((project request kappa) =? (PrismUorc::uorcKappaAdmit))) && (not ((PrismUorc::uorcJudge request) =? (PrismUorc::uorcAnswerKeep))))
+}
+
+theorem{
+  name: uorcInv013Holds,
+  parameters: [request : PrismUorc::UorcRequest],
+  statement: ((uorcBreaksInv013 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismUorc::uorcActKeep,
+      PrismUorc::uorcActOpen,
+      PrismUorc::uorcAnswerKeep,
+      PrismUorc::uorcAnswerOpen,
+      PrismUorc::uorcAnswerRefuse,
+      PrismUorc::uorcFormatKnown,
+      PrismUorc::uorcFormatOther,
+      PrismUorc::uorcHaltedNo,
+      PrismUorc::uorcHaltedYes,
+      PrismUorc::uorcJudge,
+      PrismUorc::uorcKappaAdmit,
+      PrismUorc::uorcKappaOther,
+      PrismUorc::uorcObjectsMany,
+      PrismUorc::uorcObjectsOne,
+      PrismUorc::uorcRestoreDiffers,
+      PrismUorc::uorcRestoreFailed,
+      PrismUorc::uorcRestoreSame,
+      PrismUorc::uorcScopeOther,
+      PrismUorc::uorcScopeSelf,
+      PrismUorc::uorcScopeStandard,
+      PrismUorc::uorcSealBroken,
+      PrismUorc::uorcSealOk,
+      uorcBreaksInv013
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcBreaksInv014,
+  parameters: [request : PrismUorc::UorcRequest],
+  result: Bool,
+  body: ((((((((((((((((((project request act) <? 2) && ((project request halted) <? 2)) && ((project request seal) <? 2)) && ((project request format) <? 2)) && ((project request scope) <? 3)) && ((project request objects) <? 2)) && ((project request restore) <? 3)) && ((project request kappa) <? 2)) && ((project request act) =? (PrismUorc::uorcActOpen))) && ((project request halted) =? (PrismUorc::uorcHaltedNo))) && ((project request seal) =? (PrismUorc::uorcSealOk))) && ((project request format) =? (PrismUorc::uorcFormatKnown))) && ((project request scope) =? (PrismUorc::uorcScopeSelf))) && ((project request objects) =? (PrismUorc::uorcObjectsOne))) && ((project request restore) =? (PrismUorc::uorcRestoreSame))) && ((project request kappa) =? (PrismUorc::uorcKappaAdmit))) && (not ((PrismUorc::uorcJudge request) =? (PrismUorc::uorcAnswerOpen))))
+}
+
+theorem{
+  name: uorcInv014Holds,
+  parameters: [request : PrismUorc::UorcRequest],
+  statement: ((uorcBreaksInv014 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismUorc::uorcActKeep,
+      PrismUorc::uorcActOpen,
+      PrismUorc::uorcAnswerKeep,
+      PrismUorc::uorcAnswerOpen,
+      PrismUorc::uorcAnswerRefuse,
+      PrismUorc::uorcFormatKnown,
+      PrismUorc::uorcFormatOther,
+      PrismUorc::uorcHaltedNo,
+      PrismUorc::uorcHaltedYes,
+      PrismUorc::uorcJudge,
+      PrismUorc::uorcKappaAdmit,
+      PrismUorc::uorcKappaOther,
+      PrismUorc::uorcObjectsMany,
+      PrismUorc::uorcObjectsOne,
+      PrismUorc::uorcRestoreDiffers,
+      PrismUorc::uorcRestoreFailed,
+      PrismUorc::uorcRestoreSame,
+      PrismUorc::uorcScopeOther,
+      PrismUorc::uorcScopeSelf,
+      PrismUorc::uorcScopeStandard,
+      PrismUorc::uorcSealBroken,
+      PrismUorc::uorcSealOk,
+      uorcBreaksInv014
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
