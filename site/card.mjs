@@ -3,7 +3,7 @@
 // the verified app's: this script only carries bytes between the page, the
 // vault, R4, the routed models and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
-import { PLACES, ACTS, LABELS, FLOORS, SETTINGS, WORDS, DOMAINS, FEEDERS } from "./surface/surface.mjs";
+import { PLACES, ACTS, LABELS, FLOORS, SETTINGS, WORDS, DOMAINS, FEEDERS, FONTS } from "./surface/surface.mjs";
 // The coherence registry's runtime: what an item is about, what an Ask is
 // after, and Today. Loaded once there is something kept or asked, so an
 // ordinary first visit fetches none of it.
@@ -937,6 +937,18 @@ export default async function start({ app, reason, $ }) {
   addEventListener("pointerdown", voice, { once: true, capture: true });
   addEventListener("keydown", voice, { once: true, capture: true });
   root.classList.add("pr-ready");
+  // The look's gesture fonts (FONTS): the page opens in their metric-matched
+  // fallback and fetches nothing for them; they come with the first touch, or
+  // at once when this browser already keeps them.
+  const fonts = () => Promise.all(FONTS.map(async (f) => {
+    const face = new FontFace(f.family, `url(${new URL(`./fonts/${f.file}`, import.meta.url).href})`, { weight: String(f.weight), display: "swap" });
+    document.fonts.add(await face.load());
+  })).catch(() => {});
+  (async () => {
+    const kept = globalThis.caches && (await Promise.all(FONTS.map((f) => caches.match(new URL(`./fonts/${f.file}`, import.meta.url).href)))).every(Boolean);
+    if (FONTS.length && kept) fonts();
+    else for (const type of ["pointerdown", "keydown"]) document.addEventListener(type, fonts, { once: true, capture: true });
+  })().catch(() => {});
   // Resonance loads on the owner's first touch, never with the page, then orders what they resonate with first.
   const wake = () => resonanceOf().then((made) => { if (made && current.show !== "settings") paintList(); });
   for (const type of ["pointerdown", "keydown"]) document.addEventListener(type, wake, { once: true, capture: true });
