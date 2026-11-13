@@ -657,6 +657,8 @@ export default async function start({ app, reason, $ }) {
     $("pr-list").hidden = settings;
     $("pr-count").hidden = settings;
     $("pr-home").hidden = place.host !== "home";
+    // The home's cards hold their latest items only while the home is shown, so an item is in one place at a time.
+    if (place.host !== "home") for (const latest of document.querySelectorAll("#pr-home .pr-card-latest")) latest.textContent = "";
     actForm(place);
     if (settings) { buildSettings(); paintSettings(); }
     else paintList();
