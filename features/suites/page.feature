@@ -22,3 +22,9 @@ Feature: page
     When test/page/acts.test.mjs keeps a task, reviews and sends an event and a message, opens the message, and asks a question, then asks again while halted, in headless Chromium
     Then the event and the message are sent to the owner's apps and kept in Calendar and Conversations, the message opens to its body, the question draws on the task, and the question asked while halted draws on nothing
     And crates/conformance/tests/page.rs holds the event's stamp to Review, the keep of what was sent to the domain's floor and the Ask's label to what it drew on
+
+  @VO-01 @build
+  Scenario: The Prism answers a gesture in tone and colour from PrismSurface's voice: 5-limit just ratios within one octave, a loudness ceiling, a rest between answers, silent under Quiet, and nothing loaded before the owner's first gesture
+    Given the fixture VO-01 needs
+    When the suite exercises VO-01
+    Then The Prism answers a gesture in tone and colour from PrismSurface's voice: 5-limit just ratios within one octave, a loudness ceiling, a rest between answers, silent under Quiet, and nothing loaded before the owner's first gesture

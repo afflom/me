@@ -886,6 +886,10 @@ export default async function start({ app, reason, $ }) {
   go(current.key);
   await load();
   go(current.key);
+  // The voice comes with the owner's first gesture, never before it.
+  const voice = () => import("./voice.mjs").catch((error) => console.warn(`voice: ${error?.message ?? error}`));
+  addEventListener("pointerdown", voice, { once: true, capture: true });
+  addEventListener("keydown", voice, { once: true, capture: true });
   root.classList.add("pr-ready");
   // Resonance loads on the owner's first touch, never with the page, then orders what they resonate with first.
   const wake = () => resonanceOf().then((made) => { if (made && current.show !== "settings") paintList(); });

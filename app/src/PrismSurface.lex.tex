@@ -72,6 +72,25 @@ structure{
   ]
 }
 
+structure{
+  name: SurfaceRatio,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: num, type: (List Nat)}, {name: den, type: (List Nat)}]
+}
+
+structure{
+  name: SurfaceAnswer,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: name, type: String},
+    {name: degrees, type: (List Nat)},
+    {name: level, type: Nat},
+    {name: tone, type: Nat}
+  ]
+}
+
 definition{
   name: surfaceDomainNames,
   parameters: [],
@@ -168,5 +187,36 @@ definition{
   result: (List SurfaceFeeder),
   body: (cons (record SurfaceFeeder {name := "device", act := 0, setting := 0, domains := (cons 4 (cons 5 (cons 3 (nil Nat))))}) (cons (record SurfaceFeeder {name := "note", act := 1, setting := 5, domains := (cons 0 (cons 1 (cons 2 (cons 3 (cons 6 (cons 7 (cons 8 (cons 9 (cons 10 (nil Nat))))))))))}) (cons (record SurfaceFeeder {name := "write", act := 2, setting := 5, domains := (cons 4 (nil Nat))}) (cons (record SurfaceFeeder {name := "event", act := 3, setting := 5, domains := (cons 5 (nil Nat))}) (cons (record SurfaceFeeder {name := "share", act := 4, setting := 5, domains := (cons 2 (nil Nat))}) (nil SurfaceFeeder))))))
 }
+
+definition{name: surfaceToneCount, parameters: [], result: Nat, body: 16}
+
+definition{
+  name: surfaceScale,
+  parameters: [],
+  result: (List SurfaceRatio),
+  body: (cons (record SurfaceRatio {num := (nil Nat), den := (nil Nat)}) (cons (record SurfaceRatio {num := (cons 3 (cons 3 (nil Nat))), den := (cons 2 (cons 2 (cons 2 (nil Nat))))}) (cons (record SurfaceRatio {num := (cons 5 (nil Nat)), den := (cons 2 (cons 2 (nil Nat)))}) (cons (record SurfaceRatio {num := (cons 2 (cons 2 (nil Nat))), den := (cons 3 (nil Nat))}) (cons (record SurfaceRatio {num := (cons 3 (nil Nat)), den := (cons 2 (nil Nat))}) (cons (record SurfaceRatio {num := (cons 5 (nil Nat)), den := (cons 3 (nil Nat))}) (cons (record SurfaceRatio {num := (cons 3 (cons 5 (nil Nat))), den := (cons 2 (cons 2 (cons 2 (nil Nat))))}) (cons (record SurfaceRatio {num := (cons 2 (nil Nat)), den := (nil Nat)}) (nil SurfaceRatio)))))))))
+}
+
+definition{
+  name: surfacePartials,
+  parameters: [],
+  result: (List SurfaceRatio),
+  body: (cons (record SurfaceRatio {num := (nil Nat), den := (nil Nat)}) (cons (record SurfaceRatio {num := (cons 2 (nil Nat)), den := (nil Nat)}) (cons (record SurfaceRatio {num := (nil Nat), den := (cons 2 (nil Nat))}) (cons (record SurfaceRatio {num := (cons 3 (nil Nat)), den := (nil Nat)}) (cons (record SurfaceRatio {num := (cons 2 (cons 2 (nil Nat))), den := (nil Nat)}) (nil SurfaceRatio))))))
+}
+
+definition{
+  name: surfaceAnswers,
+  parameters: [],
+  result: (List SurfaceAnswer),
+  body: (cons (record SurfaceAnswer {name := "rest", degrees := (nil Nat), level := 0, tone := 6}) (cons (record SurfaceAnswer {name := "whisper", degrees := (cons 0 (nil Nat)), level := 25, tone := 6}) (cons (record SurfaceAnswer {name := "chime", degrees := (cons 4 (nil Nat)), level := 70, tone := 12}) (cons (record SurfaceAnswer {name := "bloom", degrees := (cons 0 (cons 2 (nil Nat))), level := 85, tone := 9}) (cons (record SurfaceAnswer {name := "chorus", degrees := (cons 0 (cons 2 (cons 4 (nil Nat)))), level := 100, tone := 13}) (cons (record SurfaceAnswer {name := "recede", degrees := (cons 3 (cons 0 (nil Nat))), level := 60, tone := 5}) (nil SurfaceAnswer)))))))
+}
+
+definition{name: surfaceVoiceCeiling, parameters: [], result: Nat, body: 6}
+
+definition{name: surfaceVoiceAttack, parameters: [], result: Nat, body: 14}
+
+definition{name: surfaceVoiceRelease, parameters: [], result: Nat, body: 1100}
+
+definition{name: surfaceVoiceRefractory, parameters: [], result: Nat, body: 240}
 \end{semanticmodule}
 \end{lexlean}

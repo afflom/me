@@ -33,6 +33,7 @@ or test is added without the other two.
 | `prismpm verify` (`PG-02`) | the Today place drops Money from its domains in `PrismSurface` | rejected (LLV7002: `decide` proved `surfacePlacesAgree PrismSurface.surfacePlaces = true` false); restoring the row proves all 18 surface guarantees |
 | `page_pg_02` | an explanatory sentence as the empty-place word in `app/specs/surface/spec.json`; a word of its own in `site/card.mjs` (`say("Kept.", …)`) | both rejected (`the empty word … is not a name`; `site/card.mjs writes its own word after say("`) |
 | `tools/surface/gen.py --check` (`PG-02`) | the look's dark `muted` tone darkened to `#3a4a42` in `app/specs/surface/spec.json` | rejected (`surface: muted on ground reads at 2.03 in dark, under its 4.5`); restoring the tone reports `surface: current` |
+| `test/page/voice.test.mjs` (`VO-01`) | `site/voice.mjs` sounds an answer under Quiet (`if (true) sound(`) | rejected (`Quiet sounds nothing`); restoring `if (!quiet) sound(` passes |
 | `prism_pm_01` | `routesBoundary` states that the boundary facet answers with `PrismLearning::learningDispatch` | rejected (`PM-01: routesBoundary must prove the Boundary facet answers with PrismBoundary::boundaryDispatch`); restoring the statement passes |
 | `prismpm verify` | an acceptance vector set without the exact guest-allocation boundary | rejected (PP2009); seen again on the Prism root before its 1024-byte vector was added |
 | `audit-bootstrap` | a floating/copied action, mutable SDK tag, changed universal file, narrowed boundary, shallow/credential-retaining checkout, copied project renderer, omitted standards lock, acceptance bypass, deploy-job signing privilege, incomplete release lifecycle, or a bootstrap that drops a native architecture from main or tags, cancels or replaces a main run, or skips runs by path, condition or matrix exclusion | all rejected |
@@ -420,6 +421,21 @@ field, read on every question. A passphrase is asked only to make or read an
 encrypted backup. `test/page/card.test.mjs` drives the assembled page in
 headless Chromium in `pages.yml`; `page_pg_01` pins the wiring and
 `page_pg_02` the model.
+
+The voice (`VO-01`) answers a gesture in tone and colour, after verdant
+resonance's soundscape without its garden. `PrismSurface` holds its numbers:
+a 5-limit just scale over one base, each ratio written as its prime factors,
+five partials, a loudness ceiling, attack, release and a rest between
+answers, and the answers of PrismResonance (rest, whisper, chime, bloom,
+chorus, recede), each with its degrees, level and a tone of the look. Five
+guarantees by `decide`: every ratio is 5-limit, the scale rises within one
+octave, every answer sounds degrees of the scale in at most a triad, a rest
+is silent, and the ceiling, attack, release and rest are humane.
+`site/voice.mjs` loads on the owner's first gesture, never before; it sounds
+nothing under Quiet and only colours the result. It listens to
+`onResonance` when the page carries it, and until then to the page's own
+outcomes, mapped onto the same answers. `test/page/voice.test.mjs` hears the
+model's exact frequencies in headless Chromium.
 
 ## Prism accounts: the remembered passkey
 

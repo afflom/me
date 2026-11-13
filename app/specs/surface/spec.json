@@ -159,5 +159,26 @@
       {"key": "display", "family": "Cormorant Garamond", "file": "CormorantGaramond-SemiBold.woff2", "weight": 600, "fallback": "Georgia", "metrics": {"size": "92%", "ascent": "100.4%", "descent": "31.2%"}}
     ],
     "radius": {"outer": "1rem", "inner": "0.75rem"}
+  },
+  "voice": {
+    "comment": "How the Prism answers a gesture in tone and colour, after verdant resonance's soundscape without its garden: 5-limit just intonation over one base, five partials, a loudness ceiling far under the owner's own sounds, and a rest between answers. Answers are PrismResonance's; the page's own outcomes map onto them until the resonance signal arrives.",
+    "base": 220,
+    "scale": [[1, 1], [9, 8], [5, 4], [4, 3], [3, 2], [5, 3], [15, 8], [2, 1]],
+    "partials": [[1, 1, 100], [2, 1, 26], [1, 2, 20], [3, 1, 9], [4, 1, 4]],
+    "ceiling": 6,
+    "attack": 14,
+    "release": 1100,
+    "spread": 90,
+    "refractory": 240,
+    "salience": {"near": 100, "far": 60},
+    "answers": [
+      {"key": "rest", "degrees": [], "level": 0, "tone": "faint"},
+      {"key": "whisper", "degrees": [0], "level": 25, "tone": "faint"},
+      {"key": "chime", "degrees": [4], "level": 70, "tone": "verdant"},
+      {"key": "bloom", "degrees": [0, 2], "level": 85, "tone": "solar"},
+      {"key": "chorus", "degrees": [0, 2, 4], "level": 100, "tone": "crystal"},
+      {"key": "recede", "degrees": [3, 0], "level": 60, "tone": "muted"}
+    ],
+    "outcomes": {"kept": "chime", "kept.sealed": "bloom", "drafted": "bloom", "delivered": "chorus", "shown": "chime", "held": "whisper", "refused": "recede", "halted": "rest"}
   }
 }
