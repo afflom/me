@@ -32,7 +32,7 @@ test("the committed product record passes (PD-03)", () => {
 });
 
 const DEFECTS = [
-  ["a new place with no viewpoint", (f) => f.surface.places.push({ ...f.surface.places[0], key: "inbox", name: "Inbox" }), /surface place 'inbox' has no viewpoint/],
+  ["a new place with no viewpoint", (f) => { const { viewpoint, ...place } = f.surface.places[0]; f.surface.places.push({ ...place, key: "inbox", name: "Inbox" }); }, /surface place 'inbox' has no viewpoint/],
   ["a new word with no viewpoint", (f) => { f.surface.words["device.sync"] = "Sync now"; }, /surface word 'device.sync' has no viewpoint/],
   ["a person place that offers a system act", (f) => { f.product.surface.acts.note = "system"; }, /person place '[a-z]+' offers act 'note'/],
   ["a new root facet with no product entry", (f) => f.coherence.facets.push({ key: "uorc", line: "uorc", sealed: "planted" }), /facet 'uorc' is in the Prism but not in the product record/],
@@ -42,8 +42,8 @@ const DEFECTS = [
   ["a journey with no measure", (f) => { delete f.product.journeys[2].measure; }, /journey J2 has no usability measure/],
   ["a journey with an unknown status", (f) => { f.product.journeys[0].status = "done"; }, /journey J0 has status 'done'/],
   ["a journey without a done-state", (f) => { f.product.journeys[4].done = ""; }, /journey J4 has no done/],
-  ["a viewpoint placed in both the surface and the record", (f) => { f.surface.places[0].viewpoint = "person"; }, /surface place 'today' carries its viewpoint in the surface model; remove the copy/],
-  ["a viewpoint in the surface that is neither", (f) => { f.surface.settings[0].viewpoint = "both"; delete f.product.surface.settings[f.surface.settings[0].key]; }, /has viewpoint 'both'/],
+  ["a viewpoint placed in both the surface and the record", (f) => { f.product.surface.places = { [f.surface.places[0].key]: f.surface.places[0].viewpoint }; }, /surface place '[a-z]+' carries its viewpoint in the surface model; remove the copy/],
+  ["a viewpoint in the surface that is neither", (f) => { f.surface.settings[0].viewpoint = "both"; }, /has viewpoint 'both'/],
   ["debt that is a person's word", (f) => f.product.debt.push("Today"), /debt 'Today' is not a word of the system view/],
 ];
 for (const [name, json, why] of DEFECTS) {
