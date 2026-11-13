@@ -114,7 +114,9 @@ fn device_dv_02() {
     );
     let card = read("site/card.mjs");
     assert!(
-        card.contains("decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted"),
+        card.contains(
+            "decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted"
+        ),
         "DV-02: the page asks the Prism root and keeps each item through the vault"
     );
     let surface = read("app/specs/surface/spec.json");
