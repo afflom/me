@@ -22,8 +22,8 @@ fn page_pg_01() {
             "every question goes to the verified root guest",
         ),
         (
-            "openVault({ decide: routerDecide(line), halted })",
-            "the vault's decisions are the root's, and it sees the halt switch",
+            "openVault({ decide: routerDecide(line), halted, objects })",
+            "the vault's decisions are the root's, it sees the halt switch, and it keeps values as uorc archives",
         ),
         (
             "decide: guestDecider(app.dispatch)",
