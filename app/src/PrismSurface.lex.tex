@@ -31,12 +31,7 @@ structure{
   name: SurfaceSetting,
   type_parameters: [],
   parameters: [],
-  fields: [
-    {name: name, type: String},
-    {name: viewpoint, type: Nat},
-    {name: group, type: Nat},
-    {name: source, type: Nat}
-  ]
+  fields: [{name: name, type: String}, {name: viewpoint, type: Nat}, {name: group, type: Nat}, {name: source, type: Nat}]
 }
 
 structure{
@@ -57,25 +52,14 @@ structure{
   name: SurfaceContrast,
   type_parameters: [],
   parameters: [],
-  fields: [
-    {name: fore, type: Nat},
-    {name: back, type: Nat},
-    {name: theme, type: Nat},
-    {name: ratio, type: Nat},
-    {name: floor, type: Nat}
-  ]
+  fields: [{name: fore, type: Nat}, {name: back, type: Nat}, {name: theme, type: Nat}, {name: ratio, type: Nat}, {name: floor, type: Nat}]
 }
 
 structure{
   name: SurfaceFeeder,
   type_parameters: [],
   parameters: [],
-  fields: [
-    {name: name, type: String},
-    {name: act, type: Nat},
-    {name: setting, type: Nat},
-    {name: domains, type: (List Nat)}
-  ]
+  fields: [{name: name, type: String}, {name: act, type: Nat}, {name: setting, type: Nat}, {name: domains, type: (List Nat)}]
 }
 
 structure{
@@ -89,12 +73,7 @@ structure{
   name: SurfaceAnswer,
   type_parameters: [],
   parameters: [],
-  fields: [
-    {name: name, type: String},
-    {name: degrees, type: (List Nat)},
-    {name: level, type: Nat},
-    {name: tone, type: Nat}
-  ]
+  fields: [{name: name, type: String}, {name: degrees, type: (List Nat)}, {name: level, type: Nat}, {name: tone, type: Nat}]
 }
 
 definition{
@@ -157,10 +136,15 @@ definition{
   name: surfaceWords,
   parameters: [],
   result: (List SurfaceWord),
-  body: (cons (record SurfaceWord {key := "ask.placeholder", text := "Ask"}) (cons (record SurfaceWord {key := "ask.loading", text := "Loading the language model"}) (cons (record SurfaceWord {key := "ask.routed", text := "Routed model"}) (cons (record SurfaceWord {key := "note.placeholder", text := "Note"}) (cons (record SurfaceWord {key := "write.to", text := "To"}) (cons (record SurfaceWord {key := "write.body", text := "Message"}) (cons (record SurfaceWord {key := "event.when", text := "When"}) (cons (record SurfaceWord {key := "event.what", text := "What"}) (cons (record SurfaceWord {key := "share.what", text := "What to share"}) (cons (record SurfaceWord {key := "review", text := "Review"}) (cons (record SurfaceWord {key := "send", text := "Send"}) (cons (record SurfaceWord {key := "keep", text := "Keep"}) (cons (record SurfaceWord {key := "cancel", text := "Cancel"}) (cons (record SurfaceWord {key := "empty", text := "Nothing yet"}) (cons (record SurfaceWord {key := "search", text := "Search"}) (cons (record SurfaceWord {key := "sealed", text := "Sealed"}) (cons (record SurfaceWord {key := "kept", text := "Kept"}) (cons (record SurfaceWord {key := "kept.sealed", text := "Kept sealed"}) (cons (record SurfaceWord {key := "refused", text := "Refused"}) (cons (record SurfaceWord {key := "held", text := "Held for you"}) (cons (record SurfaceWord {key := "needs", text := "Needs me"}) (cons (record SurfaceWord {key := "done", text := "Done"}) (cons (record SurfaceWord {key := "identity.names", text := "Your names"}) (cons (record SurfaceWord {key := "identity.addresses", text := "Your addresses"}) (cons (record SurfaceWord {key := "identity.confirm", text := "This is me"}) (cons (record SurfaceWord {key := "drafted", text := "Ready to send"}) (cons (record SurfaceWord {key := "delivered", text := "Sent to your app"}) (cons (record SurfaceWord {key := "shown", text := "Shown"}) (cons (record SurfaceWord {key := "answer.none", text := "No answer"}) (cons (record SurfaceWord {key := "answer.asks", text := "Needs your approval"}) (cons (record SurfaceWord {key := "halted", text := "Paused"}) (cons (record SurfaceWord {key := "resume", text := "Resume"}) (cons (record SurfaceWord {key := "halt", text := "Pause"}) (cons (record SurfaceWord {key := "on", text := "On"}) (cons (record SurfaceWord {key := "off", text := "Off"}) (cons (record SurfaceWord {key := "connect", text := "Connect"}) (cons (record SurfaceWord {key := "forget", text := "Forget"}) (cons (record SurfaceWord {key := "unavailable", text := "Unavailable"}) (cons (record SurfaceWord {key := "route", text := "Route in"}) (cons (record SurfaceWord {key := "unroute", text := "Stop"}) (cons (record SurfaceWord {key := "model.ask", text := "Not routed"}) (cons (record SurfaceWord {key := "model.fetch", text := "Routed"}) (cons (record SurfaceWord {key := "model.run", text := "Running"}) (cons (record SurfaceWord {key := "model.refuse", text := "Refused"}) (cons (record SurfaceWord {key := "model.r4", text := "R4"}) (cons (record SurfaceWord {key := "export", text := "Export"}) (cons (record SurfaceWord {key := "import", text := "Import"}) (cons (record SurfaceWord {key := "passphrase.export", text := "Backup passphrase"}) (cons (record SurfaceWord {key := "passphrase.import", text := "Passphrase"}) (cons (record SurfaceWord {key := "items", text := "items"}) (cons (record SurfaceWord {key := "persisted", text := "Protected"}) (cons (record SurfaceWord {key := "not.verified", text := "Not verified"}) (cons (record SurfaceWord {key := "offline", text := "Offline"}) (cons (record SurfaceWord {key := "places", text := "Places"}) (cons (record SurfaceWord {key := "prism", text := "Prism"}) (cons (record SurfaceWord {key := "device.folder", text := "Add a folder"}) (cons (record SurfaceWord {key := "device.files", text := "Add files"}) (cons (record SurfaceWord {key := "device.allow", text := "Allow again"}) (cons (record SurfaceWord {key := "device.none", text := "No folder yet"}) (cons (record SurfaceWord {key := "device.contacts", text := "Add contacts"}) (cons (record SurfaceWord {key := "device.extension", text := "Get the extension"}) (nil SurfaceWord))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+  body: (cons (record SurfaceWord {key := "ask.placeholder", text := "Ask"}) (cons (record SurfaceWord {key := "ask.loading", text := "Loading the language model"}) (cons (record SurfaceWord {key := "ask.routed", text := "Routed model"}) (cons (record SurfaceWord {key := "note.placeholder", text := "Note"}) (cons (record SurfaceWord {key := "write.to", text := "To"}) (cons (record SurfaceWord {key := "write.body", text := "Message"}) (cons (record SurfaceWord {key := "event.when", text := "When"}) (cons (record SurfaceWord {key := "event.what", text := "What"}) (cons (record SurfaceWord {key := "share.what", text := "What to share"}) (cons (record SurfaceWord {key := "review", text := "Review"}) (cons (record SurfaceWord {key := "send", text := "Send"}) (cons (record SurfaceWord {key := "keep", text := "Keep"}) (cons (record SurfaceWord {key := "cancel", text := "Cancel"}) (cons (record SurfaceWord {key := "empty", text := "Nothing yet"}) (cons (record SurfaceWord {key := "search", text := "Search"}) (cons (record SurfaceWord {key := "sealed", text := "Sealed"}) (cons (record SurfaceWord {key := "kept", text := "Kept"}) (cons (record SurfaceWord {key := "kept.sealed", text := "Kept sealed"}) (cons (record SurfaceWord {key := "refused", text := "Refused"}) (cons (record SurfaceWord {key := "held", text := "Held for you"}) (cons (record SurfaceWord {key := "needs", text := "Needs me"}) (cons (record SurfaceWord {key := "done", text := "Done"}) (cons (record SurfaceWord {key := "identity.names", text := "Your names"}) (cons (record SurfaceWord {key := "identity.addresses", text := "Your addresses"}) (cons (record SurfaceWord {key := "identity.confirm", text := "This is me"}) (cons (record SurfaceWord {key := "reply", text := "Reply"}) (cons (record SurfaceWord {key := "drafted", text := "Ready to send"}) (cons (record SurfaceWord {key := "delivered", text := "Sent to your app"}) (cons (record SurfaceWord {key := "shown", text := "Shown"}) (cons (record SurfaceWord {key := "answer.none", text := "No answer"}) (cons (record SurfaceWord {key := "answer.asks", text := "Needs your approval"}) (cons (record SurfaceWord {key := "halted", text := "Paused"}) (cons (record SurfaceWord {key := "resume", text := "Resume"}) (cons (record SurfaceWord {key := "halt", text := "Pause"}) (cons (record SurfaceWord {key := "on", text := "On"}) (cons (record SurfaceWord {key := "off", text := "Off"}) (cons (record SurfaceWord {key := "connect", text := "Connect"}) (cons (record SurfaceWord {key := "forget", text := "Forget"}) (cons (record SurfaceWord {key := "unavailable", text := "Unavailable"}) (cons (record SurfaceWord {key := "route", text := "Route in"}) (cons (record SurfaceWord {key := "unroute", text := "Stop"}) (cons (record SurfaceWord {key := "model.ask", text := "Not routed"}) (cons (record SurfaceWord {key := "model.fetch", text := "Routed"}) (cons (record SurfaceWord {key := "model.run", text := "Running"}) (cons (record SurfaceWord {key := "model.refuse", text := "Refused"}) (cons (record SurfaceWord {key := "model.r4", text := "R4"}) (cons (record SurfaceWord {key := "export", text := "Export"}) (cons (record SurfaceWord {key := "import", text := "Import"}) (cons (record SurfaceWord {key := "passphrase.export", text := "Backup passphrase"}) (cons (record SurfaceWord {key := "passphrase.import", text := "Passphrase"}) (cons (record SurfaceWord {key := "items", text := "items"}) (cons (record SurfaceWord {key := "persisted", text := "Protected"}) (cons (record SurfaceWord {key := "not.verified", text := "Not verified"}) (cons (record SurfaceWord {key := "offline", text := "Offline"}) (cons (record SurfaceWord {key := "places", text := "Places"}) (cons (record SurfaceWord {key := "prism", text := "Prism"}) (cons (record SurfaceWord {key := "device.folder", text := "Add a folder"}) (cons (record SurfaceWord {key := "device.files", text := "Add files"}) (cons (record SurfaceWord {key := "device.allow", text := "Allow again"}) (cons (record SurfaceWord {key := "device.none", text := "No folder yet"}) (cons (record SurfaceWord {key := "device.contacts", text := "Add contacts"}) (cons (record SurfaceWord {key := "device.extension", text := "Get the extension"}) (nil SurfaceWord)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
 }
 
-definition{name: surfaceRoutedSources, parameters: [], result: (List Nat), body: (cons 6 (nil Nat))}
+definition{
+  name: surfaceRoutedSources,
+  parameters: [],
+  result: (List Nat),
+  body: (cons 6 (nil Nat))
+}
 
 definition{
   name: surfaceOutboundActs,
@@ -169,7 +153,12 @@ definition{
   body: (cons 2 (cons 3 (cons 4 (nil Nat))))
 }
 
-definition{name: surfaceGroupCount, parameters: [], result: Nat, body: 6}
+definition{
+  name: surfaceGroupCount,
+  parameters: [],
+  result: Nat,
+  body: 6
+}
 
 definition{
   name: surfaceTones,
@@ -185,7 +174,12 @@ definition{
   body: (cons (record SurfaceContrast {fore := 4, back := 0, theme := 0, ratio := 1529, floor := 700}) (cons (record SurfaceContrast {fore := 4, back := 0, theme := 1, ratio := 1587, floor := 700}) (cons (record SurfaceContrast {fore := 4, back := 1, theme := 0, ratio := 1305, floor := 700}) (cons (record SurfaceContrast {fore := 4, back := 1, theme := 1, ratio := 1748, floor := 700}) (cons (record SurfaceContrast {fore := 4, back := 2, theme := 0, ratio := 1161, floor := 700}) (cons (record SurfaceContrast {fore := 4, back := 2, theme := 1, ratio := 1464, floor := 700}) (cons (record SurfaceContrast {fore := 4, back := 3, theme := 0, ratio := 969, floor := 700}) (cons (record SurfaceContrast {fore := 4, back := 3, theme := 1, ratio := 1347, floor := 700}) (cons (record SurfaceContrast {fore := 5, back := 0, theme := 0, ratio := 1102, floor := 450}) (cons (record SurfaceContrast {fore := 5, back := 0, theme := 1, ratio := 720, floor := 450}) (cons (record SurfaceContrast {fore := 5, back := 1, theme := 0, ratio := 941, floor := 450}) (cons (record SurfaceContrast {fore := 5, back := 1, theme := 1, ratio := 793, floor := 450}) (cons (record SurfaceContrast {fore := 5, back := 2, theme := 0, ratio := 837, floor := 450}) (cons (record SurfaceContrast {fore := 5, back := 2, theme := 1, ratio := 664, floor := 450}) (cons (record SurfaceContrast {fore := 6, back := 0, theme := 0, ratio := 853, floor := 450}) (cons (record SurfaceContrast {fore := 6, back := 0, theme := 1, ratio := 491, floor := 450}) (cons (record SurfaceContrast {fore := 11, back := 9, theme := 0, ratio := 1152, floor := 450}) (cons (record SurfaceContrast {fore := 11, back := 9, theme := 1, ratio := 901, floor := 450}) (cons (record SurfaceContrast {fore := 11, back := 10, theme := 0, ratio := 1302, floor := 450}) (cons (record SurfaceContrast {fore := 11, back := 10, theme := 1, ratio := 1060, floor := 450}) (cons (record SurfaceContrast {fore := 12, back := 0, theme := 0, ratio := 977, floor := 450}) (cons (record SurfaceContrast {fore := 12, back := 0, theme := 1, ratio := 526, floor := 450}) (cons (record SurfaceContrast {fore := 13, back := 0, theme := 0, ratio := 873, floor := 450}) (cons (record SurfaceContrast {fore := 13, back := 0, theme := 1, ratio := 548, floor := 450}) (cons (record SurfaceContrast {fore := 14, back := 0, theme := 0, ratio := 754, floor := 450}) (cons (record SurfaceContrast {fore := 14, back := 0, theme := 1, ratio := 596, floor := 450}) (cons (record SurfaceContrast {fore := 15, back := 0, theme := 0, ratio := 832, floor := 450}) (cons (record SurfaceContrast {fore := 15, back := 0, theme := 1, ratio := 535, floor := 450}) (cons (record SurfaceContrast {fore := 14, back := 1, theme := 0, ratio := 644, floor := 450}) (cons (record SurfaceContrast {fore := 14, back := 1, theme := 1, ratio := 657, floor := 450}) (cons (record SurfaceContrast {fore := 12, back := 1, theme := 0, ratio := 834, floor := 450}) (cons (record SurfaceContrast {fore := 12, back := 1, theme := 1, ratio := 579, floor := 450}) (cons (record SurfaceContrast {fore := 9, back := 0, theme := 0, ratio := 1071, floor := 150}) (cons (record SurfaceContrast {fore := 9, back := 0, theme := 1, ratio := 176, floor := 150}) (nil SurfaceContrast)))))))))))))))))))))))))))))))))))
 }
 
-definition{name: surfaceThemeCount, parameters: [], result: Nat, body: 2}
+definition{
+  name: surfaceThemeCount,
+  parameters: [],
+  result: Nat,
+  body: 2
+}
 
 definition{
   name: surfaceFeeders,
@@ -194,7 +188,12 @@ definition{
   body: (cons (record SurfaceFeeder {name := "device", act := 0, setting := 0, domains := (cons 4 (cons 5 (cons 3 (nil Nat))))}) (cons (record SurfaceFeeder {name := "note", act := 1, setting := 6, domains := (cons 0 (cons 1 (cons 2 (cons 3 (cons 4 (cons 6 (cons 7 (cons 8 (cons 9 (cons 10 (nil Nat)))))))))))}) (cons (record SurfaceFeeder {name := "write", act := 2, setting := 6, domains := (cons 4 (nil Nat))}) (cons (record SurfaceFeeder {name := "event", act := 3, setting := 6, domains := (cons 5 (nil Nat))}) (cons (record SurfaceFeeder {name := "share", act := 4, setting := 6, domains := (cons 2 (nil Nat))}) (nil SurfaceFeeder))))))
 }
 
-definition{name: surfaceToneCount, parameters: [], result: Nat, body: 16}
+definition{
+  name: surfaceToneCount,
+  parameters: [],
+  result: Nat,
+  body: 16
+}
 
 definition{
   name: surfaceScale,
@@ -217,12 +216,33 @@ definition{
   body: (cons (record SurfaceAnswer {name := "rest", degrees := (nil Nat), level := 0, tone := 6}) (cons (record SurfaceAnswer {name := "whisper", degrees := (cons 0 (nil Nat)), level := 25, tone := 6}) (cons (record SurfaceAnswer {name := "chime", degrees := (cons 4 (nil Nat)), level := 70, tone := 12}) (cons (record SurfaceAnswer {name := "bloom", degrees := (cons 0 (cons 2 (nil Nat))), level := 85, tone := 9}) (cons (record SurfaceAnswer {name := "chorus", degrees := (cons 0 (cons 2 (cons 4 (nil Nat)))), level := 100, tone := 13}) (cons (record SurfaceAnswer {name := "recede", degrees := (cons 3 (cons 0 (nil Nat))), level := 60, tone := 5}) (nil SurfaceAnswer)))))))
 }
 
-definition{name: surfaceVoiceCeiling, parameters: [], result: Nat, body: 6}
+definition{
+  name: surfaceVoiceCeiling,
+  parameters: [],
+  result: Nat,
+  body: 6
+}
 
-definition{name: surfaceVoiceAttack, parameters: [], result: Nat, body: 14}
+definition{
+  name: surfaceVoiceAttack,
+  parameters: [],
+  result: Nat,
+  body: 14
+}
 
-definition{name: surfaceVoiceRelease, parameters: [], result: Nat, body: 1100}
+definition{
+  name: surfaceVoiceRelease,
+  parameters: [],
+  result: Nat,
+  body: 1100
+}
 
-definition{name: surfaceVoiceRefractory, parameters: [], result: Nat, body: 240}
+definition{
+  name: surfaceVoiceRefractory,
+  parameters: [],
+  result: Nat,
+  body: 240
+}
+
 \end{semanticmodule}
 \end{lexlean}
