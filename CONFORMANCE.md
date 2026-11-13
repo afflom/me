@@ -41,6 +41,7 @@ model does not sanction.
 | `DV-01` | `build` | The page lists or reads on the owner's device only when PrismFolder answers read, which it never does while halted, without the browser's grant, for a write, for a file that is not mail, calendar or contacts, or for one too large to read at once |
 | `DV-02` | `build` | Mail, calendar and contacts read from the owner's device reach only the browser vault, through the detectors and the Boundary, from a folder opened read-only or files the owner picked or dropped |
 | `DV-03` | `build` | The page uses each surface the browser reports for the owner's content only as PrismHost answers: every reported surface is used or offered, nothing is used while halted, a paste, drop, pick or contact list only on the owner's act, a folder only on the owner's act or a grant the browser keeps, and a live account on another origin is named sealed |
+| `DV-04` | `build` | Live Gmail and Google Calendar reach the Prism only through the extension the owner installed, written by the page for its own address: it reads by GET with the owner's own sign-in, answers only that Prism page, reads nothing while halted, and each item it hands over is kept only through PrismHost, PrismFolder, the detectors and the vault |
 
 ## frame
 
@@ -82,7 +83,7 @@ model does not sanction.
 | ID | Level | Statement |
 | --- | --- | --- |
 | `PG-01` | `build` | The page keeps, reads and answers only through the verified app: a note is kept at its domain's floor only when the Boundary and the vault allow it, nothing is kept while halted, and an outbound act is only drafted until the owner's Send |
-| `PG-02` | `build` | The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, and every visible word a name from the model |
+| `PG-02` | `build` | The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, every visible word a name from the model, every list place fed by a source or an act, and every colour a tone of its modeled look read at its contrast |
 | `PG-03` | `build` | Every act on the page completes end to end: what the owner sends is the very event or message they reviewed and is kept in the place it left from at that domain's floor, every kept item opens to its words, and Ask draws on the kept items that share its words, never while halted, under the highest label it drew on |
 
 ## prism

@@ -3,7 +3,7 @@
 // the verified app's: this script only carries bytes between the page, the
 // vault, R4, the routed models and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
-import { PLACES, ACTS, LABELS, FLOORS, GROUPS, SETTINGS, WORDS, DOMAINS } from "./surface/surface.mjs";
+import { PLACES, ACTS, LABELS, FLOORS, GROUPS, SETTINGS, WORDS, DOMAINS, FEEDERS } from "./surface/surface.mjs";
 // The coherence registry's runtime: what an item is about, what an Ask is
 // after, and Today. Loaded once there is something kept or asked, so an
 // ordinary first visit fetches none of it.
@@ -240,15 +240,35 @@ export default async function start({ app, reason, $ }) {
       await reportDevice(await d.source.readFiles(files));
     })().catch((error) => say(error?.code ?? error?.message ?? String(error), "bad"));
   });
-  // A folder the owner granted is re-read on every visit while the browser keeps the grant.
-  async function rereadFolders() {
-    if (!vault || typeof indexedDB?.databases !== "function") return;
-    if (!(await indexedDB.databases()).some((db) => db.name === "prism-device")) return;
+  // The owner's Prism extension, if installed, answers a hello on this page.
+  let extensionHere = false;
+  window.addEventListener("message", (event) => {
+    if (event.source === window && event.origin === location.origin && event.data?.from === "extension" && event.data.prism === "extension") extensionHere = true;
+  });
+  window.postMessage({ prism: "hello", from: "page" }, location.origin);
+  const extensionGrant = () => (extensionHere ? "kept" : "none");
+  // Live mail and calendar, read by the installed extension with the owner's own sign-in.
+  async function pullExtension(d) {
+    const { pull } = await import("./device/extension.mjs");
+    return d.source.readItems(await pull(window, { halted: halted() }));
+  }
+  // On every visit: a folder the owner granted is re-read while the browser
+  // keeps the grant, and the installed extension is pulled.
+  async function readOnVisit() {
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const folder = vault && typeof indexedDB?.databases === "function" && (await indexedDB.databases()).some((db) => db.name === "prism-device");
+    if (!vault || (!folder && !extensionHere)) return;
     const d = await deviceOf();
-    const kept = (await d.source.folders()).some((f) => f.grant === "granted");
-    if ((await d.ask({ grant: { folder: kept ? "kept" : "none" } })).folder !== "use") return;
-    const t = await d.source.readFolders();
-    if (t.store + t.storehash) await reportDevice(t);
+    const kept = folder && (await d.source.folders()).some((f) => f.grant === "granted");
+    const plan = await d.ask({ grant: { folder: kept ? "kept" : "none", extension: extensionGrant() } });
+    if (plan.folder === "use") {
+      const t = await d.source.readFolders();
+      if (t.store + t.storehash) await reportDevice(t);
+    }
+    if (plan.extension === "use") {
+      const t = await pullExtension(d);
+      if (t.store + t.storehash) await reportDevice(t);
+    }
   }
 
   // --- Places ---
@@ -281,28 +301,9 @@ export default async function start({ app, reason, $ }) {
     return row;
   }
 
-  // Files the owner picks, from anywhere a place offers them: each is judged
-  // by PrismHost (files) and PrismFolder, and kept through the vault.
+  // What the device row's file picker takes: zips (Takeout) and the formats PrismFolder reads.
   const FILE_TYPES = ".zip,.mbox,.mbx,.eml,.ics,.ical,.vcf,.vcard";
-  function filesControl() {
-    const files = element("input", { type: "file", multiple: true, accept: FILE_TYPES });
-    files.setAttribute("aria-label", WORDS["device.files"]);
-    files.addEventListener("change", async () => {
-      try {
-        const d = await deviceOf();
-        if ((await d.ask({ act: { files: "owner" } })).files !== "use") return;
-        await reportDevice(await d.source.readFiles([...(files.files ?? [])]));
-      } catch (error) {
-        say(error?.code ?? error?.message ?? String(error), "bad");
-      } finally {
-        files.value = "";
-      }
-    });
-    return element("label", { className: "pr-file" }, element("span", { textContent: WORDS["device.files"] }), files);
-  }
   const emptyRow = () => element("li", { className: "pr-empty", textContent: WORDS.empty });
-  // An empty Today offers its feeder in its act row, the list itself unchanged.
-  const offerFiles = (empty) => $("pr-act").replaceChildren(...(empty && vault ? [element("div", { className: "pr-row" }, filesControl())] : []));
 
   // Today: the agenda ahead (PrismChronology says what falls today and what
   // clashes), then what came in lately, then what is to do.
@@ -310,7 +311,9 @@ export default async function start({ app, reason, $ }) {
   let painting = 0;
   async function paintToday(list) {
     const turn = ++painting;
-    offerFiles(!items.length);
+    // The home's cards count every place and offer each one's feeder.
+    homeCards();
+    list.hidden = !items.length;
     if (!items.length) { list.replaceChildren(emptyRow()); return; }
     const { today, lineOf } = await coherence();
     const { agenda, recent, tasks } = await today(items, { relate });
@@ -329,6 +332,7 @@ export default async function start({ app, reason, $ }) {
     section(4, recent.map(rowOf));
     section(9, tasks.map(rowOf));
     $("pr-count").textContent = "";
+    list.hidden = !rows.length;
     list.replaceChildren(...(rows.length ? rows : [emptyRow()]));
   }
 
@@ -343,6 +347,41 @@ export default async function start({ app, reason, $ }) {
     $("pr-count").textContent = shown.length ? String(shown.length) : "";
     if (current.show === "search" && !query) { list.replaceChildren(); return; }
     list.replaceChildren(...(shown.length ? shown.slice(0, 200).map(rowOf) : [emptyRow()]));
+  }
+
+  // The home: a card per place, its count and latest item, and the feeder
+  // PrismSurface binds to it, so an empty place offers what fills it.
+  function homeCards() {
+    for (const card of document.querySelectorAll("#pr-home .pr-card")) {
+      const place = byKey.get(card.querySelector(".pr-card-go").dataset.place);
+      const held = items.filter((item) => (item.domains ?? [item.domain]).some((d) => place.domains.includes(d)));
+      card.querySelector(".pr-card-count").textContent = held.length ? String(held.length) : "";
+      card.querySelector(".pr-card-latest").textContent = held.length ? (held[0].sealed ? WORDS.sealed : held[0].title || "") : "";
+      card.classList.toggle("pr-card-empty", !held.length);
+    }
+  }
+  for (const button of document.querySelectorAll("#pr-home .pr-card-go")) button.addEventListener("click", () => go(button.dataset.place, true));
+  for (const button of document.querySelectorAll("#pr-home .pr-card-feed")) {
+    button.addEventListener("click", () => {
+      const feeder = FEEDERS.find((f) => f.key === button.dataset.feed);
+      if (feeder.act !== "none") {
+        go(button.dataset.place);
+        $("pr-act").querySelector("input, textarea")?.focus();
+        return;
+      }
+      go(PLACES.find((p) => p.show === "settings").key);
+      const name = SETTINGS.find((s) => s.key === feeder.setting).name;
+      // The source's row is drawn once its code arrives: wait for it, then bring it to hand.
+      const reach = (tries) => {
+        const row = [...document.querySelectorAll("#pr-settings .pr-setting")].find((r) => r.querySelector(".pr-name")?.textContent === name);
+        const control = row?.querySelector("label.pr-file");
+        if (!control) return tries > 0 && setTimeout(reach, 50, tries - 1);
+        row.scrollIntoView({ block: "center" });
+        // The owner's press on the card is the press on the source's own act: its picker opens.
+        control.querySelector("input").click();
+      };
+      reach(40);
+    });
   }
 
   // One act per place, as PrismSurface names it. Outbound acts are prepared,
@@ -485,6 +524,7 @@ export default async function start({ app, reason, $ }) {
     $("pr-settings").hidden = !settings;
     $("pr-list").hidden = settings;
     $("pr-count").hidden = settings;
+    $("pr-home").hidden = place.host !== "home";
     actForm(place);
     if (settings) { buildSettings(); paintSettings(); }
     else paintList();
@@ -530,26 +570,28 @@ export default async function start({ app, reason, $ }) {
       const device = named("device");
       const addFolder = element("button", { type: "button", textContent: WORDS["device.folder"] });
       const contacts = element("button", { type: "button", textContent: WORDS["device.contacts"] });
+      const getExtension = element("button", { type: "button", textContent: WORDS["device.extension"] });
       const allow = element("button", { type: "button", textContent: WORDS["device.allow"] });
       const read = element("button", { type: "button", textContent: WORDS["read.now"] });
       const forget = element("button", { type: "button", textContent: WORDS.forget });
       const files = element("input", { type: "file", multiple: true, accept: FILE_TYPES });
       files.setAttribute("aria-label", WORDS["device.files"]);
       const filesLabel = element("label", { className: "pr-file" }, element("span", { textContent: WORDS["device.files"] }), files);
-      const row = settingRow(device, addFolder, filesLabel, contacts, allow, read, forget);
+      const row = settingRow(device, addFolder, filesLabel, contacts, getExtension, allow, read, forget);
       if (!vault) { row.state.textContent = WORDS.unavailable; row.row.querySelector(".pr-controls").hidden = true; return; }
       const d = await deviceOf();
       let kept = [];
       const paint = async () => {
         kept = await d.source.folders().catch(() => []);
-        const plan = await d.ask({ grant: { folder: kept.some((f) => f.grant === "granted") ? "kept" : "none" } });
+        const plan = await d.ask({ grant: { folder: kept.some((f) => f.grant === "granted") ? "kept" : "none", extension: extensionGrant() } });
         const shown = (surface) => plan[surface] === "offer" || plan[surface] === "use";
         row.state.textContent = kept.length ? kept.map((f) => f.name).join(", ") : WORDS["device.none"];
         addFolder.hidden = !shown("folder");
         filesLabel.hidden = !shown("files");
         contacts.hidden = !shown("contacts");
+        getExtension.hidden = plan.extension !== "offer";
         allow.hidden = !shown("folder") || !kept.some((f) => f.grant === "prompt");
-        read.hidden = plan.folder !== "use";
+        read.hidden = plan.folder !== "use" && plan.extension !== "use";
         forget.hidden = !kept.length;
       };
       const owner = (surface) => async () => (await d.ask({ act: { [surface]: "owner" } }))[surface] === "use";
@@ -559,7 +601,19 @@ export default async function start({ app, reason, $ }) {
       };
       addFolder.addEventListener("click", busy(addFolder, owner("folder"), async () => { await d.source.addFolder(); await reportDevice(await d.source.readFolders()); }));
       allow.addEventListener("click", busy(allow, owner("folder"), async () => { await d.source.allow(); await reportDevice(await d.source.readFolders()); }));
-      read.addEventListener("click", busy(read, owner("folder"), async () => reportDevice(await d.source.readFolders())));
+      read.addEventListener("click", busy(read, async () => true, async () => {
+        const plan = await d.ask({ act: { folder: "owner", extension: "owner" }, grant: { extension: extensionGrant() } });
+        if (plan.folder === "use") await reportDevice(await d.source.readFolders());
+        if (plan.extension === "use" && extensionHere) await reportDevice(await pullExtension(d));
+      }));
+      // The extension, written by this page for its own address: one download.
+      getExtension.addEventListener("click", busy(getExtension, async () => true, async () => {
+        const { pack } = await import("./device/extension.mjs");
+        const bytes = await pack(new URL("./", location.href).href);
+        const link = element("a", { href: URL.createObjectURL(new Blob([bytes], { type: "application/zip" })), download: "prism-extension.zip" });
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }));
       forget.addEventListener("click", busy(forget, async () => true, async () => { for (const f of kept) await d.source.forget(f.id); }));
       files.addEventListener("change", busy(files, owner("files"), async () => { await reportDevice(await d.source.readFiles([...(files.files ?? [])])); files.value = ""; }));
       contacts.addEventListener("click", busy(contacts, owner("contacts"), async () => {
@@ -758,5 +812,5 @@ export default async function start({ app, reason, $ }) {
   await load();
   go(current.key);
   root.classList.add("pr-ready");
-  rereadFolders().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
+  readOnVisit().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
 }

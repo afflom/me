@@ -1,7 +1,7 @@
 {
   "name": "prism-host",
   "title": "Prism Host",
-  "purpose": "Decides how the owner's browser uses each surface it reports as a route for the owner's own content, so that every surface the browser exposes is used, nothing is used while the Prism is halted, nothing the owner holds is read without the owner's act or a grant the browser keeps, and a live account on another origin is named sealed instead of reached around.",
+  "purpose": "Decides how the owner's browser uses each surface it reports as a route for the owner's own content, so that every surface the browser exposes is used, nothing is used while the Prism is halted, nothing the owner holds is read without the owner's act or a grant the browser keeps, a live account on another origin is named sealed to the page itself, and is read only through the extension the owner installed.",
   "fields": [
     {
       "name": "surface",
@@ -14,9 +14,10 @@
         "contacts",
         "workers",
         "mail",
-        "calendar"
+        "calendar",
+        "extension"
       ],
-      "means": "the browser surface: a granted folder, picked files, dropped files, a paste, the contact picker, the device's cores and memory, or a live mail or calendar account on another origin"
+      "means": "the browser surface: a granted folder, picked files, dropped files, a paste, the contact picker, the device's cores and memory, a live mail or calendar account on another origin as the page sees it, or the owner's installed Prism extension,"
     },
     {
       "name": "present",
@@ -43,7 +44,7 @@
         "none",
         "kept"
       ],
-      "means": "whether the browser keeps the owner's grant for this surface across visits"
+      "means": "whether the browser keeps the owner's grant for this surface across visits: a folder's permission, or the extension the owner installed"
     },
     {
       "name": "halted",
@@ -157,6 +158,24 @@
       "then": "use",
       "says": "when surface is folder and grant is kept then use",
       "why": "a folder the owner granted is re-read while the browser keeps the grant"
+    },
+    {
+      "id": "REQ-008",
+      "when": [
+        {
+          "field": "surface",
+          "op": "is",
+          "value": "extension"
+        },
+        {
+          "field": "grant",
+          "op": "is",
+          "value": "kept"
+        }
+      ],
+      "then": "use",
+      "says": "when surface is extension and grant is kept then use",
+      "why": "the extension the owner installed is the owner's kept grant to read their own accounts"
     }
   ],
   "otherwise": "offer",
@@ -330,6 +349,30 @@
       "then": "use",
       "says": "never when act is none and surface is drop then use",
       "why": "dropped files are read only when the owner drops them"
+    },
+    {
+      "id": "INV-011",
+      "kind": "never",
+      "when": [
+        {
+          "field": "act",
+          "op": "is",
+          "value": "none"
+        },
+        {
+          "field": "grant",
+          "op": "is",
+          "value": "none"
+        },
+        {
+          "field": "surface",
+          "op": "is",
+          "value": "extension"
+        }
+      ],
+      "then": "use",
+      "says": "never when act is none and grant is none and surface is extension then use",
+      "why": "no account is read through an extension the owner did not install"
     }
   ],
   "examples": [
@@ -380,6 +423,22 @@
     {
       "request": "workers yes none none yes",
       "response": "refuse"
+    },
+    {
+      "request": "extension yes none kept no",
+      "response": "use"
+    },
+    {
+      "request": "extension no none none no",
+      "response": "refuse"
+    },
+    {
+      "request": "extension yes none none no",
+      "response": "offer"
+    },
+    {
+      "request": "extension yes owner kept yes",
+      "response": "refuse"
     }
   ],
   "schema": "prism/spec/1",
@@ -392,7 +451,7 @@
   },
   "otherwiseWhy": "every surface the browser reports is offered to the owner",
   "limits": [
-    "It does not read anything itself: each item still goes through PrismFolder, the router, the Boundary and the vault.",
+    "It does not read anything itself: each item still goes through PrismFolder, the router, the Boundary and the vault, and the extension only reads with GET.",
     "Sharing to the Prism and opening files with it need the app manifest and service worker, which the locked frame generates without a hook.",
     "The worker count is the host rule uorc states: at most one per core, sixteen, and two per GiB the browser reports."
   ]

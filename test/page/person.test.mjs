@@ -95,9 +95,12 @@ test("the owner brings content in, every place shows it, Today and Ask answer fr
 
     // A fresh profile opens on Today, which offers its feeder rather than nothing.
     assert.equal(await page.textContent("#pr-title"), PLACES.find((p) => p.host === "home").name);
-    const offered = page.locator("#pr-act input[type=file]");
-    assert.equal(await offered.count(), 1, "an empty Today offers to add files");
-    await offered.setInputFiles([ics, eml]);
+    // Its device card offers Add files: the press opens the device row's own picker.
+    const offered = page.locator('#pr-home .pr-card-feed[data-feed="device"]').first();
+    assert.ok(await offered.isVisible(), "an empty Today offers to add files");
+    const [chooser] = await Promise.all([page.waitForEvent("filechooser", { timeout: 15000 }), offered.click()]);
+    await chooser.setFiles([ics, eml]);
+    await page.click('.pr-go[data-place="today"]');
     await settled(/^\d+ items$/);
     assert.match(await out(), /^3 items$/);
 

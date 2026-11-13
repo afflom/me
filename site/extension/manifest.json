@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Prism",
+  "version": "1.0.0",
+  "description": "Reads your own Gmail and Google Calendar with your own sign-in, by GET only, and hands each item to your Prism in this browser.",
+  "host_permissions": ["https://mail.google.com/*", "https://calendar.google.com/*"],
+  "permissions": ["storage"],
+  "background": { "service_worker": "background.js", "type": "module" },
+  "content_scripts": [
+    { "matches": ["__PRISM__*"], "js": ["bridge.js"], "run_at": "document_start" },
+    { "matches": ["https://mail.google.com/*"], "js": ["gmail.js"], "run_at": "document_idle" }
+  ]
+}

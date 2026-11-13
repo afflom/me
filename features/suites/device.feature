@@ -25,7 +25,15 @@ Feature: device
   @DV-03 @build
   Scenario: The page uses each surface the browser reports for the owner's content only as PrismHost answers: every reported surface is used or offered, nothing is used while halted, a paste, drop, pick or contact list only on the owner's act, a folder only on the owner's act or a grant the browser keeps, and a live account on another origin is named sealed
     Given the PrismHost guest built from app/src/PrismHost.lex.tex, refused unless its SHA-256 is the pinned one
-    When every one of its 128 requests is decided, and the page plans a visit on a browser that reports every surface and on one that reports none
+    When every one of its 144 requests is decided, and the page plans a visit on a browser that reports every surface and on one that reports none
     Then every surface the browser reports is used or offered, a live mail or calendar account on another origin is sealed, and while halted every surface is refused
     And items are kept on as many lanes as uorc's host rule allows for the cores and memory the browser reports, and no more
-    And Lean proves the ten guarantees with exactly the axioms Quot.sound and propext
+    And Lean proves the eleven guarantees with exactly the axioms Quot.sound and propext
+
+  @DV-04 @build
+  Scenario: Live Gmail and Google Calendar reach the Prism only through the extension the owner installed, written by the page for its own address: it reads by GET with the owner's own sign-in, answers only that Prism page, reads nothing while halted, and each item it hands over is kept only through PrismHost, PrismFolder, the detectors and the vault
+    Given test doubles for Gmail's unread feed and message originals, Calendar's export, the extension's storage and the Prism page's window
+    When the page writes the extension for its own address, the extension answers the page's hello, and the page pulls twice and once while halted
+    Then every request is a GET to mail.google.com or calendar.google.com with the owner's own sign-in, a message is read once, and nothing is read while halted
+    And another page or Gmail itself is never answered, and the written extension names only the page that wrote it
+    And each item is kept by its own first bytes through PrismFolder and the vault, and anything else is passed over

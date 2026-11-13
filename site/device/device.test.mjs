@@ -148,7 +148,7 @@ ok(lanes({ hardwareConcurrency: 8, deviceMemory: 8 }) === 8 && lanes({ hardwareC
   ok(t.store === 9 && most === 3, `items are kept on every lane and no more: ${most}`);
 }
 
-// DV-03: PrismHost, every request, against its ten guarantees.
+// DV-03: PrismHost, every request, against its eleven guarantees.
 let hostRequests = 0;
 for (const [surface, here, act, grant, halted] of product(SURFACES, ['yes', 'no'], ['none', 'owner'], ['none', 'kept'], ['no', 'yes'])) {
   const answer = await hostGuest(`${surface} ${here} ${act} ${grant} ${halted}`);
@@ -159,10 +159,11 @@ for (const [surface, here, act, grant, halted] of product(SURFACES, ['yes', 'no'
   if (surface === 'mail' || surface === 'calendar') ok(answer !== 'use', `sealed ${why}`);
   if (here === 'no') ok(answer !== 'use' && answer !== 'offer', `absent ${why}`);
   if (act === 'none' && ['contacts', 'paste', 'files', 'drop'].includes(surface)) ok(answer !== 'use', `owner's act ${why}`);
-  if (act === 'none' && grant === 'none' && surface === 'folder') ok(answer !== 'use', `folder grant ${why}`);
+  if (act === 'none' && grant === 'none' && (surface === 'folder' || surface === 'extension')) ok(answer !== 'use', `kept grant ${why}`);
+  if (surface === 'extension' && grant === 'kept' && here === 'yes' && halted === 'no') ok(answer === 'use', `the installed extension is used ${why}`);
   if (halted === 'no' && here === 'yes' && !['mail', 'calendar'].includes(surface)) ok(answer === 'use' || answer === 'offer', `every reported surface is used or offered ${why}`);
 }
-ok(hostRequests === 128, 'every host request is decided');
+ok(hostRequests === 144, 'every host request is decided');
 const browser = { showDirectoryPicker() {}, indexedDB: {}, File: function () {}, DataTransfer: function () {}, ClipboardEvent: function () {}, document: {}, Worker: function () {}, navigator: { hardwareConcurrency: 4, contacts: { select() {} } } };
 const bare = { navigator: {} };
 ok(Object.values(present(browser)).every((v) => v === 'yes') && present(bare).folder === 'no' && present(bare).contacts === 'no' && present(bare).mail === 'yes', 'the surfaces this browser reports');
@@ -172,5 +173,71 @@ const phone = await plan({ decide: hostGuest, halted: () => 'no', act: { contact
 ok(phone.contacts === 'use' && phone.folder === 'offer', 'the owner\'s press uses the contact picker');
 ok((await plan({ decide: hostGuest, halted: () => 'no', g: bare })).folder === 'refuse', 'a browser without the folder picker is never offered it');
 ok(Object.values(await plan({ decide: hostGuest, halted: () => 'yes', act: { paste: 'owner' }, grant: { folder: 'kept' }, g: browser })).every((a) => a === 'refuse'), 'halted, every surface is refused');
+
+ok(visit.extension === 'offer' && (await plan({ decide: hostGuest, halted: () => 'no', grant: { extension: 'kept' }, g: browser })).extension === 'use', 'the extension is offered, and used once installed');
+ok(present({ document: {}, navigator: { userAgentData: { mobile: true } } }).extension === 'no' && present({ document: {}, navigator: { userAgent: 'Mozilla/5.0 (Linux; Android 14) Mobile' } }).extension === 'no', 'a phone is not offered the extension');
+
+// DV-04: the extension reads by GET with the owner's own sign-in, and only the Prism page it was written for is answered.
+{
+  const store = {};
+  const listeners = [];
+  globalThis.chrome = { storage: { local: { get: async (keys) => Object.fromEntries(keys.filter((k) => k in store).map((k) => [k, store[k]])), set: async (v) => Object.assign(store, v) } }, runtime: { onMessage: { addListener: (f) => listeners.push(f) } } };
+  const bg = await import('../extension/background.js');
+  const { zip, pack, installed, pull: pullFrom } = await import('./extension.mjs');
+  const RAW = 'From: a@example.com\r\nTo: b@example.org\r\nSubject: live\r\nDate: Thu, 12 Nov 2026 00:00:00 +0000\r\n\r\nFrom Gmail <itself> & more.\r\n';
+  const html = (raw) => `<html><body><pre class="raw_message_text" id="raw_message_text">${raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre></body></html>`;
+  const ICS = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:e9@example.com\r\nSUMMARY:live\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n';
+  const calendarZip = zip([{ name: 'calendar.ics', bytes: new TextEncoder().encode(ICS) }, { name: 'notes.txt', bytes: new TextEncoder().encode('x') }]);
+  const requests = [];
+  const google = async (url, init) => {
+    requests.push({ url: String(url), init });
+    const u = new URL(url);
+    const body = (text, status = 200) => ({ ok: status < 300, status, text: async () => text, arrayBuffer: async () => text.buffer ?? new TextEncoder().encode(text).buffer });
+    if (u.pathname.endsWith('/feed/atom')) return body('<feed><entry><link href="https://mail.google.com/mail/u/0/?account_id=x&amp;message_id=18c0ffee00000001&amp;view=conv"/></entry></feed>');
+    if (u.searchParams.get('view') === 'om') return body(u.searchParams.get('th') === '18c0ffee00000001' || u.searchParams.get('permmsgid') === `msg-f:${BigInt('0x18c0ffee00000002')}` ? html(RAW) : '<html>nothing</html>');
+    if (u.pathname.endsWith('/exporticalzip')) return { ok: true, status: 200, arrayBuffer: async () => calendarZip.buffer };
+    return body('', 404);
+  };
+  ok((await bg.unzip(calendarZip)).length === 1, 'a calendar export unzips to its iCalendar files');
+  ok((await bg.original('18c0ffee00000001', null, google)) === RAW, 'a message original is read from Gmail\'s own page, unescaped');
+  await chrome.storage.local.set({ ids: ['18c0ffee00000002'], ik: 'abcdef0123' });
+  const first = await bg.pull({ halted: 'no' }, google);
+  ok(first.items.filter((i) => i.format === 'eml').length === 2 && first.items.some((i) => i.format === 'ics' && i.text === ICS), `a pull reads unread and seen mail and the calendars: ${first.items.length}`);
+  ok(requests.every(({ url, init }) => init.method === 'GET' && init.credentials === 'include' && /^https:\/\/(mail|calendar)\.google\.com\//.test(url)), 'only GET, with the owner\'s own sign-in, to Gmail and Calendar');
+  const again = await bg.pull({ halted: 'no' }, google);
+  ok(again.items.filter((i) => i.format === 'eml').length === 0, 'a message already handed over is not read again');
+  const before = requests.length;
+  ok((await bg.pull({ halted: 'yes' }, google)).items.length === 0 && requests.length === before, 'nothing is read while halted');
+  const answer = (url, message) => new Promise((resolve) => { const kept = listeners[0](message, { url }, resolve); if (!kept) resolve('unanswered'); });
+  ok((await answer('https://other.example/', { prism: 'pull', halted: 'no' })) === 'unanswered', 'another page is never answered');
+  ok((await answer('https://mail.google.com/mail/u/0/', { prism: 'pull', halted: 'no' })) === 'unanswered', 'Gmail itself cannot pull');
+
+  // The page's side: the extension written for this page's own address, the hello and the pull.
+  const local = async (url) => ({ ok: true, status: 200, text: async () => readFile(new URL(url), 'utf8') });
+  const packed = await pack('https://owner.example/me/', new URL('../extension/', import.meta.url), local);
+  const unpacked = await bg.unzip(packed.slice()); // .ics only: none
+  ok(unpacked.length === 0, 'the extension zip holds no calendar');
+  const text = new TextDecoder().decode(packed);
+  ok(text.includes('"matches": ["https://owner.example/me/*"]') && text.includes("const PRISM = 'https://owner.example/me/';") && !text.includes('__PRISM__'), 'the page writes the extension for its own address');
+  await assert.rejects(pack('https://owner.example/me', undefined, local), (e) => e.code === 'extension.address');
+  checks += 1;
+  const win = new EventTarget();
+  win.location = { origin: 'https://owner.example' };
+  win.postMessage = (data) => queueMicrotask(() => {
+    const event = Object.assign(new Event('message'), { data, source: win, origin: win.location.origin });
+    win.dispatchEvent(event);
+    if (data.from === 'page' && data.prism === 'hello') win.postMessage({ prism: 'extension', from: 'extension', version: 1 });
+    if (data.from === 'page' && data.prism === 'pull') win.postMessage({ prism: 'items', from: 'extension', id: data.id, items: [{ format: 'eml', text: RAW }, { format: 'eml', text: 'not mail' }, 7] });
+  });
+  ok((await installed(win, 50)) === 'kept', 'the installed extension answers the page');
+  const silent = new EventTarget();
+  silent.location = win.location; silent.postMessage = () => {};
+  ok((await installed(silent, 20)) === 'none', 'no extension, no answer');
+  const items = await pullFrom(win, { halted: 'no', ms: 200 });
+  ok(items.length === 2, 'malformed items are dropped');
+  const read = await device.readItems(items);
+  ok(read.store === 1 && read.skip === 1, `an item is kept by its own first bytes, never its claim: ${JSON.stringify(read)}`);
+  delete globalThis.chrome;
+}
 
 console.log(`device: ${checks} checks passed`);

@@ -62,7 +62,7 @@ fn page_pg_01() {
     }
 }
 
-/// `PG-02`: The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, and every visible word a name from the model
+/// `PG-02`: The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, every visible word a name from the model, every list place fed by a source or an act, and every colour a tone of its modeled look read at its contrast
 #[test]
 fn page_pg_02() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -103,6 +103,10 @@ fn page_pg_02() {
         "surfaceEverySourceOneSetting",
         "surfaceSettingsInGroups",
         "surfaceNoEmptyGroup",
+        "surfaceEveryPairReads",
+        "surfaceTonesAreColours",
+        "surfaceTwoThemes",
+        "surfaceEveryPlaceIsFed",
     ] {
         let at = proofs
             .find(&format!("name: {theorem},"))

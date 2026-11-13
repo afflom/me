@@ -6,6 +6,8 @@ Outputs, all generated, never hand-edited:
   app/src/PrismSurface.lex.tex        every place, act, setting and visible word
   app/src/PrismSurfaceProofs.lex.tex  the surface's guarantees, each by decide
   site/surface/surface.mjs            the same records in JavaScript, for the page
+  site/card.html                      the places, the result, the question and history
+  site/card.css (token block)         the look: every tone in both themes, the fonts
 
 The surface is the design model made visible: a place is a row of
 Foundation.Me.V1.Model's views, and the proofs hold the two together, so a
@@ -103,6 +105,91 @@ def word_record(k, w):
     return f"(record SurfaceWord {{key := {s(k)}, text := {s(w)}}})"
 
 
+# The look: every tone is a colour in each theme and sets brand variables;
+# a pair the spec names must read at its contrast, by WCAG 2.2.
+LOOK = SPEC["look"]
+THEMES = LOOK["themes"]
+TONES = {t["key"]: t for t in LOOK["tones"]}
+BRAND = (ROOT / "site/brand/hologram-warm.css").read_text()
+
+
+def rgb(hexcode):
+    if len(hexcode) != 7 or hexcode[0] != "#":
+        refuse(f"the colour {hexcode!r} is not #rrggbb")
+    return tuple(int(hexcode[i:i + 2], 16) for i in (1, 3, 5))
+
+
+def luminance(hexcode):
+    def lin(c):
+        c /= 255
+        return c / 12.92 if c <= 0.04045 else ((c + 0.055) / 1.055) ** 2.4
+    r, g, b = (lin(c) for c in rgb(hexcode))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def contrast(fore, back):
+    a, b = sorted((luminance(fore), luminance(back)), reverse=True)
+    return (a + 0.05) / (b + 0.05)
+
+
+claimed = {}
+for tone in LOOK["tones"]:
+    for theme in THEMES:
+        rgb(tone[theme])
+    for var in tone["sets"]:
+        if f"--{var}:" not in BRAND:
+            refuse(f"the tone {tone['key']} sets --{var}, which the brand does not define")
+        if var in claimed:
+            refuse(f"--{var} is set by both {claimed[var]} and {tone['key']}")
+        claimed[var] = tone["key"]
+CONTRASTS = []
+for fore, back, floor in LOOK["contrast"]:
+    for theme in THEMES:
+        ratio = contrast(TONES[fore][theme], TONES[back][theme])
+        if ratio < floor:
+            refuse(f"{fore} on {back} reads at {ratio:.2f} in {theme}, under its {floor}")
+        CONTRASTS.append((fore, back, theme, int(ratio * 100), int(floor * 100)))
+TONE_KEYS = list(TONES)
+
+
+def tone_record(t):
+    return f"(record SurfaceTone {{name := {s(t['key'])}, dark := {int(t['dark'][1:], 16)}, light := {int(t['light'][1:], 16)}}})"
+
+
+def contrast_record(c):
+    fore, back, theme, ratio, floor = c
+    return (f"(record SurfaceContrast {{fore := {TONE_KEYS.index(fore)}, back := {TONE_KEYS.index(back)}, "
+            f"theme := {THEMES.index(theme)}, ratio := {ratio}, floor := {floor}}})")
+
+
+# The feeders: the facet behind every place. A source setting fills the
+# domains it reads into; an act fills the domain its place keeps into. A list
+# place that no feeder can fill is refused here and disproved in the proofs.
+SETTING_KEYS = [x["key"] for x in SPEC["settings"]]
+FEEDERS = []
+for f in SPEC["feeders"]:
+    if f["act"] != "none":
+        if f["act"] not in ACTS:
+            refuse(f"the feeder {f['key']} names an unknown act")
+        domains = sorted({p["domains"][0] for p in SPEC["places"] if p["act"] == f["act"]})
+        word = next(a["word"] for a in SPEC["acts"] if a["key"] == f["act"])
+    else:
+        if f["setting"] not in SETTING_KEYS or f["word"] not in SPEC["words"]:
+            refuse(f"the feeder {f['key']} names an unknown setting or word")
+        domains = f["domains"]
+        word = SPEC["words"][f["word"]]
+    FEEDERS.append({"key": f["key"], "act": f["act"], "setting": f["setting"], "word": word, "domains": domains})
+fed = {d for f in FEEDERS for d in f["domains"]}
+for p_ in SPEC["places"]:
+    if p_["show"] == "list" and not fed & set(p_["domains"]):
+        refuse(f"the place {p_['key']} has no feeder for any of its domains")
+
+
+def feeder_record(f):
+    setting = SETTING_KEYS.index(f["setting"]) if f["setting"] != "none" else len(SETTING_KEYS)
+    return f"(record SurfaceFeeder {{name := {s(f['key'])}, act := {ACTS.index(f['act'])}, setting := {setting}, domains := {nats(f['domains'])}}})"
+
+
 def defn(name, result, body, params="[]"):
     return f"definition{{\n  name: {name},\n  parameters: {params},\n  result: {result},\n  body: {body}\n}}\n"
 
@@ -162,6 +249,27 @@ model = [
   fields: [{name: key, type: String}, {name: text, type: String}]
 }
 """,
+    """structure{
+  name: SurfaceTone,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: name, type: String}, {name: dark, type: Nat}, {name: light, type: Nat}]
+}
+""",
+    """structure{
+  name: SurfaceContrast,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: fore, type: Nat}, {name: back, type: Nat}, {name: theme, type: Nat}, {name: ratio, type: Nat}, {name: floor, type: Nat}]
+}
+""",
+    """structure{
+  name: SurfaceFeeder,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: name, type: String}, {name: act, type: Nat}, {name: setting, type: Nat}, {name: domains, type: (List Nat)}]
+}
+""",
     defn("surfaceDomainNames", "(List String)", strings(SPEC["domains"])),
     defn("surfaceLabelNames", "(List String)", strings(SPEC["labels"])),
     defn("surfaceRoleNames", "(List String)", strings(SPEC["roles"])),
@@ -174,6 +282,10 @@ model = [
     defn("surfaceRoutedSources", "(List Nat)", nats(routed)),
     defn("surfaceOutboundActs", "(List Nat)", nats(outbound)),
     defn("surfaceGroupCount", "Nat", str(len(GROUPS))),
+    defn("surfaceTones", "(List SurfaceTone)", records("SurfaceTone", [tone_record(x) for x in LOOK["tones"]])),
+    defn("surfaceContrasts", "(List SurfaceContrast)", records("SurfaceContrast", [contrast_record(x) for x in CONTRASTS])),
+    defn("surfaceThemeCount", "Nat", str(len(THEMES))),
+    defn("surfaceFeeders", "(List SurfaceFeeder)", records("SurfaceFeeder", [feeder_record(f) for f in FEEDERS])),
     "\\end{semanticmodule}",
     "\\end{lexlean}",
     "",
@@ -222,6 +334,24 @@ proofs_defs = [
     rec("surfaceSettingsGrouped", f"[settings : (List {M}SurfaceSetting)]", "Bool",
         f"(match settings\n    | List.nil => true\n    | List.cons setting rest => (((project setting group) <? ({M}surfaceGroupCount)) && (surfaceSettingsGrouped rest)))", "settings"),
 ]
+proofs_defs += [
+    # Every pair the look names reads at its floor, in every theme.
+    rec("surfacePairsRead", f"[pairs : (List {M}SurfaceContrast)]", "Bool",
+        f"(match pairs\n    | List.nil => true\n    | List.cons pair rest => (((project pair floor) <=? (project pair ratio)) && (((project pair theme) <? ({M}surfaceThemeCount)) && (surfacePairsRead rest))))", "pairs"),
+    rec("surfaceColoursInRange", f"[tones : (List {M}SurfaceTone)]", "Bool",
+        "(match tones\n    | List.nil => true\n    | List.cons tone rest => (((project tone dark) <? 16777216) && (((project tone light) <? 16777216) && (surfaceColoursInRange rest))))", "tones"),
+    rec("surfaceThemesDiffer", f"[tones : (List {M}SurfaceTone)]", "Bool",
+        "(match tones\n    | List.nil => false\n    | List.cons tone rest => ((not ((project tone dark) =? (project tone light))) || (surfaceThemesDiffer rest)))", "tones"),
+]
+proofs_defs += [
+    rec("surfaceDomainFed", f"[domain : Nat, feeders : (List {M}SurfaceFeeder)]", "Bool",
+        "(match feeders\n    | List.nil => false\n    | List.cons f rest => ((surfaceMember domain (project f domains)) || (surfaceDomainFed domain rest)))", "feeders"),
+    rec("surfaceAnyFed", "[domains : (List Nat)]", "Bool",
+        f"(match domains\n    | List.nil => false\n    | List.cons d rest => ((surfaceDomainFed d ({M}surfaceFeeders)) || (surfaceAnyFed rest)))", "domains"),
+    # Every list place has a facet behind it: some feeder fills one of its domains.
+    rec("surfacePlacesFed", f"[places : (List {M}SurfacePlace)]", "Bool",
+        "(match places\n    | List.nil => true\n    | List.cons place rest => (((not ((project place kind) =? 0)) || (surfaceAnyFed (project place domains))) && (surfacePlacesFed rest)))", "places"),
+]
 groups_all = "true"
 for i in reversed(range(len(GROUPS))):
     groups_all = f"((surfaceGroupUsed {i} ({M}surfaceSettings)) && {groups_all})"
@@ -247,6 +377,10 @@ theorems = [
     theorem("surfaceEverySourceOneSetting", f"((surfaceSourcesSet ({M}surfaceRoutedSources)) = true)"),
     theorem("surfaceSettingsInGroups", f"((surfaceSettingsGrouped ({M}surfaceSettings)) = true)"),
     theorem("surfaceNoEmptyGroup", "((surfaceGroupsUsed) = true)"),
+    theorem("surfaceEveryPairReads", f"((surfacePairsRead ({M}surfaceContrasts)) = true)"),
+    theorem("surfaceTonesAreColours", f"((surfaceColoursInRange ({M}surfaceTones)) = true)"),
+    theorem("surfaceEveryPlaceIsFed", f"((surfacePlacesFed ({M}surfacePlaces)) = true)"),
+    theorem("surfaceTwoThemes", f"((surfaceThemesDiffer ({M}surfaceTones)) = true)"),
 ]
 
 proofs = [
@@ -294,6 +428,25 @@ def nav_html():
     return "\n".join(out)
 
 
+def feeder_of(place):
+    """A source that reads into the place's first domain comes first; else the place's own act."""
+    source = next((f for f in FEEDERS if f["act"] == "none" and place["domains"][0] in f["domains"]), None)
+    return source or next((f for f in FEEDERS if f["act"] != "none" and f["act"] == place["act"]), None)
+
+
+def home_html():
+    """The home: a card per place that holds things, each with the feeder that fills it."""
+    out = [f'    <ul id="pr-home" class="pr-home" aria-label="{e(W["places"])}">']
+    for p in SPEC["places"]:
+        if p["host"] != "nav" or p["show"] == "settings":
+            continue
+        f = feeder_of(p)
+        feed = f'<button type="button" class="pr-card-feed" data-feed="{f["key"]}" data-place="{p["key"]}">{e(f["word"])}</button>' if f else ""
+        out.append(f'      <li class="pr-card pr-card-empty"><button type="button" class="pr-card-go" data-place="{p["key"]}"><span class="pr-card-name">{e(p["name"])}</span><span class="pr-card-count"></span></button><span class="pr-card-latest"></span>{feed}</li>')
+    out.append("    </ul>")
+    return "\n".join(out)
+
+
 home_place = next(p for p in SPEC["places"] if p["host"] == "home")
 ask_place = next(p for p in SPEC["places"] if p["host"] == "composer")
 card_html = f"""<!-- Generated by tools/surface/gen.py from app/specs/surface/spec.json. Do not edit.
@@ -304,6 +457,7 @@ card_html = f"""<!-- Generated by tools/surface/gen.py from app/specs/surface/sp
   <section class="pr-place" id="pr-place" aria-labelledby="pr-title">
     <header class="pr-top"><h2 id="pr-title">{e(home_place["name"])}</h2><span id="pr-count" class="pr-count"></span></header>
     <div id="pr-act" class="pr-act"></div>
+{home_html()}
     <ol id="pr-list" class="pr-list" aria-labelledby="pr-title"><li class="pr-empty">{e(W["empty"])}</li></ol>
     <div id="pr-settings" class="pr-settings" hidden></div>
   </section>
@@ -319,11 +473,40 @@ card_html = f"""<!-- Generated by tools/surface/gen.py from app/specs/surface/sp
 <ol id="pr-log" data-slot="history" data-label="{e(W["recent"])}"></ol>
 """
 
+def look_css():
+    out = ["/* look: generated by tools/surface/gen.py from app/specs/surface/spec.json; do not edit. */"]
+    for font in LOOK["fonts"]:
+        m = font["metrics"]
+        fallback = f"{font['family']} Fallback"
+        out.append(f'@font-face {{ font-family: "{fallback}"; src: local("{font["fallback"]}"); size-adjust: {m["size"]}; '
+                   f'ascent-override: {m["ascent"]}; descent-override: {m["descent"]}; line-gap-override: 0%; }}')
+        out.append(f'@font-face {{ font-family: "{font["family"]}"; src: url("./fonts/{font["file"]}") format("woff2"); '
+                   f'font-weight: {font["weight"]}; font-style: normal; font-display: optional; }}')
+    fonts = "; ".join(f'--font-{f["key"]}: "{f["family"]}", "{f["family"]} Fallback", {f["fallback"]}, serif' for f in LOOK["fonts"])
+    radius = LOOK["radius"]
+    for theme, selector in (("light", ":root"), ("dark", ".dark")):
+        decls = [f"--vr-{t['key']}: {t[theme]}" for t in LOOK["tones"]]
+        decls += [f"--{v}: var(--vr-{t['key']})" for t in LOOK["tones"] for v in t["sets"]]
+        if theme == "light":
+            decls += [fonts, f"--radius-outer: {radius['outer']}", f"--radius-inner: {radius['inner']}"]
+        out.append(f"{selector} {{ " + "; ".join(decls) + "; }")
+    out.append("/* look: end */")
+    return "\n".join(out) + "\n"
+
+
+CARD_CSS = (ROOT / "site/card.css").read_text()
+BEGIN, END = "/* look: generated", "/* look: end */\n"
+if BEGIN in CARD_CSS:
+    rest = CARD_CSS[CARD_CSS.index(END) + len(END):]
+else:
+    rest = CARD_CSS
+
 OUTPUTS = {
     "app/src/PrismSurface.lex.tex": "\n".join(model),
     "app/src/PrismSurfaceProofs.lex.tex": "\n".join(proofs),
     "site/surface/surface.mjs": None,
     "site/card.html": card_html,
+    "site/card.css": look_css() + rest,
 }
 mirror = {
     "domains": SPEC["domains"],
@@ -336,6 +519,7 @@ mirror = {
     "settings": SPEC["settings"],
     "media": SPEC["media"],
     "words": SPEC["words"],
+    "feeders": FEEDERS,
 }
 OUTPUTS["site/surface/surface.mjs"] = (
     "// Generated by tools/surface/gen.py from app/specs/surface/spec.json. Do not edit.\n"
