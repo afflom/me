@@ -752,6 +752,8 @@ export default async function start({ app, reason, $ }) {
     // Connections: a row per service the Prism declares, drawn from its
     // declaration (app/specs/source/services.json): its state, the steps that
     // connect it with the next one to press, and how to do it.
+    let servicesShown = false;
+    let repaintDevice = null;
     function buildServices(section, rows) {
       const holder = element("div", { className: "pr-services" });
       rows.prepend(holder);
@@ -771,12 +773,13 @@ export default async function start({ app, reason, $ }) {
           let touched = false;
           row.querySelector("summary").addEventListener("click", () => { touched = true; });
           holder.append(row);
-          const paint = (report) => {
+          const paint = (report, first) => {
             const now = services.state(service.key, report, { halted: halted() });
             row.hidden = now.state === "off";
             const next = service.connect.find((s) => s.key === now.next);
             state.textContent = now.state === "live" ? WORDS["service.live"] : now.state === "paused" ? WORDS.halted : now.state === "refused" ? WORDS["service.refused"] : next?.word ?? "";
-            if (section.reveal === "until-done" && !touched) row.open = now.state === "step";
+            // Only the first service that needs a step opens, so the person meets one thing to do.
+            if (section.reveal === "until-done" && !touched) row.open = now.state === "step" && first;
             const doneSteps = new Set(service.connect.filter((s) => services.done(service, s, report)).map((s) => s.key));
             steps.replaceChildren(...service.connect.map((step) => {
               const item = element("li", { className: doneSteps.has(step.key) ? "pr-step pr-step-done" : step === next ? "pr-step pr-step-next" : "pr-step" });
@@ -790,12 +793,16 @@ export default async function start({ app, reason, $ }) {
               if (step.how?.length > 1) item.append(element("ol", { className: "pr-how" }, ...step.how.map((line) => element("li", { textContent: line }))));
               return item;
             }));
+            return now.state === "step";
           };
           return paint;
         });
         const paintServices = async () => {
           const report = await services.probe().catch(() => ({ extension: false, services: {} }));
-          for (const paint of drawn) paint(report);
+          let first = true;
+          for (const paint of drawn) if (paint(report, first)) first = false;
+          servicesShown = Boolean(holder.querySelector(".pr-service:not([hidden])"));
+          await repaintDevice?.();
         };
         painters.push(paintServices);
         // Coming back from the extension page or the service's tab, the rows say where things stand.
@@ -836,7 +843,6 @@ export default async function start({ app, reason, $ }) {
       const device = named("device");
       const addFolder = element("button", { type: "button", textContent: WORDS["device.folder"] });
       const contacts = element("button", { type: "button", textContent: WORDS["device.contacts"] });
-      const getExtension = element("button", { type: "button", textContent: WORDS["device.extension"] });
       const allow = element("button", { type: "button", textContent: WORDS["device.allow"] });
       const forget = element("button", { type: "button", textContent: WORDS.forget });
       const files = element("input", { type: "file", multiple: true, accept: FILE_TYPES });
@@ -848,7 +854,7 @@ export default async function start({ app, reason, $ }) {
         await onFiles();
       });
       const filesLabel = element("label", { className: "pr-file" }, element("span", { textContent: WORDS["device.files"] }), files);
-      const row = settingRow(device, addFolder, filesLabel, contacts, getExtension, allow, forget);
+      const row = settingRow(device, addFolder, filesLabel, contacts, allow, forget);
       if (!vault) { onFiles = async () => {}; row.state.textContent = WORDS.unavailable; row.row.querySelector(".pr-controls").hidden = true; return; }
       const d = await deviceOf();
       let kept = [];
@@ -857,11 +863,10 @@ export default async function start({ app, reason, $ }) {
         const plan = await d.ask({ grant: { folder: kept.some((f) => f.grant === "granted") ? "kept" : "none", extension: extensionGrant() } });
         const shown = (surface) => plan[surface] === "offer" || plan[surface] === "use";
         row.state.textContent = kept.length ? kept.map((f) => f.name).join(", ") : WORDS["device.none"];
-        row.done(kept.length > 0 || items.length > 0);
+        row.done(kept.length > 0 || items.length > 0 || servicesShown);
         addFolder.hidden = !shown("folder");
         filesLabel.hidden = !shown("files");
         contacts.hidden = !shown("contacts");
-        getExtension.hidden = plan.extension !== "offer";
         allow.hidden = !shown("folder") || !kept.some((f) => f.grant === "prompt");
         forget.hidden = !kept.length;
       };
@@ -872,14 +877,6 @@ export default async function start({ app, reason, $ }) {
       };
       addFolder.addEventListener("click", busy(addFolder, owner("folder"), async () => { await d.source.addFolder(); await reportDevice(await d.source.readFolders()); }));
       allow.addEventListener("click", busy(allow, owner("folder"), async () => { await d.source.allow(); await reportDevice(await d.source.readFolders()); }));
-      // The extension, written by this page for its own address: one download.
-      getExtension.addEventListener("click", busy(getExtension, async () => true, async () => {
-        const { pack } = await import("./device/extension.mjs");
-        const bytes = await pack(new URL("./", location.href).href);
-        const link = element("a", { href: URL.createObjectURL(new Blob([bytes], { type: "application/zip" })), download: "prism-extension.zip" });
-        link.click();
-        URL.revokeObjectURL(link.href);
-      }));
       forget.addEventListener("click", busy(forget, async () => true, async () => { for (const f of kept) await d.source.forget(f.id); }));
       onFiles = busy(files, owner("files"), async () => { await reportDevice(await d.source.readFiles([...(files.files ?? [])])); files.value = ""; });
       contacts.addEventListener("click", busy(contacts, owner("contacts"), async () => {
@@ -887,6 +884,7 @@ export default async function start({ app, reason, $ }) {
         await reportDevice(await d.source.readContacts(picked));
       }));
       painters.push(paint);
+      repaintDevice = paint;
       await paint();
     })().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
 
