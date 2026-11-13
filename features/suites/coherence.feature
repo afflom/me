@@ -8,7 +8,7 @@ Feature: coherence
   Scenario: The owner brings content in through the feeders the coherence registry names and every place that lists things lists it: Today shows the agenda ahead with what falls today and what clashes as PrismChronology answers, and Ask answers at once with the owner's own kept items that meet it, only as the Boundary allows, never while halted
     Given the assembled page with the verified app.holo, and synthetic files: a calendar with two clashing events today, a bank's mail, and a Takeout zip with an mbox, a calendar and contacts
     When test/page/person.test.mjs adds the files from an empty Today, the zip from the Boundary, pastes words, keeps a note in every note place, opens every place and asks five questions, then one while halted, in headless Chromium
-    Then every place that lists things lists something, Today marks today's events and their clash, each question is answered with the matching kept item or No answer, and the halted question is answered Halted
+    Then every place that lists things lists something, Today marks today's events and their clash, each question is answered with the matching kept item or says nothing held matches it, and the halted question is answered Halted
 
   @CO-02 @build
   Scenario: Every facet the Prism root routes is one model in the coherence registry with typed ports, live with the page modules that ask it or sealed by a PrismHost surface, and the build refuses a registry whose flow leaves a port unproduced or untaken, a place unfed, an act or setting undriven, a feeder's media without a domain or a domain without vocabulary
