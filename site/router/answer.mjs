@@ -8,7 +8,7 @@
 import { PROVIDERS } from "./table.mjs";
 import { route } from "./router.mjs";
 import { withoutTime } from "./features.mjs";
-import { drawOn, windowOf } from "../coherence/sense.mjs";
+import { drawOn, windowOf, termsOf } from "../coherence/sense.mjs";
 
 const S = PROVIDERS.sentence;
 const RANK = ["public", "internal", "confidential", "restricted"];
@@ -55,17 +55,60 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
   if (keep && mapped.intent !== "question") {
     return { sentences: [keptSentence(text, mapped)], sources: [], offers: [{ kind: "keep" }], mapped };
   }
-  // A question: the kept items it is after, shown only as the Boundary allows.
-  const used = drawOn(items, text, { now });
-  const label = used.reduce((at, item) => higher(at, item.label ?? "confidential"), "confidential");
-  const word = (await line(`boundary ${label} none browser none yes ${halted()}`)).trim();
-  if (word !== "allow" || !used.length) return { ...none, mapped, refused: word !== "allow" && used.length > 0 };
-  // A question about a span answers with what falls in it; otherwise with the best match.
-  const told = windowOf(text, now) ? used.slice(0, S.most) : used.slice(0, 1);
-  const sentences = told.map((item) => `${sentenceOf(item, me)}.`);
+  // A question over an empty Prism says so and leads to connecting.
+  const held = items.filter((item) => !item.sealed);
+  if (!held.length) return { sentences: [`${S.frames.empty}.`], sources: [], offers: [{ kind: S.offers.empty }], mapped };
+  // The kind of thing it names (mail, calendar, notes), the words it is after,
+  // and whether it only greets or asks how things stand.
+  const words = text.toLowerCase().match(/[\p{L}]+/gu) ?? [];
+  const kind = Object.keys(S.kinds).find((k) => words.some((w) => S.kinds[k].includes(w))) ?? null;
+  const ofKind = (item) => (kind === "calendar" ? item.media === "calendar" || item.start != null : item.media === kind && item.start == null);
+  const terms = termsOf(text).filter((t) => !Object.values(S.kinds).flat().includes(t));
+  const greets = terms.every((t) => S.greet.includes(t) || S.overview.includes(t));
+  const span = windowOf(text, now);
+  let used = drawOn(items, text, { now });
+  let lead = [];
+  let many = Boolean(span);
+  if (kind && !span) {
+    // Mail and notes newest first; the calendar from what is next.
+    const matched = used.filter(ofKind);
+    const latest = held.filter(ofKind).sort((a, b) => (kind === "calendar" ? upcoming(a, b, now) : b.at - a.at));
+    used = matched.length && terms.length ? matched : latest;
+    many = true;
+    if (!used.length) lead = [fill(S.frames.unmatched, { what: words.find((w) => S.kinds[kind].includes(w)) })];
+  }
+  if (!used.length) {
+    if (!lead.length) lead = greets ? (terms.some((t) => S.greet.includes(t)) || !terms.length ? [S.frames.help] : []) : [fill(S.frames.unmatched, { what: terms.join(" ") || text })];
+    used = overview(held, now);
+    many = true;
+  }
+  // What is drawn from content is shown only as the Boundary allows.
+  if (used.length) {
+    const label = used.reduce((at, item) => higher(at, item.label ?? "confidential"), "confidential");
+    const word = (await line(`boundary ${label} none browser none yes ${halted()}`)).trim();
+    if (word !== "allow") return { ...none, mapped, refused: true };
+  }
+  // A span, a kind or an overview answers with several; otherwise the best match.
+  const told = many ? used.slice(0, S.most) : used.slice(0, 1);
+  const sentences = [...lead.map((s) => `${s}.`), ...told.map((item) => `${sentenceOf(item, me)}.`)];
   const offers = told.flatMap((item) => {
-    const kind = S.offers[item.media === "message" ? "message" : item.media === "plainText" ? "note" : ""];
-    return kind ? [{ kind, item }] : [];
+    const k = S.offers[item.media === "message" ? "message" : item.media === "plainText" ? "note" : ""];
+    return k ? [{ kind: k, item }] : [];
   });
   return { sentences, sources: used.slice(0, S.most), offers, mapped };
+}
+
+// Events still ahead come first, soonest first; past ones after, latest first.
+function upcoming(a, b, now) {
+  const at = (item) => item.start ?? item.at ?? 0;
+  const ahead = (item) => at(item) >= now - 3_600_000;
+  if (ahead(a) !== ahead(b)) return ahead(a) ? -1 : 1;
+  return ahead(a) ? at(a) - at(b) : at(b) - at(a);
+}
+
+// How things stand: the next event, the newest message and the newest note.
+export function overview(held, now = Date.now()) {
+  const events = held.filter((i) => i.media === "calendar" || i.start != null).sort((a, b) => upcoming(a, b, now));
+  const newest = (media) => held.filter((i) => i.media === media && i.start == null).sort((a, b) => b.at - a.at)[0];
+  return [events[0], newest("message"), newest("plainText")].filter(Boolean);
 }

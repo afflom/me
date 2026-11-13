@@ -1001,6 +1001,7 @@ export default async function start({ app, reason, $ }) {
   const notePlace = () => (current.act === "note" ? current : PLACES.find((p) => p.act === "note" && onPage(p)));
   async function offer(kind, item, prompt) {
     if (kind === "done" && item) { clear(item); say(WORDS.done, "good"); return; }
+    if (kind === "connect") { go(PLACES.find((p) => p.show === "settings").key); return; }
     if (kind === "keep") { const place = notePlace(); if (place) await keepNote(place, prompt); return; }
     if (kind === "reply" && item) {
       const place = writePlace();
@@ -1033,7 +1034,7 @@ export default async function start({ app, reason, $ }) {
       return link;
     });
     const offers = (said.offers ?? []).map(({ kind, item }) => {
-      const label = { reply: WORDS.reply, done: WORDS.done, keep: WORDS.keep }[kind];
+      const label = { reply: WORDS.reply, done: WORDS.done, keep: WORDS.keep, connect: WORDS.connect }[kind];
       if (!label) return null;
       const button = element("button", { type: "button", className: "pr-offer", textContent: label });
       button.addEventListener("click", () => { button.disabled = true; offer(kind, item, prompt).catch((error) => say(error?.message ?? String(error), "bad")); });

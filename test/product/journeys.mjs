@@ -82,9 +82,11 @@ export const walks = {
   async j2(page) {
     assert.ok(await arrived(page), "the person's day never arrives");
     const list = app(page).getByRole("region", { name: /needs me/i }).or(app(page).getByRole("list", { name: /needs me/i })).first();
-    assert.ok(await list.count(), "there is no list named Needs me");
+    // The day arrives in parts (the calendar can land before the mail), so the
+    // person waits for the list and its row as they would, not for any one item.
+    assert.ok(await list.waitFor({ timeout: 15000 }).then(() => true, () => false), "there is no list named Needs me");
     const row = list.getByRole("listitem").filter({ hasText: "Lunch on Thursday" }).first();
-    assert.ok(await row.count(), "Needs me does not hold the message that asks the person something");
+    assert.ok(await row.waitFor({ timeout: 15000 }).then(() => true, () => false), "Needs me does not hold the message that asks the person something");
     await row.getByRole("button").first().click();
     await page.waitForTimeout(800);
     assert.equal(await list.getByRole("listitem").filter({ hasText: "Lunch on Thursday" }).count(), 0, "one gesture on it does not take it off Needs me");
