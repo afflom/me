@@ -64,7 +64,7 @@ fn coherence_co_01() {
                 "Today's spans are PrismChronology's answers",
             ),
             (
-                "const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, keep: false });",
+                "const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: false });",
                 "Ask is answered by the router's answer, from nothing kept while halted",
             ),
             (

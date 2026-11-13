@@ -865,7 +865,59 @@ export default async function start({ app, reason, $ }) {
   // Boundary allows at the highest label among them.
   const drawn = element("ol", { className: "pr-list pr-drawn" });
   drawn.setAttribute("aria-label", WORDS["ask.placeholder"]);
-  out.after(drawn);
+  // The chat: earlier turns above, the answer now in the result, then where
+  // it came from (each a link that opens it) and the decision it offers.
+  const chat = element("ol", { className: "pr-chat" });
+  chat.setAttribute("aria-label", PLACES.find((p) => p.host === "composer")?.name ?? WORDS["ask.placeholder"]);
+  const more = element("div", { className: "pr-said-more" });
+  out.before(chat);
+  out.after(more);
+  more.after(drawn);
+  let lastTurn = null;
+  const writePlace = () => PLACES.find((p) => p.act === "write" && onPage(p));
+  const notePlace = () => (current.act === "note" ? current : PLACES.find((p) => p.act === "note" && onPage(p)));
+  async function offer(kind, item, prompt) {
+    if (kind === "done" && item) { clear(item); say(WORDS.done, "good"); return; }
+    if (kind === "keep") { const place = notePlace(); if (place) await keepNote(place, prompt); return; }
+    if (kind === "reply" && item) {
+      const place = writePlace();
+      if (!place) return;
+      go(place.key, true);
+      const { partiesOf } = await coherence();
+      const to = partiesOf(item)[0]?.address ?? "";
+      const field = $("pr-act").querySelector("input[type=email]");
+      if (field) field.value = to;
+      $("pr-act").querySelector("textarea")?.focus();
+    }
+  }
+  function turn(prompt, said) {
+    // The turn before moves up with what was said; this one shows its words above the answer.
+    if (lastTurn) lastTurn.node.append(element("p", { className: "pr-said", textContent: lastTurn.said }));
+    const node = element("li", { className: "pr-turn" }, element("p", { className: "pr-you", textContent: prompt }));
+    chat.append(node);
+    node.scrollIntoView({ block: "nearest" });
+    lastTurn = { node, said: said.sentences.join(" ") };
+    const rows = said.sources.map(rowOf);
+    drawn.replaceChildren(...rows);
+    const links = said.sources.map((item, i) => {
+      const link = element("a", { href: "#", className: "pr-source", textContent: item.title || item.who || "—" });
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        const row = rows[i];
+        if (row.getAttribute("aria-expanded") === "false") row.click();
+        row.scrollIntoView({ block: "nearest" });
+      });
+      return link;
+    });
+    const offers = (said.offers ?? []).map(({ kind, item }) => {
+      const label = { reply: WORDS.reply, done: WORDS.done, keep: WORDS.keep }[kind];
+      if (!label) return null;
+      const button = element("button", { type: "button", className: "pr-offer", textContent: label });
+      button.addEventListener("click", () => { button.disabled = true; offer(kind, item, prompt).catch((error) => say(error?.message ?? String(error), "bad")); });
+      return button;
+    }).filter(Boolean);
+    more.replaceChildren(...(links.length ? [element("p", { className: "pr-sources" }, ...links)] : []), ...(offers.length ? [element("div", { className: "pr-offers" }, ...offers)] : []));
+  }
   out.style.whiteSpace = "pre-line";
   out.style.minWidth = "0";
   if (out.parentElement) Object.assign(out.parentElement.style, { minWidth: "0", flex: "1 1 0" });
@@ -878,8 +930,8 @@ export default async function start({ app, reason, $ }) {
       // The person's words go through the R4 router; a question is answered in
       // sentences from what is held, under the Boundary, with what it drew on.
       const { answer } = await import("./router/answer.mjs");
-      const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, keep: false });
-      drawn.replaceChildren(...said.sources.map(rowOf));
+      const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: false });
+      turn(prompt, said);
       if (said.sentences.length) { say(said.sentences.join(" "), "good"); $("pr-prompt").value = ""; }
       else if (haltedNow) say(WORDS.halted, "bad");
       else if (said.refused) say(WORDS["answer.asks"], "warn");
