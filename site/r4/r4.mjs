@@ -126,7 +126,9 @@ export async function openR4({
     engine: { state: engine.state, reasons: engine.reasons, fingerprint: lock.engine.wasm.fingerprint },
 
     // Mode 2: a model running in the Prism from its fingerprinted parameter blob.
-    async ask({ prompt, model: id = lock.models.inprism[0]?.id, context = { label: "public" }, detect, maxTokens = 128 }) {
+    // `grounds` are the owner's kept words the page drew on for this prompt; they
+    // reach the model as context and only the model's answer meets the Boundary.
+    async ask({ prompt, model: id = lock.models.inprism[0]?.id, context = { label: "public" }, detect, maxTokens = 128, grounds = [] }) {
       const entry = lock.models.inprism.find((m) => m.id === id);
       if (!entry) throw new Refusal("UnknownModel", { id });
       const weights = engine.state === "match" ? await weightsFor(entry) : { state: "missing" };
@@ -136,7 +138,8 @@ export async function openR4({
         fields: { mode: "inprism", engine: engine.state, weights: weights.state, route: "none" },
         model: r4Model(entry), route: null, prompt, context: ctx, detect,
         run: async (p) => {
-          const reply = await worker.call("chat", { request: { model: entry.id, max_tokens: maxTokens, messages: [{ role: "user", content: p }] } });
+          const messages = [...(grounds.length ? [{ role: "system", content: grounds.join("\n") }] : []), { role: "user", content: p }];
+          const reply = await worker.call("chat", { request: { model: entry.id, max_tokens: maxTokens, messages } });
           return reply?.choices?.[0]?.message?.content ?? "";
         },
       });
@@ -166,7 +169,7 @@ export async function openR4({
     registerRoute({ id, run, entry = null }) {
       routes.set(id, { run, entry });
     },
-    async askRouted({ target, prompt, context = { label: "public" }, detect }) {
+    async askRouted({ target, prompt, context = { label: "public" }, detect, grounds = [] }) {
       const registered = routes.get(target);
       const entry = lock.models.routed.find((m) => m.id === target) ?? registered?.entry ?? null;
       const granted = Boolean(entry && registered && (entry.origin ? admits(grant, entry.origin) : entry.decision === "run"));
@@ -178,7 +181,7 @@ export async function openR4({
         model: { id: target, ...(entry?.fingerprint ? { weights: entry.fingerprint } : {}), ...(entry?.source ? { source: entry.source, decision: entry.line } : {}) },
         route: { router, target: { id: target, origin: entry?.origin ?? null } },
         prompt, context: { ...context, identifier: context.identifier ?? "no" }, detect,
-        run: async (p) => routes.get(target).run(p),
+        run: async (p) => routes.get(target).run(grounds.length ? `${grounds.join("\n")}\n\n${p}` : p),
       });
     },
 
