@@ -1,0 +1,299 @@
+\begin{lexlean}{PrismFolder}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: folderGrantNone, parameters: [], result: Nat, body: 0}
+
+definition{name: folderGrantPrompt, parameters: [], result: Nat, body: 1}
+
+definition{name: folderGrantGranted, parameters: [], result: Nat, body: 2}
+
+definition{name: folderGrantRevoked, parameters: [], result: Nat, body: 3}
+
+definition{name: folderFormatMbox, parameters: [], result: Nat, body: 0}
+
+definition{name: folderFormatEml, parameters: [], result: Nat, body: 1}
+
+definition{name: folderFormatMaildir, parameters: [], result: Nat, body: 2}
+
+definition{name: folderFormatIcs, parameters: [], result: Nat, body: 3}
+
+definition{name: folderFormatVcf, parameters: [], result: Nat, body: 4}
+
+definition{name: folderFormatOther, parameters: [], result: Nat, body: 5}
+
+definition{name: folderActionList, parameters: [], result: Nat, body: 0}
+
+definition{name: folderActionRead, parameters: [], result: Nat, body: 1}
+
+definition{name: folderActionWrite, parameters: [], result: Nat, body: 2}
+
+definition{name: folderBulkSmall, parameters: [], result: Nat, body: 0}
+
+definition{name: folderBulkLarge, parameters: [], result: Nat, body: 1}
+
+definition{name: folderHaltedNo, parameters: [], result: Nat, body: 0}
+
+definition{name: folderHaltedYes, parameters: [], result: Nat, body: 1}
+
+definition{name: folderAnswerRead, parameters: [], result: Nat, body: 0}
+
+definition{name: folderAnswerAsk, parameters: [], result: Nat, body: 1}
+
+definition{name: folderAnswerSkip, parameters: [], result: Nat, body: 2}
+
+definition{name: folderAnswerRefuse, parameters: [], result: Nat, body: 3}
+
+structure{
+  name: FolderRequest,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: grant, type: Nat},
+    {name: format, type: Nat},
+    {name: action, type: Nat},
+    {name: bulk, type: Nat},
+    {name: halted, type: Nat}
+  ]
+}
+
+definition{
+  name: folderByteAt,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some b => (ctor Option.some [Nat] (prim to_nat b : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderDigitsValue,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.some [Nat] acc)
+    | Nat.succ rest => (match (folderByteAt s i)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (folderDigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: folderParseDigits,
+  parameters: [s : Bytes],
+  result: (Option Nat),
+  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (folderByteAt s 0)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (folderDigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderParseNumber,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (folderParseDigits value),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderParseGrant,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f6e65 : Bool) then (ctor Option.some [Nat] (folderGrantNone)) else (if (prim equal value 0x70726f6d7074 : Bool) then (ctor Option.some [Nat] (folderGrantPrompt)) else (if (prim equal value 0x6772616e746564 : Bool) then (ctor Option.some [Nat] (folderGrantGranted)) else (if (prim equal value 0x7265766f6b6564 : Bool) then (ctor Option.some [Nat] (folderGrantRevoked)) else (ctor Option.none [Nat])))))
+}
+
+definition{
+  name: folderParseFormat,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6d626f78 : Bool) then (ctor Option.some [Nat] (folderFormatMbox)) else (if (prim equal value 0x656d6c : Bool) then (ctor Option.some [Nat] (folderFormatEml)) else (if (prim equal value 0x6d61696c646972 : Bool) then (ctor Option.some [Nat] (folderFormatMaildir)) else (if (prim equal value 0x696373 : Bool) then (ctor Option.some [Nat] (folderFormatIcs)) else (if (prim equal value 0x766366 : Bool) then (ctor Option.some [Nat] (folderFormatVcf)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (folderFormatOther)) else (ctor Option.none [Nat])))))))
+}
+
+definition{
+  name: folderParseAction,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6c697374 : Bool) then (ctor Option.some [Nat] (folderActionList)) else (if (prim equal value 0x72656164 : Bool) then (ctor Option.some [Nat] (folderActionRead)) else (if (prim equal value 0x7772697465 : Bool) then (ctor Option.some [Nat] (folderActionWrite)) else (ctor Option.none [Nat]))))
+}
+
+definition{
+  name: folderParseBulk,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x736d616c6c : Bool) then (ctor Option.some [Nat] (folderBulkSmall)) else (if (prim equal value 0x6c61726765 : Bool) then (ctor Option.some [Nat] (folderBulkLarge)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: folderParseHalted,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (folderHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (folderHaltedYes)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: folderSliceOf,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: folderFieldEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match (folderByteAt s i)
+      | Option.none => i
+      | Option.some d => (if (d =? 32) then i else (folderFieldEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: folderDecodeField5,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat],
+  result: (Option FolderRequest),
+  body: (let e : Nat := (folderFieldEnd s start (Foundation.Bytes::byteLength s)); (match (folderParseHalted (folderSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [FolderRequest])
+    | Option.some v5 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [FolderRequest] (record FolderRequest {grant := v1, format := v2, action := v3, bulk := v4, halted := v5})) else (ctor Option.none [FolderRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderDecodeField4,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
+  result: (Option FolderRequest),
+  body: (let e : Nat := (folderFieldEnd s start (Foundation.Bytes::byteLength s)); (match (folderParseBulk (folderSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [FolderRequest])
+    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (folderDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [FolderRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderDecodeField3,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
+  result: (Option FolderRequest),
+  body: (let e : Nat := (folderFieldEnd s start (Foundation.Bytes::byteLength s)); (match (folderParseAction (folderSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [FolderRequest])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (folderDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [FolderRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderDecodeField2,
+  parameters: [s : Bytes, start : Nat, v1 : Nat],
+  result: (Option FolderRequest),
+  body: (let e : Nat := (folderFieldEnd s start (Foundation.Bytes::byteLength s)); (match (folderParseFormat (folderSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [FolderRequest])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (folderDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [FolderRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderDecodeField1,
+  parameters: [s : Bytes, start : Nat],
+  result: (Option FolderRequest),
+  body: (let e : Nat := (folderFieldEnd s start (Foundation.Bytes::byteLength s)); (match (folderParseGrant (folderSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [FolderRequest])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (folderDecodeField2 s (e + 1) v1) else (ctor Option.none [FolderRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderRule1,
+  parameters: [request : FolderRequest],
+  result: Bool,
+  body: ((project request halted) =? (folderHaltedYes))
+}
+
+definition{
+  name: folderRule2,
+  parameters: [request : FolderRequest],
+  result: Bool,
+  body: ((project request action) =? (folderActionWrite))
+}
+
+definition{
+  name: folderRule3,
+  parameters: [request : FolderRequest],
+  result: Bool,
+  body: ((project request grant) =? (folderGrantRevoked))
+}
+
+definition{
+  name: folderRule4,
+  parameters: [request : FolderRequest],
+  result: Bool,
+  body: ((project request grant) =? (folderGrantNone))
+}
+
+definition{
+  name: folderRule5,
+  parameters: [request : FolderRequest],
+  result: Bool,
+  body: ((project request grant) =? (folderGrantPrompt))
+}
+
+definition{
+  name: folderRule6,
+  parameters: [request : FolderRequest],
+  result: Bool,
+  body: ((project request action) =? (folderActionList))
+}
+
+definition{
+  name: folderRule7,
+  parameters: [request : FolderRequest],
+  result: Bool,
+  body: ((project request format) =? (folderFormatOther))
+}
+
+definition{
+  name: folderRule8,
+  parameters: [request : FolderRequest],
+  result: Bool,
+  body: ((project request bulk) =? (folderBulkLarge))
+}
+
+definition{
+  name: folderRule9,
+  parameters: [request : FolderRequest],
+  result: Bool,
+  body: ((project request action) =? (folderActionRead))
+}
+
+definition{
+  name: folderJudge,
+  parameters: [request : FolderRequest],
+  result: Nat,
+  body: (if (folderRule1 request) then (folderAnswerRefuse) else (if (folderRule2 request) then (folderAnswerRefuse) else (if (folderRule3 request) then (folderAnswerRefuse) else (if (folderRule4 request) then (folderAnswerAsk) else (if (folderRule5 request) then (folderAnswerAsk) else (if (folderRule6 request) then (folderAnswerRead) else (if (folderRule7 request) then (folderAnswerSkip) else (if (folderRule8 request) then (folderAnswerSkip) else (if (folderRule9 request) then (folderAnswerRead) else (folderAnswerRefuse))))))))))
+}
+
+definition{
+  name: folderEncodeAnswer,
+  parameters: [code : Nat],
+  result: Bytes,
+  body: (if (code =? (folderAnswerRead)) then 0x72656164 else (if (code =? (folderAnswerAsk)) then 0x61736b else (if (code =? (folderAnswerSkip)) then 0x736b6970 else (if (code =? (folderAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964))))
+}
+
+definition{
+  name: folderDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (136 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (folderDecodeField1 value 0)
+    | Option.none => 0x696e76616c6964
+    | Option.some request => (folderEncodeAnswer (folderJudge request)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

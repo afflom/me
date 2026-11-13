@@ -1,0 +1,399 @@
+{
+  "name": "prism-host",
+  "title": "Prism Host",
+  "purpose": "Decides how the owner's browser uses each surface it reports as a route for the owner's own content, so that every surface the browser exposes is used, nothing is used while the Prism is halted, nothing the owner holds is read without the owner's act or a grant the browser keeps, and a live account on another origin is named sealed instead of reached around.",
+  "fields": [
+    {
+      "name": "surface",
+      "kind": "choice",
+      "values": [
+        "folder",
+        "files",
+        "drop",
+        "paste",
+        "contacts",
+        "workers",
+        "mail",
+        "calendar"
+      ],
+      "means": "the browser surface: a granted folder, picked files, dropped files, a paste, the contact picker, the device's cores and memory, or a live mail or calendar account on another origin"
+    },
+    {
+      "name": "present",
+      "kind": "choice",
+      "values": [
+        "yes",
+        "no"
+      ],
+      "means": "whether this browser reports the surface"
+    },
+    {
+      "name": "act",
+      "kind": "choice",
+      "values": [
+        "none",
+        "owner"
+      ],
+      "means": "whether the owner's own press, pick, drop or paste is this use"
+    },
+    {
+      "name": "grant",
+      "kind": "choice",
+      "values": [
+        "none",
+        "kept"
+      ],
+      "means": "whether the browser keeps the owner's grant for this surface across visits"
+    },
+    {
+      "name": "halted",
+      "kind": "choice",
+      "values": [
+        "no",
+        "yes"
+      ],
+      "means": "whether the owner has pressed the kill switch"
+    }
+  ],
+  "outcomes": [
+    "use",
+    "offer",
+    "sealed",
+    "refuse"
+  ],
+  "rules": [
+    {
+      "id": "REQ-001",
+      "when": [
+        {
+          "field": "halted",
+          "op": "is",
+          "value": "yes"
+        }
+      ],
+      "then": "refuse",
+      "says": "when halted is yes then refuse",
+      "why": "stop means stop (kill switch)"
+    },
+    {
+      "id": "REQ-002",
+      "when": [
+        {
+          "field": "surface",
+          "op": "is",
+          "value": "mail"
+        }
+      ],
+      "then": "sealed",
+      "says": "when surface is mail then sealed",
+      "why": "a live mail account on another origin is closed to every page by the same-origin policy"
+    },
+    {
+      "id": "REQ-003",
+      "when": [
+        {
+          "field": "surface",
+          "op": "is",
+          "value": "calendar"
+        }
+      ],
+      "then": "sealed",
+      "says": "when surface is calendar then sealed",
+      "why": "a live calendar on another origin is closed to every page by the same-origin policy"
+    },
+    {
+      "id": "REQ-004",
+      "when": [
+        {
+          "field": "present",
+          "op": "is",
+          "value": "no"
+        }
+      ],
+      "then": "refuse",
+      "says": "when present is no then refuse",
+      "why": "a surface the browser does not report is never offered"
+    },
+    {
+      "id": "REQ-005",
+      "when": [
+        {
+          "field": "surface",
+          "op": "is",
+          "value": "workers"
+        }
+      ],
+      "then": "use",
+      "says": "when surface is workers then use",
+      "why": "the device's cores and memory read nothing of the owner's, so they are always used"
+    },
+    {
+      "id": "REQ-006",
+      "when": [
+        {
+          "field": "act",
+          "op": "is",
+          "value": "owner"
+        }
+      ],
+      "then": "use",
+      "says": "when act is owner then use",
+      "why": "the owner's own act is the consent for this use"
+    },
+    {
+      "id": "REQ-007",
+      "when": [
+        {
+          "field": "surface",
+          "op": "is",
+          "value": "folder"
+        },
+        {
+          "field": "grant",
+          "op": "is",
+          "value": "kept"
+        }
+      ],
+      "then": "use",
+      "says": "when surface is folder and grant is kept then use",
+      "why": "a folder the owner granted is re-read while the browser keeps the grant"
+    }
+  ],
+  "otherwise": "offer",
+  "properties": [
+    {
+      "id": "INV-001",
+      "kind": "always",
+      "when": [
+        {
+          "field": "halted",
+          "op": "is",
+          "value": "yes"
+        }
+      ],
+      "then": "refuse",
+      "says": "always when halted is yes then refuse",
+      "why": "when the owner presses the kill switch no surface is used (constitution P7)"
+    },
+    {
+      "id": "INV-002",
+      "kind": "never",
+      "when": [
+        {
+          "field": "surface",
+          "op": "is",
+          "value": "mail"
+        }
+      ],
+      "then": "use",
+      "says": "never when surface is mail then use",
+      "why": "the Prism never reaches around the browser's seal on another origin"
+    },
+    {
+      "id": "INV-003",
+      "kind": "never",
+      "when": [
+        {
+          "field": "surface",
+          "op": "is",
+          "value": "calendar"
+        }
+      ],
+      "then": "use",
+      "says": "never when surface is calendar then use",
+      "why": "the Prism never reaches around the browser's seal on another origin"
+    },
+    {
+      "id": "INV-004",
+      "kind": "never",
+      "when": [
+        {
+          "field": "present",
+          "op": "is",
+          "value": "no"
+        }
+      ],
+      "then": "use",
+      "says": "never when present is no then use",
+      "why": "a surface the browser does not report is never used"
+    },
+    {
+      "id": "INV-005",
+      "kind": "never",
+      "when": [
+        {
+          "field": "present",
+          "op": "is",
+          "value": "no"
+        }
+      ],
+      "then": "offer",
+      "says": "never when present is no then offer",
+      "why": "a surface the browser does not report is never shown"
+    },
+    {
+      "id": "INV-006",
+      "kind": "never",
+      "when": [
+        {
+          "field": "act",
+          "op": "is",
+          "value": "none"
+        },
+        {
+          "field": "grant",
+          "op": "is",
+          "value": "none"
+        },
+        {
+          "field": "surface",
+          "op": "is",
+          "value": "folder"
+        }
+      ],
+      "then": "use",
+      "says": "never when act is none and grant is none and surface is folder then use",
+      "why": "no folder is read without the owner's act or a kept grant"
+    },
+    {
+      "id": "INV-007",
+      "kind": "never",
+      "when": [
+        {
+          "field": "act",
+          "op": "is",
+          "value": "none"
+        },
+        {
+          "field": "surface",
+          "op": "is",
+          "value": "contacts"
+        }
+      ],
+      "then": "use",
+      "says": "never when act is none and surface is contacts then use",
+      "why": "contacts are read only when the owner picks them"
+    },
+    {
+      "id": "INV-008",
+      "kind": "never",
+      "when": [
+        {
+          "field": "act",
+          "op": "is",
+          "value": "none"
+        },
+        {
+          "field": "surface",
+          "op": "is",
+          "value": "paste"
+        }
+      ],
+      "then": "use",
+      "says": "never when act is none and surface is paste then use",
+      "why": "the clipboard is read only on the owner's paste"
+    },
+    {
+      "id": "INV-009",
+      "kind": "never",
+      "when": [
+        {
+          "field": "act",
+          "op": "is",
+          "value": "none"
+        },
+        {
+          "field": "surface",
+          "op": "is",
+          "value": "files"
+        }
+      ],
+      "then": "use",
+      "says": "never when act is none and surface is files then use",
+      "why": "files are read only when the owner picks them"
+    },
+    {
+      "id": "INV-010",
+      "kind": "never",
+      "when": [
+        {
+          "field": "act",
+          "op": "is",
+          "value": "none"
+        },
+        {
+          "field": "surface",
+          "op": "is",
+          "value": "drop"
+        }
+      ],
+      "then": "use",
+      "says": "never when act is none and surface is drop then use",
+      "why": "dropped files are read only when the owner drops them"
+    }
+  ],
+  "examples": [
+    {
+      "request": "folder yes none kept no",
+      "response": "use"
+    },
+    {
+      "request": "folder yes none none no",
+      "response": "offer"
+    },
+    {
+      "request": "folder no owner none no",
+      "response": "refuse"
+    },
+    {
+      "request": "paste yes owner none no",
+      "response": "use"
+    },
+    {
+      "request": "paste yes none none no",
+      "response": "offer"
+    },
+    {
+      "request": "contacts no none none no",
+      "response": "refuse"
+    },
+    {
+      "request": "contacts yes owner none no",
+      "response": "use"
+    },
+    {
+      "request": "workers yes none none no",
+      "response": "use"
+    },
+    {
+      "request": "mail yes owner kept no",
+      "response": "sealed"
+    },
+    {
+      "request": "calendar yes owner none no",
+      "response": "sealed"
+    },
+    {
+      "request": "folder yes owner kept yes",
+      "response": "refuse"
+    },
+    {
+      "request": "workers yes none none yes",
+      "response": "refuse"
+    }
+  ],
+  "schema": "prism/spec/1",
+  "actors": [],
+  "meanings": {
+    "use": "the page uses the surface now",
+    "offer": "the page shows the surface's control and waits for the owner",
+    "sealed": "the browser seals it from every page on another origin",
+    "refuse": "the surface is not used"
+  },
+  "otherwiseWhy": "every surface the browser reports is offered to the owner",
+  "limits": [
+    "It does not read anything itself: each item still goes through PrismFolder, the router, the Boundary and the vault.",
+    "Sharing to the Prism and opening files with it need the app manifest and service worker, which the locked frame generates without a hook.",
+    "The worker count is the host rule uorc states: at most one per core, sixteen, and two per GiB the browser reports."
+  ]
+}

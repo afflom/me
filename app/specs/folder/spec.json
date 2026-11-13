@@ -1,0 +1,351 @@
+{
+  "name": "prism-folder",
+  "title": "Prism Folder",
+  "purpose": "Decides whether the owner's browser may read one file from a folder or file the owner granted on their device, so that nothing is read while the Prism is halted, nothing is read without the owner's grant, nothing is ever written to the device, and only standard mail, calendar and contact formats are read.",
+  "fields": [
+    {
+      "name": "grant",
+      "kind": "choice",
+      "values": [
+        "none",
+        "prompt",
+        "granted",
+        "revoked"
+      ],
+      "means": "the browser's permission for the folder or file: never granted, must be asked again, granted, or taken back by the owner"
+    },
+    {
+      "name": "format",
+      "kind": "choice",
+      "values": [
+        "mbox",
+        "eml",
+        "maildir",
+        "ics",
+        "vcf",
+        "other"
+      ],
+      "means": "the file's format, by its name and first bytes"
+    },
+    {
+      "name": "action",
+      "kind": "choice",
+      "values": [
+        "list",
+        "read",
+        "write"
+      ],
+      "means": "what the page would do: list the folder, read the file, or write to the device"
+    },
+    {
+      "name": "bulk",
+      "kind": "choice",
+      "values": [
+        "small",
+        "large"
+      ],
+      "means": "whether the file is within the size the page reads in one go"
+    },
+    {
+      "name": "halted",
+      "kind": "choice",
+      "values": [
+        "no",
+        "yes"
+      ],
+      "means": "whether the owner has pressed the kill switch"
+    }
+  ],
+  "outcomes": [
+    "read",
+    "ask",
+    "skip",
+    "refuse"
+  ],
+  "rules": [
+    {
+      "id": "REQ-001",
+      "when": [
+        {
+          "field": "halted",
+          "op": "is",
+          "value": "yes"
+        }
+      ],
+      "then": "refuse",
+      "says": "when halted is yes then refuse",
+      "why": "stop means stop (kill switch)"
+    },
+    {
+      "id": "REQ-002",
+      "when": [
+        {
+          "field": "action",
+          "op": "is",
+          "value": "write"
+        }
+      ],
+      "then": "refuse",
+      "says": "when action is write then refuse",
+      "why": "the Prism never writes to the owner's device"
+    },
+    {
+      "id": "REQ-003",
+      "when": [
+        {
+          "field": "grant",
+          "op": "is",
+          "value": "revoked"
+        }
+      ],
+      "then": "refuse",
+      "says": "when grant is revoked then refuse",
+      "why": "a folder the owner took back stays closed"
+    },
+    {
+      "id": "REQ-004",
+      "when": [
+        {
+          "field": "grant",
+          "op": "is",
+          "value": "none"
+        }
+      ],
+      "then": "ask",
+      "says": "when grant is none then ask",
+      "why": "the owner grants each folder"
+    },
+    {
+      "id": "REQ-005",
+      "when": [
+        {
+          "field": "grant",
+          "op": "is",
+          "value": "prompt"
+        }
+      ],
+      "then": "ask",
+      "says": "when grant is prompt then ask",
+      "why": "the browser asks again when the grant lapsed"
+    },
+    {
+      "id": "REQ-006",
+      "when": [
+        {
+          "field": "action",
+          "op": "is",
+          "value": "list"
+        }
+      ],
+      "then": "read",
+      "says": "when action is list then read",
+      "why": "a granted folder may be listed"
+    },
+    {
+      "id": "REQ-007",
+      "when": [
+        {
+          "field": "format",
+          "op": "is",
+          "value": "other"
+        }
+      ],
+      "then": "skip",
+      "says": "when format is other then skip",
+      "why": "only standard mail, calendar and contact files are read"
+    },
+    {
+      "id": "REQ-008",
+      "when": [
+        {
+          "field": "bulk",
+          "op": "is",
+          "value": "large"
+        }
+      ],
+      "then": "skip",
+      "says": "when bulk is large then skip",
+      "why": "a file too large to read at once is passed over"
+    },
+    {
+      "id": "REQ-009",
+      "when": [
+        {
+          "field": "action",
+          "op": "is",
+          "value": "read"
+        }
+      ],
+      "then": "read",
+      "says": "when action is read then read",
+      "why": "a granted standard file is read"
+    }
+  ],
+  "otherwise": "refuse",
+  "properties": [
+    {
+      "id": "INV-001",
+      "kind": "always",
+      "when": [
+        {
+          "field": "halted",
+          "op": "is",
+          "value": "yes"
+        }
+      ],
+      "then": "refuse",
+      "says": "always when halted is yes then refuse",
+      "why": "when the owner presses the kill switch nothing is read (constitution P7)"
+    },
+    {
+      "id": "INV-002",
+      "kind": "always",
+      "when": [
+        {
+          "field": "action",
+          "op": "is",
+          "value": "write"
+        }
+      ],
+      "then": "refuse",
+      "says": "always when action is write then refuse",
+      "why": "the Prism must never change or delete the owner's files"
+    },
+    {
+      "id": "INV-003",
+      "kind": "never",
+      "when": [
+        {
+          "field": "grant",
+          "op": "is",
+          "value": "none"
+        }
+      ],
+      "then": "read",
+      "says": "never when grant is none then read",
+      "why": "nothing is read from a folder the owner did not grant"
+    },
+    {
+      "id": "INV-004",
+      "kind": "never",
+      "when": [
+        {
+          "field": "grant",
+          "op": "is",
+          "value": "prompt"
+        }
+      ],
+      "then": "read",
+      "says": "never when grant is prompt then read",
+      "why": "a lapsed grant is not the owner's consent"
+    },
+    {
+      "id": "INV-005",
+      "kind": "never",
+      "when": [
+        {
+          "field": "grant",
+          "op": "is",
+          "value": "revoked"
+        }
+      ],
+      "then": "read",
+      "says": "never when grant is revoked then read",
+      "why": "a folder the owner took back is never read"
+    },
+    {
+      "id": "INV-006",
+      "kind": "never",
+      "when": [
+        {
+          "field": "format",
+          "op": "is",
+          "value": "other"
+        },
+        {
+          "field": "action",
+          "op": "is",
+          "value": "read"
+        }
+      ],
+      "then": "read",
+      "says": "never when format is other and action is read then read",
+      "why": "only standard mail, calendar and contact files are read"
+    },
+    {
+      "id": "INV-007",
+      "kind": "never",
+      "when": [
+        {
+          "field": "bulk",
+          "op": "is",
+          "value": "large"
+        },
+        {
+          "field": "action",
+          "op": "is",
+          "value": "read"
+        }
+      ],
+      "then": "read",
+      "says": "never when bulk is large and action is read then read",
+      "why": "no file is read beyond the page's limit"
+    }
+  ],
+  "examples": [
+    {
+      "request": "granted mbox read small no",
+      "response": "read"
+    },
+    {
+      "request": "granted ics read small no",
+      "response": "read"
+    },
+    {
+      "request": "granted other read small no",
+      "response": "skip"
+    },
+    {
+      "request": "granted eml read large no",
+      "response": "skip"
+    },
+    {
+      "request": "granted mbox write small no",
+      "response": "refuse"
+    },
+    {
+      "request": "granted mbox read small yes",
+      "response": "refuse"
+    },
+    {
+      "request": "none mbox read small no",
+      "response": "ask"
+    },
+    {
+      "request": "prompt vcf list small no",
+      "response": "ask"
+    },
+    {
+      "request": "revoked mbox list small no",
+      "response": "refuse"
+    },
+    {
+      "request": "granted other list small no",
+      "response": "read"
+    }
+  ],
+  "schema": "prism/spec/1",
+  "actors": [],
+  "meanings": {
+    "read": "the page may read it now",
+    "ask": "the browser must ask the owner for the folder first",
+    "skip": "the file is passed over",
+    "refuse": "the act may not happen"
+  },
+  "otherwiseWhy": "deny by default",
+  "limits": [
+    "It does not pick the folder: the owner does, in the browser's own picker.",
+    "The browser refuses app-data and system folders before this decision is asked.",
+    "Each item read still goes through the router, the Boundary and the vault."
+  ]
+}

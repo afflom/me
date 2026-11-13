@@ -88,6 +88,8 @@ fn prism_pm_01() {
         ("Google", "PrismGoogle", "googleDispatch"),
         ("Googlelink", "PrismGoogleLink", "googleLinkDispatch"),
         ("Dest", "PrismDest", "destDispatch"),
+        ("Folder", "PrismFolder", "folderDispatch"),
+        ("Host", "PrismHost", "hostDispatch"),
         ("Model", "PrismModels", "modelsDispatch"),
         ("Kappa", "PrismKappa", "kappaDispatch"),
     ] {

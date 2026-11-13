@@ -1,0 +1,290 @@
+\begin{lexlean}{PrismHost}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: hostSurfaceFolder, parameters: [], result: Nat, body: 0}
+
+definition{name: hostSurfaceFiles, parameters: [], result: Nat, body: 1}
+
+definition{name: hostSurfaceDrop, parameters: [], result: Nat, body: 2}
+
+definition{name: hostSurfacePaste, parameters: [], result: Nat, body: 3}
+
+definition{name: hostSurfaceContacts, parameters: [], result: Nat, body: 4}
+
+definition{name: hostSurfaceWorkers, parameters: [], result: Nat, body: 5}
+
+definition{name: hostSurfaceMail, parameters: [], result: Nat, body: 6}
+
+definition{name: hostSurfaceCalendar, parameters: [], result: Nat, body: 7}
+
+definition{name: hostPresentYes, parameters: [], result: Nat, body: 0}
+
+definition{name: hostPresentNo, parameters: [], result: Nat, body: 1}
+
+definition{name: hostActNone, parameters: [], result: Nat, body: 0}
+
+definition{name: hostActOwner, parameters: [], result: Nat, body: 1}
+
+definition{name: hostGrantNone, parameters: [], result: Nat, body: 0}
+
+definition{name: hostGrantKept, parameters: [], result: Nat, body: 1}
+
+definition{name: hostHaltedNo, parameters: [], result: Nat, body: 0}
+
+definition{name: hostHaltedYes, parameters: [], result: Nat, body: 1}
+
+definition{name: hostAnswerUse, parameters: [], result: Nat, body: 0}
+
+definition{name: hostAnswerOffer, parameters: [], result: Nat, body: 1}
+
+definition{name: hostAnswerSealed, parameters: [], result: Nat, body: 2}
+
+definition{name: hostAnswerRefuse, parameters: [], result: Nat, body: 3}
+
+structure{
+  name: HostRequest,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: surface, type: Nat},
+    {name: present, type: Nat},
+    {name: act, type: Nat},
+    {name: grant, type: Nat},
+    {name: halted, type: Nat}
+  ]
+}
+
+definition{
+  name: hostByteAt,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some b => (ctor Option.some [Nat] (prim to_nat b : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostDigitsValue,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.some [Nat] acc)
+    | Nat.succ rest => (match (hostByteAt s i)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (hostDigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: hostParseDigits,
+  parameters: [s : Bytes],
+  result: (Option Nat),
+  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (hostByteAt s 0)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (hostDigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostParseNumber,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (hostParseDigits value),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostParseSurface,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x666f6c646572 : Bool) then (ctor Option.some [Nat] (hostSurfaceFolder)) else (if (prim equal value 0x66696c6573 : Bool) then (ctor Option.some [Nat] (hostSurfaceFiles)) else (if (prim equal value 0x64726f70 : Bool) then (ctor Option.some [Nat] (hostSurfaceDrop)) else (if (prim equal value 0x7061737465 : Bool) then (ctor Option.some [Nat] (hostSurfacePaste)) else (if (prim equal value 0x636f6e7461637473 : Bool) then (ctor Option.some [Nat] (hostSurfaceContacts)) else (if (prim equal value 0x776f726b657273 : Bool) then (ctor Option.some [Nat] (hostSurfaceWorkers)) else (if (prim equal value 0x6d61696c : Bool) then (ctor Option.some [Nat] (hostSurfaceMail)) else (if (prim equal value 0x63616c656e646172 : Bool) then (ctor Option.some [Nat] (hostSurfaceCalendar)) else (ctor Option.none [Nat])))))))))
+}
+
+definition{
+  name: hostParsePresent,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (hostPresentYes)) else (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (hostPresentNo)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: hostParseAct,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f6e65 : Bool) then (ctor Option.some [Nat] (hostActNone)) else (if (prim equal value 0x6f776e6572 : Bool) then (ctor Option.some [Nat] (hostActOwner)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: hostParseGrant,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f6e65 : Bool) then (ctor Option.some [Nat] (hostGrantNone)) else (if (prim equal value 0x6b657074 : Bool) then (ctor Option.some [Nat] (hostGrantKept)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: hostParseHalted,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (hostHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (hostHaltedYes)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: hostSliceOf,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: hostFieldEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match (hostByteAt s i)
+      | Option.none => i
+      | Option.some d => (if (d =? 32) then i else (hostFieldEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: hostDecodeField5,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat],
+  result: (Option HostRequest),
+  body: (let e : Nat := (hostFieldEnd s start (Foundation.Bytes::byteLength s)); (match (hostParseHalted (hostSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [HostRequest])
+    | Option.some v5 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [HostRequest] (record HostRequest {surface := v1, present := v2, act := v3, grant := v4, halted := v5})) else (ctor Option.none [HostRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostDecodeField4,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
+  result: (Option HostRequest),
+  body: (let e : Nat := (hostFieldEnd s start (Foundation.Bytes::byteLength s)); (match (hostParseGrant (hostSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [HostRequest])
+    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (hostDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [HostRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostDecodeField3,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
+  result: (Option HostRequest),
+  body: (let e : Nat := (hostFieldEnd s start (Foundation.Bytes::byteLength s)); (match (hostParseAct (hostSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [HostRequest])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (hostDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [HostRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostDecodeField2,
+  parameters: [s : Bytes, start : Nat, v1 : Nat],
+  result: (Option HostRequest),
+  body: (let e : Nat := (hostFieldEnd s start (Foundation.Bytes::byteLength s)); (match (hostParsePresent (hostSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [HostRequest])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (hostDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [HostRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostDecodeField1,
+  parameters: [s : Bytes, start : Nat],
+  result: (Option HostRequest),
+  body: (let e : Nat := (hostFieldEnd s start (Foundation.Bytes::byteLength s)); (match (hostParseSurface (hostSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [HostRequest])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (hostDecodeField2 s (e + 1) v1) else (ctor Option.none [HostRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hostRule1,
+  parameters: [request : HostRequest],
+  result: Bool,
+  body: ((project request halted) =? (hostHaltedYes))
+}
+
+definition{
+  name: hostRule2,
+  parameters: [request : HostRequest],
+  result: Bool,
+  body: ((project request surface) =? (hostSurfaceMail))
+}
+
+definition{
+  name: hostRule3,
+  parameters: [request : HostRequest],
+  result: Bool,
+  body: ((project request surface) =? (hostSurfaceCalendar))
+}
+
+definition{
+  name: hostRule4,
+  parameters: [request : HostRequest],
+  result: Bool,
+  body: ((project request present) =? (hostPresentNo))
+}
+
+definition{
+  name: hostRule5,
+  parameters: [request : HostRequest],
+  result: Bool,
+  body: ((project request surface) =? (hostSurfaceWorkers))
+}
+
+definition{
+  name: hostRule6,
+  parameters: [request : HostRequest],
+  result: Bool,
+  body: ((project request act) =? (hostActOwner))
+}
+
+definition{
+  name: hostRule7,
+  parameters: [request : HostRequest],
+  result: Bool,
+  body: (((project request surface) =? (hostSurfaceFolder)) && ((project request grant) =? (hostGrantKept)))
+}
+
+definition{
+  name: hostRule7Misses,
+  parameters: [request : HostRequest],
+  result: Bool,
+  body: (((((project request surface) <? (hostSurfaceFolder)) || ((hostSurfaceFolder) <? (project request surface))) || ((project request grant) <? (hostGrantKept))) || ((hostGrantKept) <? (project request grant)))
+}
+
+definition{
+  name: hostJudge,
+  parameters: [request : HostRequest],
+  result: Nat,
+  body: (if (hostRule1 request) then (hostAnswerRefuse) else (if (hostRule2 request) then (hostAnswerSealed) else (if (hostRule3 request) then (hostAnswerSealed) else (if (hostRule4 request) then (hostAnswerRefuse) else (if (hostRule5 request) then (hostAnswerUse) else (if (hostRule6 request) then (hostAnswerUse) else (if (hostRule7Misses request) then (hostAnswerOffer) else (hostAnswerUse))))))))
+}
+
+definition{
+  name: hostEncodeAnswer,
+  parameters: [code : Nat],
+  result: Bytes,
+  body: (if (code =? (hostAnswerUse)) then 0x757365 else (if (code =? (hostAnswerOffer)) then 0x6f66666572 else (if (code =? (hostAnswerSealed)) then 0x7365616c6564 else (if (code =? (hostAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964))))
+}
+
+definition{
+  name: hostDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (136 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (hostDecodeField1 value 0)
+    | Option.none => 0x696e76616c6964
+    | Option.some request => (hostEncodeAnswer (hostJudge request)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

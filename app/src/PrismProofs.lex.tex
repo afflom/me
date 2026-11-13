@@ -7,8 +7,10 @@
 \importmodule{PrismBoundary}
 \importmodule{PrismChronology}
 \importmodule{PrismDest}
+\importmodule{PrismFolder}
 \importmodule{PrismGoogle}
 \importmodule{PrismGoogleLink}
+\importmodule{PrismHost}
 \importmodule{PrismKappa}
 \importmodule{PrismLearning}
 \importmodule{PrismModels}
@@ -94,6 +96,22 @@ theorem{
   name: routesDest,
   parameters: [rest : Bytes],
   statement: ((Prism::route (Prism::facetDest) rest) = (PrismDest::destDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesFolder,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetFolder) rest) = (PrismFolder::folderDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesHost,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetHost) rest) = (PrismHost::hostDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }

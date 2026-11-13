@@ -3,7 +3,8 @@
 The root routes a request "<facet> <rest>" to the facet module's
 `dispatch rest`, and proves one `routes<Facet>` theorem per facet plus
 `refusesUnknownFacet`. To add a facet: append (keyword, Module, dispatch name) to FACETS,
-add vectors for it below, raise the limits if its requests or answers are
+add vectors for it below (one or two: the root's vector list nests one level per
+vector, and 117 overflowed the SDK's IR reader while 107 passes), raise the limits if its requests or answers are
 larger, then run
 
     python3 -I tools/prism_root.py app/src
@@ -31,6 +32,8 @@ FACETS = [
     ("google", "PrismGoogle", "googleDispatch"),
     ("googlelink", "PrismGoogleLink", "googleLinkDispatch"),
     ("dest", "PrismDest", "destDispatch"),
+    ("folder", "PrismFolder", "folderDispatch"),
+    ("host", "PrismHost", "hostDispatch"),
     ("model", "PrismModels", "modelsDispatch"),
     ("kappa", "PrismKappa", "kappaDispatch"),
 ]
@@ -70,6 +73,8 @@ VECTORS = [
  ("model locked onnx match match granted yes", "refuse"),
  ("model unlocked gguf match match granted no", "refuse"),
  ("model", "invalid request"),
+ ("folder granted mbox read small no", "read"),
+ ("host mail yes owner kept no", "sealed"),
  ("kappa sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 match", "admit sha256 0 32"),
  ("kappa sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 mismatch", "mismatch"),
  ("kappa blake3:d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24 uncomputed", "unverified blake3 2 32"),
