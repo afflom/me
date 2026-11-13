@@ -11,10 +11,10 @@ Feature: page
     And crates/conformance/tests/page.rs holds every decision in site/card.mjs to the app guest
 
   @PG-02 @build
-  Scenario: The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, every visible word a name from the model, every list place fed by a source or an act, and every colour a tone of its modeled look read at its contrast
+  Scenario: The page is PrismSurface made visible: one place per owner view of the design model, drawn only when it is in the person's view and never when it is the system's, showing that view's domains under its role, every act and setting in its modeled place, every visible word a name from the model, every list place fed by a source or an act, and every colour a tone of its modeled look read at its contrast
     Given the fixture PG-02 needs
     When the suite exercises PG-02
-    Then The page is PrismSurface made visible: one place per owner view of the design model, showing that view's domains under its role, every act and setting in its modeled place, every visible word a name from the model, every list place fed by a source or an act, and every colour a tone of its modeled look read at its contrast
+    Then The page is PrismSurface made visible: one place per owner view of the design model, drawn only when it is in the person's view and never when it is the system's, showing that view's domains under its role, every act and setting in its modeled place, every visible word a name from the model, every list place fed by a source or an act, and every colour a tone of its modeled look read at its contrast
 
   @PG-03 @build
   Scenario: Every act on the page completes end to end: what the owner sends is the very event or message they reviewed and is kept in the place it left from at that domain's floor, every kept item opens to its words, and Ask draws on the kept items that share its words, never while halted, under the highest label it drew on

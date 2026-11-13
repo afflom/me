@@ -15,6 +15,10 @@
 .pr-nav { display: flex; flex-direction: column; gap: var(--space-3); min-height: 0; overflow-y: auto; scrollbar-width: none; padding-block: var(--space-1); }
 .pr-group { list-style: none; margin: 0; padding: 0 0 var(--space-3); display: flex; flex-direction: column; gap: 1px; border-bottom: var(--border-width) solid var(--border); }
 .pr-group:last-child { border-bottom: 0; }
+/* The settings sheet sits apart from the places, at the foot of the menu. */
+button.pr-go.pr-sheet { margin-top: auto; flex: none; }
+/* What the person did is already on the page; the frame's log stays empty. */
+body.has-card .rail .history { display: none; }
 button.pr-go {
   width: 100%;
   min-height: 2.25rem;
@@ -122,6 +126,7 @@ button.pr-go[aria-current="page"] { background: color-mix(in oklch, var(--vr-ver
   .pr-group { flex-direction: row; gap: var(--space-1); padding: 0 var(--space-2) 0 0; border-bottom: 0; border-right: var(--border-width) solid var(--border); }
   .pr-group:last-child { border-right: 0; }
   button.pr-go { width: auto; white-space: nowrap; }
+  button.pr-go.pr-sheet { margin: 0 0 0 auto; }
   .pr-item { grid-template-columns: 3.75rem minmax(0, 1fr); }
   .pr-who { grid-column: 2; text-align: start; }
   .pr-ask { flex-direction: row; align-items: stretch; }

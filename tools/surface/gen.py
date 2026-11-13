@@ -12,7 +12,10 @@ Outputs, all generated, never hand-edited:
 The surface is the design model made visible: a place is a row of
 Foundation.Me.V1.Model's views, and the proofs hold the two together, so a
 place cannot show other domains than its view, an owner view cannot go
-unplaced, and a note cannot be kept below its domain's floor. The words are
+unplaced, and a note cannot be kept below its domain's floor. The page is
+the person's view alone: a place in the system view (ISO/IEC 42010) is
+filed by the back end and never drawn, and a drawn place is never the
+system's. The words are
 names, never explanations: a word longer than four words or ending a
 sentence is refused here, before anything is written.
 """
@@ -31,6 +34,7 @@ SHOWS = SPEC["shows"]
 GROUPS = [g["key"] for g in SPEC["groups"]]
 DIRECTIONS = ["in", "out", "local"]
 SOURCES = SPEC["sources"]
+VIEWPOINTS = SPEC["viewpoints"]
 
 
 def refuse(why):
@@ -86,13 +90,13 @@ def records(kind, rows):
 def place_record(p):
     return (
         f"(record SurfacePlace {{view := {p['view']}, name := {s(p['name'])}, host := {HOSTS.index(p['host'])}, "
-        f"role := {p['role']}, domains := {nats(p['domains'])}, kind := {SHOWS.index(p['show'])}, act := {ACTS.index(p['act'])}}})"
+        f"viewpoint := {VIEWPOINTS.index(p['viewpoint'])}, role := {p['role']}, domains := {nats(p['domains'])}, kind := {SHOWS.index(p['show'])}, act := {ACTS.index(p['act'])}}})"
     )
 
 
 def setting_record(x):
     return (
-        f"(record SurfaceSetting {{name := {s(x['name'])}, group := {GROUPS.index(x['group'])}, "
+        f"(record SurfaceSetting {{name := {s(x['name'])}, viewpoint := {VIEWPOINTS.index(x['viewpoint'])}, group := {GROUPS.index(x['group'])}, "
         f"source := {SOURCES.index(x['source']) if x['source'] != 'none' else len(SOURCES)}}})"
     )
 
@@ -244,6 +248,9 @@ ask = ACTS.index("ask")
 composer = HOSTS.index("composer")
 home = HOSTS.index("home")
 nav = HOSTS.index("nav")
+sheet = HOSTS.index("sheet")
+undrawn = HOSTS.index("none")
+system = VIEWPOINTS.index("system")
 routed = [SOURCES.index(x) for x in SPEC["routed"] if x != "ownerUtterance"]
 
 model = [
@@ -261,6 +268,7 @@ model = [
     {name: view, type: Nat},
     {name: name, type: String},
     {name: host, type: Nat},
+    {name: viewpoint, type: Nat},
     {name: role, type: Nat},
     {name: domains, type: (List Nat)},
     {name: kind, type: Nat},
@@ -279,7 +287,7 @@ model = [
   name: SurfaceSetting,
   type_parameters: [],
   parameters: [],
-  fields: [{name: name, type: String}, {name: group, type: Nat}, {name: source, type: Nat}]
+  fields: [{name: name, type: String}, {name: viewpoint, type: Nat}, {name: group, type: Nat}, {name: source, type: Nat}]
 }
 """,
     """structure{
@@ -375,11 +383,9 @@ proofs_defs = [
     # A place shows exactly its view's domains under its view's role.
     rec("surfacePlacesAgree", f"[places : (List {M}SurfacePlace)]", "Bool",
         f"(match places\n    | List.nil => true\n    | List.cons place rest => ((surfaceRowAgrees place ({D}designViews)) && (surfacePlacesAgree rest)))", "places"),
-    rec("surfaceNavRoles", f"[places : (List {M}SurfacePlace)]", "(List Nat)",
-        f"(match places\n    | List.nil => (nil Nat)\n    | List.cons place rest => (if ((project place host) =? {nav}) then (cons (project place role) (surfaceNavRoles rest)) else (surfaceNavRoles rest)))", "places"),
-    # The menu groups by role: once a role's run ends, it never comes back.
-    rec("surfaceRunsContiguous", "[previous : Nat, seen : (List Nat), roles : (List Nat)]", "Bool",
-        "(match roles\n    | List.nil => true\n    | List.cons role rest => (if (role =? previous) then (surfaceRunsContiguous previous seen rest) else ((not (surfaceMember role seen)) && (surfaceRunsContiguous role (cons previous seen) rest))))", "roles"),
+    # The page is the person's view: a place is undrawn exactly when it is the system's.
+    rec("surfacePageIsPersonView", f"[places : (List {M}SurfacePlace)]", "Bool",
+        f"(match places\n    | List.nil => true\n    | List.cons place rest => ((if ((project place viewpoint) =? {system}) then ((project place host) =? {undrawn}) else (not ((project place host) =? {undrawn}))) && (surfacePageIsPersonView rest)))", "places"),
     rec("surfaceActsSound", f"[places : (List {M}SurfacePlace)]", "Bool",
         f"(match places\n    | List.nil => true\n    | List.cons place rest => (((not (surfaceMember (project place act) ({M}surfaceOutboundActs))) || ((((project place role) =? 1) || ((project place role) =? 2)) || ((project place role) =? 4))) && ((if ((project place act) =? {ask}) then ((project place host) =? {composer}) else (not ((project place host) =? {composer}))) && (surfaceActsSound rest))))", "places"),
     defn("surfaceFirstOr", "Nat",
@@ -455,7 +461,9 @@ theorems = [
     theorem("surfacePlacesAreViews", f"((surfacePlacesAgree ({M}surfacePlaces)) = true)"),
     theorem("surfaceOneHome", f"((surfaceHostCount {home} ({M}surfacePlaces)) = 1)"),
     theorem("surfaceOneComposer", f"((surfaceHostCount {composer} ({M}surfacePlaces)) = 1)"),
-    theorem("surfaceMenuByRole", f"((surfaceRunsContiguous 99 (nil Nat) (surfaceNavRoles ({M}surfacePlaces))) = true)"),
+    theorem("surfaceOneSheet", f"((surfaceHostCount {sheet} ({M}surfacePlaces)) = 1)"),
+    theorem("surfacePageIsThePersonsView", f"((surfacePageIsPersonView ({M}surfacePlaces)) = true)"),
+    theorem("surfaceMenuIsShort", f"(((surfaceHostCount {nav} ({M}surfacePlaces)) <=? 4) = true)"),
     theorem("surfaceActsInTheirRoles", f"((surfaceActsSound ({M}surfacePlaces)) = true)"),
     theorem("surfaceNotesKeepTheFloor", f"((surfaceNotesNeverPublic ({M}surfacePlaces)) = true)"),
     theorem("surfaceFloorsAreTheDesign", f"((surfaceSameNats ({M}surfaceFloors) ({D}designDomainFloors)) = true)"),
@@ -500,38 +508,32 @@ import html as _html
 
 e = _html.escape
 W = SPEC["words"]
-ROLE_ORDER = []
-for p in SPEC["places"]:
-    if p["host"] == "nav" and p["role"] not in ROLE_ORDER:
-        ROLE_ORDER.append(p["role"])
-
-
 def nav_html():
-    out = ['  <nav class="pr-nav" id="pr-nav" aria-label="' + e(W["places"]) + '">']
-    home = [p for p in SPEC["places"] if p["host"] == "home"]
-    groups = [home] + [[p for p in SPEC["places"] if p["host"] == "nav" and p["role"] == r] for r in ROLE_ORDER]
-    for i, group in enumerate(groups):
-        label = SPEC["roles"][group[0]["role"]] if i else W["places"]
-        out.append(f'    <ul class="pr-group" aria-label="{e(label)}">')
-        for p in group:
+    """The menu: Today, then the person's places in the spec's order, then the sheet."""
+    out = ['  <nav class="pr-nav" id="pr-nav" aria-label="' + e(W["places"]) + '">', '    <ul class="pr-group">']
+    for p in SPEC["places"]:
+        if p["host"] in ("home", "nav"):
             current = ' aria-current="page"' if p["host"] == "home" else ""
             out.append(f'      <li><button type="button" class="pr-go" data-place="{p["key"]}"{current}>{e(p["name"])}</button></li>')
-        out.append("    </ul>")
+    out.append("    </ul>")
+    for p in SPEC["places"]:
+        if p["host"] == "sheet":
+            out.append(f'    <button type="button" class="pr-go pr-sheet" data-place="{p["key"]}">{e(p["name"])}</button>')
     out.append("  </nav>")
     return "\n".join(out)
 
 
 def feeder_of(place):
-    """A source that reads into the place's first domain comes first; else the place's own act."""
-    source = next((f for f in FEEDERS if f["act"] == "none" and place["domains"][0] in f["domains"]), None)
-    return source or next((f for f in FEEDERS if f["act"] != "none" and f["act"] == place["act"]), None)
+    """A source that reads into the place's first domain. A place's own act is
+    on the place itself, so a card never repeats it."""
+    return next((f for f in FEEDERS if f["act"] == "none" and place["domains"][0] in f["domains"]), None)
 
 
 def home_html():
     """The home: a card per place that holds things, each with the feeder that fills it."""
     out = [f'    <ul id="pr-home" class="pr-home" aria-label="{e(W["places"])}">']
     for p in SPEC["places"]:
-        if p["host"] != "nav" or p["show"] == "settings":
+        if p["host"] != "nav":
             continue
         f = feeder_of(p)
         feed = f'<button type="button" class="pr-card-feed" data-feed="{f["key"]}" data-place="{p["key"]}">{e(f["word"])}</button>' if f else ""
@@ -544,7 +546,7 @@ home_place = next(p for p in SPEC["places"] if p["host"] == "home")
 ask_place = next(p for p in SPEC["places"] if p["host"] == "composer")
 card_html = f"""<!-- Generated by tools/surface/gen.py from app/specs/surface/spec.json. Do not edit.
      The Prism's places, from PrismSurface: one per owner view of the design
-     model, grouped by role. Every word here is the model's. -->
+     model in the person's view, then the settings sheet. Every word here is the model's. -->
 <div class="pr" data-slot="surface">
 {nav_html()}
   <section class="pr-place" id="pr-place" aria-labelledby="pr-title">
@@ -562,8 +564,6 @@ card_html = f"""<!-- Generated by tools/surface/gen.py from app/specs/surface/sp
   <textarea id="pr-prompt" rows="3" aria-label="{e(ask_place["name"])}" placeholder="{e(W["ask.placeholder"])}" autocomplete="off" spellcheck="true"></textarea>
   <button id="pr-ask-go" type="submit">{e(SPEC["acts"][ACTS.index("ask")]["word"])}</button>
 </form>
-
-<ol id="pr-log" data-slot="history" data-label="{e(W["recent"])}"></ol>
 """
 
 def look_css():

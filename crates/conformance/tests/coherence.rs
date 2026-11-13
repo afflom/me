@@ -77,7 +77,7 @@ fn coherence_co_01() {
             ),
             ("pr-clash", "the clash is checked"),
             ("/^No answer$/", "an Ask nothing kept meets says so"),
-            ("/^Halted$/", "Ask while halted shows nothing kept"),
+            ("/^Paused$/", "Ask while paused shows nothing kept"),
         ],
     );
     let pages = read(".github/workflows/pages.yml");
