@@ -1,0 +1,607 @@
+\begin{lexlean}{PrismCurateProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismCurate}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: curateBreaksInv001,
+  parameters: [request : PrismCurate::CurateRequest],
+  result: Bool,
+  body: (((((((((((((project request halted) <? 2) && ((project request tunable) <? 2)) && ((project request label) <? 2)) && ((project request defect) <? 2)) && ((project request evidence) <? 2)) && ((project request floor) <? 2)) && ((project request move) <? 2)) && ((project request eased) <? 2)) && ((project request dominance) <? 4)) && ((project request claim) <? 2)) && ((project request halted) =? (PrismCurate::curateHaltedYes))) && (not ((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerRefuse))))
+}
+
+theorem{
+  name: curateInv001Holds,
+  parameters: [request : PrismCurate::CurateRequest],
+  statement: ((curateBreaksInv001 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismCurate::curateAnswerAdopt,
+      PrismCurate::curateAnswerKeep,
+      PrismCurate::curateAnswerRecall,
+      PrismCurate::curateAnswerRefuse,
+      PrismCurate::curateClaimKnown,
+      PrismCurate::curateClaimNew,
+      PrismCurate::curateDefectSome,
+      PrismCurate::curateDefectZero,
+      PrismCurate::curateDominanceDominated,
+      PrismCurate::curateDominanceDominates,
+      PrismCurate::curateDominanceEqual,
+      PrismCurate::curateDominanceIncomparable,
+      PrismCurate::curateEasedNo,
+      PrismCurate::curateEasedYes,
+      PrismCurate::curateEvidenceOwner,
+      PrismCurate::curateEvidenceSelf,
+      PrismCurate::curateFloorKept,
+      PrismCurate::curateFloorRegressed,
+      PrismCurate::curateHaltedNo,
+      PrismCurate::curateHaltedYes,
+      PrismCurate::curateJudge,
+      PrismCurate::curateLabelAdmit,
+      PrismCurate::curateLabelOther,
+      PrismCurate::curateMoveExplore,
+      PrismCurate::curateMoveReconcile,
+      PrismCurate::curateTunableNo,
+      PrismCurate::curateTunableYes,
+      curateBreaksInv001
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: curateBreaksInv002,
+  parameters: [request : PrismCurate::CurateRequest],
+  result: Bool,
+  body: (((((((((((((project request halted) <? 2) && ((project request tunable) <? 2)) && ((project request label) <? 2)) && ((project request defect) <? 2)) && ((project request evidence) <? 2)) && ((project request floor) <? 2)) && ((project request move) <? 2)) && ((project request eased) <? 2)) && ((project request dominance) <? 4)) && ((project request claim) <? 2)) && ((project request tunable) =? (PrismCurate::curateTunableNo))) && (not ((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerRefuse))))
+}
+
+theorem{
+  name: curateInv002Holds,
+  parameters: [request : PrismCurate::CurateRequest],
+  statement: ((curateBreaksInv002 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismCurate::curateAnswerAdopt,
+      PrismCurate::curateAnswerKeep,
+      PrismCurate::curateAnswerRecall,
+      PrismCurate::curateAnswerRefuse,
+      PrismCurate::curateClaimKnown,
+      PrismCurate::curateClaimNew,
+      PrismCurate::curateDefectSome,
+      PrismCurate::curateDefectZero,
+      PrismCurate::curateDominanceDominated,
+      PrismCurate::curateDominanceDominates,
+      PrismCurate::curateDominanceEqual,
+      PrismCurate::curateDominanceIncomparable,
+      PrismCurate::curateEasedNo,
+      PrismCurate::curateEasedYes,
+      PrismCurate::curateEvidenceOwner,
+      PrismCurate::curateEvidenceSelf,
+      PrismCurate::curateFloorKept,
+      PrismCurate::curateFloorRegressed,
+      PrismCurate::curateHaltedNo,
+      PrismCurate::curateHaltedYes,
+      PrismCurate::curateJudge,
+      PrismCurate::curateLabelAdmit,
+      PrismCurate::curateLabelOther,
+      PrismCurate::curateMoveExplore,
+      PrismCurate::curateMoveReconcile,
+      PrismCurate::curateTunableNo,
+      PrismCurate::curateTunableYes,
+      curateBreaksInv002
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: curateBreaksInv003,
+  parameters: [request : PrismCurate::CurateRequest],
+  result: Bool,
+  body: (((((((((((((project request halted) <? 2) && ((project request tunable) <? 2)) && ((project request label) <? 2)) && ((project request defect) <? 2)) && ((project request evidence) <? 2)) && ((project request floor) <? 2)) && ((project request move) <? 2)) && ((project request eased) <? 2)) && ((project request dominance) <? 4)) && ((project request claim) <? 2)) && ((project request label) =? (PrismCurate::curateLabelOther))) && (not ((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerRefuse))))
+}
+
+theorem{
+  name: curateInv003Holds,
+  parameters: [request : PrismCurate::CurateRequest],
+  statement: ((curateBreaksInv003 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismCurate::curateAnswerAdopt,
+      PrismCurate::curateAnswerKeep,
+      PrismCurate::curateAnswerRecall,
+      PrismCurate::curateAnswerRefuse,
+      PrismCurate::curateClaimKnown,
+      PrismCurate::curateClaimNew,
+      PrismCurate::curateDefectSome,
+      PrismCurate::curateDefectZero,
+      PrismCurate::curateDominanceDominated,
+      PrismCurate::curateDominanceDominates,
+      PrismCurate::curateDominanceEqual,
+      PrismCurate::curateDominanceIncomparable,
+      PrismCurate::curateEasedNo,
+      PrismCurate::curateEasedYes,
+      PrismCurate::curateEvidenceOwner,
+      PrismCurate::curateEvidenceSelf,
+      PrismCurate::curateFloorKept,
+      PrismCurate::curateFloorRegressed,
+      PrismCurate::curateHaltedNo,
+      PrismCurate::curateHaltedYes,
+      PrismCurate::curateJudge,
+      PrismCurate::curateLabelAdmit,
+      PrismCurate::curateLabelOther,
+      PrismCurate::curateMoveExplore,
+      PrismCurate::curateMoveReconcile,
+      PrismCurate::curateTunableNo,
+      PrismCurate::curateTunableYes,
+      curateBreaksInv003
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: curateBreaksInv004,
+  parameters: [request : PrismCurate::CurateRequest],
+  result: Bool,
+  body: (((((((((((((project request halted) <? 2) && ((project request tunable) <? 2)) && ((project request label) <? 2)) && ((project request defect) <? 2)) && ((project request evidence) <? 2)) && ((project request floor) <? 2)) && ((project request move) <? 2)) && ((project request eased) <? 2)) && ((project request dominance) <? 4)) && ((project request claim) <? 2)) && ((project request defect) =? (PrismCurate::curateDefectSome))) && (((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerAdopt)) || ((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerRecall))))
+}
+
+theorem{
+  name: curateInv004Holds,
+  parameters: [request : PrismCurate::CurateRequest],
+  statement: ((curateBreaksInv004 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismCurate::curateAnswerAdopt,
+      PrismCurate::curateAnswerKeep,
+      PrismCurate::curateAnswerRecall,
+      PrismCurate::curateAnswerRefuse,
+      PrismCurate::curateClaimKnown,
+      PrismCurate::curateClaimNew,
+      PrismCurate::curateDefectSome,
+      PrismCurate::curateDefectZero,
+      PrismCurate::curateDominanceDominated,
+      PrismCurate::curateDominanceDominates,
+      PrismCurate::curateDominanceEqual,
+      PrismCurate::curateDominanceIncomparable,
+      PrismCurate::curateEasedNo,
+      PrismCurate::curateEasedYes,
+      PrismCurate::curateEvidenceOwner,
+      PrismCurate::curateEvidenceSelf,
+      PrismCurate::curateFloorKept,
+      PrismCurate::curateFloorRegressed,
+      PrismCurate::curateHaltedNo,
+      PrismCurate::curateHaltedYes,
+      PrismCurate::curateJudge,
+      PrismCurate::curateLabelAdmit,
+      PrismCurate::curateLabelOther,
+      PrismCurate::curateMoveExplore,
+      PrismCurate::curateMoveReconcile,
+      PrismCurate::curateTunableNo,
+      PrismCurate::curateTunableYes,
+      curateBreaksInv004
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: curateBreaksInv005,
+  parameters: [request : PrismCurate::CurateRequest],
+  result: Bool,
+  body: (((((((((((((project request halted) <? 2) && ((project request tunable) <? 2)) && ((project request label) <? 2)) && ((project request defect) <? 2)) && ((project request evidence) <? 2)) && ((project request floor) <? 2)) && ((project request move) <? 2)) && ((project request eased) <? 2)) && ((project request dominance) <? 4)) && ((project request claim) <? 2)) && ((project request evidence) =? (PrismCurate::curateEvidenceSelf))) && (((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerAdopt)) || ((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerRecall))))
+}
+
+theorem{
+  name: curateInv005Holds,
+  parameters: [request : PrismCurate::CurateRequest],
+  statement: ((curateBreaksInv005 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismCurate::curateAnswerAdopt,
+      PrismCurate::curateAnswerKeep,
+      PrismCurate::curateAnswerRecall,
+      PrismCurate::curateAnswerRefuse,
+      PrismCurate::curateClaimKnown,
+      PrismCurate::curateClaimNew,
+      PrismCurate::curateDefectSome,
+      PrismCurate::curateDefectZero,
+      PrismCurate::curateDominanceDominated,
+      PrismCurate::curateDominanceDominates,
+      PrismCurate::curateDominanceEqual,
+      PrismCurate::curateDominanceIncomparable,
+      PrismCurate::curateEasedNo,
+      PrismCurate::curateEasedYes,
+      PrismCurate::curateEvidenceOwner,
+      PrismCurate::curateEvidenceSelf,
+      PrismCurate::curateFloorKept,
+      PrismCurate::curateFloorRegressed,
+      PrismCurate::curateHaltedNo,
+      PrismCurate::curateHaltedYes,
+      PrismCurate::curateJudge,
+      PrismCurate::curateLabelAdmit,
+      PrismCurate::curateLabelOther,
+      PrismCurate::curateMoveExplore,
+      PrismCurate::curateMoveReconcile,
+      PrismCurate::curateTunableNo,
+      PrismCurate::curateTunableYes,
+      curateBreaksInv005
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: curateBreaksInv006,
+  parameters: [request : PrismCurate::CurateRequest],
+  result: Bool,
+  body: (((((((((((((project request halted) <? 2) && ((project request tunable) <? 2)) && ((project request label) <? 2)) && ((project request defect) <? 2)) && ((project request evidence) <? 2)) && ((project request floor) <? 2)) && ((project request move) <? 2)) && ((project request eased) <? 2)) && ((project request dominance) <? 4)) && ((project request claim) <? 2)) && ((project request floor) =? (PrismCurate::curateFloorRegressed))) && (((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerAdopt)) || ((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerRecall))))
+}
+
+theorem{
+  name: curateInv006Holds,
+  parameters: [request : PrismCurate::CurateRequest],
+  statement: ((curateBreaksInv006 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismCurate::curateAnswerAdopt,
+      PrismCurate::curateAnswerKeep,
+      PrismCurate::curateAnswerRecall,
+      PrismCurate::curateAnswerRefuse,
+      PrismCurate::curateClaimKnown,
+      PrismCurate::curateClaimNew,
+      PrismCurate::curateDefectSome,
+      PrismCurate::curateDefectZero,
+      PrismCurate::curateDominanceDominated,
+      PrismCurate::curateDominanceDominates,
+      PrismCurate::curateDominanceEqual,
+      PrismCurate::curateDominanceIncomparable,
+      PrismCurate::curateEasedNo,
+      PrismCurate::curateEasedYes,
+      PrismCurate::curateEvidenceOwner,
+      PrismCurate::curateEvidenceSelf,
+      PrismCurate::curateFloorKept,
+      PrismCurate::curateFloorRegressed,
+      PrismCurate::curateHaltedNo,
+      PrismCurate::curateHaltedYes,
+      PrismCurate::curateJudge,
+      PrismCurate::curateLabelAdmit,
+      PrismCurate::curateLabelOther,
+      PrismCurate::curateMoveExplore,
+      PrismCurate::curateMoveReconcile,
+      PrismCurate::curateTunableNo,
+      PrismCurate::curateTunableYes,
+      curateBreaksInv006
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: curateBreaksInv007,
+  parameters: [request : PrismCurate::CurateRequest],
+  result: Bool,
+  body: ((((((((((((((project request halted) <? 2) && ((project request tunable) <? 2)) && ((project request label) <? 2)) && ((project request defect) <? 2)) && ((project request evidence) <? 2)) && ((project request floor) <? 2)) && ((project request move) <? 2)) && ((project request eased) <? 2)) && ((project request dominance) <? 4)) && ((project request claim) <? 2)) && ((project request move) =? (PrismCurate::curateMoveExplore))) && ((project request dominance) =? (PrismCurate::curateDominanceEqual))) && (((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerAdopt)) || ((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerRecall))))
+}
+
+theorem{
+  name: curateInv007Holds,
+  parameters: [request : PrismCurate::CurateRequest],
+  statement: ((curateBreaksInv007 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismCurate::curateAnswerAdopt,
+      PrismCurate::curateAnswerKeep,
+      PrismCurate::curateAnswerRecall,
+      PrismCurate::curateAnswerRefuse,
+      PrismCurate::curateClaimKnown,
+      PrismCurate::curateClaimNew,
+      PrismCurate::curateDefectSome,
+      PrismCurate::curateDefectZero,
+      PrismCurate::curateDominanceDominated,
+      PrismCurate::curateDominanceDominates,
+      PrismCurate::curateDominanceEqual,
+      PrismCurate::curateDominanceIncomparable,
+      PrismCurate::curateEasedNo,
+      PrismCurate::curateEasedYes,
+      PrismCurate::curateEvidenceOwner,
+      PrismCurate::curateEvidenceSelf,
+      PrismCurate::curateFloorKept,
+      PrismCurate::curateFloorRegressed,
+      PrismCurate::curateHaltedNo,
+      PrismCurate::curateHaltedYes,
+      PrismCurate::curateJudge,
+      PrismCurate::curateLabelAdmit,
+      PrismCurate::curateLabelOther,
+      PrismCurate::curateMoveExplore,
+      PrismCurate::curateMoveReconcile,
+      PrismCurate::curateTunableNo,
+      PrismCurate::curateTunableYes,
+      curateBreaksInv007
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: curateBreaksInv008,
+  parameters: [request : PrismCurate::CurateRequest],
+  result: Bool,
+  body: ((((((((((((((project request halted) <? 2) && ((project request tunable) <? 2)) && ((project request label) <? 2)) && ((project request defect) <? 2)) && ((project request evidence) <? 2)) && ((project request floor) <? 2)) && ((project request move) <? 2)) && ((project request eased) <? 2)) && ((project request dominance) <? 4)) && ((project request claim) <? 2)) && ((project request move) =? (PrismCurate::curateMoveExplore))) && ((project request dominance) =? (PrismCurate::curateDominanceDominated))) && (((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerAdopt)) || ((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerRecall))))
+}
+
+theorem{
+  name: curateInv008Holds,
+  parameters: [request : PrismCurate::CurateRequest],
+  statement: ((curateBreaksInv008 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismCurate::curateAnswerAdopt,
+      PrismCurate::curateAnswerKeep,
+      PrismCurate::curateAnswerRecall,
+      PrismCurate::curateAnswerRefuse,
+      PrismCurate::curateClaimKnown,
+      PrismCurate::curateClaimNew,
+      PrismCurate::curateDefectSome,
+      PrismCurate::curateDefectZero,
+      PrismCurate::curateDominanceDominated,
+      PrismCurate::curateDominanceDominates,
+      PrismCurate::curateDominanceEqual,
+      PrismCurate::curateDominanceIncomparable,
+      PrismCurate::curateEasedNo,
+      PrismCurate::curateEasedYes,
+      PrismCurate::curateEvidenceOwner,
+      PrismCurate::curateEvidenceSelf,
+      PrismCurate::curateFloorKept,
+      PrismCurate::curateFloorRegressed,
+      PrismCurate::curateHaltedNo,
+      PrismCurate::curateHaltedYes,
+      PrismCurate::curateJudge,
+      PrismCurate::curateLabelAdmit,
+      PrismCurate::curateLabelOther,
+      PrismCurate::curateMoveExplore,
+      PrismCurate::curateMoveReconcile,
+      PrismCurate::curateTunableNo,
+      PrismCurate::curateTunableYes,
+      curateBreaksInv008
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: curateBreaksInv009,
+  parameters: [request : PrismCurate::CurateRequest],
+  result: Bool,
+  body: ((((((((((((((project request halted) <? 2) && ((project request tunable) <? 2)) && ((project request label) <? 2)) && ((project request defect) <? 2)) && ((project request evidence) <? 2)) && ((project request floor) <? 2)) && ((project request move) <? 2)) && ((project request eased) <? 2)) && ((project request dominance) <? 4)) && ((project request claim) <? 2)) && ((project request move) =? (PrismCurate::curateMoveExplore))) && ((project request dominance) =? (PrismCurate::curateDominanceIncomparable))) && (((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerAdopt)) || ((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerRecall))))
+}
+
+theorem{
+  name: curateInv009Holds,
+  parameters: [request : PrismCurate::CurateRequest],
+  statement: ((curateBreaksInv009 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismCurate::curateAnswerAdopt,
+      PrismCurate::curateAnswerKeep,
+      PrismCurate::curateAnswerRecall,
+      PrismCurate::curateAnswerRefuse,
+      PrismCurate::curateClaimKnown,
+      PrismCurate::curateClaimNew,
+      PrismCurate::curateDefectSome,
+      PrismCurate::curateDefectZero,
+      PrismCurate::curateDominanceDominated,
+      PrismCurate::curateDominanceDominates,
+      PrismCurate::curateDominanceEqual,
+      PrismCurate::curateDominanceIncomparable,
+      PrismCurate::curateEasedNo,
+      PrismCurate::curateEasedYes,
+      PrismCurate::curateEvidenceOwner,
+      PrismCurate::curateEvidenceSelf,
+      PrismCurate::curateFloorKept,
+      PrismCurate::curateFloorRegressed,
+      PrismCurate::curateHaltedNo,
+      PrismCurate::curateHaltedYes,
+      PrismCurate::curateJudge,
+      PrismCurate::curateLabelAdmit,
+      PrismCurate::curateLabelOther,
+      PrismCurate::curateMoveExplore,
+      PrismCurate::curateMoveReconcile,
+      PrismCurate::curateTunableNo,
+      PrismCurate::curateTunableYes,
+      curateBreaksInv009
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: curateBreaksInv010,
+  parameters: [request : PrismCurate::CurateRequest],
+  result: Bool,
+  body: ((((((((((((((project request halted) <? 2) && ((project request tunable) <? 2)) && ((project request label) <? 2)) && ((project request defect) <? 2)) && ((project request evidence) <? 2)) && ((project request floor) <? 2)) && ((project request move) <? 2)) && ((project request eased) <? 2)) && ((project request dominance) <? 4)) && ((project request claim) <? 2)) && ((project request move) =? (PrismCurate::curateMoveReconcile))) && ((project request eased) =? (PrismCurate::curateEasedNo))) && (((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerAdopt)) || ((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerRecall))))
+}
+
+theorem{
+  name: curateInv010Holds,
+  parameters: [request : PrismCurate::CurateRequest],
+  statement: ((curateBreaksInv010 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismCurate::curateAnswerAdopt,
+      PrismCurate::curateAnswerKeep,
+      PrismCurate::curateAnswerRecall,
+      PrismCurate::curateAnswerRefuse,
+      PrismCurate::curateClaimKnown,
+      PrismCurate::curateClaimNew,
+      PrismCurate::curateDefectSome,
+      PrismCurate::curateDefectZero,
+      PrismCurate::curateDominanceDominated,
+      PrismCurate::curateDominanceDominates,
+      PrismCurate::curateDominanceEqual,
+      PrismCurate::curateDominanceIncomparable,
+      PrismCurate::curateEasedNo,
+      PrismCurate::curateEasedYes,
+      PrismCurate::curateEvidenceOwner,
+      PrismCurate::curateEvidenceSelf,
+      PrismCurate::curateFloorKept,
+      PrismCurate::curateFloorRegressed,
+      PrismCurate::curateHaltedNo,
+      PrismCurate::curateHaltedYes,
+      PrismCurate::curateJudge,
+      PrismCurate::curateLabelAdmit,
+      PrismCurate::curateLabelOther,
+      PrismCurate::curateMoveExplore,
+      PrismCurate::curateMoveReconcile,
+      PrismCurate::curateTunableNo,
+      PrismCurate::curateTunableYes,
+      curateBreaksInv010
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: curateBreaksInv011,
+  parameters: [request : PrismCurate::CurateRequest],
+  result: Bool,
+  body: (((((((((((((project request halted) <? 2) && ((project request tunable) <? 2)) && ((project request label) <? 2)) && ((project request defect) <? 2)) && ((project request evidence) <? 2)) && ((project request floor) <? 2)) && ((project request move) <? 2)) && ((project request eased) <? 2)) && ((project request dominance) <? 4)) && ((project request claim) <? 2)) && ((project request claim) =? (PrismCurate::curateClaimKnown))) && ((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerAdopt)))
+}
+
+theorem{
+  name: curateInv011Holds,
+  parameters: [request : PrismCurate::CurateRequest],
+  statement: ((curateBreaksInv011 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismCurate::curateAnswerAdopt,
+      PrismCurate::curateAnswerKeep,
+      PrismCurate::curateAnswerRecall,
+      PrismCurate::curateAnswerRefuse,
+      PrismCurate::curateClaimKnown,
+      PrismCurate::curateClaimNew,
+      PrismCurate::curateDefectSome,
+      PrismCurate::curateDefectZero,
+      PrismCurate::curateDominanceDominated,
+      PrismCurate::curateDominanceDominates,
+      PrismCurate::curateDominanceEqual,
+      PrismCurate::curateDominanceIncomparable,
+      PrismCurate::curateEasedNo,
+      PrismCurate::curateEasedYes,
+      PrismCurate::curateEvidenceOwner,
+      PrismCurate::curateEvidenceSelf,
+      PrismCurate::curateFloorKept,
+      PrismCurate::curateFloorRegressed,
+      PrismCurate::curateHaltedNo,
+      PrismCurate::curateHaltedYes,
+      PrismCurate::curateJudge,
+      PrismCurate::curateLabelAdmit,
+      PrismCurate::curateLabelOther,
+      PrismCurate::curateMoveExplore,
+      PrismCurate::curateMoveReconcile,
+      PrismCurate::curateTunableNo,
+      PrismCurate::curateTunableYes,
+      curateBreaksInv011
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: curateBreaksInv012,
+  parameters: [request : PrismCurate::CurateRequest],
+  result: Bool,
+  body: (((((((((((((project request halted) <? 2) && ((project request tunable) <? 2)) && ((project request label) <? 2)) && ((project request defect) <? 2)) && ((project request evidence) <? 2)) && ((project request floor) <? 2)) && ((project request move) <? 2)) && ((project request eased) <? 2)) && ((project request dominance) <? 4)) && ((project request claim) <? 2)) && ((project request claim) =? (PrismCurate::curateClaimNew))) && ((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerRecall)))
+}
+
+theorem{
+  name: curateInv012Holds,
+  parameters: [request : PrismCurate::CurateRequest],
+  statement: ((curateBreaksInv012 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismCurate::curateAnswerAdopt,
+      PrismCurate::curateAnswerKeep,
+      PrismCurate::curateAnswerRecall,
+      PrismCurate::curateAnswerRefuse,
+      PrismCurate::curateClaimKnown,
+      PrismCurate::curateClaimNew,
+      PrismCurate::curateDefectSome,
+      PrismCurate::curateDefectZero,
+      PrismCurate::curateDominanceDominated,
+      PrismCurate::curateDominanceDominates,
+      PrismCurate::curateDominanceEqual,
+      PrismCurate::curateDominanceIncomparable,
+      PrismCurate::curateEasedNo,
+      PrismCurate::curateEasedYes,
+      PrismCurate::curateEvidenceOwner,
+      PrismCurate::curateEvidenceSelf,
+      PrismCurate::curateFloorKept,
+      PrismCurate::curateFloorRegressed,
+      PrismCurate::curateHaltedNo,
+      PrismCurate::curateHaltedYes,
+      PrismCurate::curateJudge,
+      PrismCurate::curateLabelAdmit,
+      PrismCurate::curateLabelOther,
+      PrismCurate::curateMoveExplore,
+      PrismCurate::curateMoveReconcile,
+      PrismCurate::curateTunableNo,
+      PrismCurate::curateTunableYes,
+      curateBreaksInv012
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: curateBreaksInv013,
+  parameters: [request : PrismCurate::CurateRequest],
+  result: Bool,
+  body: (((((((((((((((project request halted) <? 2) && ((project request tunable) <? 2)) && ((project request label) <? 2)) && ((project request defect) <? 2)) && ((project request evidence) <? 2)) && ((project request floor) <? 2)) && ((project request move) <? 2)) && ((project request eased) <? 2)) && ((project request dominance) <? 4)) && ((project request claim) <? 2)) && ((project request halted) =? (PrismCurate::curateHaltedNo))) && ((project request tunable) =? (PrismCurate::curateTunableYes))) && ((project request label) =? (PrismCurate::curateLabelAdmit))) && ((PrismCurate::curateJudge request) =? (PrismCurate::curateAnswerRefuse)))
+}
+
+theorem{
+  name: curateInv013Holds,
+  parameters: [request : PrismCurate::CurateRequest],
+  statement: ((curateBreaksInv013 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismCurate::curateAnswerAdopt,
+      PrismCurate::curateAnswerKeep,
+      PrismCurate::curateAnswerRecall,
+      PrismCurate::curateAnswerRefuse,
+      PrismCurate::curateClaimKnown,
+      PrismCurate::curateClaimNew,
+      PrismCurate::curateDefectSome,
+      PrismCurate::curateDefectZero,
+      PrismCurate::curateDominanceDominated,
+      PrismCurate::curateDominanceDominates,
+      PrismCurate::curateDominanceEqual,
+      PrismCurate::curateDominanceIncomparable,
+      PrismCurate::curateEasedNo,
+      PrismCurate::curateEasedYes,
+      PrismCurate::curateEvidenceOwner,
+      PrismCurate::curateEvidenceSelf,
+      PrismCurate::curateFloorKept,
+      PrismCurate::curateFloorRegressed,
+      PrismCurate::curateHaltedNo,
+      PrismCurate::curateHaltedYes,
+      PrismCurate::curateJudge,
+      PrismCurate::curateLabelAdmit,
+      PrismCurate::curateLabelOther,
+      PrismCurate::curateMoveExplore,
+      PrismCurate::curateMoveReconcile,
+      PrismCurate::curateTunableNo,
+      PrismCurate::curateTunableYes,
+      curateBreaksInv013
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+\end{semanticmodule}
+\end{lexlean}
