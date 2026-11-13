@@ -66,7 +66,7 @@ test("the Prism keeps at the model's floors, refuses while halted and drafts onl
     // The system's view is never drawn: no place the back end files into, no model to route.
     assert.equal(await page.locator('.pr-go[data-place="health"]').count(), 0);
     await page.click('.pr-go[data-place="boundary"]');
-    assert.deepEqual(await page.$$eval("#pr-settings .pr-name", (names) => names.map((n) => n.textContent)), ["Who you are", "This device", "Quiet", "Backup", "Pause"]);
+    assert.deepEqual(await page.$$eval("#pr-settings .pr-name", (names) => names.map((n) => n.textContent)), ["Who you are", "This device", "Quiet", "Pause", "Backup"]);
 
     // Halted, the Boundary denies every keep.
     await page.click('.pr-go[data-place="boundary"]');
