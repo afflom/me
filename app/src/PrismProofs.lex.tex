@@ -20,6 +20,7 @@
 \importmodule{PrismResonance}
 \importmodule{PrismRoute}
 \importmodule{PrismRouter}
+\importmodule{PrismSource}
 \importmodule{PrismUorc}
 \importmodule{PrismVaultRestore}
 \importmodule{PrismVaultStore}
@@ -117,6 +118,14 @@ theorem{
   name: routesHost,
   parameters: [rest : Bytes],
   statement: ((Prism::route (Prism::facetHost) rest) = (PrismHost::hostDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesSource,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetSource) rest) = (PrismSource::sourceDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }

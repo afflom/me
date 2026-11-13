@@ -22,6 +22,7 @@ export const FACETS = [
   {"key": "dest", "line": "dest", "in": ["owner", "item"], "out": ["draft", "sent"], "drives": {"acts": ["write", "event", "share"], "settings": ["quiet"]}},
   {"key": "folder", "line": "folder", "in": ["content"], "out": ["item"], "drives": {"settings": ["device"]}},
   {"key": "host", "line": "host", "in": ["owner"], "out": ["content"], "drives": {"settings": ["device"]}},
+  {"key": "source", "line": "source", "in": ["content"], "out": ["content"], "drives": {"settings": ["device"]}},
   {"key": "kappa", "line": "kappa", "in": ["object"], "out": ["object"]},
   {"key": "uorc", "line": "uorc", "in": ["item", "kept"], "out": ["object"]},
   {"key": "resonance", "line": "resonance", "in": ["owner", "kept"], "out": ["answer"], "drives": {"places": ["today", "conversations", "people", "calendar", "tasks", "places", "money", "things", "me", "health", "work", "library", "timeline", "presence"]}},
