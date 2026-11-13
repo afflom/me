@@ -185,6 +185,7 @@ export const walks = {
     assert.ok(await section.count(), "the settings have no Connections section");
     for (const service of ["Gmail", "Calendar"]) {
       const row = section.getByRole("group", { name: new RegExp(service) }).first();
+      await row.waitFor({ timeout: 10000 }).catch(() => {});
       assert.ok(await row.count(), `Connections has no row for ${service}`);
       const connected = (await row.innerText()).includes(surface.words["service.live"]);
       // A folded row opens with a tap on its name.

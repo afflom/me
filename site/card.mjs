@@ -797,14 +797,23 @@ export default async function start({ app, reason, $ }) {
           };
           return paint;
         });
-        const paintServices = async () => {
-          const report = await services.probe().catch(() => ({ extension: false, services: {} }));
+        // What the browser reports, or nothing yet if it has not answered within a moment.
+        let last = { extension: false, services: {} };
+        const paintWith = async (report) => {
           let first = true;
           for (const paint of drawn) if (paint(report, first)) first = false;
           servicesShown = Boolean(holder.querySelector(".pr-service:not([hidden])"));
           await repaintDevice?.();
         };
+        const paintServices = async () => {
+          await paintWith(last);
+          const late = new Promise((done) => setTimeout(() => done(null), 3000));
+          const report = await Promise.race([services.probe().catch(() => null), late]);
+          if (report) { last = report; await paintWith(report); }
+        };
         painters.push(paintServices);
+        // The rows arrive after the panel may already be painted; paint them now.
+        paintServices();
         // Coming back from the extension page or the service's tab, the rows say where things stand.
         addEventListener("focus", () => { if (!$("pr-settings").hidden) paintServices(); });
         await paintServices();
