@@ -88,7 +88,10 @@ fn coherence_co_01() {
                 "every listing place must list something",
             ),
             ("pr-clash", "the clash is checked"),
-            ("/^Nothing you hold mentions “zebra quantum marmalade”\\./u", "an Ask nothing kept meets says so"),
+            (
+                "/^Nothing you hold mentions “zebra quantum marmalade”\\./u",
+                "an Ask nothing kept meets says so",
+            ),
             ("/^Paused$/", "Ask while paused shows nothing kept"),
         ],
     );
