@@ -127,9 +127,14 @@ function memoryIndexedDB() {
 }
 globalThis.indexedDB = memoryIndexedDB();
 Object.defineProperty(globalThis.navigator, 'storage', { value: { estimate: async () => ({ usage: 0, quota: 1 << 30 }) } });
-const { loadRouter } = await import('../../site/vault/test/guests.mjs');
+// The vault's proved guests live in site/vault/test, which the assembled page leaves out;
+// read them from the tracked tree when the working copy no longer has them.
+const tracked = async (path) => (existsSync(new URL(path, root))
+  ? readFile(new URL(path, root))
+  : execFileSync('git', ['show', `HEAD:${path}`], { cwd: fileURLToPath(root), maxBuffer: 1 << 26 }));
+const { loadRouter } = await dataImport(await tracked('site/vault/test/guests.mjs'));
 const { openVault, routerDecide } = await import('../../site/vault/vault.mjs');
-const router = await loadRouter((file) => readFile(new URL(`site/vault/test/guests/${file}`, root)));
+const router = await loadRouter((file) => tracked(`site/vault/test/guests/${file}`));
 const vault = await openVault({ decide: routerDecide(router), name: 'uorc-test', objects });
 const put = await vault.put(value, { label: 'public' });
 ok(put.outcome === 'store' && put.address === (await vault.addressOf(value)), `the vault keeps it under the value's address: ${put.outcome}`);
