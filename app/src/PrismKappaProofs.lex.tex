@@ -1,0 +1,368 @@
+\begin{lexlean}{PrismKappaProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismKappa}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: kappaBreaksInv001,
+  parameters: [request : PrismKappa::KappaRequest],
+  result: Bool,
+  body: ((((((((project request colon) <? 2) && ((project request axis) <? 7)) && ((project request digits) <? 2)) && ((project request hex) <? 2)) && ((project request digest) <? 4)) && ((project request colon) =? (PrismKappa::kappaColonAbsent))) && (not ((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerNocolon))))
+}
+
+theorem{
+  name: kappaInv001Holds,
+  parameters: [request : PrismKappa::KappaRequest],
+  statement: ((kappaBreaksInv001 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismKappa::kappaAnswerAdmit,
+      PrismKappa::kappaAnswerBadhex,
+      PrismKappa::kappaAnswerCollision,
+      PrismKappa::kappaAnswerDigits,
+      PrismKappa::kappaAnswerMismatch,
+      PrismKappa::kappaAnswerNocolon,
+      PrismKappa::kappaAnswerUnknownaxis,
+      PrismKappa::kappaAnswerUnverified,
+      PrismKappa::kappaAxisBlake3,
+      PrismKappa::kappaAxisKeccak256,
+      PrismKappa::kappaAxisOther,
+      PrismKappa::kappaAxisSha1,
+      PrismKappa::kappaAxisSha256,
+      PrismKappa::kappaAxisSha3x256,
+      PrismKappa::kappaAxisSha512,
+      PrismKappa::kappaColonAbsent,
+      PrismKappa::kappaColonPresent,
+      PrismKappa::kappaDigestCollision,
+      PrismKappa::kappaDigestMatch,
+      PrismKappa::kappaDigestMismatch,
+      PrismKappa::kappaDigestUncomputed,
+      PrismKappa::kappaDigitsRight,
+      PrismKappa::kappaDigitsWrong,
+      PrismKappa::kappaHexBad,
+      PrismKappa::kappaHexLower,
+      PrismKappa::kappaJudge,
+      kappaBreaksInv001
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kappaBreaksInv002,
+  parameters: [request : PrismKappa::KappaRequest],
+  result: Bool,
+  body: (((((((((project request colon) <? 2) && ((project request axis) <? 7)) && ((project request digits) <? 2)) && ((project request hex) <? 2)) && ((project request digest) <? 4)) && ((project request colon) =? (PrismKappa::kappaColonPresent))) && ((project request axis) =? (PrismKappa::kappaAxisOther))) && (not ((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerUnknownaxis))))
+}
+
+theorem{
+  name: kappaInv002Holds,
+  parameters: [request : PrismKappa::KappaRequest],
+  statement: ((kappaBreaksInv002 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismKappa::kappaAnswerAdmit,
+      PrismKappa::kappaAnswerBadhex,
+      PrismKappa::kappaAnswerCollision,
+      PrismKappa::kappaAnswerDigits,
+      PrismKappa::kappaAnswerMismatch,
+      PrismKappa::kappaAnswerNocolon,
+      PrismKappa::kappaAnswerUnknownaxis,
+      PrismKappa::kappaAnswerUnverified,
+      PrismKappa::kappaAxisBlake3,
+      PrismKappa::kappaAxisKeccak256,
+      PrismKappa::kappaAxisOther,
+      PrismKappa::kappaAxisSha1,
+      PrismKappa::kappaAxisSha256,
+      PrismKappa::kappaAxisSha3x256,
+      PrismKappa::kappaAxisSha512,
+      PrismKappa::kappaColonAbsent,
+      PrismKappa::kappaColonPresent,
+      PrismKappa::kappaDigestCollision,
+      PrismKappa::kappaDigestMatch,
+      PrismKappa::kappaDigestMismatch,
+      PrismKappa::kappaDigestUncomputed,
+      PrismKappa::kappaDigitsRight,
+      PrismKappa::kappaDigitsWrong,
+      PrismKappa::kappaHexBad,
+      PrismKappa::kappaHexLower,
+      PrismKappa::kappaJudge,
+      kappaBreaksInv002
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kappaBreaksInv003,
+  parameters: [request : PrismKappa::KappaRequest],
+  result: Bool,
+  body: ((((((((project request colon) <? 2) && ((project request axis) <? 7)) && ((project request digits) <? 2)) && ((project request hex) <? 2)) && ((project request digest) <? 4)) && ((project request digits) =? (PrismKappa::kappaDigitsWrong))) && (((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerAdmit)) || ((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerUnverified))))
+}
+
+theorem{
+  name: kappaInv003Holds,
+  parameters: [request : PrismKappa::KappaRequest],
+  statement: ((kappaBreaksInv003 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismKappa::kappaAnswerAdmit,
+      PrismKappa::kappaAnswerBadhex,
+      PrismKappa::kappaAnswerCollision,
+      PrismKappa::kappaAnswerDigits,
+      PrismKappa::kappaAnswerMismatch,
+      PrismKappa::kappaAnswerNocolon,
+      PrismKappa::kappaAnswerUnknownaxis,
+      PrismKappa::kappaAnswerUnverified,
+      PrismKappa::kappaAxisBlake3,
+      PrismKappa::kappaAxisKeccak256,
+      PrismKappa::kappaAxisOther,
+      PrismKappa::kappaAxisSha1,
+      PrismKappa::kappaAxisSha256,
+      PrismKappa::kappaAxisSha3x256,
+      PrismKappa::kappaAxisSha512,
+      PrismKappa::kappaColonAbsent,
+      PrismKappa::kappaColonPresent,
+      PrismKappa::kappaDigestCollision,
+      PrismKappa::kappaDigestMatch,
+      PrismKappa::kappaDigestMismatch,
+      PrismKappa::kappaDigestUncomputed,
+      PrismKappa::kappaDigitsRight,
+      PrismKappa::kappaDigitsWrong,
+      PrismKappa::kappaHexBad,
+      PrismKappa::kappaHexLower,
+      PrismKappa::kappaJudge,
+      kappaBreaksInv003
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kappaBreaksInv004,
+  parameters: [request : PrismKappa::KappaRequest],
+  result: Bool,
+  body: ((((((((project request colon) <? 2) && ((project request axis) <? 7)) && ((project request digits) <? 2)) && ((project request hex) <? 2)) && ((project request digest) <? 4)) && ((project request hex) =? (PrismKappa::kappaHexBad))) && (((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerAdmit)) || ((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerUnverified))))
+}
+
+theorem{
+  name: kappaInv004Holds,
+  parameters: [request : PrismKappa::KappaRequest],
+  statement: ((kappaBreaksInv004 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismKappa::kappaAnswerAdmit,
+      PrismKappa::kappaAnswerBadhex,
+      PrismKappa::kappaAnswerCollision,
+      PrismKappa::kappaAnswerDigits,
+      PrismKappa::kappaAnswerMismatch,
+      PrismKappa::kappaAnswerNocolon,
+      PrismKappa::kappaAnswerUnknownaxis,
+      PrismKappa::kappaAnswerUnverified,
+      PrismKappa::kappaAxisBlake3,
+      PrismKappa::kappaAxisKeccak256,
+      PrismKappa::kappaAxisOther,
+      PrismKappa::kappaAxisSha1,
+      PrismKappa::kappaAxisSha256,
+      PrismKappa::kappaAxisSha3x256,
+      PrismKappa::kappaAxisSha512,
+      PrismKappa::kappaColonAbsent,
+      PrismKappa::kappaColonPresent,
+      PrismKappa::kappaDigestCollision,
+      PrismKappa::kappaDigestMatch,
+      PrismKappa::kappaDigestMismatch,
+      PrismKappa::kappaDigestUncomputed,
+      PrismKappa::kappaDigitsRight,
+      PrismKappa::kappaDigitsWrong,
+      PrismKappa::kappaHexBad,
+      PrismKappa::kappaHexLower,
+      PrismKappa::kappaJudge,
+      kappaBreaksInv004
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kappaBreaksInv005,
+  parameters: [request : PrismKappa::KappaRequest],
+  result: Bool,
+  body: ((((((((project request colon) <? 2) && ((project request axis) <? 7)) && ((project request digits) <? 2)) && ((project request hex) <? 2)) && ((project request digest) <? 4)) && ((project request digest) =? (PrismKappa::kappaDigestMismatch))) && (((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerAdmit)) || ((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerUnverified))))
+}
+
+theorem{
+  name: kappaInv005Holds,
+  parameters: [request : PrismKappa::KappaRequest],
+  statement: ((kappaBreaksInv005 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismKappa::kappaAnswerAdmit,
+      PrismKappa::kappaAnswerBadhex,
+      PrismKappa::kappaAnswerCollision,
+      PrismKappa::kappaAnswerDigits,
+      PrismKappa::kappaAnswerMismatch,
+      PrismKappa::kappaAnswerNocolon,
+      PrismKappa::kappaAnswerUnknownaxis,
+      PrismKappa::kappaAnswerUnverified,
+      PrismKappa::kappaAxisBlake3,
+      PrismKappa::kappaAxisKeccak256,
+      PrismKappa::kappaAxisOther,
+      PrismKappa::kappaAxisSha1,
+      PrismKappa::kappaAxisSha256,
+      PrismKappa::kappaAxisSha3x256,
+      PrismKappa::kappaAxisSha512,
+      PrismKappa::kappaColonAbsent,
+      PrismKappa::kappaColonPresent,
+      PrismKappa::kappaDigestCollision,
+      PrismKappa::kappaDigestMatch,
+      PrismKappa::kappaDigestMismatch,
+      PrismKappa::kappaDigestUncomputed,
+      PrismKappa::kappaDigitsRight,
+      PrismKappa::kappaDigitsWrong,
+      PrismKappa::kappaHexBad,
+      PrismKappa::kappaHexLower,
+      PrismKappa::kappaJudge,
+      kappaBreaksInv005
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kappaBreaksInv006,
+  parameters: [request : PrismKappa::KappaRequest],
+  result: Bool,
+  body: ((((((((project request colon) <? 2) && ((project request axis) <? 7)) && ((project request digits) <? 2)) && ((project request hex) <? 2)) && ((project request digest) <? 4)) && ((project request digest) =? (PrismKappa::kappaDigestCollision))) && (((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerAdmit)) || ((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerUnverified))))
+}
+
+theorem{
+  name: kappaInv006Holds,
+  parameters: [request : PrismKappa::KappaRequest],
+  statement: ((kappaBreaksInv006 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismKappa::kappaAnswerAdmit,
+      PrismKappa::kappaAnswerBadhex,
+      PrismKappa::kappaAnswerCollision,
+      PrismKappa::kappaAnswerDigits,
+      PrismKappa::kappaAnswerMismatch,
+      PrismKappa::kappaAnswerNocolon,
+      PrismKappa::kappaAnswerUnknownaxis,
+      PrismKappa::kappaAnswerUnverified,
+      PrismKappa::kappaAxisBlake3,
+      PrismKappa::kappaAxisKeccak256,
+      PrismKappa::kappaAxisOther,
+      PrismKappa::kappaAxisSha1,
+      PrismKappa::kappaAxisSha256,
+      PrismKappa::kappaAxisSha3x256,
+      PrismKappa::kappaAxisSha512,
+      PrismKappa::kappaColonAbsent,
+      PrismKappa::kappaColonPresent,
+      PrismKappa::kappaDigestCollision,
+      PrismKappa::kappaDigestMatch,
+      PrismKappa::kappaDigestMismatch,
+      PrismKappa::kappaDigestUncomputed,
+      PrismKappa::kappaDigitsRight,
+      PrismKappa::kappaDigitsWrong,
+      PrismKappa::kappaHexBad,
+      PrismKappa::kappaHexLower,
+      PrismKappa::kappaJudge,
+      kappaBreaksInv006
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kappaBreaksInv007,
+  parameters: [request : PrismKappa::KappaRequest],
+  result: Bool,
+  body: ((((((((project request colon) <? 2) && ((project request axis) <? 7)) && ((project request digits) <? 2)) && ((project request hex) <? 2)) && ((project request digest) <? 4)) && ((project request digest) =? (PrismKappa::kappaDigestUncomputed))) && ((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerAdmit)))
+}
+
+theorem{
+  name: kappaInv007Holds,
+  parameters: [request : PrismKappa::KappaRequest],
+  statement: ((kappaBreaksInv007 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismKappa::kappaAnswerAdmit,
+      PrismKappa::kappaAnswerBadhex,
+      PrismKappa::kappaAnswerCollision,
+      PrismKappa::kappaAnswerDigits,
+      PrismKappa::kappaAnswerMismatch,
+      PrismKappa::kappaAnswerNocolon,
+      PrismKappa::kappaAnswerUnknownaxis,
+      PrismKappa::kappaAnswerUnverified,
+      PrismKappa::kappaAxisBlake3,
+      PrismKappa::kappaAxisKeccak256,
+      PrismKappa::kappaAxisOther,
+      PrismKappa::kappaAxisSha1,
+      PrismKappa::kappaAxisSha256,
+      PrismKappa::kappaAxisSha3x256,
+      PrismKappa::kappaAxisSha512,
+      PrismKappa::kappaColonAbsent,
+      PrismKappa::kappaColonPresent,
+      PrismKappa::kappaDigestCollision,
+      PrismKappa::kappaDigestMatch,
+      PrismKappa::kappaDigestMismatch,
+      PrismKappa::kappaDigestUncomputed,
+      PrismKappa::kappaDigitsRight,
+      PrismKappa::kappaDigitsWrong,
+      PrismKappa::kappaHexBad,
+      PrismKappa::kappaHexLower,
+      PrismKappa::kappaJudge,
+      kappaBreaksInv007
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kappaBreaksInv008,
+  parameters: [request : PrismKappa::KappaRequest],
+  result: Bool,
+  body: (((((((((((project request colon) <? 2) && ((project request axis) <? 7)) && ((project request digits) <? 2)) && ((project request hex) <? 2)) && ((project request digest) <? 4)) && ((project request colon) =? (PrismKappa::kappaColonPresent))) && ((project request digits) =? (PrismKappa::kappaDigitsRight))) && ((project request hex) =? (PrismKappa::kappaHexLower))) && ((project request digest) =? (PrismKappa::kappaDigestMatch))) && (((((((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerNocolon)) || ((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerDigits))) || ((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerBadhex))) || ((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerMismatch))) || ((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerCollision))) || ((PrismKappa::kappaJudge request) =? (PrismKappa::kappaAnswerUnverified))))
+}
+
+theorem{
+  name: kappaInv008Holds,
+  parameters: [request : PrismKappa::KappaRequest],
+  statement: ((kappaBreaksInv008 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismKappa::kappaAnswerAdmit,
+      PrismKappa::kappaAnswerBadhex,
+      PrismKappa::kappaAnswerCollision,
+      PrismKappa::kappaAnswerDigits,
+      PrismKappa::kappaAnswerMismatch,
+      PrismKappa::kappaAnswerNocolon,
+      PrismKappa::kappaAnswerUnknownaxis,
+      PrismKappa::kappaAnswerUnverified,
+      PrismKappa::kappaAxisBlake3,
+      PrismKappa::kappaAxisKeccak256,
+      PrismKappa::kappaAxisOther,
+      PrismKappa::kappaAxisSha1,
+      PrismKappa::kappaAxisSha256,
+      PrismKappa::kappaAxisSha3x256,
+      PrismKappa::kappaAxisSha512,
+      PrismKappa::kappaColonAbsent,
+      PrismKappa::kappaColonPresent,
+      PrismKappa::kappaDigestCollision,
+      PrismKappa::kappaDigestMatch,
+      PrismKappa::kappaDigestMismatch,
+      PrismKappa::kappaDigestUncomputed,
+      PrismKappa::kappaDigitsRight,
+      PrismKappa::kappaDigitsWrong,
+      PrismKappa::kappaHexBad,
+      PrismKappa::kappaHexLower,
+      PrismKappa::kappaJudge,
+      kappaBreaksInv008
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
