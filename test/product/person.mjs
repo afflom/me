@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 // The synthetic person: a day of mail and calendar on their device, and
 // nothing real. The device answers the page the way the person's installed
 // Prism extension does (site/extension/background.js: each item names its declared
@@ -42,11 +43,13 @@ export function today(now = new Date()) {
 
 // Installs the person's device on a browser context before any page runs.
 export async function device(context) {
+  // The stand-in answers with the version the page writes (app/specs/source/services.json).
+  await context.addInitScript((version) => { window.__prismExtensionVersion = version; }, JSON.parse(readFileSync(new URL("../../app/specs/source/services.json", import.meta.url), "utf8")).extension.version);
   await context.addInitScript((items) => {
     window.addEventListener("message", (event) => {
       if (event.source !== window || event.data?.from !== "page") return;
       const answer = (data) => window.postMessage({ ...data, from: "extension" }, location.origin);
-      if (event.data.prism === "hello") answer({ prism: "extension", version: 3 });
+      if (event.data.prism === "hello") answer({ prism: "extension", version: window.__prismExtensionVersion });
       if (event.data.prism === "pull") answer({ prism: "items", id: event.data.id, items: [true, "yes"].includes(event.data.halted) ? [] : items });
     });
   }, today());

@@ -71,9 +71,9 @@ const zone = /^TZID:(.*)$/m.exec(ICS)[1];
 ok(zoned.length === 1 && zoned[0].startsWith('BEGIN:VCALENDAR\r\n') && zoned[0].includes(`TZID:${zone}`) && zoned[0].endsWith('END:VCALENDAR\r\n'), 'one calendar per event, with its zones');
 const two = calendarItems(example('rfc5546-37'));
 ok(two.length === 1 && (two[0].match(/^BEGIN:VEVENT\r$/gm) ?? []).length === 2 && /^METHOD:REQUEST\r$/m.test(two[0]) && !/[^\r]\n/.test(two[0]), 'a recurring event and its override are one item, with the calendar\'s own METHOD, in CRLF lines (RFC 5545 3.8.4.4)');
-const timed = ORACLE.filter((c) => c.kind === 'calendar' && /^BEGIN:(VEVENT|VTODO|VJOURNAL)\r$/m.test(c.raw));
+const timed = ORACLE.filter((c) => c.kind === 'calendar');
 const rooms = timed.flatMap((c) => calendarItems(c.raw));
-ok(timed.length > 40 && timed.every((c) => calendarItems(c.raw).length >= 1) && rooms.every((e) => !/[^\r]\n/.test(e) && /^BEGIN:VCALENDAR\r\n/.test(e) && /\r\nEND:VCALENDAR\r\n$/.test(e)), 'every calendar example of RFC 5545 and RFC 5546 with an event, a task or a journal entry splits into items in CRLF lines (free/busy is not an item)');
+ok(timed.length > 40 && timed.every((c) => calendarItems(c.raw).length >= 1) && timed.every((c) => !/^METHOD:/m.test(c.raw) || calendarItems(c.raw).every((e) => e.includes(/^METHOD:[^\r\n]*/m.exec(c.raw)[0]))) && rooms.every((e) => !/[^\r]\n/.test(e) && /^BEGIN:VCALENDAR\r\n/.test(e) && /\r\nEND:VCALENDAR\r\n$/.test(e)), 'every calendar example of RFC 5545 and RFC 5546 with an event, a task or a journal entry splits into items in CRLF lines, free/busy included, each keeping its METHOD');
 ok(contactItems(CARDS.slice(0, 2).join('')).length === 2 && contactItems(CARDS.slice(0, 2).join('').replace(/\r\n/g, '\n')).length === 2, 'one item per card, CRLF or LF');
 
 // DV-02: the device as a source, through a fake folder, the detectors and the vault.
@@ -213,7 +213,7 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
   const listeners = [];
   globalThis.chrome = { storage: { local: { get: async (keys) => Object.fromEntries(keys.filter((k) => k in store).map((k) => [k, store[k]])), set: async (v) => Object.assign(store, v) } }, runtime: { onMessage: { addListener: (f) => listeners.push(f) } } };
   const bg = await import('../extension/background.js');
-  const { zip, pack, installed, pull: pullFrom } = await import('./extension.mjs');
+  const { zip, pack, installed, pull: pullFrom, VERSION: VERSION_NOW } = await import('./extension.mjs');
   const RAW = example('rfc5322-1');
   // Gmail's own pages, as its declaration says of them: the original message
   // inside the element the declaration names (own.item.unwrap), HTML-escaped,
@@ -271,6 +271,47 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
   const st2 = await bg.status({ query: async () => [] });
   ok(st2.services.calendar.error === 'offline' && st2.services.calendar.checked > 0 && st2.services.gmail.error === null && st2.services.gmail.read >= 2, `a failing service is reported and the others are still read: ${JSON.stringify(st2.services.calendar)}`);
   await bg.take({ halted: 'no' });
+  // A site that challenges (a status its contract names) rests: nothing more is
+  // asked of it until its hours pass or its own tab shows content again, and
+  // the page shows the owner its contract's step. Nothing is retried around it.
+  const { CONTRACTS } = await import('../source/declared.mjs');
+  const { state: stateOf } = await import('../source/services.mjs');
+  const contracted = declared.map((s) => ({ ...s, backoff: CONTRACTS[s.key].backoff }));
+  bg.declare(contracted);
+  for (const status of CONTRACTS.calendar.backoff.on) {
+    store.rest = {};
+    const asked = [];
+    const challenging = async (url, init) => { asked.push(String(url)); if (String(url).includes('calendar')) return { ok: false, status, url: String(url), text: async () => '', arrayBuffer: async () => new ArrayBuffer(0) }; return google(url, init); };
+    await bg.round(challenging);
+    const calls = asked.filter((u) => u.includes('calendar')).length;
+    await bg.round(challenging);
+    const rested = (await bg.status({ query: async () => [] })).services.calendar;
+    ok(calls === 1 && asked.filter((u) => u.includes('calendar')).length === 1 && rested.rest > Date.now() + (CONTRACTS.calendar.backoff.hours - 1) * 3600000, `a ${status} rests Calendar for its contract's hours, asked once and not again: ${JSON.stringify(rested)}`);
+    const shown = stateOf('calendar', { extension: true, services: { calendar: { ...rested, signedIn: true, pinned: true } } });
+    ok(shown.state === 'step' && shown.next === CONTRACTS.calendar.backoff.step, `the owner is shown the contract's step while it rests: ${JSON.stringify(shown)}`);
+  }
+  ok(stateOf('calendar', { extension: true, services: { calendar: { checked: 1, signedIn: true, pinned: true, rest: 0 } } }).state === 'live', 'a site that is not resting is live');
+  store.rest = {};
+  await bg.take({ halted: 'no' });
+  // What Discord's own tab shows (seen.items): held once each, as its words, and made mail by the page.
+  // The items are RFC 5322's own example messages, as a tab would show them: who, when, the conversation, the words.
+  const { readItem, useReader } = await import('../card.mjs');
+  useReader(await import('../read/read.mjs'));
+  const shownOf = (id) => { const m = readItem({ address: id, outcome: 'restore', bytes: new TextEncoder().encode(example(id)), meta: { about: { media: 'message', domain: 4, at: 0 } } }); return { at: new Date(m.at).toISOString(), who: m.who, where: m.title, words: m.body.trim() }; };
+  const shownItems = [shownOf('rfc5322-1'), { ...shownOf('rfc5322-2'), at: null }];
+  store.rest = { discord: Date.now() + 3600000 };
+  await bg.seen('discord', { items: shownItems });
+  await bg.seen('discord', { items: shownItems });
+  const seenHeld = (await bg.take({ halted: 'no' })).items;
+  ok(seenHeld.length === 2 && seenHeld.every((i) => i.service === 'discord' && i.route === 'seen' && i.format === 'seen') && JSON.parse(seenHeld[0].text).words === shownItems[0].words, `each item a tab shows is held once: ${seenHeld.length}`);
+  const st3 = (await bg.status({ query: async () => [] })).services.discord;
+  ok(st3.rest === 0 && st3.checked > 0 && st3.signedIn, `the owner's tab showing content ends a rest, and the service reads as live: ${JSON.stringify(st3)}`);
+  const { seenMessage } = await import('../source/exports.mjs');
+  const mail = await seenMessage('discord', seenHeld[0].text);
+  const kept = readItem({ address: 'x', outcome: 'restore', bytes: new TextEncoder().encode(mail), meta: { about: { media: 'message', domain: 4, at: 0 } } });
+  ok(kept.title === shownItems[0].where && kept.who === shownItems[0].who && kept.at === Date.parse(shownItems[0].at) && kept.body.trim() === shownItems[0].words && formatOfText(mail) === 'eml', `an item the tab showed is kept as mail, reading as it was shown: ${JSON.stringify({ title: kept.title, who: kept.who, at: kept.at })}`);
+  ok(Math.abs(Date.parse(/^Date: (.*)$/m.exec(await seenMessage('discord', seenHeld[1].text, Date.UTC(2026, 10, 14)))[1]) - Date.UTC(2026, 10, 14)) < 1000, 'one with no time of its own is as of when it was seen');
+  bg.declare(declared);
   // The declarations as data: taken only within the extension's site access, and never widened.
   const allowed = ['https://mail.google.com/*', 'https://calendar.google.com/*'];
   ok(bg.reachable(declared, allowed).map((x) => x.key).join() === 'gmail,calendar' && bg.reachable(declared, ['<all_urls>']).length === 5 && bg.reachable([{ ...gmail, origins: ['http://mail.google.com/'] }], ['<all_urls>']).length === 0, 'the page\'s declarations are taken only for https origins the extension may reach');
@@ -279,7 +320,7 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
   const registered = [];
   const scriptingFake = { unregisterContentScripts: async () => {}, registerContentScripts: async (list) => { registered.push(...list); } };
   await bg.adopt(declared, ['<all_urls>'], scriptingFake);
-  ok(registered.length === 1 && registered[0].matches.join() === 'https://mail.google.com/*' && registered[0].js[0] === 'seen.js', `seen.js goes only on the pages of services declared with a seen route: ${JSON.stringify(registered)}`);
+  ok(registered.length === 1 && registered[0].matches.join() === 'https://mail.google.com/*,https://discord.com/*' && registered[0].js.join() === 'name.js,seen.js', `seen.js, with the accessible-name reader, goes only on the pages of services declared with a seen route: ${JSON.stringify(registered)}`);
   bg.declare([]);
   const quiet = requests.length;
   ok((await bg.round(google)) === 0 && requests.length === quiet, 'a blank extension, not yet told anything by the Prism, reads nothing');
@@ -287,7 +328,7 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
   // Tabs open before the extension get its scripts.
   const injected = [];
   const n = await bg.attach({ query: async () => [{ id: 1, url: 'https://owner.example/me/' }, { id: 2, url: 'https://mail.google.com/mail/u/0/' }, { id: 3, url: 'https://news.example/' }] }, { executeScript: async (x) => { injected.push(x); } });
-  ok(n === 1 && injected[0].files[0] === 'seen.js' && injected[0].target.tabId === 2, `a declared service's open tab is given seen.js: ${JSON.stringify(injected)}`);
+  ok(n === 1 && injected[0].files.join() === 'name.js,seen.js' && injected[0].target.tabId === 2, `a declared service's open tab is given seen.js: ${JSON.stringify(injected)}`);
   await bg.take({ halted: 'no' });
   const answer = (url, message) => new Promise((resolve) => { const kept = listeners[0](message, { url }, resolve); if (!kept) resolve('unanswered'); });
   ok((await answer('https://other.example/', { prism: 'pull', halted: 'no' })) === 'unanswered', 'another page is never answered');
@@ -299,7 +340,7 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
   const packed = await pack('https://owner.example/me/', new URL('../extension/', import.meta.url), local);
   const manifest = JSON.parse((await bg.unzip(packed.slice(), 'manifest.json'))[0]);
   ok(manifest.host_permissions.join() === '<all_urls>' && manifest.content_scripts.length === 1 && !new TextDecoder().decode(packed).includes('"services"'), 'the extension is a blank carrier: no services of its own, reaching only what the Prism declares');
-  ok(manifest.permissions.includes('scripting') && text0(packed).includes("version: Number('3')") && !text0(packed).includes('__VERSION__'), 'the extension carries the declared version, and may give already open tabs their scripts');
+  ok(manifest.permissions.includes('scripting') && text0(packed).includes(`version: Number('${JSON.parse(await readFile(new URL('../../app/specs/source/services.json', import.meta.url), 'utf8')).extension.version}')`) && !text0(packed).includes('__VERSION__'), 'the extension carries the declared version, and may give already open tabs their scripts');
   const text = new TextDecoder().decode(packed);
   ok(manifest.content_scripts[0].matches.join() === 'https://owner.example/me/*' && text.includes("const PRISM = 'https://owner.example/me/';") && !text.includes('__PRISM__') && !text.includes('__ORIGINS__'), 'the page writes the extension for its own address');
   await assert.rejects(pack('https://owner.example/me', undefined, local), (e) => e.code === 'extension.address');
@@ -317,7 +358,7 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
   current.location = win.location;
   current.postMessage = (data) => queueMicrotask(() => {
     current.dispatchEvent(Object.assign(new Event('message'), { data, source: current, origin: current.location.origin }));
-    if (data.from === 'page' && data.prism === 'hello') current.postMessage({ prism: 'extension', from: 'extension', version: 3 });
+    if (data.from === 'page' && data.prism === 'hello') current.postMessage({ prism: 'extension', from: 'extension', version: VERSION_NOW });
   });
   ok((await installed(current, 50)) === 'kept', 'the installed extension answers the page with the version it writes');
   const silent = new EventTarget();
@@ -379,7 +420,8 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
   ok(conn.state('gmail', { extension: true, services: {} }).state === 'checking' && conn.state('gmail', { extension: true, services: { gmail: { checked: 1 } } }).state === 'step', 'until the extension has read a service, its row says it is checking, not that the person must sign in');
   ok(conn.howOf(conn.SERVICES[0].connect.find((x) => x.kind === 'extension'), { outdated: true }) === conn.EXTENSION.update && conn.howOf(conn.SERVICES[0].connect.find((x) => x.kind === 'extension'), {}).includes('Load unpacked'), 'an older extension is put in place by the declared update steps; a first one is added');
   ok(conn.state('gmail', { extension: true }, { halted: 'yes' }).state === 'paused' && conn.state('nothing', {}).state === 'refused', 'paused while halted; an undeclared service is refused');
-  ok(['discord', 'whatsapp', 'linkedin'].every((k) => conn.state(k, { extension: true }).next === 'history' && conn.state(k, { extension: true, imported: { [k]: true } }).state === 'live' && conn.SERVICES.find((s) => s.key === k).out === 'refused'), 'a service no live route carries yet is brought in by its own download, and sends nothing');
+  ok(['whatsapp', 'linkedin'].every((k) => conn.state(k, { extension: true }).next === 'history' && conn.state(k, { extension: true, imported: { [k]: true } }).state === 'live' && conn.SERVICES.find((s) => s.key === k).out === 'refused'), 'a service no live route carries yet is brought in by its own download, and sends nothing');
+  ok(conn.state('discord', { extension: true, services: {} }).state === 'checking' && conn.state('discord', { extension: true, services: { discord: { checked: 1 } } }).next === 'sign-in' && conn.state('discord', { extension: true, services: { discord: { checked: 1, signedIn: true, pinned: true } } }).state === 'live' && conn.SERVICES.find((s) => s.key === 'discord').out === 'refused', 'Discord is read live from its own open tab, and sends nothing');
   ok(conn.state('gmail', { extension: false }).next === 'extension' && conn.SERVICES.filter((s) => ['discord', 'linkedin'].includes(s.key)).every((s) => s.connect[0].url.startsWith(s.origins[0])), 'a history step opens only a page on its service\'s own origin');
   {
     const opened = [];

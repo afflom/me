@@ -514,10 +514,16 @@ export default async function start({ app, reason, $ }) {
   async function pullExtension(d) {
     const { pull } = await import("./device/extension.mjs");
     const by = new Map();
-    const { SERVICES } = await import("./source/declared.mjs");
-    // The declarations go to the extension as data, each own route only where PrismSource reads it.
+    const { SERVICES, CONTRACTS } = await import("./source/declared.mjs");
+    // The declarations go to the extension as data, each own route only where
+    // PrismSource reads it, each seen route only where it does, and each with
+    // its site contract's rest for when the site challenges.
     const sent = [];
-    for (const service of SERVICES) sent.push({ ...service, own: (await line(`source ${service.key} own read ${halted()}`)) === "read" ? service.own ?? [] : [] });
+    for (const service of SERVICES) {
+      const reads = async (route) => (await line(`source ${service.key} ${route} read ${halted()}`)) === "read";
+      const { seen, ...rest } = service;
+      sent.push({ ...rest, ...(seen && (await reads("seen")) ? { seen } : {}), own: (await reads("own")) ? service.own ?? [] : [], backoff: CONTRACTS[service.key]?.backoff ?? null });
+    }
     for (const item of await pull(window, { halted: halted(), services: sent })) {
       if ((await line(`source ${item.service} ${item.route} read ${halted()}`)) !== "read") continue;
       if (!by.has(item.service)) by.set(item.service, []);

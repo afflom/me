@@ -208,7 +208,8 @@ fn device_dv_04() {
     assert!(
         card.contains("if (plan.extension === \"use\") {")
             && card.contains("for (const item of await pull(window, { halted: halted(), services: sent })) {")
-            && card.contains("own: (await line(`source ${service.key} own read ${halted()}`)) === \"read\" ? service.own ?? [] : []")
+            && card.contains("const reads = async (route) => (await line(`source ${service.key} ${route} read ${halted()}`)) === \"read\";")
+            && card.contains("...(seen && (await reads(\"seen\")) ? { seen } : {}), own: (await reads(\"own\")) ? service.own ?? [] : []")
             && card.contains("if ((await line(`source ${item.service} ${item.route} read ${halted()}`)) !== \"read\") continue;"),
         "DV-04: the page pulls only on PrismHost's use and keeps each item through the device source"
     );

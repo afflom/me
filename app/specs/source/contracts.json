@@ -1,0 +1,185 @@
+{
+  "comment": "The threat and security model of the Prism's sources, and its contract with each site. The owner's content is the owner's: each contract takes the most of it the site's own published terms leave reachable from the owner's own signed-in browser, and stays within what keeps the owner's account and standing safe. A contract never defeats an active defense (never solves a challenge, never disguises the browser or its client, never takes the owner's sign-in out of the browser), reads only the owner's own content in the owner's own session, and writes nothing (PrismSource INV-002). terms: the site's own words that bound the contract, each with the page it is on, its section, the date the page says it took effect and the date it was read, and what the words bar (automation, extension, crawl). live: the routes the contract allows live (seen, own); none where the terms bar the extension itself. history: the site's own download, which every site offers the owner. conflict: where the contract still reads against the letter of the terms, and why the owner's account is not put at risk by it. risk: low, some or high, for the owner's account. backoff: when the site challenges or refuses (a status in on), the service rests for hours, or until the owner's own tab of it shows content again, and the owner is shown the service's connect step named by step; nothing is retried before. tools/source/gen.py refuses a contract whose live routes include one PrismSource refuses, a declared route its contract does not allow, a live route on a site whose terms bar the extension, or a live route with no backoff.",
+  "threats": [
+    {
+      "key": "restriction",
+      "what": "The site restricts, suspends or closes the owner's account because it took the Prism's reading for a bot.",
+      "guard": "Live reading is what the owner's own open tab already shows (seen), or a page the site itself serves the owner, fetched with the owner's sign-in at most once a quarter hour (own). Nothing is ever sent, posted, clicked or typed on the site. A site whose terms bar browser extensions outright is read from its download only."
+    },
+    {
+      "key": "challenge",
+      "what": "The site challenges the browser (a captcha, a fresh sign-in, a rate limit) or starts to refuse it.",
+      "guard": "The service rests for its contract's hours and the owner is shown the step; the challenge is never solved, bypassed or retried around."
+    },
+    {
+      "key": "disguise",
+      "what": "Reading that hides what it is: a spoofed client, fingerprint, user agent or address.",
+      "guard": "Never. The extension reads with the owner's own Chrome exactly as it is."
+    },
+    {
+      "key": "credential",
+      "what": "The owner's sign-in (cookies, tokens) leaving the browser, or used outside the owner's own session.",
+      "guard": "Never. Requests go out with the browser's own sign-in (credentials: include) and no token is read, kept or sent anywhere."
+    },
+    {
+      "key": "others",
+      "what": "Reading content that is not the owner's, or that the owner could not already see.",
+      "guard": "Only the owner's own session is read, and only what the site already shows or serves the owner."
+    },
+    {
+      "key": "write",
+      "what": "Changing anything on a site the Prism reads.",
+      "guard": "Never: PrismSource refuses every write (INV-002); anything the Prism sends goes through the destinations and the owner's own press."
+    },
+    {
+      "key": "load",
+      "what": "Reading at a rate that burdens the site.",
+      "guard": "Own routes are read at most once a quarter hour and on the page's pull, at most 200 items a round; seen sends no request at all."
+    }
+  ],
+  "sites": [
+    {
+      "service": "gmail",
+      "terms": [
+        {
+          "url": "https://policies.google.com/terms",
+          "section": "Don’t abuse our services",
+          "effective": "2026-07-30",
+          "read": "2026-11-14",
+          "says": "using automated means to access content from any of our services in violation of the machine-readable instructions on our web pages (for example, robots.txt files that disallow crawling, training, or other activities)",
+          "bars": ["crawl"]
+        },
+        {
+          "url": "https://mail.google.com/robots.txt",
+          "section": "User-agent: *",
+          "effective": "2026-11-14",
+          "read": "2026-11-14",
+          "says": "Allow: /mail/u/0/$ Disallow: /",
+          "bars": ["crawl"]
+        },
+        {
+          "url": "https://policies.google.com/terms",
+          "section": "Develop, improve, and update Google services",
+          "effective": "2026-07-30",
+          "read": "2026-11-14",
+          "says": "We’ll also provide you with an opportunity to export your content from your Google Account using Google Takeout, subject to applicable law and policies.",
+          "bars": []
+        }
+      ],
+      "live": ["seen", "own"],
+      "history": "export",
+      "conflict": "The own route fetches the owner's own messages (view=om) and feed with the owner's sign-in, paths robots.txt disallows to crawlers. The Prism is not a crawler: it reads one person's own mailbox, from that person's browser, a few times an hour, as the person's own Gmail tab does.",
+      "risk": "low",
+      "threats": ["restriction", "challenge", "disguise", "credential", "others", "write", "load"],
+      "backoff": { "on": [401, 403, 429, 503], "hours": 6, "step": "sign-in" }
+    },
+    {
+      "service": "calendar",
+      "terms": [
+        {
+          "url": "https://policies.google.com/terms",
+          "section": "Don’t abuse our services",
+          "effective": "2026-07-30",
+          "read": "2026-11-14",
+          "says": "using automated means to access content from any of our services in violation of the machine-readable instructions on our web pages (for example, robots.txt files that disallow crawling, training, or other activities)",
+          "bars": ["crawl"]
+        },
+        {
+          "url": "https://calendar.google.com/robots.txt",
+          "section": "User-agent: *",
+          "effective": "2026-11-14",
+          "read": "2026-11-14",
+          "says": "Allow: /$ Disallow: /",
+          "bars": ["crawl"]
+        }
+      ],
+      "live": ["own"],
+      "history": "export",
+      "conflict": "The own route takes the owner's own calendar export (exporticalzip) with the owner's sign-in, a path robots.txt disallows to crawlers. It is the same file Calendar's own Export button gives the owner, taken a few times an hour.",
+      "risk": "low",
+      "threats": ["restriction", "challenge", "disguise", "credential", "others", "write", "load"],
+      "backoff": { "on": [401, 403, 429, 503], "hours": 6, "step": "sign-in" }
+    },
+    {
+      "service": "discord",
+      "terms": [
+        {
+          "url": "https://discord.com/terms",
+          "section": "Restrictions on your use of Discord’s services",
+          "effective": "2025-09-29",
+          "read": "2026-11-14",
+          "says": "scraping our services without our written consent, including by using any robot, spider, crawler, scraper, or other automatic device, process, or software",
+          "bars": ["automation"]
+        },
+        {
+          "url": "https://discord.com/guidelines",
+          "section": "14",
+          "effective": "2025-09-29",
+          "read": "2026-11-14",
+          "says": "Do not use self-bots or user-bots. Each account must be associated with a human, not a bot.",
+          "bars": ["automation"]
+        },
+        {
+          "url": "https://discord.com/terms",
+          "section": "Content in Discord’s services: Your content",
+          "effective": "2025-09-29",
+          "read": "2026-11-14",
+          "says": "Your content is yours",
+          "bars": []
+        }
+      ],
+      "live": ["seen"],
+      "history": "export",
+      "conflict": "Discord's terms bar automatic software that scrapes its services. The seen route sends Discord nothing: it notes what the owner's own open Discord tab already shows the owner, as the owner reads it, and makes no request, so Discord's servers see only the owner using Discord. No self-bot: the account acts only when the owner acts. History comes from Discord's own data package.",
+      "risk": "low",
+      "threats": ["restriction", "challenge", "disguise", "credential", "others", "write", "load"],
+      "backoff": { "on": [401, 403, 429], "hours": 24, "step": "sign-in" }
+    },
+    {
+      "service": "whatsapp",
+      "terms": [
+        {
+          "url": "https://www.whatsapp.com/legal/terms-of-service",
+          "section": "Harm To WhatsApp Or Our Users",
+          "effective": "2021-01-04",
+          "read": "2026-11-14",
+          "says": "You must not (or assist others to) directly, indirectly, through automated or other means, access, use, copy, adapt, modify, prepare derivative works based upon, distribute, license, sublicense, transfer, display, perform, or otherwise exploit our Services in impermissible or unauthorized manners",
+          "bars": ["automation"]
+        }
+      ],
+      "live": ["seen"],
+      "history": "export",
+      "conflict": "WhatsApp's terms bar automated access in unauthorized manners. The seen route sends WhatsApp nothing: it notes what the owner's own WhatsApp Web tab has already decrypted and shows the owner, so WhatsApp sees only the owner using WhatsApp Web, and its encryption is never reached around (PrismSource INV-004). History comes from each chat's own Export chat.",
+      "risk": "low",
+      "threats": ["restriction", "challenge", "disguise", "credential", "others", "write", "load"],
+      "backoff": { "on": [401, 403, 429], "hours": 24, "step": "sign-in" }
+    },
+    {
+      "service": "linkedin",
+      "terms": [
+        {
+          "url": "https://www.linkedin.com/legal/user-agreement",
+          "section": "8.2",
+          "effective": "2025-11-03",
+          "read": "2026-11-14",
+          "says": "Develop, support or use software, devices, scripts, robots or any other means or processes (such as crawlers, browser plugins and add-ons or any other technology) to scrape or copy the Services, including profiles and other data from the Services",
+          "bars": ["automation", "extension"]
+        },
+        {
+          "url": "https://www.linkedin.com/legal/user-agreement",
+          "section": "3.1",
+          "effective": "2025-11-03",
+          "read": "2026-11-14",
+          "says": "You own all of your original content that you provide to us",
+          "bars": []
+        }
+      ],
+      "live": [],
+      "history": "export",
+      "conflict": "LinkedIn's agreement names browser plugins and add-ons that copy the Services, and LinkedIn restricts accounts for it, so no live route is safe for the owner's account. The owner's content comes from LinkedIn's own Download your data, which also answers the owner's right of access and portability (GDPR Articles 15 and 20).",
+      "risk": "none",
+      "threats": ["restriction", "challenge", "disguise", "credential", "others", "write", "load"],
+      "backoff": null
+    }
+  ]
+}

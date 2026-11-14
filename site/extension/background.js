@@ -17,7 +17,7 @@ const HOLD = 2000; // items held for the page
 const INIT = Object.freeze({ method: 'GET', credentials: 'include', cache: 'no-store', redirect: 'follow' });
 const get = (url, init) => fetch(url, init);
 const storage = () => chrome.storage.local;
-const STATE = { ids: {}, sent: {}, keys: {}, held: [], halted: 'no', live: {}, out: {}, checked: {}, read: {}, error: {} };
+const STATE = { ids: {}, sent: {}, keys: {}, held: [], halted: 'no', live: {}, out: {}, checked: {}, read: {}, error: {}, rest: {} };
 const load = async () => ({ ...STATE, ...(await storage().get(Object.keys(STATE))) });
 
 // The declarations the Prism page last sent as data; none until it first
@@ -46,9 +46,21 @@ export async function adopt(list, allowed, scripting = globalThis.chrome?.script
   if (changed && scripting?.registerContentScripts) {
     const matches = [...new Set(taken.filter((s) => s.seen).flatMap((s) => s.origins.map((o) => `${o}*`)))];
     await scripting.unregisterContentScripts({ ids: ['prism-seen'] }).catch(() => {});
-    if (matches.length) await scripting.registerContentScripts([{ id: 'prism-seen', matches, js: ['seen.js'], runAt: 'document_idle', persistAcrossSessions: true }]);
+    if (matches.length) await scripting.registerContentScripts([{ id: 'prism-seen', matches, js: SEEN, runAt: 'document_idle', persistAcrossSessions: true }]);
   }
   return taken.length;
+}
+
+// seen.js and the accessible-name reader it reads a tab by.
+const SEEN = ['name.js', 'seen.js'];
+
+// A site that challenges or refuses (a status its contract names) is rested:
+// nothing more is asked of it until the contract's hours pass, or until the
+// owner's own tab of it shows content again, and the page shows the owner the
+// contract's step. Nothing is retried around a challenge.
+export class Rest extends Error {}
+function challenged(service, response) {
+  if ((service.backoff?.on ?? []).includes(response.status)) throw new Rest(`${service.key} answered ${response.status}`);
 }
 
 // A declared URL must stay on its service's own origins.
@@ -111,6 +123,7 @@ export async function item(service, route, values, fetchImpl = get) {
     if (template.includes('{key}') && !values.key) continue;
     if (!own(service, url)) continue;
     const response = await fetchImpl(url, INIT);
+    challenged(service, response);
     if (!signedIn(service, response)) continue;
     if (route.item.unzip) return unzip(new Uint8Array(await response.arrayBuffer()), route.item.unzip);
     const text = await response.text();
@@ -126,6 +139,7 @@ export async function listed(service, route, noted, fetchImpl = get) {
   const ids = [...noted];
   if (route.list && own(service, route.list.url)) {
     const response = await fetchImpl(route.list.url, INIT);
+    challenged(service, response);
     if (signedIn(service, response)) for (const m of (await response.text()).matchAll(new RegExp(route.list.id, 'g'))) ids.push(m[1]);
   }
   return [...new Set(ids)];
@@ -136,6 +150,7 @@ export async function listed(service, route, noted, fetchImpl = get) {
 export async function keyOf(service, route, fetchImpl = get) {
   if (!route.key?.url || !service.seen?.key || !own(service, route.key.url)) return null;
   const response = await fetchImpl(route.key.url, INIT);
+  challenged(service, response);
   if (!signedIn(service, response)) return null;
   return (await response.text()).match(new RegExp(service.seen.key))?.[1] ?? null;
 }
@@ -149,11 +164,13 @@ export async function round(fetchImpl = get) {
   answered.clear();
   for (const service of await services()) {
     if (!(service.own ?? []).length) continue;
+    if ((state.rest[service.key] ?? 0) > Date.now()) continue;
     state.checked[service.key] = Date.now();
     try {
       read += await roundOf(service, state, fetchImpl);
       delete state.error[service.key];
     } catch (error) {
+      if (error instanceof Rest) state.rest[service.key] = Date.now() + (service.backoff?.hours ?? 24) * 3600000;
       state.error[service.key] = String(error?.message ?? error).slice(0, 200);
     }
   }
@@ -162,7 +179,7 @@ export async function round(fetchImpl = get) {
     if (answered.get(service.key)) state.live[service.key] = Date.now();
     else if (answered.get(`${service.key}:asked`)) state.out[service.key] = Date.now();
   }
-  await storage().set({ sent: state.sent, keys: state.keys, held: state.held, live: state.live, out: state.out, checked: state.checked, read: state.read, error: state.error });
+  await storage().set({ sent: state.sent, keys: state.keys, held: state.held, live: state.live, out: state.out, checked: state.checked, read: state.read, error: state.error, rest: state.rest });
   return read;
 }
 
@@ -206,12 +223,12 @@ export async function take({ halted }) {
 // Each declared service: its tab open and pinned, and when its own pages last
 // answered with the owner signed in (or showed a sign-in page instead).
 export async function status(tabs = globalThis.chrome?.tabs) {
-  const { live, out, checked, read, error } = await load();
+  const { live, out, checked, read, error, rest } = await load();
   const open = tabs ? await tabs.query({}) : [];
   const out2 = {};
   for (const service of await services()) {
     const mine = open.filter((tab) => tab.url && own(service, tab.url));
-    out2[service.key] = { open: mine.length > 0, pinned: mine.some((tab) => tab.pinned), signedIn: (live[service.key] ?? 0) > (out[service.key] ?? 0), at: live[service.key] ?? 0, checked: checked[service.key] ?? 0, read: read[service.key] ?? 0, error: error[service.key] ?? null };
+    out2[service.key] = { open: mine.length > 0, pinned: mine.some((tab) => tab.pinned), signedIn: (live[service.key] ?? 0) > (out[service.key] ?? 0), at: live[service.key] ?? 0, checked: checked[service.key] ?? 0, read: read[service.key] ?? 0, error: error[service.key] ?? null, rest: rest[service.key] ?? 0 };
   }
   return { services: out2 };
 }
@@ -235,19 +252,39 @@ export async function attach(tabs = globalThis.chrome?.tabs, scripting = globalT
   let n = 0;
   for (const tab of await tabs.query({})) {
     const url = tab.url ?? '';
-    const files = url.startsWith(PRISM) ? ['bridge.js'] : list.some((s) => s.seen && own(s, url)) ? ['seen.js'] : [];
+    const files = url.startsWith(PRISM) ? ['bridge.js'] : list.some((s) => s.seen && own(s, url)) ? SEEN : [];
     if (!files.length) continue;
     try { await scripting.executeScript({ target: { tabId: tab.id }, files }); n += 1; } catch { /* a tab the browser will not script */ }
   }
   return n;
 }
 
-// What seen.js noted on a declared service's own tab.
-export async function seen(service, { ids = [], key = null }) {
+// What seen.js noted on a declared service's own tab: ids its own routes read
+// by, and the items the tab itself shows (when its declaration names them),
+// held for the page as they are, each once. The owner's tab showing content
+// again ends a rest.
+export async function seen(service, { ids = [], key = null, items = [] }) {
   const state = await load();
   state.ids[service] = [...new Set([...ids, ...(state.ids[service] ?? [])])].slice(0, KEEP);
   if (key) state.keys[service] = key;
-  await storage().set({ ids: state.ids, keys: state.keys });
+  const shown = (Array.isArray(items) ? items : []).filter((i) => i && typeof i.words === 'string' && i.words.trim()).slice(0, MOST);
+  if (shown.length) {
+    const sent = new Set(state.sent[service] ?? []);
+    for (const i of shown) {
+      const item = { at: typeof i.at === 'string' ? i.at : null, who: typeof i.who === 'string' ? i.who : null, where: typeof i.where === 'string' ? i.where : null, words: i.words };
+      const mark = JSON.stringify([item.at, item.who, item.where, item.words]);
+      if (sent.has(mark)) continue;
+      sent.add(mark);
+      state.held.push({ service, route: 'seen', kind: 'message', format: 'seen', text: JSON.stringify(item) });
+    }
+    state.sent[service] = [...sent].slice(-KEEP);
+    state.held = state.held.slice(-HOLD);
+    state.read[service] = (state.read[service] ?? 0) + shown.length;
+    state.live[service] = Date.now();
+    state.checked[service] = Date.now();
+    delete state.rest[service];
+  }
+  await storage().set({ ids: state.ids, keys: state.keys, sent: state.sent, held: state.held, read: state.read, live: state.live, checked: state.checked, rest: state.rest });
 }
 
 if (globalThis.chrome?.runtime?.onMessage) {

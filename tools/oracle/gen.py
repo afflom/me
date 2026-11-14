@@ -16,6 +16,8 @@ examples are taken out mechanically:
     written "CRLF" marks made line breaks;
   - "otc": each example of the WICG origin-bound one-time codes report, the
     message and the code the report says it carries, or none;
+  - "page": the whole test page, its cases graded in a browser (the Web
+    Platform Tests' accname pages: each case names its expected name);
   - "patterns": each distinct pattern string of a labelled research dataset
     whose category the source names (Mathur et al., "Dark Patterns at Scale",
     CSCW 2019: the urgency and scarcity lines found on shopping sites).
@@ -496,11 +498,43 @@ for u in SPEC.get("unsourced", []):
     if u["label"] in sourced:
         refuse(f"unsourced {u['label']!r} has a source now: remove it from unsourced")
 
+def page(text):
+    """A test page taken whole: its cases need the page around them (WPT accname)."""
+    return [text]
+
+
+def read_accname(raw):
+    """W3C AccName, as the Web Platform Tests grade it: each element of class
+    "ex" names its expected accessible name (data-expectedlabel) and its case
+    (data-testname); the browser test compares the Prism's computed name."""
+    from html.parser import HTMLParser
+
+    names = []
+
+    class Cases(HTMLParser):
+        def handle_starttag(self, tag, attrs):
+            a = dict(attrs)
+            if "ex" in (a.get("class") or "").split() and "data-expectedlabel" in a:
+                names.append({"test": a.get("data-testname", ""), "name": re.sub(r"\s+", " ", a["data-expectedlabel"]).strip()})
+
+    Cases().feed(raw)
+    return {"names": names}
+
+
+def read_feed(raw):
+    """WAI-ARIA Authoring Practices' feed example: its own renderer and data.
+    Each restaurant it renders is an article labelled by its name
+    (aria-labelledby), so a reader of the feed hears each name, in order."""
+    data = raw[raw.index("aria.RestaurantData"):raw.index("];", raw.index("aria.RestaurantData"))]
+    names = [json.loads(m.group(1)) if m.group(1) else m.group(2).replace("\\'", "'") for m in re.finditer(r"\bname:\s*(?:(\"(?:[^\"\\\\]|\\\\.)*\")|'((?:[^'\\\\]|\\\\.)*)')", data)]
+    return {"names": names}
+
+
 corpus = []
 for source in SPEC["sources"]:
     text = unpaginate(fetch(source))
-    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples, "patterns": lambda text: pattern_examples(text, source)}[source["examples"]]
-    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc, "coercive": read_pattern}[source["kind"]]
+    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples, "patterns": lambda text: pattern_examples(text, source), "page": page}[source["examples"]]
+    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc, "coercive": read_pattern, "accname": read_accname, "feed": read_feed}[source["kind"]]
     n = kept = 0
     for raw in take(text):
         n += 1

@@ -29,8 +29,21 @@
         if (m) { key = m[1]; break; }
       }
     }
-    if (ids.size || key) chrome.runtime.sendMessage({ prism: 'seen', service: service.key, ids: [...ids], key });
+    const items = seen.items ? shown(seen.items) : [];
+    if (ids.size || key || items.length) chrome.runtime.sendMessage({ prism: 'seen', service: service.key, ids: [...ids], key, items });
   };
+  // The items the tab shows, as its declaration names them (name.js), each sent once.
+  const sent = new Set();
+  function shown(declared) {
+    const out = [];
+    for (const item of globalThis.prismItems(declared)) {
+      const mark = JSON.stringify([item.at, item.who, item.where, item.words]);
+      if (sent.has(mark)) continue;
+      sent.add(mark);
+      out.push(item);
+    }
+    return out.slice(-200);
+  }
   note();
   let timer = null;
   new MutationObserver(() => { clearTimeout(timer); timer = setTimeout(note, 1500); }).observe(document.documentElement, { childList: true, subtree: true });

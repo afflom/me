@@ -6023,6 +6023,612 @@
     "coercive": true,
     "type": "Low-stock Message"
    }
+  },
+  {
+   "id": "wpt-comp-labelledby-1",
+   "source": "wpt-comp-labelledby",
+   "kind": "accname",
+   "raw": "<!doctype html>\n<html>\n<head>\n  <title>Name Comp: Labelledby</title>\n  <script src=\"/resources/testharness.js\"></script>\n  <script src=\"/resources/testharnessreport.js\"></script>\n  <script src=\"/resources/testdriver.js\"></script>\n  <script src=\"/resources/testdriver-vendor.js\"></script>\n  <script src=\"/resources/testdriver-actions.js\"></script>\n  <script src=\"/wai-aria/scripts/aria-utils.js\"></script>\n</head>\n<body>\n\n<p>Tests the <a href=\"https://w3c.github.io/accname/#comp_labelledby\">#comp_labelledby</a> portions of the AccName <em>Name Computation</em> algorithm.</p>\n\n<!--\n\n  Some overlap with other aria-labelledby tests in:\n  - /accname/name/comp_label.html (aria-labelledby / aria-label fallback, etc.)\n  - /accname/name/comp_name_from_content.html\n  - /accname/name/shadowdom/*\n\n-->\n<h2>Tests for <code>aria-labelledby</code></h2>\n\n<div role=\"group\" aria-labelledby=\"h\" class=\"ex\" data-expectedlabel=\"first heading\" data-testname=\"div group explicitly labelledby heading\">\n  <h2 id=\"h\">first heading</h2>\n  <p>text inside div group</p>\n</div>\n\n<div role=\"group\" aria-label=\"self label\" id=\"g2\" aria-labelledby=\"g2 h2\" class=\"ex\" data-expectedlabel=\"self label + first heading\" data-testname=\"div group explicitly labelledby self and heading\">\n  <h2 id=\"h2\">+ first heading</h2>\n  <p>text inside div group</p>\n</div>\n\n<nav aria-labelledby=\"s1 s2 s3 s4\" class=\"ex\" data-expectedlabel=\"verify spaces between foreach\" data-testname=\"nav with verified spaces appended between each of IDREFS\">\n  <span id=\"s1\">verify</span><span id=\"s2\">spaces</span><span>FAIL IF INCLUDED</span><span id=\"s3\">between</span><span id=\"s4\">foreach</span>\n</nav>\n\n\n<!-- Removed tests to be merged back in (or this PR reverted) after Interop 2024 completed on Feb 6, 2025. -->\n\n<h2>Tests for <code>aria-labeledby</code> (non-standard spelling)</h2>\n\n<span id=\"n1\">first label</span>\n<span id=\"n2\">second label</span>\n\n<h2>Tests for precedence: <code>aria-labelledby</code> vs. <code>aria-labeledby</code> (non-standard spelling)</h2>\n<!-- The \"aria-labelledby\" spelling should take precedence over \"aria-labeledby\" for accname -->\n\n<a href=\"#\" aria-labelledby=\"n1\" aria-labeledby=\"n2\" class=\"ex\" data-expectedlabel=\"first label\" data-testname=\"link labelled by aria-labelledby supercedes aria-labeledby (non-standard spelling)\">x</a>\n<button aria-labelledby=\"n1\" aria-labeledby=\"n2\" class=\"ex\" data-expectedlabel=\"first label\" data-testname=\"button labelled by aria-labelledby supercedes aria-labeledby (non-standard spelling)\">x</button>\n<div role=\"group\" aria-labelledby=\"n1\" aria-labeledby=\"n2\" class=\"ex\" data-expectedlabel=\"first label\" data-testname=\"div labelled by aria-labelledby supercedes aria-labeledby (non-standard spelling)\">x</div>\n\n<a href=\"#\" aria-labeledby=\"n1\" aria-labelledby=\"n2\" class=\"ex\" data-expectedlabel=\"second label\" data-testname=\"link labelled by [aria-labeledby][aria-labelledby]\">x</a>\n<button aria-labeledby=\"n1\" aria-labelledby=\"n2\" class=\"ex\" data-expectedlabel=\"second label\" data-testname=\"button labelled by [aria-labeledby][aria-labelledby]\">x</button>\n<div role=\"group\" aria-labeledby=\"n1\" aria-labelledby=\"n2\" class=\"ex\" data-expectedlabel=\"second label\" data-testname=\"div labelled by [aria-labeledby][aria-labelledby]\">x</div>\n\n<h2>Tests for name precedence with <code>aria-labeledby</code> (non-standard spelling)</h2>\n<!-- Name computation: https://w3c.github.io/accname/#computation-steps -->\n\n<!-- Step 2H: Recursive Name from Content, see wpt/accname/name/comp_name_from_content.html  -->\n<h3>\n  <a href=\"#\" aria-labeledby=\"nested_image_label2\">\n    link1<!-- this text is skipped because of aria-labeledby -->\n  </a>\n  <a href=\"#\" data-expectedlabel=\"link2 image link3\" data-testname=\"link name from content for each child including nested image (referenced elsewhere via labeledby)\" class=\"ex\">\n    link2\n    <img id=\"nested_image_label2\" alt=\"image\" src=\"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==\">\n    <!-- image skipped in this link (when computing heading text) because it was already referenced by the first link within this heading label recursion cycle. -->\n    <!-- but image not skipped when computing the text of the link itself since it has not been referenced in that context -->\n    link3\n  </a>\n</h3>\n\n<!--\n\n  BLOCKED on https://github.com/w3c/accname/issues/209\n\n  Once that's resolved, it may be worthwhile to add a new ./comp_labelledby_recursion.html file,\n  so that the implementation diffs rolling in don't penalize this Interop 2024 test.\n\n  All remaining cases of https://w3c.github.io/accname/#comp_labelledby\n  - comp_labelledby_reset\n  - comp_labelledby_foreach\n  - comp_labelledby_set_current\n  - comp_labelledby_recursion\n  - comp_labelledby_append\n  - comp_labelledby_return\n\n-->\n\n<script>\nAriaUtils.verifyLabelsBySelector(\".ex\");\n</script>\n</body>\n</html>",
+   "expect": {
+    "names": [
+     {
+      "test": "div group explicitly labelledby heading",
+      "name": "first heading"
+     },
+     {
+      "test": "div group explicitly labelledby self and heading",
+      "name": "self label + first heading"
+     },
+     {
+      "test": "nav with verified spaces appended between each of IDREFS",
+      "name": "verify spaces between foreach"
+     },
+     {
+      "test": "link labelled by aria-labelledby supercedes aria-labeledby (non-standard spelling)",
+      "name": "first label"
+     },
+     {
+      "test": "button labelled by aria-labelledby supercedes aria-labeledby (non-standard spelling)",
+      "name": "first label"
+     },
+     {
+      "test": "div labelled by aria-labelledby supercedes aria-labeledby (non-standard spelling)",
+      "name": "first label"
+     },
+     {
+      "test": "link labelled by [aria-labeledby][aria-labelledby]",
+      "name": "second label"
+     },
+     {
+      "test": "button labelled by [aria-labeledby][aria-labelledby]",
+      "name": "second label"
+     },
+     {
+      "test": "div labelled by [aria-labeledby][aria-labelledby]",
+      "name": "second label"
+     },
+     {
+      "test": "link name from content for each child including nested image (referenced elsewhere via labeledby)",
+      "name": "link2 image link3"
+     }
+    ]
+   }
+  },
+  {
+   "id": "wpt-comp-text-node-1",
+   "source": "wpt-comp-text-node",
+   "kind": "accname",
+   "raw": "<!doctype html>\n<html>\n<head>\n  <title>Name Comp: Text Node</title>\n  <meta name=\"timeout\" content=\"long\">\n  <script src=\"/resources/testharness.js\"></script>\n  <script src=\"/resources/testharnessreport.js\"></script>\n  <script src=\"/resources/testdriver.js\"></script>\n  <script src=\"/resources/testdriver-vendor.js\"></script>\n  <script src=\"/resources/testdriver-actions.js\"></script>\n  <script src=\"/wai-aria/scripts/aria-utils.js\"></script>\n</head>\n<body>\n\n<p>Tests the <a href=\"https://w3c.github.io/accname/#comp_text_node\">#comp_text_node</a> portions of the AccName <em>Name Computation</em> algorithm.</p>\n\n<!--\n\n  Note: some overlap with the tests in:\n  - /accname/name/comp_label.html\n  - /accname/name/comp_name_from_content.html\n\n-->\n\n<h1>text/element/text nodes, no space</h1>\n<span role=\"button\" tabindex=\"0\" class=\"ex\" data-expectedlabel=\"buttonlabel\" data-testname=\"span[role=button] with text/element/text nodes, no space\">button<span></span>label</span>\n<div role=\"heading\" class=\"ex\" data-expectedlabel=\"headinglabel\" data-testname=\"div[role=heading] with text/element/text nodes, no space\">heading<span></span>label</div>\n<button class=\"ex\" data-expectedlabel=\"buttonlabel\" data-testname=\"button with text/element/text nodes, no space\">button<span></span>label</button>\n<h3 class=\"ex\" data-expectedlabel=\"headinglabel\" data-testname=\"heading with text/element/text nodes, no space\">heading<span></span>label</h3>\n<a href=\"#\" class=\"ex\" data-expectedlabel=\"linklabel\" data-testname=\"link with text/element/text nodes, no space\">link<span></span>label</a>\n<br>\n\n<h1>text/comment/text nodes, no space</h1>\n<!-- Note: This set is not currently to spec until https://github.com/w3c/accname/issues/193 is resolved. -->\n<span role=\"button\" tabindex=\"0\" class=\"ex\" data-expectedlabel=\"buttonlabel\" data-testname=\"span[role=button] with text/comment/text nodes, no space\">\n  button<!-- with non-text node splitting concatenated text nodes -->label<!-- [sic] no extra spaces around first comment -->\n</span>\n<div role=\"heading\" class=\"ex\" data-expectedlabel=\"headinglabel\" data-testname=\"div[role=heading] with text/comment/text nodes, no space\">\n  heading<!-- with non-text node splitting concatenated text nodes -->label<!-- [sic] no extra spaces around first comment -->\n</div>\n<button class=\"ex\" data-expectedlabel=\"buttonlabel\" data-testname=\"button with text/comment/text nodes, no space\">\n  button<!-- with non-text node splitting concatenated text nodes -->label<!-- [sic] no extra spaces around first comment -->\n</button>\n<h3 class=\"ex\" data-expectedlabel=\"headinglabel\" data-testname=\"heading with text/comment/text nodes, no space\">\n  heading<!-- with non-text node splitting concatenated text nodes -->label<!-- [sic] no extra spaces around first comment -->\n</h3>\n<a href=\"#\" class=\"ex\" data-expectedlabel=\"linklabel\" data-testname=\"link with text/comment/text nodes, no space\">\n  link<!-- with non-text node splitting concatenated text nodes -->label<!-- [sic] no extra spaces around first comment -->\n</a>\n<br>\n\n<h1>text/comment/text nodes, with space</h1>\n<span role=\"button\" tabindex=\"0\" class=\"ex\" data-expectedlabel=\"button label\" data-testname=\"span[role=button] with text/comment/text nodes, with space\">\n  button\n  <!-- comment node between text nodes with leading/trailing whitespace -->\n  label\n</span>\n<div role=\"heading\" class=\"ex\" data-expectedlabel=\"heading label\" data-testname=\"div[role=heading] with text/comment/text nodes, with space\">\n  heading\n  <!-- comment node between text nodes with leading/trailing whitespace -->\n  label\n</div>\n<button class=\"ex\" data-expectedlabel=\"button label\" data-testname=\"button with text/comment/text nodes, with space\">\n  button\n  <!-- comment node between text nodes with leading/trailing whitespace -->\n  label\n</button>\n<h3 class=\"ex\" data-expectedlabel=\"heading label\" data-testname=\"heading with text/comment/text nodes, with space\">\n  heading\n  <!-- comment node between text nodes with leading/trailing whitespace -->\n  label\n</h3>\n<a href=\"#\" class=\"ex\" data-expectedlabel=\"link label\" data-testname=\"link with text/comment/text nodes, with space\">\n  link\n  <!-- comment node between text nodes with leading/trailing whitespace -->\n  label\n</a>\n<br>\n\n<h1>text node, with tab char</h1>\n<span role=\"button\" tabindex=\"0\" class=\"ex\" data-expectedlabel=\"button label\" data-testname=\"span[role=button] with text node, with tab char\">button  label</span>\n<div role=\"heading\" class=\"ex\" data-expectedlabel=\"heading label\" data-testname=\"div[role=heading] with text node, with tab char\">heading label</div>\n<button class=\"ex\" data-expectedlabel=\"button label\" data-testname=\"button with text node, with tab char\">button  label</button>\n<h3 class=\"ex\" data-expectedlabel=\"heading label\" data-testname=\"heading with text node, with tab char\">heading label</h3>\n<a href=\"#\" class=\"ex\" data-expectedlabel=\"link label\" data-testname=\"link with text node, with tab char\">link\tlabel</a>\n<br>\n\n<h1>text node, with non-breaking space</h1>\n<span role=\"button\" tabindex=\"0\" class=\"ex\" data-expectedlabel=\"button&nbsp;label\" data-testname=\"span[role=button] with text node, with non-breaking space\">button&nbsp;label</span>\n<div role=\"heading\" class=\"ex\" data-expectedlabel=\"heading&nbsp;label\" data-testname=\"div[role=heading] with text node, with non-breaking space\">heading&nbsp;label</div>\n<button class=\"ex\" data-expectedlabel=\"button&nbsp;label\" data-testname=\"button with text node, with non-breaking space\">button&nbsp;label</button>\n<h3 class=\"ex\" data-expectedlabel=\"heading&nbsp;label\" data-testname=\"heading with text node, with non-breaking space\">heading&nbsp;label</h3>\n<a href=\"#\" class=\"ex\" data-expectedlabel=\"link&nbsp;label\" data-testname=\"link with text node, with non-breaking space\">link&nbsp;label</a>\n<br>\n\n<h1>text node, with extra non-breaking space</h1>\n<span role=\"button\" tabindex=\"0\" class=\"ex\" data-expectedlabel=\"button&nbsp;&nbsp;&nbsp;label\" data-testname=\"span[role=button] with text node, with extra non-breaking space\">button&nbsp;&nbsp;&nbsp;label</span>\n<div role=\"heading\" class=\"ex\" data-expectedlabel=\"heading&nbsp;&nbsp;&nbsp;label\" data-testname=\"div[role=heading] with text node, with extra non-breaking space\">heading&nbsp;&nbsp;&nbsp;label</div>\n<button class=\"ex\" data-expectedlabel=\"button&nbsp;&nbsp;&nbsp;label\" data-testname=\"button with text node, with extra non-breaking space\">button&nbsp;&nbsp;&nbsp;label</button>\n<h3 class=\"ex\" data-expectedlabel=\"heading&nbsp;&nbsp;&nbsp;label\" data-testname=\"heading with text node, with extra non-breaking space\">heading&nbsp;&nbsp;&nbsp;label</h3>\n<a href=\"#\" class=\"ex\" data-expectedlabel=\"link&nbsp;&nbsp;&nbsp;label\" data-testname=\"link with text node, with extra non-breaking space\">link&nbsp;&nbsp;&nbsp;label</a>\n<br>\n\n<h1>text node, with leading/trailing non-breaking space</h1>\n<span role=\"button\" tabindex=\"0\" class=\"ex\" data-expectedlabel=\"&nbsp;button&nbsp;label&nbsp;\" data-testname=\"span[role=button] with text node, with leading/trailing non-breaking space\">&nbsp;button&nbsp;label&nbsp;</span>\n<div role=\"heading\" class=\"ex\" data-expectedlabel=\"&nbsp;heading&nbsp;label&nbsp;\" data-testname=\"div[role=heading] with text node, with leading/trailing non-breaking space\">&nbsp;heading&nbsp;label&nbsp;</div>\n<button class=\"ex\" data-expectedlabel=\"&nbsp;button&nbsp;label&nbsp;\" data-testname=\"button with text node, with leading/trailing non-breaking space\">&nbsp;button&nbsp;label&nbsp;</button>\n<h3 class=\"ex\" data-expectedlabel=\"&nbsp;heading&nbsp;label&nbsp;\" data-testname=\"heading with text node, with leading/trailing non-breaking space\">&nbsp;heading&nbsp;label&nbsp;</h3>\n<a href=\"#\" class=\"ex\" data-expectedlabel=\"&nbsp;link&nbsp;label&nbsp;\" data-testname=\"link with text node, with leading/trailing non-breaking space\">&nbsp;link&nbsp;label&nbsp;</a>\n<br>\n\n<h1>text node, with mixed space and non-breaking space</h1>\n<span role=\"button\" tabindex=\"0\" class=\"ex\" data-expectedlabel=\"button &nbsp; label\" data-testname=\"span[role=button] with text node, with mixed space and non-breaking space\">button   &nbsp;   label</span>\n<div role=\"heading\" class=\"ex\" data-expectedlabel=\"heading &nbsp; label\" data-testname=\"div[role=heading] with text node, with mixed space and non-breaking space\">heading   &nbsp;   label</div>\n<button class=\"ex\" data-expectedlabel=\"button &nbsp; label\" data-testname=\"button with text node, with mixed space and non-breaking space\">button   &nbsp;   label</button>\n<h3 class=\"ex\" data-expectedlabel=\"heading &nbsp; label\" data-testname=\"heading with text node, with mixed space and non-breaking space\">heading   &nbsp;   label</h3>\n<a href=\"#\" class=\"ex\" data-expectedlabel=\"link &nbsp; label\" data-testname=\"link with text node, with mixed space and non-breaking space\">link   &nbsp;   label</a>\n<br>\n\n<h1>text nodes, with deeply nested space</h1>\n<span role=\"button\" tabindex=\"0\" class=\"ex\" data-expectedlabel=\"button label\" data-testname=\"span[role=button] with text node, with deeply nested space\">\nbutton<span><span><span><span><span><span><span> </span></span></span></span></span></span></span>label\n</span>\n<div role=\"heading\" class=\"ex\" data-expectedlabel=\"heading label\" data-testname=\"div[role=heading] with text node, with deeply nested space\">\nheading<span><span><span><span><span><span><span> </span></span></span></span></span></span></span>label\n</div>\n<button class=\"ex\" data-expectedlabel=\"button label\" data-testname=\"button with text node, with deeply nested space\">\nbutton<span><span><span><span><span><span><span> </span></span></span></span></span></span></span>label\n</button>\n<h3 class=\"ex\" data-expectedlabel=\"heading label\" data-testname=\"heading with text node, with deeply nested space\">\nheading<span><span><span><span><span><span><span> </span></span></span></span></span></span></span>label\n</h3>\n<a href=\"#\" class=\"ex\" data-expectedlabel=\"link label\" data-testname=\"link with text node, with deeply nested space\">\nlink<span><span><span><span><span><span><span> </span></span></span></span></span></span></span>label\n</a>\n<br>\n\n<h1>text nodes, with single line break</h1>\n<span role=\"button\" tabindex=\"0\" class=\"ex\" data-expectedlabel=\"button label\" data-testname=\"span[role=button] with text node, with single line break\">button\nlabel</span>\n<div role=\"heading\" class=\"ex\" data-expectedlabel=\"heading label\" data-testname=\"div[role=heading] with text node, with single line break\">heading\nlabel</div>\n<button class=\"ex\" data-expectedlabel=\"button label\" data-testname=\"button with text node, with single line break\">button\nlabel</button>\n<h3 class=\"ex\" data-expectedlabel=\"heading label\" data-testname=\"heading with text node, with single line break\">heading\nlabel</h3>\n<a href=\"#\" class=\"ex\" data-expectedlabel=\"link label\" data-testname=\"link with text node, with single line break\">link\nlabel</a>\n<br>\n\n<script>\nAriaUtils.verifyLabelsBySelector(\".ex\");\n</script>\n</body>\n</html>",
+   "expect": {
+    "names": [
+     {
+      "test": "span[role=button] with text/element/text nodes, no space",
+      "name": "buttonlabel"
+     },
+     {
+      "test": "div[role=heading] with text/element/text nodes, no space",
+      "name": "headinglabel"
+     },
+     {
+      "test": "button with text/element/text nodes, no space",
+      "name": "buttonlabel"
+     },
+     {
+      "test": "heading with text/element/text nodes, no space",
+      "name": "headinglabel"
+     },
+     {
+      "test": "link with text/element/text nodes, no space",
+      "name": "linklabel"
+     },
+     {
+      "test": "span[role=button] with text/comment/text nodes, no space",
+      "name": "buttonlabel"
+     },
+     {
+      "test": "div[role=heading] with text/comment/text nodes, no space",
+      "name": "headinglabel"
+     },
+     {
+      "test": "button with text/comment/text nodes, no space",
+      "name": "buttonlabel"
+     },
+     {
+      "test": "heading with text/comment/text nodes, no space",
+      "name": "headinglabel"
+     },
+     {
+      "test": "link with text/comment/text nodes, no space",
+      "name": "linklabel"
+     },
+     {
+      "test": "span[role=button] with text/comment/text nodes, with space",
+      "name": "button label"
+     },
+     {
+      "test": "div[role=heading] with text/comment/text nodes, with space",
+      "name": "heading label"
+     },
+     {
+      "test": "button with text/comment/text nodes, with space",
+      "name": "button label"
+     },
+     {
+      "test": "heading with text/comment/text nodes, with space",
+      "name": "heading label"
+     },
+     {
+      "test": "link with text/comment/text nodes, with space",
+      "name": "link label"
+     },
+     {
+      "test": "span[role=button] with text node, with tab char",
+      "name": "button label"
+     },
+     {
+      "test": "div[role=heading] with text node, with tab char",
+      "name": "heading label"
+     },
+     {
+      "test": "button with text node, with tab char",
+      "name": "button label"
+     },
+     {
+      "test": "heading with text node, with tab char",
+      "name": "heading label"
+     },
+     {
+      "test": "link with text node, with tab char",
+      "name": "link label"
+     },
+     {
+      "test": "span[role=button] with text node, with non-breaking space",
+      "name": "button label"
+     },
+     {
+      "test": "div[role=heading] with text node, with non-breaking space",
+      "name": "heading label"
+     },
+     {
+      "test": "button with text node, with non-breaking space",
+      "name": "button label"
+     },
+     {
+      "test": "heading with text node, with non-breaking space",
+      "name": "heading label"
+     },
+     {
+      "test": "link with text node, with non-breaking space",
+      "name": "link label"
+     },
+     {
+      "test": "span[role=button] with text node, with extra non-breaking space",
+      "name": "button label"
+     },
+     {
+      "test": "div[role=heading] with text node, with extra non-breaking space",
+      "name": "heading label"
+     },
+     {
+      "test": "button with text node, with extra non-breaking space",
+      "name": "button label"
+     },
+     {
+      "test": "heading with text node, with extra non-breaking space",
+      "name": "heading label"
+     },
+     {
+      "test": "link with text node, with extra non-breaking space",
+      "name": "link label"
+     },
+     {
+      "test": "span[role=button] with text node, with leading/trailing non-breaking space",
+      "name": "button label"
+     },
+     {
+      "test": "div[role=heading] with text node, with leading/trailing non-breaking space",
+      "name": "heading label"
+     },
+     {
+      "test": "button with text node, with leading/trailing non-breaking space",
+      "name": "button label"
+     },
+     {
+      "test": "heading with text node, with leading/trailing non-breaking space",
+      "name": "heading label"
+     },
+     {
+      "test": "link with text node, with leading/trailing non-breaking space",
+      "name": "link label"
+     },
+     {
+      "test": "span[role=button] with text node, with mixed space and non-breaking space",
+      "name": "button label"
+     },
+     {
+      "test": "div[role=heading] with text node, with mixed space and non-breaking space",
+      "name": "heading label"
+     },
+     {
+      "test": "button with text node, with mixed space and non-breaking space",
+      "name": "button label"
+     },
+     {
+      "test": "heading with text node, with mixed space and non-breaking space",
+      "name": "heading label"
+     },
+     {
+      "test": "link with text node, with mixed space and non-breaking space",
+      "name": "link label"
+     },
+     {
+      "test": "span[role=button] with text node, with deeply nested space",
+      "name": "button label"
+     },
+     {
+      "test": "div[role=heading] with text node, with deeply nested space",
+      "name": "heading label"
+     },
+     {
+      "test": "button with text node, with deeply nested space",
+      "name": "button label"
+     },
+     {
+      "test": "heading with text node, with deeply nested space",
+      "name": "heading label"
+     },
+     {
+      "test": "link with text node, with deeply nested space",
+      "name": "link label"
+     },
+     {
+      "test": "span[role=button] with text node, with single line break",
+      "name": "button label"
+     },
+     {
+      "test": "div[role=heading] with text node, with single line break",
+      "name": "heading label"
+     },
+     {
+      "test": "button with text node, with single line break",
+      "name": "button label"
+     },
+     {
+      "test": "heading with text node, with single line break",
+      "name": "heading label"
+     },
+     {
+      "test": "link with text node, with single line break",
+      "name": "link label"
+     }
+    ]
+   }
+  },
+  {
+   "id": "wpt-comp-name-from-content-1",
+   "source": "wpt-comp-name-from-content",
+   "kind": "accname",
+   "raw": "<!doctype html>\n<html>\n<head>\n  <title>Name Comp: Name From Content</title>\n  <meta charset=\"utf-8\">\n  <script src=\"/resources/testharness.js\"></script>\n  <script src=\"/resources/testharnessreport.js\"></script>\n  <script src=\"/resources/testdriver.js\"></script>\n  <script src=\"/resources/testdriver-vendor.js\"></script>\n  <script src=\"/resources/testdriver-actions.js\"></script>\n  <script src=\"/wai-aria/scripts/aria-utils.js\"></script>\n  <style type=\"text/css\">\n\n     /*\n\n      Since the AccName spec is in flux about whitespace joiners, and the implementations don't match,\n      normalize the whitespace (with extra leading/trailing) space.\n\n      No point in having the same in-flux spec change cause failures the remaining unrelated tests.\n\n      See more here:\n      https://github.com/w3c/accname/issues/205\n      https://github.com/w3c/accname/projects/1#card-42288231\n\n    */\n\n    .alt-counter::before {\n      counter-set: cnt 5051;\n      content: \"\" / counter(cnt);\n    }\n    .multi-alt-counter {\n      counter-reset: multi_alt 10;\n    }\n    .multi-alt-counter span::before {\n      counter-increment: multi_alt 1;\n      content: \"\" / counter(multi_alt) \" \";\n    }\n    .multi-alt-counter span:nth-child(2n)::before {\n      counter-increment: multi_alt 2;\n    }\n    .simple-before::before {\n      content: \" before \"; /* [sic] leading and trailing space */\n      margin:0 0.1em;\n    }\n    .simple-after::after {\n      content: \" after \"; /* [sic] leading and trailing space */\n      margin:0 0.1em;\n    }\n    .no-space::before, .no-space::after {\n      content: \"nospace\"; /* [sic] Unlike the others, NO extra leading/trailing space here. */\n    }\n    .simple-before:dir(rtl)::before {\n      content: \" من قبل \"; /* [sic] leading and trailing space */\n    }\n    .simple-after:dir(rtl)::after {\n      content: \" بعد \"; /* [sic] leading and trailing space */\n    }\n    .fallback-before::before {\n      content: \" before \"; /* [sic] leading and trailing space */\n      content: \" before \" / \" alt-before \"; /* Override the previous line for engines that support the Alternative Text syntax. */\n    }\n    .fallback-after::after {\n      content: \" after \"; /* [sic] leading and trailing space */\n      content: \" after \" / \" alt-after \"; /* Override the previous line for engines that support the Alternative Text syntax. */\n    }\n    .fallback-before-empty::before {\n      content: \"before\"  / \"\";\n    }\n    .fallback-before-image-empty::before {\n      content: \"before \" url(/images/blue.png) / \"\";\n    }\n    .fallback-before-mixed::before {\n      content: \" before \"; /* [sic] leading and trailing space */\n      content: \" before \" / \" start \" attr(data-alt-text-before) \" end \"; /* Override the previous line for engines that support the Alternative Text syntax. */\n    }\n    .fallback-after-mixed::after {\n      content: \" after \"; /* [sic] leading and trailing space */\n      content: \" after \" / \" start \" attr(data-alt-text-after) \" end \"; /* Override the previous line for engines that support the Alternative Text syntax. */\n    }\n    .block > span {\n      display: block;\n      margin: 0 0.1em;\n    }\n    .iblock > span {\n      display: inline-block;\n      margin: 0 0.1em;\n    }\n\n  </style>\n</head>\n<body>\n\n<p>Tests the <a href=\"https://w3c.github.io/accname/#comp_name_from_content\">#comp_name_from_content</a> portions of the AccName <em>Name Computation</em> algorithm.</p>\n\n<p>This series of tests exercises the button, heading, and link elements, because each have different characteristics worthy of testing in each of the name computation algorithm scenarios:</p>\n<ul>\n  <li>button is a leaf node with sub-level elements presentational.</li>\n  <li>heading is block level, and can contain sub-level interactives like links.</li>\n  <li>link (a[href]) is an interactive inline element that can include non-presentational descendants.</li>\n</ul>\n\n<h1>ARIA roles, inline</h1>\n<span tabindex=\"0\" role=\"button\" data-expectedlabel=\"label\" data-testname=\"aria button name from content, inline\" class=\"ex\">label</span><br>\n<span tabindex=\"0\" role=\"heading\" data-expectedlabel=\"label\" data-testname=\"aria heading name from content, inline\" class=\"ex\">label</span><br>\n<span tabindex=\"0\" role=\"link\" data-expectedlabel=\"label\" data-testname=\"aria link name from content, inline\" class=\"ex\">label</span><br>\n<br>\n\n<h1>ARIA roles, block</h1>\n<div tabindex=\"0\" role=\"button\" data-expectedlabel=\"label\" data-testname=\"aria button name from content, block\" class=\"ex\">label</div>\n<div tabindex=\"0\" role=\"heading\" data-expectedlabel=\"label\" data-testname=\"aria heading name from content, block\" class=\"ex\">label</div>\n<div tabindex=\"0\" role=\"link\" data-expectedlabel=\"label\" data-testname=\"aria link name from content, block\" class=\"ex\">label</div>\n<br>\n\n<h1>simple</h1>\n<button data-expectedlabel=\"label\" data-testname=\"button name from content\" class=\"ex\">label</button><br>\n<h3 data-expectedlabel=\"label\" data-testname=\"heading name from content\" class=\"ex\">label</h3>\n<a href=\"#\" data-expectedlabel=\"label\" data-testname=\"link name from content\" class=\"ex\">label</a><br>\n<br>\n\n<h1>alt counter with ::before</h1>\n<button data-expectedlabel=\"5051 label\" data-testname=\"button with alt counter on ::before\" class=\"ex alt-counter\">label</button><br>\n<h3 data-expectedlabel=\"5051 label\" data-testname=\"heading with alt counter on ::before\" class=\"ex alt-counter\">label</h3>\n<a href=\"#\" data-expectedlabel=\"5051 label\" data-testname=\"link with alt counter on ::before\" class=\"ex alt-counter\">label</a><br>\n<br>\n\n<h1>multiple alt counters with varying increments</h1>\n<button data-expectedlabel=\"11 alpha 13 beta 14 gamma\" data-testname=\"button with multiple alt counters and counter increments\" class=\"ex multi-alt-counter\"><span>alpha</span> <span>beta</span> <span>gamma</span></button><br>\n<h3 data-expectedlabel=\"11 alpha 13 beta 14 gamma\" data-testname=\"heading with multiple alt counters and counter increments\" class=\"ex multi-alt-counter\"><span>alpha</span> <span>beta</span> <span>gamma</span></h3>\n<a href=\"#\" data-expectedlabel=\"11 alpha 13 beta 14 gamma\" data-testname=\"link with multiple alt counters and counter increments\" class=\"ex multi-alt-counter\"><span>alpha</span> <span>beta</span> <span>gamma</span></a><br>\n<br>\n\n<h1>simple with ::before</h1>\n<button data-expectedlabel=\"before label\" data-testname=\"button name from content with ::before\" class=\"ex simple-before\">label</button><br>\n<h3 data-expectedlabel=\"before label\" data-testname=\"heading name from content with ::before\" class=\"ex simple-before\">label</h3>\n<a href=\"#\" data-expectedlabel=\"before label\" data-testname=\"link name from content with ::before\" class=\"ex simple-before\">label</a><br>\n<br>\n\n<h1>simple with ::after</h1>\n<button data-expectedlabel=\"label after\" data-testname=\"button name from content with ::after\" class=\"ex simple-after\">label</button><br>\n<h3 data-expectedlabel=\"label after\" data-testname=\"heading name from content with ::after\" class=\"ex simple-after\">label</h3>\n<a href=\"#\" data-expectedlabel=\"label after\" data-testname=\"link name from content with ::after\" class=\"ex simple-after\">label</a><br>\n<br>\n\n<h1>simple with ::before and ::after</h1>\n<button data-expectedlabel=\"before label after\" data-testname=\"button name from content with ::before and ::after\" class=\"ex simple-before simple-after\">label</button><br>\n<h3 data-expectedlabel=\"before label after\" data-testname=\"heading name from content with ::before and ::after\" class=\"ex simple-before simple-after\">label</h3>\n<a href=\"#\" data-expectedlabel=\"before label after\" data-testname=\"link name from content with ::before and ::after\" class=\"ex simple-before simple-after\">label</a><br>\n<br>\n\n<h1>no space joiners ::before and ::after</h1>\n<button data-expectedlabel=\"nospacelabelnospace\" data-testname=\"button name from content no space joiners ::before and ::after\" class=\"ex no-space\">label</button><br>\n<h3 data-expectedlabel=\"nospacelabelnospace\" data-testname=\"heading name from content no space joiners ::before and ::after\" class=\"ex no-space\">label</h3>\n<a href=\"#\" data-expectedlabel=\"nospacelabelnospace\" data-testname=\"link name from content no space joiners ::before and ::after\" class=\"ex no-space\">label</a><br>\n<br>\n\n<h1>Arabic right-to-left (RTL) with ::before and ::after</h1>\n<div dir=\"rtl\" lang=\"ar\">\n  <button data-expectedlabel=\"من قبل اسم بعد\" data-testname=\"button name from content with ::before and ::after in rtl\" class=\"ex simple-before simple-after\">اسم</button><br>\n  <h3 data-expectedlabel=\"من قبل اسم بعد\" data-testname=\"heading name from content with ::before and ::after in rtl\" class=\"ex simple-before simple-after\">اسم</h3>\n  <a href=\"#\" data-expectedlabel=\"من قبل اسم بعد\" data-testname=\"link name from content with ::before and ::after in rtl\" class=\"ex simple-before simple-after\">اسم</a><br>\n</div>\n<br>\n\n<h1><a href=\"https://drafts.csswg.org/css-content/#alt\">Alternative Text for  CSS content (previously `alt:`)</a> in pseudo-elements</h1>\n<p>rendered text should be \"before label after\"</p>\n<p>accessibility label should be \"alt-before label alt-after\"</p>\n<button data-expectedlabel=\"alt-before label alt-after\" data-testname=\"button name from fallback content with ::before and ::after\" class=\"ex fallback-before fallback-after\">label</button><br>\n<h3 data-expectedlabel=\"alt-before label alt-after\" data-testname=\"heading name from fallback content with ::before and ::after\" class=\"ex fallback-before fallback-after\">label</h3>\n<a href=\"#\" data-expectedlabel=\"alt-before label alt-after\" data-testname=\"link name from fallback content with ::before and ::after\" class=\"ex fallback-before fallback-after\">label</a><br>\n<br>\n\n<h1><a href=\"https://drafts.csswg.org/css-content/#alt\">Mixed Alternative Text (attr() and strings) for  CSS content (previously `alt:`)</a> in pseudo-elements</h1>\n<p>rendered text should be \"before label after\"</p>\n<p>accessibility label should be \"start alt-before end label start alt-after end\"</p>\n<button data-alt-text-before=\"alt-before\" data-alt-text-after=\"alt-after\" data-expectedlabel=\"start alt-before end label start alt-after end\" data-testname=\"button name from fallback content mixing attr() and strings with ::before and ::after\" class=\"ex fallback-before-mixed fallback-after-mixed\">label</button><br>\n<h3 data-alt-text-before=\"alt-before\" data-alt-text-after=\"alt-after\" data-expectedlabel=\"start alt-before end label start alt-after end\" data-testname=\"heading name from fallback content mixing attr() and strings with ::before and ::after\" class=\"ex fallback-before-mixed fallback-after-mixed\">label</h3>\n<a href=\"#\" data-alt-text-before=\"alt-before\" data-alt-text-after=\"alt-after\" data-expectedlabel=\"start alt-before end label start alt-after end\" data-testname=\"link name from fallback content mixing attr() and strings with ::before and ::after\" class=\"ex fallback-before-mixed fallback-after-mixed\">label</a><br>\n<br>\n\n<h1>Empty alternative text for CSS content in pseudo-elements when applied to primitive appearance form controls</h1>\n<p><input data-expectedlabel=\"\" data-testname=\"primitive radio input with ::before containing empty alternative text\" class=\"ex fallback-before-empty\" type=radio style=appearance:none>\n<p><input data-expectedlabel=\"\" data-testname=\"primitive radio input with ::before containing empty alternative text for an image\" class=\"ex fallback-before-image-empty\" type=radio style=appearance:none>\n\n<h1>simple w/ for each child</h1>\n<button data-expectedlabel=\"one two three\" data-testname=\"button name from content for each child\" class=\"ex\"><span>one</span> <span>two</span> <span>three</span></button><br>\n<h3 data-expectedlabel=\"one two three\" data-testname=\"heading name from content for each child\" class=\"ex\"><span>one</span> <span>two</span> <span>three</span></h3>\n<a href=\"#\" data-expectedlabel=\"one two three\" data-testname=\"link name from content for each child\" class=\"ex\"><span>one</span> <span>two</span> <span>three</span></a><br>\n<br>\n\n<h1>simple for each child with image</h1>\n<button data-expectedlabel=\"one two three\" data-testname=\"button name from content for each child including image\" class=\"ex\"><span>one</span> <img alt=\"two\" src=\"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==\"> <span>three</span></button><br>\n<h3 data-expectedlabel=\"one two three\" data-testname=\"heading name from content for each child including image\" class=\"ex\"><span>one</span> <img alt=\"two\" src=\"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==\"> <span>three</span></h3>\n<a href=\"#\" data-expectedlabel=\"one two three\" data-testname=\"link name from content for each child including image\" class=\"ex\"><span>one</span> <img alt=\"two\" src=\"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==\"> <span>three</span></a><br>\n<br>\n\n\n<h1>simple for each child with extra nesting containing image</h1>\n<button data-expectedlabel=\"one two three four\" data-testname=\"button name from content for each child including nested image\" class=\"ex\"><span>one</span> <span>two <img alt=\"three\" src=\"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==\"></span> <span>four</span></button><br>\n<h3 data-expectedlabel=\"one two three four\" data-testname=\"heading name from content for each child including nested image\" class=\"ex\"><span>one</span> <span>two <img alt=\"three\" src=\"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==\"></span> <span>four</span></h3>\n<a href=\"#\" data-expectedlabel=\"one two three four\" data-testname=\"link name from content for each child including nested image\" class=\"ex\"><span>one</span> <span>two <img alt=\"three\" src=\"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==\"></span> <span>four</span></a><br>\n<br>\n\n<h1>heading with nested button with nested image</h1>\n<h3 data-expectedlabel=\"heading button image button heading\" data-testname=\"heading name from content for each child including nested button with nested image\" class=\"ex\">\n  heading\n  <button>\n    button\n    <img alt=\"image\" src=\"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==\">\n    button\n  </button>\n  heading\n</h3>\n\n<h1>heading with nested link with nested image</h1>\n<h3 data-expectedlabel=\"heading link image link heading\" data-testname=\"heading name from content for each child including nested link with nested image\" class=\"ex\">\n  heading\n  <a href=\"#\">\n    link\n    <img alt=\"image\" src=\"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==\">\n    link\n  </a>\n  heading\n</h3>\n\n<h1>heading with nested link with nested image using aria-label</h1>\n<h3 data-expectedlabel=\"heading link aria-label heading\" data-testname=\"heading name from content for each child including nested link using aria-label with nested image\" class=\"ex\">\n  heading\n  <a href=\"#\" aria-label=\"link aria-label\"><!-- should skip the other link text -->\n    ignored link text\n    <img id=\"nested_image_label_1\" alt=\"ignored image alt\" src=\"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==\">\n    ignored link text\n  </a>\n  heading\n</h3>\n\n<h1>heading with nested link with nested image using aria-labelledby</h1>\n<h3 data-expectedlabel=\"heading image heading\" data-testname=\"heading name from content for each child including nested link using aria-labelledby with nested image\" class=\"ex\">\n  heading\n  <a href=\"#\" aria-labelledby=\"nested_image_label1\"><!-- should skip the other link text -->\n    ignored link text\n    <img id=\"nested_image_label1\" alt=\"image\" src=\"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==\">\n    ignored link text\n  </a>\n  heading\n</h3>\n\n<h1>heading with two nested links referencing image using aria-labelledby</h1>\n<h3 data-expectedlabel=\"image link2 link3\" data-testname=\"heading name from content for each child including two nested links using aria-labelledby with nested image\" class=\"ex\">\n  <a href=\"#\" aria-labelledby=\"nested_image_label2\">\n    link1<!-- this text is skipped because of aria-labelledby -->\n  </a>\n  <a href=\"#\" data-expectedlabel=\"link2 image link3\" data-testname=\"link name from content for each child including nested image (referenced elsewhere via labelledby)\" class=\"ex\">\n    link2\n    <img id=\"nested_image_label2\" alt=\"image\" src=\"data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==\">\n    <!-- image skipped in this link (when computing heading text) because it was already referenced by the first link within this heading label recursion cycle. -->\n    <!-- but image not skipped when computing the text of the link itself since it has not been referenced in that context -->\n    link3\n  </a>\n</h3>\n\n\n<!-- Note: The following test is out of line with the spec, but matching two out of three implementations at the time of writing, and spec changes are expeected. -->\n<!-- See details in https://github.com/w3c/accname/issues/205 -->\n<!-- Final spec resolution will be addressed in AccName Whitespace Project: https://github.com/w3c/accname/projects/1#card-42288231 -->\n<h1>simple w/ for each child (w/o spaces and display:inline)</h1>\n<button data-expectedlabel=\"onetwothree\" data-testname=\"button name from content for each child (no space, inline)\" class=\"ex\"><span>one</span><span>two</span><span>three</span></button><br>\n<h3 data-expectedlabel=\"onetwothree\" data-testname=\"heading name from content for each child (no space, inline)\" class=\"ex\"><span>one</span><span>two</span><span>three</span></h3>\n<a href=\"#\" data-expectedlabel=\"onetwothree\" data-testname=\"link name from content for each child (no space, inline)\" class=\"ex\"><span>one</span><span>two</span><span>three</span></a><br>\n<br>\n\n<h1>simple w/ for each child (w/o spaces and display:block)</h1>\n<button data-expectedlabel=\"one two three\" data-testname=\"button name from content for each child (no space, display:block)\" class=\"ex block\"><span>one</span><span>two</span><span>three</span></button><br>\n<h3 data-expectedlabel=\"one two three\" data-testname=\"heading name from content for each child (no space, display:block)\" class=\"ex block\"><span>one</span><span>two</span><span>three</span></h3>\n<a href=\"#\" data-expectedlabel=\"one two three\" data-testname=\"link name from content for each child (no space, display:block)\" class=\"ex block\"><span>one</span><span>two</span><span>three</span></a><br>\n<br>\n\n<h1>simple w/ for each child (w/o spaces and display:inline block)</h1>\n<button data-expectedlabel=\"one two three\" data-testname=\"button name from content for each child (no space, display:inline-block)\" class=\"ex iblock\"><span>one</span><span>two</span><span>three</span></button><br>\n<h3 data-expectedlabel=\"one two three\" data-testname=\"heading name from content for each child (no space, display:inline-block)\" class=\"ex iblock\"><span>one</span><span>two</span><span>three</span></h3>\n<a href=\"#\" data-expectedlabel=\"one two three\" data-testname=\"link name from content for each child (no space, display:inline-block)\" class=\"ex iblock\"><span>one</span><span>two</span><span>three</span></a><br>\n<br>\n\n<h1 data-expectedlabel=\"Call us\" data-testname=\"heading name from content with text-transform:none\" class=\"ex\" style=\"text-transform:none;\">Call us</h1>\n<h1 data-expectedlabel=\"CALL US\" data-testname=\"heading name from content with text-transform:uppercase\" class=\"ex\" style=\"text-transform:uppercase;\">Call us</h1>\n<h1 data-expectedlabel=\"Call Us\" data-testname=\"heading name from content with text-transform:capitalize\" class=\"ex\" style=\"text-transform:capitalize;\">Call us</h1>\n<h1 data-expectedlabel=\"call us\" data-testname=\"heading name from content with text-transform:lowercase\" class=\"ex\" style=\"text-transform:lowercase;\">Call us</h1>\n\n<!-- “びょういんのかんじゃサービス” means “Hospital patient services” -->\n<!-- text-transform:full-size-kana risks changing the heading’s meaning -->\n<!-- by transforming the following words: -->\n<!--   1. びょういん (byōin = hospital) into びよういん (biyōin = beauty parlor) -->\n<!--   2. かんじゃ (kanja = patient) into かんじや (kanjiya = [no meaning]) -->\n<h1>heading which visually transforms <span lang=\"ja\">びょういん</span> (hospital) to\n  <span lang=\"ja\">びよういん</span> (beauty parlor) using CSS\n  <code>text-transform:full-size-kana</code></h1>\n<h3\n  lang=\"ja\"\n  data-expectedlabel=\"びょういんのかんじゃサービス\"\n  data-testname=\"heading name from content with text-transform:full-size-kana\"\n  class=\"ex\"\n  style=\"text-transform:full-size-kana;\"\n>びょういんのかんじゃサービス</h3>\n\n<!-- Tests `Name from Each Child` edge case failures with an embedded `term` as a child element role. -->\n<!-- https://w3c.github.io/accname/#comp_name_from_content_for_each_child -->\n\n<h2>Elements with implicit button, heading, link roles containing element with\n  implicit term role</h2>\n<button\n  data-expectedlabel=\"this is an example\"\n  data-testname=\"implicit button name from content containing a dfn element\"\n  class=\"ex iblock\"\n><span>this is an </span><dfn>example</dfn></button>\n<h3\n  data-expectedlabel=\"this is an example\"\n  data-testname=\"implicit heading name from content containing a dfn element\"\n  class=\"ex iblock\"\n><span>this is an </span><dfn>example</dfn></h3>\n<a\n  href=\"#\"\n  data-expectedlabel=\"this is an example\"\n  data-testname=\"implicit link name from content containing a dfn element\"\n  class=\"ex iblock\"\n><span>this is an </span><dfn>example</dfn></a>\n\n<h2>Elements with implicit button, heading, link roles containing element with\n  explicit term role</h2>\n<button\n  data-expectedlabel=\"this is an example\"\n  data-testname=\"implicit button name from content containing an element with explicit term role\"\n  class=\"ex iblock\"\n><span>this is an </span><span role=\"term\">example</span></button>\n<h3\n  data-expectedlabel=\"this is an example\"\n  data-testname=\"implicit heading name from content containing an element with explicit term role\"\n  class=\"ex iblock\"\n><span>this is an </span><span role=\"term\">example</span></h3>\n<a\n  href=\"#\"\n  data-expectedlabel=\"this is an example\"\n  data-testname=\"implicit link name from content containing an element explicit with term role\"\n  class=\"ex iblock\"\n><span>this is an </span><span role=\"term\">example</span></a>\n\n<h2>Elements with explicit button, heading, link roles containing element with\n  implicit term role</h2>\n<div\n  role=\"button\"\n  tabindex=\"0\"\n  data-expectedlabel=\"this is an example\"\n  data-testname=\"explicit button name from content containing a dfn element\"\n  class=\"ex iblock\"\n><span>this is an </span><dfn>example</dfn></div>\n<div\n  role=\"heading\"\n  data-expectedlabel=\"this is an example\"\n  data-testname=\"explicit heading name from content containing a dfn element\"\n  class=\"ex iblock\"\n><span>this is an </span><dfn>example</dfn></div>\n<div\n  role=\"link\"\n  tabindex=\"0\"\n  data-expectedlabel=\"this is an example\"\n  data-testname=\"explicit link name from content containing a dfn element\"\n  class=\"ex iblock\"\n><span>this is an </span><dfn>example</dfn></div>\n\n<h2>Elements with explicit button, heading, link roles containing element with\n  explicit term role</h2>\n<div\n  role=\"button\"\n  tabindex=\"0\"\n  data-expectedlabel=\"this is an example\"\n  data-testname=\"explicit button name from content containing an element explicit with term role\"\n  class=\"ex iblock\"\n><span>this is an </span><span role=\"term\">example</span></div>\n<div\n  role=\"heading\"\n  data-expectedlabel=\"this is an example\"\n  data-testname=\"explicit heading name from content containing an element explicit with term role\"\n  class=\"ex iblock\"\n><span>this is an </span><span role=\"term\">example</span></div>\n<div\n  role=\"link\"\n  tabindex=\"0\"\n  data-expectedlabel=\"this is an example\"\n  data-testname=\"explicit link name from content containing an element explicit with term role\"\n  class=\"ex iblock\"\n><span>this is an </span><span role=\"term\">example</span></div>\n\n<script>\nAriaUtils.verifyLabelsBySelector(\".ex\");\n</script>\n</body>\n</html>\n",
+   "expect": {
+    "names": [
+     {
+      "test": "aria button name from content, inline",
+      "name": "label"
+     },
+     {
+      "test": "aria heading name from content, inline",
+      "name": "label"
+     },
+     {
+      "test": "aria link name from content, inline",
+      "name": "label"
+     },
+     {
+      "test": "aria button name from content, block",
+      "name": "label"
+     },
+     {
+      "test": "aria heading name from content, block",
+      "name": "label"
+     },
+     {
+      "test": "aria link name from content, block",
+      "name": "label"
+     },
+     {
+      "test": "button name from content",
+      "name": "label"
+     },
+     {
+      "test": "heading name from content",
+      "name": "label"
+     },
+     {
+      "test": "link name from content",
+      "name": "label"
+     },
+     {
+      "test": "button with alt counter on ::before",
+      "name": "5051 label"
+     },
+     {
+      "test": "heading with alt counter on ::before",
+      "name": "5051 label"
+     },
+     {
+      "test": "link with alt counter on ::before",
+      "name": "5051 label"
+     },
+     {
+      "test": "button with multiple alt counters and counter increments",
+      "name": "11 alpha 13 beta 14 gamma"
+     },
+     {
+      "test": "heading with multiple alt counters and counter increments",
+      "name": "11 alpha 13 beta 14 gamma"
+     },
+     {
+      "test": "link with multiple alt counters and counter increments",
+      "name": "11 alpha 13 beta 14 gamma"
+     },
+     {
+      "test": "button name from content with ::before",
+      "name": "before label"
+     },
+     {
+      "test": "heading name from content with ::before",
+      "name": "before label"
+     },
+     {
+      "test": "link name from content with ::before",
+      "name": "before label"
+     },
+     {
+      "test": "button name from content with ::after",
+      "name": "label after"
+     },
+     {
+      "test": "heading name from content with ::after",
+      "name": "label after"
+     },
+     {
+      "test": "link name from content with ::after",
+      "name": "label after"
+     },
+     {
+      "test": "button name from content with ::before and ::after",
+      "name": "before label after"
+     },
+     {
+      "test": "heading name from content with ::before and ::after",
+      "name": "before label after"
+     },
+     {
+      "test": "link name from content with ::before and ::after",
+      "name": "before label after"
+     },
+     {
+      "test": "button name from content no space joiners ::before and ::after",
+      "name": "nospacelabelnospace"
+     },
+     {
+      "test": "heading name from content no space joiners ::before and ::after",
+      "name": "nospacelabelnospace"
+     },
+     {
+      "test": "link name from content no space joiners ::before and ::after",
+      "name": "nospacelabelnospace"
+     },
+     {
+      "test": "button name from content with ::before and ::after in rtl",
+      "name": "من قبل اسم بعد"
+     },
+     {
+      "test": "heading name from content with ::before and ::after in rtl",
+      "name": "من قبل اسم بعد"
+     },
+     {
+      "test": "link name from content with ::before and ::after in rtl",
+      "name": "من قبل اسم بعد"
+     },
+     {
+      "test": "button name from fallback content with ::before and ::after",
+      "name": "alt-before label alt-after"
+     },
+     {
+      "test": "heading name from fallback content with ::before and ::after",
+      "name": "alt-before label alt-after"
+     },
+     {
+      "test": "link name from fallback content with ::before and ::after",
+      "name": "alt-before label alt-after"
+     },
+     {
+      "test": "button name from fallback content mixing attr() and strings with ::before and ::after",
+      "name": "start alt-before end label start alt-after end"
+     },
+     {
+      "test": "heading name from fallback content mixing attr() and strings with ::before and ::after",
+      "name": "start alt-before end label start alt-after end"
+     },
+     {
+      "test": "link name from fallback content mixing attr() and strings with ::before and ::after",
+      "name": "start alt-before end label start alt-after end"
+     },
+     {
+      "test": "primitive radio input with ::before containing empty alternative text",
+      "name": ""
+     },
+     {
+      "test": "primitive radio input with ::before containing empty alternative text for an image",
+      "name": ""
+     },
+     {
+      "test": "button name from content for each child",
+      "name": "one two three"
+     },
+     {
+      "test": "heading name from content for each child",
+      "name": "one two three"
+     },
+     {
+      "test": "link name from content for each child",
+      "name": "one two three"
+     },
+     {
+      "test": "button name from content for each child including image",
+      "name": "one two three"
+     },
+     {
+      "test": "heading name from content for each child including image",
+      "name": "one two three"
+     },
+     {
+      "test": "link name from content for each child including image",
+      "name": "one two three"
+     },
+     {
+      "test": "button name from content for each child including nested image",
+      "name": "one two three four"
+     },
+     {
+      "test": "heading name from content for each child including nested image",
+      "name": "one two three four"
+     },
+     {
+      "test": "link name from content for each child including nested image",
+      "name": "one two three four"
+     },
+     {
+      "test": "heading name from content for each child including nested button with nested image",
+      "name": "heading button image button heading"
+     },
+     {
+      "test": "heading name from content for each child including nested link with nested image",
+      "name": "heading link image link heading"
+     },
+     {
+      "test": "heading name from content for each child including nested link using aria-label with nested image",
+      "name": "heading link aria-label heading"
+     },
+     {
+      "test": "heading name from content for each child including nested link using aria-labelledby with nested image",
+      "name": "heading image heading"
+     },
+     {
+      "test": "heading name from content for each child including two nested links using aria-labelledby with nested image",
+      "name": "image link2 link3"
+     },
+     {
+      "test": "link name from content for each child including nested image (referenced elsewhere via labelledby)",
+      "name": "link2 image link3"
+     },
+     {
+      "test": "button name from content for each child (no space, inline)",
+      "name": "onetwothree"
+     },
+     {
+      "test": "heading name from content for each child (no space, inline)",
+      "name": "onetwothree"
+     },
+     {
+      "test": "link name from content for each child (no space, inline)",
+      "name": "onetwothree"
+     },
+     {
+      "test": "button name from content for each child (no space, display:block)",
+      "name": "one two three"
+     },
+     {
+      "test": "heading name from content for each child (no space, display:block)",
+      "name": "one two three"
+     },
+     {
+      "test": "link name from content for each child (no space, display:block)",
+      "name": "one two three"
+     },
+     {
+      "test": "button name from content for each child (no space, display:inline-block)",
+      "name": "one two three"
+     },
+     {
+      "test": "heading name from content for each child (no space, display:inline-block)",
+      "name": "one two three"
+     },
+     {
+      "test": "link name from content for each child (no space, display:inline-block)",
+      "name": "one two three"
+     },
+     {
+      "test": "heading name from content with text-transform:none",
+      "name": "Call us"
+     },
+     {
+      "test": "heading name from content with text-transform:uppercase",
+      "name": "CALL US"
+     },
+     {
+      "test": "heading name from content with text-transform:capitalize",
+      "name": "Call Us"
+     },
+     {
+      "test": "heading name from content with text-transform:lowercase",
+      "name": "call us"
+     },
+     {
+      "test": "heading name from content with text-transform:full-size-kana",
+      "name": "びょういんのかんじゃサービス"
+     },
+     {
+      "test": "implicit button name from content containing a dfn element",
+      "name": "this is an example"
+     },
+     {
+      "test": "implicit heading name from content containing a dfn element",
+      "name": "this is an example"
+     },
+     {
+      "test": "implicit link name from content containing a dfn element",
+      "name": "this is an example"
+     },
+     {
+      "test": "implicit button name from content containing an element with explicit term role",
+      "name": "this is an example"
+     },
+     {
+      "test": "implicit heading name from content containing an element with explicit term role",
+      "name": "this is an example"
+     },
+     {
+      "test": "implicit link name from content containing an element explicit with term role",
+      "name": "this is an example"
+     },
+     {
+      "test": "explicit button name from content containing a dfn element",
+      "name": "this is an example"
+     },
+     {
+      "test": "explicit heading name from content containing a dfn element",
+      "name": "this is an example"
+     },
+     {
+      "test": "explicit link name from content containing a dfn element",
+      "name": "this is an example"
+     },
+     {
+      "test": "explicit button name from content containing an element explicit with term role",
+      "name": "this is an example"
+     },
+     {
+      "test": "explicit heading name from content containing an element explicit with term role",
+      "name": "this is an example"
+     },
+     {
+      "test": "explicit link name from content containing an element explicit with term role",
+      "name": "this is an example"
+     }
+    ]
+   }
+  },
+  {
+   "id": "apg-feed-1",
+   "source": "apg-feed",
+   "kind": "feed",
+   "raw": "/*\n *   This content is licensed according to the W3C Software License at\n *   https://www.w3.org/Consortium/Legal/2015/copyright-software-and-document\n */\n\n'use strict';\n\n/**\n * @namespace aria\n */\nvar aria = aria || {};\n\naria.RestaurantData = [\n  {\n    name: \"Tito's Tacos\",\n    rating: 5,\n    type: 'Mexican, Tacos',\n    street: '123 Blueberry Ln',\n    citystate: 'San Dimas, CA',\n    phone: '(111) 111-1111',\n    image: '',\n  },\n  {\n    name: 'Sakura Sushi',\n    rating: 4,\n    type: 'Japanese, Fish, Sushi',\n    street: '123 Blueberry Ln',\n    citystate: 'Pomona, CA',\n    phone: '(111) 111-1111',\n    image: '',\n  },\n  {\n    name: 'Prime Steakhouse',\n    rating: 4,\n    type: 'Steakhouses',\n    street: '123 Blueberry Ln',\n    citystate: 'Claremont, CA',\n    phone: '(111) 111-1111',\n    image: '',\n  },\n  {\n    name: 'The Pizza Factory',\n    rating: 4,\n    type: 'Pizza',\n    street: '123 Blueberry Ln',\n    citystate: 'Pomona, CA',\n    phone: '(111) 111-1111',\n    image: '',\n  },\n  {\n    name: \"Emperor's Mongolian\",\n    rating: 5,\n    type: 'Mongolian, Barbecue, Buffets',\n    street: '123 Blueberry Ln',\n    citystate: 'La Verne, CA',\n    phone: '(111) 111-1111',\n    image: '',\n  },\n  {\n    name: 'Backyard Grill',\n    rating: 3,\n    type: 'American, Burgers',\n    street: '123 Blueberry Ln',\n    citystate: 'San Dimas, CA',\n    phone: '(111) 111-1111',\n    image: '',\n  },\n  {\n    name: 'Taste Kitchen',\n    rating: 4,\n    type: 'American',\n    street: '123 Blueberry Ln',\n    citystate: 'Claremont, CA',\n    phone: '(111) 111-1111',\n    image: '',\n  },\n  {\n    name: 'Bon Appetit',\n    rating: 4,\n    type: 'French',\n    street: '123 Blueberry Ln',\n    citystate: 'La Verne, CA',\n    phone: '(111) 111-1111',\n    image: '',\n  },\n  {\n    name: \"Sally's Sandwiches\",\n    rating: 3,\n    type: 'Sandwiches, American',\n    street: '123 Blueberry Ln',\n    citystate: 'San Dimas, CA',\n    phone: '(111) 111-1111',\n    image: '',\n  },\n  {\n    name: 'The HotPot Spot',\n    rating: 5,\n    type: 'Hot Pot, Japanese',\n    street: '123 Blueberry Ln',\n    citystate: 'Pomona, CA',\n    phone: '(111) 111-1111',\n    image: '',\n  },\n];\n\naria.FeedDisplay = function (feed, fetchData) {\n  this.feed = feed;\n  this.feedNode = feed.getFeedNode();\n  this.fetchData = fetchData;\n  this.currentPage = 0;\n  this.perPage = 10;\n  this.feedSize = 0;\n  this.feedItems = [];\n  this.loading = false;\n  this.loadingDelay = 200; // in milliseconds\n\n  this.lastChecked = Date.now();\n  this.loadData();\n  this.setupEvents();\n};\n\naria.FeedDisplay.prototype.setDelay = function (delay) {\n  this.loadingDelay = delay;\n};\n\naria.FeedDisplay.prototype.loadData = function () {\n  var feedData = this.fetchData(this.currentPage, this.perPage);\n\n  if (!this.feedNode || this.loading) {\n    return;\n  }\n\n  this.feedNode.setAttribute('aria-busy', 'true');\n  this.loading = true;\n\n  var loadingItems = [];\n\n  Array.prototype.forEach.call(\n    feedData,\n    function (itemData) {\n      var newFeedItem = this.renderItemData(itemData);\n      loadingItems.push(newFeedItem);\n    },\n    this\n  );\n\n  this.delayRender(\n    loadingItems,\n    function () {\n      this.feedNode.removeAttribute('aria-busy');\n      this.loading = false;\n      this.checkLoadMore();\n    }.bind(this)\n  );\n};\n\naria.FeedDisplay.prototype.delayRender = function (items, onRenderDone) {\n  if (!items || !items.length) {\n    onRenderDone();\n    return;\n  }\n\n  var newFeedItem = items.shift();\n  this.feedNode.appendChild(newFeedItem);\n  this.feedItems.push(newFeedItem);\n  this.feed.addItem(newFeedItem);\n\n  this.feedItems.forEach(function (feedItem) {\n    feedItem.setAttribute('aria-setsize', this.feedItems.length);\n  }, this);\n\n  setTimeout(\n    function () {\n      this.delayRender(items, onRenderDone);\n    }.bind(this),\n    this.loadingDelay\n  );\n};\n\naria.FeedDisplay.prototype.renderItemData = function (itemData) {\n  var feedItem = document.createElement('div');\n\n  this.feedSize++;\n\n  feedItem.setAttribute('role', 'article');\n  feedItem.className = 'restaurant-item';\n  feedItem.setAttribute('aria-posinset', this.feedSize);\n  feedItem.setAttribute('tabindex', '0');\n\n  var itemDetails = document.createElement('div');\n  itemDetails.className = 'restaurant-details';\n  var itemContent = '';\n  var describedbyIDs = [];\n  var restaurantID = 'restaurant-name-' + this.feedSize;\n  feedItem.setAttribute('aria-labelledby', restaurantID);\n\n  if (itemData.image) {\n    itemContent += '<div class=\"restaurant-image\">' + itemData.image + '</div>';\n  }\n\n  itemContent +=\n    '<div class=\"restaurant-name\" ' +\n    'id=\"' +\n    restaurantID +\n    '\">' +\n    itemData.name +\n    '</div>';\n\n  if (itemData.rating) {\n    const starText = `${itemData.rating} ${\n      itemData.rating === 1 ? 'star' : 'stars'\n    }`;\n    var ratingID = 'restaurant-rating-' + this.feedSize;\n    itemContent +=\n      '<div class=\"restaurant-rating\" id=\"' +\n      ratingID +\n      '\" data-rating-value=\"' +\n      itemData.rating +\n      '\">' +\n      '<svg aria-label=\"' +\n      starText +\n      '\" xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"38 -5 100 48\" width=\"90\" height=\"25\">' +\n      '<defs>' +\n      '<g id=\"star\">' +\n      '<polygon points=\"2.0,13.4 11.7,20.5 8.0,31.1 17.7,24.8 27.4,31.9 23.7,20.5 33.4,13.4 21.4,13.4 17.7,2.0 14.0,13.4\" />' +\n      '</g>' +\n      '</defs>' +\n      '<g class=\"star-1 star-2 star-3 star-4 star-5\">' +\n      '<use class=\"star\" xlink:href=\"#star\" x=\"0\" y=\"0\" />' +\n      '</g>' +\n      '<g class=\"star-2 star-3 star-4 star-5\">' +\n      '<use class=\"star\" xlink:href=\"#star\" x=\"35\" y=\"0\" />' +\n      '</g>' +\n      '<g class=\"star-3 star-4 star-5\">' +\n      '<use class=\"star\" xlink:href=\"#star\" x=\"70\" y=\"0\" />' +\n      '</g>' +\n      '<g class=\"star-4 star-5\">' +\n      '<use class=\"star\" xlink:href=\"#star\" x=\"105\" y=\"0\" />' +\n      '</g>' +\n      '<g class=\"star-5\">' +\n      '<use class=\"star\" xlink:href=\"#star\" x=\"140\" y=\"0\" />' +\n      '</g>' +\n      '</svg>' +\n      '</div>';\n    describedbyIDs.push(ratingID);\n  }\n\n  if (itemData.type) {\n    var typeID = 'restaurant-type-' + this.feedSize;\n    itemContent +=\n      '<div class=\"restaurant-type\" id=\"' +\n      typeID +\n      '\">' +\n      itemData.type +\n      '</div>';\n    describedbyIDs.push(typeID);\n  }\n\n  itemDetails.innerHTML = itemContent;\n  feedItem.appendChild(itemDetails);\n\n  var locationBlock = document.createElement('div');\n  var locationID = 'restaurant-location-' + this.feedSize;\n  locationBlock.setAttribute('id', locationID);\n  locationBlock.className = 'location-block';\n  var locationContent = '';\n  describedbyIDs.push(locationID);\n\n  if (itemData.street) {\n    locationContent +=\n      '<div class=\"restaurant-street\">' + itemData.street + '</div>';\n  }\n\n  if (itemData.citystate) {\n    locationContent +=\n      '<div class=\"restaurant-citystate\">' + itemData.citystate + '</div>';\n  }\n\n  if (itemData.phone) {\n    locationContent +=\n      '<div class=\"restaurant-phone\">' + itemData.phone + '</div>';\n  }\n\n  locationBlock.innerHTML = locationContent;\n  feedItem.appendChild(locationBlock);\n\n  feedItem.setAttribute('aria-describedby', describedbyIDs.join(' '));\n\n  var actions = document.createElement('div');\n  actions.className = 'restaurant-actions';\n  actions.innerHTML =\n    '<button type=\"button\" class=\"bookmark-button\">Bookmark</button>';\n  feedItem.appendChild(actions);\n\n  return feedItem;\n};\n\naria.FeedDisplay.prototype.setupEvents = function () {\n  window.addEventListener('scroll', this.handleScroll.bind(this));\n};\n\naria.FeedDisplay.prototype.handleScroll = function () {\n  var now = Date.now();\n\n  if (this.lastChecked + 100 - now < 0) {\n    this.checkLoadMore();\n    this.lastChecked = now;\n  }\n};\n\naria.FeedDisplay.prototype.checkLoadMore = function () {\n  if (!this.feedItems || !this.feedItems.length) {\n    return;\n  }\n\n  var lastFeedItem = this.feedItems[this.feedItems.length - 1];\n  var scrollTop =\n    window.pageYOffset ||\n    document.documentElement.scrollTop ||\n    document.body.scrollTop ||\n    0;\n  var scrollBottom = scrollTop + window.innerHeight;\n\n  if (scrollBottom >= lastFeedItem.offsetTop - 300) {\n    this.loadData();\n  }\n};\n",
+   "expect": {
+    "names": [
+     "Tito's Tacos",
+     "Sakura Sushi",
+     "Prime Steakhouse",
+     "The Pizza Factory",
+     "Emperor's Mongolian",
+     "Backyard Grill",
+     "Taste Kitchen",
+     "Bon Appetit",
+     "Sally's Sandwiches",
+     "The HotPot Spot"
+    ]
+   }
   }
  ]
 }
