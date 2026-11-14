@@ -316,7 +316,10 @@ def audit():
     for k in bindings:
         if k not in keys:
             fail.append(f"settings.{k} is not a setting of the surface")
-    return fail, out, (bound, len(keys))
+    # The person's view is the page: say which proven settings it draws,
+    # so "proven" never reads as "what the person handles" (PD-03).
+    seen = [x["name"] for x in surface["settings"] if x.get("viewpoint") == "person"]
+    return fail, out, (bound, len(keys), seen)
 
 
 def camel(d):
@@ -398,7 +401,7 @@ def main():
         for path, text in targets.items():
             path.write_text(text)
     n = sum(len(r["spec"].fields) for r in out.values())
-    print(f"realizability: {len(out)} facets, {n} fields each change an answer, {settings[0]} of {settings[1]} settings drive one, 11 of 11 elements complete")
+    print(f"realizability: {len(out)} facets, {n} fields each change an answer, {settings[0]} of {settings[1]} settings drive one (the person sees {len(settings[2])}: {', '.join(settings[2])}), 11 of 11 elements complete")
 
 
 if __name__ == "__main__":
