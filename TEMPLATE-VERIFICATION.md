@@ -17,7 +17,7 @@ template contract checker in `app/`.
 Each check runs once per `just vv`. `just bdd` runs only the meta-gate while a
 scenario is being written; `just test` already includes it.
 
-The register holds `PM-01` to `PM-04`, `PG-01`, `PG-02`, `VS-01` to `VS-03`, `R4-01`, `FR-01` and `PV-01`, so the meta-gate checks real rows,
+The register holds `PM-01` to `PM-04`, `PG-01`, `PG-02`, `RZ-01`, `VS-01` to `VS-03`, `R4-01`, `FR-01` and `PV-01`, so the meta-gate checks real rows,
 scenarios and tests. It becomes an error as soon as an ID, scenario,
 or test is added without the other two.
 
@@ -32,6 +32,9 @@ or test is added without the other two.
 | `test/page/card.test.mjs` | the page's halt switch always answers `no` | rejected: a task kept while halted, the wait for `Refused` times out |
 | `prismpm verify` (`PG-02`) | the Today place drops Money from its domains in `PrismSurface` | rejected (LLV7002: `decide` proved `surfacePlacesAgree PrismSurface.surfacePlaces = true` false); restoring the row proves all 18 surface guarantees |
 | `page_pg_02` | an explanatory sentence as the empty-place word in `app/specs/surface/spec.json`; a word of its own in `site/card.mjs` (`say("Kept.", …)`) | both rejected (`the empty word … is not a name`; `site/card.mjs writes its own word after say("`) |
+| `tools/realize/gate.py --check` (`RZ-01`) | a boundary field no rule reads (`mood`); the vault store's redundant `deny` rule put back; the Quiet setting bound to a field that does not exist, then to nothing; the destinations' `verdict` read as R4's outcomes; a destination outcome with its meaning removed; a spec edited without rewriting the model | all rejected (`field \`mood\` changes no answer` with the Lean structure mismatch; `rule REQ-003 changes no answer`; `setting \`quiet\` drives dest.urgencyx, which is not a sensitive field`, `drives no field of any facet`; `field \`verdict\` reads r4, but its values are not r4's outcomes`; `vocabulary has 13 of 14`; `PrismRealizability.lex.tex is not what app/specs says`); restoring each passes |
+| `tools/realize/gate.py --check` (`RZ-01`, settings) | the Language models setting bound to `models.route`, a facet the coherence registry does not have drive it | rejected (`setting \`models\` binds models.route, but the coherence registry does not have \`model\` drive \`models\``; `the coherence registry has \`router\` drive setting \`models\`, but no field of it is bound`); restoring `router.provider` passes |
+| `lexlean verify` (`RZ-01`) | the vault store's judge answers `storehash` where its spec says `store` | rejected (LLV7002 on `PrismRealizabilityProofs`: `rfl` failed on the witness pairs); restoring the judge verifies all 64 realizability theorems with no axioms |
 | `tools/surface/gen.py --check` (`PG-02`) | the look's dark `muted` tone darkened to `#3a4a42` in `app/specs/surface/spec.json` | rejected (`surface: muted on ground reads at 2.03 in dark, under its 4.5`); restoring the tone reports `surface: current` |
 | `test/page/voice.test.mjs` (`VO-01`) | `site/voice.mjs` sounds an answer under Quiet (`if (true) sound(`) | rejected (`Quiet sounds nothing`); restoring `if (!quiet) sound(` passes |
 | `prism_pm_01` | `routesBoundary` states that the boundary facet answers with `PrismLearning::learningDispatch` | rejected (`PM-01: routesBoundary must prove the Boundary facet answers with PrismBoundary::boundaryDispatch`); restoring the statement passes |
@@ -598,3 +601,25 @@ The added source-root control failed before the correction with ENOENT on the
 unstaged vendor directory. Nineteen Node controls pass after correction. A real
 no-holo/no-vendor scaffold render is also included in the browser lane. Production
 packaging remains unconditional; no gate or capability is skipped.
+
+## Realizability (RZ-01)
+
+Every facet spec is realized by the runtime with nothing left over, after
+verdant resonance's Foundation.Realizability and Foundation.MetaModel.
+`tools/realize/gate.py` reads `app/specs/realizability/spec.json` (which spec
+belongs to which routed facet, which fields read another facet's outcomes, and
+which fields each surface setting drives) with every facet spec, and refuses
+a field that changes no answer, a rule whose removal changes no answer, an
+unreached tree leaf or outcome, an example the spec does not answer as stated,
+and a setting that drives no such field. Which facets a setting drives is the
+coherence registry's (`drives`); this model names only which of their fields,
+and the two must agree facet for facet. It writes `PrismRealizability`: one
+eleven-element descriptor per facet (identity, vocabulary, capability,
+interface, composition, dynamics, fidelity, resources, authority, evidence,
+projection), each element a measured `have` against a `need`. The proofs
+state, by reflexivity with no axioms, that every descriptor is complete and
+that each facet's own judge, the one the holo is compiled from, gives every
+witness pair the two answers its spec gives: the spec-to-runtime adjunction
+closes in the kernel. An `otherwise` the rules never leave unreached is the
+judge's totality, not a stub. The page gate runs the check before the proof.
+

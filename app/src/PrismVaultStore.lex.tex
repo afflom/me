@@ -192,13 +192,6 @@ definition{
 }
 
 definition{
-  name: storeRule3,
-  parameters: [request : StoreRequest],
-  result: Bool,
-  body: ((project request boundary) =? (storeBoundaryDeny))
-}
-
-definition{
   name: storeRule4,
   parameters: [request : StoreRequest],
   result: Bool,
@@ -230,7 +223,7 @@ definition{
   name: storeJudge,
   parameters: [request : StoreRequest],
   result: Nat,
-  body: (if (storeRule1 request) then (storeAnswerRefuse) else (if (storeRule2 request) then (storeAnswerRefuse) else (if (storeRule3 request) then (storeAnswerRefuse) else (if (storeRule4 request) then (storeAnswerRefuse) else (if (storeRule5 request) then (storeAnswerAsk) else (if (storeRule6 request) then (storeAnswerStorehash) else (if (storeRule7 request) then (storeAnswerStore) else (storeAnswerRefuse))))))))
+  body: (if (storeRule1 request) then (storeAnswerRefuse) else (if (storeRule2 request) then (storeAnswerRefuse) else (if (storeRule4 request) then (storeAnswerRefuse) else (if (storeRule5 request) then (storeAnswerAsk) else (if (storeRule6 request) then (storeAnswerStorehash) else (if (storeRule7 request) then (storeAnswerStore) else (storeAnswerRefuse)))))))
 }
 
 definition{

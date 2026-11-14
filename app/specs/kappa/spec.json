@@ -30,6 +30,7 @@
   ],
   "read": "colon, axis, digits and hex are read by the model from the label itself; only digest is a word on the request line",
   "outcomes": ["admit", "unverified", "mismatch", "collision", "nocolon", "unknownaxis", "digits", "badhex"],
+  "meanings": {"admit": "the object enters under its label", "unverified": "the label is well formed, its digest not derived here", "mismatch": "the object's bytes derive another digest", "collision": "the digest is a known SHA-1 collision", "nocolon": "the label has no axis separator", "unknownaxis": "the axis is not one of kappa-registry's six", "digits": "the digest has the wrong length for its axis", "badhex": "the digest is not lowercase hex"},
   "tree": {"if": ["colon", "absent"], "then": "nocolon", "else":
            {"if": ["axis", "other"], "then": "unknownaxis", "else":
             {"if": ["digits", "wrong"], "then": "digits", "else":

@@ -61,6 +61,12 @@ These modules are hand-patched after generation, so do not regenerate them from
   and every name carries the `r4` prefix (`R4Request`, `r4Judge`,
   `r4Dispatch`), because the holo build puts every module into one crate.
 
+Realizability (`RZ-01`): `realizability/spec.json` names every facet spec
+here, and `python3 -I tools/realize/gate.py` proves each field changes some
+answer and each rule decides something no other rule would. The vault store's
+rule for a denied value (formerly REQ-003) was dropped for that reason: the
+default already refuses it, and INV-002 still holds.
+
 The modules carry no personal value. They speak of "the owner"; the owner's
 facts live only in the browser.
 - Resonance: written by the generic `tools/facet/gen.py app/specs/resonance/spec.json`
