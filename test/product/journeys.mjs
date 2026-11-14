@@ -236,13 +236,14 @@ export const walks = {
     assert.ok(await arrived(page), "the person's day never arrives");
     await go(page, "conversations");
     const headings = await app(page).getByRole("heading").filter({ visible: true }).allInnerTexts();
-    const shown = headings.map((h) => h.trim()).filter((h) => kinds.includes(h));
+    // Headings may be drawn in capitals, so each is read as the kind it names.
+    const shown = headings.map((h) => kinds.find((k) => k.toLowerCase() === h.trim().toLowerCase())).filter(Boolean);
     assert.ok(shown.length >= 2, `Messages are not in sections by kind (headings: ${headings.join(", ") || "none"})`);
     assert.equal(shown[0], kinds[0], `the first section is not "${kinds[0]}"`);
     assert.deepEqual(shown, kinds.filter((k) => shown.includes(k)), "the sections are not in the kinds' order");
     assert.match(await rowOf(page, "Lunch on Thursday?"), /Robin Example/, "a message from a person does not say who it is from");
     const people = await page.evaluate((name) => {
-      const h = [...document.querySelectorAll("#stage h2, #stage h3, #stage [role=heading]")].find((e) => e.innerText.trim() === name);
+      const h = [...document.querySelectorAll("#stage h2, #stage h3, #stage [role=heading]")].find((e) => e.textContent.trim() === name);
       const list = h?.nextElementSibling;
       return list ? [...list.querySelectorAll("li")].map((li) => li.innerText) : [];
     }, kinds[0]);
