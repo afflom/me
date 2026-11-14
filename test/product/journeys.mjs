@@ -73,6 +73,9 @@ export const walks = {
   // J1: today's meeting, what is due and who is waiting, on Today.
   async j1(page) {
     assert.ok(await arrived(page), "the person's day never arrives");
+    // Today paints its agenda a moment after the day arrives, as the person sees it settle.
+    const by = Date.now() + 15000;
+    while (Date.now() < by && !TIME.test(await rowOf(page, "Design review"))) await page.waitForTimeout(500);
     assert.match(await rowOf(page, "Design review"), TIME, "Today does not show today's meeting at its time");
     const shown = await text(page);
     assert.match(shown, /due/i, "Today does not show what is due (the payment due on the 28th)");
