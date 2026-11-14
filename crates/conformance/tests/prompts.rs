@@ -49,12 +49,11 @@ fn array_items(text: &str, key: &str) -> Vec<String> {
         .collect()
 }
 
-/// The decisions awaiting the builder on main when this gate was set: the list may only shrink.
-const AWAITING_AT_MOST: [&str; 8] = [
+/// The decisions still awaiting the builder: the list may only shrink.
+const AWAITING_AT_MOST: [&str; 7] = [
     "chronology",
     "curate",
     "dest",
-    "holon",
     "kappa",
     "resonance",
     "router",

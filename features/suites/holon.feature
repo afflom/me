@@ -17,8 +17,8 @@ Feature: holon
     When every one of its 96 requests is decided
     Then each answer is the generated mirror's answer and keeps all nine guarantees
     And every facet in site/holon/table.mjs has a directive, an objective, a KPI and a floor
-    And the Prism root routes "holon <request>" to PrismHolon::holonDispatch
-    And Lean proves the nine guarantees with exactly the axioms Quot.sound and propext
+    And the Prism root routes "holon <request>" to PrismHolon::prismHolonDispatch
+    And Lean proves the nine guarantees, as twelve properties, with exactly the axioms Quot.sound and propext
 
   @HL-02 @build
   Scenario: A candidate set of a facet's tunable parameters replaces what runs only as the proved PrismCurate answers: a Rule-30 hypothesis only when it strictly Pareto-dominates what runs, a reconciliation only when it eases the owner's dismissals, never with a humane defect, without the owner's gestures, below the floor, off its spec's bounds or step, or while halted, and always under a kappa label the kappa facet admitted, minted once

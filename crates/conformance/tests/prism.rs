@@ -94,7 +94,7 @@ fn prism_pm_01() {
         ("Model", "PrismModels", "prismModelsDispatch"),
         ("Kappa", "PrismKappa", "kappaDispatch"),
         ("Uorc", "PrismUorc", "uorcDispatch"),
-        ("Holon", "PrismHolon", "holonDispatch"),
+        ("Holon", "PrismHolon", "prismHolonDispatch"),
         ("Curate", "PrismCurate", "curateDispatch"),
         ("Resonance", "PrismResonance", "resonanceDispatch"),
         ("Router", "PrismRouter", "routerDispatch"),

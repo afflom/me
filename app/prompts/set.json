@@ -1,6 +1,6 @@
 {
   "schema": "prism/prompt-set/1",
-  "comment": "Every decision spec in app/specs is built here with its full model, or awaiting the builder, with the reason the builder cannot take it yet. The awaiting list only shrinks (BS-01).",
+  "comment": "Every decision spec in app/specs is built here with its full model, or awaiting the builder, with the reason the builder cannot take it yet. The awaiting list only shrinks (BS-01). New decisions join at the end, so the claim ids of those before them never move.",
   "name": "me",
   "title": "me",
   "purpose": "A Prism of its owner, run only in the owner's browser: it differentiates what reaches the owner into parts and routes each where it belongs.",
@@ -20,16 +20,16 @@
     "r4.prompt.json",
     "source.prompt.json",
     "vault-restore.prompt.json",
-    "vault-store.prompt.json"
+    "vault-store.prompt.json",
+    "holon.prompt.json"
   ],
   "awaiting": {
     "chronology": "its fields are all numbers, so no choice field can factor its 14-rule chain and omega cannot split it; it needs a comparison decision tree in the builder",
-    "curate": "a keyword facet of more than eight fields (tools/holon/gen.py); the builder takes at most eight",
-    "dest": "a keyword facet of more than eight fields (tools/dest/gen.py); the builder takes at most eight",
-    "holon": "a keyword facet whose fields are not yet number or choice fields (tools/holon/gen.py)",
-    "kappa": "a keyword facet whose fields are not yet number or choice fields (tools/kappa/gen.py)",
-    "resonance": "a keyword facet whose fields are not yet number or choice fields (tools/facet/gen.py)",
-    "router": "a keyword facet whose fields are not yet number or choice fields (tools/facet/gen.py)",
-    "uorc": "a keyword facet whose fields are not yet number or choice fields (tools/uorc/gen.py)"
+    "curate": "a keyword facet of ten fields (tools/holon/gen.py); the builder's vendored prism-code takes at most eight, and lifting that needs an upstream prism-code patch",
+    "dest": "a keyword facet of nine fields (tools/dest/gen.py); the builder's vendored prism-code takes at most eight, and lifting that needs an upstream prism-code patch",
+    "kappa": "its examples are raw kappa strings read by a reader (read, axes), not field-level requests, so they are not the builder's examples; it needs a reader in front of the decision table (tools/kappa/gen.py)",
+    "resonance": "the builder's proofs of its seven-field table (1920 requests, an 18-rule chain factored on gesture) fail in the kernel: omega cannot prove any of inv001Holds to inv016Holds (LLV7002), since the factored steps leave if-chains it does not split; it stays on tools/facet/gen.py's tree until the builder's factoring splits",
+    "router": "the builder's proofs of its table (720 requests, a 13-rule chain factored on value) fail in the kernel: omega cannot prove any of inv001Holds to inv015Holds (LLV7002), since the factored steps leave if-chains it does not split; it stays on tools/facet/gen.py's tree until the builder's factoring splits",
+    "uorc": "the builder's proofs of its eight-field table (576 requests, 14 properties) are rejected in the kernel: lexlean verify fails PrismUorcProofs with LLV7002 and an empty Lean message, so no theorem of it is proved; it stays on tools/uorc/gen.py's tree until that is diagnosed"
   }
 }

@@ -1,0 +1,541 @@
+{
+  "schema": "prism/prompt/1",
+  "goal": "Decides what the Prism's observer does next for one of its facets, the Prism itself and the owner among them: hold the facet as it is, reconcile it toward the owner, curate it (try a Rule-30 hypothesi",
+  "pattern": "decisionTable",
+  "repository": "afflom/me",
+  "app": {
+    "name": "prism-holon",
+    "title": "Prism Holon",
+    "purpose": "Decides what the Prism's observer does next for one of its facets, the Prism itself and the owner among them: hold the facet as it is, reconcile it toward the owner, curate it (try a Rule-30 hypothesis), restore its floor, or refuse. The observer turns its attention to the Prism including the owner: it changes a facet only on the owner's own gestures, never on its own measures alone, never while halted, never below the floor, and never for the sake of change when the owner and the Prism agree.",
+    "fields": [
+      {
+        "name": "halted",
+        "kind": "choice",
+        "values": [
+          "no",
+          "yes"
+        ],
+        "means": "whether the owner pressed the kill switch"
+      },
+      {
+        "name": "floor",
+        "kind": "choice",
+        "values": [
+          "held",
+          "regressed"
+        ],
+        "means": "whether the facet's floor (its parameters as first modeled) Pareto-dominates what the facet runs now (regressed) or not (held)"
+      },
+      {
+        "name": "signal",
+        "kind": "choice",
+        "values": [
+          "owner",
+          "self"
+        ],
+        "means": "whether the window holds at least the minimum of the owner's own gestures on this facet (owner) or only the Prism's own measures (self)"
+      },
+      {
+        "name": "tunable",
+        "kind": "choice",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "means": "whether the facet's spec marks any parameter tunable"
+      },
+      {
+        "name": "dissonance",
+        "kind": "choice",
+        "values": [
+          "none",
+          "some",
+          "high"
+        ],
+        "means": "the share of what the facet brought forward that the owner undid or dismissed: none, below the high band, or at or above it"
+      },
+      {
+        "name": "kpi",
+        "kind": "choice",
+        "values": [
+          "met",
+          "missed"
+        ],
+        "means": "whether the facet's measured KPI (the share of what it brought forward that the owner kept) is at or above the facet's floor"
+      }
+    ],
+    "outcomes": [
+      "hold",
+      "reconcile",
+      "curate",
+      "restore",
+      "refuse"
+    ],
+    "meanings": {
+      "hold": "the facet stays as it is",
+      "reconcile": "the facet moves toward the owner",
+      "curate": "the facet tries one Rule-30 hypothesis",
+      "restore": "the facet returns to its floor",
+      "refuse": "the observer changes nothing"
+    },
+    "rules": [
+      {
+        "id": "REQ-001",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "yes"
+          }
+        ],
+        "then": "refuse",
+        "says": "when halted is yes then refuse",
+        "why": "Prism Holon: the decision tree's path to refuse"
+      },
+      {
+        "id": "REQ-002",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is not",
+            "value": "yes"
+          },
+          {
+            "field": "floor",
+            "op": "is",
+            "value": "regressed"
+          }
+        ],
+        "then": "restore",
+        "says": "when halted is not yes and floor is regressed then restore",
+        "why": "Prism Holon: the decision tree's path to restore"
+      },
+      {
+        "id": "REQ-003",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is not",
+            "value": "yes"
+          },
+          {
+            "field": "floor",
+            "op": "is not",
+            "value": "regressed"
+          },
+          {
+            "field": "signal",
+            "op": "is",
+            "value": "self"
+          }
+        ],
+        "then": "hold",
+        "says": "when halted is not yes and floor is not regressed and signal is self then hold",
+        "why": "Prism Holon: the decision tree's path to hold"
+      },
+      {
+        "id": "REQ-004",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is not",
+            "value": "yes"
+          },
+          {
+            "field": "floor",
+            "op": "is not",
+            "value": "regressed"
+          },
+          {
+            "field": "signal",
+            "op": "is not",
+            "value": "self"
+          },
+          {
+            "field": "tunable",
+            "op": "is",
+            "value": "no"
+          }
+        ],
+        "then": "hold",
+        "says": "when halted is not yes and floor is not regressed and signal is not self and tunable is no then hold",
+        "why": "Prism Holon: the decision tree's path to hold"
+      },
+      {
+        "id": "REQ-005",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is not",
+            "value": "yes"
+          },
+          {
+            "field": "floor",
+            "op": "is not",
+            "value": "regressed"
+          },
+          {
+            "field": "signal",
+            "op": "is not",
+            "value": "self"
+          },
+          {
+            "field": "tunable",
+            "op": "is not",
+            "value": "no"
+          },
+          {
+            "field": "dissonance",
+            "op": "is",
+            "value": "high"
+          }
+        ],
+        "then": "reconcile",
+        "says": "when halted is not yes and floor is not regressed and signal is not self and tunable is not no and dissonance is high then reconcile",
+        "why": "Prism Holon: the decision tree's path to reconcile"
+      },
+      {
+        "id": "REQ-006",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is not",
+            "value": "yes"
+          },
+          {
+            "field": "floor",
+            "op": "is not",
+            "value": "regressed"
+          },
+          {
+            "field": "signal",
+            "op": "is not",
+            "value": "self"
+          },
+          {
+            "field": "tunable",
+            "op": "is not",
+            "value": "no"
+          },
+          {
+            "field": "dissonance",
+            "op": "is not",
+            "value": "high"
+          },
+          {
+            "field": "kpi",
+            "op": "is",
+            "value": "missed"
+          }
+        ],
+        "then": "curate",
+        "says": "when halted is not yes and floor is not regressed and signal is not self and tunable is not no and dissonance is not high and kpi is missed then curate",
+        "why": "Prism Holon: the decision tree's path to curate"
+      },
+      {
+        "id": "REQ-007",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is not",
+            "value": "yes"
+          },
+          {
+            "field": "floor",
+            "op": "is not",
+            "value": "regressed"
+          },
+          {
+            "field": "signal",
+            "op": "is not",
+            "value": "self"
+          },
+          {
+            "field": "tunable",
+            "op": "is not",
+            "value": "no"
+          },
+          {
+            "field": "dissonance",
+            "op": "is not",
+            "value": "high"
+          },
+          {
+            "field": "kpi",
+            "op": "is not",
+            "value": "missed"
+          },
+          {
+            "field": "dissonance",
+            "op": "is",
+            "value": "some"
+          }
+        ],
+        "then": "curate",
+        "says": "when halted is not yes and floor is not regressed and signal is not self and tunable is not no and dissonance is not high and kpi is not missed and dissonance is some then curate",
+        "why": "Prism Holon: the decision tree's path to curate"
+      }
+    ],
+    "otherwise": "hold",
+    "otherwiseWhy": "Prism Holon: the decision tree's path that meets no test",
+    "properties": [
+      {
+        "id": "INV-001",
+        "kind": "always",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "yes"
+          }
+        ],
+        "then": "refuse",
+        "says": "always when halted is yes then refuse",
+        "why": "the kill switch stops the observer too: nothing changes while halted"
+      },
+      {
+        "id": "INV-002",
+        "kind": "never",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "no"
+          }
+        ],
+        "then": "refuse",
+        "says": "never when halted is no then refuse",
+        "why": "the observer refuses only while halted; otherwise it always answers for the facet"
+      },
+      {
+        "id": "INV-003",
+        "kind": "always",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "no"
+          },
+          {
+            "field": "floor",
+            "op": "is",
+            "value": "regressed"
+          }
+        ],
+        "then": "restore",
+        "says": "always when halted is no and floor is regressed then restore",
+        "why": "the floor never regresses: when the first-modeled parameters dominate what runs, they come back"
+      },
+      {
+        "id": "INV-004",
+        "kind": "never",
+        "when": [
+          {
+            "field": "signal",
+            "op": "is",
+            "value": "self"
+          }
+        ],
+        "then": "reconcile",
+        "says": "never when signal is self then reconcile",
+        "why": "self-reference alone is bounded: the Prism never changes itself on its own measures without the owner's gestures"
+      },
+      {
+        "id": "INV-005",
+        "kind": "never",
+        "when": [
+          {
+            "field": "signal",
+            "op": "is",
+            "value": "self"
+          }
+        ],
+        "then": "curate",
+        "says": "never when signal is self then curate",
+        "why": "self-reference alone is bounded: the Prism never changes itself on its own measures without the owner's gestures"
+      },
+      {
+        "id": "INV-006",
+        "kind": "never",
+        "when": [
+          {
+            "field": "tunable",
+            "op": "is",
+            "value": "no"
+          }
+        ],
+        "then": "reconcile",
+        "says": "never when tunable is no then reconcile",
+        "why": "only parameters a facet's spec marks tunable are ever changed"
+      },
+      {
+        "id": "INV-007",
+        "kind": "never",
+        "when": [
+          {
+            "field": "tunable",
+            "op": "is",
+            "value": "no"
+          }
+        ],
+        "then": "curate",
+        "says": "never when tunable is no then curate",
+        "why": "only parameters a facet's spec marks tunable are ever changed"
+      },
+      {
+        "id": "INV-008",
+        "kind": "always",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "no"
+          },
+          {
+            "field": "floor",
+            "op": "is",
+            "value": "held"
+          },
+          {
+            "field": "signal",
+            "op": "is",
+            "value": "owner"
+          },
+          {
+            "field": "tunable",
+            "op": "is",
+            "value": "yes"
+          },
+          {
+            "field": "dissonance",
+            "op": "is",
+            "value": "high"
+          }
+        ],
+        "then": "reconcile",
+        "says": "always when halted is no and floor is held and signal is owner and tunable is yes and dissonance is high then reconcile",
+        "why": "high dissonance between the owner and the Prism is reconciled toward the owner before anything is explored"
+      },
+      {
+        "id": "INV-009",
+        "kind": "never",
+        "when": [
+          {
+            "field": "dissonance",
+            "op": "is",
+            "value": "high"
+          }
+        ],
+        "then": "curate",
+        "says": "never when dissonance is high then curate",
+        "why": "the Prism never experiments on an owner it is already at odds with"
+      },
+      {
+        "id": "INV-010",
+        "kind": "never",
+        "when": [
+          {
+            "field": "dissonance",
+            "op": "is",
+            "value": "none"
+          },
+          {
+            "field": "kpi",
+            "op": "is",
+            "value": "met"
+          }
+        ],
+        "then": "reconcile",
+        "says": "never when dissonance is none and kpi is met then reconcile",
+        "why": "nothing changes for the sake of change when the owner and the Prism agree"
+      },
+      {
+        "id": "INV-011",
+        "kind": "never",
+        "when": [
+          {
+            "field": "dissonance",
+            "op": "is",
+            "value": "none"
+          },
+          {
+            "field": "kpi",
+            "op": "is",
+            "value": "met"
+          }
+        ],
+        "then": "curate",
+        "says": "never when dissonance is none and kpi is met then curate",
+        "why": "nothing changes for the sake of change when the owner and the Prism agree"
+      },
+      {
+        "id": "INV-012",
+        "kind": "never",
+        "when": [
+          {
+            "field": "floor",
+            "op": "is",
+            "value": "held"
+          }
+        ],
+        "then": "restore",
+        "says": "never when floor is held then restore",
+        "why": "a floor that still holds is never restored over what the owner has shaped"
+      }
+    ],
+    "examples": [
+      {
+        "request": "no held owner yes none met",
+        "response": "hold"
+      },
+      {
+        "request": "no held owner yes some met",
+        "response": "curate"
+      },
+      {
+        "request": "no held owner yes none missed",
+        "response": "curate"
+      },
+      {
+        "request": "no held owner yes high met",
+        "response": "reconcile"
+      },
+      {
+        "request": "no held owner yes high missed",
+        "response": "reconcile"
+      },
+      {
+        "request": "no held self yes high missed",
+        "response": "hold"
+      },
+      {
+        "request": "no held owner no high missed",
+        "response": "hold"
+      },
+      {
+        "request": "no regressed owner yes none met",
+        "response": "restore"
+      },
+      {
+        "request": "no regressed self no none met",
+        "response": "restore"
+      },
+      {
+        "request": "yes held owner yes some missed",
+        "response": "refuse"
+      },
+      {
+        "request": "yes regressed owner yes high missed",
+        "response": "refuse"
+      },
+      {
+        "request": "no held owner yes none",
+        "response": "invalid"
+      },
+      {
+        "request": "No held owner yes none met",
+        "response": "invalid"
+      }
+    ]
+  }
+}

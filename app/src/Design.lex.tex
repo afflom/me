@@ -1211,6 +1211,104 @@ definition{
 }
 
 definition{
+  name: processPrismHolonSendRequest,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentBrowser"})
+}
+
+definition{
+  name: processPrismHolonDecide,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: processPrismHolonParseRequest,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: processPrismHolonJudge,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: processPrismHolonEncodeAnswer,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: processPrismHolonBuildAndVerify,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismBuild"})
+}
+
+definition{
+  name: processPrismHolonRule1,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: processPrismHolonRule2,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: processPrismHolonRule3,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: processPrismHolonRule4,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: processPrismHolonRule5,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: processPrismHolonRule6,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: processPrismHolonRule7,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: processPrismHolonOtherwise,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
   name: statePrismBoundaryIdle,
   parameters: [],
   result: Foundation.Arch::SystemState,
@@ -1764,6 +1862,62 @@ definition{
 }
 
 definition{
+  name: statePrismHolonIdle,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: statePrismHolonDeciding,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: statePrismHolonRefused,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: statePrismHolonAnsweredHold,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: statePrismHolonAnsweredReconcile,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: statePrismHolonAnsweredCurate,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: statePrismHolonAnsweredRestore,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: statePrismHolonAnsweredRefuse,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
   name: viewPrismBoundaryOpmDecide,
   parameters: [],
   result: Foundation.Arch::DesignView,
@@ -2069,6 +2223,34 @@ definition{
   parameters: [],
   result: Foundation.Arch::DesignView,
   body: (record Foundation.Arch::DesignView {title := "States of the Prism Vault Store guest", viewpoint := "Architecture::viewpointPrismVaultStoreVerifierRefusedMalformedRequests", diagram := (ctor Foundation.Arch::DesignDiagram.umlStateMachine)})
+}
+
+definition{
+  name: viewPrismHolonOpmDecide,
+  parameters: [],
+  result: Foundation.Arch::DesignView,
+  body: (record Foundation.Arch::DesignView {title := "Deciding a Prism Holon request", viewpoint := "Architecture::viewpointPrismHolonUserCorrectAnswers", diagram := (ctor Foundation.Arch::DesignDiagram.opmObjectProcess)})
+}
+
+definition{
+  name: viewPrismHolonUmlComponents,
+  parameters: [],
+  result: Foundation.Arch::DesignView,
+  body: (record Foundation.Arch::DesignView {title := "Components of Prism Holon", viewpoint := "Architecture::viewpointPrismHolonVerifierIntegrityOfThePublishedApp", diagram := (ctor Foundation.Arch::DesignDiagram.umlComponent)})
+}
+
+definition{
+  name: viewPrismHolonUmlRequest,
+  parameters: [],
+  result: Foundation.Arch::DesignView,
+  body: (record Foundation.Arch::DesignView {title := "Answering a Prism Holon request", viewpoint := "Architecture::viewpointPrismHolonUserCorrectAnswers", diagram := (ctor Foundation.Arch::DesignDiagram.umlSequence)})
+}
+
+definition{
+  name: viewPrismHolonUmlStates,
+  parameters: [],
+  result: Foundation.Arch::DesignView,
+  body: (record Foundation.Arch::DesignView {title := "States of the Prism Holon guest", viewpoint := "Architecture::viewpointPrismHolonVerifierRefusedMalformedRequests", diagram := (ctor Foundation.Arch::DesignDiagram.umlStateMachine)})
 }
 
 definition{
@@ -2534,6 +2716,48 @@ definition{
 }
 
 definition{
+  name: opmPrismHolonBrowser,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "Design::viewPrismHolonOpmDecide", kind := (ctor Foundation.Arch::OpmThingKind.object), subject := "Architecture::componentBrowser"})
+}
+
+definition{
+  name: opmPrismHolonGuest,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "Design::viewPrismHolonOpmDecide", kind := (ctor Foundation.Arch::OpmThingKind.object), subject := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: opmPrismHolonDecide,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "Design::viewPrismHolonOpmDecide", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismHolonDecide"})
+}
+
+definition{
+  name: opmPrismHolonParseRequest,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "Design::viewPrismHolonOpmDecide", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismHolonParseRequest"})
+}
+
+definition{
+  name: opmPrismHolonJudge,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "Design::viewPrismHolonOpmDecide", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismHolonJudge"})
+}
+
+definition{
+  name: opmPrismHolonEncodeAnswer,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "Design::viewPrismHolonOpmDecide", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismHolonEncodeAnswer"})
+}
+
+definition{
   name: opmPrismBoundaryGuestIdle,
   parameters: [],
   result: Foundation.Arch::OpmState,
@@ -2685,6 +2909,20 @@ definition{
   parameters: [],
   result: Foundation.Arch::OpmState,
   body: (record Foundation.Arch::OpmState {view := "Design::viewPrismVaultStoreOpmDecide", thing := "Architecture::componentPrismVaultStorePrismVaultStoreGuest", state := "Design::statePrismVaultStoreDeciding"})
+}
+
+definition{
+  name: opmPrismHolonGuestIdle,
+  parameters: [],
+  result: Foundation.Arch::OpmState,
+  body: (record Foundation.Arch::OpmState {view := "Design::viewPrismHolonOpmDecide", thing := "Architecture::componentPrismHolonPrismHolonGuest", state := "Design::statePrismHolonIdle"})
+}
+
+definition{
+  name: opmPrismHolonGuestDeciding,
+  parameters: [],
+  result: Foundation.Arch::OpmState,
+  body: (record Foundation.Arch::OpmState {view := "Design::viewPrismHolonOpmDecide", thing := "Architecture::componentPrismHolonPrismHolonGuest", state := "Design::statePrismHolonDeciding"})
 }
 
 definition{
@@ -3073,6 +3311,41 @@ definition{
 }
 
 definition{
+  name: opmPrismHolonGuestAgent,
+  parameters: [],
+  result: Foundation.Arch::OpmLink,
+  body: (record Foundation.Arch::OpmLink {view := "Design::viewPrismHolonOpmDecide", kind := (ctor Foundation.Arch::OpmLinkKind.agent), source := "Architecture::componentPrismHolonPrismHolonGuest", target := "Design::processPrismHolonDecide"})
+}
+
+definition{
+  name: opmPrismHolonBrowserInstrument,
+  parameters: [],
+  result: Foundation.Arch::OpmLink,
+  body: (record Foundation.Arch::OpmLink {view := "Design::viewPrismHolonOpmDecide", kind := (ctor Foundation.Arch::OpmLinkKind.instrument), source := "Architecture::componentBrowser", target := "Design::processPrismHolonParseRequest"})
+}
+
+definition{
+  name: opmPrismHolonParseInvokesJudge,
+  parameters: [],
+  result: Foundation.Arch::OpmLink,
+  body: (record Foundation.Arch::OpmLink {view := "Design::viewPrismHolonOpmDecide", kind := (ctor Foundation.Arch::OpmLinkKind.invocation), source := "Design::processPrismHolonParseRequest", target := "Design::processPrismHolonJudge"})
+}
+
+definition{
+  name: opmPrismHolonJudgeInvokesEncode,
+  parameters: [],
+  result: Foundation.Arch::OpmLink,
+  body: (record Foundation.Arch::OpmLink {view := "Design::viewPrismHolonOpmDecide", kind := (ctor Foundation.Arch::OpmLinkKind.invocation), source := "Design::processPrismHolonJudge", target := "Design::processPrismHolonEncodeAnswer"})
+}
+
+definition{
+  name: opmPrismHolonEncodeAffectsBrowser,
+  parameters: [],
+  result: Foundation.Arch::OpmLink,
+  body: (record Foundation.Arch::OpmLink {view := "Design::viewPrismHolonOpmDecide", kind := (ctor Foundation.Arch::OpmLinkKind.effect), source := "Architecture::componentBrowser", target := "Design::processPrismHolonEncodeAnswer"})
+}
+
+definition{
   name: opmPrismBoundaryZoomParseRequest,
   parameters: [],
   result: Foundation.Arch::OpmZoom,
@@ -3301,6 +3574,27 @@ definition{
   parameters: [],
   result: Foundation.Arch::OpmZoom,
   body: (record Foundation.Arch::OpmZoom {view := "Design::viewPrismVaultStoreOpmDecide", process := "Design::processPrismVaultStoreDecide", subprocess := "Design::processPrismVaultStoreEncodeAnswer", order := 2})
+}
+
+definition{
+  name: opmPrismHolonZoomParseRequest,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "Design::viewPrismHolonOpmDecide", process := "Design::processPrismHolonDecide", subprocess := "Design::processPrismHolonParseRequest", order := 0})
+}
+
+definition{
+  name: opmPrismHolonZoomJudge,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "Design::viewPrismHolonOpmDecide", process := "Design::processPrismHolonDecide", subprocess := "Design::processPrismHolonJudge", order := 1})
+}
+
+definition{
+  name: opmPrismHolonZoomEncodeAnswer,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "Design::viewPrismHolonOpmDecide", process := "Design::processPrismHolonDecide", subprocess := "Design::processPrismHolonEncodeAnswer", order := 2})
 }
 
 definition{
@@ -3763,6 +4057,48 @@ definition{
   parameters: [],
   result: Foundation.Arch::UmlComponent,
   body: (record Foundation.Arch::UmlComponent {view := "Design::viewPrismVaultStoreUmlComponents", component := "Architecture::componentSourceRepository"})
+}
+
+definition{
+  name: umlPrismHolonBrowser,
+  parameters: [],
+  result: Foundation.Arch::UmlComponent,
+  body: (record Foundation.Arch::UmlComponent {view := "Design::viewPrismHolonUmlComponents", component := "Architecture::componentBrowser"})
+}
+
+definition{
+  name: umlPrismHolonGitHubPages,
+  parameters: [],
+  result: Foundation.Arch::UmlComponent,
+  body: (record Foundation.Arch::UmlComponent {view := "Design::viewPrismHolonUmlComponents", component := "Architecture::componentGitHubPages"})
+}
+
+definition{
+  name: umlPrismHolonPrismBuild,
+  parameters: [],
+  result: Foundation.Arch::UmlComponent,
+  body: (record Foundation.Arch::UmlComponent {view := "Design::viewPrismHolonUmlComponents", component := "Architecture::componentPrismBuild"})
+}
+
+definition{
+  name: umlPrismHolonPrismHolonGuest,
+  parameters: [],
+  result: Foundation.Arch::UmlComponent,
+  body: (record Foundation.Arch::UmlComponent {view := "Design::viewPrismHolonUmlComponents", component := "Architecture::componentPrismHolonPrismHolonGuest"})
+}
+
+definition{
+  name: umlPrismHolonPrismHolonPage,
+  parameters: [],
+  result: Foundation.Arch::UmlComponent,
+  body: (record Foundation.Arch::UmlComponent {view := "Design::viewPrismHolonUmlComponents", component := "Architecture::componentPrismHolonPrismHolonPage"})
+}
+
+definition{
+  name: umlPrismHolonSourceRepository,
+  parameters: [],
+  result: Foundation.Arch::UmlComponent,
+  body: (record Foundation.Arch::UmlComponent {view := "Design::viewPrismHolonUmlComponents", component := "Architecture::componentSourceRepository"})
 }
 
 definition{
@@ -4305,6 +4641,55 @@ definition{
 }
 
 definition{
+  name: umlPrismHolonBrowserToPrismHolonGuest,
+  parameters: [],
+  result: Foundation.Arch::UmlConnector,
+  body: (record Foundation.Arch::UmlConnector {view := "Design::viewPrismHolonUmlComponents", edge := "Architecture::edgePrismHolonBrowserToPrismHolonGuest"})
+}
+
+definition{
+  name: umlPrismHolonGitHubPagesToBrowser,
+  parameters: [],
+  result: Foundation.Arch::UmlConnector,
+  body: (record Foundation.Arch::UmlConnector {view := "Design::viewPrismHolonUmlComponents", edge := "Architecture::edgeGitHubPagesToBrowser"})
+}
+
+definition{
+  name: umlPrismHolonPrismBuildToPrismHolonGuest,
+  parameters: [],
+  result: Foundation.Arch::UmlConnector,
+  body: (record Foundation.Arch::UmlConnector {view := "Design::viewPrismHolonUmlComponents", edge := "Architecture::edgePrismHolonPrismBuildToPrismHolonGuest"})
+}
+
+definition{
+  name: umlPrismHolonPrismBuildToPrismHolonPage,
+  parameters: [],
+  result: Foundation.Arch::UmlConnector,
+  body: (record Foundation.Arch::UmlConnector {view := "Design::viewPrismHolonUmlComponents", edge := "Architecture::edgePrismHolonPrismBuildToPrismHolonPage"})
+}
+
+definition{
+  name: umlPrismHolonPrismHolonGuestToBrowser,
+  parameters: [],
+  result: Foundation.Arch::UmlConnector,
+  body: (record Foundation.Arch::UmlConnector {view := "Design::viewPrismHolonUmlComponents", edge := "Architecture::edgePrismHolonPrismHolonGuestToBrowser"})
+}
+
+definition{
+  name: umlPrismHolonPrismHolonPageToGitHubPages,
+  parameters: [],
+  result: Foundation.Arch::UmlConnector,
+  body: (record Foundation.Arch::UmlConnector {view := "Design::viewPrismHolonUmlComponents", edge := "Architecture::edgePrismHolonPrismHolonPageToGitHubPages"})
+}
+
+definition{
+  name: umlPrismHolonSourceRepositoryToPrismBuild,
+  parameters: [],
+  result: Foundation.Arch::UmlConnector,
+  body: (record Foundation.Arch::UmlConnector {view := "Design::viewPrismHolonUmlComponents", edge := "Architecture::edgeSourceRepositoryToPrismBuild"})
+}
+
+definition{
   name: seqPrismBoundaryBrowser,
   parameters: [],
   result: Foundation.Arch::UmlLifeline,
@@ -4459,6 +4844,20 @@ definition{
 }
 
 definition{
+  name: seqPrismHolonBrowser,
+  parameters: [],
+  result: Foundation.Arch::UmlLifeline,
+  body: (record Foundation.Arch::UmlLifeline {view := "Design::viewPrismHolonUmlRequest", component := "Architecture::componentBrowser", order := 0})
+}
+
+definition{
+  name: seqPrismHolonPrismHolonGuest,
+  parameters: [],
+  result: Foundation.Arch::UmlLifeline,
+  body: (record Foundation.Arch::UmlLifeline {view := "Design::viewPrismHolonUmlRequest", component := "Architecture::componentPrismHolonPrismHolonGuest", order := 1})
+}
+
+definition{
   name: seqPrismBoundaryRequest,
   parameters: [],
   result: Foundation.Arch::UmlMessage,
@@ -4610,6 +5009,20 @@ definition{
   parameters: [],
   result: Foundation.Arch::UmlMessage,
   body: (record Foundation.Arch::UmlMessage {view := "Design::viewPrismVaultStoreUmlRequest", kind := (ctor Foundation.Arch::UmlMessageKind.reply), order := 1, source := "Architecture::componentPrismVaultStorePrismVaultStoreGuest", target := "Architecture::componentBrowser", process := "Design::processPrismVaultStoreDecide"})
+}
+
+definition{
+  name: seqPrismHolonRequest,
+  parameters: [],
+  result: Foundation.Arch::UmlMessage,
+  body: (record Foundation.Arch::UmlMessage {view := "Design::viewPrismHolonUmlRequest", kind := (ctor Foundation.Arch::UmlMessageKind.synchronous), order := 0, source := "Architecture::componentBrowser", target := "Architecture::componentPrismHolonPrismHolonGuest", process := "Design::processPrismHolonDecide"})
+}
+
+definition{
+  name: seqPrismHolonReply,
+  parameters: [],
+  result: Foundation.Arch::UmlMessage,
+  body: (record Foundation.Arch::UmlMessage {view := "Design::viewPrismHolonUmlRequest", kind := (ctor Foundation.Arch::UmlMessageKind.reply), order := 1, source := "Architecture::componentPrismHolonPrismHolonGuest", target := "Architecture::componentBrowser", process := "Design::processPrismHolonDecide"})
 }
 
 definition{
@@ -5163,6 +5576,62 @@ definition{
   parameters: [],
   result: Foundation.Arch::UmlState,
   body: (record Foundation.Arch::UmlState {view := "Design::viewPrismVaultStoreUmlStates", state := "Design::statePrismVaultStoreAnsweredRefuse", initial := false})
+}
+
+definition{
+  name: stPrismHolonIdle,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismHolonUmlStates", state := "Design::statePrismHolonIdle", initial := true})
+}
+
+definition{
+  name: stPrismHolonDeciding,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismHolonUmlStates", state := "Design::statePrismHolonDeciding", initial := false})
+}
+
+definition{
+  name: stPrismHolonRefused,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismHolonUmlStates", state := "Design::statePrismHolonRefused", initial := false})
+}
+
+definition{
+  name: stPrismHolonAnsweredHold,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismHolonUmlStates", state := "Design::statePrismHolonAnsweredHold", initial := false})
+}
+
+definition{
+  name: stPrismHolonAnsweredReconcile,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismHolonUmlStates", state := "Design::statePrismHolonAnsweredReconcile", initial := false})
+}
+
+definition{
+  name: stPrismHolonAnsweredCurate,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismHolonUmlStates", state := "Design::statePrismHolonAnsweredCurate", initial := false})
+}
+
+definition{
+  name: stPrismHolonAnsweredRestore,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismHolonUmlStates", state := "Design::statePrismHolonAnsweredRestore", initial := false})
+}
+
+definition{
+  name: stPrismHolonAnsweredRefuse,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismHolonUmlStates", state := "Design::statePrismHolonAnsweredRefuse", initial := false})
 }
 
 definition{
@@ -6458,6 +6927,118 @@ definition{
   parameters: [],
   result: Foundation.Arch::UmlTransition,
   body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismVaultStoreUmlStates", order := 13, source := "Design::statePrismVaultStoreRefused", target := "Design::statePrismVaultStoreIdle", trigger := "Design::processPrismVaultStoreEncodeAnswer"})
+}
+
+definition{
+  name: trPrismHolonAccept,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismHolonUmlStates", order := 0, source := "Design::statePrismHolonIdle", target := "Design::statePrismHolonDeciding", trigger := "Design::processPrismHolonParseRequest"})
+}
+
+definition{
+  name: trPrismHolonRefuse,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismHolonUmlStates", order := 1, source := "Design::statePrismHolonIdle", target := "Design::statePrismHolonRefused", trigger := "Design::processPrismHolonParseRequest"})
+}
+
+definition{
+  name: trPrismHolonRule1,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismHolonUmlStates", order := 2, source := "Design::statePrismHolonDeciding", target := "Design::statePrismHolonAnsweredRefuse", trigger := "Design::processPrismHolonRule1"})
+}
+
+definition{
+  name: trPrismHolonRule2,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismHolonUmlStates", order := 3, source := "Design::statePrismHolonDeciding", target := "Design::statePrismHolonAnsweredRestore", trigger := "Design::processPrismHolonRule2"})
+}
+
+definition{
+  name: trPrismHolonRule3,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismHolonUmlStates", order := 4, source := "Design::statePrismHolonDeciding", target := "Design::statePrismHolonAnsweredHold", trigger := "Design::processPrismHolonRule3"})
+}
+
+definition{
+  name: trPrismHolonRule4,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismHolonUmlStates", order := 5, source := "Design::statePrismHolonDeciding", target := "Design::statePrismHolonAnsweredHold", trigger := "Design::processPrismHolonRule4"})
+}
+
+definition{
+  name: trPrismHolonRule5,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismHolonUmlStates", order := 6, source := "Design::statePrismHolonDeciding", target := "Design::statePrismHolonAnsweredReconcile", trigger := "Design::processPrismHolonRule5"})
+}
+
+definition{
+  name: trPrismHolonRule6,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismHolonUmlStates", order := 7, source := "Design::statePrismHolonDeciding", target := "Design::statePrismHolonAnsweredCurate", trigger := "Design::processPrismHolonRule6"})
+}
+
+definition{
+  name: trPrismHolonRule7,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismHolonUmlStates", order := 8, source := "Design::statePrismHolonDeciding", target := "Design::statePrismHolonAnsweredCurate", trigger := "Design::processPrismHolonRule7"})
+}
+
+definition{
+  name: trPrismHolonOtherwise,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismHolonUmlStates", order := 9, source := "Design::statePrismHolonDeciding", target := "Design::statePrismHolonAnsweredHold", trigger := "Design::processPrismHolonOtherwise"})
+}
+
+definition{
+  name: trPrismHolonResetHold,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismHolonUmlStates", order := 10, source := "Design::statePrismHolonAnsweredHold", target := "Design::statePrismHolonIdle", trigger := "Design::processPrismHolonEncodeAnswer"})
+}
+
+definition{
+  name: trPrismHolonResetReconcile,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismHolonUmlStates", order := 11, source := "Design::statePrismHolonAnsweredReconcile", target := "Design::statePrismHolonIdle", trigger := "Design::processPrismHolonEncodeAnswer"})
+}
+
+definition{
+  name: trPrismHolonResetCurate,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismHolonUmlStates", order := 12, source := "Design::statePrismHolonAnsweredCurate", target := "Design::statePrismHolonIdle", trigger := "Design::processPrismHolonEncodeAnswer"})
+}
+
+definition{
+  name: trPrismHolonResetRestore,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismHolonUmlStates", order := 13, source := "Design::statePrismHolonAnsweredRestore", target := "Design::statePrismHolonIdle", trigger := "Design::processPrismHolonEncodeAnswer"})
+}
+
+definition{
+  name: trPrismHolonResetRefuse,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismHolonUmlStates", order := 14, source := "Design::statePrismHolonAnsweredRefuse", target := "Design::statePrismHolonIdle", trigger := "Design::processPrismHolonEncodeAnswer"})
+}
+
+definition{
+  name: trPrismHolonResetRefused,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismHolonUmlStates", order := 15, source := "Design::statePrismHolonRefused", target := "Design::statePrismHolonIdle", trigger := "Design::processPrismHolonEncodeAnswer"})
 }
 \end{semanticmodule}
 \end{lexlean}

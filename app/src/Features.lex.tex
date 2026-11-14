@@ -13,6 +13,7 @@
 \importmodule{PrismSource}
 \importmodule{PrismVaultRestore}
 \importmodule{PrismVaultStore}
+\importmodule{PrismHolon}
 \importmodule{Architecture}
 \importmodule{Foundation.Arch}
 \title{feature}
@@ -582,6 +583,90 @@ definition{
   parameters: [],
   result: String,
   body: "PrismVaultStoreProofs::inv005Holds"
+}
+
+definition{
+  name: acceptPrismHolonINV001,
+  parameters: [],
+  result: String,
+  body: "PrismHolonProofs::inv001Holds"
+}
+
+definition{
+  name: acceptPrismHolonINV002,
+  parameters: [],
+  result: String,
+  body: "PrismHolonProofs::inv002Holds"
+}
+
+definition{
+  name: acceptPrismHolonINV003,
+  parameters: [],
+  result: String,
+  body: "PrismHolonProofs::inv003Holds"
+}
+
+definition{
+  name: acceptPrismHolonINV004,
+  parameters: [],
+  result: String,
+  body: "PrismHolonProofs::inv004Holds"
+}
+
+definition{
+  name: acceptPrismHolonINV005,
+  parameters: [],
+  result: String,
+  body: "PrismHolonProofs::inv005Holds"
+}
+
+definition{
+  name: acceptPrismHolonINV006,
+  parameters: [],
+  result: String,
+  body: "PrismHolonProofs::inv006Holds"
+}
+
+definition{
+  name: acceptPrismHolonINV007,
+  parameters: [],
+  result: String,
+  body: "PrismHolonProofs::inv007Holds"
+}
+
+definition{
+  name: acceptPrismHolonINV008,
+  parameters: [],
+  result: String,
+  body: "PrismHolonProofs::inv008Holds"
+}
+
+definition{
+  name: acceptPrismHolonINV009,
+  parameters: [],
+  result: String,
+  body: "PrismHolonProofs::inv009Holds"
+}
+
+definition{
+  name: acceptPrismHolonINV010,
+  parameters: [],
+  result: String,
+  body: "PrismHolonProofs::inv010Holds"
+}
+
+definition{
+  name: acceptPrismHolonINV011,
+  parameters: [],
+  result: String,
+  body: "PrismHolonProofs::inv011Holds"
+}
+
+definition{
+  name: acceptPrismHolonINV012,
+  parameters: [],
+  result: String,
+  body: "PrismHolonProofs::inv012Holds"
 }
 
 definition{
@@ -1971,6 +2056,153 @@ definition{
 }
 
 definition{
+  name: featurePrismHolonRule1,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when halted is yes then refuse", calls := (cons "PrismHolon::prismHolonRule1" (cons "PrismHolon::prismHolonJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonRule2,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when halted is not yes and floor is regressed then restore", calls := (cons "PrismHolon::prismHolonRule2" (cons "PrismHolon::prismHolonJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonRule3,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when halted is not yes and floor is not regressed and signal is self then hold", calls := (cons "PrismHolon::prismHolonRule3" (cons "PrismHolon::prismHolonJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonRule4,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when halted is not yes and floor is not regressed and signal is not self and tunable is no then hold", calls := (cons "PrismHolon::prismHolonRule4" (cons "PrismHolon::prismHolonJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonRule5,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when halted is not yes and floor is not regressed and signal is not self and tunable is not no and dissonance is high then reconcile", calls := (cons "PrismHolon::prismHolonRule5" (cons "PrismHolon::prismHolonJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonRule6,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when halted is not yes and floor is not regressed and signal is not self and tunable is not no and dissonance is not high and kpi is missed then curate", calls := (cons "PrismHolon::prismHolonRule6" (cons "PrismHolon::prismHolonJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonRule7,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when halted is not yes and floor is not regressed and signal is not self and tunable is not no and dissonance is not high and kpi is not missed and dissonance is some then curate", calls := (cons "PrismHolon::prismHolonRule7" (cons "PrismHolon::prismHolonJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonOtherwise,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "When no rule matches, the answer is hold.", calls := (cons "PrismHolon::prismHolonJudge" (nil String)), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonRefuseMalformed,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "A request that is not halted, floor, signal, tunable, dissonance, kpi in order, separated by single spaces, or is over 160 bytes, is answered invalid.", calls := (cons "PrismHolon::prismHolonDispatch" (cons "PrismHolon::prismHolonDecodeField1" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonINV001,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "always when halted is yes then refuse", calls := (cons "PrismHolon::prismHolonJudge" (nil String)), acceptance := (cons "Features::acceptPrismHolonINV001" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonINV002,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when halted is no then refuse", calls := (cons "PrismHolon::prismHolonJudge" (nil String)), acceptance := (cons "Features::acceptPrismHolonINV002" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonINV003,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "always when halted is no and floor is regressed then restore", calls := (cons "PrismHolon::prismHolonJudge" (nil String)), acceptance := (cons "Features::acceptPrismHolonINV003" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonINV004,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when signal is self then reconcile", calls := (cons "PrismHolon::prismHolonJudge" (nil String)), acceptance := (cons "Features::acceptPrismHolonINV004" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonINV005,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when signal is self then curate", calls := (cons "PrismHolon::prismHolonJudge" (nil String)), acceptance := (cons "Features::acceptPrismHolonINV005" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonINV006,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when tunable is no then reconcile", calls := (cons "PrismHolon::prismHolonJudge" (nil String)), acceptance := (cons "Features::acceptPrismHolonINV006" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonINV007,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when tunable is no then curate", calls := (cons "PrismHolon::prismHolonJudge" (nil String)), acceptance := (cons "Features::acceptPrismHolonINV007" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonINV008,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "always when halted is no and floor is held and signal is owner and tunable is yes and dissonance is high then reconcile", calls := (cons "PrismHolon::prismHolonJudge" (nil String)), acceptance := (cons "Features::acceptPrismHolonINV008" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonINV009,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when dissonance is high then curate", calls := (cons "PrismHolon::prismHolonJudge" (nil String)), acceptance := (cons "Features::acceptPrismHolonINV009" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonINV010,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when dissonance is none and kpi is met then reconcile", calls := (cons "PrismHolon::prismHolonJudge" (nil String)), acceptance := (cons "Features::acceptPrismHolonINV010" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonINV011,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when dissonance is none and kpi is met then curate", calls := (cons "PrismHolon::prismHolonJudge" (nil String)), acceptance := (cons "Features::acceptPrismHolonINV011" (nil String))})
+}
+
+definition{
+  name: featurePrismHolonINV012,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when floor is held then restore", calls := (cons "PrismHolon::prismHolonJudge" (nil String)), acceptance := (cons "Features::acceptPrismHolonINV012" (nil String))})
+}
+
+definition{
   name: journeyPrismBoundaryUser,
   parameters: [],
   result: Foundation.Arch::Journey,
@@ -2122,6 +2354,20 @@ definition{
   parameters: [],
   result: Foundation.Arch::Journey,
   body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderVerifier", steps := (cons "Features::featurePrismVaultStoreRefuseMalformed" (cons "Features::featurePrismVaultStoreINV001" (cons "Features::featurePrismVaultStoreINV002" (cons "Features::featurePrismVaultStoreINV003" (cons "Features::featurePrismVaultStoreINV004" (cons "Features::featurePrismVaultStoreINV005" (nil String)))))))})
+}
+
+definition{
+  name: journeyPrismHolonUser,
+  parameters: [],
+  result: Foundation.Arch::Journey,
+  body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderUser", steps := (cons "Features::featurePrismHolonRule1" (cons "Features::featurePrismHolonRule2" (cons "Features::featurePrismHolonRule3" (cons "Features::featurePrismHolonRule4" (cons "Features::featurePrismHolonRule5" (cons "Features::featurePrismHolonRule6" (cons "Features::featurePrismHolonRule7" (cons "Features::featurePrismHolonOtherwise" (nil String)))))))))})
+}
+
+definition{
+  name: journeyPrismHolonVerifier,
+  parameters: [],
+  result: Foundation.Arch::Journey,
+  body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderVerifier", steps := (cons "Features::featurePrismHolonRefuseMalformed" (cons "Features::featurePrismHolonINV001" (cons "Features::featurePrismHolonINV002" (cons "Features::featurePrismHolonINV003" (cons "Features::featurePrismHolonINV004" (cons "Features::featurePrismHolonINV005" (cons "Features::featurePrismHolonINV006" (cons "Features::featurePrismHolonINV007" (cons "Features::featurePrismHolonINV008" (cons "Features::featurePrismHolonINV009" (cons "Features::featurePrismHolonINV010" (cons "Features::featurePrismHolonINV011" (cons "Features::featurePrismHolonINV012" (nil String))))))))))))))})
 }
 \end{semanticmodule}
 \end{lexlean}

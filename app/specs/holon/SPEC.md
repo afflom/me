@@ -8,7 +8,8 @@ owner is a facet (the co-observer), self-reference alone is bounded, and the
 observer reconciles the dissonance between the owner and the Prism.
 
 `spec.json` is the single source, with `../curate/spec.json`.
-`python3 -I tools/holon/gen.py` writes `app/src/PrismHolon(.Proofs).lex.tex`,
+The Prism's builder (`python3 -I tools/prompts/gen.py`) writes
+`app/src/PrismHolon(.Proofs).lex.tex`; `python3 -I tools/holon/gen.py` writes
 `app/src/PrismCurate(.Proofs).lex.tex` and `site/holon/table.mjs`;
 `tools/holon/build.sh` proves and builds the two standalone guests in the
 locked SDK image and pins them in `site/holon/guest.mjs`.
@@ -37,7 +38,9 @@ with at least 8 of the owner's gestures, `dissonance` is `high` at or above
 
 ## Guarantees
 
-Proved over `holonJudge` with exactly `[Quot.sound, propext]`:
+Proved over `prismHolonJudge` (written by the Prism's builder, `tools/prompts/gen.py`)
+with exactly `[Quot.sound, propext]`, as twelve properties: a guarantee that
+names several answers it never gives is one property per answer.
 
 1. Halted always refuses.
 2. Not halted never refuses.

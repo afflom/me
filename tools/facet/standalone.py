@@ -4,7 +4,9 @@
 
 DIR gets app/'s toolchain files, Foundation, the facet module (+Proofs) and an
 <Facet>App module whose application record routes every request straight to
-<Module>::<prefix>Dispatch (tools/dest/standalone.py, generalized). In the locked SDK image, with no network:
+<Module>::<prefix>Dispatch (tools/dest/standalone.py, generalized), or the
+builder's <module>Dispatch (prismRouterDispatch) for a facet the Prism's builder
+builds (app/prompts/set.json). In the locked SDK image, with no network:
 
     lexlean fmt && lexlean lock && lexlean verify && prismpm build
 
@@ -21,6 +23,9 @@ APP = ROOT / "app"
 SPEC = json.loads((ROOT / sys.argv[1]).read_text())
 P, MOD = SPEC["facet"]["prefix"], SPEC["facet"]["module"]
 APPM = P[0].upper() + P[1:] + "App"
+# A facet the builder builds names its definitions after its module: PrismRouter -> prismRouterDispatch.
+BUILT = f"{pathlib.Path(sys.argv[1]).parent.name}.prompt.json" in json.loads((APP / "prompts/set.json").read_text())["prompts"]
+DISPATCH = (MOD[0].lower() + MOD[1:] if BUILT else P) + "Dispatch"
 REQ_MAX, RESP_MAX, ALLOC = 128, 16, 256
 
 out = pathlib.Path(sys.argv[2])
@@ -62,7 +67,7 @@ definition{{
   name: dispatch,
   parameters: [value : Bytes],
   result: Bytes,
-  body: ({MOD}::{P}Dispatch value),
+  body: ({MOD}::{DISPATCH} value),
   axioms: [Quot.sound, propext]
 }}
 

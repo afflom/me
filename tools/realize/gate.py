@@ -152,15 +152,18 @@ def projection(s):
     prefix, struct = judge.group(1), judge.group(2)
     body = re.search(r"name: %s,\s*type_parameters: \[\],\s*parameters: \[\],\s*fields: \[(.*?)\]\s*\}" % struct, text, re.S)
     lean_fields = re.findall(r"\{name: (\w+), type: Nat\}", body.group(1)) if body else []
-    if lean_fields != s.names:
+    # The builder renames a field whose name Lean reserves (value -> value2), keeping its place.
+    renamed = len(lean_fields) == len(s.names) and all(l == n or re.fullmatch(re.escape(n) + r"\d+", l) for l, n in zip(lean_fields, s.names))
+    if not renamed:
         faults.append(f"{s.module}::{struct} has fields {lean_fields}, the spec {s.names}")
+    fields = dict(zip(s.names, lean_fields)) if renamed else {n: n for n in s.names}
     consts = {m.group(1): int(m.group(2)) for m in re.finditer(r"name: (\w+), parameters: \[\], result: Nat, body: (\d+)\}", text)}
     values = {}
     for f in s.fields:
         if s.is_number(f):
             continue
         for k, v in enumerate(f["values"]):
-            name = f"{prefix}{cap(f['name'])}{cap(v)}"
+            name = f"{prefix}{cap(fields[f['name']])}{cap(v)}"
             if consts.get(name) != k:
                 faults.append(f"{s.module}::{name} is not value {k} of field {f['name']}")
             values[(f["name"], v)] = name
@@ -170,7 +173,7 @@ def projection(s):
         if consts.get(name) != k:
             faults.append(f"{s.module}::{name} is not answer {k}")
         answers[o] = name
-    names = {"judge": f"{prefix}Judge", "struct": struct, "values": values, "answers": answers}
+    names = {"judge": f"{prefix}Judge", "struct": struct, "fields": fields, "values": values, "answers": answers}
     return (None if faults else names), faults
 
 
@@ -361,7 +364,8 @@ def lean(out, settings):
         def term(x):
             parts = []
             for f, v in zip(s.fields, x):
-                parts.append(f"{f['name']} := {v}" if s.is_number(f) else f"{f['name']} := ({m}::{names['values'][(f['name'], v)]})")
+                lean = names["fields"][f["name"]]
+                parts.append(f"{lean} := {v}" if s.is_number(f) else f"{lean} := ({m}::{names['values'][(f['name'], v)]})")
             return "(record %s::%s {%s})" % (m, names["struct"], ", ".join(parts))
 
         for field, (x, y) in r["witnesses"]:

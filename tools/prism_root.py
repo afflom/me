@@ -38,7 +38,7 @@ FACETS = [
     ("model", "PrismModels", "prismModelsDispatch"),
     ("kappa", "PrismKappa", "kappaDispatch"),
     ("uorc", "PrismUorc", "uorcDispatch"),
-    ("holon", "PrismHolon", "holonDispatch"),
+    ("holon", "PrismHolon", "prismHolonDispatch"),
     ("curate", "PrismCurate", "curateDispatch"),
     ("resonance", "PrismResonance", "resonanceDispatch"),
     ("router", "PrismRouter", "routerDispatch"),

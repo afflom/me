@@ -78,8 +78,9 @@ export function readSet(set) {
 
 /**
  * Claim ids: the initials of every word of the app's name. A prefix a row of
- * another suite already holds (`taken`) is lengthened by the next letters of
- * the name's last word until it is free. Refused when two apps would share one.
+ * another suite already holds (`taken`), or an earlier app of the set holds, is
+ * lengthened by the next letters of the name's last word until it is free.
+ * Refused when two apps would still share one.
  */
 function idPrefixes(models, taken = new Set()) {
   const out = new Map();
@@ -88,7 +89,9 @@ function idPrefixes(models, taken = new Set()) {
     const p = words.map((w) => w[0]).join('').toUpperCase();
     let prefix = p === 'CM' ? 'CN' : p;
     const last = words.at(-1).toUpperCase();
-    for (let k = 1; taken.has(prefix) && k < last.length; k++) prefix = `${p}${last.slice(1, k + 1)}`;
+    // A prefix an earlier app of the set holds is lengthened the same way, so the first app keeps it.
+    const held = (x) => taken.has(x) || [...out.values()].includes(x);
+    for (let k = 1; held(prefix) && k < last.length; k++) prefix = `${p}${last.slice(1, k + 1)}`;
     if (taken.has(prefix)) throw new SpecError(`Every id prefix of ${m.spec.name} is held by another suite's rows; rename the app.`, 'prompts');
     if ([...out.values()].includes(prefix)) throw new SpecError(`Two apps of the set would both claim ${prefix}-xx; rename one.`, 'prompts');
     out.set(m, prefix);

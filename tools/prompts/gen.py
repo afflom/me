@@ -32,9 +32,64 @@ SETTING = json.loads(SET.read_text())
 LAST = SETTING.pop("lastModified")
 
 
+def condition(field, value, holds):
+    return {"field": field, "op": "is" if holds else "is not", "value": value}
+
+
+def said(when, then):
+    return "when " + " and ".join(f"{c['field']} {c['op']} {c['value']}" for c in when) + f" then {then}"
+
+
+def from_tree(spec):
+    """A keyword facet's spec (tools/facet/gen.py and its kin): a binary decision
+    tree over choice fields, its guarantees and its examples as pairs. Read as
+    the builder's decision table: every root-to-leaf path in then-first order is
+    one first-match rule, the path that fails every test is `otherwise`, each
+    guarantee is an always or never property, and every field is a choice."""
+    rules, rest = [], []
+
+    def walk(node, path):
+        if isinstance(node, str):
+            if all(c["op"] == "is not" for c in path):
+                rest.append(node)
+            else:
+                rules.append((path, node))
+            return
+        field, value = node["if"]
+        walk(node["then"], path + [condition(field, value, True)])
+        walk(node["else"], path + [condition(field, value, False)])
+
+    walk(spec["tree"], [])
+    assert len(rest) == 1, f"{spec['name']}: the tree has one all-else path"
+    title = spec.get("title", spec["name"])
+    app = {
+        "name": spec["name"],
+        "title": title,
+        "purpose": spec["purpose"],
+        "fields": [{"name": f["name"], "kind": "choice", "values": f["values"], "means": f["means"]} for f in spec["fields"]],
+        "outcomes": spec["outcomes"],
+        "meanings": spec["meanings"],
+        "rules": [
+            {"id": f"REQ-{i:03}", "when": when, "then": then, "says": said(when, then), "why": f"{title}: the decision tree's path to {then}"}
+            for i, (when, then) in enumerate(rules, 1)
+        ],
+        "otherwise": rest[0],
+        "otherwiseWhy": f"{title}: the decision tree's path that meets no test",
+        "properties": [],
+        "examples": [{"request": r, "response": o} for r, o in spec["examples"]],
+    }
+    # A guarantee that names several answers it never gives is one property per answer.
+    for g in spec["guarantees"]:
+        when = [condition(f, v, True) for f, v in g["when"]]
+        for kind, then in [("always", g["always"])] if "always" in g else [("never", a) for a in g["never"]]:
+            n = len(app["properties"]) + 1
+            app["properties"].append({"id": f"INV-{n:03}", "kind": kind, "when": when, "then": then, "says": f"{kind} " + said(when, then), "why": g["why"]})
+    return app
+
+
 def prompt(facet):
     spec = json.loads((ROOT / f"app/specs/{facet}/spec.json").read_text())
-    app = {k: spec[k] for k in APP_KEYS if k in spec}
+    app = from_tree(spec) if "tree" in spec else {k: spec[k] for k in APP_KEYS if k in spec}
     old = ROOT / f"app/prompts/{facet}.prompt.json"
     axioms = json.loads(old.read_text()).get("axioms", {}) if old.exists() else {}
     out = {"schema": "prism/prompt/1", "goal": spec["purpose"][:200], "pattern": "decisionTable", "repository": SETTING["repository"], "app": app}

@@ -163,6 +163,23 @@ model does not sanction.
 | `PGL-08` | `build` | The app never answers syncing when origin is differs |
 | `PGL-09` | `build` | The app never answers granted when origin is differs |
 
+## prism_holon
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PHO-01` | `build` | The app always answers refuse when halted is yes |
+| `PHO-02` | `build` | The app never answers refuse when halted is no |
+| `PHO-03` | `build` | The app always answers restore when halted is no and floor is regressed |
+| `PHO-04` | `build` | The app never answers reconcile when signal is self |
+| `PHO-05` | `build` | The app never answers curate when signal is self |
+| `PHO-06` | `build` | The app never answers reconcile when tunable is no |
+| `PHO-07` | `build` | The app never answers curate when tunable is no |
+| `PHO-08` | `build` | The app always answers reconcile when halted is no and floor is held and signal is owner and tunable is yes and dissonance is high |
+| `PHO-09` | `build` | The app never answers curate when dissonance is high |
+| `PHO-10` | `build` | The app never answers reconcile when dissonance is none and kpi is met |
+| `PHO-11` | `build` | The app never answers curate when dissonance is none and kpi is met |
+| `PHO-12` | `build` | The app never answers restore when floor is held |
+
 ## prism_host
 
 | ID | Level | Statement |
