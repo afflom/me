@@ -242,6 +242,20 @@ mod tests {
         for file in ["authorities.toml", "ledger.toml"] {
             std::fs::copy(real.join("model").join(file), root.join("model").join(file)).unwrap();
         }
+        // The authorities' evidence is this repository's IDs, which the empty
+        // register below does not hold: the scratch cites without evidence.
+        let cited = std::fs::read_to_string(root.join("model/authorities.toml")).unwrap();
+        let cited: Vec<&str> = cited
+            .lines()
+            .map(|line| {
+                if line.starts_with("realized_by = ") {
+                    "realized_by = []"
+                } else {
+                    line
+                }
+            })
+            .collect();
+        std::fs::write(root.join("model/authorities.toml"), cited.join("\n") + "\n").unwrap();
         // An empty register, as a freshly instantiated repository has; this
         // repository's own rows are not the scratch repository's.
         std::fs::write(
