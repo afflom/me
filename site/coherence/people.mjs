@@ -106,7 +106,7 @@ export function peopleOf(items, me = null) {
 // What is open between the person and one of their people: the meetings
 // ahead, soonest first, then everything else, newest first.
 export function between(one, now = Date.now()) {
-  const ahead = one.items.filter((item) => item.media === "calendar" && item.at + 3_600_000 > now).sort((a, b) => a.at - b.at);
+  const ahead = one.items.filter((item) => item.media === "calendar" && !item.undated && !item.cancelled && item.at + 3_600_000 > now).sort((a, b) => a.at - b.at);
   const rest = one.items.filter((item) => !ahead.includes(item) && item.media !== "contactCard").sort((a, b) => b.at - a.at);
   return [...ahead, ...rest];
 }
