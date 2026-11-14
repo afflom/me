@@ -51,8 +51,9 @@ function misses(example) {
     else if ("local" in e.start && !("zone" in e.start)) same("start", e.start.local, Number.isFinite(item.at) ? localOf(item.at) : String(item.at));
   }
   if (e.start && "date" in e.start) same("allDay", true, item.allDay);
-  // A message's plain words are what the person reads of it.
-  if ("body" in e) same("body", e.body, (item.body ?? "").replace(/\s+/g, " ").trim());
+  // A message's plain words are what the person reads of it, first; an
+  // invitation it carries (RFC 6047) is read after them, as its event.
+  if ("body" in e) { const got = (item.body ?? "").replace(/\s+/g, " ").trim(); same("body", e.body, got.startsWith(e.body) ? e.body : got); }
   return out;
 }
 

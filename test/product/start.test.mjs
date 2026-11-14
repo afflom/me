@@ -3,11 +3,13 @@
 // screen within "restart-ms", and none is lost ("restart-lost") once the rest
 // are read. Both thresholds are the quality record's
 // (app/specs/product/quality/QR-05.json).
-// The messages are invented, at example.org, shaped as Gmail's originals
-// read: an encoded sender, multipart, base64 plain and quoted-printable HTML.
+// The messages are the validation oracles' own (test/oracle/corpus.json: RFC 5322
+// Appendix A and RFC 6047), copied mechanically to the count kept. Each copy is its
+// example's very bytes with only its Date and Message-ID fields set, three hours
+// apart; the newest is the one example whose subject no other example shares.
 // usage: NODE_PATH="$(npm root --global)" [PAGE_SITE=dir | PAGE_URL=url] node --test test/product/start.test.mjs
 import assert from "node:assert/strict";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -16,20 +18,20 @@ import { chromium, product, serve, summary } from "./harness.mjs";
 const KEPT = 600;
 const measures = Object.fromEntries(product.quality.find((q) => q.key === "QR-05").measures.map((m) => [m.key, m.threshold]));
 const budget = measures["restart-ms"];
-const names = ["Ana", "Kai", "Lee", "Mara", "Noor", "Olu", "Priya", "Sol", "Tove", "Uma"];
-const topics = ["Budget", "Garden", "Invoice", "Travel", "Report", "Photos", "School", "Plan"];
+const oracle = JSON.parse(readFileSync(new URL("../oracle/corpus.json", import.meta.url), "utf8")).corpus.filter((e) => e.kind === "message");
+const once = oracle.find((e) => e.expect.title && oracle.every((o) => o === e || o.expect.title !== e.expect.title));
+const others = oracle.filter((e) => e !== once);
+// The example's header with its Date and Message-ID fields (and their folded lines) set anew.
+function restamp(raw, at, id) {
+  const cut = raw.indexOf("\r\n\r\n");
+  const fields = raw.slice(0, cut).split(/\r\n(?![ \t])/u).filter((f) => !/^(date|message-id):/iu.test(f));
+  return [`Date: ${at.toUTCString()}`, `Message-ID: <oracle.${id}@example.org>`, ...fields].join("\r\n") + raw.slice(cut);
+}
 function messages(now = Date.now()) {
   return Array.from({ length: KEPT }, (_, i) => {
-    const who = names[i % names.length];
-    const at = new Date(now - (i + 1) * 3 * 3600_000);
-    const subject = `${topics[i % topics.length]} note ${i}`;
-    const plain = Buffer.from(`Hi,\r\n\r\nAbout the ${subject.toLowerCase()}: could you look at it?\r\n\r\n${who}\r\n`).toString("base64");
-    return { service: "gmail", route: "own", kind: "message", format: "eml", text: [
-      `From: =?UTF-8?B?${Buffer.from(`${who} Example`).toString("base64")}?= <${who.toLowerCase()}@example.org>`, "To: person@example.org",
-      `Subject: ${subject}`, `Date: ${at.toUTCString()}`, `Message-ID: <st${i}@example.org>`, "MIME-Version: 1.0",
-      `Content-Type: multipart/alternative; boundary="b${i}"`, "", `--b${i}`, "Content-Type: text/plain; charset=UTF-8", "Content-Transfer-Encoding: base64", "", plain,
-      `--b${i}`, "Content-Type: text/html; charset=UTF-8", "Content-Transfer-Encoding: quoted-printable", "", `<p>About the ${subject.toLowerCase()}.</p>`, `--b${i}--`, "",
-    ].join("\r\n") };
+    const example = i === 0 ? once : others[(i - 1) % others.length];
+    const text = restamp(example.raw, new Date(now - (i + 1) * 3 * 3600_000), `${example.id}.${i}`);
+    return { service: "gmail", route: "own", kind: "message", format: "eml", text };
   });
 }
 
@@ -62,7 +64,7 @@ test("it opens at once: the newest of 600 kept messages shows within the budget 
     await page.waitForTimeout(3000);
     await context.close();
     ({ context, page } = await visit(dir, server.url, items));
-    const newest = "Budget note 0";
+    const newest = once.expect.title;
     const t0 = Date.now();
     await page.goto(server.url);
     await page.getByText(newest, { exact: true }).first().waitFor({ state: "visible", timeout: 60000 });

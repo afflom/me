@@ -46,12 +46,17 @@ const asked = [];
 const decide = { kappa: kappaGuest, uorc: async (line) => { asked.push(line); return uorcGuest(line); } };
 const objects = makeObjects({ client: () => client, decide, halted: () => halted });
 
+// The objects are the validation oracles' own examples (test/oracle/corpus.json: the
+// messages and calendars of RFC 5322, 5545, 5546 and 6047), the largest first.
+const corpus = JSON.parse(await readFile(new URL('test/oracle/corpus.json', root), 'utf8')).corpus;
+const largest = [...corpus].sort((a, b) => b.raw.length - a.raw.length);
+
 // UO-02: an object is kept as its archive, named by its kappa label, and opened back to its bytes.
-const value = new TextEncoder().encode('A note the owner keeps. '.repeat(40));
+const value = new TextEncoder().encode(largest[0].raw);
 const kept = await objects.keep(value);
 ok(kept.outcome === 'keep', `a sound object is kept: ${asked.at(-1)}`);
 ok(kept.kappa === (await labelOf(value)), 'it is named by the kappa label of its bytes');
-ok(kept.archive.length < value.length, 'the archive is smaller than the repetitive value');
+ok(kept.archive.length < value.length, `the archive is smaller than the value (${largest[0].id})`);
 ok(asked.at(-1) === 'keep no ok known standard one same admit', `the uorc facet saw only structure: ${asked.at(-1)}`);
 const opened = await objects.open(kept.archive, kept.kappa);
 ok(opened.outcome === 'open' && Buffer.compare(Buffer.from(opened.bytes), Buffer.from(value)) === 0, 'the archive opens to the very bytes');
@@ -61,7 +66,7 @@ const flipped = kept.archive.slice();
 flipped[flipped.length - 1] ^= 1;
 ok(structureOf(client, flipped).seal === 'broken', 'a flipped seal bit is a broken seal');
 ok((await objects.open(flipped, kept.kappa)).outcome === 'refuse', 'a broken seal is never opened');
-const other = (await objects.keep(new TextEncoder().encode('another object'))).archive;
+const other = (await objects.keep(new TextEncoder().encode(largest[1].raw))).archive;
 ok((await objects.open(other, kept.kappa)).outcome === 'refuse', 'an archive of other bytes is never opened under this label');
 ok(asked.at(-1).endsWith(' differs other'), `the facet was told the restore differs: ${asked.at(-1)}`);
 ok((await objects.open(new Uint8Array([1, 2, 3]), kept.kappa)).outcome === 'refuse', 'bytes that are no archive are refused');
@@ -70,37 +75,20 @@ const two = client.compressFiles([{ path: 'a', data: value }, { path: 'b', data:
 ok(structureOf(client, two, client.standardBases).objects === 'many', 'an archive of several objects is many');
 ok((await objects.open(two, kept.kappa)).outcome === 'refuse', 'an archive of several objects is never opened as one');
 ok(lock.standardBases.includes(client.inspect(kept.archive)[0].basis), 'the pinned client writes against a locked standard basis');
-// Plain mail takes a narrower profile and the second basis; it is kept, not refused.
-// Gmail's original of a plain message: its Received, ARC and DKIM headers take the narrower profile.
-const mail = new TextEncoder().encode([
-  "Delivered-To: person@example.org",
-  "Received: by 2002:a05:6a10:8a4b:b0:5a1:1b2c:3d4e with SMTP id k11csp1234567pxb;",
-  "        Fri, 13 Nov 2026 07:59:12 -0800 (PST)",
-  "X-Google-Smtp-Source: AGHT+IHk3l2Xn9pQ1abcDEFghiJKLmnopQRstuVWxyz0123456789abcdEFGH",
-  "ARC-Seal: i=1; a=rsa-sha256; t=1794585552; cv=none;",
-  "        d=google.com; s=arc-20240605;",
-  "        b=Xq9abcdefghijklmnopqrstuvwxyz0123456789ABCDEFGHIJKLMNOPQRSTUV",
-  "DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=example.org; s=s1;",
-  "        h=from:to:subject:date:message-id; bh=47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=;",
-  "        b=abcdefghijklmnopqrstuvwxyz0123456789",
-  "Return-Path: <bounce@example.org>",
-  "From: \"The Daily Example\" <newsletter@news.example.org>",
-  "To: person@example.org",
-  "Subject: =?UTF-8?Q?Today=E2=80=99s_top_stories=3A_markets=2C_weather_and_more?=",
-  "Date: Fri, 13 Nov 2026 06:00:00 GMT",
-  "Message-ID: <news-20261114@news.example.org>",
-  "List-Unsubscribe: <https://news.example.org/u?id=abc>",
-  "MIME-Version: 1.0",
-  "Content-Type: text/plain; charset=UTF-8",
-  "",
-  "Hello there, lovely weather.",
-  "",
-  "",
-].join('\r\n'));
-const plain = await objects.keep(mail);
-ok(plain.outcome === 'keep', `plain mail is kept: ${asked.at(-1)}`);
-ok(new Set(lock.standardBases).size === 2 && client.inspect(plain.archive)[0].basis === lock.standardBases[1], `plain mail names the second locked basis: ${JSON.stringify(client.inspect(plain.archive)[0].basis)} ${client.inspect(plain.archive)[0].ncm_profile}`);
-ok((await objects.open(plain.archive, plain.kappa)).outcome === 'open', 'and opens again');
+// Every oracle example is kept, written against a locked standard basis, and opened
+// back to its very bytes. Between them they take both bases.
+const bases = new Set();
+for (const example of corpus) {
+  const bytes = new TextEncoder().encode(example.raw);
+  const held = await objects.keep(bytes);
+  ok(held.outcome === 'keep', `${example.id} is kept: ${asked.at(-1)}`);
+  const basis = client.inspect(held.archive)[0].basis;
+  ok(lock.standardBases.includes(basis), `${example.id} names a locked standard basis`);
+  bases.add(basis);
+  const back = await objects.open(held.archive, held.kappa);
+  ok(back.outcome === 'open' && Buffer.compare(Buffer.from(back.bytes), Buffer.from(bytes)) === 0, `${example.id} opens to its very bytes`);
+}
+ok(corpus.length > 0 && new Set(lock.standardBases).size === 2 && bases.size === 2, `the oracle examples take both locked bases: ${bases.size}`);
 ok(structureOf(client, kept.archive, 'f'.repeat(64)).scope === 'other', 'any other basis is other');
 halted = 'yes';
 ok((await objects.keep(value)).outcome === 'refuse', 'nothing is kept while halted');

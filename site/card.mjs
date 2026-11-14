@@ -144,13 +144,19 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const h = headers(text);
     const when = Date.parse(h.date ?? "");
     // A message the owner sent has no From: the other party is its To.
-    const body = reader ? reader.messageBody(text) : text.split(/\r?\n\r?\n/).slice(1).join("\n\n").trim();
+    const said = reader ? reader.messageBody(text) : text.split(/\r?\n\r?\n/).slice(1).join("\n\n").trim();
+    // An invitation it carries (RFC 6047) reads as its event does, after what the sender wrote.
+    const event = reader ? reader.messageEvent(text) : "";
+    const carried = event ? readItem({ address, outcome, bytes: new TextEncoder().encode(event), meta: { about: { media: "calendar" } } }).body : "";
+    const body = [said, carried].filter(Boolean).join("\n\n");
     return { ...base, at: Number.isNaN(when) ? base.at : when, title: headerWords(h.subject ?? "").replace(/\s+/g, " ").trim(), who: person(h.from || h.to), text, body };
   }
   if (base.media === "calendar") {
     // The event's own fields: the calendar's time zones come first and carry DTSTARTs of their own (1970).
     const whole = text;
-    text = /BEGIN:(VEVENT|VTODO)[\s\S]*?END:\1/.exec(whole)?.[0] ?? whole;
+    // A component ends at the next END of any of the three: RFC 6047's own example closes a VTODO with END:VEVENT.
+    const components = [...whole.matchAll(/BEGIN:(?:VEVENT|VTODO|VJOURNAL)[\s\S]*?END:(?:VEVENT|VTODO|VJOURNAL)/g)].map(([component]) => component);
+    text = components[0] ?? whole;
     const first = icsField(text, "DTSTART");
     // A repeating event is shown at its next time, not at the first one years ago.
     const start = reader ? reader.nextTime(calendarField(text, "RRULE"), first) : first;
@@ -163,7 +169,11 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const people = [...unfoldCalendar(text).matchAll(/^(?:ORGANIZER|ATTENDEE)([^:\r\n]*):(.*)$/gim)]
       .map(([, params, value]) => /CN="?([^";:]+)"?/i.exec(params)?.[1] ?? value.replace(/^mailto:/i, "")).filter(Boolean);
     const notes = reader ? reader.eventText(/^DESCRIPTION(?:;[^:]*)?:(.*)$/mi.exec(unfoldCalendar(text))?.[1] ?? "") : calendarField(text, "DESCRIPTION");
-    const body = [title, span, calendarField(text, "LOCATION"), [...new Set(people)].slice(0, 12).join(", "), notes].filter(Boolean).join("\n");
+    // Comments to the calendar user (RFC 5545 §3.8.1.4), such as a reply's reason, read after the notes.
+    const comments = [...unfoldCalendar(text).matchAll(/^COMMENT(?:;[^:\r\n]*)?:(.*)$/gim)].map(([, value]) => (reader ? reader.eventText(value) : value.trim()));
+    // The object's further events (an iMIP PUBLISH of several) read after it: what, where, and their notes.
+    const others = components.slice(1).flatMap((other) => ["SUMMARY", "LOCATION", "DESCRIPTION"].map((name) => calendarField(other.replace(/BEGIN:VALARM[\s\S]*?END:VALARM/g, ""), name)));
+    const body = [title, span, calendarField(text, "LOCATION"), [...new Set(people)].slice(0, 12).join(", "), notes, ...comments, ...others].filter(Boolean).join("\n");
     return { ...base, at: Number.isNaN(start) ? base.at : start, ...(Number.isNaN(end) ? {} : { end }), allDay, title, who: calendarField(text, "LOCATION"), text: whole, body };
   }
   if (base.media === "contactCard") {
