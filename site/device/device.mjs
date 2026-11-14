@@ -76,7 +76,8 @@ export async function* mboxMessages(chunks) {
   yield* finish();
 }
 
-// iCalendar: one item per VEVENT or VTODO, each with the calendar's time zones.
+// iCalendar: one item per event, task, journal entry or free/busy (VEVENT,
+// VTODO, VJOURNAL, VFREEBUSY), each with the calendar's time zones.
 export function calendarItems(text) {
   // RFC 5545: lines end in CRLF; a calendar's own properties (VERSION, PRODID,
   // METHOD, CALSCALE) and its time zones go with each item; the components
@@ -85,8 +86,8 @@ export function calendarItems(text) {
   const lines = text.replace(/\r?\n/g, '\r\n');
   const body = /BEGIN:VCALENDAR\r\n([\s\S]*?)END:VCALENDAR/i.exec(lines)?.[1] ?? lines;
   const zones = body.match(/BEGIN:VTIMEZONE\r\n[\s\S]*?\r\nEND:VTIMEZONE\r\n?/g) ?? [];
-  const parts = body.match(/BEGIN:(VEVENT|VTODO|VJOURNAL)\r\n[\s\S]*?\r\nEND:\1\r\n?/g) ?? [];
-  const own = body.replace(/BEGIN:(VTIMEZONE|VEVENT|VTODO|VJOURNAL)\r\n[\s\S]*?\r\nEND:\1\r\n?/g, '').split('\r\n').filter((l) => /^(VERSION|PRODID|METHOD|CALSCALE)[;:]/i.test(l));
+  const parts = body.match(/BEGIN:(VEVENT|VTODO|VJOURNAL|VFREEBUSY)\r\n[\s\S]*?\r\nEND:\1\r\n?/g) ?? [];
+  const own = body.replace(/BEGIN:(VTIMEZONE|VEVENT|VTODO|VJOURNAL|VFREEBUSY)\r\n[\s\S]*?\r\nEND:\1\r\n?/g, '').split('\r\n').filter((l) => /^(VERSION|PRODID|METHOD|CALSCALE)[;:]/i.test(l));
   const head = [...(own.some((l) => /^VERSION[;:]/i.test(l)) ? [] : ['VERSION:2.0']), ...(own.some((l) => /^PRODID[;:]/i.test(l)) ? [] : ['PRODID:-//prism//device//EN']), ...own];
   const byUid = new Map();
   parts.forEach((part, i) => {

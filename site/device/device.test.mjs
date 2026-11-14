@@ -71,9 +71,9 @@ const zone = /^TZID:(.*)$/m.exec(ICS)[1];
 ok(zoned.length === 1 && zoned[0].startsWith('BEGIN:VCALENDAR\r\n') && zoned[0].includes(`TZID:${zone}`) && zoned[0].endsWith('END:VCALENDAR\r\n'), 'one calendar per event, with its zones');
 const two = calendarItems(example('rfc5546-37'));
 ok(two.length === 1 && (two[0].match(/^BEGIN:VEVENT\r$/gm) ?? []).length === 2 && /^METHOD:REQUEST\r$/m.test(two[0]) && !/[^\r]\n/.test(two[0]), 'a recurring event and its override are one item, with the calendar\'s own METHOD, in CRLF lines (RFC 5545 3.8.4.4)');
-const timed = ORACLE.filter((c) => c.kind === 'calendar' && /^BEGIN:(VEVENT|VTODO|VJOURNAL)\r$/m.test(c.raw));
+const timed = ORACLE.filter((c) => c.kind === 'calendar');
 const rooms = timed.flatMap((c) => calendarItems(c.raw));
-ok(timed.length > 40 && timed.every((c) => calendarItems(c.raw).length >= 1) && rooms.every((e) => !/[^\r]\n/.test(e) && /^BEGIN:VCALENDAR\r\n/.test(e) && /\r\nEND:VCALENDAR\r\n$/.test(e)), 'every calendar example of RFC 5545 and RFC 5546 with an event, a task or a journal entry splits into items in CRLF lines (free/busy is not an item)');
+ok(timed.length > 40 && timed.every((c) => calendarItems(c.raw).length >= 1) && timed.every((c) => !/^METHOD:/m.test(c.raw) || calendarItems(c.raw).every((e) => e.includes(/^METHOD:[^\r\n]*/m.exec(c.raw)[0]))) && rooms.every((e) => !/[^\r]\n/.test(e) && /^BEGIN:VCALENDAR\r\n/.test(e) && /\r\nEND:VCALENDAR\r\n$/.test(e)), 'every calendar example of RFC 5545 and RFC 5546 with an event, a task or a journal entry splits into items in CRLF lines, free/busy included, each keeping its METHOD');
 ok(contactItems(CARDS.slice(0, 2).join('')).length === 2 && contactItems(CARDS.slice(0, 2).join('').replace(/\r\n/g, '\n')).length === 2, 'one item per card, CRLF or LF');
 
 // DV-02: the device as a source, through a fake folder, the detectors and the vault.
