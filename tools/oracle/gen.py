@@ -19,6 +19,9 @@ examples are taken out mechanically:
   - "patterns": each distinct pattern string of a labelled research dataset
     whose category the source names (Mathur et al., "Dark Patterns at Scale",
     CSCW 2019: the urgency and scarcity lines found on shopping sites).
+A source's "label" is the kind of thing its specification says its whole
+messages and events are; the reference reader adds the people each
+example is with.
 An example is kept only if every address in it is at a domain reserved for
 documentation (the spec's "reserved" list, after RFC 2606 and RFC 6761), so no
 real person's address enters the repository; likewise every international
@@ -288,6 +291,34 @@ def read_message(raw):
             expect["who"] = first.display_name or first.addr_spec
         except (IndexError, AttributeError, TypeError):
             pass
+    parties = []
+    for field in ("from", "to", "cc"):
+        try:
+            for a in (msg[field].addresses if msg[field] is not None else ()):
+                one = a.display_name or a.addr_spec
+                if one and one not in parties:
+                    parties.append(one)
+        except (AttributeError, TypeError):
+            pass
+    # A message that carries an iCalendar object (iMIP, RFC 6047) is with the people the object names.
+    for part in msg.walk():
+        if part.get_content_type() == "text/calendar":
+            invited = read_calendar(part.get_content().replace("\r\n", "\n").replace("\n", "\r\n")).get("parties", [])
+            if invited:
+                parties = invited
+                expect["carries"] = "text/calendar"
+    expect["parties"] = parties
+    # What its sender says first: the first sentence of the plain text body's
+    # first line that is not quoted (RFC 3676 4.5: a quote starts with ">").
+    body = msg.get_body(preferencelist=("plain",))
+    if body is not None:
+        for line in body.get_content().splitlines():
+            line = re.sub(r"\s+", " ", line).strip()
+            if not line or line.startswith(">"):
+                continue
+            m = re.match(r"^(.+?[.!?])(\s|$)", line)
+            expect["lead"] = m.group(1) if m else line
+            break
     if msg["date"] is not None:
         try:
             when = msg["date"].datetime
@@ -348,13 +379,15 @@ def content_lines(raw):
     for line in unfolded.split("\r\n"):
         if not line:
             continue
-        name_params, _, value = line.partition(":")
-        parts = name_params.split(";")
+        # A parameter value may be a quoted string holding ":" or ";" (3.1, param-value).
+        m = re.match(r'^([^;:]+)((?:;(?:[^:";]|"[^"]*")*)*):(.*)$', line)
+        if not m:
+            continue
         params = {}
-        for p in parts[1:]:
+        for p in re.findall(r';((?:[^;"]|"[^"]*")*)', m.group(2)):
             k, _, v = p.partition("=")
             params[k.upper()] = v.strip('"')
-        yield parts[0].upper(), params, value
+        yield m.group(1).upper(), params, m.group(3)
 
 
 def text_value(value):
@@ -381,7 +414,7 @@ def date_time(params, value):
 
 
 def read_calendar(raw):
-    expect, depth, inside = {}, [], False
+    expect, depth, inside, people = {}, [], False, {}
     for name, params, value in content_lines(raw):
         if name == "BEGIN":
             depth.append(value.upper())
@@ -395,6 +428,16 @@ def read_calendar(raw):
             if depth:
                 depth.pop()
             continue
+        # Who it is with (3.8.4.1 ATTENDEE, 3.8.4.3 ORGANIZER), in any scheduling
+        # component: one person per address, by CN when given; a room or a
+        # resource (3.2.3 CUTYPE) is not a person.
+        if name in ("ORGANIZER", "ATTENDEE") and depth and depth[-1] in ("VEVENT", "VTODO", "VJOURNAL", "VFREEBUSY"):
+            if params.get("CUTYPE", "").upper() not in ("ROOM", "RESOURCE"):
+                address = re.sub(r"(?i)^mailto:", "", value).strip()
+                people.setdefault(address.lower(), [address, None])
+                if params.get("CN") and not people[address.lower()][1]:
+                    people[address.lower()][1] = params["CN"]
+            continue
         if not inside or depth[-1] not in ("VEVENT", "VTODO", "VJOURNAL"):
             continue
         if name == "SUMMARY" and "title" not in expect:
@@ -407,6 +450,9 @@ def read_calendar(raw):
                 expect["start"] = start
         elif name == "RRULE":
             expect["repeats"] = True
+
+    if people:
+        expect["parties"] = [cn or address for address, cn in people.values()]
     return expect
 
 
@@ -421,6 +467,18 @@ def read_contact(raw):
             expect["who"] = value.removeprefix("mailto:")
     return expect
 
+# Every label is a kind the Prism's kind reader names; a kind with no source
+# says why, and leaves the list once a source gives it examples.
+KINDS = {k["key"] for k in json.loads((ROOT / "app/specs/router/spec.json").read_text(encoding="utf-8"))["providers"]["kind"]["kinds"]}
+sourced = {s["label"] for s in SPEC["sources"] if "label" in s}
+for s in SPEC["sources"]:
+    if s["kind"] in ("message", "calendar") and s.get("label") not in KINDS:
+        refuse(f"{s['key']} labels its examples {s.get('label')!r}, which is not a kind the kind reader names")
+for u in SPEC.get("unsourced", []):
+    if u.get("label") not in KINDS or not str(u.get("why", "")).strip():
+        refuse(f"unsourced {u.get('label')!r} is not a kind with a reason")
+    if u["label"] in sourced:
+        refuse(f"unsourced {u['label']!r} has a source now: remove it from unsourced")
 
 corpus = []
 for source in SPEC["sources"]:
@@ -433,7 +491,11 @@ for source in SPEC["sources"]:
         if not documentation_only(raw):
             continue
         kept += 1
-        corpus.append({"id": f"{source['key']}-{n}", "source": source["key"], "kind": source["kind"], "raw": raw, "expect": read(raw)})
+        expect = read(raw)
+        # What a person calls it is what its specification says it is.
+        if "label" in source:
+            expect["label"] = source["label"]
+        corpus.append({"id": f"{source['key']}-{n}", "source": source["key"], "kind": source["kind"], "raw": raw, "expect": expect})
     if not kept:
         refuse(f"{source['key']} gave no example at a documentation domain")
 

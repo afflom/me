@@ -104,7 +104,8 @@ export function withoutTime(text, spans = []) {
 const P_PARTY = () => PROVIDERS.party;
 export function isRobot({ name = "", address = "" } = {}) {
   const local = address.split("@")[0] ?? "";
-  const tokens = new Set([local, ...local.split(/[._+-]+/), ...lower(name).split(/[^\p{L}\p{N}-]+/u)]);
+  // A role mailbox is named by its address (RFC 2142), never by a person's display name.
+  const tokens = new Set([local, ...local.split(/[._+-]+/)]);
   return P_PARTY().robots.some((word) => tokens.has(word));
 }
 function readParty(text, { people = [] } = {}) {

@@ -9,8 +9,14 @@
    "expect": {
     "title": "Saying Hello",
     "who": "John Doe",
+    "parties": [
+     "John Doe",
+     "Mary Smith"
+    ],
+    "lead": "This is a message just to say hello.",
     "at": 880127706000,
-    "body": "This is a message just to say hello. So, \"Hello\"."
+    "body": "This is a message just to say hello. So, \"Hello\".",
+    "label": "person"
    }
   },
   {
@@ -21,8 +27,14 @@
    "expect": {
     "title": "Saying Hello",
     "who": "John Doe",
+    "parties": [
+     "John Doe",
+     "Mary Smith"
+    ],
+    "lead": "This is a message just to say hello.",
     "at": 880127706000,
-    "body": "This is a message just to say hello. So, \"Hello\"."
+    "body": "This is a message just to say hello. So, \"Hello\".",
+    "label": "person"
    }
   },
   {
@@ -32,8 +44,18 @@
    "raw": "From: \"Joe Q. Public\" <john.q.public@example.com>\r\nTo: Mary Smith <mary@x.test>, jdoe@example.org, Who? <one@y.test>\r\nCc: <boss@nil.test>, \"Giant; \\\"Big\\\" Box\" <sysservices@example.net>\r\nDate: Tue, 1 Jul 2003 10:52:37 +0200\r\nMessage-ID: <5678.21-Nov-1997@example.com>\r\n\r\nHi everyone.\r\n",
    "expect": {
     "who": "Joe Q. Public",
+    "parties": [
+     "Joe Q. Public",
+     "Mary Smith",
+     "jdoe@example.org",
+     "Who?",
+     "boss@nil.test",
+     "Giant; \"Big\" Box"
+    ],
+    "lead": "Hi everyone.",
     "at": 1057049557000,
-    "body": "Hi everyone."
+    "body": "Hi everyone.",
+    "label": "person"
    }
   },
   {
@@ -43,8 +65,16 @@
    "raw": "From: Pete <pete@silly.example>\r\nTo: A Group:Ed Jones <c@a.test>,joe@where.test,John <jdoe@one.test>;\r\nCc: Undisclosed recipients:;\r\nDate: Thu, 13 Feb 1969 23:32:54 -0330\r\nMessage-ID: <testabcd.1234@silly.example>\r\n\r\nTesting.\r\n",
    "expect": {
     "who": "Pete",
+    "parties": [
+     "Pete",
+     "Ed Jones",
+     "joe@where.test",
+     "John"
+    ],
+    "lead": "Testing.",
     "at": -27723426000,
-    "body": "Testing."
+    "body": "Testing.",
+    "label": "person"
    }
   },
   {
@@ -55,8 +85,14 @@
    "expect": {
     "title": "Saying Hello",
     "who": "John Doe",
+    "parties": [
+     "John Doe",
+     "Mary Smith"
+    ],
+    "lead": "This is a message just to say hello.",
     "at": 880127706000,
-    "body": "This is a message just to say hello. So, \"Hello\"."
+    "body": "This is a message just to say hello. So, \"Hello\".",
+    "label": "person"
    }
   },
   {
@@ -67,8 +103,14 @@
    "expect": {
     "title": "Re: Saying Hello",
     "who": "Mary Smith",
+    "parties": [
+     "Mary Smith",
+     "John Doe"
+    ],
+    "lead": "This is a reply to your hello.",
     "at": 880128070000,
-    "body": "This is a reply to your hello."
+    "body": "This is a reply to your hello.",
+    "label": "person"
    }
   },
   {
@@ -79,8 +121,14 @@
    "expect": {
     "title": "Re: Saying Hello",
     "who": "John Doe",
+    "parties": [
+     "John Doe",
+     "Mary Smith: Personal Account"
+    ],
+    "lead": "This is a reply to your reply.",
     "at": 880131600000,
-    "body": "This is a reply to your reply."
+    "body": "This is a reply to your reply.",
+    "label": "person"
    }
   },
   {
@@ -91,8 +139,14 @@
    "expect": {
     "title": "Saying Hello",
     "who": "John Doe",
+    "parties": [
+     "John Doe",
+     "Mary Smith"
+    ],
+    "lead": "This is a message just to say hello.",
     "at": 880127706000,
-    "body": "This is a message just to say hello. So, \"Hello\"."
+    "body": "This is a message just to say hello. So, \"Hello\".",
+    "label": "person"
    }
   },
   {
@@ -103,8 +157,14 @@
    "expect": {
     "title": "Saying Hello",
     "who": "John Doe",
+    "parties": [
+     "John Doe",
+     "Mary Smith"
+    ],
+    "lead": "This is a message just to say hello.",
     "at": 880127706000,
-    "body": "This is a message just to say hello. So, \"Hello\"."
+    "body": "This is a message just to say hello. So, \"Hello\".",
+    "label": "person"
    }
   },
   {
@@ -115,8 +175,14 @@
    "expect": {
     "title": "Saying Hello",
     "who": "John Doe",
+    "parties": [
+     "John Doe",
+     "Mary Smith"
+    ],
+    "lead": "This is a message just to say hello.",
     "at": 880127706000,
-    "body": "This is a message just to say hello. So, \"Hello\"."
+    "body": "This is a message just to say hello. So, \"Hello\".",
+    "label": "person"
    }
   },
   {
@@ -126,8 +192,16 @@
    "raw": "From: Pete(A nice \\) chap) <pete(his account)@silly.test(his host)>\r\nTo:A Group(Some people)\r\n     :Chris Jones <c@(Chris's host.)public.example>,\r\n         joe@example.org,\r\n  John <jdoe@one.test> (my dear friend); (the end of the group)\r\nCc:(Empty list)(start)Hidden recipients  :(nobody(that I know))  ;\r\nDate: Thu,\r\n      13\r\n        Feb\r\n          1969\r\n      23:32\r\n               -0330 (Newfoundland Time)\r\nMessage-ID:              <testabcd.1234@silly.test>\r\n\r\nTesting.\r\n",
    "expect": {
     "who": "Pete",
+    "parties": [
+     "Pete",
+     "Chris Jones",
+     "joe@example.org",
+     "John"
+    ],
+    "lead": "Testing.",
     "at": -27723480000,
-    "body": "Testing."
+    "body": "Testing.",
+    "label": "person"
    }
   },
   {
@@ -137,8 +211,15 @@
    "raw": "From: Joe Q. Public <john.q.public@example.com>\r\nTo: Mary Smith <@node.test:mary@example.net>, , jdoe@test  . example\r\nDate: Tue, 1 Jul 2003 10:52:37 +0200\r\nMessage-ID: <5678.21-Nov-1997@example.com>\r\n\r\nHi everyone.\r\n",
    "expect": {
     "who": "Joe Q. Public",
+    "parties": [
+     "Joe Q. Public",
+     "Mary Smith",
+     "jdoe@test.example"
+    ],
+    "lead": "Hi everyone.",
     "at": 1057049557000,
-    "body": "Hi everyone."
+    "body": "Hi everyone.",
+    "label": "person"
    }
   },
   {
@@ -149,8 +230,14 @@
    "expect": {
     "title": "Saying Hello",
     "who": "John Doe",
+    "parties": [
+     "John Doe",
+     "Mary Smith"
+    ],
+    "lead": "This is a message just to say hello.",
     "at": 880106106000,
-    "body": "This is a message just to say hello. So, \"Hello\"."
+    "body": "This is a message just to say hello. So, \"Hello\".",
+    "label": "person"
    }
   },
   {
@@ -163,7 +250,8 @@
     "start": {
      "at": 868899600000
     },
-    "title": "Bastille Day Party"
+    "title": "Bastille Day Party",
+    "label": "event"
    }
   },
   {
@@ -176,7 +264,11 @@
     "start": {
      "at": 843057000000
     },
-    "title": "Networld+Interop Conference"
+    "title": "Networld+Interop Conference",
+    "parties": [
+     "jsmith@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -190,7 +282,12 @@
     "start": {
      "at": 889709400000
     },
-    "who": "1CP Conference Room 4350"
+    "who": "1CP Conference Room 4350",
+    "parties": [
+     "mrbig@example.com",
+     "employee-A@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -204,7 +301,12 @@
      "at": 859206600000
     },
     "title": "Calendaring Interoperability Planning Meeting",
-    "who": "LDB Lobby"
+    "who": "LDB Lobby",
+    "parties": [
+     "jdoe@example.com",
+     "jsmith@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -214,7 +316,12 @@
    "raw": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//ABC Corporation//NONSGML My Product//EN\r\nBEGIN:VTODO\r\nDTSTAMP:19980130T134500Z\r\nSEQUENCE:2\r\nUID:uid4@example.com\r\nORGANIZER:mailto:unclesam@example.com\r\nATTENDEE;PARTSTAT=ACCEPTED:mailto:jqpublic@example.com\r\nDUE:19980415T000000\r\nSTATUS:NEEDS-ACTION\r\nSUMMARY:Submit Income Taxes\r\nBEGIN:VALARM\r\nACTION:AUDIO\r\nTRIGGER:19980403T120000Z\r\nATTACH;FMTTYPE=audio/basic:http://example.com/pub/audio-\r\n files/ssbanner.aud\r\nREPEAT:4\r\nDURATION:PT1H\r\nEND:VALARM\r\nEND:VTODO\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VTODO",
-    "title": "Submit Income Taxes"
+    "title": "Submit Income Taxes",
+    "parties": [
+     "unclesam@example.com",
+     "jqpublic@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -223,7 +330,11 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//ABC Corporation//NONSGML My Product//EN\r\nBEGIN:VJOURNAL\r\nDTSTAMP:19970324T120000Z\r\nUID:uid5@example.com\r\nORGANIZER:mailto:jsmith@example.com\r\nSTATUS:DRAFT\r\nCLASS:PUBLIC\r\nCATEGORIES:Project Report,XYZ,Weekly Meeting\r\nDESCRIPTION:Project xyz Review Meeting Minutes\\n\r\n Agenda\\n1. Review of project version 1.0 requirements.\\n2.\r\n  Definition\r\n of project processes.\\n3. Review of project schedule.\\n\r\n Participants: John Smith\\, Jane Doe\\, Jim Dandy\\n-It was\r\n  decided that the requirements need to be signed off by\r\n  product marketing.\\n-Project processes were accepted.\\n\r\n -Project schedule needs to account for scheduled holidays\r\n  and employee vacation time. Check with HR for specific\r\n  dates.\\n-New schedule will be distributed by Friday.\\n-\r\n Next weeks meeting is cancelled. No meeting until 3/23.\r\nEND:VJOURNAL\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VJOURNAL"
+    "component": "VJOURNAL",
+    "parties": [
+     "jsmith@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -231,7 +342,12 @@
    "source": "rfc5545",
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//RDU Software//NONSGML HandCal//EN\r\nBEGIN:VFREEBUSY\r\nORGANIZER:mailto:jsmith@example.com\r\nDTSTART:19980313T141711Z\r\nDTEND:19980410T141711Z\r\nFREEBUSY:19980314T233000Z/19980315T003000Z\r\nFREEBUSY:19980316T153000Z/19980316T163000Z\r\nFREEBUSY:19980318T030000Z/19980318T040000Z\r\nURL:http://www.example.com/calendar/busytime/jsmith.ifb\r\nEND:VFREEBUSY\r\nEND:VCALENDAR\r\n",
-   "expect": {}
+   "expect": {
+    "parties": [
+     "jsmith@example.com"
+    ],
+    "label": "event"
+   }
   },
   {
    "id": "rfc5546-1",
@@ -243,7 +359,11 @@
     "start": {
      "at": 867787200000
     },
-    "title": "ST. PAUL SAINTS -VS- DULUTH-SUPERIOR DUKES"
+    "title": "ST. PAUL SAINTS -VS- DULUTH-SUPERIOR DUKES",
+    "parties": [
+     "a@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -256,7 +376,11 @@
     "start": {
      "at": 867790800000
     },
-    "title": "ST. PAUL SAINTS -VS- DULUTH-SUPERIOR DUKES"
+    "title": "ST. PAUL SAINTS -VS- DULUTH-SUPERIOR DUKES",
+    "parties": [
+     "a@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -265,7 +389,11 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:CANCEL\r\nVERSION:2.0\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nCOMMENT:DUKES forfeit the game\r\nSEQUENCE:2\r\nUID:0981234-1234234-23@example.com\r\nDTSTAMP:19970613T190000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VEVENT"
+    "component": "VEVENT",
+    "parties": [
+     "a@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -280,7 +408,11 @@
      "local": "1997-07-02T16:00:00"
     },
     "who": "http://stadium.example.com/",
-    "title": "ST. PAUL SAINTS -VS- DULUTH-SUPERIOR DUKES"
+    "title": "ST. PAUL SAINTS -VS- DULUTH-SUPERIOR DUKES",
+    "parties": [
+     "a@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -294,7 +426,11 @@
      "date": "1997-07-14"
     },
     "repeats": true,
-    "title": " Bastille Day"
+    "title": " Bastille Day",
+    "parties": [
+     "a@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -307,7 +443,15 @@
     "start": {
      "at": 867787200000
     },
-    "title": "Conference"
+    "title": "Conference",
+    "parties": [
+     "A",
+     "B",
+     "C",
+     "Hal",
+     "e@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -316,7 +460,12 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nATTENDEE;PARTSTAT=ACCEPTED:mailto:b@example.com\r\nORGANIZER:mailto:a@example.com\r\nUID:calsrv.example.com-873970198738777@example.com\r\nSEQUENCE:0\r\nREQUEST-STATUS:2.0;Success\r\nDTSTAMP:19970612T190000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VEVENT"
+    "component": "VEVENT",
+    "parties": [
+     "b@example.com",
+     "a@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -329,7 +478,15 @@
     "start": {
      "at": 867780000000
     },
-    "title": "Phone Conference"
+    "title": "Phone Conference",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "Hal",
+     "e@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -343,7 +500,13 @@
      "at": 867783600000
     },
     "title": "Discuss the Merits of the election results",
-    "who": "Green Conference Room"
+    "who": "Green Conference Room",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -357,7 +520,13 @@
      "at": 867772800000
     },
     "title": "Discuss the Merits of the election results",
-    "who": "Blue Conference Room"
+    "who": "Blue Conference Room",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -371,7 +540,13 @@
      "at": 867772800000
     },
     "title": "Discuss the Merits of the election results - changed tomeet B's schedule",
-    "who": "Blue Conference Room"
+    "who": "Blue Conference Room",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -380,7 +555,12 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:DECLINECOUNTER\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;RSVP=TRUE;CUTYPE=INDIVIDUAL:mailto:b@example.com\r\nCOMMENT:Sorry, I cannot change this meeting time\r\nUID:calsrv.example.com-873970198738777@example.com\r\nSEQUENCE:0\r\nDTSTAMP:19970614T190000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VEVENT"
+    "component": "VEVENT",
+    "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -389,7 +569,12 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;PARTSTAT=DELEGATED;DELEGATED-\r\n TO=\"mailto:e@example.com\":mailto:c@example.com\r\nUID:calsrv.example.com-873970198738777@example.com\r\nSEQUENCE:0\r\nREQUEST-STATUS:2.0;Success\r\nDTSTAMP:19970611T190000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VEVENT"
+    "component": "VEVENT",
+    "parties": [
+     "a@example.com",
+     "c@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -402,7 +587,13 @@
     "start": {
      "at": 867780000000
     },
-    "title": "Phone Conference"
+    "title": "Phone Conference",
+    "parties": [
+     "a@example.com",
+     "c@example.com",
+     "e@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -411,7 +602,13 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;PARTSTAT=ACCEPTED;DELEGATED-\r\n FROM=\"mailto:c@example.com\":mailto:e@example.com\r\nATTENDEE;PARTSTAT=DELEGATED;\r\n DELEGATED-TO=\"mailto:e@example.com\":mailto:c@example.com\r\nUID:calsrv.example.com-873970198738777@example.com\r\nSEQUENCE:0\r\nREQUEST-STATUS:2.0;Success\r\nDTSTAMP:19970614T190000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VEVENT"
+    "component": "VEVENT",
+    "parties": [
+     "a@example.com",
+     "e@example.com",
+     "c@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -420,7 +617,13 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;PARTSTAT=DELEGATED;\r\n DELEGATED-TO=\"mailto:e@example.com\":mailto:c@example.com\r\nATTENDEE;PARTSTAT=DECLINED;\r\n DELEGATED-FROM=\"mailto:c@example.com\":mailto:e@example.com\r\nCOMMENT:Sorry, I will be out of town at that time.\r\nUID:calsrv.example.com-873970198738777@example.com\r\nSEQUENCE:0\r\nREQUEST-STATUS:2.0;Success\r\nDTSTAMP:19970614T190000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VEVENT"
+    "component": "VEVENT",
+    "parties": [
+     "a@example.com",
+     "c@example.com",
+     "e@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -433,7 +636,13 @@
     "title": "Phone Conference",
     "start": {
      "at": 867780000000
-    }
+    },
+    "parties": [
+     "a@example.com",
+     "e@example.com",
+     "c@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -442,7 +651,14 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:CANCEL\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;CUTYPE=INDIVIDUAL;mailto:a@example.com\r\nATTENDEE;CUTYPE=INDIVIDUAL:mailto:b@example.com\r\nATTENDEE;CUTYPE=INDIVIDUAL:mailto:c@example.com\r\nATTENDEE;CUTYPE=INDIVIDUAL:mailto:d@example.com\r\nCOMMENT:Mr. B cannot attend.  It's raining.  Lets cancel.\r\nUID:calsrv.example.com-873970198738777@example.com\r\nSEQUENCE:1\r\nSTATUS:CANCELLED\r\nDTSTAMP:19970613T190000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VEVENT"
+    "component": "VEVENT",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -451,7 +667,12 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:CANCEL\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nCOMMENT:You're off the hook for this meeting\r\nUID:calsrv.example.com-873970198738777@example.com\r\nDTSTAMP:19970613T193000Z\r\nSEQUENCE:1\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VEVENT"
+    "component": "VEVENT",
+    "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -464,7 +685,14 @@
     "start": {
      "at": 867787200000
     },
-    "title": "Phone Conference"
+    "title": "Phone Conference",
+    "parties": [
+     "a@example.com",
+     "c@example.com",
+     "d@example.com",
+     "e@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -478,7 +706,13 @@
      "at": 867787200000
     },
     "repeats": true,
-    "title": "Phone Conference"
+    "title": "Phone Conference",
+    "parties": [
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -486,21 +720,39 @@
    "source": "rfc5546",
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nMETHOD:PUBLISH\r\nBEGIN:VFREEBUSY\r\nDTSTAMP:19980101T124100Z\r\nORGANIZER:mailto:a@example.com\r\nDTSTART:19980101T124200Z\r\nDTEND:19980108T124200Z\r\nFREEBUSY:19980101T180000Z/19980101T190000Z\r\nFREEBUSY:19980103T020000Z/19980103T050000Z\r\nFREEBUSY:19980107T020000Z/19980107T050000Z\r\nFREEBUSY:19980113T000000Z/19980113T010000Z\r\nFREEBUSY:19980115T190000Z/19980115T200000Z\r\nFREEBUSY:19980115T220000Z/19980115T230000Z\r\nFREEBUSY:19980116T013000Z/19980116T043000Z\r\nEND:VFREEBUSY\r\nEND:VCALENDAR\r\n",
-   "expect": {}
+   "expect": {
+    "parties": [
+     "a@example.com"
+    ],
+    "label": "event"
+   }
   },
   {
    "id": "rfc5546-23",
    "source": "rfc5546",
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REQUEST\r\nVERSION:2.0\r\nBEGIN:VFREEBUSY\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nATTENDEE:mailto:c@example.com\r\nDTSTAMP:19970613T190000Z\r\nDTSTART:19970701T080000Z\r\nDTEND:19970701T200000\r\nUID:calsrv.example.com-873970198738777@example.com\r\nEND:VFREEBUSY\r\nEND:VCALENDAR\r\n",
-   "expect": {}
+   "expect": {
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com"
+    ],
+    "label": "event"
+   }
   },
   {
    "id": "rfc5546-24",
    "source": "rfc5546",
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VFREEBUSY\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nDTSTART:19970701T080000Z\r\nDTEND:19970701T200000Z\r\nUID:calsrv.example.com-873970198738777@example.com\r\nFREEBUSY:19970701T090000Z/PT1H,19970701T140000Z/PT30M\r\nDTSTAMP:19970613T190030Z\r\nEND:VFREEBUSY\r\nEND:VCALENDAR\r\n",
-   "expect": {}
+   "expect": {
+    "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "label": "event"
+   }
   },
   {
    "id": "rfc5546-26",
@@ -514,7 +766,14 @@
     "start": {
      "at": 865198800000
     },
-    "who": "Conference Call"
+    "who": "Conference Call",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -528,7 +787,14 @@
     "start": {
      "at": 867963600000
     },
-    "who": "Conference Call"
+    "who": "Conference Call",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -537,7 +803,14 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:CANCEL\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:guid-1@example.com\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nATTENDEE:mailto:c@example.com\r\nATTENDEE:mailto:d@example.com\r\nRECURRENCE-ID:19970801T210000Z\r\nSEQUENCE:2\r\nSTATUS:CANCELLED\r\nDTSTAMP:19970721T093000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VEVENT"
+    "component": "VEVENT",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -546,7 +819,14 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:CANCEL\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:guid-1@example.com\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nATTENDEE:mailto:c@example.com\r\nATTENDEE:mailto:d@example.com\r\nDTSTAMP:19970721T103000Z\r\nSTATUS:CANCELLED\r\nSEQUENCE:3\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VEVENT"
+    "component": "VEVENT",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -560,7 +840,14 @@
     "start": {
      "at": 873147600000
     },
-    "who": "Building 32, Microsoft, Seattle, WA"
+    "who": "Building 32, Microsoft, Seattle, WA",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -574,7 +861,14 @@
     "start": {
      "at": 869000400000
     },
-    "who": "Conference Call"
+    "who": "Conference Call",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -589,7 +883,12 @@
     "start": {
      "at": 888958800000
     },
-    "who": "The White Room"
+    "who": "The White Room",
+    "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -604,7 +903,12 @@
     "start": {
      "at": 888958800000
     },
-    "who": "The White Room"
+    "who": "The White Room",
+    "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -618,7 +922,12 @@
     "start": {
      "at": 889034400000
     },
-    "who": "Conference Room A"
+    "who": "Conference Room A",
+    "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -632,7 +941,12 @@
     "start": {
      "at": 889632000000
     },
-    "who": "The Small conference room"
+    "who": "The Small conference room",
+    "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -646,7 +960,12 @@
     "start": {
      "at": 889984800000
     },
-    "who": "Conference Room A"
+    "who": "Conference Room A",
+    "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -660,7 +979,12 @@
     "start": {
      "at": 889034400000
     },
-    "who": "Conference Room A"
+    "who": "Conference Room A",
+    "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -674,7 +998,14 @@
     "start": {
      "at": 869004000000
     },
-    "who": "Conference Call"
+    "who": "Conference Call",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -689,7 +1020,14 @@
     "start": {
      "at": 865198800000
     },
-    "who": "Conference Call"
+    "who": "Conference Call",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -698,7 +1036,12 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nREQUEST-STATUS:3.0;Invalid Property Name;FOO\r\nUID:guid-1@example.com\r\nSEQUENCE:0\r\nDTSTAMP:19970603T094000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VEVENT"
+    "component": "VEVENT",
+    "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -711,7 +1054,14 @@
     "start": {
      "at": 867776400000
     },
-    "title": "Create the requirements document"
+    "title": "Create the requirements document",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -720,7 +1070,12 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VTODO\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;PARTSTAT=ACCEPTED:mailto:b@example.com\r\nUID:calsrv.example.com-873970198738777-00@example.com\r\nCOMMENT:I'll send you my input by email\r\nSEQUENCE:0\r\nDTSTAMP:19970717T203000Z\r\nREQUEST-STATUS:2.0;Success\r\nEND:VTODO\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VTODO"
+    "component": "VTODO",
+    "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -733,7 +1088,13 @@
     "title": "Create the requirements document",
     "start": {
      "at": 867776400000
-    }
+    },
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "d@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -742,7 +1103,12 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VTODO\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;PARTSTAT=IN-PROCESS:mailto:b@example.com\r\nPERCENT-COMPLETE:75\r\nUID:calsrv.example.com-873970198738777-00@example.com\r\nDTSTAMP:19970717T233000Z\r\nSEQUENCE:0\r\nEND:VTODO\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VTODO"
+    "component": "VTODO",
+    "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -751,7 +1117,12 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VTODO\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;PARTSTAT=COMPLETED:mailto:d@example.com\r\nUID:calsrv.example.com-873970198738777-00@example.com\r\nDTSTAMP:19970717T233000Z\r\nSEQUENCE:0\r\nEND:VTODO\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VTODO"
+    "component": "VTODO",
+    "parties": [
+     "a@example.com",
+     "d@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -764,7 +1135,13 @@
     "start": {
      "at": 867776400000
     },
-    "title": "Create the requirements document"
+    "title": "Create the requirements document",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "d@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -778,7 +1155,13 @@
     "start": {
      "at": 883648800000
     },
-    "title": "Send Status Reports to Area Managers"
+    "title": "Send Status Reports to Area Managers",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "d@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -787,7 +1170,11 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VTODO\r\nATTENDEE;PARTSTAT=IN-PROCESS:mailto:b@example.com\r\nPERCENT-COMPLETE:75\r\nUID:calsrv.example.com-873970198738777-00@example.com\r\nDTSTAMP:19970717T233000Z\r\nRECURRENCE-ID:19980101T170000Z\r\nSEQUENCE:1\r\nEND:VTODO\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VTODO"
+    "component": "VTODO",
+    "parties": [
+     "b@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -800,7 +1187,11 @@
     "start": {
      "at": 875822400000
     },
-    "title": "Phone conference minutes"
+    "title": "Phone conference minutes",
+    "parties": [
+     "a@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -809,7 +1200,14 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REFRESH\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nATTENDEE:mailto:c@example.com\r\nATTENDEE:mailto:d@example.com\r\nUID:guid-1-12345@example.com\r\nDTSTAMP:19970603T094000\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VEVENT"
+    "component": "VEVENT",
+    "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -823,7 +1221,12 @@
     "title": "IETF Calendaring Working Group Meeting",
     "start": {
      "at": 870469200000
-    }
+    },
+    "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -832,7 +1235,12 @@
    "kind": "calendar",
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REFRESH\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nUID:example-12345@example.com\r\nDTSTAMP:19970603T094000\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
-    "component": "VEVENT"
+    "component": "VEVENT",
+    "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "label": "event"
    }
   },
   {
@@ -916,7 +1324,13 @@
    "expect": {
     "title": "Phone Conference",
     "who": "user1@example.com",
-    "at": 1210181425000
+    "carries": "text/calendar",
+    "parties": [
+     "user1@example.com",
+     "user2@example.com"
+    ],
+    "at": 1210181425000,
+    "label": "invitation"
    }
   },
   {
@@ -926,7 +1340,13 @@
    "raw": "From: sman@netscape.example.com\r\nTo: stevesil@microsoft.example.com\r\nSubject: Phone Conference\r\nMime-Version: 1.0\r\nContent-Type: text/calendar; method=REQUEST; charset=US-ASCII\r\nContent-Transfer-Encoding: 7bit\r\n\r\nBEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REQUEST\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:man@netscape.example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:man@netscape.example.com\r\nATTENDEE;RSVP=YES:mailto:stevesil@microsoft.example.com\r\nDTSTAMP:19970611T190000Z\r\nDTSTART:19970701T210000Z\r\nDTEND:19970701T230000Z\r\nSUMMARY:Phone Conference\r\nDESCRIPTION:Please review the attached document.\r\nUID:calsvr.example.com-873970198738777\r\nATTACH:ftp://ftp.bar.example.com/pub/docs/foo.doc\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "title": "Phone Conference",
-    "who": "sman@netscape.example.com"
+    "who": "sman@netscape.example.com",
+    "carries": "text/calendar",
+    "parties": [
+     "man@netscape.example.com",
+     "stevesil@microsoft.example.com"
+    ],
+    "label": "invitation"
    }
   },
   {
@@ -937,7 +1357,14 @@
    "expect": {
     "title": "Phone Conference",
     "who": "foo1@example.com",
-    "body": "This is an alternative representation of a \"text/calendar\" MIME object. When: 7/1/1997 10:00AM PDT - 7/1/97 10:30AM PDT Where: Organizer: foo1@example.com Summary: Phone Conference"
+    "carries": "text/calendar",
+    "parties": [
+     "foo1@example.com",
+     "foo2@example.com"
+    ],
+    "lead": "This is an alternative representation of a \"text/calendar\"",
+    "body": "This is an alternative representation of a \"text/calendar\" MIME object. When: 7/1/1997 10:00AM PDT - 7/1/97 10:30AM PDT Where: Organizer: foo1@example.com Summary: Phone Conference",
+    "label": "invitation"
    }
   },
   {
@@ -948,7 +1375,13 @@
    "expect": {
     "title": "Phone Conference",
     "who": "foo1@example.com",
-    "body": "Content-Type: text/calendar; method=REQUEST; charset=US-ASCII Content-Transfer-Encoding: 7bit Content-Disposition: attachment; filename=\"event.ics\" BEGIN:VCALENDAR PRODID:-//Example/ExampleCalendarClient//EN METHOD:REQUEST VERSION:2.0 BEGIN:VEVENT ORGANIZER:mailto:foo1@example.com ATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:foo1@example.com ATTENDEE;RSVP=YES;CUTYPE=INDIVIDUAL:mailto:foo2@example.com DTSTAMP:19970611T190000Z DTSTART:19970701T180000Z DTEND:19970701T183000Z SUMMARY:Phone Conference UID:calsvr.example.com-8739701987387771 ATTACH:cid:123456789@example.com SEQUENCE:0 STATUS:CONFIRMED END:VEVENT END:VCALENDAR"
+    "parties": [
+     "foo1@example.com",
+     "foo2@example.com"
+    ],
+    "lead": "Content-Type: text/calendar; method=REQUEST; charset=US-ASCII",
+    "body": "Content-Type: text/calendar; method=REQUEST; charset=US-ASCII Content-Transfer-Encoding: 7bit Content-Disposition: attachment; filename=\"event.ics\" BEGIN:VCALENDAR PRODID:-//Example/ExampleCalendarClient//EN METHOD:REQUEST VERSION:2.0 BEGIN:VEVENT ORGANIZER:mailto:foo1@example.com ATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:foo1@example.com ATTENDEE;RSVP=YES;CUTYPE=INDIVIDUAL:mailto:foo2@example.com DTSTAMP:19970611T190000Z DTSTART:19970701T180000Z DTEND:19970701T183000Z SUMMARY:Phone Conference UID:calsvr.example.com-8739701987387771 ATTACH:cid:123456789@example.com SEQUENCE:0 STATUS:CONFIRMED END:VEVENT END:VCALENDAR",
+    "label": "invitation"
    }
   },
   {
@@ -958,7 +1391,12 @@
    "raw": "From: foo1@example.com\r\nTo: foo2@example.com\r\nSubject: Summer Company Holidays\r\nMime-Version: 1.0\r\nContent-Type: text/calendar; method=PUBLISH; charset=US-ASCII\r\nContent-Transfer-Encoding: 7bit\r\nContent-Disposition: attachment; filename=\"event.ics\"\r\n\r\nBEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:PUBLISH\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:foo1@example.com\r\nDTSTAMP:19970611T150000Z\r\nDTSTART:19970701T150000Z\r\nDTEND:19970701T230000Z\r\nSUMMARY:Company Picnic\r\nDESCRIPTION:Food and drink will be provided\r\nUID:calsvr.example.com-873970198738777-1\r\nSEQUENCE:0\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:foo1@example.com\r\nDTSTAMP:19970611T190000Z\r\nDTSTART:19970715T150000Z\r\nDTEND:19970715T230000Z\r\nSUMMARY:Company Bowling Tournament\r\nDESCRIPTION:We have 10 lanes reserved\r\nUID:calsvr.example.com-873970198738777-2\r\nSEQUENCE:0\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "title": "Summer Company Holidays",
-    "who": "foo1@example.com"
+    "who": "foo1@example.com",
+    "carries": "text/calendar",
+    "parties": [
+     "foo1@example.com"
+    ],
+    "label": "invitation"
    }
   },
   {
@@ -968,7 +1406,13 @@
    "raw": "From: foo1@example.com\r\nTo: foo2@example.com\r\nSubject: Phone Conference\r\nMime-Version: 1.0\r\nContent-Type: multipart/mixed;\r\n              boundary=\"--FEE3790DC7E35189CA67CE2C\"\r\n\r\nThis is a multi-part message in MIME format.\r\n\r\n----FEE3790DC7E35189CA67CE2C\r\nContent-Type: text/calendar; method=REQUEST; charset=US-ASCII\r\nContent-Transfer-Encoding: 7bit\r\nContent-Disposition: attachment; filename=\"event1.ics\"\r\n\r\nBEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REQUEST\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:foo1@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:foo1@example.com\r\nATTENDEE;RSVP=YES;CUTYPE=INDIVIDUAL:mailto:foo2@example.com\r\nDTSTAMP:19970611T190000Z\r\nDTSTART:19970701T210000Z\r\nDTEND:19970701T230000Z\r\nSUMMARY:Phone Conference\r\nDESCRIPTION:Discuss what happened at the last meeting\r\nUID:calsvr.example.com-8739701987387772\r\nSEQUENCE:0\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n----FEE3790DC7E35189CA67CE2C\r\nContent-Type: text/calendar; method=REQUEST; charset=US-ASCII\r\nContent-Transfer-Encoding: 7bit\r\nContent-Disposition: attachment; filename=\"todo1.ics\"\r\n\r\nBEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REQUEST\r\nVERSION:2.0\r\nBEGIN:VTODO\r\nDUE:19970701T160000Z\r\nORGANIZER:mailto:foo1@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:foo1@example.com\r\nATTENDEE;RSVP=YES:mailto:foo2@example.com\r\nSUMMARY:Phone Conference\r\nDESCRIPTION:Discuss a new location for the company picnic\r\nUID:calsvr.example.com-td-8739701987387773\r\nSEQUENCE:0\r\nSTATUS:NEEDS-ACTION\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n\r\n----FEE3790DC7E35189CA67CE2C\r\n",
    "expect": {
     "title": "Phone Conference",
-    "who": "foo1@example.com"
+    "who": "foo1@example.com",
+    "carries": "text/calendar",
+    "parties": [
+     "foo1@example.com",
+     "foo2@example.com"
+    ],
+    "label": "invitation"
    }
   },
   {
@@ -979,7 +1423,14 @@
    "expect": {
     "title": "REQUEST - Phone Conference",
     "who": "foo1@example.com",
-    "body": "When: 7/1/1997 10:00PM PDT - 7/1/97 10:30 PM PDT Where: Organizer: foo1@example.com Summary: Let's discuss the attached document"
+    "parties": [
+     "foo1@example.com",
+     "foo2@example.com",
+     "foo3@example.com"
+    ],
+    "lead": "When: 7/1/1997 10:00PM PDT - 7/1/97 10:30 PM PDT",
+    "body": "When: 7/1/1997 10:00PM PDT - 7/1/97 10:30 PM PDT Where: Organizer: foo1@example.com Summary: Let's discuss the attached document",
+    "label": "invitation"
    }
   },
   {
