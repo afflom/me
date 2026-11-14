@@ -238,6 +238,8 @@ export default async function start({ app, reason, $ }) {
   const resonanceOf = () => (resonating ??= import("./resonance/resonance.mjs")
     .then(({ makeResonance }) => makeResonance({ line, halted, attention: pace, keep: { get: () => store.get(RESONANCE_KEY, null), set: (text) => store.set(RESONANCE_KEY, text) } }))
     .then((made) => (resonance = made))
+    // The observer (PrismHolon and PrismCurate) watches every answer and tunes the engine.
+    .then((made) => import("./holon/page.mjs").then(({ observe }) => observe({ line, halted, made, place: () => current.key })).then(() => made, () => made))
     .catch(() => null));
   const answerOn = (node, event) => {
     if (!node || !event) return;

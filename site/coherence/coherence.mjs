@@ -12,6 +12,8 @@ export const PORTS = [
   "sent",
   "answer",
   "object",
+  "verdict",
+  "tuning",
 ];
 export const FACETS = [
   {"key": "boundary", "line": "boundary", "in": ["item", "draft", "answer"], "out": ["kept", "answer"], "drives": {"settings": ["halt", "identity"], "acts": ["ask"]}},
@@ -25,7 +27,9 @@ export const FACETS = [
   {"key": "source", "line": "source", "in": ["content"], "out": ["content"], "drives": {"settings": ["device", "halt"]}},
   {"key": "kappa", "line": "kappa", "in": ["object"], "out": ["object"]},
   {"key": "uorc", "line": "uorc", "in": ["item", "kept"], "out": ["object"], "drives": {"settings": ["halt"]}},
-  {"key": "resonance", "line": "resonance", "in": ["owner", "kept"], "out": ["answer"], "drives": {"places": ["today", "conversations", "people", "calendar", "tasks", "places", "money", "things", "me", "health", "work", "library", "timeline", "presence"], "settings": ["halt"]}},
+  {"key": "holon", "line": "holon", "in": ["answer"], "out": ["verdict"]},
+  {"key": "curate", "line": "curate", "in": ["verdict", "object"], "out": ["tuning"]},
+  {"key": "resonance", "line": "resonance", "in": ["owner", "kept", "tuning"], "out": ["answer"], "drives": {"places": ["today", "conversations", "people", "calendar", "tasks", "places", "money", "things", "me", "health", "work", "library", "timeline", "presence"], "settings": ["halt"]}},
   {"key": "router", "line": "router", "in": ["owner", "content"], "out": ["item"], "drives": {"acts": ["note"], "settings": ["models", "halt"]}},
 ];
 export const SEALED = [
@@ -34,8 +38,6 @@ export const SEALED = [
   {"key": "google", "sealed": "mail"},
   {"key": "googlelink", "sealed": "calendar"},
   {"key": "model", "sealed": "a compiled model's bytes are admitted when the router's meaning feature first loads one; no feature needs a model's bytes yet"},
-  {"key": "holon", "sealed": "reconciles owner and Prism from resonance signals; no page caller yet; the observer wires to resonance's onResonance next"},
-  {"key": "curate", "sealed": "tunes the parameters a facet marks tunable from resonance signals; no page caller yet; the observer wires to resonance's onResonance next"},
 ];
 // Facet a feeds facet b where a's outputs meet b's inputs (computed here, so a new facet changes one line).
 export const FLOW = FACETS.map((a) => FACETS.map((b) => [...new Set(a.out.filter((p) => b.in.includes(p)))].sort()));

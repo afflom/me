@@ -149,5 +149,10 @@ fn holon_hl_03() {
         !page.contains("fetch(") && !page.contains("XMLHttpRequest") && !page.contains("WebSocket"),
         "HL-03: no host is called from the observer"
     );
+    assert!(
+        read("site/card.mjs").contains("import(\"./holon/page.mjs\")"),
+        "HL-03: the page loads the observer with the resonance engine"
+    );
     node_suite();
+    run("node", &["site/holon/page.test.mjs"]);
 }
