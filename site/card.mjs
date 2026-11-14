@@ -886,8 +886,17 @@ export default async function start({ app, reason, $ }) {
             const now = services.state(service.key, report, { halted: halted() });
             row.hidden = now.state === "off";
             const next = service.connect.find((s) => s.key === now.next);
-            const got = report.arrived?.[service.key]?.n ?? 0;
-            state.textContent = now.state === "checking" ? WORDS["service.checking"] : now.state === "live" ? (got ? `${got} ${WORDS.items}` : WORDS["service.live"]) : now.state === "paused" ? WORDS.halted : now.state === "refused" ? WORDS["service.refused"] : next?.word ?? "";
+            // What arrived from this service, and when: the row's first word once anything has.
+            const got = report.arrived?.[service.key] ?? { n: 0, at: 0 };
+            const seen = report.services?.[service.key] ?? {};
+            const when = got.at ? new Date(got.at).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }) : "";
+            state.textContent = now.state === "paused" ? WORDS.halted
+              : now.state === "refused" ? WORDS["service.refused"]
+              : got.n ? `${got.n} ${WORDS.items} · ${when}`
+              : now.state === "checking" ? WORDS["service.checking"]
+              : seen.error || seen.read > 0 ? WORDS["service.failed"]
+              : now.state === "live" || (seen.signedIn && seen.checked) ? WORDS["service.nothing"]
+              : next?.word ?? "";
             // Only the first service that needs a step opens, so the person meets one thing to do.
             if (section.reveal === "until-done" && !touched) row.open = now.state === "step" && first;
             const doneSteps = new Set(service.connect.filter((s) => services.done(service, s, report)).map((s) => s.key));
