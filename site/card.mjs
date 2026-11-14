@@ -40,8 +40,11 @@ async function relayConsent() {
 // nothing; an item kept only as a hash says only that.
 const lenient = new TextDecoder("utf-8", { fatal: false });
 
-// RFC 5322 and RFC 5545 fold long lines; unfold before reading a field.
-const unfold = (text) => text.replace(/\r?\n[ \t]/g, " ");
+// RFC 5322 and RFC 5545 fold long lines; unfold before reading a field. A
+// message's fold keeps its white space (RFC 5322 2.2.3); a calendar's fold
+// removes the line break and the one space after it (RFC 5545 3.1).
+const unfold = (text) => text.replace(/\r?\n(?=[ \t])/g, "");
+const unfoldCalendar = (text) => text.replace(/\r?\n[ \t]/g, "");
 
 function headers(text) {
   const head = unfold(text.split(/\r?\n\r?\n/, 1)[0]);
@@ -67,22 +70,60 @@ function words(value = "") {
   });
 }
 
-const person = (from = "") => {
+// RFC 5322 3.2.2: a comment is parenthesised (nested, with quoted pairs) outside a quoted string.
+function uncomment(value = "") {
+  let out = "", depth = 0, quoted = false;
+  for (let i = 0; i < value.length; i++) {
+    const c = value[i];
+    if (c === "\\" && (quoted || depth)) { if (!depth) out += c + (value[i + 1] ?? ""); i++; continue; }
+    if (!depth && c === '"') quoted = !quoted;
+    if (!quoted && c === "(") { depth++; continue; }
+    if (!quoted && depth && c === ")") { depth--; continue; }
+    if (!depth) out += c;
+  }
+  return out.replace(/\s+/g, " ").trim();
+}
+
+const person = (raw = "") => {
+  const from = uncomment(raw);
   const named = /^\s*"?([^"<]+?)"?\s*<[^>]+>\s*$/.exec(from);
   return words(named ? named[1] : from.replace(/[<>]/g, ""));
 };
 
-function calendarField(text, name) {
-  const match = new RegExp(`^${name}(?:;[^:]*)?:(.*)$`, "mi").exec(unfold(text));
-  return match ? match[1].trim().replace(/\\([,;\\])/g, "$1").replace(/\\n/gi, " ") : "";
+function calendarLine(text, name) {
+  return new RegExp(`^${name}((?:;[^:]*)?):(.*)$`, "mi").exec(unfoldCalendar(text));
 }
 
-function icsTime(value) {
+function calendarField(text, name) {
+  const match = calendarLine(text, name);
+  return match ? match[2].trim().replace(/\\([,;\\])/g, "$1").replace(/\\n/gi, " ") : "";
+}
+
+// A local time in a named zone (RFC 5545 3.2.19 TZID), through the browser's own zone data.
+function zoned(y, mo, d, h, mi, s, zone) {
+  try {
+    const parts = new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    const wall = Date.UTC(y, mo, d, h, mi, s);
+    const offset = (at) => {
+      const p = Object.fromEntries(parts.formatToParts(at).map(({ type, value }) => [type, +value]));
+      return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - at;
+    };
+    const first = wall - offset(wall);
+    return wall - offset(first);
+  } catch {
+    return new Date(y, mo, d, h, mi, s).getTime();
+  }
+}
+
+function icsTime(value, params = "") {
   const m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/.exec(value);
   if (!m) return NaN;
   const [, y, mo, d, h = "0", mi = "0", s = "0", z] = m;
-  return z ? Date.UTC(+y, mo - 1, +d, +h, +mi, +s) : new Date(+y, mo - 1, +d, +h, +mi, +s).getTime();
+  if (z) return Date.UTC(+y, mo - 1, +d, +h, +mi, +s);
+  const zone = /;TZID=("?)([^";:]+)\1/i.exec(params)?.[2];
+  return zone && h !== undefined && m[4] ? zoned(+y, mo - 1, +d, +h, +mi, +s, zone.replace(/^\//, "")) : new Date(+y, mo - 1, +d, +h, +mi, +s).getTime();
 }
+const icsField = (text, name) => { const line = calendarLine(text, name); return line ? icsTime(line[2].trim(), line[1]) : NaN; };
 
 // How the person's content reads (site/read/read.mjs), loaded once something is kept.
 let reader = null;
@@ -108,18 +149,18 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     // The event's own fields: the calendar's time zones come first and carry DTSTARTs of their own (1970).
     const whole = text;
     text = /BEGIN:(VEVENT|VTODO)[\s\S]*?END:\1/.exec(whole)?.[0] ?? whole;
-    const first = icsTime(calendarField(text, "DTSTART"));
+    const first = icsField(text, "DTSTART");
     // A repeating event is shown at its next time, not at the first one years ago.
     const start = reader ? reader.nextTime(calendarField(text, "RRULE"), first) : first;
     const title = calendarField(text, "SUMMARY");
     const allDay = /^\d{8}$/.test(calendarField(text, "DTSTART"));
     // Opened, an event reads as the person would say it: when, where, who, and its notes.
-    const end = icsTime(calendarField(text, "DTEND")) - first + start;
+    const end = icsField(text, "DTEND") - first + start;
     const span = Number.isNaN(start) ? "" : [new Date(start), allDay || Number.isNaN(end) ? null : new Date(end)]
       .filter(Boolean).map((d, i) => d.toLocaleString(undefined, i === 0 ? (allDay ? { dateStyle: "full" } : { dateStyle: "full", timeStyle: "short" }) : (allDay ? { dateStyle: "full" } : { timeStyle: "short" }))).join(" – ");
-    const people = [...unfold(text).matchAll(/^(?:ORGANIZER|ATTENDEE)([^:\r\n]*):(.*)$/gim)]
+    const people = [...unfoldCalendar(text).matchAll(/^(?:ORGANIZER|ATTENDEE)([^:\r\n]*):(.*)$/gim)]
       .map(([, params, value]) => /CN="?([^";:]+)"?/i.exec(params)?.[1] ?? value.replace(/^mailto:/i, "")).filter(Boolean);
-    const notes = reader ? reader.eventText(/^DESCRIPTION(?:;[^:]*)?:(.*)$/mi.exec(unfold(text))?.[1] ?? "") : calendarField(text, "DESCRIPTION");
+    const notes = reader ? reader.eventText(/^DESCRIPTION(?:;[^:]*)?:(.*)$/mi.exec(unfoldCalendar(text))?.[1] ?? "") : calendarField(text, "DESCRIPTION");
     const body = [title, span, calendarField(text, "LOCATION"), [...new Set(people)].slice(0, 12).join(", "), notes].filter(Boolean).join("\n");
     return { ...base, at: Number.isNaN(start) ? base.at : start, ...(Number.isNaN(end) ? {} : { end }), allDay, title, who: calendarField(text, "LOCATION"), text: whole, body };
   }
