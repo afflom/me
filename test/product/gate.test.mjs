@@ -53,6 +53,20 @@ const DEFECTS = [
   ["a required setting that works but shows nowhere", (f) => { f.product.requires.settings[0].setting = null; f.product.requires.settings[0].status = "works"; }, /required setting 'identity' works but names no surface setting or section/],
   ["a required setting shown by a setting that does not exist", (f) => { f.product.requires.settings[1].setting = "accounts"; }, /shown by setting 'accounts', which the surface does not have/],
   ["debt that is a person's word", (f) => f.product.debt.push("Today"), /debt 'Today' is not a word of the system view/],
+  ["a feature serving no journey", (f) => { f.product.features[0].journeys = []; }, /feature F-01 serves no journey/],
+  ["a feature serving a journey that does not exist", (f) => { f.product.features[0].journeys = ["J99"]; }, /feature F-01 serves J99, which is not a journey/],
+  ["a feature realized by an export that is not there", (f) => { f.product.features[1].calls.push("site/router/router.mjs#reroute"); }, /feature F-02 is realized by site\/router\/router.mjs#reroute, which site\/router\/router.mjs does not export/],
+  ["a feature realized by a file that is not there", (f) => { f.product.features[1].calls = ["site/router/nowhere.mjs#route"]; }, /feature F-02 is realized by site\/router\/nowhere.mjs, which does not exist/],
+  ["a feature with no acceptance suite", (f) => { f.product.features[2].acceptance = []; }, /feature F-03 names no suite that accepts it/],
+  ["a feature held by no quality requirement", (f) => { f.product.features[3].quality = []; }, /feature F-04 is held by no quality requirement/],
+  ["a quality requirement outside ISO/IEC 25010", (f) => { f.product.quality[0].characteristic = "delight"; }, /names characteristic 'delight', which ISO\/IEC 25010 does not have/],
+  ["a subcharacteristic of another characteristic", (f) => { f.product.quality[2].subcharacteristic = "learnability"; }, /names subcharacteristic 'learnability', which is not one of performance efficiency/],
+  ["a quality requirement that holds no feature", (f) => { for (const x of f.product.features) x.quality = x.quality.filter((q) => q !== "QR-03"); }, /quality requirement QR-03 holds no feature/],
+  ["a quality requirement with no measure", (f) => { f.product.quality[1].measures = []; }, /quality requirement QR-02 has no measure/],
+  ["a measure with no direction", (f) => { f.product.quality[0].measures[0].direction = "about"; }, /has direction 'about', not atLeast or atMost/],
+  ["a measure with no threshold", (f) => { delete f.product.quality[0].measures[1].threshold; }, /quality measure QR-01\/party-accuracy has no threshold/],
+  ["a measure held by a gate that is not there", (f) => { f.product.quality[0].measures[0].gate = "test/router/missing.test.mjs"; }, /is held by gate 'test\/router\/missing.test.mjs', which does not exist/],
+  ["a measure its gate never computes", (f) => { f.product.quality[0].measures[0].key = "kind-recall"; }, /quality measure QR-01\/kind-recall is held by test\/router\/labels.test.mjs, which never computes it/],
 ];
 for (const [name, json, why] of DEFECTS) {
   test(`the gate refuses ${name} (PD-03)`, () => {

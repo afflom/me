@@ -4,6 +4,7 @@
 // does not meet. A walk is named by the journey's "walk" key.
 import assert from "node:assert/strict";
 import { surface } from "./harness.mjs";
+import { PROVIDERS } from "../../site/router/table.mjs";
 
 const app = (page) => page.locator("#stage, #rail");
 const text = async (page) => (await app(page).allInnerTexts()).join("\n");
@@ -225,6 +226,25 @@ export const walks = {
   },
   // J12: a fresh profile meets one Set up card naming the steps; Continue opens
   // the next step alone, numbered, with Next; finishing every step takes the card away.
+  // J13: Messages are in sections by kind, people first, newest first in each,
+  // and each row says who it is with.
+  async j13(page) {
+    const kinds = PROVIDERS.kind.kinds.map((k) => k.name);
+    assert.ok(await arrived(page), "the person's day never arrives");
+    await go(page, "conversations");
+    const headings = await app(page).getByRole("heading").filter({ visible: true }).allInnerTexts();
+    const shown = headings.map((h) => h.trim()).filter((h) => kinds.includes(h));
+    assert.ok(shown.length >= 2, `Messages are not in sections by kind (headings: ${headings.join(", ") || "none"})`);
+    assert.equal(shown[0], kinds[0], `the first section is not "${kinds[0]}"`);
+    assert.deepEqual(shown, kinds.filter((k) => shown.includes(k)), "the sections are not in the kinds' order");
+    assert.match(await rowOf(page, "Lunch on Thursday?"), /Robin Example/, "a message from a person does not say who it is from");
+    const people = await page.evaluate((name) => {
+      const h = [...document.querySelectorAll("#stage h2, #stage h3, #stage [role=heading]")].find((e) => e.innerText.trim() === name);
+      const list = h?.nextElementSibling;
+      return list ? [...list.querySelectorAll("li")].map((li) => li.innerText) : [];
+    }, kinds[0]);
+    assert.ok(people.some((r) => r.includes("Lunch on Thursday?")) && !people.some((r) => r.includes("November statement")), "a bank statement is filed with the person's people");
+  },
   async j12(page) {
     const W = surface.words;
     assert.ok(await arrived(page), "the person's day never arrives");

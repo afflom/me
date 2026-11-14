@@ -1,0 +1,23 @@
+{
+  "key": "QR-02",
+  "name": "Nothing arrives unlabeled",
+  "characteristic": "functional suitability",
+  "subcharacteristic": "functional completeness",
+  "says": "every item the person can read carries a kind, and most carry what they are about",
+  "measures": [
+    {
+      "key": "unlabeled-items",
+      "says": "readable items with no labels while the Prism is not halted",
+      "direction": "atMost",
+      "threshold": 0,
+      "gate": "test/router/labels.test.mjs"
+    },
+    {
+      "key": "topic-coverage",
+      "says": "percent of items labeled with at least one topic the person's own content keeps using",
+      "direction": "atLeast",
+      "threshold": 50,
+      "gate": "test/router/labels.test.mjs"
+    }
+  ]
+}

@@ -7,7 +7,12 @@ import { PROVIDERS } from "./table.mjs";
 const DAY = 86_400_000;
 const lower = (text = "") => text.toLowerCase();
 const wordsOf = (text) => lower(text).match(/[\p{L}\p{N}']+/gu) ?? [];
-const has = (text, phrase) => new RegExp(`(?<![\\p{L}\\p{N}])${phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\p{L}\\p{N}])`, "u").test(text);
+const patterns = new Map();
+const has = (text, phrase) => {
+  let pattern = patterns.get(phrase);
+  if (!pattern) patterns.set(phrase, (pattern = new RegExp(`(?<![\\p{L}\\p{N}])${phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\p{L}\\p{N}])`, "u")));
+  return pattern.test(text);
+};
 const startOfDay = (at) => { const d = new Date(at); d.setHours(0, 0, 0, 0); return d.getTime(); };
 
 // When: the day the words name (a relative day or a weekday), and the clock
@@ -75,10 +80,6 @@ function readIntent(text, { timed = false } = {}) {
   return timed ? "event" : "fact";
 }
 
-export const READERS = {
-  time: (value, { now }) => readTime(value, now),
-  intent: (value, { start }) => readIntent(value, { timed: start != null }),
-};
 
 // The places an item lands in: its intent's domains, and time's when it has a start.
 export function domainsFor(intent, start) {
@@ -94,3 +95,79 @@ export function withoutTime(text, spans = []) {
   for (const [a, b] of [...spans].sort((x, y) => y[0] - x[0])) out = `${out.slice(0, a)} ${out.slice(b)}`;
   return out.replace(/\s+(on|at|by|for)\s*$/i, "").replace(/\s{2,}/g, " ").trim().replace(/[,;]\s*$/, "");
 }
+
+// Who it is with. A party value the schema names arrives as [{name, address}]
+// and is marked robot when its address or name is an automated sender's. In
+// free text, the reader finds the people the owner's content already knows
+// (ctx.people, learned from every item's own parties), so a name that has
+// written before is recognized where it is mentioned.
+const P_PARTY = () => PROVIDERS.party;
+export function isRobot({ name = "", address = "" } = {}) {
+  const local = address.split("@")[0] ?? "";
+  const tokens = new Set([local, ...local.split(/[._+-]+/), ...lower(name).split(/[^\p{L}\p{N}-]+/u)]);
+  return P_PARTY().robots.some((word) => tokens.has(word));
+}
+function readParty(text, { people = [] } = {}) {
+  const t = lower(text);
+  const out = [];
+  // A person is found by their whole name, or by their first name when no one
+  // else the content knows shares it.
+  const first = (one) => lower(one.name).split(/\s+/)[0];
+  const shared = new Map();
+  for (const one of people) shared.set(first(one), (shared.get(first(one)) ?? 0) + 1);
+  for (const one of people) {
+    if (!one.name || one.name.length < 3 || one.name.includes("@")) continue;
+    const name = first(one);
+    if (has(t, lower(one.name)) || (name.length > 2 && shared.get(name) === 1 && has(t, name))) out.push({ ...one, mentioned: true });
+    if (out.length >= 5) break;
+  }
+  return out.length ? out : null;
+}
+
+// What kind of thing it is, by the kind provider: the sender its shape says,
+// then the first kind for that sender whose shape it has or whose words its
+// subject uses, then (an automated sender only) whose words open its body.
+export function senderOf({ shapes = [], from = [] }) {
+  const k = PROVIDERS.kind;
+  if (shapes.includes("note")) return "note";
+  if (shapes.includes("card")) return "card";
+  if (shapes.includes("vevent")) return "calendar";
+  if (k.automated.some((x) => shapes.includes(x)) || (from.length && from.every(isRobot))) return "automated";
+  return "person";
+}
+export function kindOf({ shapes = [], subject = "", text = "", from = [] }) {
+  const k = PROVIDERS.kind;
+  const sender = senderOf({ shapes, from });
+  const kinds = k.order.map((key) => k.kinds.find((x) => x.key === key)).filter((x) => x.senders.includes(sender));
+  const s = lower(subject);
+  for (const x of kinds) if (x.shapes.some((y) => shapes.includes(y)) || x.words.some((w) => has(s, w))) return x.key;
+  if (sender === "automated") {
+    const b = lower(text.slice(0, 600));
+    for (const x of kinds) if (x.words.some((w) => has(b, w))) return x.key;
+  }
+  return k.fallback[sender];
+}
+
+// What it is about: the words of the owner's lexicon (ctx.topics, learned
+// from their own content) that this value uses, subject words first.
+const termsIn = (text) => [...new Set(lower(text).normalize("NFD").replace(/\p{M}+/gu, "").match(/(?<![\p{L}'])\p{L}[\p{L}-]*\p{L}(?![\p{L}'])/gu) ?? [])];
+export function topicTerms(text) {
+  const p = PROVIDERS.topic;
+  const quiet = new Set([...p.quiet, ...PROVIDERS.party.robots]);
+  return termsIn(text).filter((w) => w.length >= p.shortest && !quiet.has(w));
+}
+function readTopic(text, { topics = null } = {}) {
+  if (!topics) return null;
+  const got = topicTerms(text).filter((w) => topics.has(w));
+  return got.length ? got : null;
+}
+
+// Each compiled feature's reader. The kind reader passes the cues it is given
+// on: the router gathers them from every value and kindOf decides once.
+export const READERS = {
+  time: (value, { now }) => readTime(value, now),
+  intent: (value, { start }) => readIntent(value, { timed: start != null }),
+  party: (value, ctx) => readParty(value, ctx),
+  kind: (value) => value,
+  topic: (value, ctx) => readTopic(value, ctx),
+};
