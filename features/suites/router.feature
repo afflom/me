@@ -27,7 +27,7 @@ Feature: router
 
   @RU-03 @build
   Scenario: Every item the owner can read is taken apart and labeled through PrismRouter: its parts are the values of its own schema, the readers learn the owner's people and topics in this browser first, and each item carries the kind of thing it is, who it is with and what it is about, or nothing while halted or sealed
-    Given an invented mailbox and calendar in the shape real ones arrive in
+    Given the mail and calendar examples of the specifications they follow, kind and people read by reference readers
     When the page reads each item and labels it through the router
     Then every measure of the product record's quality requirements that names the labels suite meets its own threshold
     And a router that hides an item's parts fails the kind measure
