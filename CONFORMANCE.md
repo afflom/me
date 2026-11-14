@@ -80,6 +80,12 @@ model does not sanction.
 | --- | --- | --- |
 | `MD-01` | `build` | A language or reasoning model routed into the Prism runs in the browser only when the proved Prism Models decision says run: pinned by hub commit and SHA-256, in a format with a locked runtime, granted by the owner, and not halted; its answer is shown only through R4's routed mode and the Boundary |
 
+## oracle
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `OR-01` | `build` | Every example of each specification the oracle pins by checksum, kept only where its addresses are at documentation domains, is read by the Prism as a reference reader written to that specification's own grammar reads it, beyond a debt list that only shrinks; the corpus is re-derived from the pinned sources on every run, and each pinned source is a cited authority whose evidence is this ID |
+
 ## page
 
 | ID | Level | Statement |
@@ -167,6 +173,20 @@ Never re-derived, vendored, or gated on.
 
 | Authority | Citation | Evidence here |
 | --- | --- | --- |
+| `SRC-RFC5322` | https://www.rfc-editor.org/rfc/rfc5322.txt | `OR-01` |
+| `SRC-RFC5545` | https://www.rfc-editor.org/rfc/rfc5545.txt | `OR-01` |
+| `SRC-RFC5546` | https://www.rfc-editor.org/rfc/rfc5546.txt | `OR-01` |
+| `SRC-RFC6350` | https://www.rfc-editor.org/rfc/rfc6350.txt | `OR-01` |
+| `SRC-RFC6047` | https://www.rfc-editor.org/rfc/rfc6047.txt | `OR-01` |
+| `SRC-RFC2047` | https://www.rfc-editor.org/rfc/rfc2047.txt | `OR-01` |
+| `SRC-RFC4648` | https://www.rfc-editor.org/rfc/rfc4648.txt | `OR-01` |
+| `SRC-RFC4180` | https://www.rfc-editor.org/rfc/rfc4180.txt | `OR-01` |
+| `SRC-OTC` | https://raw.githubusercontent.com/WICG/sms-one-time-codes/2bb70db2550c4a4d76a4836f1b42d7abfca4ab82/index.bs | `OR-01` |
+| `SRC-DARKPATTERNS` | https://raw.githubusercontent.com/aruneshmathur/dark-patterns/f458f19c4814419acd691f2842d7e1123f14097c/data/final-dark-patterns/dark-patterns.csv | `OR-01` |
+| `SRC-WPT-COMP-LABELLEDBY` | https://raw.githubusercontent.com/web-platform-tests/wpt/cc8dcb79914d9bc3356ce6641d040022a52f20d8/accname/name/comp_labelledby.html | `OR-01` |
+| `SRC-WPT-COMP-TEXT-NODE` | https://raw.githubusercontent.com/web-platform-tests/wpt/cc8dcb79914d9bc3356ce6641d040022a52f20d8/accname/name/comp_text_node.html | `OR-01` |
+| `SRC-WPT-COMP-NAME-FROM-CONTENT` | https://raw.githubusercontent.com/web-platform-tests/wpt/cc8dcb79914d9bc3356ce6641d040022a52f20d8/accname/name/comp_name_from_content.html | `OR-01` |
+| `SRC-APG-FEED` | https://raw.githubusercontent.com/w3c/aria-practices/f14b2490a6728cda85fd7feafbd148b3c3eaf038/content/patterns/feed/examples/js/feedDisplay.js | `OR-01` |
 
 ## Claims that are not conformance IDs
 
