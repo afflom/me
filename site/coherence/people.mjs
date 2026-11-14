@@ -5,7 +5,16 @@ import { PEOPLE } from "./coherence.mjs";
 export const peoplePlace = PEOPLE.place;
 
 const unfold = (text) => (text ?? "").replace(/\r?\n[ \t]/g, "");
-const clean = (name) => name.replace(/^"|"$/g, "").replace(/\\([,;])/g, "$1").trim();
+// RFC 2047 encoded words, so a sender's name reads as written.
+const words = (value = "") => value.replace(/=\?([^?]+)\?([bqBQ])\?([^?]*)\?=/g, (_, charset, kind, data) => {
+  try {
+    const bytes = kind.toUpperCase() === "B"
+      ? Uint8Array.from(atob(data), (c) => c.charCodeAt(0))
+      : Uint8Array.from(data.replace(/_/g, " ").replace(/=([0-9a-f]{2})/gi, (m, h) => String.fromCharCode(parseInt(h, 16))), (c) => c.charCodeAt(0));
+    return new TextDecoder(charset, { fatal: false }).decode(bytes);
+  } catch { return data; }
+});
+const clean = (name) => words(name).replace(/^"|"$/g, "").replace(/\\([,;])/g, "$1").trim();
 
 function mailbox(value = "") {
   const named = /^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/.exec(value);

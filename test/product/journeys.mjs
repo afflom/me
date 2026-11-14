@@ -34,7 +34,8 @@ const rowOf = (page, words) => page.evaluate((w) => {
 const TIME = /\b\d{1,2}(:\d{2})?\s*(AM|PM)\b|\b\d{1,2}:\d{2}\b/i;
 // The synthetic day has arrived once any of it shows anywhere in the Prism.
 const arrived = (page) => page.waitForFunction(
-  () => [...document.querySelectorAll("#stage, #rail")].some((root) => /Lisbon|Lunch on Thursday|Time next week|Design review|November statement/.test(root.innerText)), null, { timeout: 30000 },
+  // Both of its services: what arrives lands in batches, one service after another.
+  () => { const all = [...document.querySelectorAll("#stage, #rail")].map((root) => root.innerText).join("\n"); return /Lisbon|Design review/.test(all) && /Lunch on Thursday|Time next week|November statement/.test(all); }, null, { timeout: 30000 },
 ).then(() => true, () => false);
 // The item the person sees with these words, as one control or row.
 // The person looks for it on Today, then in each of their own places.
@@ -80,6 +81,18 @@ export const walks = {
     const shown = await text(page);
     assert.match(shown, /due/i, "Today does not show what is due (the payment due on the 28th)");
     assert.ok(shown.includes("Lunch on Thursday"), "Today does not show the message waiting on the person (Robin's lunch question)");
+    // Pressing the meeting opens it to read: who it is with, not only its title.
+    await app(page).getByText("Design review", { exact: true }).filter({ visible: true }).first().click();
+    assert.ok(await seen(page, "Robin Example", 3000), "opening today's meeting does not show who it is with");
+    // A real message reads as it was written: decoded, without its parts' machinery or the history it quotes.
+    await go(page, "conversations");
+    await app(page).getByText("Café booking", { exact: true }).filter({ visible: true }).first().click();
+    assert.ok(await seen(page, "The café table is held under your name.", 3000), "an opened message does not read as written");
+    const opened = await text(page);
+    for (const machinery of ["Content-Type", "quoted-printable", "=C3", "Earlier words"]) assert.ok(!opened.includes(machinery), `an opened message shows "${machinery}"`);
+    // Its sender is named as written in People too.
+    await go(page, "people");
+    assert.ok(await seen(page, "Jordan Exámple", 5000), "People does not name the sender as written");
   },
   // J2: a Needs me list holding Robin's question; one gesture clears it.
   async j2(page) {

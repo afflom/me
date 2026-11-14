@@ -11,6 +11,8 @@ const startOfDay = (at) => { const d = new Date(at); d.setHours(0, 0, 0, 0); ret
 
 // An event's end: its DTEND, else a day for a date, else an hour.
 function endOf(item) {
+  // The reader sets the end of the occurrence it shows (a repeating event at its next time).
+  if (Number.isFinite(item.end) && item.end > item.at) return item.end;
   const match = /^DTEND(?:;[^:]*)?:(\d{8})(?:T(\d{6})(Z)?)?/mi.exec((item.text ?? "").replace(/\r?\n[ \t]/g, ""));
   if (match) {
     const [, d, t = "000000", z] = match;

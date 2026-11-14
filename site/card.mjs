@@ -84,6 +84,8 @@ function icsTime(value) {
   return z ? Date.UTC(+y, mo - 1, +d, +h, +mi, +s) : new Date(+y, mo - 1, +d, +h, +mi, +s).getTime();
 }
 
+// How the person's content reads (site/read/read.mjs), loaded once something is kept.
+let reader = null;
 function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
   const about = meta.about ?? {};
   const base = { address, domain: about.domain ?? 11, media: about.media ?? "plainText", label: meta.label, at: about.at ?? at };
@@ -92,19 +94,32 @@ function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
   if (about.intent) base.intent = about.intent;
   if (Array.isArray(about.domains) && about.domains.length) base.mapped = about.domains;
   if (outcome !== "restore") return { ...base, sealed: true, title: "", who: "", text: "", body: "" };
-  const text = lenient.decode(bytes);
+  let text = lenient.decode(bytes);
   if (base.media === "message") {
     const h = headers(text);
     const when = Date.parse(h.date ?? "");
     // A message the owner sent has no From: the other party is its To.
-    const body = text.split(/\r?\n\r?\n/).slice(1).join("\n\n").trim();
-    return { ...base, at: Number.isNaN(when) ? base.at : when, title: words(h.subject ?? ""), who: person(h.from || h.to), text, body };
+    const body = reader ? reader.messageBody(text) : text.split(/\r?\n\r?\n/).slice(1).join("\n\n").trim();
+    return { ...base, at: Number.isNaN(when) ? base.at : when, title: words(h.subject ?? "").replace(/\s+/g, " ").trim(), who: person(h.from || h.to), text, body };
   }
   if (base.media === "calendar") {
-    const start = icsTime(calendarField(text, "DTSTART"));
+    // The event's own fields: the calendar's time zones come first and carry DTSTARTs of their own (1970).
+    const whole = text;
+    text = /BEGIN:(VEVENT|VTODO)[\s\S]*?END:\1/.exec(whole)?.[0] ?? whole;
+    const first = icsTime(calendarField(text, "DTSTART"));
+    // A repeating event is shown at its next time, not at the first one years ago.
+    const start = reader ? reader.nextTime(calendarField(text, "RRULE"), first) : first;
     const title = calendarField(text, "SUMMARY");
     const allDay = /^\d{8}$/.test(calendarField(text, "DTSTART"));
-    return { ...base, at: Number.isNaN(start) ? base.at : start, allDay, title, who: calendarField(text, "LOCATION"), text, body: calendarField(text, "DESCRIPTION") || title };
+    // Opened, an event reads as the person would say it: when, where, who, and its notes.
+    const end = icsTime(calendarField(text, "DTEND")) - first + start;
+    const span = Number.isNaN(start) ? "" : [new Date(start), allDay || Number.isNaN(end) ? null : new Date(end)]
+      .filter(Boolean).map((d, i) => d.toLocaleString(undefined, i === 0 ? (allDay ? { dateStyle: "full" } : { dateStyle: "full", timeStyle: "short" }) : (allDay ? { dateStyle: "full" } : { timeStyle: "short" }))).join(" – ");
+    const people = [...unfold(text).matchAll(/^(?:ORGANIZER|ATTENDEE)([^:\r\n]*):(.*)$/gim)]
+      .map(([, params, value]) => /CN="?([^";:]+)"?/i.exec(params)?.[1] ?? value.replace(/^mailto:/i, "")).filter(Boolean);
+    const notes = reader ? reader.eventText(/^DESCRIPTION(?:;[^:]*)?:(.*)$/mi.exec(unfold(text))?.[1] ?? "") : calendarField(text, "DESCRIPTION");
+    const body = [title, span, calendarField(text, "LOCATION"), [...new Set(people)].slice(0, 12).join(", "), notes].filter(Boolean).join("\n");
+    return { ...base, at: Number.isNaN(start) ? base.at : start, ...(Number.isNaN(end) ? {} : { end }), allDay, title, who: calendarField(text, "LOCATION"), text: whole, body };
   }
   if (base.media === "contactCard") {
     const field = (name) => calendarField(text, name);
@@ -208,22 +223,30 @@ export default async function start({ app, reason, $ }) {
   // Everything kept, read once through the vault (each read is the root's
   // restore decision) and placed by its domain, newest first.
   let items = [];
+  const readOnce = new Map();
   async function load() {
     if (!vault) return;
     const rows = await vault.list();
     const { domainsOf, peopleOf, peoplePlace, between, selfOf, fromMe } = rows.length ? await coherence() : {};
+    if (rows.length) reader ??= await import("./read/read.mjs").catch(() => null);
+    // Each kept item is opened once: a later load reads only what is new, and lets go of what is gone.
     const read = [];
+    const listed = new Set();
     for (const row of rows) {
-      const got = await vault.get(row.address);
-      if (got.outcome !== "restore" && got.outcome !== "hashonly") continue;
-      const item = readItem({ address: row.address, outcome: got.outcome, bytes: got.bytes, meta: got.meta, at: row.at });
-      // Its domains: its media's, and each one its words name (the coherence registry's vocabulary).
-      item.domains = item.mapped ?? domainsOf(item);
+      listed.add(row.address);
+      let item = readOnce.get(row.address);
+      if (!item) {
+        const got = await vault.get(row.address);
+        if (got.outcome !== "restore" && got.outcome !== "hashonly") continue;
+        item = readItem({ address: row.address, outcome: got.outcome, bytes: got.bytes, meta: got.meta, at: row.at });
+        // Its domains: its media's, and each one its words name (the coherence registry's vocabulary).
+        item.domains = item.mapped ?? domainsOf(item);
+        readOnce.set(row.address, item);
+      }
       read.push(item);
     }
+    for (const address of readOnce.keys()) if (!listed.has(address)) readOnce.delete(address);
     items = read.sort((a, b) => b.at - a.at);
-    // Ask is offered once there is something of the person's to ask about.
-    $("pr-ask").hidden = !items.length;
     // The people in what is kept, for the place that lists them.
     if (selfOf) { inferred = selfOf(items); mineOf = fromMe; }
     people = peopleOf ? { place: peoplePlace, all: peopleOf(items, meNow()), between } : null;
@@ -343,6 +366,17 @@ export default async function start({ app, reason, $ }) {
   const extensionGrant = () => (extensionHere ? "kept" : "none");
   // The declared services, carried by the installed extension with the
   // owner's own sign-in; PrismSource decides each item by its service and route.
+  // While content arrives, the place's heading says from where and how far along; the answer area stays the person's.
+  function arrivingAt(words) {
+    let line = document.getElementById("pr-arriving");
+    if (!line) {
+      line = element("span", { id: "pr-arriving", className: "pr-count" });
+      line.setAttribute("role", "status");
+      $("pr-title").after(line);
+    }
+    line.textContent = words;
+    line.hidden = !words;
+  }
   async function pullExtension(d) {
     const { pull } = await import("./device/extension.mjs");
     const by = new Map();
@@ -356,11 +390,19 @@ export default async function start({ app, reason, $ }) {
       by.get(item.service).push(item);
     }
     const total = { files: 0, store: 0, storehash: 0, ask: 0, refuse: 0, skip: 0 };
+    // What is arriving shows as it arrives: the service, how far along, and each batch in its places at once.
+    const BATCH = 25;
     for (const [service, items] of by) {
-      const t = await d.source.readItems(items);
-      for (const key of Object.keys(total)) total[key] += t[key] ?? 0;
-      noteArrived(service, t.store + t.storehash, items.length);
+      const name = SERVICES.find((s) => s.key === service)?.name ?? service;
+      for (let i = 0; i < items.length; i += BATCH) {
+        arrivingAt(`${WORDS.arriving} · ${name} · ${Math.min(i + BATCH, items.length)} ${WORDS["setup.of"]} ${items.length}`);
+        const t = await d.source.readItems(items.slice(i, i + BATCH));
+        for (const key of Object.keys(total)) total[key] += t[key] ?? 0;
+        noteArrived(service, t.store + t.storehash, Math.min(BATCH, items.length - i));
+        if (t.store + t.storehash) { await load(); if (current.show !== "settings") paintList(); }
+      }
     }
+    arrivingAt("");
     return total;
   }
   // On every visit, and every few minutes while the page is open: a folder the
@@ -413,7 +455,8 @@ export default async function start({ app, reason, $ }) {
       if (open) { row.querySelector(".pr-preview")?.remove(); closeOpened(row); }
       else { row.append(element("pre", { className: "pr-preview", textContent: item.body })); opened.set(row, { item, since: Date.now() }); }
     };
-    row.addEventListener("click", (event) => { if (!event.target.closest(".pr-preview")) toggle(); });
+    // A press anywhere on an opened item closes it, unless the person is selecting its words.
+    row.addEventListener("click", () => { if (!String(getSelection?.() ?? "")) toggle(); });
     row.addEventListener("keydown", (event) => {
       if (event.target === row && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); toggle(); }
     });
@@ -542,7 +585,7 @@ export default async function start({ app, reason, $ }) {
     let shown = items.filter((item) => (item.domains ?? [item.domain]).some((d) => current.domains.includes(d)));
     if (current.show === "search") {
       const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-      shown = words.length ? items.filter((item) => words.every((w) => `${item.title} ${item.who} ${item.text}`.toLowerCase().includes(w))) : [];
+      shown = words.length ? items.filter((item) => words.every((w) => `${item.title} ${item.who} ${item.body ?? item.text}`.toLowerCase().includes(w))) : [];
     }
     if (resonance && current.show !== "search") shown = resonance.order(shown);
     $("pr-count").textContent = shown.length ? String(shown.length) : "";
@@ -606,9 +649,6 @@ export default async function start({ app, reason, $ }) {
     const left = setupLeft();
     const shown = current.host === "home" && left.length > 0;
     setupCard.hidden = !shown;
-    // While nothing has arrived and set up is not done, Today holds only the card and the note.
-    $("pr-home").hidden = current.host !== "home" || (shown && !items.length);
-    $("pr-ask").hidden = !items.length;
     if (!shown) return false;
     const next = left[0];
     const steps = element("ol", { className: "pr-steps" }, ...SETUP.map((step) => element("li", {
