@@ -1,5 +1,5 @@
 {
-  "comment": "Validation oracles: the published specifications whose own examples are the Prism's test content. tools/oracle/gen.py fetches each source at its pinned SHA-256, takes its examples out mechanically (an example is kept only if every address in it is at a domain reserved for documentation, RFC 2606 and RFC 6761, so no real person's address enters the repository), and reads each one with a reference reader written to the source's own grammar. test/oracle/read.test.mjs then holds the Prism's reading (site/card.mjs readItem) to that reading, field by field: a message's title, sender, time and plain words; an event's title, place and start; a card's name; a header's encoded words as the specification says they display; a base64 test vector as it decodes; a CSV example as RFC 4180 reads it; a one-time code message as the WICG report says; an urgency or scarcity line, as the researchers who found it labelled it, as coercive. gaps: kinds of content the Prism reads that no published specification gives examples of, each with why; no test content is written for them. label: the kind of thing a source's specification says its whole messages and events are (a kind the kind reader names); unsourced: kinds no specification publishes a whole example of, each with why. Nothing here is invented: a new kind of content is added by naming the specification it follows.",
+  "comment": "Validation oracles: the published specifications whose own examples are the Prism's test content. tools/oracle/gen.py fetches each source at its pinned SHA-256, takes its examples out mechanically (an example is kept only if every address in it is at a domain reserved for documentation, RFC 2606 and RFC 6761, so no real person's address enters the repository), and reads each one with a reference reader written to the source's own grammar. test/oracle/read.test.mjs then holds the Prism's reading (site/card.mjs readItem) to that reading, field by field: a message's title, sender, time and plain words; an event's title, place and start; a card's name; a header's encoded words as the specification says they display; a base64 test vector as it decodes; a CSV example as RFC 4180 reads it; a one-time code message as the WICG report says; an element's accessible name as W3C AccName computes it, graded in the browser on the Web Platform Tests' own cases (test/oracle/name.test.mjs); an urgency or scarcity line, as the researchers who found it labelled it, as coercive. gaps: kinds of content the Prism reads that no published specification gives examples of, each with why; no test content is written for them. label: the kind of thing a source's specification says its whole messages and events are (a kind the kind reader names); unsourced: kinds no specification publishes a whole example of, each with why. Nothing here is invented: a new kind of content is added by naming the specification it follows.",
   "reserved": [
     "example",
     "example.com",
@@ -97,6 +97,30 @@
         "Urgency",
         "Scarcity"
       ]
+    },
+    {
+      "key": "wpt-comp-labelledby",
+      "kind": "accname",
+      "title": "Web Platform Tests, W3C AccName name computation: aria-labelledby (accname/name/comp_labelledby.html)",
+      "url": "https://raw.githubusercontent.com/web-platform-tests/wpt/cc8dcb79914d9bc3356ce6641d040022a52f20d8/accname/name/comp_labelledby.html",
+      "sha256": "a1b1cc748dce3af7664fc002b83e620817e8753cc4036725ab7cc5ef4cc990f4",
+      "examples": "page"
+    },
+    {
+      "key": "wpt-comp-text-node",
+      "kind": "accname",
+      "title": "Web Platform Tests, W3C AccName name computation: text nodes (accname/name/comp_text_node.html)",
+      "url": "https://raw.githubusercontent.com/web-platform-tests/wpt/cc8dcb79914d9bc3356ce6641d040022a52f20d8/accname/name/comp_text_node.html",
+      "sha256": "c7723f8e3cddd7854b04aa1f0fa6d82f3d2e8fe71f0afc555f952a4c72c19dcc",
+      "examples": "page"
+    },
+    {
+      "key": "wpt-comp-name-from-content",
+      "kind": "accname",
+      "title": "Web Platform Tests, W3C AccName name computation: name from content (accname/name/comp_name_from_content.html)",
+      "url": "https://raw.githubusercontent.com/web-platform-tests/wpt/cc8dcb79914d9bc3356ce6641d040022a52f20d8/accname/name/comp_name_from_content.html",
+      "sha256": "32ea5bb637608d0dced8c58ea266a1db25dfbbec2fedf63cc7831421a4f180e0",
+      "examples": "page"
     }
   ],
   "debt": [
@@ -169,6 +193,55 @@
       "want": true,
       "got": false,
       "why": "A bare time or count with no word of pressure; calling it coercive would hold ordinary mail that names a time or a number."
+    },
+    {
+      "id": "wpt-comp-name-from-content-1",
+      "field": "button with alt counter on ::before",
+      "want": "5051 label",
+      "got": "label",
+      "why": "CSS counters: getComputedStyle gives a ::before content of counter() unresolved, and the page cannot read a counter's value, so its number is not in the name"
+    },
+    {
+      "id": "wpt-comp-name-from-content-1",
+      "field": "heading with alt counter on ::before",
+      "want": "5051 label",
+      "got": "label",
+      "why": "CSS counters: getComputedStyle gives a ::before content of counter() unresolved, and the page cannot read a counter's value, so its number is not in the name"
+    },
+    {
+      "id": "wpt-comp-name-from-content-1",
+      "field": "link with alt counter on ::before",
+      "want": "5051 label",
+      "got": "label",
+      "why": "CSS counters: getComputedStyle gives a ::before content of counter() unresolved, and the page cannot read a counter's value, so its number is not in the name"
+    },
+    {
+      "id": "wpt-comp-name-from-content-1",
+      "field": "button with multiple alt counters and counter increments",
+      "want": "11 alpha 13 beta 14 gamma",
+      "got": "alpha beta gamma",
+      "why": "CSS counters: getComputedStyle gives a ::before content of counter() unresolved, and the page cannot read a counter's value, so its number is not in the name"
+    },
+    {
+      "id": "wpt-comp-name-from-content-1",
+      "field": "heading with multiple alt counters and counter increments",
+      "want": "11 alpha 13 beta 14 gamma",
+      "got": "alpha beta gamma",
+      "why": "CSS counters: getComputedStyle gives a ::before content of counter() unresolved, and the page cannot read a counter's value, so its number is not in the name"
+    },
+    {
+      "id": "wpt-comp-name-from-content-1",
+      "field": "link with multiple alt counters and counter increments",
+      "want": "11 alpha 13 beta 14 gamma",
+      "got": "alpha beta gamma",
+      "why": "CSS counters: getComputedStyle gives a ::before content of counter() unresolved, and the page cannot read a counter's value, so its number is not in the name"
+    },
+    {
+      "id": "wpt-comp-name-from-content-1",
+      "field": "heading name from content for each child including two nested links using aria-labelledby with nested image",
+      "want": "image link2 link3",
+      "got": "image link2 image link3",
+      "why": "an image an earlier sibling's aria-labelledby already named is named again; the name keeps no record of what one recursion has already referenced"
     }
   ],
   "gaps": [
