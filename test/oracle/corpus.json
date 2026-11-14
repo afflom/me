@@ -9,7 +9,8 @@
    "expect": {
     "title": "Saying Hello",
     "who": "John Doe",
-    "at": 880127706000
+    "at": 880127706000,
+    "body": "This is a message just to say hello. So, \"Hello\"."
    }
   },
   {
@@ -20,7 +21,8 @@
    "expect": {
     "title": "Saying Hello",
     "who": "John Doe",
-    "at": 880127706000
+    "at": 880127706000,
+    "body": "This is a message just to say hello. So, \"Hello\"."
    }
   },
   {
@@ -30,7 +32,8 @@
    "raw": "From: \"Joe Q. Public\" <john.q.public@example.com>\r\nTo: Mary Smith <mary@x.test>, jdoe@example.org, Who? <one@y.test>\r\nCc: <boss@nil.test>, \"Giant; \\\"Big\\\" Box\" <sysservices@example.net>\r\nDate: Tue, 1 Jul 2003 10:52:37 +0200\r\nMessage-ID: <5678.21-Nov-1997@example.com>\r\n\r\nHi everyone.\r\n",
    "expect": {
     "who": "Joe Q. Public",
-    "at": 1057049557000
+    "at": 1057049557000,
+    "body": "Hi everyone."
    }
   },
   {
@@ -40,7 +43,8 @@
    "raw": "From: Pete <pete@silly.example>\r\nTo: A Group:Ed Jones <c@a.test>,joe@where.test,John <jdoe@one.test>;\r\nCc: Undisclosed recipients:;\r\nDate: Thu, 13 Feb 1969 23:32:54 -0330\r\nMessage-ID: <testabcd.1234@silly.example>\r\n\r\nTesting.\r\n",
    "expect": {
     "who": "Pete",
-    "at": -27723426000
+    "at": -27723426000,
+    "body": "Testing."
    }
   },
   {
@@ -51,7 +55,8 @@
    "expect": {
     "title": "Saying Hello",
     "who": "John Doe",
-    "at": 880127706000
+    "at": 880127706000,
+    "body": "This is a message just to say hello. So, \"Hello\"."
    }
   },
   {
@@ -62,7 +67,8 @@
    "expect": {
     "title": "Re: Saying Hello",
     "who": "Mary Smith",
-    "at": 880128070000
+    "at": 880128070000,
+    "body": "This is a reply to your hello."
    }
   },
   {
@@ -73,7 +79,8 @@
    "expect": {
     "title": "Re: Saying Hello",
     "who": "John Doe",
-    "at": 880131600000
+    "at": 880131600000,
+    "body": "This is a reply to your reply."
    }
   },
   {
@@ -84,7 +91,8 @@
    "expect": {
     "title": "Saying Hello",
     "who": "John Doe",
-    "at": 880127706000
+    "at": 880127706000,
+    "body": "This is a message just to say hello. So, \"Hello\"."
    }
   },
   {
@@ -95,7 +103,8 @@
    "expect": {
     "title": "Saying Hello",
     "who": "John Doe",
-    "at": 880127706000
+    "at": 880127706000,
+    "body": "This is a message just to say hello. So, \"Hello\"."
    }
   },
   {
@@ -106,7 +115,8 @@
    "expect": {
     "title": "Saying Hello",
     "who": "John Doe",
-    "at": 880127706000
+    "at": 880127706000,
+    "body": "This is a message just to say hello. So, \"Hello\"."
    }
   },
   {
@@ -116,7 +126,8 @@
    "raw": "From: Pete(A nice \\) chap) <pete(his account)@silly.test(his host)>\r\nTo:A Group(Some people)\r\n     :Chris Jones <c@(Chris's host.)public.example>,\r\n         joe@example.org,\r\n  John <jdoe@one.test> (my dear friend); (the end of the group)\r\nCc:(Empty list)(start)Hidden recipients  :(nobody(that I know))  ;\r\nDate: Thu,\r\n      13\r\n        Feb\r\n          1969\r\n      23:32\r\n               -0330 (Newfoundland Time)\r\nMessage-ID:              <testabcd.1234@silly.test>\r\n\r\nTesting.\r\n",
    "expect": {
     "who": "Pete",
-    "at": -27723480000
+    "at": -27723480000,
+    "body": "Testing."
    }
   },
   {
@@ -126,7 +137,8 @@
    "raw": "From: Joe Q. Public <john.q.public@example.com>\r\nTo: Mary Smith <@node.test:mary@example.net>, , jdoe@test  . example\r\nDate: Tue, 1 Jul 2003 10:52:37 +0200\r\nMessage-ID: <5678.21-Nov-1997@example.com>\r\n\r\nHi everyone.\r\n",
    "expect": {
     "who": "Joe Q. Public",
-    "at": 1057049557000
+    "at": 1057049557000,
+    "body": "Hi everyone."
    }
   },
   {
@@ -137,7 +149,8 @@
    "expect": {
     "title": "Saying Hello",
     "who": "John Doe",
-    "at": 880106106000
+    "at": 880106106000,
+    "body": "This is a message just to say hello. So, \"Hello\"."
    }
   },
   {
@@ -923,7 +936,8 @@
    "raw": "From: foo1@example.com\r\nTo: foo2@example.com\r\nSubject: Phone Conference\r\nMime-Version: 1.0\r\nContent-Type: multipart/alternative; boundary=\"01BD3665.3AF0D360\"\r\n\r\n--01BD3665.3AF0D360\r\nContent-Type: text/plain; charset=us-ascii\r\nContent-Transfer-Encoding: 7bit\r\n\r\nThis is an alternative representation of a \"text/calendar\"\r\nMIME object.\r\n\r\nWhen: 7/1/1997 10:00AM PDT - 7/1/97 10:30AM PDT\r\nWhere:\r\nOrganizer: foo1@example.com\r\nSummary: Phone Conference\r\n\r\n--01BD3665.3AF0D360\r\nContent-Type: text/calendar; method=REQUEST; charset=US-ASCII\r\nContent-Transfer-Encoding: 7bit\r\n\r\nBEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REQUEST\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:foo1@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:foo1@example.com\r\nATTENDEE;RSVP=YES;CUTYPE=INDIVIDUAL:mailto:foo2@example.com\r\nDTSTAMP:19970611T190000Z\r\nDTSTART:19970701T170000Z\r\nDTEND:19970701T173000Z\r\nSUMMARY:Phone Conference\r\nUID:calsvr.example.com-8739701987387771\r\nSEQUENCE:0\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n\r\n--01BD3665.3AF0D360\r\n",
    "expect": {
     "title": "Phone Conference",
-    "who": "foo1@example.com"
+    "who": "foo1@example.com",
+    "body": "This is an alternative representation of a \"text/calendar\" MIME object. When: 7/1/1997 10:00AM PDT - 7/1/97 10:30AM PDT Where: Organizer: foo1@example.com Summary: Phone Conference"
    }
   },
   {
@@ -933,7 +947,8 @@
    "raw": "From: foo1@example.com\r\nTo: foo2@example.com\r\nSubject: Phone Conference\r\nMime-Version: 1.0\r\nContent-Type: multipart/related; boundary=\"boundary-example-1\"\r\n\r\n--boundary-example-1\r\n\r\nContent-Type: text/calendar; method=REQUEST; charset=US-ASCII\r\nContent-Transfer-Encoding: 7bit\r\nContent-Disposition: attachment; filename=\"event.ics\"\r\n\r\nBEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REQUEST\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:foo1@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:foo1@example.com\r\nATTENDEE;RSVP=YES;CUTYPE=INDIVIDUAL:mailto:foo2@example.com\r\nDTSTAMP:19970611T190000Z\r\nDTSTART:19970701T180000Z\r\nDTEND:19970701T183000Z\r\nSUMMARY:Phone Conference\r\nUID:calsvr.example.com-8739701987387771\r\nATTACH:cid:123456789@example.com\r\nSEQUENCE:0\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n\r\n--boundary-example-1\r\nContent-Type: application/msword; name=\"FieldReport.doc\"\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: inline; filename=\"FieldReport.doc\"\r\nContent-ID: <123456789@example.com>\r\n\r\n0M8R4KGxGuEAAAAAAAAAAAAAAAAAAAAAPgADAP7/CQAGAAAAAAAAAAABAAAARAAAAAAA\r\nAAAAEAAAQAAAAAEAAAD+////AAAAAEUAAAD/////////////////////////////////\r\n ...\r\n\r\n--boundary-example-1--\r\n",
    "expect": {
     "title": "Phone Conference",
-    "who": "foo1@example.com"
+    "who": "foo1@example.com",
+    "body": "Content-Type: text/calendar; method=REQUEST; charset=US-ASCII Content-Transfer-Encoding: 7bit Content-Disposition: attachment; filename=\"event.ics\" BEGIN:VCALENDAR PRODID:-//Example/ExampleCalendarClient//EN METHOD:REQUEST VERSION:2.0 BEGIN:VEVENT ORGANIZER:mailto:foo1@example.com ATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:foo1@example.com ATTENDEE;RSVP=YES;CUTYPE=INDIVIDUAL:mailto:foo2@example.com DTSTAMP:19970611T190000Z DTSTART:19970701T180000Z DTEND:19970701T183000Z SUMMARY:Phone Conference UID:calsvr.example.com-8739701987387771 ATTACH:cid:123456789@example.com SEQUENCE:0 STATUS:CONFIRMED END:VEVENT END:VCALENDAR"
    }
   },
   {
@@ -963,7 +978,134 @@
    "raw": "From: foo1@example.com\r\nMIME-Version: 1.0\r\nTo: foo2@example.com,foo3@example.com\r\nSubject: REQUEST - Phone Conference\r\nContent-Type: multipart/related;\r\n              boundary=\"--FEE3790DC7E35189CA67CE2C\"\r\n\r\n----FEE3790DC7E35189CA67CE2C\r\nContent-Type: multipart/alternative;\r\n              boundary=\"--00FEE3790DC7E35189CA67CE2C00\"\r\n----00FEE3790DC7E35189CA67CE2C00\r\nContent-Type: text/plain; charset=us-ascii\r\nContent-Transfer-Encoding: 7bit\r\n\r\nWhen: 7/1/1997 10:00PM PDT - 7/1/97 10:30 PM PDT\r\nWhere:\r\nOrganizer: foo1@example.com\r\nSummary: Let's discuss the attached document\r\n\r\n----00FEE3790DC7E35189CA67CE2C00\r\n\r\nContent-Type: text/calendar; method=REQUEST; charset=US-ASCII;\r\n                 Component=vevent\r\nContent-Transfer-Encoding: 7bit\r\nContent-Disposition: attachment; filename=\"event.ics\"\r\n\r\nBEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REQUEST\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:foo1@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:foo1@example.com\r\nATTENDEE;RSVP=YES;CUTYPE=INDIVIDUAL:mailto:foo2@example.com\r\nATTENDEE;RSVP=YES;CUTYPE=INDIVIDUAL:mailto:foo3@example.com\r\nDTSTAMP:19970611T190000Z\r\nDTSTART:19970621T170000Z\r\nDTEND:199706211T173000Z\r\nSUMMARY:Let's discuss the attached document\r\nUID:calsvr.example.com-873970198738777-8aa\r\nATTACH:cid:calsvr.example.com-12345aaa\r\nSEQUENCE:0\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n\r\n----00FEE3790DC7E35189CA67CE2C00\r\n----FEE3790DC7E35189CA67CE2C\r\nContent-Type: application/msword; name=\"FieldReport.doc\"\r\nContent-Transfer-Encoding: base64\r\nContent-Disposition: inline; filename=\"FieldReport.doc\"\r\nContent-ID: <calsvr.example.com-12345aaa>\r\n\r\nR0lGODdhTAQZAJEAAFVVVd3d3e4AAP///ywAAAAATAQZAAAC/5yPOSLhD6OctNqLs94Xq\r\nAG4kiW5omm6sq27gvH8kzX9o1y+s73/g8MCofEovGITCoxKMbyCR16cNSq9YrNarfcrvd\r\nriIH5LL5jE6rxc3G+v2cguf0uv2Oz+v38L7/DxgoOKjURnjIIbe3yNjo+AgZWYVIWWl5i\r\nZnJY6J\r\n ...\r\n\r\n----FEE3790DC7E35189CA67CE2C\r\n",
    "expect": {
     "title": "REQUEST - Phone Conference",
-    "who": "foo1@example.com"
+    "who": "foo1@example.com",
+    "body": "When: 7/1/1997 10:00PM PDT - 7/1/97 10:30 PM PDT Where: Organizer: foo1@example.com Summary: Let's discuss the attached document"
+   }
+  },
+  {
+   "id": "rfc2047-1",
+   "source": "rfc2047",
+   "kind": "headerText",
+   "raw": "{\"encoded\": \"=?ISO-8859-1?Q?a?=\", \"displayed\": \"a\"}",
+   "expect": {
+    "text": "a"
+   }
+  },
+  {
+   "id": "rfc2047-2",
+   "source": "rfc2047",
+   "kind": "headerText",
+   "raw": "{\"encoded\": \"=?ISO-8859-1?Q?a?= b\", \"displayed\": \"a b\"}",
+   "expect": {
+    "text": "a b"
+   }
+  },
+  {
+   "id": "rfc2047-3",
+   "source": "rfc2047",
+   "kind": "headerText",
+   "raw": "{\"encoded\": \"=?ISO-8859-1?Q?a?= =?ISO-8859-1?Q?b?=\", \"displayed\": \"ab\"}",
+   "expect": {
+    "text": "ab"
+   }
+  },
+  {
+   "id": "rfc2047-4",
+   "source": "rfc2047",
+   "kind": "headerText",
+   "raw": "{\"encoded\": \"=?ISO-8859-1?Q?a?=  =?ISO-8859-1?Q?b?=\", \"displayed\": \"ab\"}",
+   "expect": {
+    "text": "ab"
+   }
+  },
+  {
+   "id": "rfc2047-5",
+   "source": "rfc2047",
+   "kind": "headerText",
+   "raw": "{\"encoded\": \"=?ISO-8859-1?Q?a?=\\r\\n       =?ISO-8859-1?Q?b?=\", \"displayed\": \"ab\"}",
+   "expect": {
+    "text": "ab"
+   }
+  },
+  {
+   "id": "rfc2047-6",
+   "source": "rfc2047",
+   "kind": "headerText",
+   "raw": "{\"encoded\": \"=?ISO-8859-1?Q?a_b?=\", \"displayed\": \"a b\"}",
+   "expect": {
+    "text": "a b"
+   }
+  },
+  {
+   "id": "rfc2047-7",
+   "source": "rfc2047",
+   "kind": "headerText",
+   "raw": "{\"encoded\": \"=?ISO-8859-1?Q?a?= =?ISO-8859-2?Q?_b?=\", \"displayed\": \"a b\"}",
+   "expect": {
+    "text": "a b"
+   }
+  },
+  {
+   "id": "rfc4648-1",
+   "source": "rfc4648",
+   "kind": "base64",
+   "raw": "{\"decoded\": \"\", \"encoded\": \"\"}",
+   "expect": {
+    "text": ""
+   }
+  },
+  {
+   "id": "rfc4648-2",
+   "source": "rfc4648",
+   "kind": "base64",
+   "raw": "{\"decoded\": \"f\", \"encoded\": \"Zg==\"}",
+   "expect": {
+    "text": "f"
+   }
+  },
+  {
+   "id": "rfc4648-3",
+   "source": "rfc4648",
+   "kind": "base64",
+   "raw": "{\"decoded\": \"fo\", \"encoded\": \"Zm8=\"}",
+   "expect": {
+    "text": "fo"
+   }
+  },
+  {
+   "id": "rfc4648-4",
+   "source": "rfc4648",
+   "kind": "base64",
+   "raw": "{\"decoded\": \"foo\", \"encoded\": \"Zm9v\"}",
+   "expect": {
+    "text": "foo"
+   }
+  },
+  {
+   "id": "rfc4648-5",
+   "source": "rfc4648",
+   "kind": "base64",
+   "raw": "{\"decoded\": \"foob\", \"encoded\": \"Zm9vYg==\"}",
+   "expect": {
+    "text": "foob"
+   }
+  },
+  {
+   "id": "rfc4648-6",
+   "source": "rfc4648",
+   "kind": "base64",
+   "raw": "{\"decoded\": \"fooba\", \"encoded\": \"Zm9vYmE=\"}",
+   "expect": {
+    "text": "fooba"
+   }
+  },
+  {
+   "id": "rfc4648-7",
+   "source": "rfc4648",
+   "kind": "base64",
+   "raw": "{\"decoded\": \"foobar\", \"encoded\": \"Zm9vYmFy\"}",
+   "expect": {
+    "text": "foobar"
    }
   }
  ]

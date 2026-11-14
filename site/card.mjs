@@ -57,8 +57,10 @@ function headers(text) {
 }
 
 // RFC 2047 encoded words, the common case of a subject or a sender's name.
-function words(value = "") {
-  return value.replace(/=\?([^?]+)\?([bqBQ])\?([^?]*)\?=/g, (_, charset, kind, data) => {
+// White space between two adjacent encoded words, folding included, is not
+// displayed (section 6.2).
+export function headerWords(value = "") {
+  return value.replace(/(\?=)(?:\r?\n)?[ \t]+(?=(?:\r?\n)?[ \t]*=\?[^?]+\?[bqBQ]\?)/g, "$1").replace(/(\?=)\r?\n[ \t]*(?==\?)/g, "$1").replace(/=\?([^?]+)\?([bqBQ])\?([^?]*)\?=/g, (_, charset, kind, data) => {
     try {
       const bytes = kind.toUpperCase() === "B"
         ? Uint8Array.from(atob(data), (c) => c.charCodeAt(0))
@@ -87,7 +89,7 @@ function uncomment(value = "") {
 const person = (raw = "") => {
   const from = uncomment(raw);
   const named = /^\s*"?([^"<]+?)"?\s*<[^>]+>\s*$/.exec(from);
-  return words(named ? named[1] : from.replace(/[<>]/g, ""));
+  return headerWords(named ? named[1] : from.replace(/[<>]/g, ""));
 };
 
 function calendarLine(text, name) {
@@ -143,7 +145,7 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const when = Date.parse(h.date ?? "");
     // A message the owner sent has no From: the other party is its To.
     const body = reader ? reader.messageBody(text) : text.split(/\r?\n\r?\n/).slice(1).join("\n\n").trim();
-    return { ...base, at: Number.isNaN(when) ? base.at : when, title: words(h.subject ?? "").replace(/\s+/g, " ").trim(), who: person(h.from || h.to), text, body };
+    return { ...base, at: Number.isNaN(when) ? base.at : when, title: headerWords(h.subject ?? "").replace(/\s+/g, " ").trim(), who: person(h.from || h.to), text, body };
   }
   if (base.media === "calendar") {
     // The event's own fields: the calendar's time zones come first and carry DTSTARTs of their own (1970).

@@ -1,5 +1,5 @@
 {
-  "comment": "Validation oracles: the published specifications whose own examples are the Prism's test content. tools/oracle/gen.py fetches each source at its pinned SHA-256, takes its examples out mechanically (an example is kept only if every address in it is at a domain reserved for documentation, RFC 2606 and RFC 6761, so no real person's address enters the repository), and reads each one with a reference reader written to the source's own grammar. test/oracle/read.test.mjs then holds the Prism's reading (site/card.mjs readItem) to that reading, field by field. Nothing here is invented: a new kind of content is added by naming the specification it follows.",
+  "comment": "Validation oracles: the published specifications whose own examples are the Prism's test content. tools/oracle/gen.py fetches each source at its pinned SHA-256, takes its examples out mechanically (an example is kept only if every address in it is at a domain reserved for documentation, RFC 2606 and RFC 6761, so no real person's address enters the repository), and reads each one with a reference reader written to the source's own grammar. test/oracle/read.test.mjs then holds the Prism's reading (site/card.mjs readItem) to that reading, field by field: a message's title, sender, time and plain words; an event's title, place and start; a card's name; a header's encoded words as the specification says they display; a base64 test vector as it decodes. Nothing here is invented: a new kind of content is added by naming the specification it follows.",
   "reserved": [
     "example",
     "example.com",
@@ -49,6 +49,22 @@
       "url": "https://www.rfc-editor.org/rfc/rfc6047.txt",
       "sha256": "79d66621adbef4ad5cead0a84b4952fe931e935ad12a50adad4694579711d579",
       "examples": "headers"
+    },
+    {
+      "key": "rfc2047",
+      "kind": "headerText",
+      "title": "RFC 2047 MIME Part Three: Message Header Extensions for Non-ASCII Text, Section 8 Examples",
+      "url": "https://www.rfc-editor.org/rfc/rfc2047.txt",
+      "sha256": "f3b1356151ae24d616076880115c5ac0c313a88bcbe76d32d0cacf4b5f24f01d",
+      "examples": "displayed"
+    },
+    {
+      "key": "rfc4648",
+      "kind": "base64",
+      "title": "RFC 4648 The Base16, Base32, and Base64 Data Encodings, Section 10 Test Vectors",
+      "url": "https://www.rfc-editor.org/rfc/rfc4648.txt",
+      "sha256": "84e14418f795d503be5f34bf23ce4ebaa119e9ec7c9f667d8caeb111385b178f",
+      "examples": "vectors"
     }
   ],
   "debt": []

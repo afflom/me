@@ -7,7 +7,11 @@ examples are taken out mechanically:
   - "vcalendar": every object from BEGIN:VCALENDAR to END:VCALENDAR;
   - "vcard": every object from BEGIN:VCARD to END:VCARD (RFC 6350);
   - "headers": every indented block that opens with a From field and runs to
-    the next line of prose (RFC 6047's example messages).
+    the next line of prose (RFC 6047's example messages);
+  - "displayed": each row of an "encoded form / displayed as" table, the
+    encoded form and what the specification says it displays as (RFC 2047
+    section 8), each without the parentheses around it;
+  - "vectors": each NAME("input") = "output" test vector (RFC 4648 section 10).
 An example is kept only if every address in it is at a domain reserved for
 documentation (the spec's "reserved" list, after RFC 2606 and RFC 6761), so no
 real person's address enters the repository; likewise every international
@@ -15,20 +19,25 @@ phone number must be in the fictional range PV-01 allows.
 
 Each kept example is then read by a reference reader written to the source's
 own grammar, independent of the Prism's code: a message by Python's email
-package (policy.default, which implements RFC 5322 and the MIME RFCs), an
+package (policy.default, which implements RFC 5322 and the MIME RFCs), its
+plain words included (transfer encoding and charset undone), an
 iCalendar object by its content lines (RFC 5545 section 3.1: unfolding,
 parameters, TEXT escapes, DATE and DATE-TIME with TZID, UTC or floating), a
 vCard by the same content lines (RFC 6350 section 3.3, the formatted name and
 first email). What
 the reader finds is what test/oracle/read.test.mjs holds the Prism's reading to.
+A displayed row and a test vector carry the specification's own answer, which
+Python's email.header and base64 must also give, or the extraction is refused.
 
 Writes test/oracle/corpus.json. --check refuses a stale one. --cache DIR reads
 and keeps the fetched sources there.
 
 usage: python3 -I tools/oracle/gen.py [--check] [--cache DIR]
 """
+import base64
 import datetime
 import email
+import email.header
 import email.policy
 import email.utils
 import hashlib
@@ -154,6 +163,37 @@ def headers(text):
             i += 1
 
 
+def displayed(text):
+    """Rows of the table under "encoded form ... displayed as", split at the
+    column the table's own heading sets. A row whose encoded form runs on to
+    the next line (no closing parenthesis yet) is joined to it by CRLF and
+    the continuation's own leading white space, as a folded field is."""
+    lines = text.split("\n")
+    head = next(i for i, l in enumerate(lines) if re.match(r"^ {3}encoded form\s+displayed as\s*$", l))
+    at = lines[head].index("displayed as")
+    i = head + 1
+    while i < len(lines) and not re.match(r"^\d+\. ", lines[i]):
+        line = lines[i]
+        encoded, shown = line[:at].rstrip(), line[at:].strip()
+        if re.match(r"^ {3}\(=\?", line) and shown.startswith("(") and shown.endswith(")"):
+            encoded = encoded.strip()
+            while not encoded.endswith(")"):
+                i += 1
+                encoded += "\r\n" + lines[i].rstrip()
+            yield json.dumps({"encoded": encoded[1:-1], "displayed": shown[1:-1]})
+        i += 1
+
+
+VECTOR = re.compile(r'^\s+BASE64\("([^"]*)"\) = "([^"]*)"\s*$')
+
+
+def vectors(text):
+    for line in text.split("\n"):
+        m = VECTOR.match(line)
+        if m:
+            yield json.dumps({"decoded": m.group(1), "encoded": m.group(2)})
+
+
 ADDRESS = re.compile(r"[A-Za-z0-9._%+!$&*=^`{|}~'-]+@([A-Za-z0-9.-]+)")
 
 
@@ -198,7 +238,29 @@ def read_message(raw):
                 expect["at"] = ms(when)
         except (AttributeError, ValueError, TypeError):
             pass
+    # The plain words a person reads (RFC 2045/2046: the first text/plain
+    # part not an attachment, its transfer encoding and charset undone).
+    plain = msg.get_body(preferencelist=("plain",))
+    if plain is not None and not plain.is_attachment():
+        words = re.sub(r"\s+", " ", plain.get_content()).strip()
+        if words:
+            expect["body"] = words
     return expect
+
+
+def read_displayed(raw):
+    row = json.loads(raw)
+    python = str(email.header.make_header(email.header.decode_header(row["encoded"])))
+    if python != row["displayed"]:
+        refuse(f"RFC 2047 says {row['encoded']!r} displays as {row['displayed']!r}; Python's email.header reads {python!r}")
+    return {"text": row["displayed"]}
+
+
+def read_vector(raw):
+    row = json.loads(raw)
+    if base64.b64decode(row["encoded"]).decode("ascii") != row["decoded"]:
+        refuse(f"the vector {row} does not decode as written")
+    return {"text": row["decoded"]}
 
 
 def content_lines(raw):
@@ -284,8 +346,8 @@ def read_contact(raw):
 corpus = []
 for source in SPEC["sources"]:
     text = unpaginate(fetch(source))
-    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers}[source["examples"]]
-    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact}[source["kind"]]
+    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors}[source["examples"]]
+    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector}[source["kind"]]
     n = kept = 0
     for raw in take(text):
         n += 1
