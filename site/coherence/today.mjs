@@ -33,7 +33,7 @@ export async function today(items, { now = Date.now(), relate, done, mine = () =
   };
   const horizon = base + TODAY.ahead * DAY;
   const events = items
-    .filter((item) => item.media === "calendar" && !item.sealed && item.at < horizon && endOf(item) > now)
+    .filter((item) => item.media === "calendar" && !item.sealed && !item.undated && !item.cancelled && item.at < horizon && endOf(item) > now)
     .sort((a, b) => a.at - b.at);
   const agenda = [];
   for (const item of events) {
