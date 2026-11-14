@@ -6,9 +6,10 @@ import { appendFileSync, createReadStream, existsSync, readFileSync } from "node
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { extname, join, resolve } from "node:path";
+import { load } from "../../tools/specs/record.mjs";
 
 export const { chromium } = createRequire(import.meta.url)("playwright");
-export const product = JSON.parse(readFileSync("app/specs/product/spec.json", "utf8"));
+export const product = load("app/specs/product/spec.json");
 export const surface = JSON.parse(readFileSync("app/specs/surface/spec.json", "utf8"));
 const site = resolve(process.env.PAGE_SITE ?? "site");
 const published = process.env.PAGE_URL;

@@ -13,8 +13,9 @@ import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
 import { deflateRawSync } from "node:zlib";
+import { load } from "../../tools/specs/record.mjs";
 
-const SPEC = JSON.parse(readFileSync("app/specs/coherence/spec.json", "utf8"));
+const SPEC = load("app/specs/coherence/spec.json");
 const gate = (spec) => {
   const args = ["-I", "tools/coherence/gen.py"];
   if (spec) {

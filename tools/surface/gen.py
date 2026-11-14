@@ -177,7 +177,11 @@ SETTING_KEYS = [x["key"] for x in SPEC["settings"]]
 # The panel: every person setting in exactly one section, in the order a person
 # needs them; each section serves journeys or lasting goals the product record
 # names, so nothing is in the panel that no success of the person's asks for.
-PRODUCT = json.loads((ROOT / "app/specs/product/spec.json").read_text())
+import importlib.util as _ilu
+_rec = _ilu.spec_from_file_location("record", ROOT / "tools/specs/record.py")
+record = _ilu.module_from_spec(_rec)
+_rec.loader.exec_module(record)
+PRODUCT = record.load(ROOT / "app/specs/product/spec.json")
 SUCCESS = {j["key"] for j in PRODUCT["journeys"]} | {a["key"] for a in PRODUCT["always"]}
 for x in SPEC["sections"]:
     if x["reveal"] not in REVEALS:
