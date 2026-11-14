@@ -293,6 +293,29 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
   ok((await installed(silent, 20)) === 'none', 'no extension, no answer');
   const items = await pullFrom(win, { halted: 'no', ms: 200 });
   ok(items.length === 2, 'malformed items are dropped');
+  // The reading: a raised reading names the service anew to the extension, and
+  // all that comes back is named by the service's own key.
+  const { wired, unwired, ask: askOf } = await import('./extension.mjs');
+  const { SERVICES: DECLARED } = await import('../source/declared.mjs');
+  const gmailDeclared = DECLARED.find((s) => s.key === 'gmail');
+  ok(wired(gmailDeclared) === `gmail~${gmailDeclared.reading}` && gmailDeclared.reading > 1 && wired({ key: 'calendar' }) === 'calendar' && unwired('gmail~2') === 'gmail' && unwired('calendar') === 'calendar', 'a raised reading names the service with its reading, and the name comes back to its key');
+  const named = new EventTarget();
+  named.location = win.location;
+  const heard = [];
+  named.postMessage = (data) => queueMicrotask(() => {
+    named.dispatchEvent(Object.assign(new Event('message'), { data, source: named, origin: named.location.origin }));
+    if (data.from !== 'page') return;
+    heard.push(data);
+    if (data.prism === 'pull') named.postMessage({ prism: 'items', from: 'extension', id: data.id, items: data.services.map((s) => ({ service: s.key, route: 'own', format: 'eml', text: RAW })) });
+    if (data.prism === 'status') named.postMessage({ prism: 'answer', from: 'extension', id: data.id, services: { [wired(gmailDeclared)]: { read: 3 }, calendar: { read: 1 } } });
+    if (data.prism === 'pin') named.postMessage({ prism: 'answer', from: 'extension', id: data.id, pinned: data.service === wired(gmailDeclared) });
+  });
+  const back = await pullFrom(named, { halted: 'no', services: DECLARED, ms: 200 });
+  ok(heard[0].services.some((s) => s.key === wired(gmailDeclared)) && !heard[0].services.some((s) => s.key === 'gmail'), 'the extension is sent the service by its reading');
+  ok(back.length === DECLARED.length && back.every((i) => DECLARED.some((s) => s.key === i.service)), 'items come back by the service key the page reads them under');
+  const status = await askOf(named, 'status', {}, 200);
+  ok(status.services.gmail?.read === 3 && status.services.calendar?.read === 1 && !status.services[wired(gmailDeclared)], 'the status rows are kept under the service key');
+  ok((await askOf(named, 'pin', { service: 'gmail' }, 200))?.pinned === true, 'a pin names the service by its reading');
   const read = await device.readItems(items);
   ok(read.store === 1 && read.skip === 1, `an item is kept by its own first bytes, never its claim: ${JSON.stringify(read)}`);
   delete globalThis.chrome;
