@@ -38,6 +38,9 @@ function misses(example) {
     else if ("local" in e.start && !("zone" in e.start)) same("start", e.start.local, Number.isFinite(item.at) ? localOf(item.at) : String(item.at));
   }
   if (e.start && "date" in e.start) same("allDay", true, item.allDay);
+  // Where it stands in its own order: its conversation (RFC 5322 3.6.4) and its revisions (RFC 5545 UID, SEQUENCE).
+  for (const field of ["id", "uid", "sequence"]) if (field in e) same(field, e[field], item[field]);
+  for (const field of ["replyTo", "refs"]) if (field in e) same(field, JSON.stringify(e[field]), JSON.stringify(item[field] ?? []));
   return out;
 }
 
