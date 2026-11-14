@@ -86,7 +86,9 @@ function icsTime(value) {
 
 // How the person's content reads (site/read/read.mjs), loaded once something is kept.
 let reader = null;
-function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
+// The Node suites read real-shaped bytes the way the page does.
+export const useReader = (module) => { reader = module; };
+export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
   const about = meta.about ?? {};
   const base = { address, domain: about.domain ?? 11, media: about.media ?? "plainText", label: meta.label, at: about.at ?? at };
   // What the R4 router mapped it onto when it came in: its time, its intent and its places.
@@ -240,6 +242,13 @@ export default async function start({ app, reason, $ }) {
     items = read.sort((a, b) => b.at - a.at);
     // The people in what is kept, for the place that lists them.
     if (selfOf) { inferred = selfOf(items); mineOf = fromMe; }
+    // Every item labeled by the readers compiled into the Prism (who it is
+    // with, what kind of thing it is, what it is about), after they have
+    // learned from the person's own content. Under the halt switch, none.
+    if (items.length) {
+      const { labelAll } = await import("./router/labels.mjs");
+      await labelAll(items, { line, halted, me: meNow() }).catch((error) => { for (const item of items) item.labels = null; console.warn(`labels: ${error?.message ?? error}`); });
+    }
     people = peopleOf ? { place: peoplePlace, all: peopleOf(items, meNow()), between } : null;
   }
 

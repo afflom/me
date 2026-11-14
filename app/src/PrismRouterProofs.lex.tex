@@ -9,7 +9,7 @@ definition{
   name: routerBreaksInv001,
   parameters: [request : PrismRouter::RouterRequest],
   result: Bool,
-  body: ((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedYes))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerRefuse))))
+  body: ((((((((project request source) <? 4) && ((project request value) <? 5)) && ((project request feature) <? 6)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedYes))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerRefuse))))
 }
 
 theorem{
@@ -23,9 +23,11 @@ theorem{
       PrismRouter::routerAnswerRefuse,
       PrismRouter::routerAnswerSkip,
       PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureKind,
       PrismRouter::routerFeatureMeaning,
       PrismRouter::routerFeatureParty,
       PrismRouter::routerFeatureTime,
+      PrismRouter::routerFeatureTopic,
       PrismRouter::routerHaltedNo,
       PrismRouter::routerHaltedYes,
       PrismRouter::routerJudge,
@@ -37,6 +39,7 @@ theorem{
       PrismRouter::routerSourceMessage,
       PrismRouter::routerSourceNote,
       PrismRouter::routerValueParty,
+      PrismRouter::routerValueShape,
       PrismRouter::routerValueStart,
       PrismRouter::routerValueSubject,
       PrismRouter::routerValueText,
@@ -50,7 +53,7 @@ definition{
   name: routerBreaksInv002,
   parameters: [request : PrismRouter::RouterRequest],
   result: Bool,
-  body: (((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedNo))) && ((project request provider) =? (PrismRouter::routerProviderMismatch))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerRefuse))))
+  body: (((((((((project request source) <? 4) && ((project request value) <? 5)) && ((project request feature) <? 6)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedNo))) && ((project request provider) =? (PrismRouter::routerProviderMismatch))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerRefuse))))
 }
 
 theorem{
@@ -64,9 +67,11 @@ theorem{
       PrismRouter::routerAnswerRefuse,
       PrismRouter::routerAnswerSkip,
       PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureKind,
       PrismRouter::routerFeatureMeaning,
       PrismRouter::routerFeatureParty,
       PrismRouter::routerFeatureTime,
+      PrismRouter::routerFeatureTopic,
       PrismRouter::routerHaltedNo,
       PrismRouter::routerHaltedYes,
       PrismRouter::routerJudge,
@@ -78,6 +83,7 @@ theorem{
       PrismRouter::routerSourceMessage,
       PrismRouter::routerSourceNote,
       PrismRouter::routerValueParty,
+      PrismRouter::routerValueShape,
       PrismRouter::routerValueStart,
       PrismRouter::routerValueSubject,
       PrismRouter::routerValueText,
@@ -91,7 +97,7 @@ definition{
   name: routerBreaksInv003,
   parameters: [request : PrismRouter::RouterRequest],
   result: Bool,
-  body: ((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request provider) =? (PrismRouter::routerProviderAbsent))) && ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap)))
+  body: ((((((((project request source) <? 4) && ((project request value) <? 5)) && ((project request feature) <? 6)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request provider) =? (PrismRouter::routerProviderAbsent))) && ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap)))
 }
 
 theorem{
@@ -105,9 +111,11 @@ theorem{
       PrismRouter::routerAnswerRefuse,
       PrismRouter::routerAnswerSkip,
       PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureKind,
       PrismRouter::routerFeatureMeaning,
       PrismRouter::routerFeatureParty,
       PrismRouter::routerFeatureTime,
+      PrismRouter::routerFeatureTopic,
       PrismRouter::routerHaltedNo,
       PrismRouter::routerHaltedYes,
       PrismRouter::routerJudge,
@@ -119,6 +127,7 @@ theorem{
       PrismRouter::routerSourceMessage,
       PrismRouter::routerSourceNote,
       PrismRouter::routerValueParty,
+      PrismRouter::routerValueShape,
       PrismRouter::routerValueStart,
       PrismRouter::routerValueSubject,
       PrismRouter::routerValueText,
@@ -132,7 +141,7 @@ definition{
   name: routerBreaksInv004,
   parameters: [request : PrismRouter::RouterRequest],
   result: Bool,
-  body: ((((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedNo))) && ((project request provider) =? (PrismRouter::routerProviderCompiled))) && ((project request value) =? (PrismRouter::routerValueText))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap))))
+  body: ((((((((((project request source) <? 4) && ((project request value) <? 5)) && ((project request feature) <? 6)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedNo))) && ((project request provider) =? (PrismRouter::routerProviderCompiled))) && ((project request value) =? (PrismRouter::routerValueText))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap))))
 }
 
 theorem{
@@ -146,9 +155,11 @@ theorem{
       PrismRouter::routerAnswerRefuse,
       PrismRouter::routerAnswerSkip,
       PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureKind,
       PrismRouter::routerFeatureMeaning,
       PrismRouter::routerFeatureParty,
       PrismRouter::routerFeatureTime,
+      PrismRouter::routerFeatureTopic,
       PrismRouter::routerHaltedNo,
       PrismRouter::routerHaltedYes,
       PrismRouter::routerJudge,
@@ -160,6 +171,7 @@ theorem{
       PrismRouter::routerSourceMessage,
       PrismRouter::routerSourceNote,
       PrismRouter::routerValueParty,
+      PrismRouter::routerValueShape,
       PrismRouter::routerValueStart,
       PrismRouter::routerValueSubject,
       PrismRouter::routerValueText,
@@ -173,7 +185,7 @@ definition{
   name: routerBreaksInv005,
   parameters: [request : PrismRouter::RouterRequest],
   result: Bool,
-  body: ((((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedNo))) && ((project request provider) =? (PrismRouter::routerProviderCompiled))) && ((project request value) =? (PrismRouter::routerValueSubject))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap))))
+  body: ((((((((((project request source) <? 4) && ((project request value) <? 5)) && ((project request feature) <? 6)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedNo))) && ((project request provider) =? (PrismRouter::routerProviderCompiled))) && ((project request value) =? (PrismRouter::routerValueSubject))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap))))
 }
 
 theorem{
@@ -187,9 +199,11 @@ theorem{
       PrismRouter::routerAnswerRefuse,
       PrismRouter::routerAnswerSkip,
       PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureKind,
       PrismRouter::routerFeatureMeaning,
       PrismRouter::routerFeatureParty,
       PrismRouter::routerFeatureTime,
+      PrismRouter::routerFeatureTopic,
       PrismRouter::routerHaltedNo,
       PrismRouter::routerHaltedYes,
       PrismRouter::routerJudge,
@@ -201,6 +215,7 @@ theorem{
       PrismRouter::routerSourceMessage,
       PrismRouter::routerSourceNote,
       PrismRouter::routerValueParty,
+      PrismRouter::routerValueShape,
       PrismRouter::routerValueStart,
       PrismRouter::routerValueSubject,
       PrismRouter::routerValueText,
@@ -214,7 +229,7 @@ definition{
   name: routerBreaksInv006,
   parameters: [request : PrismRouter::RouterRequest],
   result: Bool,
-  body: ((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request value) =? (PrismRouter::routerValueStart))) && ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap)))
+  body: ((((((((project request source) <? 4) && ((project request value) <? 5)) && ((project request feature) <? 6)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request value) =? (PrismRouter::routerValueStart))) && ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap)))
 }
 
 theorem{
@@ -228,9 +243,11 @@ theorem{
       PrismRouter::routerAnswerRefuse,
       PrismRouter::routerAnswerSkip,
       PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureKind,
       PrismRouter::routerFeatureMeaning,
       PrismRouter::routerFeatureParty,
       PrismRouter::routerFeatureTime,
+      PrismRouter::routerFeatureTopic,
       PrismRouter::routerHaltedNo,
       PrismRouter::routerHaltedYes,
       PrismRouter::routerJudge,
@@ -242,6 +259,7 @@ theorem{
       PrismRouter::routerSourceMessage,
       PrismRouter::routerSourceNote,
       PrismRouter::routerValueParty,
+      PrismRouter::routerValueShape,
       PrismRouter::routerValueStart,
       PrismRouter::routerValueSubject,
       PrismRouter::routerValueText,
@@ -255,7 +273,7 @@ definition{
   name: routerBreaksInv007,
   parameters: [request : PrismRouter::RouterRequest],
   result: Bool,
-  body: ((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request value) =? (PrismRouter::routerValueParty))) && ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap)))
+  body: ((((((((project request source) <? 4) && ((project request value) <? 5)) && ((project request feature) <? 6)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request value) =? (PrismRouter::routerValueParty))) && ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap)))
 }
 
 theorem{
@@ -269,9 +287,11 @@ theorem{
       PrismRouter::routerAnswerRefuse,
       PrismRouter::routerAnswerSkip,
       PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureKind,
       PrismRouter::routerFeatureMeaning,
       PrismRouter::routerFeatureParty,
       PrismRouter::routerFeatureTime,
+      PrismRouter::routerFeatureTopic,
       PrismRouter::routerHaltedNo,
       PrismRouter::routerHaltedYes,
       PrismRouter::routerJudge,
@@ -283,6 +303,7 @@ theorem{
       PrismRouter::routerSourceMessage,
       PrismRouter::routerSourceNote,
       PrismRouter::routerValueParty,
+      PrismRouter::routerValueShape,
       PrismRouter::routerValueStart,
       PrismRouter::routerValueSubject,
       PrismRouter::routerValueText,
@@ -296,7 +317,7 @@ definition{
   name: routerBreaksInv008,
   parameters: [request : PrismRouter::RouterRequest],
   result: Bool,
-  body: ((((((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedNo))) && ((project request provider) =? (PrismRouter::routerProviderAbsent))) && ((project request source) =? (PrismRouter::routerSourceCalendar))) && ((project request value) =? (PrismRouter::routerValueStart))) && ((project request feature) =? (PrismRouter::routerFeatureTime))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerDirect))))
+  body: ((((((((((((project request source) <? 4) && ((project request value) <? 5)) && ((project request feature) <? 6)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedNo))) && ((project request provider) =? (PrismRouter::routerProviderAbsent))) && ((project request source) =? (PrismRouter::routerSourceCalendar))) && ((project request value) =? (PrismRouter::routerValueStart))) && ((project request feature) =? (PrismRouter::routerFeatureTime))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerDirect))))
 }
 
 theorem{
@@ -310,9 +331,11 @@ theorem{
       PrismRouter::routerAnswerRefuse,
       PrismRouter::routerAnswerSkip,
       PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureKind,
       PrismRouter::routerFeatureMeaning,
       PrismRouter::routerFeatureParty,
       PrismRouter::routerFeatureTime,
+      PrismRouter::routerFeatureTopic,
       PrismRouter::routerHaltedNo,
       PrismRouter::routerHaltedYes,
       PrismRouter::routerJudge,
@@ -324,6 +347,7 @@ theorem{
       PrismRouter::routerSourceMessage,
       PrismRouter::routerSourceNote,
       PrismRouter::routerValueParty,
+      PrismRouter::routerValueShape,
       PrismRouter::routerValueStart,
       PrismRouter::routerValueSubject,
       PrismRouter::routerValueText,
@@ -337,7 +361,7 @@ definition{
   name: routerBreaksInv009,
   parameters: [request : PrismRouter::RouterRequest],
   result: Bool,
-  body: (((((((((project request source) <? 4) && ((project request value) <? 4)) && ((project request feature) <? 4)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request source) =? (PrismRouter::routerSourceNote))) && ((project request value) =? (PrismRouter::routerValueStart))) && ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerDirect)))
+  body: (((((((((project request source) <? 4) && ((project request value) <? 5)) && ((project request feature) <? 6)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request source) =? (PrismRouter::routerSourceNote))) && ((project request value) =? (PrismRouter::routerValueStart))) && ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerDirect)))
 }
 
 theorem{
@@ -351,9 +375,11 @@ theorem{
       PrismRouter::routerAnswerRefuse,
       PrismRouter::routerAnswerSkip,
       PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureKind,
       PrismRouter::routerFeatureMeaning,
       PrismRouter::routerFeatureParty,
       PrismRouter::routerFeatureTime,
+      PrismRouter::routerFeatureTopic,
       PrismRouter::routerHaltedNo,
       PrismRouter::routerHaltedYes,
       PrismRouter::routerJudge,
@@ -365,10 +391,187 @@ theorem{
       PrismRouter::routerSourceMessage,
       PrismRouter::routerSourceNote,
       PrismRouter::routerValueParty,
+      PrismRouter::routerValueShape,
       PrismRouter::routerValueStart,
       PrismRouter::routerValueSubject,
       PrismRouter::routerValueText,
       routerBreaksInv009
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerBreaksInv010,
+  parameters: [request : PrismRouter::RouterRequest],
+  result: Bool,
+  body: (((((((((((project request source) <? 4) && ((project request value) <? 5)) && ((project request feature) <? 6)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedNo))) && ((project request provider) =? (PrismRouter::routerProviderCompiled))) && ((project request value) =? (PrismRouter::routerValueShape))) && ((project request feature) =? (PrismRouter::routerFeatureKind))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap))))
+}
+
+theorem{
+  name: routerInv010Holds,
+  parameters: [request : PrismRouter::RouterRequest],
+  statement: ((routerBreaksInv010 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismRouter::routerAnswerDirect,
+      PrismRouter::routerAnswerMap,
+      PrismRouter::routerAnswerRefuse,
+      PrismRouter::routerAnswerSkip,
+      PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureKind,
+      PrismRouter::routerFeatureMeaning,
+      PrismRouter::routerFeatureParty,
+      PrismRouter::routerFeatureTime,
+      PrismRouter::routerFeatureTopic,
+      PrismRouter::routerHaltedNo,
+      PrismRouter::routerHaltedYes,
+      PrismRouter::routerJudge,
+      PrismRouter::routerProviderAbsent,
+      PrismRouter::routerProviderCompiled,
+      PrismRouter::routerProviderMismatch,
+      PrismRouter::routerSourceCalendar,
+      PrismRouter::routerSourceContact,
+      PrismRouter::routerSourceMessage,
+      PrismRouter::routerSourceNote,
+      PrismRouter::routerValueParty,
+      PrismRouter::routerValueShape,
+      PrismRouter::routerValueStart,
+      PrismRouter::routerValueSubject,
+      PrismRouter::routerValueText,
+      routerBreaksInv010
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerBreaksInv011,
+  parameters: [request : PrismRouter::RouterRequest],
+  result: Bool,
+  body: (((((((((project request source) <? 4) && ((project request value) <? 5)) && ((project request feature) <? 6)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request value) =? (PrismRouter::routerValueShape))) && ((project request feature) =? (PrismRouter::routerFeatureTopic))) && (((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap)) || ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerDirect))))
+}
+
+theorem{
+  name: routerInv011Holds,
+  parameters: [request : PrismRouter::RouterRequest],
+  statement: ((routerBreaksInv011 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismRouter::routerAnswerDirect,
+      PrismRouter::routerAnswerMap,
+      PrismRouter::routerAnswerRefuse,
+      PrismRouter::routerAnswerSkip,
+      PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureKind,
+      PrismRouter::routerFeatureMeaning,
+      PrismRouter::routerFeatureParty,
+      PrismRouter::routerFeatureTime,
+      PrismRouter::routerFeatureTopic,
+      PrismRouter::routerHaltedNo,
+      PrismRouter::routerHaltedYes,
+      PrismRouter::routerJudge,
+      PrismRouter::routerProviderAbsent,
+      PrismRouter::routerProviderCompiled,
+      PrismRouter::routerProviderMismatch,
+      PrismRouter::routerSourceCalendar,
+      PrismRouter::routerSourceContact,
+      PrismRouter::routerSourceMessage,
+      PrismRouter::routerSourceNote,
+      PrismRouter::routerValueParty,
+      PrismRouter::routerValueShape,
+      PrismRouter::routerValueStart,
+      PrismRouter::routerValueSubject,
+      PrismRouter::routerValueText,
+      routerBreaksInv011
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerBreaksInv012,
+  parameters: [request : PrismRouter::RouterRequest],
+  result: Bool,
+  body: (((((((((project request source) <? 4) && ((project request value) <? 5)) && ((project request feature) <? 6)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request value) =? (PrismRouter::routerValueShape))) && ((project request feature) =? (PrismRouter::routerFeatureParty))) && (((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap)) || ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerDirect))))
+}
+
+theorem{
+  name: routerInv012Holds,
+  parameters: [request : PrismRouter::RouterRequest],
+  statement: ((routerBreaksInv012 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismRouter::routerAnswerDirect,
+      PrismRouter::routerAnswerMap,
+      PrismRouter::routerAnswerRefuse,
+      PrismRouter::routerAnswerSkip,
+      PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureKind,
+      PrismRouter::routerFeatureMeaning,
+      PrismRouter::routerFeatureParty,
+      PrismRouter::routerFeatureTime,
+      PrismRouter::routerFeatureTopic,
+      PrismRouter::routerHaltedNo,
+      PrismRouter::routerHaltedYes,
+      PrismRouter::routerJudge,
+      PrismRouter::routerProviderAbsent,
+      PrismRouter::routerProviderCompiled,
+      PrismRouter::routerProviderMismatch,
+      PrismRouter::routerSourceCalendar,
+      PrismRouter::routerSourceContact,
+      PrismRouter::routerSourceMessage,
+      PrismRouter::routerSourceNote,
+      PrismRouter::routerValueParty,
+      PrismRouter::routerValueShape,
+      PrismRouter::routerValueStart,
+      PrismRouter::routerValueSubject,
+      PrismRouter::routerValueText,
+      routerBreaksInv012
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: routerBreaksInv013,
+  parameters: [request : PrismRouter::RouterRequest],
+  result: Bool,
+  body: (((((((((((project request source) <? 4) && ((project request value) <? 5)) && ((project request feature) <? 6)) && ((project request provider) <? 3)) && ((project request halted) <? 2)) && ((project request halted) =? (PrismRouter::routerHaltedNo))) && ((project request provider) =? (PrismRouter::routerProviderCompiled))) && ((project request value) =? (PrismRouter::routerValueText))) && ((project request feature) =? (PrismRouter::routerFeatureTopic))) && (not ((PrismRouter::routerJudge request) =? (PrismRouter::routerAnswerMap))))
+}
+
+theorem{
+  name: routerInv013Holds,
+  parameters: [request : PrismRouter::RouterRequest],
+  statement: ((routerBreaksInv013 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismRouter::routerAnswerDirect,
+      PrismRouter::routerAnswerMap,
+      PrismRouter::routerAnswerRefuse,
+      PrismRouter::routerAnswerSkip,
+      PrismRouter::routerFeatureIntent,
+      PrismRouter::routerFeatureKind,
+      PrismRouter::routerFeatureMeaning,
+      PrismRouter::routerFeatureParty,
+      PrismRouter::routerFeatureTime,
+      PrismRouter::routerFeatureTopic,
+      PrismRouter::routerHaltedNo,
+      PrismRouter::routerHaltedYes,
+      PrismRouter::routerJudge,
+      PrismRouter::routerProviderAbsent,
+      PrismRouter::routerProviderCompiled,
+      PrismRouter::routerProviderMismatch,
+      PrismRouter::routerSourceCalendar,
+      PrismRouter::routerSourceContact,
+      PrismRouter::routerSourceMessage,
+      PrismRouter::routerSourceNote,
+      PrismRouter::routerValueParty,
+      PrismRouter::routerValueShape,
+      PrismRouter::routerValueStart,
+      PrismRouter::routerValueSubject,
+      PrismRouter::routerValueText,
+      routerBreaksInv013
     ]
   },
   axioms: [Quot.sound, propext]
