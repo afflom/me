@@ -3,7 +3,7 @@
 // Node suite's cross-check against the compiled guest. The guest decides;
 // this mirror only explains.
 
-export const FIELDS = [["source", ["note", "message", "calendar", "contact"]], ["value", ["text", "subject", "start", "party"]], ["feature", ["time", "intent", "party", "meaning"]], ["provider", ["compiled", "absent", "mismatch"]], ["halted", ["no", "yes"]]];
+export const FIELDS = [["source", ["note", "message", "calendar", "contact"]], ["value", ["text", "subject", "start", "party", "shape"]], ["feature", ["time", "intent", "party", "meaning", "kind", "topic"]], ["provider", ["compiled", "absent", "mismatch"]], ["halted", ["no", "yes"]]];
 export const ANSWERS = ["map", "direct", "skip", "refuse"];
 export const MAX_LINE = 37;
 export const GUARANTEES = [
@@ -153,13 +153,95 @@ export const GUARANTEES = [
       "direct"
     ],
     "why": "the owner's words carry no typed start: their time is read, never assumed"
+  },
+  {
+    "id": "INV-010",
+    "when": [
+      [
+        "halted",
+        "no"
+      ],
+      [
+        "provider",
+        "compiled"
+      ],
+      [
+        "value",
+        "shape"
+      ],
+      [
+        "feature",
+        "kind"
+      ]
+    ],
+    "always": "map",
+    "why": "what kind of thing an item is is read from the parts it is built of"
+  },
+  {
+    "id": "INV-011",
+    "when": [
+      [
+        "value",
+        "shape"
+      ],
+      [
+        "feature",
+        "topic"
+      ]
+    ],
+    "never": [
+      "map",
+      "direct"
+    ],
+    "why": "the parts an item is built of never say what it is about"
+  },
+  {
+    "id": "INV-012",
+    "when": [
+      [
+        "value",
+        "shape"
+      ],
+      [
+        "feature",
+        "party"
+      ]
+    ],
+    "never": [
+      "map",
+      "direct"
+    ],
+    "why": "the parts an item is built of never say who it is with"
+  },
+  {
+    "id": "INV-013",
+    "when": [
+      [
+        "halted",
+        "no"
+      ],
+      [
+        "provider",
+        "compiled"
+      ],
+      [
+        "value",
+        "text"
+      ],
+      [
+        "feature",
+        "topic"
+      ]
+    ],
+    "always": "map",
+    "why": "what the owner's content is about is read in its own words"
   }
 ];
 export const SIGNALS = {};
 export const TUNABLE = [];
 export const START = {};
 export const LEARNING = {};
-export const PROVIDERS = {"time": {"kind": "compiled", "model": "prism-chronology-reader", "maps": "startTime", "days": {"today": 0, "tonight": 0, "tomorrow": 1}, "weekdays": ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"], "short": {"sun": 0, "mon": 1, "tue": 2, "tues": 2, "wed": 3, "thu": 4, "thur": 4, "thurs": 4, "fri": 5, "sat": 6}, "named": {"noon": 720, "midday": 720, "midnight": 0, "morning": 540, "afternoon": 900, "evening": 1080, "tonight": 1200}, "bareHourAfternoonBelow": 8, "allDayWithoutClock": true}, "intent": {"kind": "compiled", "model": "prism-intent-reader", "maps": "additionalType", "question": ["who", "what", "when", "where", "why", "how", "which", "is", "are", "do", "does", "did", "can", "could", "will", "should"], "event": ["meeting", "meet", "lunch", "dinner", "breakfast", "coffee", "appointment", "flight", "call with", "party", "interview", "class", "concert"], "task": ["call", "email", "text", "buy", "pay", "send", "book", "renew", "pick up", "drop off", "remind", "remember", "ask", "tell", "fix", "finish", "write", "schedule", "cancel", "order", "return", "check", "follow up", "todo", "to do", "need to", "must"], "domains": {"task": [9], "event": [5], "question": [9, 11], "fact": [9, 11]}, "timed": 5}, "party": {"kind": "absent", "model": "none", "maps": "participant"}, "meaning": {"kind": "absent", "model": "all-minilm-l6-v2", "maps": "about"}, "sentence": {"kind": "compiled", "model": "prism-sentence-composer", "maps": "answer", "frames": {"event": "{what} is on {when}", "place": ", at {who}", "message": "{who} wrote \u201c{what}\u201d on {when}", "contact": "{what}: {who}", "note": "You noted \u201c{what}\u201d on {when}", "kept": "{what}, {when}", "keptUntimed": "{what}", "empty": "Nothing has arrived yet: connect your mail and calendar, or keep a note, and ask again", "unmatched": "Nothing you hold mentions \u201c{what}\u201d", "help": "Ask about your day, a person, your mail, your calendar or your notes"}, "clock": " at ", "most": 3, "find": 50, "offers": {"message": "reply", "note": "done", "empty": "connect"}, "kinds": {"message": ["email", "emails", "emailed", "mail", "inbox", "messages", "message", "wrote", "say", "said", "says", "told", "sent"], "calendar": ["calendar", "meeting", "meetings", "schedule", "agenda", "events", "event", "plans", "busy"], "plainText": ["notes", "note", "noted"]}, "greet": ["hello", "hi", "hey", "help", "thanks", "thank"], "overview": ["day", "summary", "summarize", "overview", "brief", "briefing", "going", "happening", "new", "morning", "afternoon", "evening", "else"]}};
+export const PROVIDERS = {"time": {"kind": "compiled", "model": "prism-chronology-reader", "maps": "startTime", "days": {"today": 0, "tonight": 0, "tomorrow": 1}, "weekdays": ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"], "short": {"sun": 0, "mon": 1, "tue": 2, "tues": 2, "wed": 3, "thu": 4, "thur": 4, "thurs": 4, "fri": 5, "sat": 6}, "named": {"noon": 720, "midday": 720, "midnight": 0, "morning": 540, "afternoon": 900, "evening": 1080, "tonight": 1200}, "bareHourAfternoonBelow": 8, "allDayWithoutClock": true}, "intent": {"kind": "compiled", "model": "prism-intent-reader", "maps": "additionalType", "question": ["who", "what", "when", "where", "why", "how", "which", "is", "are", "do", "does", "did", "can", "could", "will", "should"], "event": ["meeting", "meet", "lunch", "dinner", "breakfast", "coffee", "appointment", "flight", "call with", "party", "interview", "class", "concert"], "task": ["call", "email", "text", "buy", "pay", "send", "book", "renew", "pick up", "drop off", "remind", "remember", "ask", "tell", "fix", "finish", "write", "schedule", "cancel", "order", "return", "check", "follow up", "todo", "to do", "need to", "must"], "domains": {"task": [9], "event": [5], "question": [9, 11], "fact": [9, 11]}, "timed": 5}, "party": {"kind": "compiled", "model": "prism-party-reader", "maps": "participant", "comment": "Who an item is with, from the parts that name people: a message's From, To and Cc, an event's organizer and attendees, a card's name. The people the owner corresponds with become the reader's own: a name that has written before is known by it. An automated sender is one whose address or name is a role mailbox (RFC 2142 and the common ones mailers use), not a person's.", "fields": {"message": ["from", "reply-to", "to", "cc"], "calendar": ["organizer", "attendee"], "contact": ["fn"]}, "robots": ["noreply", "no-reply", "donotreply", "do-not-reply", "notifications", "notification", "notify", "mailer", "mailer-daemon", "postmaster", "bounce", "bounces", "newsletter", "news", "info", "hello", "support", "team", "updates", "alerts", "billing", "receipts", "orders", "marketing", "digest", "automated", "statements", "statement", "reservations", "tickets", "security", "sales", "accounts", "account", "service", "customerservice", "help", "contact", "admin", "webmaster", "abuse", "hostmaster", "calendar", "deals", "offers", "receipt", "shipping", "delivery"]}, "meaning": {"kind": "absent", "model": "all-minilm-l6-v2", "maps": "about"}, "sentence": {"kind": "compiled", "model": "prism-sentence-composer", "maps": "answer", "frames": {"event": "{what} is on {when}", "place": ", at {who}", "message": "{who} wrote \u201c{what}\u201d on {when}", "contact": "{what}: {who}", "note": "You noted \u201c{what}\u201d on {when}", "kept": "{what}, {when}", "keptUntimed": "{what}", "empty": "Nothing has arrived yet: connect your mail and calendar, or keep a note, and ask again", "unmatched": "Nothing you hold mentions \u201c{what}\u201d", "help": "Ask about your day, a person, your mail, your calendar or your notes"}, "clock": " at ", "most": 3, "find": 50, "offers": {"message": "reply", "note": "done", "empty": "connect"}, "kinds": {"message": ["email", "emails", "emailed", "mail", "inbox", "messages", "message", "wrote", "say", "said", "says", "told", "sent"], "calendar": ["calendar", "meeting", "meetings", "schedule", "agenda", "events", "event", "plans", "busy"], "plainText": ["notes", "note", "noted"]}, "greet": ["hello", "hi", "hey", "help", "thanks", "thank"], "overview": ["day", "summary", "summarize", "overview", "brief", "briefing", "going", "happening", "new", "morning", "afternoon", "evening", "else"]}, "kind": {"kind": "compiled", "model": "prism-kind-reader", "maps": "genre", "comment": "What sort of thing an item is. Its sender comes first, read from the shape of its parts: a note is the owner's, a card is a person, an event is on the calendar, a message from a list, in bulk or from an automated address is automated, and anything else a person wrote. A kind applies only to the senders it names: for those, the kind is the first in order whose shape it has or whose words its subject uses, then (automated senders only) whose words open its body; else the sender's fallback. A person writing about a flight is still a person writing.", "kinds": [{"key": "person", "name": "From people", "shapes": [], "words": [], "senders": []}, {"key": "invitation", "name": "Invitations", "shapes": ["method-request", "attachment-calendar"], "words": ["invitation:", "invitation", "updated invitation", "invited you", "rsvp", "accepted:", "declined:", "tentative:"], "senders": ["automated", "person"]}, {"key": "event", "name": "Events", "shapes": [], "words": [], "senders": ["calendar"]}, {"key": "travel", "name": "Travel", "shapes": [], "words": ["flight", "boarding pass", "itinerary", "check-in", "check in", "reservation", "booking confirmation", "hotel", "rental car", "train", "gate change", "e-ticket", "trip"], "senders": ["automated", "calendar"]}, {"key": "receipt", "name": "Receipts", "shapes": [], "words": ["receipt", "your order", "order confirmation", "order #", "invoice", "payment received", "payment confirmation", "you paid", "has shipped", "shipped", "delivered", "delivery", "refund", "subscription renewed", "statement is ready"], "senders": ["automated"]}, {"key": "notice", "name": "Notices", "shapes": [], "words": ["security alert", "new sign-in", "sign-in attempt", "verify your", "verification code", "password", "your account", "account update", "terms of service", "privacy policy", "action required", "suspicious"], "senders": ["automated"]}, {"key": "update", "name": "Updates", "shapes": ["list", "bulk", "robot"], "words": ["newsletter", "digest", "weekly", "webinar", "unsubscribe", "sale", "% off", "deal", "new post", "announcing", "introducing"], "senders": ["automated"]}, {"key": "note", "name": "Your notes", "shapes": [], "words": [], "senders": ["note"]}], "order": ["invitation", "travel", "receipt", "notice", "update", "event", "note"], "fallback": {"person": "person", "automated": "update", "calendar": "event", "note": "note", "card": "person"}, "automated": ["list", "bulk", "robot"]}, "topic": {"kind": "compiled", "model": "prism-topic-reader", "maps": "keywords", "comment": "What an item is about, in the words the owner's own content keeps using: a word is a topic once the titles of at least `least` items use it (a subject, an event's summary, a note) and no more than `share` percent of them do, so the owner's content extends the reader as it arrives. A word the kind reader already reads as a cue, a person's name, or a quiet word is never a topic. An item is about the topics its title and words use, at most `most`. The lexicon is learned in the browser and never leaves it.", "least": 2, "share": 20, "most": 3, "shortest": 4, "quiet": ["about", "after", "again", "also", "another", "because", "before", "being", "below", "between", "both", "could", "does", "doing", "down", "during", "each", "even", "every", "from", "have", "having", "here", "hers", "into", "just", "know", "like", "made", "make", "many", "more", "most", "much", "must", "next", "only", "other", "ours", "over", "please", "really", "same", "should", "some", "such", "than", "thank", "thanks", "that", "their", "them", "then", "there", "these", "they", "this", "those", "through", "time", "today", "tomorrow", "under", "until", "very", "want", "week", "were", "what", "when", "where", "which", "while", "will", "with", "would", "your", "yours", "hello", "dear", "regards", "best", "sent", "wrote", "email", "mail", "message", "view", "click", "here", "link", "online", "browser", "unsubscribe", "privacy", "policy", "reply", "forward", "subject", "date", "http", "https", "www", "com", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday", "january", "february", "march", "april", "june", "july", "august", "september", "october", "november", "december", "pick", "call", "news", "items", "item"]}};
 
 export function judge(r) {
   return (r.halted === 'yes'
@@ -180,9 +262,15 @@ export function judge(r) {
             ? 'skip'
             : 'direct')
           : 'skip')
-        : (r.provider === 'absent'
-          ? 'skip'
-          : 'map')))));
+        : (r.value === 'shape'
+          ? (r.feature === 'kind'
+            ? (r.provider === 'absent'
+              ? 'skip'
+              : 'map')
+            : 'skip')
+          : (r.provider === 'absent'
+            ? 'skip'
+            : 'map'))))));
 }
 
 export function line(r) {

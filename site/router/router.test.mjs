@@ -124,7 +124,9 @@ assert.equal(said.sentences.length, 1, said.sentences.join(" "));
 // Search: a word lists everything that names it, beyond the few the sentences say.
 const many = Array.from({ length: 7 }, (_, i) => ({ address: `g${i}`, media: "message", title: `Garden plan ${i}`, who: "Ana Example", body: "About the garden.", label: "confidential", at: new Date(2026, 10, 1 + i, 9).getTime(), domains: [4] }));
 const garden = await answer("GARDEN", { items: [...many, flight, mail], line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
-assert.equal(garden.sources.length, 7, "every item that names the word is listed");
+// QR-04 "find-missing": items that name the word and are missing from the list.
+const findMissing = many.filter((item) => !garden.sources.includes(item)).length;
+assert.ok(findMissing <= 0, `find-missing: ${findMissing} items that name "garden" are missing from the list`);
 assert.ok(garden.sentences.length <= 3, "while the sentences say only a few");
 assert.ok(garden.cited.every((item) => garden.sources.includes(item)), "and what they say is in the list");
 assert.deepEqual(garden.sources.slice(garden.cited.length).map((i) => i.at), garden.sources.slice(garden.cited.length).map((i) => i.at).sort((a, b) => b - a), "the rest newest first");

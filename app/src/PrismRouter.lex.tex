@@ -22,6 +22,8 @@ definition{name: routerValueStart, parameters: [], result: Nat, body: 2}
 
 definition{name: routerValueParty, parameters: [], result: Nat, body: 3}
 
+definition{name: routerValueShape, parameters: [], result: Nat, body: 4}
+
 definition{name: routerFeatureTime, parameters: [], result: Nat, body: 0}
 
 definition{name: routerFeatureIntent, parameters: [], result: Nat, body: 1}
@@ -29,6 +31,10 @@ definition{name: routerFeatureIntent, parameters: [], result: Nat, body: 1}
 definition{name: routerFeatureParty, parameters: [], result: Nat, body: 2}
 
 definition{name: routerFeatureMeaning, parameters: [], result: Nat, body: 3}
+
+definition{name: routerFeatureKind, parameters: [], result: Nat, body: 4}
+
+definition{name: routerFeatureTopic, parameters: [], result: Nat, body: 5}
 
 definition{name: routerProviderCompiled, parameters: [], result: Nat, body: 0}
 
@@ -104,14 +110,14 @@ definition{
   name: routerParseValue,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x74657874 : Bool) then (ctor Option.some [Nat] (routerValueText)) else (if (prim equal value 0x7375626a656374 : Bool) then (ctor Option.some [Nat] (routerValueSubject)) else (if (prim equal value 0x7374617274 : Bool) then (ctor Option.some [Nat] (routerValueStart)) else (if (prim equal value 0x7061727479 : Bool) then (ctor Option.some [Nat] (routerValueParty)) else (ctor Option.none [Nat])))))
+  body: (if (prim equal value 0x74657874 : Bool) then (ctor Option.some [Nat] (routerValueText)) else (if (prim equal value 0x7375626a656374 : Bool) then (ctor Option.some [Nat] (routerValueSubject)) else (if (prim equal value 0x7374617274 : Bool) then (ctor Option.some [Nat] (routerValueStart)) else (if (prim equal value 0x7061727479 : Bool) then (ctor Option.some [Nat] (routerValueParty)) else (if (prim equal value 0x7368617065 : Bool) then (ctor Option.some [Nat] (routerValueShape)) else (ctor Option.none [Nat]))))))
 }
 
 definition{
   name: routerParseFeature,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x74696d65 : Bool) then (ctor Option.some [Nat] (routerFeatureTime)) else (if (prim equal value 0x696e74656e74 : Bool) then (ctor Option.some [Nat] (routerFeatureIntent)) else (if (prim equal value 0x7061727479 : Bool) then (ctor Option.some [Nat] (routerFeatureParty)) else (if (prim equal value 0x6d65616e696e67 : Bool) then (ctor Option.some [Nat] (routerFeatureMeaning)) else (ctor Option.none [Nat])))))
+  body: (if (prim equal value 0x74696d65 : Bool) then (ctor Option.some [Nat] (routerFeatureTime)) else (if (prim equal value 0x696e74656e74 : Bool) then (ctor Option.some [Nat] (routerFeatureIntent)) else (if (prim equal value 0x7061727479 : Bool) then (ctor Option.some [Nat] (routerFeatureParty)) else (if (prim equal value 0x6d65616e696e67 : Bool) then (ctor Option.some [Nat] (routerFeatureMeaning)) else (if (prim equal value 0x6b696e64 : Bool) then (ctor Option.some [Nat] (routerFeatureKind)) else (if (prim equal value 0x746f706963 : Bool) then (ctor Option.some [Nat] (routerFeatureTopic)) else (ctor Option.none [Nat])))))))
 }
 
 definition{
@@ -182,7 +188,7 @@ definition{
   name: routerJudge,
   parameters: [request : RouterRequest],
   result: Nat,
-  body: (if ((project request halted) =? (routerHaltedYes)) then (routerAnswerRefuse) else (if ((project request provider) =? (routerProviderMismatch)) then (routerAnswerRefuse) else (if ((project request value) =? (routerValueStart)) then (if ((project request feature) =? (routerFeatureTime)) then (if ((project request source) =? (routerSourceNote)) then (routerAnswerSkip) else (if ((project request source) =? (routerSourceContact)) then (routerAnswerSkip) else (routerAnswerDirect))) else (routerAnswerSkip)) else (if ((project request value) =? (routerValueParty)) then (if ((project request feature) =? (routerFeatureParty)) then (if ((project request source) =? (routerSourceNote)) then (routerAnswerSkip) else (routerAnswerDirect)) else (routerAnswerSkip)) else (if ((project request provider) =? (routerProviderAbsent)) then (routerAnswerSkip) else (routerAnswerMap))))))
+  body: (if ((project request halted) =? (routerHaltedYes)) then (routerAnswerRefuse) else (if ((project request provider) =? (routerProviderMismatch)) then (routerAnswerRefuse) else (if ((project request value) =? (routerValueStart)) then (if ((project request feature) =? (routerFeatureTime)) then (if ((project request source) =? (routerSourceNote)) then (routerAnswerSkip) else (if ((project request source) =? (routerSourceContact)) then (routerAnswerSkip) else (routerAnswerDirect))) else (routerAnswerSkip)) else (if ((project request value) =? (routerValueParty)) then (if ((project request feature) =? (routerFeatureParty)) then (if ((project request source) =? (routerSourceNote)) then (routerAnswerSkip) else (routerAnswerDirect)) else (routerAnswerSkip)) else (if ((project request value) =? (routerValueShape)) then (if ((project request feature) =? (routerFeatureKind)) then (if ((project request provider) =? (routerProviderAbsent)) then (routerAnswerSkip) else (routerAnswerMap)) else (routerAnswerSkip)) else (if ((project request provider) =? (routerProviderAbsent)) then (routerAnswerSkip) else (routerAnswerMap)))))))
 }
 
 definition{
