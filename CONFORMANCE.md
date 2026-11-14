@@ -143,6 +143,7 @@ model does not sanction.
 | --- | --- | --- |
 | `RU-01` | `build` | Every value of incoming content reaches a Prism feature only as PrismRouter answers: the kill switch and bytes that are not the compiled model refuse every mapping, a value the source's schema types is mapped straight and never re-read, the owner's free text is read by every compiled feature, and no feature runs without its compiled model |
 | `RU-02` | `build` | The owner's words are mapped by the R4 router before they are kept: a jot that names a day and a clock lands once, at that time, in the places its intent and its time name, and nothing reaches the vault while the router refuses |
+| `RU-03` | `build` | Every item the owner can read is taken apart and labeled through PrismRouter: its parts are the values of its own schema, the readers learn the owner's people and topics in this browser first, and each item carries the kind of thing it is, who it is with and what it is about, or nothing while halted or sealed |
 
 ## uorc
 

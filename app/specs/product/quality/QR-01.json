@@ -1,0 +1,23 @@
+{
+  "key": "QR-01",
+  "name": "Labels are right",
+  "characteristic": "functional suitability",
+  "subcharacteristic": "functional correctness",
+  "says": "every item is labeled with the kind of thing a person would call it and the people it is with, on content in the shape real mail and calendars arrive in",
+  "measures": [
+    {
+      "key": "kind-accuracy",
+      "says": "percent of an invented, real-shaped mailbox and calendar whose kind is the one a person gives it",
+      "direction": "atLeast",
+      "threshold": 95,
+      "gate": "test/router/labels.test.mjs"
+    },
+    {
+      "key": "party-accuracy",
+      "says": "percent of the same items whose people are exactly the ones a person names, the person themself and automated senders left out",
+      "direction": "atLeast",
+      "threshold": 95,
+      "gate": "test/router/labels.test.mjs"
+    }
+  ]
+}

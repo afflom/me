@@ -1,7 +1,7 @@
 //! The `router` suite: one test per scenario in `features/suites/router.feature`.
 //!
 //! The Lean kernel proves the guarantees when `just vv` runs `prismpm verify`
-//! on `app/`. These tests hold the claims fixed (nine guarantees, each on
+//! on `app/`. These tests hold the claims fixed (thirteen guarantees, each on
 //! exactly `[Quot.sound, propext]`), check the spec still writes the module
 //! (`tools/facet/gen.py --check`), run the router and its compiled readers in
 //! Node (`site/router/router.test.mjs`), and check that the page keeps the
@@ -40,7 +40,7 @@ fn run(program: &str, args: &[&str]) {
 #[test]
 fn router_ru_01() {
     let text = read("app/src/PrismRouterProofs.lex.tex");
-    for i in 1..=9 {
+    for i in 1..=13 {
         let name = format!("routerInv{i:03}Holds");
         let start = text
             .find(&format!("  name: {name},\n"))
@@ -56,7 +56,7 @@ fn router_ru_01() {
         );
     }
     assert!(
-        !text.contains("routerInv010Holds"),
+        !text.contains("routerInv014Holds"),
         "more guarantees than the scenario names"
     );
     assert!(
@@ -120,5 +120,30 @@ fn router_ru_02() {
     assert!(
         !card.contains("askRouted(") && !card.contains("openR4("),
         "RU-02: R4 routes; it no longer writes replies on the page"
+    );
+}
+
+/// `RU-03`: Every item the owner can read is taken apart and labeled through PrismRouter
+#[test]
+fn router_ru_03() {
+    run("node", &["test/router/labels.test.mjs"]);
+    let labels = read("site/router/labels.mjs");
+    assert!(
+        labels.contains(
+            "const r = await route({ source, values, line: once, halted, now, learned });"
+        ) && labels.contains("if (r.refused) { item.labels = null; continue; }")
+            && labels.contains("if (item.sealed) { item.labels = null; continue; }"),
+        "RU-03: every label is the router's mapping; a refusal or a sealed item labels nothing"
+    );
+    assert!(
+        !labels.contains("fetch(")
+            && !labels.contains("localStorage")
+            && !labels.contains("indexedDB"),
+        "RU-03: what the readers learn stays in memory in this browser"
+    );
+    let card = read("site/card.mjs");
+    assert!(
+        card.contains("await labelAll(items, { line, halted, me: meNow() })"),
+        "RU-03: the page labels every item it reads"
     );
 }

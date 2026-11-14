@@ -21,6 +21,12 @@ does not place:
 - a person-view setting the Prism does not require of the person (beyond the
   shrinking 'unrequired' list), or a required setting without its name, reason,
   status, or the surface setting or section that shows it once it works;
+- a feature without its statement, a journey that exists, an export that
+  realizes it, a suite that accepts it, or a quality requirement that holds it;
+- a quality requirement (ISO/IEC 25010) whose characteristic or
+  subcharacteristic the standard does not have, that holds no feature, or that
+  has no measure; a measure without what it counts, its direction and
+  threshold, or whose gate does not exist or never computes it;
 - a debt entry that is not a system word.
 
 usage: python3 -I tools/product/gate.py [product.json surface.json coherence.json journeys.mjs]
@@ -37,6 +43,17 @@ _spec.loader.exec_module(record)
 KINDS = {"effectiveness", "efficiency", "satisfaction"}
 STATUS = {"works", "not yet"}
 VIEWS = {"person", "system"}
+
+
+ROOT = pathlib.Path(__file__).resolve().parents[2]
+
+
+def _read(path):
+    """A repository file's text, or None when it is not one."""
+    target = (ROOT / str(path)).resolve()
+    if not path or ROOT not in target.parents or not target.is_file():
+        return None
+    return target.read_text(encoding="utf-8")
 
 
 def refusals(product, surface, coherence, walks):
@@ -143,6 +160,72 @@ def refusals(product, surface, coherence, walks):
     for key in sorted(set(given) - facets):
         out.append(f"the product record has facet '{key}', which the coherence registry does not")
 
+    # Features (prism-devrel's Features facet): each one says what the person
+    # gets, serves journeys that exist, names the exports that realize it and
+    # the suites that accept it, and is held by quality requirements.
+    model = {k: v for k, v in product.get("qualityModel", {}).items() if k != "comment"}
+    quality = {q.get("key"): q for q in product.get("quality", [])}
+    held = set()
+    for f in product.get("features", []):
+        key = f.get("key")
+        if not str(f.get("statement", "")).strip():
+            out.append(f"feature {key} has no statement")
+        if not f.get("journeys"):
+            out.append(f"feature {key} serves no journey")
+        for j in f.get("journeys", []):
+            if j not in journeys:
+                out.append(f"feature {key} serves {j}, which is not a journey")
+        if not f.get("calls"):
+            out.append(f"feature {key} names no call that realizes it")
+        for call in f.get("calls", []):
+            path, _, name = call.partition("#")
+            source = _read(path)
+            if source is None:
+                out.append(f"feature {key} is realized by {path}, which does not exist")
+            elif not name or not re.search(rf"^export (?:async )?(?:function\*? |const |let |class ){re.escape(name)}\b", source, re.M):
+                out.append(f"feature {key} is realized by {call}, which {path} does not export")
+        if not f.get("acceptance"):
+            out.append(f"feature {key} names no suite that accepts it")
+        for path in f.get("acceptance", []):
+            if _read(path) is None:
+                out.append(f"feature {key} is accepted by {path}, which does not exist")
+        if not f.get("quality"):
+            out.append(f"feature {key} is held by no quality requirement")
+        for q in f.get("quality", []):
+            if q not in quality:
+                out.append(f"feature {key} is held by {q}, which is not a quality requirement")
+            held.add(q)
+    # Quality (ISO/IEC 25010): each requirement names a characteristic and one
+    # of its subcharacteristics, holds a feature, and is measured; each
+    # measure says what it counts, bounds it from above or below by its own
+    # threshold, and names the suite that computes it, which must use its key.
+    for key, q in quality.items():
+        for field in ("name", "says"):
+            if not str(q.get(field, "")).strip():
+                out.append(f"quality requirement {key} has no {field}")
+        c, sub = q.get("characteristic"), q.get("subcharacteristic")
+        if c not in model:
+            out.append(f"quality requirement {key} names characteristic {c!r}, which ISO/IEC 25010 does not have")
+        elif sub not in model[c]:
+            out.append(f"quality requirement {key} names subcharacteristic {sub!r}, which is not one of {c}")
+        if key not in held:
+            out.append(f"quality requirement {key} holds no feature")
+        if not q.get("measures"):
+            out.append(f"quality requirement {key} has no measure")
+        for m in q.get("measures", []):
+            mk = m.get("key")
+            if not str(m.get("says", "")).strip():
+                out.append(f"quality measure {key}/{mk} does not say what it counts")
+            if m.get("direction") not in ("atLeast", "atMost"):
+                out.append(f"quality measure {key}/{mk} has direction {m.get('direction')!r}, not atLeast or atMost")
+            if not isinstance(m.get("threshold"), (int, float)) or isinstance(m.get("threshold"), bool):
+                out.append(f"quality measure {key}/{mk} has no threshold")
+            source = _read(m.get("gate", ""))
+            if source is None:
+                out.append(f"quality measure {key}/{mk} is held by gate {m.get('gate')!r}, which does not exist")
+            elif f'"{mk}"' not in source:
+                out.append(f"quality measure {key}/{mk} is held by {m['gate']}, which never computes it")
+
     system = set(product.get("machinery", {}).get("terms", []))
     word = lambda k: surface["words"].get(k, "")
     for kind, items, text in (
@@ -174,7 +257,8 @@ def main(argv):
         print(f"product: {line}", file=sys.stderr)
     if out:
         return 1
-    print(f"product: {len(product['journeys'])} journeys, {sum(j['status'] == 'works' for j in product['journeys'])} working; {len(product['facets'])} facets placed; {len(product['debt'])} system words still on the screen")
+    measures = sum(len(q["measures"]) for q in product.get("quality", []))
+    print(f"product: {len(product['journeys'])} journeys, {sum(j['status'] == 'works' for j in product['journeys'])} working; {len(product.get('features', []))} features, {len(product.get('quality', []))} quality requirements, {measures} measures; {len(product['facets'])} facets placed; {len(product['debt'])} system words still on the screen")
     return 0
 
 
