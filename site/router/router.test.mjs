@@ -118,6 +118,10 @@ assert.deepEqual(new Set(joel.sources.slice(0, 2)), new Set([review, reply]), "a
 assert.equal(joel.sentences.length, 2, "and says both: " + joel.sentences.join(" "));
 assert.ok(joel.sentences.some((s) => /^Joël Example wrote “Re: Proposal draft for the grant” on /u.test(s)), joel.sentences.join(" "));
 assert.ok(joel.sentences.some((s) => /^Grant proposal review is on /u.test(s)), joel.sentences.join(" "));
+// Words that only ask how things stand name nothing: both of Joël's items are told, whichever is newer.
+const going = await named("What is going on with Joel?");
+assert.equal(going.sentences.length, 2, "what is going on with someone tells everything that names them: " + going.sentences.join(" "));
+assert.deepEqual(going.offers.map((o) => o.kind), ["reply"], "and offers the reply their message asks for");
 const said = await named("what did Joel say?");
 assert.match(said.sentences[0], /^Joël Example wrote “Re: Proposal draft for the grant” on /u, "what someone said is their mail");
 assert.equal(said.sentences.length, 1, said.sentences.join(" "));

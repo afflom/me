@@ -65,6 +65,8 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
   const ofKind = (item) => (kind === "calendar" ? item.media === "calendar" || item.start != null : item.media === kind && item.start == null);
   const terms = termsOf(text).filter((t) => !Object.values(S.kinds).flat().includes(t));
   const greets = terms.every((t) => S.greet.includes(t) || S.overview.includes(t));
+  // The words that name what is asked about, without the ones that only ask how things stand.
+  const named = terms.filter((t) => !S.overview.includes(t) && !S.greet.includes(t));
   const span = windowOf(text, now);
   let used = drawOn(items, text, { now });
   let lead = [];
@@ -90,12 +92,12 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
   }
   // A span, a kind or an overview answers with several; a name or a topic with
   // everything that names it; otherwise the best match.
-  const naming = many ? [] : used.filter((item) => mentions(item, terms));
+  const naming = many ? [] : used.filter((item) => mentions(item, named));
   const told = many ? used.slice(0, S.most) : naming.length > 1 ? naming.slice(0, S.most) : used.slice(0, 1);
   const sentences = [...lead.map((s) => `${s}.`), ...told.map((item) => `${sentenceOf(item, me)}.`)];
   // Everything held that names the asked words is found: the sentences say
   // the few, and the list beneath holds those first, then the rest, newest first.
-  const found = terms.length ? held.filter((item) => (!kind || ofKind(item)) && mentions(item, terms)).sort((a, b) => (b.at ?? 0) - (a.at ?? 0)) : [];
+  const found = named.length ? held.filter((item) => (!kind || ofKind(item)) && mentions(item, named)).sort((a, b) => (b.at ?? 0) - (a.at ?? 0)) : [];
   const offers = told.flatMap((item) => {
     const k = S.offers[item.media === "message" ? "message" : item.media === "plainText" ? "note" : ""];
     return k ? [{ kind: k, item }] : [];
