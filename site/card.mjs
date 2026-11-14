@@ -1032,7 +1032,14 @@ export default async function start({ app, reason, $ }) {
     const importFile = element("input", { type: "file", accept: ".pvx,application/octet-stream" });
     importFile.setAttribute("aria-label", WORDS.import);
     const importLabel = element("label", { className: "pr-file" }, element("span", { textContent: WORDS.import }), importFile);
-    const backup = settingRow(named("backup"), passphrase, exportButton, importLabel);
+    // The shape of what arrived, with no content in it, for the person to share.
+    const shapeButton = element("button", { type: "button", textContent: WORDS["data.shape"] });
+    shapeButton.addEventListener("click", async () => {
+      const { describe } = await import("./source/shape.mjs");
+      const text = JSON.stringify(describe(items), null, 1);
+      try { await navigator.clipboard.writeText(text); say(WORDS["data.shaped"], "good"); } catch { say(WORDS.unavailable, "bad"); }
+    });
+    const backup = settingRow(named("backup"), passphrase, exportButton, importLabel, shapeButton);
     painters.push(async () => {
       if (!vault) { backup.state.textContent = WORDS.unavailable; return; }
       const where = await vault.persist();
