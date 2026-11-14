@@ -68,7 +68,8 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
   const span = windowOf(text, now);
   let used = drawOn(items, text, { now });
   let lead = [];
-  let many = Boolean(span);
+  // A question of how things stand ("what is going on with Robin") is told in several.
+  let many = Boolean(span) || words.some((w) => S.overview.includes(w));
   if (kind && !span) {
     // Mail and notes newest first; the calendar from what is next.
     const matched = used.filter(ofKind);

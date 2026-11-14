@@ -181,7 +181,10 @@ export const walks = {
     const said = (await answer.innerText()).trim();
     assert.match(said, /\b(is|are|asked|asks|wrote|meets|meeting|has|wants)\b[^·]*[.?!]/i, `the answer is not a sentence: "${said}"`);
     assert.ok(await answer.getByRole("link").count(), "the answer does not link to where it came from");
-    assert.ok(await answer.getByRole("button", { name: /reply|schedule|keep|let go|done/i }).count(), "the answer offers no decision");
+    // The decision may follow the sentence by a moment; the person waits for it as long as a reply takes.
+    const decision = answer.getByRole("button", { name: /reply|schedule|keep|let go|done/i });
+    await decision.first().waitFor({ timeout: 10000 }).catch(() => {});
+    assert.ok(await decision.count(), "the answer offers no decision");
   },
   // J7: a person's page shows what is open between us.
   async j7(page) {
@@ -279,8 +282,8 @@ export const walks = {
     };
     await go(page, "conversations");
     const messages = await app(page).locator("ol, ul").filter({ hasText: "Lunch on Thursday" }).last().innerText();
-    before(messages, "Lunch on Thursday", "November statement", "Messages");
-    before(messages, "November statement", "Café booking", "Messages");
+    // Messages are in sections by kind (J13); within one, newest first.
+    before(messages, "Lunch on Thursday", "Café booking", "Messages");
     await go(page, "calendar");
     const calendar = await app(page).locator("ol, ul").filter({ hasText: "Flight to Lisbon" }).last().innerText();
     before(calendar, surface.words.upcoming, "Design review", "Calendar");

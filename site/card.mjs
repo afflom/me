@@ -256,6 +256,7 @@ export default async function start({ app, reason, $ }) {
     // learned from the person's own content. Under the halt switch, none.
     if (items.length) {
       const { labelAll } = await import("./router/labels.mjs");
+      kinds ??= (await import("./router/table.mjs")).PROVIDERS.kind.kinds;
       await labelAll(items, { line, halted, me: meNow() }).catch((error) => { for (const item of items) item.labels = null; console.warn(`labels: ${error?.message ?? error}`); });
     }
     people = peopleOf ? { place: peoplePlace, all: peopleOf(items, meNow()), between } : null;
@@ -617,8 +618,20 @@ export default async function start({ app, reason, $ }) {
   // A place's list in the order PrismSurface gives it: newest first, or what is
   // ahead soonest first and then what has passed, latest first.
   const SHOWN = 200;
+  // The kinds the compiled readers give, in the order the person meets them.
+  let kinds = null;
+  const group = (word, rows) => element("li", { className: "pr-group" },
+    element("h3", { className: "pr-section", textContent: word }),
+    element("ol", { className: "pr-rows" }, ...rows));
   function ordered(shown, order) {
     const newest = [...shown].sort((a, b) => b.at - a.at);
+    if (order === "kinds" && kinds && newest.some((item) => item.labels?.kind)) {
+      const first = newest.slice(0, SHOWN);
+      const known = new Set(kinds.map((k) => k.key));
+      const sections = kinds.map((k) => [k.name, first.filter((item) => item.labels?.kind === k.key)]);
+      sections.push([WORDS.other, first.filter((item) => !known.has(item.labels?.kind))]);
+      return sections.filter(([, rows]) => rows.length).map(([word, rows]) => group(word, rows.map(rowOf)));
+    }
     if (order !== "upcoming") return newest.slice(0, SHOWN).map(rowOf);
     const from = new Date().setHours(0, 0, 0, 0);
     const ahead = shown.filter((item) => item.at >= from).sort((a, b) => a.at - b.at).slice(0, SHOWN);
