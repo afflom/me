@@ -1,5 +1,5 @@
 {
-  "comment": "Validation oracles: the published specifications whose own examples are the Prism's test content. tools/oracle/gen.py fetches each source at its pinned SHA-256, takes its examples out mechanically (an example is kept only if every address in it is at a domain reserved for documentation, RFC 2606 and RFC 6761, so no real person's address enters the repository), and reads each one with a reference reader written to the source's own grammar. test/oracle/read.test.mjs then holds the Prism's reading (site/card.mjs readItem) to that reading, field by field: a message's title, sender, time and plain words; an event's title, place and start; a card's name; a header's encoded words as the specification says they display; a base64 test vector as it decodes; a CSV example as RFC 4180 reads it; a one-time code message as the WICG report says. gaps: kinds of content the Prism reads that no published specification gives examples of, each with why; no test content is written for them. Nothing here is invented: a new kind of content is added by naming the specification it follows.",
+  "comment": "Validation oracles: the published specifications whose own examples are the Prism's test content. tools/oracle/gen.py fetches each source at its pinned SHA-256, takes its examples out mechanically (an example is kept only if every address in it is at a domain reserved for documentation, RFC 2606 and RFC 6761, so no real person's address enters the repository), and reads each one with a reference reader written to the source's own grammar. test/oracle/read.test.mjs then holds the Prism's reading (site/card.mjs readItem) to that reading, field by field: a message's title, sender, time and plain words; an event's title, place and start; a card's name; a header's encoded words as the specification says they display; a base64 test vector as it decodes; a CSV example as RFC 4180 reads it; a one-time code message as the WICG report says; an urgency or scarcity line, as the researchers who found it labelled it, as coercive. gaps: kinds of content the Prism reads that no published specification gives examples of, each with why; no test content is written for them. Nothing here is invented: a new kind of content is added by naming the specification it follows.",
   "reserved": [
     "example",
     "example.com",
@@ -81,9 +81,92 @@
       "url": "https://raw.githubusercontent.com/WICG/sms-one-time-codes/2bb70db2550c4a4d76a4836f1b42d7abfca4ab82/index.bs",
       "sha256": "4e9173e874a12a907d9edde08bccd45a773adc544b3271ee7d4b4bbde3e8d56c",
       "examples": "otc"
+    },
+    {
+      "key": "darkpatterns",
+      "kind": "coercive",
+      "title": "Mathur et al., Dark Patterns at Scale: Findings from a Crawl of 11K Shopping Websites (CSCW 2019), the labelled dataset",
+      "url": "https://raw.githubusercontent.com/aruneshmathur/dark-patterns/f458f19c4814419acd691f2842d7e1123f14097c/data/final-dark-patterns/dark-patterns.csv",
+      "sha256": "fb2877af3b7bef359abcfb415f3a477df02481300d84f5eb9762b3ca2523bc9b",
+      "examples": "patterns",
+      "categories": [
+        "Urgency",
+        "Scarcity"
+      ]
     }
   ],
-  "debt": [],
+  "debt": [
+    {
+      "id": "darkpatterns-21",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "The urgency was the page's countdown beside these words; the words alone are a price or a name, which mail carries every day."
+    },
+    {
+      "id": "darkpatterns-33",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "A bare time or count with no word of pressure; calling it coercive would hold ordinary mail that names a time or a number."
+    },
+    {
+      "id": "darkpatterns-38",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "A bare time or count with no word of pressure; calling it coercive would hold ordinary mail that names a time or a number."
+    },
+    {
+      "id": "darkpatterns-41",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "A bare time or count with no word of pressure; calling it coercive would hold ordinary mail that names a time or a number."
+    },
+    {
+      "id": "darkpatterns-49",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "The urgency was the page's countdown beside these words; the words alone are a price or a name, which mail carries every day."
+    },
+    {
+      "id": "darkpatterns-71",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "A bare time or count with no word of pressure; calling it coercive would hold ordinary mail that names a time or a number."
+    },
+    {
+      "id": "darkpatterns-74",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "A bare time or count with no word of pressure; calling it coercive would hold ordinary mail that names a time or a number."
+    },
+    {
+      "id": "darkpatterns-192",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "The urgency was the page's countdown beside these words; the words alone are a price or a name, which mail carries every day."
+    },
+    {
+      "id": "darkpatterns-294",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "A bare time or count with no word of pressure; calling it coercive would hold ordinary mail that names a time or a number."
+    },
+    {
+      "id": "darkpatterns-405",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "A bare time or count with no word of pressure; calling it coercive would hold ordinary mail that names a time or a number."
+    }
+  ],
   "gaps": [
     {
       "kind": "card number",

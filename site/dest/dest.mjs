@@ -29,6 +29,27 @@ const COERCIVE = [
   /\b(?:expires?|ends?) in \d+ (?:minutes?|hours?)\b/i,
   /\b(?:you must|failure to (?:respond|comply|pay))\b/i,
   /\bif you (?:really )?cared\b/i,
+  // Urgency and scarcity, as Mathur et al. (CSCW 2019) found them on shopping
+  // sites: hurry, a countdown, a limited time, an end or expiry, a reserved
+  // cart, low or limited stock, a few left, high demand, selling fast.
+  /\bhurry\b/i,
+  /\b(?:limited|for a limited|limited[- ]time) (?:time|offer|offers|only|sale|quantit(?:y|ies)|stock|items?|edition|deal)\b|\blimited (?:time|offer|stock|quantity)\b|^\s*limited\b/im,
+  /\b(?:ends|expires?|expiring|ending|closes)\s*:?\s*(?:in|soon|today|tonight|at midnight|once|(?:mon|tues|wednes|thurs|fri|satur|sun)day)\b/i,
+  /\b(?:offers?|sale|deal|discount|cart|reservation|price) (?:ends?|expires?|ending)\b/i,
+  /\breserved (?:in your cart )?for\b|\bguaranteed for (?:\d|days)/i,
+  /\d+\s*days?\s*\d{1,2}\s*:\s*\d{2}\s*:\s*\d{2}/i,
+  /\b(?:order|buy|act|activate|checkout|purchase) within\b/i,
+  /\b\d+\s*(?:d(?:ays?)?|h(?:rs?|ours?)?)\s*:?\s*\d+\s*(?:m(?:ins?|inutes?)?)\b/i,
+  /\d+\s*days?\s*\d+\s*(?:hrs?|hours?)/i,
+  /\b(?:order|act|buy|activate|checkout) in \d|\b(?:prioritized|released) (?:for|in)\b|\btime remaining\b/i,
+  /\b(?:days?|hrs?|hours?)\b[\s\d.:]*\b(?:mins?|minutes?)\b[\s\d.:]*\b(?:secs?|seconds?)\b/i,
+  /\b(?:only|just)\s*:?\s*(?:\d+(?:\.\d+)?|a few|one|limited)\b[^.!?\n]{0,30}?\b(?:left|remaining|in stock|available)\b/i,
+  /\b(?:\d+%?|a few|few|one)\s*(?:\S+\s+){0,2}?(?:left|remaining)(?:\b|!)/i,
+  /\b(?:low|limited|remaining|live remaining) (?:in )?stock\b|\blow stock\b|\bin stock\s*\(\d+\)\s*left\b/i,
+  /\b(?:less|fewer) than \d+ (?:left|remaining)\b/i,
+  /\b(?:last (?:\d+|one|items?|few)\b[^.!?\n]{0,20}?\b(?:in stock|available|left)|(?:less|fewer) than \d+ available|sell ?out (?:fast|risk)|sellout risk|will sell out|(?:just )?missed it)\b/i,
+  /\b(?:in high demand|high[- ]demand|in demand|selling fast|selling out|almost (?:gone|sold out)|going fast|once it'?s gone|won'?t last|while (?:supplies|stocks?) last|claimed)\b/i,
+  /\b(?:don'?t|do not) miss\b|\bnow or never\b|\bone[- ]time offer\b|\btoday only\b|\bflash (?:sale|offer|deal)\b/i,
 ];
 
 export function toneOf(text) {

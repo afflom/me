@@ -15,7 +15,10 @@ examples are taken out mechanically:
   - "csv": each example after "For example:" in RFC 4180 section 2, its
     written "CRLF" marks made line breaks;
   - "otc": each example of the WICG origin-bound one-time codes report, the
-    message and the code the report says it carries, or none.
+    message and the code the report says it carries, or none;
+  - "patterns": each distinct pattern string of a labelled research dataset
+    whose category the source names (Mathur et al., "Dark Patterns at Scale",
+    CSCW 2019: the urgency and scarcity lines found on shopping sites).
 An example is kept only if every address in it is at a domain reserved for
 documentation (the spec's "reserved" list, after RFC 2606 and RFC 6761), so no
 real person's address enters the repository; likewise every international
@@ -234,6 +237,20 @@ def otc_examples(text):
         yield json.dumps({"message": message, "code": said.group(1) if said else None})
 
 
+def pattern_examples(text, source):
+    seen = set()
+    for row in csvlib.DictReader(io.StringIO(text, newline="")):
+        if row["Pattern Category"] not in source["categories"]:
+            continue
+        words = row["Pattern String"].strip()
+        key = re.sub(r"\d+", "#", words.lower())
+        # A line with no words (a bare timer) or one already taken in another number is not a new example.
+        if not re.search(r"[A-Za-z]{3}", words) or key in seen:
+            continue
+        seen.add(key)
+        yield json.dumps({"text": words, "category": row["Pattern Category"], "type": row["Pattern Type"]})
+
+
 ADDRESS = re.compile(r"[A-Za-z0-9._%+!$&*=^`{|}~'-]+@([A-Za-z0-9.-]+)")
 
 
@@ -311,6 +328,11 @@ def read_otc(raw):
     if parsed != row["code"]:
         refuse(f"the report says {row['message']!r} carries {row['code']!r}; its parsing rule finds {parsed!r}")
     return {"code": row["code"]}
+
+
+def read_pattern(raw):
+    row = json.loads(raw)
+    return {"coercive": True, "type": row["type"]}
 
 
 def read_vector(raw):
@@ -403,8 +425,8 @@ def read_contact(raw):
 corpus = []
 for source in SPEC["sources"]:
     text = unpaginate(fetch(source))
-    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples}[source["examples"]]
-    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc}[source["kind"]]
+    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples, "patterns": lambda text: pattern_examples(text, source)}[source["examples"]]
+    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc, "coercive": read_pattern}[source["kind"]]
     n = kept = 0
     for raw in take(text):
         n += 1

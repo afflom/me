@@ -82,8 +82,11 @@ const edited = { ...reply, payload: { ...reply.payload, body: `${A2body} ${A2bod
 ok((await router.send(edited, prepared.seal)).answer === 'draft' && handed.length === 1, 'changed words go back to the owner (Satya)');
 ok((await router.send(reply, null)).answer === 'draft' && handed.length === 1, 'a send without the seal of what was seen does not deliver');
 
-// No specification publishes coercive words; these are written by their shape.
-const pushy = { ...reply, text: 'Last chance: reply now or else.' };
+// Coercive words are the urgency and scarcity lines Mathur et al. (CSCW 2019)
+// found on shopping sites, from the oracle corpus.
+const { corpus } = await import('../../test/oracle/examples.mjs');
+const pressure = corpus.filter((c) => c.kind === 'coercive').map((c) => JSON.parse(c.raw).text);
+const pushy = { ...reply, text: pressure[0] };
 const pushySeal = (await router.prepare(pushy)).seal;
 ok((await router.send(pushy, pushySeal)).answer === 'draft' && handed.length === 1, 'coercive words never leave (Ahimsa)');
 
@@ -117,14 +120,12 @@ paceNow = 'quiet';
 ok((await router.prepare(note)).answer === 'hold', 'quiet is kept');
 ok((await router.prepare({ ...note, urgency: 'urgent' })).answer === 'show', 'only what the owner marked urgent breaks quiet');
 paceNow = 'open';
-// No specification publishes coercive wording; these few lines are written by their shape (an open gap).
-ok((await router.prepare({ ...note, text: 'Final notice: pay immediately or else.' })).answer === 'hold', 'coercive content waits, never pushed');
+ok((await router.prepare({ ...note, text: pressure[1] })).answer === 'hold', 'coercive content waits, never pushed');
 ok(asked.filter((t) => t.startsWith('dest ')).every((t) => t.split(' ').length === 10), 'every dest request has its nine fields');
 
 // The detectors and builders.
-ok(toneOf('Only 3 seats left, act now!') === 'coercive', 'tone check');
+ok(pressure.length > 100 && toneOf(pressure.at(-1)) === 'coercive', 'tone check');
 // Every message the specifications publish reads calm: none is held as coercive.
-const { corpus } = await import('../../test/oracle/examples.mjs');
 ok(corpus.filter((c) => c.kind === 'message').every((c) => toneOf(c.raw.slice(c.raw.search(/\r?\n\r?\n/))) === 'calm'), 'no example message of RFC 5322 or RFC 6047 is coercive');
 ok((await sealOf('abc')) === 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad', 'seal is SHA-256');
 const m = buildMail({ to: 'a@example.org\r\nBcc: x@example.org', subject: 'Hi', body: 'x' });
