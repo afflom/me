@@ -23,6 +23,8 @@ export function whenOf(at, allDay = false) {
   return allDay ? day.format(date) : `${day.format(date)}${S.clock}${clock.format(date)}`;
 }
 
+// A sentence ends once: one that already ends in . ? ! or … keeps its own mark.
+const end = (text) => (/[.?!…]$/u.test(text) ? text : `${text}.`);
 const fill = (frame, parts) => frame.replace(/\{(\w+)\}/g, (_, key) => parts[key] ?? "");
 const whatOf = (item) => item.title || (item.body ?? "").split("\n")[0] || "";
 
@@ -31,7 +33,10 @@ export function sentenceOf(item, me = null) {
   const parts = { what: whatOf(item), who: item.who ?? "", when: whenOf(item.at, item.allDay) };
   if (item.media === "message") {
     const mine = me?.addresses?.some((a) => (item.who ?? "").toLowerCase().includes(a.toLowerCase()));
-    return fill(S.frames.message, { ...parts, who: mine ? (me.name ?? parts.who) : parts.who });
+    // What the message asks or tells, in the sender's first words, when they say more than its subject.
+    const lead = item.labels?.lead ?? "";
+    const says = lead && lead.toLowerCase() !== parts.what.toLowerCase() ? fill(S.frames.lead, { lead }) : "";
+    return fill(S.frames.message, { ...parts, who: mine ? (me.name ?? parts.who) : parts.who }) + says;
   }
   if (item.media === "contactCard") return fill(S.frames.contact, parts);
   if (item.media === "calendar" || item.start != null) return fill(S.frames.event, parts) + (parts.who && item.media === "calendar" ? fill(S.frames.place, parts) : "");
@@ -94,7 +99,7 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
   // everything that names it; otherwise the best match.
   const naming = many ? [] : used.filter((item) => mentions(item, named));
   const told = many ? used.slice(0, S.most) : naming.length > 1 ? naming.slice(0, S.most) : used.slice(0, 1);
-  const sentences = [...lead.map((s) => `${s}.`), ...told.map((item) => `${sentenceOf(item, me)}.`)];
+  const sentences = [...lead.map((s) => `${s}.`), ...told.map((item) => end(sentenceOf(item, me)))];
   // Everything held that names the asked words is found: the sentences say
   // the few, and the list beneath holds those first, then the rest, newest first.
   const found = named.length ? held.filter((item) => (!kind || ofKind(item)) && mentions(item, named)).sort((a, b) => (b.at ?? 0) - (a.at ?? 0)) : [];
