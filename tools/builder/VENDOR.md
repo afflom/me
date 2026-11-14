@@ -2,8 +2,8 @@
 
 `tools/builder/` is `builder/` of [afflom/prism-devrel](https://github.com/afflom/prism-devrel)
 without its own test file, copied unchanged so `tools/prompts/gen.py` runs it
-with no network. Source: branch `claude/constructive-judge` at commit
-`87b58484acd7ca7e2f3c08b934b8e2e3f7ad0cd2` (afflom/prism-devrel#16: constructive proofs, factored long
+with no network. Source: `main` at merge commit
+`07af20eeaa8f7a12cd991f650ef6d5b28b41a52c` (afflom/prism-devrel#16, merged: constructive proofs, factored long
 tables, a set hosted by this repository's own root, id prefixes that never
 collide).
 
