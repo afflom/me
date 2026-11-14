@@ -252,7 +252,11 @@ export const walks = {
   // J14: every place in time order: Messages newest first; Calendar ahead soonest first, then what has passed.
   async j14(page) {
     assert.ok(await arrived(page), "the person's day never arrives");
-    const before = (shown, a, b, where) => assert.ok(shown.indexOf(a) >= 0 && shown.indexOf(a) < shown.indexOf(b), `${where}: "${a}" is not before "${b}"`);
+    // Headings may be drawn in capitals, so the order is read without case.
+    const before = (shown, a, b, where) => {
+      const [text, x, y] = [shown, a, b].map((s) => s.toLowerCase());
+      assert.ok(text.indexOf(x) >= 0 && text.indexOf(x) < text.indexOf(y), `${where}: "${a}" is not before "${b}"`);
+    };
     await go(page, "conversations");
     const messages = await app(page).locator("ol, ul").filter({ hasText: "Lunch on Thursday" }).last().innerText();
     before(messages, "Lunch on Thursday", "November statement", "Messages");
@@ -261,5 +265,11 @@ export const walks = {
     const calendar = await app(page).locator("ol, ul").filter({ hasText: "Flight to Lisbon" }).last().innerText();
     before(calendar, surface.words.upcoming, "Design review", "Calendar");
     before(calendar, "Design review", "Flight to Lisbon", "Calendar");
+    // What the person opened stays open when the list is drawn again.
+    await app(page).getByRole("button", { name: /Design review/ }).first().click();
+    await go(page, "conversations");
+    await go(page, "calendar");
+    const open = app(page).getByRole("button", { name: /Design review/ }).first();
+    assert.equal(await open.getAttribute("aria-expanded"), "true", "Calendar: an opened item closed when the list was drawn again");
   },
 };

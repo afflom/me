@@ -439,6 +439,9 @@ export default async function start({ app, reason, $ }) {
   let query = "";
 
   // A row opens to the item's full words, and closes again.
+  // What the person opened stays open while content arrives and the list is drawn again.
+  // One opening is one gesture, however often its row is drawn again.
+  const openAt = new Map();
   function rowOf(item) {
     const what = item.sealed ? WORDS.sealed : item.title || "—";
     const row = element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}` },
@@ -449,12 +452,21 @@ export default async function start({ app, reason, $ }) {
     row.tabIndex = 0;
     row.setAttribute("role", "button");
     row.setAttribute("aria-expanded", "false");
-    const toggle = () => {
-      const open = row.getAttribute("aria-expanded") === "true";
-      row.setAttribute("aria-expanded", String(!open));
-      if (open) { row.querySelector(".pr-preview")?.remove(); closeOpened(row); }
-      else { row.append(element("pre", { className: "pr-preview", textContent: item.body })); opened.set(row, { item, since: Date.now() }); }
+    const show = (since = Date.now()) => {
+      row.setAttribute("aria-expanded", "true");
+      row.append(element("pre", { className: "pr-preview", textContent: item.body }));
+      opened.set(row, { item, since });
     };
+    const toggle = () => {
+      if (row.getAttribute("aria-expanded") === "true") {
+        row.setAttribute("aria-expanded", "false");
+        row.querySelector(".pr-preview")?.remove(); closeOpened(row); openAt.delete(item.address);
+      } else { const since = Date.now(); show(since); openAt.set(item.address, since); }
+    };
+    if (item.address && openAt.has(item.address)) {
+      for (const [node, open] of opened) if (open.item.address === item.address) opened.delete(node);
+      show(openAt.get(item.address));
+    }
     // A press anywhere on an opened item closes it, unless the person is selecting its words.
     row.addEventListener("click", () => { if (!String(getSelection?.() ?? "")) toggle(); });
     row.addEventListener("keydown", (event) => {
