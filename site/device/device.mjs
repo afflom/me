@@ -78,10 +78,23 @@ export async function* mboxMessages(chunks) {
 
 // iCalendar: one item per VEVENT or VTODO, each with the calendar's time zones.
 export function calendarItems(text) {
-  const unfolded = text.replace(/\r?\n/g, '\n');
-  const zones = unfolded.match(/BEGIN:VTIMEZONE\n[\s\S]*?\nEND:VTIMEZONE\n?/g) ?? [];
-  const parts = unfolded.match(/BEGIN:(VEVENT|VTODO)\n[\s\S]*?\nEND:\1\n?/g) ?? [];
-  return parts.map((part) => ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//prism//device//EN', ...zones.map((z) => z.trimEnd()), part.trimEnd(), 'END:VCALENDAR', ''].join('\r\n'));
+  // RFC 5545: lines end in CRLF; a calendar's own properties (VERSION, PRODID,
+  // METHOD, CALSCALE) and its time zones go with each item; the components
+  // that share a UID are one item, a recurring event with its overrides
+  // (section 3.8.4.4).
+  const lines = text.replace(/\r?\n/g, '\r\n');
+  const body = /BEGIN:VCALENDAR\r\n([\s\S]*?)END:VCALENDAR/i.exec(lines)?.[1] ?? lines;
+  const zones = body.match(/BEGIN:VTIMEZONE\r\n[\s\S]*?\r\nEND:VTIMEZONE\r\n?/g) ?? [];
+  const parts = body.match(/BEGIN:(VEVENT|VTODO|VJOURNAL)\r\n[\s\S]*?\r\nEND:\1\r\n?/g) ?? [];
+  const own = body.replace(/BEGIN:(VTIMEZONE|VEVENT|VTODO|VJOURNAL)\r\n[\s\S]*?\r\nEND:\1\r\n?/g, '').split('\r\n').filter((l) => /^(VERSION|PRODID|METHOD|CALSCALE)[;:]/i.test(l));
+  const head = [...(own.some((l) => /^VERSION[;:]/i.test(l)) ? [] : ['VERSION:2.0']), ...(own.some((l) => /^PRODID[;:]/i.test(l)) ? [] : ['PRODID:-//prism//device//EN']), ...own];
+  const byUid = new Map();
+  parts.forEach((part, i) => {
+    const uid = /^UID:(.*)$/m.exec(part.replace(/\r\n[ \t]/g, ''))?.[1]?.trim() || `#${i}`;
+    if (!byUid.has(uid)) byUid.set(uid, []);
+    byUid.get(uid).push(part.replace(/\r\n$/, ''));
+  });
+  return [...byUid.values()].map((group) => ['BEGIN:VCALENDAR', ...head, ...zones.map((z) => z.replace(/\r\n$/, '')), ...group, 'END:VCALENDAR', ''].join('\r\n'));
 }
 
 // The format of pasted or picked text, from its first bytes.

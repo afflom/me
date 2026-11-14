@@ -29,6 +29,27 @@ const COERCIVE = [
   /\b(?:expires?|ends?) in \d+ (?:minutes?|hours?)\b/i,
   /\b(?:you must|failure to (?:respond|comply|pay))\b/i,
   /\bif you (?:really )?cared\b/i,
+  // Urgency and scarcity, as Mathur et al. (CSCW 2019) found them on shopping
+  // sites: hurry, a countdown, a limited time, an end or expiry, a reserved
+  // cart, low or limited stock, a few left, high demand, selling fast.
+  /\bhurry\b/i,
+  /\b(?:limited|for a limited|limited[- ]time) (?:time|offer|offers|only|sale|quantit(?:y|ies)|stock|items?|edition|deal)\b|\blimited (?:time|offer|stock|quantity)\b|^\s*limited\b/im,
+  /\b(?:ends|expires?|expiring|ending|closes)\s*:?\s*(?:in|soon|today|tonight|at midnight|once|(?:mon|tues|wednes|thurs|fri|satur|sun)day)\b/i,
+  /\b(?:offers?|sale|deal|discount|cart|reservation|price) (?:ends?|expires?|ending)\b/i,
+  /\breserved (?:in your cart )?for\b|\bguaranteed for (?:\d|days)/i,
+  /\d+\s*days?\s*\d{1,2}\s*:\s*\d{2}\s*:\s*\d{2}/i,
+  /\b(?:order|buy|act|activate|checkout|purchase) within\b/i,
+  /\b\d+\s*(?:d(?:ays?)?|h(?:rs?|ours?)?)\s*:?\s*\d+\s*(?:m(?:ins?|inutes?)?)\b/i,
+  /\d+\s*days?\s*\d+\s*(?:hrs?|hours?)/i,
+  /\b(?:order|act|buy|activate|checkout) in \d|\b(?:prioritized|released) (?:for|in)\b|\btime remaining\b/i,
+  /\b(?:days?|hrs?|hours?)\b[\s\d.:]*\b(?:mins?|minutes?)\b[\s\d.:]*\b(?:secs?|seconds?)\b/i,
+  /\b(?:only|just)\s*:?\s*(?:\d+(?:\.\d+)?|a few|one|limited)\b[^.!?\n]{0,30}?\b(?:left|remaining|in stock|available)\b/i,
+  /\b(?:\d+%?|a few|few|one)\s*(?:\S+\s+){0,2}?(?:left|remaining)(?:\b|!)/i,
+  /\b(?:low|limited|remaining|live remaining) (?:in )?stock\b|\blow stock\b|\bin stock\s*\(\d+\)\s*left\b/i,
+  /\b(?:less|fewer) than \d+ (?:left|remaining)\b/i,
+  /\b(?:last (?:\d+|one|items?|few)\b[^.!?\n]{0,20}?\b(?:in stock|available|left)|(?:less|fewer) than \d+ available|sell ?out (?:fast|risk)|sellout risk|will sell out|(?:just )?missed it)\b/i,
+  /\b(?:in high demand|high[- ]demand|in demand|selling fast|selling out|almost (?:gone|sold out)|going fast|once it'?s gone|won'?t last|while (?:supplies|stocks?) last|claimed)\b/i,
+  /\b(?:don'?t|do not) miss\b|\bnow or never\b|\bone[- ]time offer\b|\btoday only\b|\bflash (?:sale|offer|deal)\b/i,
 ];
 
 export function toneOf(text) {
@@ -68,6 +89,22 @@ export function buildMail({ to, subject, body, inReplyTo = '', references = '' }
 const ics = (value) => String(value ?? '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
 const stamp = (date) => new Date(date).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
 
+// RFC 5545 3.1: a content line longer than 75 octets is folded, CRLF and
+// one space, never inside a character.
+function fold(line) {
+  const out = [];
+  let part = '';
+  let size = 0;
+  for (const ch of line) {
+    const n = new TextEncoder().encode(ch).length;
+    if (size + n > (out.length ? 74 : 75)) { out.push(part); part = ''; size = 0; }
+    part += ch;
+    size += n;
+  }
+  out.push(part);
+  return out.join('\r\n ');
+}
+
 // One VEVENT as an .ics the owner opens in their calendar (METHOD:PUBLISH:
 // it adds an entry to the owner's own calendar and invites no one).
 export function buildEvent({ uid, start, end, summary, description = '', location = '', now = Date.now() }) {
@@ -77,7 +114,7 @@ export function buildEvent({ uid, start, end, summary, description = '', locatio
     'BEGIN:VEVENT', `UID:${ics(uid)}`, `DTSTAMP:${stamp(now)}`, `DTSTART:${stamp(start)}`, `DTEND:${stamp(end)}`,
     `SUMMARY:${ics(summary)}`, ...(description ? [`DESCRIPTION:${ics(description)}`] : []), ...(location ? [`LOCATION:${ics(location)}`] : []),
     'END:VEVENT', 'END:VCALENDAR',
-  ]);
+  ].map(fold));
   return { bytes: text, type: 'text/calendar', name: 'event.ics' };
 }
 

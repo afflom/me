@@ -1,5 +1,5 @@
 {
-  "comment": "Validation oracles: the published specifications whose own examples are the Prism's test content. tools/oracle/gen.py fetches each source at its pinned SHA-256, takes its examples out mechanically (an example is kept only if every address in it is at a domain reserved for documentation, RFC 2606 and RFC 6761, so no real person's address enters the repository), and reads each one with a reference reader written to the source's own grammar. test/oracle/read.test.mjs then holds the Prism's reading (site/card.mjs readItem) to that reading, field by field. Nothing here is invented: a new kind of content is added by naming the specification it follows.",
+  "comment": "Validation oracles: the published specifications whose own examples are the Prism's test content. tools/oracle/gen.py fetches each source at its pinned SHA-256, takes its examples out mechanically (an example is kept only if every address in it is at a domain reserved for documentation, RFC 2606 and RFC 6761, so no real person's address enters the repository), and reads each one with a reference reader written to the source's own grammar. test/oracle/read.test.mjs then holds the Prism's reading (site/card.mjs readItem) to that reading, field by field: a message's title, sender, time and plain words; an event's title, place and start; a card's name; a header's encoded words as the specification says they display; a base64 test vector as it decodes; a CSV example as RFC 4180 reads it; a one-time code message as the WICG report says; an urgency or scarcity line, as the researchers who found it labelled it, as coercive. gaps: kinds of content the Prism reads that no published specification gives examples of, each with why; no test content is written for them. label: the kind of thing a source's specification says its whole messages and events are (a kind the kind reader names); unsourced: kinds no specification publishes a whole example of, each with why. Nothing here is invented: a new kind of content is added by naming the specification it follows.",
   "reserved": [
     "example",
     "example.com",
@@ -38,6 +38,14 @@
       "label": "event"
     },
     {
+      "key": "rfc6350",
+      "kind": "contact",
+      "title": "RFC 6350 vCard Format Specification",
+      "url": "https://www.rfc-editor.org/rfc/rfc6350.txt",
+      "sha256": "763c63b28fb9050111ee4878ea605e9e61ba2cb9f3c316bbbba936eda0dd1980",
+      "examples": "vcard"
+    },
+    {
       "key": "rfc6047",
       "kind": "message",
       "title": "RFC 6047 iCalendar Message-Based Interoperability Protocol (iMIP)",
@@ -45,9 +53,142 @@
       "sha256": "79d66621adbef4ad5cead0a84b4952fe931e935ad12a50adad4694579711d579",
       "examples": "headers",
       "label": "invitation"
+    },
+    {
+      "key": "rfc2047",
+      "kind": "headerText",
+      "title": "RFC 2047 MIME Part Three: Message Header Extensions for Non-ASCII Text, Section 8 Examples",
+      "url": "https://www.rfc-editor.org/rfc/rfc2047.txt",
+      "sha256": "f3b1356151ae24d616076880115c5ac0c313a88bcbe76d32d0cacf4b5f24f01d",
+      "examples": "displayed"
+    },
+    {
+      "key": "rfc4648",
+      "kind": "base64",
+      "title": "RFC 4648 The Base16, Base32, and Base64 Data Encodings, Section 10 Test Vectors",
+      "url": "https://www.rfc-editor.org/rfc/rfc4648.txt",
+      "sha256": "84e14418f795d503be5f34bf23ce4ebaa119e9ec7c9f667d8caeb111385b178f",
+      "examples": "vectors"
+    },
+    {
+      "key": "rfc4180",
+      "kind": "csv",
+      "title": "RFC 4180 Common Format and MIME Type for Comma-Separated Values (CSV) Files, Section 2",
+      "url": "https://www.rfc-editor.org/rfc/rfc4180.txt",
+      "sha256": "5d9ec035aa40c0108362cb767c9e2d08c30f7225cb2a4715f484cb13c29b5f21",
+      "examples": "csv"
+    },
+    {
+      "key": "otc",
+      "kind": "oneTimeCode",
+      "title": "WICG Origin-bound one-time codes delivered via SMS, Authoring examples",
+      "url": "https://raw.githubusercontent.com/WICG/sms-one-time-codes/2bb70db2550c4a4d76a4836f1b42d7abfca4ab82/index.bs",
+      "sha256": "4e9173e874a12a907d9edde08bccd45a773adc544b3271ee7d4b4bbde3e8d56c",
+      "examples": "otc"
+    },
+    {
+      "key": "darkpatterns",
+      "kind": "coercive",
+      "title": "Mathur et al., Dark Patterns at Scale: Findings from a Crawl of 11K Shopping Websites (CSCW 2019), the labelled dataset",
+      "url": "https://raw.githubusercontent.com/aruneshmathur/dark-patterns/f458f19c4814419acd691f2842d7e1123f14097c/data/final-dark-patterns/dark-patterns.csv",
+      "sha256": "fb2877af3b7bef359abcfb415f3a477df02481300d84f5eb9762b3ca2523bc9b",
+      "examples": "patterns",
+      "categories": [
+        "Urgency",
+        "Scarcity"
+      ]
     }
   ],
-  "debt": [],
+  "debt": [
+    {
+      "id": "darkpatterns-21",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "The urgency was the page's countdown beside these words; the words alone are a price or a name, which mail carries every day."
+    },
+    {
+      "id": "darkpatterns-33",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "A bare time or count with no word of pressure; calling it coercive would hold ordinary mail that names a time or a number."
+    },
+    {
+      "id": "darkpatterns-38",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "A bare time or count with no word of pressure; calling it coercive would hold ordinary mail that names a time or a number."
+    },
+    {
+      "id": "darkpatterns-41",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "A bare time or count with no word of pressure; calling it coercive would hold ordinary mail that names a time or a number."
+    },
+    {
+      "id": "darkpatterns-49",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "The urgency was the page's countdown beside these words; the words alone are a price or a name, which mail carries every day."
+    },
+    {
+      "id": "darkpatterns-71",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "A bare time or count with no word of pressure; calling it coercive would hold ordinary mail that names a time or a number."
+    },
+    {
+      "id": "darkpatterns-74",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "A bare time or count with no word of pressure; calling it coercive would hold ordinary mail that names a time or a number."
+    },
+    {
+      "id": "darkpatterns-192",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "The urgency was the page's countdown beside these words; the words alone are a price or a name, which mail carries every day."
+    },
+    {
+      "id": "darkpatterns-294",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "A bare time or count with no word of pressure; calling it coercive would hold ordinary mail that names a time or a number."
+    },
+    {
+      "id": "darkpatterns-405",
+      "field": "coercive",
+      "want": true,
+      "got": false,
+      "why": "A bare time or count with no word of pressure; calling it coercive would hold ordinary mail that names a time or a number."
+    }
+  ],
+  "gaps": [
+    {
+      "kind": "card number",
+      "why": "No published specification gives example card numbers: ISO/IEC 7812-1, which defines the issuer prefix and the Luhn check digit, is not freely published, and the networks' test numbers are on their own changing pages. The card detector (site/google/ingest.mjs) has no oracle test until one is pinned."
+    },
+    {
+      "kind": "WhatsApp chat export",
+      "why": "WhatsApp publishes no definition of its Export chat text format, only help pages on how to export. site/source/exports.mjs reads it, untested by any oracle."
+    },
+    {
+      "kind": "Discord data package",
+      "why": "Discord's help pages name the files of a data package (messages/index.json, messages/c<id>/messages.json or .csv) but publish no definition of their fields. Untested by any oracle; its CSV files follow RFC 4180, which is."
+    },
+    {
+      "kind": "LinkedIn data archive",
+      "why": "LinkedIn's help pages name messages.csv and Connections.csv but publish no definition of their columns. Untested by any oracle; the files follow RFC 4180, which is."
+    }
+  ],
   "unsourced": [
     {
       "label": "update",

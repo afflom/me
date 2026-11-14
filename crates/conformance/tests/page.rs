@@ -204,7 +204,13 @@ fn page_pg_03() {
         );
     }
     let test = read("test/page/acts.test.mjs");
-    for expected in ["Dentist checkup", "aria-expanded", ".pr-drawn", "#pr-halt"] {
+    for expected in [
+        "test/oracle/examples.mjs",
+        "datetime-local",
+        "aria-expanded",
+        ".pr-drawn",
+        "#pr-halt",
+    ] {
         assert!(
             test.contains(expected),
             "PG-03: the browser test must exercise {expected}"

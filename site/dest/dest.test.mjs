@@ -6,6 +6,7 @@ import { readFile } from 'node:fs/promises';
 import { GUEST, openGuest } from './guest.mjs';
 import { FIELDS, ANSWERS, GUARANTEES, MAX_LINE, judge, line as lineOf } from './table.mjs';
 import { makeRouter, toneOf, sealOf, buildMail, buildEvent, buildShare } from './dest.mjs';
+import { example } from '../../test/oracle/examples.mjs';
 
 const here = new URL('./', import.meta.url);
 const bytes = new Uint8Array(await readFile(new URL(GUEST.path, here)));
@@ -66,18 +67,26 @@ const router = makeRouter({
   handoff: async (out, target) => { handed.push({ out, target }); },
 });
 
-const reply = { target: 'mail', source: 'vault:abc', text: 'Thank you, Thursday works for me.', payload: { to: 'friend@example.org', subject: 'Re: Thursday', body: 'Thank you, Thursday works for me.', inReplyTo: '<m1@example.org>' } };
+// The reply is RFC 5322's own (Appendix A.2): Mary Smith's answer to John Doe.
+const field = (raw, name) => new RegExp(`^${name}: (.*)\\r$`, 'm').exec(raw)?.[1];
+const A2 = example('rfc5322-6');
+const A2body = A2.slice(A2.indexOf('\r\n\r\n') + 4).replace(/\r\n$/, '');
+const reply = { target: 'mail', source: 'vault:abc', text: A2body, payload: { to: field(A2, 'To'), subject: field(A2, 'Subject'), body: A2body, inReplyTo: field(A2, 'In-Reply-To') } };
 const prepared = await router.prepare(reply);
 ok(prepared.answer === 'draft' && handed.length === 0, `the Prism only drafts on its own: ${prepared.answer}`);
 const sent = await router.send(reply, prepared.seal);
 ok(sent.answer === 'deliver' && sent.delivered && handed.length === 1 && handed[0].target === 'mail', `the owner's act on the seen words delivers: ${sent.answer}`);
-ok(handed[0].out.bytes.includes('In-Reply-To: <m1@example.org>\r\n') && handed[0].out.bytes.endsWith('Thursday works for me.'), 'the reply is RFC 5322 with its thread');
+ok(['To', 'Subject', 'In-Reply-To', 'References'].every((name) => field(handed[0].out.bytes, name) === field(A2, name)) && handed[0].out.bytes.endsWith(A2body), 'the reply is RFC 5322 with its thread, field for field as RFC 5322 writes it');
 
-const edited = { ...reply, payload: { ...reply.payload, body: 'Thursday works. Bring the contract.' } };
+const edited = { ...reply, payload: { ...reply.payload, body: `${A2body} ${A2body}` } };
 ok((await router.send(edited, prepared.seal)).answer === 'draft' && handed.length === 1, 'changed words go back to the owner (Satya)');
 ok((await router.send(reply, null)).answer === 'draft' && handed.length === 1, 'a send without the seal of what was seen does not deliver');
 
-const pushy = { ...reply, text: 'Last chance: reply now or else.' };
+// Coercive words are the urgency and scarcity lines Mathur et al. (CSCW 2019)
+// found on shopping sites, from the oracle corpus.
+const { corpus } = await import('../../test/oracle/examples.mjs');
+const pressure = corpus.filter((c) => c.kind === 'coercive').map((c) => JSON.parse(c.raw).text);
+const pushy = { ...reply, text: pressure[0] };
 const pushySeal = (await router.prepare(pushy)).seal;
 ok((await router.send(pushy, pushySeal)).answer === 'draft' && handed.length === 1, 'coercive words never leave (Ahimsa)');
 
@@ -88,25 +97,36 @@ haltedNow = 'yes';
 ok((await router.send(reply, prepared.seal)).answer === 'refuse' && handed.length === 1, 'nothing leaves while halted');
 haltedNow = 'no';
 
-const event = { target: 'calendar', cause: 'owner', text: 'Walk', payload: { uid: 'u1@me', start: '2026-11-13T17:00:00Z', end: '2026-11-13T18:00:00Z', summary: 'Walk; then tea, maybe' } };
+// The event is RFC 5545's own (section 4, the conference in Atlanta): its
+// text, unescaped, must come back escaped exactly as RFC 5545 wrote it.
+const E2 = example('rfc5545-2').replace(/\r\n[ \t]/g, '');
+const prop = (raw, name) => new RegExp(`^${name}(?:;[^:\\r\\n]*)?:(.*)\\r$`, 'm').exec(raw)?.[1];
+const unescape = (v) => v.replace(/\\([\\;,nN])/g, (_, c) => (c === 'n' || c === 'N' ? '\n' : c));
+const utc = (v) => v.replace(/^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/, '$1-$2-$3T$4:$5:$6Z');
+const event = { target: 'calendar', cause: 'owner', text: unescape(prop(E2, 'SUMMARY')), payload: { uid: prop(E2, 'UID'), start: utc(prop(E2, 'DTSTART')), end: utc(prop(E2, 'DTEND')), summary: unescape(prop(E2, 'SUMMARY')), description: unescape(prop(E2, 'DESCRIPTION')) } };
 const ev = await router.prepare(event);
-ok((await router.send(event, ev.seal)).answer === 'deliver' && handed.at(-1).out.bytes.includes('SUMMARY:Walk\\; then tea\\, maybe\r\n'), 'the owner adds an event to their own calendar as iCalendar');
-ok(handed.at(-1).out.bytes.includes('METHOD:PUBLISH\r\n') && handed.at(-1).out.bytes.includes('DTSTART:20261113T170000Z\r\n'), 'the event invites no one and is in UTC');
+ok((await router.send(event, ev.seal)).answer === 'deliver', 'the owner adds an event to their own calendar');
+const built = handed.at(-1).out.bytes;
+ok(['UID', 'DTSTART', 'DTEND', 'SUMMARY', 'DESCRIPTION'].every((name) => prop(built.replace(/\r\n[ \t]/g, ''), name) === prop(E2, name)), 'as iCalendar, each property as RFC 5545 writes it, its text escaped the same');
+ok(built.split('\r\n').every((l) => new TextEncoder().encode(l).length <= 75), 'every line folded at 75 octets (RFC 5545 3.1)');
+ok(built.includes('METHOD:PUBLISH\r\n'), 'the event invites no one');
 assert.throws(() => buildEvent({ uid: 'x', start: '2026-11-13T18:00:00Z', end: '2026-11-13T17:00:00Z', summary: 's' }), /ends after it starts/);
 checks += 1;
 
 // The owner as a destination: shown, or held while quiet; never delivered.
-const note = { target: 'owner', source: 'vault:def', text: 'Your sister wrote about Sunday.' };
+const note = { target: 'owner', source: 'vault:def', text: A2body };
 ok((await router.prepare(note)).answer === 'show', 'the owner is shown what is theirs');
 paceNow = 'quiet';
 ok((await router.prepare(note)).answer === 'hold', 'quiet is kept');
 ok((await router.prepare({ ...note, urgency: 'urgent' })).answer === 'show', 'only what the owner marked urgent breaks quiet');
 paceNow = 'open';
-ok((await router.prepare({ ...note, text: 'Final notice: pay immediately or else.' })).answer === 'hold', 'coercive content waits, never pushed');
+ok((await router.prepare({ ...note, text: pressure[1] })).answer === 'hold', 'coercive content waits, never pushed');
 ok(asked.filter((t) => t.startsWith('dest ')).every((t) => t.split(' ').length === 10), 'every dest request has its nine fields');
 
 // The detectors and builders.
-ok(toneOf('Only 3 seats left, act now!') === 'coercive' && toneOf('Thanks, see you soon.') === 'calm', 'tone check');
+ok(pressure.length > 100 && toneOf(pressure.at(-1)) === 'coercive', 'tone check');
+// Every message the specifications publish reads calm: none is held as coercive.
+ok(corpus.filter((c) => c.kind === 'message').every((c) => toneOf(c.raw.slice(c.raw.search(/\r?\n\r?\n/))) === 'calm'), 'no example message of RFC 5322 or RFC 6047 is coercive');
 ok((await sealOf('abc')) === 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad', 'seal is SHA-256');
 const m = buildMail({ to: 'a@example.org\r\nBcc: x@example.org', subject: 'Hi', body: 'x' });
 ok(!m.bytes.includes('\r\nBcc:') && m.href.startsWith('mailto:a%40example.org'), 'header injection is flattened');

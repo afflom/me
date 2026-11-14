@@ -16,7 +16,7 @@ import { readItem, useReader } from "../../site/card.mjs";
 import * as reader from "../../site/read/read.mjs";
 import { load } from "../../tools/specs/record.mjs";
 
-const corpus = JSON.parse(readFileSync("test/oracle/corpus.json", "utf8")).corpus.map((e) => ({ media: e.kind, raw: e.raw, id: e.id, expect: { kind: e.expect.label, parties: e.expect.parties ?? [], lead: e.expect.label === "person" ? e.expect.lead : undefined } }));
+const corpus = JSON.parse(readFileSync("test/oracle/corpus.json", "utf8")).corpus.filter((e) => "label" in e.expect).map((e) => ({ media: e.kind, raw: e.raw, id: e.id, expect: { kind: e.expect.label, parties: e.expect.parties ?? [], lead: e.expect.label === "person" ? e.expect.lead : undefined } }));
 const GATE = "test/router/labels.test.mjs";
 const product = load("app/specs/product/spec.json");
 useReader(reader);

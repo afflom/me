@@ -5,28 +5,51 @@ examples are taken out mechanically:
   - "dashes": an example message between two lines of "----" (RFC 5322
     Appendix A);
   - "vcalendar": every object from BEGIN:VCALENDAR to END:VCALENDAR;
+  - "vcard": every object from BEGIN:VCARD to END:VCARD (RFC 6350);
   - "headers": every indented block that opens with a From field and runs to
-    the next line of prose (RFC 6047's example messages).
-A source's "label" is the kind of thing its specification says its examples
-are; the reference reader adds the people each example is with.
+    the next line of prose (RFC 6047's example messages);
+  - "displayed": each row of an "encoded form / displayed as" table, the
+    encoded form and what the specification says it displays as (RFC 2047
+    section 8), each without the parentheses around it;
+  - "vectors": each NAME("input") = "output" test vector (RFC 4648 section 10);
+  - "csv": each example after "For example:" in RFC 4180 section 2, its
+    written "CRLF" marks made line breaks;
+  - "otc": each example of the WICG origin-bound one-time codes report, the
+    message and the code the report says it carries, or none;
+  - "patterns": each distinct pattern string of a labelled research dataset
+    whose category the source names (Mathur et al., "Dark Patterns at Scale",
+    CSCW 2019: the urgency and scarcity lines found on shopping sites).
+A source's "label" is the kind of thing its specification says its whole
+messages and events are; the reference reader adds the people each
+example is with.
 An example is kept only if every address in it is at a domain reserved for
 documentation (the spec's "reserved" list, after RFC 2606 and RFC 6761), so no
-real person's address enters the repository.
+real person's address enters the repository; likewise every international
+phone number must be in the fictional range PV-01 allows.
 
 Each kept example is then read by a reference reader written to the source's
 own grammar, independent of the Prism's code: a message by Python's email
-package (policy.default, which implements RFC 5322 and the MIME RFCs), an
+package (policy.default, which implements RFC 5322 and the MIME RFCs), its
+plain words included (transfer encoding and charset undone), an
 iCalendar object by its content lines (RFC 5545 section 3.1: unfolding,
-parameters, TEXT escapes, DATE and DATE-TIME with TZID, UTC or floating). What
+parameters, TEXT escapes, DATE and DATE-TIME with TZID, UTC or floating), a
+vCard by the same content lines (RFC 6350 section 3.3, the formatted name and
+first email). What
 the reader finds is what test/oracle/read.test.mjs holds the Prism's reading to.
+A displayed row and a test vector carry the specification's own answer, which
+Python's email.header and base64 must also give, or the extraction is refused.
 
 Writes test/oracle/corpus.json. --check refuses a stale one. --cache DIR reads
 and keeps the fetched sources there.
 
 usage: python3 -I tools/oracle/gen.py [--check] [--cache DIR]
 """
+import base64
+import csv as csvlib
+import io
 import datetime
 import email
+import email.header
 import email.policy
 import email.utils
 import hashlib
@@ -107,19 +130,29 @@ def dashes(text):
         yield "\r\n".join(dedent(lines[a + 1 : b])) + "\r\n"
 
 
-def vcalendar(text):
+def objects(name):
+    """Every object from a line BEGIN:<name> to its END:<name> (RFC 5545 3.4, RFC 6350 6.1.1)."""
+    return lambda text: content_objects(text, name)
+
+
+CONTENT_LINE = re.compile(r"^([A-Za-z0-9-]+\.)?[A-Za-z0-9-]+[;:]")
+
+
+def content_objects(text, name):
     lines = text.split("\n")
     i = 0
     while i < len(lines):
-        if lines[i].strip() == "BEGIN:VCALENDAR":
+        if lines[i].strip() == f"BEGIN:{name}":
             j = i
-            while j < len(lines) and lines[j].strip() != "END:VCALENDAR":
+            while j < len(lines) and lines[j].strip() != f"END:{name}":
                 j += 1
             block = lines[i : j + 1]
             # Folded lines keep their one leading space after the block's own indent.
             indent = len(block[0]) - len(block[0].lstrip(" "))
             raw = [l[indent:] if l.strip() else "" for l in block if l.strip()]
-            yield "\r\n".join(raw) + "\r\n"
+            # An object is content lines throughout; a BEGIN named in the prose is not one.
+            if all(CONTENT_LINE.match(l) or l.startswith((" ", "\t")) for l in raw):
+                yield "\r\n".join(raw) + "\r\n"
             i = j + 1
         else:
             i += 1
@@ -142,13 +175,104 @@ def headers(text):
             i += 1
 
 
+def displayed(text):
+    """Rows of the table under "encoded form ... displayed as", split at the
+    column the table's own heading sets. A row whose encoded form runs on to
+    the next line (no closing parenthesis yet) is joined to it by CRLF and
+    the continuation's own leading white space, as a folded field is."""
+    lines = text.split("\n")
+    head = next(i for i, l in enumerate(lines) if re.match(r"^ {3}encoded form\s+displayed as\s*$", l))
+    at = lines[head].index("displayed as")
+    i = head + 1
+    while i < len(lines) and not re.match(r"^\d+\. ", lines[i]):
+        line = lines[i]
+        encoded, shown = line[:at].rstrip(), line[at:].strip()
+        if re.match(r"^ {3}\(=\?", line) and shown.startswith("(") and shown.endswith(")"):
+            encoded = encoded.strip()
+            while not encoded.endswith(")"):
+                i += 1
+                encoded += "\r\n" + lines[i].rstrip()
+            yield json.dumps({"encoded": encoded[1:-1], "displayed": shown[1:-1]})
+        i += 1
+
+
+VECTOR = re.compile(r'^\s+BASE64\("([^"]*)"\) = "([^"]*)"\s*$')
+
+
+def vectors(text):
+    for line in text.split("\n"):
+        m = VECTOR.match(line)
+        if m:
+            yield json.dumps({"decoded": m.group(1), "encoded": m.group(2)})
+
+
+def csv_examples(text):
+    lines = text.split("\n")
+    start = next(i for i, l in enumerate(lines) if l.startswith("2.  Definition of the CSV Format"))
+    end = next(i for i, l in enumerate(lines) if i > start and re.match(r"^3\.  ", l))
+    i = start
+    while i < end:
+        if lines[i].rstrip().endswith("For example:"):
+            j = i + 1
+            while j < end and not lines[j].strip():
+                j += 1
+            block = []
+            while j < end and lines[j].startswith("       ") and lines[j].strip():
+                block.append(lines[j][7:])
+                j += 1
+            # A written "CRLF" is a line break; a line without one joins the next
+            # only inside a quoted field, so a block's lines are joined by CRLF
+            # where it is written and stand as written at the end.
+            yield "".join(l[: -len(" CRLF")] + "\r\n" if l.endswith(" CRLF") else l for l in block)
+            i = j
+        else:
+            i += 1
+
+
+def otc_examples(text):
+    for block in re.findall(r'<div class="example">(.*?)</div>', text, re.S):
+        fenced = re.search(r"```\n\"(.*?)\"\n```", block, re.S)
+        inline = re.search(r'(?:The message|code message=\]) `"([^`]*)"`', block)
+        message = fenced.group(1) if fenced else inline.group(1) if inline else None
+        if message is None:
+            continue
+        said = None if "is not an" in block else re.search(r'the \[=code=\] is `"([^"]*)"`', block)
+        yield json.dumps({"message": message, "code": said.group(1) if said else None})
+
+
+def pattern_examples(text, source):
+    seen = set()
+    for row in csvlib.DictReader(io.StringIO(text, newline="")):
+        if row["Pattern Category"] not in source["categories"]:
+            continue
+        words = row["Pattern String"].strip()
+        key = re.sub(r"\d+", "#", words.lower())
+        # A line with no words (a bare timer) or one already taken in another number is not a new example.
+        if not re.search(r"[A-Za-z]{3}", words) or key in seen:
+            continue
+        seen.add(key)
+        yield json.dumps({"text": words, "category": row["Pattern Category"], "type": row["Pattern Type"]})
+
+
 ADDRESS = re.compile(r"[A-Za-z0-9._%+!$&*=^`{|}~'-]+@([A-Za-z0-9.-]+)")
+
+
+PHONE = re.compile(r"(?<![A-Za-z0-9])\+([0-9][0-9 .()-]*)(?![A-Za-z0-9])")
+
+
+def fictional_phones_only(raw):
+    """Every international number (8 to 15 digits) is in the fictional range 555-0100 to 555-0199, as PV-01 holds."""
+    for m in PHONE.finditer(raw):
+        digits = re.sub(r"\D", "", m.group(1))
+        if digits[:1] in "123456789" and 8 <= len(digits) <= 15 and not (len(digits) == 11 and digits.startswith("1") and digits[4:9] == "55501"):
+            return False
+    return True
 
 
 def documentation_only(raw):
     domains = [d.lower().rstrip(".") for d in ADDRESS.findall(raw)]
     reserved = SPEC["reserved"]
-    return all(any(d == r or d.endswith("." + r) for r in reserved) for d in domains)
+    return all(any(d == r or d.endswith("." + r) for r in reserved) for d in domains) and fictional_phones_only(raw)
 
 
 def ms(dt):
@@ -202,6 +326,13 @@ def read_message(raw):
                 expect["at"] = ms(when)
         except (AttributeError, ValueError, TypeError):
             pass
+    # The plain words a person reads (RFC 2045/2046: the first text/plain
+    # part not an attachment, its transfer encoding and charset undone).
+    plain = msg.get_body(preferencelist=("plain",))
+    if plain is not None and not plain.is_attachment():
+        words = re.sub(r"\s+", " ", plain.get_content()).strip()
+        if words:
+            expect["body"] = words
     # Where it stands in its conversation (RFC 5322 3.6.4): its own identifier,
     # the one it replies to, and every one it references, oldest first. The
     # order of a conversation is this dependence, not the clock.
@@ -213,6 +344,43 @@ def read_message(raw):
     if ids("references"):
         expect["refs"] = ids("references")
     return expect
+
+
+def read_displayed(raw):
+    row = json.loads(raw)
+    python = str(email.header.make_header(email.header.decode_header(row["encoded"])))
+    if python != row["displayed"]:
+        refuse(f"RFC 2047 says {row['encoded']!r} displays as {row['displayed']!r}; Python's email.header reads {python!r}")
+    return {"text": row["displayed"]}
+
+
+def read_csv(raw):
+    return {"rows": [row for row in csvlib.reader(io.StringIO(raw, newline=""), strict=True)]}
+
+
+OTC_LAST = re.compile(r"^@([^\s@#]+) #([^\s@#]+)(?: @([^\s@#]+))?(?: .*)?$")
+
+
+def read_otc(raw):
+    row = json.loads(raw)
+    last = row["message"].split("\n")[-1]
+    m = OTC_LAST.match(last)
+    parsed = m.group(2) if m else None
+    if parsed != row["code"]:
+        refuse(f"the report says {row['message']!r} carries {row['code']!r}; its parsing rule finds {parsed!r}")
+    return {"code": row["code"]}
+
+
+def read_pattern(raw):
+    row = json.loads(raw)
+    return {"coercive": True, "type": row["type"]}
+
+
+def read_vector(raw):
+    row = json.loads(raw)
+    if base64.b64decode(row["encoded"]).decode("ascii") != row["decoded"]:
+        refuse(f"the vector {row} does not decode as written")
+    return {"text": row["decoded"]}
 
 
 def content_lines(raw):
@@ -304,12 +472,23 @@ def read_calendar(raw):
     return expect
 
 
+def read_contact(raw):
+    """RFC 6350: FN is the formatted name (6.2.1); EMAIL the address (6.4.2)."""
+    expect = {}
+    for name, params, value in content_lines(raw):
+        name = name.split(".")[-1]
+        if name == "FN" and "title" not in expect:
+            expect["title"] = text_value(value)
+        elif name == "EMAIL" and "who" not in expect:
+            expect["who"] = value.removeprefix("mailto:")
+    return expect
+
 # Every label is a kind the Prism's kind reader names; a kind with no source
 # says why, and leaves the list once a source gives it examples.
 KINDS = {k["key"] for k in json.loads((ROOT / "app/specs/router/spec.json").read_text(encoding="utf-8"))["providers"]["kind"]["kinds"]}
 sourced = {s["label"] for s in SPEC["sources"] if "label" in s}
 for s in SPEC["sources"]:
-    if s.get("label") not in KINDS:
+    if s["kind"] in ("message", "calendar") and s.get("label") not in KINDS:
         refuse(f"{s['key']} labels its examples {s.get('label')!r}, which is not a kind the kind reader names")
 for u in SPEC.get("unsourced", []):
     if u.get("label") not in KINDS or not str(u.get("why", "")).strip():
@@ -320,8 +499,8 @@ for u in SPEC.get("unsourced", []):
 corpus = []
 for source in SPEC["sources"]:
     text = unpaginate(fetch(source))
-    take = {"dashes": dashes, "vcalendar": vcalendar, "headers": headers}[source["examples"]]
-    read = {"message": read_message, "calendar": read_calendar}[source["kind"]]
+    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples, "patterns": lambda text: pattern_examples(text, source)}[source["examples"]]
+    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc, "coercive": read_pattern}[source["kind"]]
     n = kept = 0
     for raw in take(text):
         n += 1

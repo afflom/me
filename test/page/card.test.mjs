@@ -11,6 +11,8 @@ import { extname, join, resolve } from "node:path";
 import test from "node:test";
 
 const { chromium } = createRequire(import.meta.url)("playwright");
+// What the owner types comes from the specifications' own examples (RFC 5546 §4.4; RFC 5322 Appendix A.1.1).
+const { titleOf, bodyOf, toOf } = await import(resolve("test/oracle/examples.mjs"));
 const site = resolve(process.env.PAGE_SITE ?? "site");
 const published = process.env.PAGE_URL;
 const types = { ".html": "text/html", ".mjs": "text/javascript", ".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".wasm": "application/wasm", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2", ".webmanifest": "application/manifest+json" };
@@ -51,7 +53,7 @@ test("the Prism keeps at the model's floors, refuses while halted and drafts onl
     assert.deepEqual(places, ["today", "conversations", "calendar", "people", "tasks", "boundary"]);
 
     // A task is kept at its domain's floor (internal): the Boundary allows it, the vault keeps it.
-    await note("tasks", "An example task");
+    await note("tasks", titleOf("rfc5546-41"));
     await settle("Kept");
     assert.equal(await rows(), 1);
 
@@ -73,7 +75,7 @@ test("the Prism keeps at the model's floors, refuses while halted and drafts onl
     await page.click('.pr-go[data-place="boundary"]');
     await page.check("#pr-halt");
     await settle("Paused");
-    await note("tasks", "Another example task");
+    await note("tasks", titleOf("rfc5546-47"));
     await settle("Refused");
     assert.equal(await rows(), 1);
 
@@ -81,11 +83,11 @@ test("the Prism keeps at the model's floors, refuses while halted and drafts onl
     await page.click('.pr-go[data-place="boundary"]');
     await page.uncheck("#pr-halt");
     await page.click('.pr-go[data-place="conversations"]');
-    await page.fill('#pr-act input[type="email"]', "someone@example.org");
-    await page.fill("#pr-act textarea", "An example message");
+    await page.fill('#pr-act input[type="email"]', toOf("rfc5322-1"));
+    await page.fill("#pr-act textarea", bodyOf("rfc5322-1"));
     await page.click('#pr-act button[type="submit"]');
     await settle("Ready to send");
-    assert.match(await page.textContent("#pr-act pre"), /^To: someone@example\.org/);
+    assert.match(await page.textContent("#pr-act pre"), new RegExp(`^To: ${toOf("rfc5322-1").replace(/\./g, "\\.")}`));
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();

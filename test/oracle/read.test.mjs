@@ -12,22 +12,35 @@ import { readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { readItem, useReader } from "../../site/card.mjs";
+import { headerWords, readItem, useReader } from "../../site/card.mjs";
 import * as reader from "../../site/read/read.mjs";
+import { csv } from "../../site/source/exports.mjs";
+import { detect } from "../../site/google/ingest.mjs";
+import { toneOf } from "../../site/dest/dest.mjs";
 
 useReader(reader);
 const { corpus } = JSON.parse(readFileSync("test/oracle/corpus.json", "utf8"));
 const spec = JSON.parse(readFileSync("app/specs/oracle/spec.json", "utf8"));
 const encoder = new TextEncoder();
-const MEDIA = { message: "message", calendar: "calendar" };
+const MEDIA = { message: "message", calendar: "calendar", contact: "contactCard" };
 const pad = (n, w = 2) => String(n).padStart(w, "0");
 const localOf = (ms) => { const d = new Date(ms); return `${pad(d.getFullYear(), 4)}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
 
 // What the Prism reads for each field the reference reader found.
 function misses(example) {
-  const item = readItem({ address: example.id, outcome: "restore", bytes: encoder.encode(example.raw), meta: { about: { media: MEDIA[example.kind], domain: 4, at: 0 } } });
   const out = [];
   const same = (field, want, got) => { if (want !== got) out.push({ id: example.id, field, want, got }); };
+  // A header's encoded words read as the specification says they display (RFC 2047).
+  if (example.kind === "headerText") { const row = JSON.parse(example.raw); same("text", example.expect.text, headerWords(row.encoded)); return out; }
+  // A base64 test vector decodes to its text (RFC 4648), as a part's body does.
+  if (example.kind === "base64") { const row = JSON.parse(example.raw); same("text", example.expect.text, reader.decode(row.encoded, "base64", "us-ascii")); return out; }
+  // A CSV example's records, field by field (RFC 4180), as the downloads that follow it are read.
+  if (example.kind === "csv") { same("rows", JSON.stringify(example.expect.rows), JSON.stringify(csv(example.raw))); return out; }
+  // A one-time code message is kept as a credential, and nothing else is (WICG origin-bound one-time codes).
+  if (example.kind === "oneTimeCode") { same("credential", example.expect.code !== null, detect(encoder.encode(JSON.parse(example.raw).message)) === "credential"); return out; }
+  // An urgency or scarcity line, as its researchers labelled it, is coercive and never leaves (Ahimsa).
+  if (example.kind === "coercive") { same("coercive", true, toneOf(JSON.parse(example.raw).text) === "coercive"); return out; }
+  const item = readItem({ address: example.id, outcome: "restore", bytes: encoder.encode(example.raw), meta: { about: { media: MEDIA[example.kind], domain: 4, at: 0 } } });
   const e = example.expect;
   if ("title" in e) same("title", e.title.replace(/\s+/g, " ").trim(), (item.title ?? "").replace(/\s+/g, " ").trim());
   if ("who" in e) same("who", e.who, item.who);
@@ -38,6 +51,9 @@ function misses(example) {
     else if ("local" in e.start && !("zone" in e.start)) same("start", e.start.local, Number.isFinite(item.at) ? localOf(item.at) : String(item.at));
   }
   if (e.start && "date" in e.start) same("allDay", true, item.allDay);
+  // A message's plain words are what the person reads of it, first; an
+  // invitation it carries (RFC 6047) is read after them, as its event.
+  if ("body" in e) { const got = (item.body ?? "").replace(/\s+/g, " ").trim(); same("body", e.body, got.startsWith(e.body) ? e.body : got); }
   // Where it stands in its own order: its conversation (RFC 5322 3.6.4) and its revisions (RFC 5545 UID, SEQUENCE).
   for (const field of ["id", "uid", "sequence"]) if (field in e) same(field, e[field], item[field]);
   for (const field of ["replyTo", "refs"]) if (field in e) same(field, JSON.stringify(e[field]), JSON.stringify(item[field] ?? []));
@@ -55,7 +71,7 @@ test("the corpus is what the pinned specifications give, read by the reference r
 
 test("the corpus is the specifications' own examples, with something to compare", () => {
   assert.ok(corpus.length >= 50, `only ${corpus.length} examples`);
-  for (const kind of ["message", "calendar"]) assert.ok(corpus.some((c) => c.kind === kind && Object.keys(c.expect).length), `no ${kind} example with a reading`);
+  for (const kind of ["message", "calendar", "contact", "headerText", "base64", "csv", "oneTimeCode", "coercive"]) assert.ok(corpus.some((c) => c.kind === kind && Object.keys(c.expect).length), `no ${kind} example with a reading`);
 });
 
 test("the Prism reads every example as its specification does, beyond the listed debt", () => {

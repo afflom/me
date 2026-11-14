@@ -7,10 +7,22 @@
 
 const unfold = (text) => text.replace(/\r?\n[ \t]/g, " ");
 
+// RFC 5322 section 2.1: the header is the field lines (a name, a colon) and
+// their folded continuations; it ends at the first empty line, which is
+// dropped, or at the first line that is neither, which begins the body. A
+// part that opens with an empty line has no header (RFC 2046 section 5.1.1).
 function split(text) {
-  const at = text.search(/\r?\n\r?\n/);
-  if (at < 0) return { head: text, body: "" };
-  return { head: text.slice(0, at), body: text.slice(at).replace(/^\r?\n\r?\n/, "") };
+  const lines = text.split(/(?<=\n)/);
+  let at = 0;
+  let i = 0;
+  for (; i < lines.length; i += 1) {
+    const line = lines[i];
+    if (/^\r?\n$/.test(line)) { at += line.length; i += 1; break; }
+    if (!(/^[!-9;-~]+:/.test(line) || (i > 0 && /^[ \t]/.test(line)))) break;
+    at += line.length;
+  }
+  const end = i > 0 && /^\r?\n$/.test(lines[i - 1]) ? at - lines[i - 1].length : at;
+  return { head: text.slice(0, end), body: text.slice(at) };
 }
 
 function fields(head) {
@@ -35,7 +47,8 @@ function bytesOf(body, encoding) {
   return Uint8Array.from(text, (c) => c.charCodeAt(0) & 0xff);
 }
 
-function decode(body, encoding, charset) {
+// A part's text, its transfer encoding (RFC 2045 section 6) and charset undone.
+export function decode(body, encoding, charset) {
   const bytes = bytesOf(body, encoding);
   try { return new TextDecoder(charset || "utf-8", { fatal: false }).decode(bytes); } catch { return new TextDecoder("utf-8", { fatal: false }).decode(bytes); }
 }
@@ -47,9 +60,15 @@ function parts(text, depth = 0, attached = false) {
   const type = (h["content-type"] ?? "text/plain").split(";")[0].trim().toLowerCase();
   const boundary = param(h["content-type"], "boundary");
   if (type.startsWith("multipart/") && boundary && depth < 8) {
+    // RFC 2046 section 5.1.1: each part lies between delimiter lines; the
+    // preamble before the first and the epilogue after the close are not parts.
+    const esc = boundary.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const pieces = `\r\n${body}`.split(new RegExp(`\\r?\\n--${esc}(--)?[ \\t]*(?:\\r?\\n|$)`));
     const out = [];
-    for (const chunk of body.split(new RegExp(`\\r?\\n?--${boundary.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:--)?\\r?\\n?`))) {
-      if (chunk.trim()) out.push(...parts(chunk, depth + 1, attached));
+    // split with one capture: [preamble, close?, part, close?, part, ...]
+    for (let k = 2; k < pieces.length; k += 2) {
+      if (pieces[k - 1] === "--") break;
+      out.push(...parts(pieces[k], depth + 1, attached));
     }
     return out;
   }

@@ -75,16 +75,18 @@ const two = client.compressFiles([{ path: 'a', data: value }, { path: 'b', data:
 ok(structureOf(client, two, client.standardBases).objects === 'many', 'an archive of several objects is many');
 ok((await objects.open(two, kept.kappa)).outcome === 'refuse', 'an archive of several objects is never opened as one');
 ok(lock.standardBases.includes(client.inspect(kept.archive)[0].basis), 'the pinned client writes against a locked standard basis');
-// Every oracle example is kept, written against a locked standard basis, and opened
+// Every oracle example is kept, written against a locked standard basis (or whole, when it is too small to gain from one), and opened
 // back to its very bytes. Between them they take both bases.
 const bases = new Set();
 for (const example of corpus) {
   const bytes = new TextEncoder().encode(example.raw);
   const held = await objects.keep(bytes);
   ok(held.outcome === 'keep', `${example.id} is kept: ${asked.at(-1)}`);
-  const basis = client.inspect(held.archive)[0].basis;
-  ok(lock.standardBases.includes(basis), `${example.id} names a locked standard basis`);
-  bases.add(basis);
+  const [shape] = client.inspect(held.archive);
+  const basis = shape.basis;
+  // A value too small to gain from a basis is kept whole, self-contained and raw.
+  if (basis === null) ok(shape.scope === 'self-contained' && shape.representation === 'raw', `${example.id} is either against a locked basis or kept whole`);
+  else { ok(lock.standardBases.includes(basis), `${example.id} names a locked standard basis`); bases.add(basis); }
   const back = await objects.open(held.archive, held.kappa);
   ok(back.outcome === 'open' && Buffer.compare(Buffer.from(back.bytes), Buffer.from(bytes)) === 0, `${example.id} opens to its very bytes`);
 }
