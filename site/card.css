@@ -244,3 +244,19 @@ html:not(.immersive) body {
 .pr-offers { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-2); }
 #pr-result.result { flex-direction: column; align-items: stretch; gap: var(--space-2); min-width: 0; }
 #pr-result .pr-drawn { width: 100%; }
+
+/* Set up: one card on Today, then one step at a time in the panel. */
+.pr-setup[hidden], .pr-ask[hidden], .pr-set[hidden] { display: none; }
+.pr-setup {
+  display: grid; gap: var(--space-3); margin-block-end: var(--space-4); padding: var(--space-4);
+  border: 1px solid color-mix(in oklch, var(--vr-verdant) 55%, transparent); border-radius: var(--radius-outer);
+  background: color-mix(in oklch, var(--vr-verdant) 8%, transparent);
+}
+.pr-setup-top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-2); }
+.pr-setup-top h3 { margin: 0; font-family: var(--font-display); font-size: var(--text-24); font-weight: 600; }
+.pr-setup .pr-steps { margin: 0; padding: 0; }
+.pr .pr-setup-go { justify-self: start; background: var(--vr-solar); color: var(--vr-onSolar); border-color: transparent; font-weight: 600; }
+.pr-setup-head { margin: 0 0 var(--space-3); font-family: var(--font-display); font-size: var(--text-24); font-weight: 600; }
+.pr-setup-on .pr-set > h3 { display: none; }
+.pr-setup-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-2); margin-block-start: var(--space-4); }
+.pr-setup-right { display: flex; gap: var(--space-2); }

@@ -38,5 +38,5 @@ export async function observe({ line, halted, made, place = () => '' }) {
     const signal = { ...event, place: place() };
     queue = queue.then(() => observer.observe(signal)).catch(() => {});
   });
-  return observer;
+  return { ...observer, settled: () => queue };
 }

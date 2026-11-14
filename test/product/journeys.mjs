@@ -73,6 +73,9 @@ export const walks = {
   // J1: today's meeting, what is due and who is waiting, on Today.
   async j1(page) {
     assert.ok(await arrived(page), "the person's day never arrives");
+    // Today paints its agenda a moment after the day arrives, as the person sees it settle.
+    const by = Date.now() + 15000;
+    while (Date.now() < by && !TIME.test(await rowOf(page, "Design review"))) await page.waitForTimeout(500);
     assert.match(await rowOf(page, "Design review"), TIME, "Today does not show today's meeting at its time");
     const shown = await text(page);
     assert.match(shown, /due/i, "Today does not show what is due (the payment due on the 28th)");
@@ -82,9 +85,11 @@ export const walks = {
   async j2(page) {
     assert.ok(await arrived(page), "the person's day never arrives");
     const list = app(page).getByRole("region", { name: /needs me/i }).or(app(page).getByRole("list", { name: /needs me/i })).first();
-    assert.ok(await list.count(), "there is no list named Needs me");
+    // The day arrives in parts (the calendar can land before the mail), so the
+    // person waits for the list and its row as they would, not for any one item.
+    assert.ok(await list.waitFor({ timeout: 15000 }).then(() => true, () => false), "there is no list named Needs me");
     const row = list.getByRole("listitem").filter({ hasText: "Lunch on Thursday" }).first();
-    assert.ok(await row.count(), "Needs me does not hold the message that asks the person something");
+    assert.ok(await row.waitFor({ timeout: 15000 }).then(() => true, () => false), "Needs me does not hold the message that asks the person something");
     await row.getByRole("button").first().click();
     await page.waitForTimeout(800);
     assert.equal(await list.getByRole("listitem").filter({ hasText: "Lunch on Thursday" }).count(), 0, "one gesture on it does not take it off Needs me");
@@ -204,5 +209,31 @@ export const walks = {
     await page.waitForSelector("html.pr-ready", { timeout: 60000 });
     await go(page, settings);
     assert.ok(await app(page).getByRole("switch", { name: /^quiet$/i }).first().isChecked(), "Quiet does not stay on");
+  },
+  // J12: a fresh profile meets one Set up card naming the steps; Continue opens
+  // the next step alone, numbered, with Next; finishing every step takes the card away.
+  async j12(page) {
+    const W = surface.words;
+    assert.ok(await arrived(page), "the person's day never arrives");
+    const card = app(page).getByRole("region", { name: new RegExp(`^${W.setup}$`, "i") }).filter({ visible: true }).first();
+    assert.ok(await card.count(), "Today has no Set up card");
+    const said = await card.innerText();
+    for (const step of surface.setup) assert.ok(said.includes(W[step.word]), `Set up does not name "${W[step.word]}"`);
+    await card.getByRole("button", { name: W["setup.continue"], exact: true }).click();
+    await page.waitForTimeout(300);
+    assert.ok(await seen(page, `1 ${W["setup.of"]} ${surface.setup.length}`, 3000), "the step is not numbered");
+    const other = surface.sections.find((x) => !surface.setup.some((step) => step.section === x.key));
+    assert.equal(await app(page).getByRole("region", { name: other.name, exact: true }).filter({ visible: true }).count(), 0, "the step is not shown alone");
+    // Say who you are: one press.
+    await app(page).getByRole("button", { name: W["identity.confirm"], exact: true }).filter({ visible: true }).first().click();
+    await page.waitForTimeout(300);
+    for (let i = 1; i < surface.setup.length; i++) {
+      await app(page).getByRole("button", { name: W["setup.next"], exact: true }).click();
+      await page.waitForTimeout(300);
+      assert.ok(await seen(page, W[surface.setup[i].word], 3000), `Next does not open "${W[surface.setup[i].word]}"`);
+    }
+    await app(page).getByRole("button", { name: W.done, exact: true }).filter({ visible: true }).first().click();
+    await page.waitForTimeout(500);
+    assert.equal(await app(page).getByRole("region", { name: new RegExp(`^${W.setup}$`, "i") }).filter({ visible: true }).count(), 0, "the Set up card stays after every step is done");
   },
 };

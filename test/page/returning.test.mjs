@@ -50,15 +50,21 @@ test("every button on Today does something when pressed (CO-05)", async () => {
     await ready(page);
     const home = await page.textContent("#pr-title");
     const dead = [];
-    const cards = await page.$$eval("#pr-home .pr-card-go", (buttons) => buttons.map((b) => b.dataset.place));
-    assert.ok(cards.length > 0, "Today shows its places");
+    // A fresh Today leads with Set up, whose Continue opens its next step; the places' cards show once something is kept.
+    const setup = page.locator("#pr-setup .pr-setup-go");
+    if (await setup.isVisible()) {
+      await setup.click();
+      if ((await page.textContent("#pr-title")) === home) dead.push("set up");
+    }
+    const cards = await page.$$eval("#pr-home:not([hidden]) .pr-card-go", (buttons) => buttons.map((b) => b.dataset.place));
+    assert.ok(cards.length > 0 || (await page.locator("#pr-setup").count()), "Today shows its places or Set up");
     for (const place of cards) {
       await page.click('.pr-go[data-place="today"]');
       await page.click(`#pr-home .pr-card-go[data-place="${place}"]`);
       const title = await page.textContent("#pr-title");
       if (title === home) dead.push(`card ${place}`);
     }
-    const feeds = await page.$$eval("#pr-home .pr-card-feed", (buttons) => buttons.map((b) => [b.dataset.feed, b.dataset.place]));
+    const feeds = await page.$$eval("#pr-home .pr-card-feed[data-feed]", (buttons) => buttons.map((b) => [b.dataset.feed, b.dataset.place]));
     for (const [feed, place] of feeds) {
       await page.click('.pr-go[data-place="today"]');
       const button = page.locator(`#pr-home .pr-card-feed[data-feed="${feed}"][data-place="${place}"]`);

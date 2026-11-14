@@ -59,7 +59,7 @@ for (let i = 0; i < 48; i++) {
   clock += 20000;
   await made.gesture(item, i % 3 ? 'dismiss' : 'keep');
 }
-await new Promise((r) => setTimeout(r, 50));
+await observer.settled();
 ok(asked.some((a) => a.startsWith('holon ')), 'the page asks the holon facet');
 ok(asked.filter((a) => a.startsWith('holon ')).every((a) => a.split(' ').length === 7), 'every holon line has its six fields');
 ok(asked.filter((a) => a.startsWith('curate ')).every((a) => a.split(' ').length === 11), 'every curate line has its ten fields');
@@ -71,7 +71,7 @@ ok(card.find((c) => c.id === 'resonance')?.verdict, 'the engine has a verdict');
 
 // What was adopted runs again on the next visit.
 const again = await makeResonance({ line, now: () => clock, hourOf: () => 14 });
-await observe({ line, halted: () => 'no', made: again, place: () => 'today' });
+await (await observe({ line, halted: () => 'no', made: again, place: () => 'today' })).settled();
 ok(JSON.stringify(again.params()) === JSON.stringify(made.params()), 'adopted parameters survive a reload');
 
 // Halted: the observer asks, is refused, and tunes nothing.
@@ -79,7 +79,7 @@ halted = 'yes';
 const before = tuned.length;
 asked.length = 0;
 for (let i = 0; i < 16; i++) { clock += 20000; await made.gesture({ address: 'k1:ff', at: clock }, 'open', { dwellMs: 6000 }); }
-await new Promise((r) => setTimeout(r, 50));
+await observer.settled();
 ok(tuned.length === before && !asked.some((a) => a.startsWith('curate ')), 'halted: nothing is curated or tuned');
 
 console.log(`holon page: ${checks} checks, ${tuned.length} tunings`);

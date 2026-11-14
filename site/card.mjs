@@ -3,7 +3,7 @@
 // the verified app's: this script only carries bytes between the page, the
 // vault, R4, the routed models and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
-import { PLACES, ACTS, LABELS, FLOORS, SETTINGS, SECTIONS, WORDS, DOMAINS, FEEDERS, FONTS } from "./surface/surface.mjs";
+import { PLACES, ACTS, LABELS, FLOORS, SETTINGS, SECTIONS, SETUP, WORDS, DOMAINS, FEEDERS, FONTS } from "./surface/surface.mjs";
 // The coherence registry's runtime: what an item is about, what an Ask is
 // after, and Today. Loaded once there is something kept or asked, so an
 // ordinary first visit fetches none of it.
@@ -222,6 +222,8 @@ export default async function start({ app, reason, $ }) {
       read.push(item);
     }
     items = read.sort((a, b) => b.at - a.at);
+    // Ask is offered once there is something of the person's to ask about.
+    $("pr-ask").hidden = !items.length;
     // The people in what is kept, for the place that lists them.
     if (selfOf) { inferred = selfOf(items); mineOf = fromMe; }
     people = peopleOf ? { place: peoplePlace, all: peopleOf(items, meNow()), between } : null;
@@ -277,7 +279,7 @@ export default async function start({ app, reason, $ }) {
   let deviceOpen = null;
   const deviceOf = () => (deviceOpen ??= (async () => {
     const [{ openDevice }, { ingestInto }, host] = await Promise.all([import("./device/device.mjs"), import("./google/ingest.mjs"), import("./device/host.mjs")]);
-    const source = openDevice({ decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted, lanes: host.lanes() });
+    const source = openDevice({ decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted, lanes: host.lanes(), source: (rest) => line(`source ${rest}`), arrived: noteArrived });
     return { source, ask: (more = {}) => host.plan({ decide: (rest) => line(`host ${rest}`), halted, ...more }) };
   })());
   async function reportDevice(t) {
@@ -314,22 +316,52 @@ export default async function start({ app, reason, $ }) {
       await reportDevice(await d.source.readFiles(files));
     })().catch((error) => say(error?.code ?? error?.message ?? String(error), "bad"));
   });
+  // What arrived from each declared service, kept in this browser so the
+  // Connections row can say that content is arriving: { key: { n, at } }.
+  const ARRIVED = "prism-arrived";
+  const arrivedNow = () => { try { return JSON.parse(localStorage.getItem(ARRIVED) ?? "{}") ?? {}; } catch { return {}; } };
+  function noteArrived(service, kept, seen = kept) {
+    const all = arrivedNow();
+    const was = all[service] ?? { n: 0, at: 0 };
+    all[service] = { n: was.n + kept, at: seen > 0 ? Date.now() : was.at };
+    try { localStorage.setItem(ARRIVED, JSON.stringify(all)); } catch { /* the row then says Connected */ }
+  }
+  const importedNow = () => Object.fromEntries(Object.entries(arrivedNow()).filter(([, a]) => a.n > 0).map(([key]) => [key, true]));
   // The owner's Prism extension, if installed, answers a hello on this page.
   let extensionHere = false;
+  // An extension added while this page is open answers later: what it carries is taken at once.
   window.addEventListener("message", (event) => {
-    if (event.source === window && event.origin === location.origin && event.data?.from === "extension" && event.data.prism === "extension") extensionHere = true;
+    if (event.source !== window || event.origin !== location.origin || event.data?.from !== "extension" || event.data.prism !== "extension") return;
+    const fresh = !extensionHere;
+    extensionHere = true;
+    if (fresh && arriving) arrive().catch((error) => console.warn(`sources: ${error?.message ?? error}`));
   });
-  window.postMessage({ prism: "hello", from: "page" }, location.origin);
+  const hello = () => window.postMessage({ prism: "hello", from: "page" }, location.origin);
+  hello();
+  addEventListener("focus", hello);
+  let arriving = false;
   const extensionGrant = () => (extensionHere ? "kept" : "none");
   // The declared services, carried by the installed extension with the
   // owner's own sign-in; PrismSource decides each item by its service and route.
   async function pullExtension(d) {
     const { pull } = await import("./device/extension.mjs");
-    const items = [];
-    for (const item of await pull(window, { halted: halted() })) {
-      if ((await line(`source ${item.service} ${item.route} read ${halted()}`)) === "read") items.push(item);
+    const by = new Map();
+    const { SERVICES } = await import("./source/declared.mjs");
+    // The declarations go to the extension as data, each own route only where PrismSource reads it.
+    const sent = [];
+    for (const service of SERVICES) sent.push({ ...service, own: (await line(`source ${service.key} own read ${halted()}`)) === "read" ? service.own ?? [] : [] });
+    for (const item of await pull(window, { halted: halted(), services: sent })) {
+      if ((await line(`source ${item.service} ${item.route} read ${halted()}`)) !== "read") continue;
+      if (!by.has(item.service)) by.set(item.service, []);
+      by.get(item.service).push(item);
     }
-    return d.source.readItems(items);
+    const total = { files: 0, store: 0, storehash: 0, ask: 0, refuse: 0, skip: 0 };
+    for (const [service, items] of by) {
+      const t = await d.source.readItems(items);
+      for (const key of Object.keys(total)) total[key] += t[key] ?? 0;
+      noteArrived(service, t.store + t.storehash, items.length);
+    }
+    return total;
   }
   // On every visit, and every few minutes while the page is open: a folder the
   // owner granted is re-read while the browser keeps the grant, and what the
@@ -337,6 +369,7 @@ export default async function start({ app, reason, $ }) {
   const ARRIVAL_MINUTES = 5;
   async function readOnVisit() {
     await new Promise((resolve) => setTimeout(resolve, 500));
+    arriving = true;
     setInterval(() => { if (halted() === "no") arrive().catch((error) => console.warn(`sources: ${error?.message ?? error}`)); }, ARRIVAL_MINUTES * 60000);
     await arrive();
   }
@@ -388,7 +421,7 @@ export default async function start({ app, reason, $ }) {
   }
 
   // What the device row's file picker takes: zips (Takeout) and the formats PrismFolder reads.
-  const FILE_TYPES = ".zip,.mbox,.mbx,.eml,.ics,.ical,.vcf,.vcard";
+  const FILE_TYPES = ".zip,.mbox,.mbx,.eml,.ics,.ical,.vcf,.vcard,.txt,.csv";
   const emptyRow = () => element("li", { className: "pr-empty", textContent: WORDS.empty });
 
   // Today: the agenda ahead (PrismChronology says what falls today and what
@@ -399,6 +432,7 @@ export default async function start({ app, reason, $ }) {
     const turn = ++painting;
     // The home's cards count every place and offer each one's feeder.
     homeCards();
+    paintSetup();
     list.hidden = !items.length;
     if (!items.length) { list.replaceChildren(emptyRow()); return; }
     const { today, lineOf } = await coherence();
@@ -528,7 +562,10 @@ export default async function start({ app, reason, $ }) {
     }
   }
   for (const button of document.querySelectorAll("#pr-home .pr-card-go")) button.addEventListener("click", () => go(button.dataset.place, true));
-  for (const button of document.querySelectorAll("#pr-home .pr-card-feed")) {
+  for (const button of document.querySelectorAll("#pr-home .pr-card-feed[data-setup]")) {
+    button.addEventListener("click", () => setupAt(SETUP.findIndex((step) => step.key === button.dataset.setup)));
+  }
+  for (const button of document.querySelectorAll("#pr-home .pr-card-feed[data-feed]")) {
     button.addEventListener("click", () => {
       const feeder = FEEDERS.find((f) => f.key === button.dataset.feed);
       if (feeder.act !== "none") {
@@ -549,6 +586,73 @@ export default async function start({ app, reason, $ }) {
       };
       reach(40);
     });
+  }
+
+
+  // Set up: the few sections a person meets first (PrismSurface's setup), in
+  // order. Until each is done Today leads with one card naming the steps and
+  // the next; Continue opens that step alone in Settings, numbered, with Back,
+  // Later and Next. An empty place offers the step that fills it.
+  let servicesLive = false;
+  const SECTION_DONE = {
+    self: () => Boolean(declared()),
+    sources: () => servicesLive || items.length > 0,
+  };
+  const stepDone = (step) => (SECTION_DONE[step.section] ?? (() => false))();
+  const setupLeft = () => SETUP.filter((step) => !stepDone(step));
+  let setupStep = -1;
+  const setupCard = $("pr-setup");
+  function paintSetup() {
+    const left = setupLeft();
+    const shown = current.host === "home" && left.length > 0;
+    setupCard.hidden = !shown;
+    // While nothing has arrived and set up is not done, Today holds only the card and the note.
+    $("pr-home").hidden = current.host !== "home" || (shown && !items.length);
+    $("pr-ask").hidden = !items.length;
+    if (!shown) return false;
+    const next = left[0];
+    const steps = element("ol", { className: "pr-steps" }, ...SETUP.map((step) => element("li", {
+      className: stepDone(step) ? "pr-step pr-step-done" : step === next ? "pr-step pr-step-next" : "pr-step",
+      textContent: WORDS[step.word],
+    })));
+    const go_ = element("button", { type: "button", className: "pr-setup-go", textContent: WORDS["setup.continue"] });
+    go_.addEventListener("click", () => setupAt(SETUP.indexOf(next)));
+    const done = SETUP.length - left.length;
+    setupCard.replaceChildren(
+      element("header", { className: "pr-setup-top" },
+        element("h3", { id: "pr-setup-title", textContent: WORDS.setup }),
+        element("span", { className: "pr-count", textContent: `${done + 1} ${WORDS["setup.of"]} ${SETUP.length}` })),
+      steps, go_);
+    return true;
+  }
+  // One step of set up, alone in the settings panel.
+  function setupAt(index) {
+    if (index < 0 || index >= SETUP.length) { go(PLACES.find((p) => p.host === "home").key, true); return; }
+    go(PLACES.find((p) => p.show === "settings").key, false, index);
+  }
+  function paintSetupStep() {
+    const panel = $("pr-settings");
+    panel.querySelector(".pr-setup-bar")?.remove();
+    panel.querySelector(".pr-setup-head")?.remove();
+    const step = SETUP[setupStep];
+    for (const node of panel.querySelectorAll(".pr-set")) node.hidden = Boolean(step) && node.dataset.section !== step.section;
+    panel.classList.toggle("pr-setup-on", Boolean(step));
+    if (!step) return;
+    $("pr-title").textContent = WORDS.setup;
+    $("pr-count").hidden = false;
+    $("pr-count").textContent = `${setupStep + 1} ${WORDS["setup.of"]} ${SETUP.length}`;
+    panel.prepend(element("h3", { className: "pr-setup-head", textContent: WORDS[step.word] }));
+    const button = (word, to, primary = false) => {
+      const b = element("button", { type: "button", className: primary ? "pr-setup-go" : "", textContent: word });
+      b.addEventListener("click", () => setupAt(to));
+      return b;
+    };
+    const last = setupStep === SETUP.length - 1;
+    panel.append(element("nav", { className: "pr-setup-bar" },
+      setupStep > 0 ? button(WORDS["setup.back"], setupStep - 1) : element("span"),
+      element("span", { className: "pr-setup-right" },
+        last ? element("span") : button(WORDS["setup.later"], SETUP.length),
+        button(last ? WORDS.done : WORDS["setup.next"], setupStep + 1, true))));
   }
 
   // One act per place, as PrismSurface names it. Outbound acts are prepared,
@@ -684,9 +788,10 @@ export default async function start({ app, reason, $ }) {
     if (result.outcome?.startsWith("store")) { await load(); paintList(); }
   }
 
-  function go(key, focus = false) {
+  function go(key, focus = false, step = -1) {
     const place = byKey.get(key);
     if (!onPage(place)) return;
+    setupStep = step;
     current = place;
     personOpen = null;
     store.set(PLACE_KEY, key);
@@ -700,11 +805,12 @@ export default async function start({ app, reason, $ }) {
     $("pr-list").hidden = settings;
     $("pr-count").hidden = settings;
     $("pr-home").hidden = place.host !== "home";
+    setupCard.hidden = true;
     // The home's cards hold their latest items only while the home is shown, so an item is in one place at a time.
     if (place.host !== "home") for (const latest of document.querySelectorAll("#pr-home .pr-card-latest")) latest.textContent = "";
     actForm(place);
-    if (settings) { buildSettings(); paintSettings(); }
-    else paintList();
+    if (settings) { buildSettings(); paintSettings(); paintSetupStep(); }
+    else { paintSetup(); paintList(); }
     if (focus) $("pr-title").focus({ preventScroll: false });
   }
   $("pr-title").tabIndex = -1;
@@ -727,6 +833,7 @@ export default async function start({ app, reason, $ }) {
       const heading = element("h3", { id: `pr-set-${section.key}`, textContent: section.name });
       const rows = element("div", { className: "pr-rows" });
       const node = element("section", { className: "pr-set" }, heading, rows);
+      node.dataset.section = section.key;
       node.setAttribute("aria-labelledby", heading.id);
       $("pr-settings").append(node);
       for (const key of section.settings) sectionOf.set(key, { section, rows });
@@ -779,7 +886,8 @@ export default async function start({ app, reason, $ }) {
             const now = services.state(service.key, report, { halted: halted() });
             row.hidden = now.state === "off";
             const next = service.connect.find((s) => s.key === now.next);
-            state.textContent = now.state === "live" ? WORDS["service.live"] : now.state === "paused" ? WORDS.halted : now.state === "refused" ? WORDS["service.refused"] : next?.word ?? "";
+            const got = report.arrived?.[service.key]?.n ?? 0;
+            state.textContent = now.state === "checking" ? WORDS["service.checking"] : now.state === "live" ? (got ? `${got} ${WORDS.items}` : WORDS["service.live"]) : now.state === "paused" ? WORDS.halted : now.state === "refused" ? WORDS["service.refused"] : next?.word ?? "";
             // Only the first service that needs a step opens, so the person meets one thing to do.
             if (section.reveal === "until-done" && !touched) row.open = now.state === "step" && first;
             const doneSteps = new Set(service.connect.filter((s) => services.done(service, s, report)).map((s) => s.key));
@@ -792,7 +900,8 @@ export default async function start({ app, reason, $ }) {
                 try { await services.run(service.key, step.key, { save }); } catch (error) { say(error?.message ?? String(error), "bad"); } finally { press.disabled = false; await paintServices(); }
               });
               item.append(press);
-              if (step.how?.length > 1) item.append(element("ol", { className: "pr-how" }, ...step.how.map((line) => element("li", { textContent: line }))));
+              const how = services.howOf(step, report);
+              if (how.length > 1) item.append(element("ol", { className: "pr-how" }, ...how.map((line) => element("li", { textContent: line }))));
               return item;
             }));
             return now.state === "step";
@@ -805,13 +914,15 @@ export default async function start({ app, reason, $ }) {
           let first = true;
           for (const paint of drawn) if (paint(report, first)) first = false;
           servicesShown = Boolean(holder.querySelector(".pr-service:not([hidden])"));
+          servicesLive = services.SERVICES.some((s) => services.state(s.key, report).state === "live");
           await repaintDevice?.();
         };
         const paintServices = async () => {
           await paintWith(last);
           const late = new Promise((done) => setTimeout(() => done(null), 3000));
           const report = await Promise.race([services.probe().catch(() => null), late]);
-          if (report) { last = report; await paintWith(report); }
+          last = { ...(report ?? last), arrived: arrivedNow(), imported: importedNow() };
+          await paintWith(last);
         };
         painters.push(paintServices);
         // The rows arrive after the panel may already be painted; paint them now.
@@ -969,6 +1080,7 @@ export default async function start({ app, reason, $ }) {
   const notePlace = () => (current.act === "note" ? current : PLACES.find((p) => p.act === "note" && onPage(p)));
   async function offer(kind, item, prompt) {
     if (kind === "done" && item) { clear(item); say(WORDS.done, "good"); return; }
+    if (kind === "connect") { setupAt(SETUP.findIndex((s) => s.key === "sources")); return; }
     if (kind === "keep") { const place = notePlace(); if (place) await keepNote(place, prompt); return; }
     if (kind === "reply" && item) {
       const place = writePlace();
@@ -1001,7 +1113,7 @@ export default async function start({ app, reason, $ }) {
       return link;
     });
     const offers = (said.offers ?? []).map(({ kind, item }) => {
-      const label = { reply: WORDS.reply, done: WORDS.done, keep: WORDS.keep }[kind];
+      const label = { reply: WORDS.reply, done: WORDS.done, keep: WORDS.keep, connect: WORDS.connect }[kind];
       if (!label) return null;
       const button = element("button", { type: "button", className: "pr-offer", textContent: label });
       button.addEventListener("click", () => { button.disabled = true; offer(kind, item, prompt).catch((error) => say(error?.message ?? String(error), "bad")); });

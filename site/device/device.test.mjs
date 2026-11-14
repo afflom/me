@@ -200,7 +200,7 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
     if (u.pathname.endsWith('/exporticalzip')) return { ok: true, status: 200, arrayBuffer: async () => calendarZip.buffer };
     return body('', 404);
   };
-  const declared = JSON.parse(await readFile(new URL('../extension/services.json', import.meta.url), 'utf8')).services;
+  const declared = JSON.parse(await readFile(new URL('../../app/specs/source/services.json', import.meta.url), 'utf8')).services;
   bg.declare(declared);
   const gmail = declared.find((s) => s.key === 'gmail');
   ok((await bg.unzip(calendarZip, '.ics')).length === 1, 'a calendar export unzips to its iCalendar files');
@@ -228,16 +228,46 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
   await bg.pin('gmail', tabs);
   await bg.pin('calendar', tabs);
   ok(tabs.list[0].pinned && tabs.list.some((x) => x.url === 'https://calendar.google.com/' && x.pinned && x.active === false) && !tabs.list[1].url.includes('google'), 'keeping a service open pins its own tab, or opens it pinned in the background');
+  // The Gmail key from Gmail's own app page, when no open tab noted it.
+  const appPage = async (url, init) => ({ ok: true, status: 200, url, text: async () => 'x<script>var GLOBALS=[null,null,1,"a","b","c","d","e","f","0123abcd9f",1];</script>' });
+  ok((await bg.keyOf(gmail, gmail.own[0], appPage)) === '0123abcd9f' && gmail.own[0].key.url === 'https://mail.google.com/mail/u/0/', 'the key is read from the service\'s own app page by the declared pattern');
+  ok((await bg.keyOf(gmail, gmail.own[0], signedOut)) === null, 'a sign-in page gives no key');
+  // One service failing leaves the others read, and the failure is reported.
+  const broken = async (url, init) => { if (String(url).includes('calendar')) throw new Error('offline'); return google(url, init); };
+  await bg.seen('gmail', { ids: ['18c0ffee000000aa'] });
+  await bg.round(broken);
+  const st2 = await bg.status({ query: async () => [] });
+  ok(st2.services.calendar.error === 'offline' && st2.services.calendar.checked > 0 && st2.services.gmail.error === null && st2.services.gmail.read >= 2, `a failing service is reported and the others are still read: ${JSON.stringify(st2.services.calendar)}`);
+  await bg.take({ halted: 'no' });
+  // The declarations as data: taken only within the extension's site access, and never widened.
+  const allowed = ['https://mail.google.com/*', 'https://calendar.google.com/*'];
+  ok(bg.reachable(declared, allowed).map((x) => x.key).join() === 'gmail,calendar' && bg.reachable(declared, ['<all_urls>']).length === 5 && bg.reachable([{ ...gmail, origins: ['http://mail.google.com/'] }], ['<all_urls>']).length === 0, 'the page\'s declarations are taken only for https origins the extension may reach');
+  ok(bg.reachable([{ ...gmail, own: [{ ...gmail.own[0], list: { url: 'https://evil.example/feed', id: 'x' } }] }], allowed).length === 0 && bg.reachable('nonsense', allowed).length === 0, 'a declaration with a route off its origins, or not a list, is refused');
+  ok((await bg.adopt([{ ...gmail, own: [] }, declared.find((x) => x.key === 'calendar')], allowed)) === 2 && (await bg.services()).find((x) => x.key === 'gmail').own.length === 0, 'the page can change what the extension reads without a new extension');
+  const registered = [];
+  const scriptingFake = { unregisterContentScripts: async () => {}, registerContentScripts: async (list) => { registered.push(...list); } };
+  await bg.adopt(declared, ['<all_urls>'], scriptingFake);
+  ok(registered.length === 1 && registered[0].matches.join() === 'https://mail.google.com/*' && registered[0].js[0] === 'seen.js', `seen.js goes only on the pages of services declared with a seen route: ${JSON.stringify(registered)}`);
+  bg.declare([]);
+  const quiet = requests.length;
+  ok((await bg.round(google)) === 0 && requests.length === quiet, 'a blank extension, not yet told anything by the Prism, reads nothing');
+  bg.declare(declared);
+  // Tabs open before the extension get its scripts.
+  const injected = [];
+  const n = await bg.attach({ query: async () => [{ id: 1, url: 'https://owner.example/me/' }, { id: 2, url: 'https://mail.google.com/mail/u/0/' }, { id: 3, url: 'https://news.example/' }] }, { executeScript: async (x) => { injected.push(x); } });
+  ok(n === 1 && injected[0].files[0] === 'seen.js' && injected[0].target.tabId === 2, `a declared service's open tab is given seen.js: ${JSON.stringify(injected)}`);
   await bg.take({ halted: 'no' });
   const answer = (url, message) => new Promise((resolve) => { const kept = listeners[0](message, { url }, resolve); if (!kept) resolve('unanswered'); });
   ok((await answer('https://other.example/', { prism: 'pull', halted: 'no' })) === 'unanswered', 'another page is never answered');
   ok((await answer('https://mail.google.com/mail/u/0/', { prism: 'pull', halted: 'no' })) === 'unanswered', 'Gmail itself cannot pull');
 
+  const text0 = (bytes) => new TextDecoder().decode(bytes);
   // The page's side: the extension written for this page's own address, the hello and the pull.
   const local = async (url) => ({ ok: true, status: 200, text: async () => readFile(new URL(url), 'utf8') });
   const packed = await pack('https://owner.example/me/', new URL('../extension/', import.meta.url), local);
   const manifest = JSON.parse((await bg.unzip(packed.slice(), 'manifest.json'))[0]);
-  ok(manifest.host_permissions.join() === 'https://mail.google.com/*,https://calendar.google.com/*' && manifest.content_scripts[1].matches.join() === 'https://mail.google.com/*', `the extension may reach exactly the declared origins: ${manifest.host_permissions}`);
+  ok(manifest.host_permissions.join() === '<all_urls>' && manifest.content_scripts.length === 1 && !new TextDecoder().decode(packed).includes('"services"'), 'the extension is a blank carrier: no services of its own, reaching only what the Prism declares');
+  ok(manifest.permissions.includes('scripting') && text0(packed).includes("version: Number('3')") && !text0(packed).includes('__VERSION__'), 'the extension carries the declared version, and may give already open tabs their scripts');
   const text = new TextDecoder().decode(packed);
   ok(manifest.content_scripts[0].matches.join() === 'https://owner.example/me/*' && text.includes("const PRISM = 'https://owner.example/me/';") && !text.includes('__PRISM__') && !text.includes('__ORIGINS__'), 'the page writes the extension for its own address');
   await assert.rejects(pack('https://owner.example/me', undefined, local), (e) => e.code === 'extension.address');
@@ -250,7 +280,14 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
     if (data.from === 'page' && data.prism === 'hello') win.postMessage({ prism: 'extension', from: 'extension', version: 1 });
     if (data.from === 'page' && data.prism === 'pull') win.postMessage({ prism: 'items', from: 'extension', id: data.id, items: [{ format: 'eml', text: RAW }, { format: 'eml', text: 'not mail' }, 7] });
   });
-  ok((await installed(win, 50)) === 'kept', 'the installed extension answers the page');
+  ok((await installed(win, 50)) === 'old', 'an extension an earlier page wrote answers with its older version');
+  const current = new EventTarget();
+  current.location = win.location;
+  current.postMessage = (data) => queueMicrotask(() => {
+    current.dispatchEvent(Object.assign(new Event('message'), { data, source: current, origin: current.location.origin }));
+    if (data.from === 'page' && data.prism === 'hello') current.postMessage({ prism: 'extension', from: 'extension', version: 3 });
+  });
+  ok((await installed(current, 50)) === 'kept', 'the installed extension answers the page with the version it writes');
   const silent = new EventTarget();
   silent.location = win.location; silent.postMessage = () => {};
   ok((await installed(silent, 20)) === 'none', 'no extension, no answer');
@@ -281,17 +318,72 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
   ok(JSON.stringify(conn.SERVICES) === JSON.stringify(spec.services), 'the page reads exactly the declarations');
   ok(conn.SERVICES.every((s) => s.connect.every((step) => conn.KINDS.includes(step.kind) && step.word.length <= 28 && step.word.split(' ').length <= 4 && step.how.length > 0)), 'every connect step is a declared kind, named in at most four words, with its how');
   ok(conn.state('gmail', { extension: false }).next === 'extension', 'without the extension, the next step is to add it');
-  ok(conn.state('gmail', { extension: true, services: { gmail: { signedIn: false } } }).next === 'sign-in', 'then to sign in');
-  ok(conn.state('gmail', { extension: true, services: { gmail: { signedIn: true, pinned: false } } }).next === 'pin-tab', 'then to keep it open');
-  ok(conn.state('gmail', { extension: true, services: { gmail: { signedIn: true, pinned: true } } }).state === 'live', 'then it is live');
+  ok(conn.state('gmail', { extension: true, services: { gmail: { checked: 1, signedIn: false } } }).next === 'sign-in', 'then to sign in');
+  ok(conn.state('gmail', { extension: true, services: { gmail: { checked: 1, signedIn: true, pinned: false } } }).next === 'pin-tab', 'then to keep it open');
+  ok(conn.state('gmail', { extension: true, services: { gmail: { checked: 1, signedIn: true, pinned: true } } }).state === 'live', 'then it is live');
+  ok(conn.state('gmail', { extension: true, services: {} }).state === 'checking' && conn.state('gmail', { extension: true, services: { gmail: { checked: 1 } } }).state === 'step', 'until the extension has read a service, its row says it is checking, not that the person must sign in');
+  ok(conn.howOf(conn.SERVICES[0].connect.find((x) => x.kind === 'extension'), { outdated: true }) === conn.EXTENSION.update && conn.howOf(conn.SERVICES[0].connect.find((x) => x.kind === 'extension'), {}).includes('Load unpacked'), 'an older extension is put in place by the declared update steps; a first one is added');
   ok(conn.state('gmail', { extension: true }, { halted: 'yes' }).state === 'paused' && conn.state('nothing', {}).state === 'refused', 'paused while halted; an undeclared service is refused');
-  ok(['discord', 'whatsapp', 'linkedin'].every((k) => conn.state(k, { extension: true }).state === 'off' && conn.SERVICES.find((s) => s.key === k).out === 'refused'), 'a service the extension cannot carry yet is off, and sends nothing');
-  const declared = JSON.parse(await readFile(new URL('../extension/services.json', import.meta.url), 'utf8')).services;
-  ok(JSON.stringify(declared) === JSON.stringify(JSON.parse(await readFile(new URL('../../app/specs/source/services.json', import.meta.url), 'utf8')).services), 'the extension carries the model\'s declarations');
+  ok(['discord', 'whatsapp', 'linkedin'].every((k) => conn.state(k, { extension: true }).next === 'history' && conn.state(k, { extension: true, imported: { [k]: true } }).state === 'live' && conn.SERVICES.find((s) => s.key === k).out === 'refused'), 'a service no live route carries yet is brought in by its own download, and sends nothing');
+  ok(conn.state('gmail', { extension: false }).next === 'extension' && conn.SERVICES.filter((s) => ['discord', 'linkedin'].includes(s.key)).every((s) => s.connect[0].url.startsWith(s.origins[0])), 'a history step opens only a page on its service\'s own origin');
+  {
+    const opened = [];
+    ok(await conn.run('linkedin', 'history', { win: {}, open: (u) => opened.push(u) }) && opened[0] === 'https://www.linkedin.com/mypreferences/d/download-my-data' && !(await conn.run('whatsapp', 'history', { win: {}, open: (u) => opened.push(u) })) && opened.length === 1, 'the history step opens the service\'s own download page, and WhatsApp\'s is on the phone');
+  }
+  const declared = spec.services;
   for (const s of declared) {
     for (const route of s.own ?? []) ok((await source(`${s.key} own read no`)) === 'read', `a declared own route is one PrismSource reads: ${s.key}`);
     ok(s.origins.every((o) => /^https:\/\/[a-z.]+\/$/.test(o)), `${s.key} names https origins only`);
   }
+
+  // The export route: each service's own data download, read only as PrismSource answers.
+  const { exportItems, whatsappLines, csv } = await import('../source/exports.mjs');
+  const { zip } = await import('./extension.mjs');
+  const ios = '[13/11/2026, 09:41:05] Robin Example: Lunch on Thursday?\n[13/11/2026, 09:42:10] Sam Example: Yes,\nnoon works\n[13/11/2026, 09:43:00] Messages and calls are end-to-end encrypted.\n';
+  const android = '11/13/26, 9:41 PM - Robin Example: See you then\n';
+  const w = whatsappLines(ios);
+  ok(w.length === 2 && w[0].from === 'Robin Example' && w[0].at.toISOString() === '2026-11-13T09:41:05.000Z' && w[1].body === 'Yes,\nnoon works', 'a WhatsApp chat (iPhone) is read line by line, day first, continuations kept, WhatsApp\'s own lines left out');
+  ok(whatsappLines(android)[0].at.toISOString() === '2026-11-13T21:41:00.000Z', 'a WhatsApp chat (Android) is read month first, with its 12-hour clock');
+  ok(JSON.stringify(csv('a,"b,""c""\nd"\r\n1,2\n')) === JSON.stringify([['a', 'b,"c"\nd'], ['1', '2']]), 'CSV fields hold commas, quotes and newlines');
+  const discordZip = zip([
+    { name: 'package/messages/index.json', bytes: new TextEncoder().encode('{"111":"Direct Message with Robin Example"}') },
+    { name: 'package/messages/c111/messages.json', bytes: new TextEncoder().encode('[{"ID":1,"Timestamp":"2026-11-12 08:00:00.123000+00:00","Contents":"Draft is ready","Attachments":""}]') },
+    { name: 'package/messages/c222/messages.csv', bytes: new TextEncoder().encode('ID,Timestamp,Contents,Attachments\n2,2026-11-12 09:00:00.000000+00:00,"Hello, server",\n') },
+  ]);
+  const files = [
+    fileOf('WhatsApp Chat with Robin Example.txt', ios),
+    new File([discordZip], 'package.zip', { lastModified: 1 }),
+    fileOf('messages.csv', 'CONVERSATION ID,CONVERSATION TITLE,FROM,SENDER PROFILE URL,TO,RECIPIENT PROFILE URLS,DATE,SUBJECT,CONTENT,FOLDER\nc1,Robin Example,Robin Example,,Person,,2026-11-12 10:00:00 UTC,,"Could we talk, next week?",INBOX\n'),
+    fileOf('Connections.csv', 'Notes:\n"Some notes LinkedIn adds"\n\nFirst Name,Last Name,URL,Email Address,Company,Position,Connected On\nRobin,Example,https://www.linkedin.com/in/example,,Example Co,Designer,12 Nov 2026\n'),
+    fileOf('a.eml', 'From: a@example.com\r\nSubject: hi\r\n\r\nhi\r\n'),
+  ];
+  const { zipEntries } = await import('./zip.mjs');
+  const opened = [files[0], ...(await zipEntries(files[1])).map((e) => Object.assign(e, { archive: 'package.zip' })), ...files.slice(2)];
+  const { items, rest } = await exportItems(opened);
+  const by = (svc) => items.filter((i) => i.service === svc);
+  ok(by('whatsapp').length === 2 && by('discord').length === 2 && by('linkedin').length === 2 && rest.length === 1 && rest[0].name === 'a.eml', `each download is claimed by its service, and other files pass through: ${items.map((i) => i.service)}`);
+  ok(by('whatsapp').every((i) => i.format === 'eml' && formatOfText(i.text) === 'eml' && /^Subject: Robin Example$/m.test(i.text) && /@whatsapp\.invalid>/.test(i.text)), 'a WhatsApp message is kept as a message, in its chat, at an address that cannot be mailed');
+  ok(by('discord').some((i) => /^Subject: Direct Message with Robin Example$/m.test(i.text) && /^Date: Thu, 12 Nov 2026 08:00:00 GMT$/m.test(i.text)) && by('discord').some((i) => /Hello, server/.test(i.text)), 'a Discord message is kept with its channel\'s name and time, from JSON and CSV alike');
+  ok(by('linkedin').some((i) => i.format === 'eml' && /Could we talk, next week\?/.test(i.text)) && by('linkedin').some((i) => i.format === 'vcf' && /FN:Robin Example/.test(i.text) && /ORG:Example Co/.test(i.text)), 'a LinkedIn message is kept as a message, a connection as a contact card');
+  ok(new Set(by('whatsapp').map((i) => i.text.match(/^Message-ID: (.*)$/m)[1])).size === 2 && (await exportItems([files[0]])).items[0].text === by('whatsapp')[0].text, 'each message has its own id, the same on every read');
+  const keptBy = [];
+  const vaultBy = { put: async (bytes, meta) => { keptBy.push(meta); return { outcome: 'store' }; } };
+  let halt = 'no';
+  const heard = {};
+  const reader = openDevice({ decide: folder, source: (rest) => source(rest), arrived: (svc, n) => { heard[svc] = (heard[svc] ?? 0) + n; }, ingest: ingestInto({ vault: vaultBy }), store: memoryStore(), halted: () => halt });
+  const t = await reader.readFiles(files);
+  ok(t.store === 7 && t.refuse === 0, `the downloads are read as PrismSource answers: ${JSON.stringify(t)}`);
+  ok(heard.whatsapp === 2 && heard.discord === 2 && heard.linkedin === 2, `the page hears what each service's download brought in: ${JSON.stringify(heard)}`);
+  halt = 'yes';
+  const before = keptBy.length;
+  await reader.readFiles(files);
+  ok(keptBy.length === before, 'nothing is read from a download while halted');
+  const unasked = openDevice({ decide: folder, ingest: ingestInto({ vault: vaultBy }), store: memoryStore() });
+  const u = await unasked.readFiles(files.slice(0, 1));
+  ok(u.store === 0 && u.refuse === 2, 'without PrismSource no download is read');
+  const inFolder = openDevice({ decide: folder, source: (rest) => source(rest), ingest: ingestInto({ vault: vaultBy }), store: memoryStore() });
+  await inFolder.addFolder(async () => dirOf('Downloads', [entryOf(files[0]), entryOf(files[1])]));
+  ok((await inFolder.readFolders()).store === 4, 'a download that lands in a kept folder is read on the next visit');
 }
 
 console.log(`device: ${checks} checks passed`);

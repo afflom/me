@@ -1,12 +1,13 @@
-// The Prism extension. It carries the declared services (services.json, the
-// model's app/specs/source/services.json) to the owner's Prism page by the
-// routes the browser offers: what each service's web app shows the owner
-// (seen.js notes it), and pages the service itself serves the owner, read by
-// GET with the owner's own sign-in. It reads on its own every quarter hour and
-// holds what it read until the Prism page takes it; the page decides what is
-// kept (PrismSource, PrismHost, PrismFolder, the Boundary and the vault). It
-// answers only the Prism page it was written for, never writes to a service,
-// and reads nothing while the page says halted.
+// The Prism extension: the Prism's carrier in this browser, blank until the
+// Prism page uses it. The page sends the model's service declarations as data
+// with every pull; the extension reads what they declare from each service by
+// the routes the browser offers (what the service's web app shows the owner,
+// noted by seen.js, and pages the service itself serves the owner, read by GET
+// with the owner's own sign-in), every quarter hour and on each pull, and holds
+// what it read until the page takes it. The page decides what is kept
+// (PrismSource, PrismHost, PrismFolder, the Boundary and the vault). It answers
+// only the Prism page it was written for, never writes to a service, and reads
+// nothing while the page says halted.
 const PRISM = '__PRISM__';
 const MOST = 200; // items read in one round
 const KEEP = 5000; // ids remembered
@@ -16,17 +17,39 @@ const HOLD = 2000; // items held for the page
 const INIT = Object.freeze({ method: 'GET', credentials: 'include', cache: 'no-store', redirect: 'follow' });
 const get = (url, init) => fetch(url, init);
 const storage = () => chrome.storage.local;
-const STATE = { ids: {}, sent: {}, keys: {}, held: [], halted: 'no', live: {}, out: {} };
+const STATE = { ids: {}, sent: {}, keys: {}, held: [], halted: 'no', live: {}, out: {}, checked: {}, read: {}, error: {} };
 const load = async () => ({ ...STATE, ...(await storage().get(Object.keys(STATE))) });
 
+// The declarations the Prism page last sent as data; none until it first
+// does. A service is taken only with https origins this extension may reach,
+// and with every route URL on its own origins.
 let declared = null;
-export async function services(fetchImpl = get) {
+export async function services() {
   if (declared) return declared;
-  const response = await fetchImpl(chrome.runtime.getURL('services.json'), { method: 'GET' });
-  declared = (await response.json()).services;
+  const kept = (await storage().get(['declared'])).declared;
+  declared = Array.isArray(kept) ? kept : [];
   return declared;
 }
 export const declare = (list) => { declared = list; };
+export function reachable(list, allowed = globalThis.chrome?.runtime?.getManifest?.().host_permissions ?? []) {
+  const may = (url) => /^https:\/\/[a-z0-9.-]+\/$/.test(url) && allowed.some((pattern) => pattern === '<all_urls>' || url.startsWith(pattern.replace(/\*$/, '')));
+  return (Array.isArray(list) ? list : []).filter((s) => s && typeof s.key === 'string' && Array.isArray(s.origins) && s.origins.length && s.origins.every(may)
+    && (s.own ?? []).every((r) => [r.list?.url, r.key?.url, ...(r.item?.urls ?? [])].filter(Boolean).every((u) => s.origins.some((o) => u.startsWith(o)))));
+}
+export async function adopt(list, allowed, scripting = globalThis.chrome?.scripting) {
+  const taken = reachable(list, allowed);
+  if (!taken.length) return 0;
+  const changed = JSON.stringify(taken) !== JSON.stringify(await services());
+  declared = taken;
+  await storage().set({ declared: taken });
+  // seen.js goes only on the declared services' own pages, as they are now declared.
+  if (changed && scripting?.registerContentScripts) {
+    const matches = [...new Set(taken.filter((s) => s.seen).flatMap((s) => s.origins.map((o) => `${o}*`)))];
+    await scripting.unregisterContentScripts({ ids: ['prism-seen'] }).catch(() => {});
+    if (matches.length) await scripting.registerContentScripts([{ id: 'prism-seen', matches, js: ['seen.js'], runAt: 'document_idle', persistAcrossSessions: true }]);
+  }
+  return taken.length;
+}
 
 // A declared URL must stay on its service's own origins.
 const own = (service, url) => service.origins.some((origin) => url.startsWith(origin));
@@ -108,14 +131,49 @@ export async function listed(service, route, noted, fetchImpl = get) {
   return [...new Set(ids)];
 }
 
+// The key a route's item URLs need, read from the service's own app page by
+// the pattern the declaration gives for it (seen.key), when no tab noted it.
+export async function keyOf(service, route, fetchImpl = get) {
+  if (!route.key?.url || !service.seen?.key || !own(service, route.key.url)) return null;
+  const response = await fetchImpl(route.key.url, INIT);
+  if (!signedIn(service, response)) return null;
+  return (await response.text()).match(new RegExp(service.seen.key))?.[1] ?? null;
+}
+
 // One round: every declared service by its `own` routes, held for the page.
+// A service that fails is noted and the others are still read.
 export async function round(fetchImpl = get) {
   const state = await load();
   if (state.halted !== 'no') return 0;
   let read = 0;
   answered.clear();
-  for (const service of await services(fetchImpl)) {
+  for (const service of await services()) {
+    if (!(service.own ?? []).length) continue;
+    state.checked[service.key] = Date.now();
+    try {
+      read += await roundOf(service, state, fetchImpl);
+      delete state.error[service.key];
+    } catch (error) {
+      state.error[service.key] = String(error?.message ?? error).slice(0, 200);
+    }
+  }
+  state.held = state.held.slice(-HOLD);
+  for (const service of await services()) {
+    if (answered.get(service.key)) state.live[service.key] = Date.now();
+    else if (answered.get(`${service.key}:asked`)) state.out[service.key] = Date.now();
+  }
+  await storage().set({ sent: state.sent, keys: state.keys, held: state.held, live: state.live, out: state.out, checked: state.checked, read: state.read, error: state.error });
+  return read;
+}
+
+async function roundOf(service, state, fetchImpl) {
+  let read = 0;
+  {
     for (const route of service.own ?? []) {
+      if (!state.keys[service.key] && route.key) {
+        const key = await keyOf(service, route, fetchImpl);
+        if (key) state.keys[service.key] = key;
+      }
       const items = [];
       if (route.list || service.seen) {
         const sent = new Set(state.sent[service.key] ?? []);
@@ -129,15 +187,10 @@ export async function round(fetchImpl = get) {
         items.push(...(await item(service, route, {}, fetchImpl)));
       }
       for (const text of items) state.held.push({ service: service.key, route: 'own', kind: route.kind, format: route.format, text });
+      state.read[service.key] = (state.read[service.key] ?? 0) + items.length;
       read += items.length;
     }
   }
-  state.held = state.held.slice(-HOLD);
-  for (const service of await services(fetchImpl)) {
-    if (answered.get(service.key)) state.live[service.key] = Date.now();
-    else if (answered.get(`${service.key}:asked`)) state.out[service.key] = Date.now();
-  }
-  await storage().set({ sent: state.sent, held: state.held, live: state.live, out: state.out });
   return read;
 }
 
@@ -153,12 +206,12 @@ export async function take({ halted }) {
 // Each declared service: its tab open and pinned, and when its own pages last
 // answered with the owner signed in (or showed a sign-in page instead).
 export async function status(tabs = globalThis.chrome?.tabs) {
-  const { live, out } = await load();
+  const { live, out, checked, read, error } = await load();
   const open = tabs ? await tabs.query({}) : [];
   const out2 = {};
   for (const service of await services()) {
     const mine = open.filter((tab) => tab.url && own(service, tab.url));
-    out2[service.key] = { open: mine.length > 0, pinned: mine.some((tab) => tab.pinned), signedIn: (live[service.key] ?? 0) > (out[service.key] ?? 0), at: live[service.key] ?? 0 };
+    out2[service.key] = { open: mine.length > 0, pinned: mine.some((tab) => tab.pinned), signedIn: (live[service.key] ?? 0) > (out[service.key] ?? 0), at: live[service.key] ?? 0, checked: checked[service.key] ?? 0, read: read[service.key] ?? 0, error: error[service.key] ?? null };
   }
   return { services: out2 };
 }
@@ -173,6 +226,22 @@ export async function pin(key, tabs = globalThis.chrome?.tabs) {
   return { pinned: true };
 }
 
+// The Prism page and the declared services' own tabs that were open before
+// the extension was: the bridge and seen.js, as the manifest gives them to
+// every page loaded after.
+export async function attach(tabs = globalThis.chrome?.tabs, scripting = globalThis.chrome?.scripting) {
+  if (!tabs || !scripting) return 0;
+  const list = await services();
+  let n = 0;
+  for (const tab of await tabs.query({})) {
+    const url = tab.url ?? '';
+    const files = url.startsWith(PRISM) ? ['bridge.js'] : list.some((s) => s.seen && own(s, url)) ? ['seen.js'] : [];
+    if (!files.length) continue;
+    try { await scripting.executeScript({ target: { tabId: tab.id }, files }); n += 1; } catch { /* a tab the browser will not script */ }
+  }
+  return n;
+}
+
 // What seen.js noted on a declared service's own tab.
 export async function seen(service, { ids = [], key = null }) {
   const state = await load();
@@ -185,7 +254,7 @@ if (globalThis.chrome?.runtime?.onMessage) {
   chrome.runtime.onMessage.addListener((message, sender, reply) => {
     const from = sender?.url ?? '';
     if (message?.prism === 'pull' && from.startsWith(PRISM)) {
-      (async () => { if (message.halted === 'no') await round(); return take(message); })().then(reply, (error) => reply({ items: [], error: String(error?.message ?? error) }));
+      (async () => { if (message.services) await adopt(message.services); if (message.halted === 'no') await round(); return take(message); })().then(reply, (error) => reply({ items: [], error: String(error?.message ?? error) }));
       return true;
     }
     if (message?.prism === 'status' && from.startsWith(PRISM)) {
@@ -196,6 +265,10 @@ if (globalThis.chrome?.runtime?.onMessage) {
       pin(String(message.service)).then(reply, (error) => reply({ error: String(error?.message ?? error) }));
       return true;
     }
+    if (message?.prism === 'declared') {
+      services().then((list) => reply({ services: list.filter((s) => s.origins.some((o) => from.startsWith(o))) }), () => reply({ services: [] }));
+      return true;
+    }
     if (message?.prism === 'seen') {
       services().then((list) => {
         const service = list.find((s) => s.key === message.service && s.origins.some((o) => from.startsWith(o)));
@@ -204,6 +277,9 @@ if (globalThis.chrome?.runtime?.onMessage) {
     }
     return false;
   });
-  chrome.alarms?.create('prism-round', { periodInMinutes: 15 });
+  chrome.alarms?.create('prism-round', { delayInMinutes: 1, periodInMinutes: 15 });
+  // Installed or updated: pages already open never had this extension's
+  // scripts, so they are given them now, and the first round runs at once.
+  chrome.runtime.onInstalled?.addListener(() => { attach().catch(() => {}).finally(() => round().catch(() => {})); });
   chrome.alarms?.onAlarm.addListener((alarm) => { if (alarm.name === 'prism-round') round().catch(() => {}); });
 }
