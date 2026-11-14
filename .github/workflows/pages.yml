@@ -41,6 +41,8 @@ jobs:
     timeout-minutes: 45
     permissions:
       contents: read
+      actions: read
+      pull-requests: read
       id-token: write
       attestations: write
     steps:
@@ -83,11 +85,38 @@ jobs:
       # and a holo built here never carries the build ID of a proof made
       # there (seen on main: same inputs, different build). A page proof is
       # reused only by a later page build, under the same read-time check.
+      #
+      # app/specs is not a proof input: the proof reads the lexlean project
+      # (app/src, app/language and app's own files), and a spec reaches it only
+      # through the .lex.tex a generator writes into app/src. So a change to the
+      # specs alone reuses the proof (xtask proof.rs INPUT_PATHS says the same).
       - name: The proof of these exact proof inputs, kept by an earlier page build
+        id: proof-cache
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: .prism-proof
-          key: prism-page-proof-${{ runner.os }}-${{ runner.arch }}-sdk-${{ steps.proof-inputs.outputs.sdk }}-lean-${{ steps.proof-inputs.outputs.lean }}-${{ hashFiles('app/**', 'prismpm.lock', 'Justfile', 'rust-toolchain.toml') }}
+          key: prism-page-proof-${{ runner.os }}-${{ runner.arch }}-sdk-${{ steps.proof-inputs.outputs.sdk }}-lean-${{ steps.proof-inputs.outputs.lean }}-${{ hashFiles('app/**', '!app/specs/**', 'prismpm.lock', 'Justfile', 'rust-toolchain.toml') }}
+      # A cache a pull request saves is never visible to main, so main proved
+      # every merge again (16 to 22 minutes). The merged pull request's own page
+      # build keeps its proof as an artifact; main takes it as a candidate only.
+      # `xtask proof-reuse` still accepts it only if it binds main's checkout,
+      # and any failure here just means: prove in full.
+      - name: On main, the proof the merged pull request's page build kept
+        if: steps.proof-cache.outputs.cache-hit != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          head=$(gh api "repos/$REPO/commits/$SHA/pulls" --jq '[.[] | select(.merged_at != null)][0].head.sha // empty')
+          test -n "$head"
+          run=$(gh api "repos/$REPO/actions/workflows/pages.yml/runs?head_sha=$head&event=pull_request&status=success&per_page=1" --jq '.workflow_runs[0].id // empty')
+          test -n "$run"
+          gh run download "$run" --repo "$REPO" --name prism-page-proof --dir .prism-proof
+          echo "candidate proof from the merged pull request's run $run"
       - name: Build and verify the holo through the locked SDK
         shell: bash
         env:
@@ -141,6 +170,16 @@ jobs:
                 fi
               fi
             '
+      # The proof this pull request ran on, for main to take when it merges.
+      - name: Keep the proof for main
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: prism-page-proof
+          path: .prism-proof
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Find the holo
         id: holo
         shell: bash
