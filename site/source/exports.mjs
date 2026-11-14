@@ -34,6 +34,16 @@ export async function messageOf({ service, from, to, title, at, body }) {
   ].join('\r\n');
 }
 
+// One item a service's own tab showed the owner (the extension's seen route:
+// its words, when, who said it, and the tab's title), as mail like the rest.
+// One with no time of its own is as of when it was seen.
+export async function seenMessage(service, text, now = Date.now()) {
+  const item = JSON.parse(text);
+  const at = new Date(item.at ?? NaN);
+  const where = String(item.where ?? '').trim() || service;
+  return messageOf({ service, from: item.who || where, to: where, title: where, at: Number.isNaN(at.getTime()) ? new Date(now) : at, body: item.words });
+}
+
 // RFC 4180 CSV: quoted fields may hold commas, quotes and newlines.
 export function csv(text) {
   const rows = [];

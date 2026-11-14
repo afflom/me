@@ -39,8 +39,8 @@ function misses(example) {
   // A one-time code message is kept as a credential, and nothing else is (WICG origin-bound one-time codes).
   if (example.kind === "oneTimeCode") { same("credential", example.expect.code !== null, detect(encoder.encode(JSON.parse(example.raw).message)) === "credential"); return out; }
   // An urgency or scarcity line, as its researchers labelled it, is coercive and never leaves (Ahimsa).
-  // Accessible names need the page rendered: test/oracle/name.test.mjs grades them in the browser.
-  if (example.kind === "accname") return out;
+  // Accessible names and a page's items need the page rendered: test/oracle/name.test.mjs grades them in the browser.
+  if (example.kind === "accname" || example.kind === "feed") return out;
   if (example.kind === "coercive") { same("coercive", true, toneOf(JSON.parse(example.raw).text) === "coercive"); return out; }
   const item = readItem({ address: example.id, outcome: "restore", bytes: encoder.encode(example.raw), meta: { about: { media: MEDIA[example.kind], domain: 4, at: 0 } } });
   const e = example.expect;
@@ -64,7 +64,7 @@ function misses(example) {
 
 const key = (m) => `${m.id} ${m.field}`;
 const found = corpus.flatMap(misses);
-const browser = new Set(corpus.filter((c) => c.kind === "accname").map((c) => c.id));
+const browser = new Set(corpus.filter((c) => c.kind === "accname" || c.kind === "feed").map((c) => c.id));
 const debt = new Map((spec.debt ?? []).filter((d) => !browser.has(d.id)).map((d) => [key(d), d]));
 
 test("the corpus is what the pinned specifications give, read by the reference reader", () => {

@@ -122,6 +122,9 @@ for s in spec["services"]:
     used = {r for r, here in (("seen", s.get("seen")), ("own", s.get("own"))) if here}
     if not used <= set(c["live"]):
         refuse(f"{s['key']} reads by {sorted(used - set(c['live']))}, which its contract does not allow")
+    off = c.get("backoff")
+    if off and off["step"] not in {step["key"] for step in s["connect"]}:
+        refuse(f"{s['key']} rests on a challenge with step {off['step']!r}, which is not one of its connect steps")
     if s.get("export") and c["history"] != "export":
         refuse(f"{s['key']} declares a download its contract does not take")
 if set(sites) - seen_keys:

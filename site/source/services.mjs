@@ -3,9 +3,9 @@
 // Connections setting needs: each service's state and next step, and the act
 // behind each step. The page draws one row per service from this module and
 // shows nothing else of the machinery.
-import { SERVICES, KINDS, STATES, EXTENSION } from './declared.mjs';
+import { SERVICES, KINDS, STATES, EXTENSION, CONTRACTS } from './declared.mjs';
 
-export { SERVICES, KINDS, STATES, EXTENSION };
+export { SERVICES, KINDS, STATES, EXTENSION, CONTRACTS };
 
 // What the browser and the extension report now: { extension, services: { key: { open, pinned, signedIn, at } } },
 // with imported: { key: true } once a service's own download has been read.
@@ -36,7 +36,8 @@ export function done(service, step, report) {
 
 // A service's state for the Connections row: off, checking (the extension has
 // not read it yet), step (with its next undone step), live, paused (while
-// halted) or refused (a route the model refuses).
+// halted) or refused (a route the model refuses). A site that challenged the
+// extension rests and shows its contract's step (app/specs/source/contracts.json).
 //   readable: whether a live route carries it yet; until then its history step
 export function state(key, report, { halted = 'no' } = {}) {
   const service = SERVICES.find((s) => s.key === key);
@@ -48,6 +49,10 @@ export function state(key, report, { halted = 'no' } = {}) {
   if (!steps.length) return { state: 'off', next: null };
   // The extension is there and has not yet read this service: nothing to press yet.
   if (readable && report.extension && report.services && !report.services[service.key]?.checked) return { state: 'checking', next: null };
+  // The site challenged or refused: it rests, and the owner is shown its contract's step.
+  const rest = report.services?.[service.key]?.rest ?? 0;
+  const rested = CONTRACTS[service.key]?.backoff?.step;
+  if (readable && rest > (report.now ?? Date.now()) && rested) return { state: 'step', next: rested };
   const next = steps.find((step) => !done(service, step, report));
   if (next) return { state: 'step', next: next.key };
   return { state: 'live', next: null };

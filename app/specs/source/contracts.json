@@ -1,5 +1,5 @@
 {
-  "comment": "The threat and security model of the Prism's sources, and its contract with each site. The owner's content is the owner's: each contract takes the most of it the site's own published terms leave reachable from the owner's own signed-in browser, and stays within what keeps the owner's account and standing safe. A contract never defeats an active defense (never solves a challenge, never disguises the browser or its client, never takes the owner's sign-in out of the browser), reads only the owner's own content in the owner's own session, and writes nothing (PrismSource INV-002). terms: the site's own words that bound the contract, each with the page it is on, its section, the date the page says it took effect and the date it was read, and what the words bar (automation, extension, crawl). live: the routes the contract allows live (seen, own); none where the terms bar the extension itself. history: the site's own download, which every site offers the owner. conflict: where the contract still reads against the letter of the terms, and why the owner's account is not put at risk by it. risk: low, some or high, for the owner's account. backoff: when the site challenges or refuses (a status in on, or a page off its origins), the service rests for hours and the owner is shown the step; nothing is retried before. tools/source/gen.py refuses a contract whose live routes include one PrismSource refuses, a declared route its contract does not allow, a live route on a site whose terms bar the extension, or a live route with no backoff.",
+  "comment": "The threat and security model of the Prism's sources, and its contract with each site. The owner's content is the owner's: each contract takes the most of it the site's own published terms leave reachable from the owner's own signed-in browser, and stays within what keeps the owner's account and standing safe. A contract never defeats an active defense (never solves a challenge, never disguises the browser or its client, never takes the owner's sign-in out of the browser), reads only the owner's own content in the owner's own session, and writes nothing (PrismSource INV-002). terms: the site's own words that bound the contract, each with the page it is on, its section, the date the page says it took effect and the date it was read, and what the words bar (automation, extension, crawl). live: the routes the contract allows live (seen, own); none where the terms bar the extension itself. history: the site's own download, which every site offers the owner. conflict: where the contract still reads against the letter of the terms, and why the owner's account is not put at risk by it. risk: low, some or high, for the owner's account. backoff: when the site challenges or refuses (a status in on), the service rests for hours, or until the owner's own tab of it shows content again, and the owner is shown the service's connect step named by step; nothing is retried before. tools/source/gen.py refuses a contract whose live routes include one PrismSource refuses, a declared route its contract does not allow, a live route on a site whose terms bar the extension, or a live route with no backoff.",
   "threats": [
     {
       "key": "restriction",
@@ -71,7 +71,7 @@
       "conflict": "The own route fetches the owner's own messages (view=om) and feed with the owner's sign-in, paths robots.txt disallows to crawlers. The Prism is not a crawler: it reads one person's own mailbox, from that person's browser, a few times an hour, as the person's own Gmail tab does.",
       "risk": "low",
       "threats": ["restriction", "challenge", "disguise", "credential", "others", "write", "load"],
-      "backoff": { "on": [401, 403, 429, 503], "hours": 6, "step": "Open Gmail and sign in" }
+      "backoff": { "on": [401, 403, 429, 503], "hours": 6, "step": "sign-in" }
     },
     {
       "service": "calendar",
@@ -98,7 +98,7 @@
       "conflict": "The own route takes the owner's own calendar export (exporticalzip) with the owner's sign-in, a path robots.txt disallows to crawlers. It is the same file Calendar's own Export button gives the owner, taken a few times an hour.",
       "risk": "low",
       "threats": ["restriction", "challenge", "disguise", "credential", "others", "write", "load"],
-      "backoff": { "on": [401, 403, 429, 503], "hours": 6, "step": "Open Calendar and sign in" }
+      "backoff": { "on": [401, 403, 429, 503], "hours": 6, "step": "sign-in" }
     },
     {
       "service": "discord",
@@ -133,7 +133,7 @@
       "conflict": "Discord's terms bar automatic software that scrapes its services. The seen route sends Discord nothing: it notes what the owner's own open Discord tab already shows the owner, as the owner reads it, and makes no request, so Discord's servers see only the owner using Discord. No self-bot: the account acts only when the owner acts. History comes from Discord's own data package.",
       "risk": "low",
       "threats": ["restriction", "challenge", "disguise", "credential", "others", "write", "load"],
-      "backoff": { "on": [401, 403, 429], "hours": 24, "step": "Open Discord and check it" }
+      "backoff": { "on": [401, 403, 429], "hours": 24, "step": "sign-in" }
     },
     {
       "service": "whatsapp",
@@ -152,7 +152,7 @@
       "conflict": "WhatsApp's terms bar automated access in unauthorized manners. The seen route sends WhatsApp nothing: it notes what the owner's own WhatsApp Web tab has already decrypted and shows the owner, so WhatsApp sees only the owner using WhatsApp Web, and its encryption is never reached around (PrismSource INV-004). History comes from each chat's own Export chat.",
       "risk": "low",
       "threats": ["restriction", "challenge", "disguise", "credential", "others", "write", "load"],
-      "backoff": { "on": [401, 403, 429], "hours": 24, "step": "Open WhatsApp Web and check it" }
+      "backoff": { "on": [401, 403, 429], "hours": 24, "step": "sign-in" }
     },
     {
       "service": "linkedin",

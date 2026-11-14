@@ -521,11 +521,20 @@ def read_accname(raw):
     return {"names": names}
 
 
+def read_feed(raw):
+    """WAI-ARIA Authoring Practices' feed example: its own renderer and data.
+    Each restaurant it renders is an article labelled by its name
+    (aria-labelledby), so a reader of the feed hears each name, in order."""
+    data = raw[raw.index("aria.RestaurantData"):raw.index("];", raw.index("aria.RestaurantData"))]
+    names = [json.loads(m.group(1)) if m.group(1) else m.group(2).replace("\\'", "'") for m in re.finditer(r"\bname:\s*(?:(\"(?:[^\"\\\\]|\\\\.)*\")|'((?:[^'\\\\]|\\\\.)*)')", data)]
+    return {"names": names}
+
+
 corpus = []
 for source in SPEC["sources"]:
     text = unpaginate(fetch(source))
     take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples, "patterns": lambda text: pattern_examples(text, source), "page": page}[source["examples"]]
-    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc, "coercive": read_pattern, "accname": read_accname}[source["kind"]]
+    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc, "coercive": read_pattern, "accname": read_accname, "feed": read_feed}[source["kind"]]
     n = kept = 0
     for raw in take(text):
         n += 1

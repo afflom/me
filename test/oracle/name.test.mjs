@@ -43,3 +43,24 @@ test("every Web Platform Tests accname case is named as the suite expects, beyon
   assert.deepEqual(gone, [], `these now name right: remove them from "debt" in app/specs/oracle/spec.json`);
   console.log(`accname: ${pages.reduce((n, p) => n + p.expect.names.length, 0) - found.length} of ${pages.reduce((n, p) => n + p.expect.names.length, 0)} cases named as the suite expects; ${found.length} listed as debt`);
 });
+
+test("a page's items are what W3C's own feed example renders, each article heard by its name", async () => {
+  const feeds = corpus.filter((c) => c.kind === "feed");
+  assert.ok(feeds.length >= 1, "the feed example is in the corpus");
+  const browser = await chromium.launch();
+  try {
+    const page = await browser.newPage();
+    for (const example of feeds) {
+      await page.setContent('<!doctype html><title>Restaurants</title><div id="restaurant-feed" role="feed"></div>');
+      // The example's own renderer, with its own data, each item as it renders one.
+      await page.addScriptTag({ content: example.raw });
+      await page.evaluate(() => { const feed = document.getElementById("restaurant-feed"); const display = Object.create(globalThis.aria.FeedDisplay.prototype); display.feedSize = 0; for (const item of globalThis.aria.RestaurantData) feed.append(display.renderItemData(item)); });
+      await page.addScriptTag({ path: "site/extension/name.js" });
+      const items = await page.evaluate(() => globalThis.prismItems({ select: '[role="article"]', where: "title" }));
+      assert.deepEqual(items.map((i) => i.words), example.expect.names, `${example.id}: each article, in order, by its name`);
+      assert.ok(items.every((i) => i.where === "Restaurants" && i.at === null && i.who === null), `${example.id}: where is the page's title; no time or speaker the page does not show`);
+    }
+  } finally {
+    await browser.close();
+  }
+});

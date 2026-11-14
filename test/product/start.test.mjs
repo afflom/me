@@ -37,11 +37,13 @@ function messages(now = Date.now()) {
 
 async function visit(dir, url, items) {
   const context = await chromium.launchPersistentContext(dir, { timezoneId: "UTC", locale: "en-US" });
+  // The stand-in answers with the version the page writes (app/specs/source/services.json).
+  await context.addInitScript((version) => { window.__prismExtensionVersion = version; }, JSON.parse(readFileSync(new URL("../../app/specs/source/services.json", import.meta.url), "utf8")).extension.version);
   await context.addInitScript((items) => {
     window.addEventListener("message", (event) => {
       if (event.source !== window || event.data?.from !== "page") return;
       const answer = (data) => window.postMessage({ ...data, from: "extension" }, location.origin);
-      if (event.data.prism === "hello") answer({ prism: "extension", version: 3 });
+      if (event.data.prism === "hello") answer({ prism: "extension", version: window.__prismExtensionVersion });
       if (event.data.prism === "pull") answer({ prism: "items", id: event.data.id, items: [true, "yes"].includes(event.data.halted) ? [] : items });
     });
   }, items);

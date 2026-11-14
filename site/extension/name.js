@@ -133,4 +133,24 @@
   globalThis.prismName = (el) => joinable(text(el, { root: true })).trim();
   // An element's words as a reader hears them, whatever its role: its name when it has one, else its content.
   globalThis.prismWords = (el) => globalThis.prismName(el) || joinable(flat(el, new Set([el]))).trim();
+  // The items a page shows, as a declaration names them (CSS selectors, sent
+  // as data): each one's words as a screen reader hears them, its time from
+  // its own <time datetime> (HTML), who said it (one who goes on saying until
+  // someone else does, as a reader hears a conversation), and where (the
+  // page's title). An item with no words of its own is not one.
+  globalThis.prismItems = (declared, doc = document) => {
+    const out = [];
+    let who = null;
+    for (const el of doc.querySelectorAll(declared.select)) {
+      const part = (selector) => (selector ? el.querySelector(selector) : null);
+      const named = part(declared.who);
+      if (named) who = globalThis.prismWords(named) || who;
+      const body = part(declared.words);
+      const words = (body ? globalThis.prismWords(body) : '') || globalThis.prismWords(el);
+      if (!words) continue;
+      const time = part(declared.time ?? 'time[datetime]');
+      out.push({ at: time?.getAttribute('datetime') ?? null, who, where: declared.where === 'title' ? doc.title : null, words });
+    }
+    return out;
+  };
 })();

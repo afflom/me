@@ -2,7 +2,7 @@
 // pull of the items it read, and the extension itself, written for this page.
 // The page decides what is kept; the extension only reads, by GET.
 
-const FILES = ['manifest.json', 'background.js', 'bridge.js', 'seen.js'];
+const FILES = ['manifest.json', 'background.js', 'bridge.js', 'name.js', 'seen.js'];
 
 const send = (win, data) => win.postMessage({ ...data, from: 'page' }, win.location.origin);
 const answers = (win, test, ms) => new Promise((resolve) => {
@@ -48,7 +48,15 @@ export async function pull(win = globalThis.window, { halted, services, ms = 120
   const got = await answer;
   if (!got) throw Object.assign(new Error('the extension did not answer'), { code: 'extension.silent' });
   if (got.error) throw Object.assign(new Error(got.error), { code: 'extension.error' });
-  return Array.isArray(got.items) ? got.items.filter((i) => typeof i?.text === 'string').map((i) => (i.service ? { ...i, service: unwired(i.service) } : i)) : [];
+  const items = Array.isArray(got.items) ? got.items.filter((i) => typeof i?.text === 'string').map((i) => (i.service ? { ...i, service: unwired(i.service) } : i)) : [];
+  // What a tab showed arrives as its words; the page makes each one mail, as a service's own download is made.
+  const { seenMessage } = await import('../source/exports.mjs');
+  const out = [];
+  for (const i of items) {
+    if (i.format !== 'seen') { out.push(i); continue; }
+    try { out.push({ ...i, format: 'eml', text: await seenMessage(i.service, i.text) }); } catch { /* not an item the tab showed */ }
+  }
+  return out;
 }
 
 // Any other ask of the extension (status, pin): its answer, or null when it is
