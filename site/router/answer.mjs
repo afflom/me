@@ -8,7 +8,7 @@
 import { PROVIDERS } from "./table.mjs";
 import { route } from "./router.mjs";
 import { withoutTime } from "./features.mjs";
-import { drawOn, windowOf, termsOf, mentions } from "../coherence/sense.mjs";
+import { drawOn, windowOf, termsOf, wordsOf, mentions } from "../coherence/sense.mjs";
 
 const S = PROVIDERS.sentence;
 const RANK = ["public", "internal", "confidential", "restricted"];
@@ -102,7 +102,10 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
   const sentences = [...lead.map((s) => `${s}.`), ...told.map((item) => end(sentenceOf(item, me)))];
   // Everything held that names the asked words is found: the sentences say
   // the few, and the list beneath holds those first, then the rest, newest first.
-  const found = named.length ? held.filter((item) => (!kind || ofKind(item)) && mentions(item, named)).sort((a, b) => (b.at ?? 0) - (a.at ?? 0)) : [];
+  // Asked only words the readers pass over (a kind, a weekday, "should"), those words are what is sought.
+  const bare = wordsOf(text);
+  const sought = named.length ? named : bare.length && bare.every((w) => !S.greet.includes(w) && !S.overview.includes(w)) ? bare : [];
+  const found = sought.length ? held.filter((item) => (!kind || !named.length || ofKind(item)) && mentions(item, sought)).sort((a, b) => (b.at ?? 0) - (a.at ?? 0)) : [];
   const offers = told.flatMap((item) => {
     const k = S.offers[item.media === "message" ? "message" : item.media === "plainText" ? "note" : ""];
     return k ? [{ kind: k, item }] : [];
