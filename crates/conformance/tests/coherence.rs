@@ -68,8 +68,8 @@ fn coherence_co_01() {
                 "Ask is answered by the router's answer, from nothing kept while halted",
             ),
             (
-                "homeCards();\n    list.hidden = !items.length;",
-                "an empty Today shows its places' cards, each offering its feeder",
+                "homeCards();\n    paintSetup();\n    list.hidden = !items.length;",
+                "an empty Today leads with Set up, and each place's card offers the step or feeder that fills it",
             ),
         ],
     );

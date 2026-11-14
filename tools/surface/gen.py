@@ -200,6 +200,26 @@ def section_record(x):
     return (f"(record SurfaceSection {{name := {s(x['name'])}, settings := {nats([SETTING_KEYS.index(k) for k in x['settings']])}, "
             f"reveal := {REVEALS.index(x['reveal'])}, serves := {len(x['serves'])}}})")
 
+# Set up: the sections a person meets first, in order, one at a time. Every
+# section that shows its detail until done is a step; a step names its section
+# once, and an empty place offers the step that fills it.
+SECTION_KEYS = [x["key"] for x in SPEC["sections"]]
+SETUP = SPEC.get("setup", [])
+if not 1 <= len(SETUP) <= 3:
+    refuse(f"set up has {len(SETUP)} steps; a person meets one to three")
+for st in SETUP:
+    if st["section"] not in SECTION_KEYS or st["word"] not in SPEC["words"]:
+        refuse(f"the setup step {st['key']} names an unknown section or word")
+if len({st["section"] for st in SETUP}) != len(SETUP):
+    refuse("a section is a setup step at most once")
+for x in SPEC["sections"]:
+    if x["reveal"] == "until-done" and x["key"] not in {st["section"] for st in SETUP}:
+        refuse(f"the section {x['key']} shows its detail until done but is not a setup step")
+for p_ in SPEC["places"]:
+    if "fills" in p_ and p_["fills"] not in {st["key"] for st in SETUP}:
+        refuse(f"the place {p_['key']} is filled by {p_['fills']!r}, which is not a setup step")
+
+
 FEEDERS = []
 for f in SPEC["feeders"]:
     if f["act"] != "none":
@@ -378,6 +398,7 @@ model = [
     defn("surfaceGroups", "(List SurfaceGroup)", records("SurfaceGroup", [group_record(g) for g in SPEC["groups"]])),
     defn("surfaceSettings", "(List SurfaceSetting)", records("SurfaceSetting", [setting_record(x) for x in SPEC["settings"]])),
     defn("surfaceSections", "(List SurfaceSection)", records("SurfaceSection", [section_record(x) for x in SPEC["sections"]])),
+    defn("surfaceSetup", "(List Nat)", nats([SECTION_KEYS.index(st["section"]) for st in SETUP])),
     defn("surfaceWords", "(List SurfaceWord)", records("SurfaceWord", [word_record(k, w) for k, w in SPEC["words"].items()])),
     defn("surfaceRoutedSources", "(List Nat)", nats(routed)),
     defn("surfaceOutboundActs", "(List Nat)", nats(outbound)),
@@ -493,6 +514,8 @@ proofs_defs += [
     # A section holds one to three settings and serves at least one success of the person's.
     rec("surfaceSectionsShort", f"[sections : (List {M}SurfaceSection)]", "Bool",
         "(match sections\n    | List.nil => true\n    | List.cons section rest => (((1 <=? (surfaceNatCount (project section settings))) && (((surfaceNatCount (project section settings)) <=? 3) && (1 <=? (project section serves)))) && (surfaceSectionsShort rest)))", "sections"),
+    rec("surfaceSetupCovers", f"[index : Nat, sections : (List {M}SurfaceSection)]", "Bool",
+        f"(match sections\n    | List.nil => true\n    | List.cons section rest => ((if ((project section reveal) =? 1) then (surfaceMember index ({M}surfaceSetup)) else true) && (surfaceSetupCovers (index + 1) rest)))", "sections"),
     rec("surfaceSectionCount", f"[sections : (List {M}SurfaceSection)]", "Nat",
         "(match sections\n    | List.nil => 0\n    | List.cons section rest => ((surfaceSectionCount rest) + 1))", "sections"),
 ]
@@ -514,6 +537,7 @@ theorems = [
     theorem("surfaceOneSheet", f"((surfaceHostCount {sheet} ({M}surfacePlaces)) = 1)"),
     theorem("surfaceEverySettingInOneSection", f"((surfaceSettingsSectioned 0 ({M}surfaceSettings)) = true)"),
     theorem("surfaceSectionsAreFewAndShort", f"(((surfaceSectionsShort ({M}surfaceSections)) && ((surfaceSectionCount ({M}surfaceSections)) <=? 4)) = true)"),
+    theorem("surfaceSetupIsShortAndWhole", f"(((surfaceSetupCovers 0 ({M}surfaceSections)) && ((1 <=? (surfaceNatCount ({M}surfaceSetup))) && ((surfaceNatCount ({M}surfaceSetup)) <=? 3))) = true)"),
     theorem("surfacePageIsThePersonsView", f"((surfacePageIsPersonView ({M}surfacePlaces)) = true)"),
     theorem("surfaceMenuIsShort", f"(((surfaceHostCount {nav} ({M}surfacePlaces)) <=? 4) = true)"),
     theorem("surfaceActsInTheirRoles", f"((surfaceActsSound ({M}surfacePlaces)) = true)"),
@@ -581,14 +605,27 @@ def feeder_of(place):
     return next((f for f in FEEDERS if f["act"] == "none" and place["domains"][0] in f["domains"]), None)
 
 
+def setup_html():
+    """Set up as a fresh person first meets it: drawn from the first paint, so nothing moves when it is painted."""
+    steps = "".join(f'<li class="pr-step{" pr-step-next" if i == 0 else ""}">{e(W[st["word"]])}</li>' for i, st in enumerate(SETUP))
+    return (f'    <section class="pr-setup" id="pr-setup" aria-labelledby="pr-setup-title"><header class="pr-setup-top">'
+            f'<h3 id="pr-setup-title">{e(W["setup"])}</h3><span class="pr-count">1 {e(W["setup.of"])} {len(SETUP)}</span></header>'
+            f'<ol class="pr-steps">{steps}</ol><button type="button" class="pr-setup-go">{e(W["setup.continue"])}</button></section>')
+
+
 def home_html():
-    """The home: a card per place that holds things, each with the feeder that fills it."""
-    out = [f'    <ul id="pr-home" class="pr-home" aria-label="{e(W["places"])}">']
+    """The home: a card per place that holds things, each with the feeder that fills it.
+    Held back until something arrives or set up is done, as a fresh person meets it."""
+    out = [setup_html(), f'    <ul id="pr-home" class="pr-home" aria-label="{e(W["places"])}" hidden>']
     for p in SPEC["places"]:
         if p["host"] != "nav":
             continue
         f = feeder_of(p)
-        feed = f'<button type="button" class="pr-card-feed" data-feed="{f["key"]}" data-place="{p["key"]}">{e(f["word"])}</button>' if f else ""
+        # An empty place offers the setup step that fills it, else the source that does.
+        if p.get("fills"):
+            feed = f'<button type="button" class="pr-card-feed" data-setup="{p["fills"]}" data-place="{p["key"]}">{e(W["setup.connect"])}</button>'
+        else:
+            feed = f'<button type="button" class="pr-card-feed" data-feed="{f["key"]}" data-place="{p["key"]}">{e(f["word"])}</button>' if f else ""
         out.append(f'      <li class="pr-card pr-card-empty"><button type="button" class="pr-card-go" data-place="{p["key"]}"><span class="pr-card-name">{e(p["name"])}</span><span class="pr-card-count"></span></button><span class="pr-card-latest"></span>{feed}</li>')
     out.append("    </ul>")
     return "\n".join(out)
@@ -614,7 +651,7 @@ card_html = f"""<!-- Generated by tools/surface/gen.py from app/specs/surface/sp
 
 <div id="pr-result" data-slot="result" class="result" aria-live="polite"><output id="pr-out" class="idle"></output></div>
 
-<form id="pr-ask" class="pr-ask" data-slot="actions" data-label="{e(ask_place["name"])}">
+<form id="pr-ask" class="pr-ask" data-slot="actions" data-label="{e(ask_place["name"])}" hidden>
   <textarea id="pr-prompt" rows="3" aria-label="{e(ask_place["name"])}" placeholder="{e(W["ask.placeholder"])}" autocomplete="off" spellcheck="true"></textarea>
   <button id="pr-ask-go" type="submit">{e(SPEC["acts"][ACTS.index("ask")]["word"])}</button>
 </form>
@@ -671,6 +708,7 @@ mirror = {
     "groups": SPEC["groups"],
     "settings": SPEC["settings"],
     "sections": SPEC["sections"],
+    "setup": SETUP,
     "media": SPEC["media"],
     "words": SPEC["words"],
     "feeders": FEEDERS,
