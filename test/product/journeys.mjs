@@ -34,7 +34,8 @@ const rowOf = (page, words) => page.evaluate((w) => {
 const TIME = /\b\d{1,2}(:\d{2})?\s*(AM|PM)\b|\b\d{1,2}:\d{2}\b/i;
 // The synthetic day has arrived once any of it shows anywhere in the Prism.
 const arrived = (page) => page.waitForFunction(
-  () => [...document.querySelectorAll("#stage, #rail")].some((root) => /Lisbon|Lunch on Thursday|Time next week|Design review|November statement/.test(root.innerText)), null, { timeout: 30000 },
+  // Both of its services: what arrives lands in batches, one service after another.
+  () => { const all = [...document.querySelectorAll("#stage, #rail")].map((root) => root.innerText).join("\n"); return /Lisbon|Design review/.test(all) && /Lunch on Thursday|Time next week|November statement/.test(all); }, null, { timeout: 30000 },
 ).then(() => true, () => false);
 // The item the person sees with these words, as one control or row.
 // The person looks for it on Today, then in each of their own places.

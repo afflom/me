@@ -357,6 +357,17 @@ export default async function start({ app, reason, $ }) {
   const extensionGrant = () => (extensionHere ? "kept" : "none");
   // The declared services, carried by the installed extension with the
   // owner's own sign-in; PrismSource decides each item by its service and route.
+  // While content arrives, the place's heading says from where and how far along; the answer area stays the person's.
+  function arrivingAt(words) {
+    let line = document.getElementById("pr-arriving");
+    if (!line) {
+      line = element("span", { id: "pr-arriving", className: "pr-count" });
+      line.setAttribute("role", "status");
+      $("pr-title").after(line);
+    }
+    line.textContent = words;
+    line.hidden = !words;
+  }
   async function pullExtension(d) {
     const { pull } = await import("./device/extension.mjs");
     const by = new Map();
@@ -375,14 +386,14 @@ export default async function start({ app, reason, $ }) {
     for (const [service, items] of by) {
       const name = SERVICES.find((s) => s.key === service)?.name ?? service;
       for (let i = 0; i < items.length; i += BATCH) {
-        say(`${WORDS.arriving} · ${name} · ${Math.min(i + BATCH, items.length)} ${WORDS["setup.of"]} ${items.length}`);
+        arrivingAt(`${WORDS.arriving} · ${name} · ${Math.min(i + BATCH, items.length)} ${WORDS["setup.of"]} ${items.length}`);
         const t = await d.source.readItems(items.slice(i, i + BATCH));
         for (const key of Object.keys(total)) total[key] += t[key] ?? 0;
         noteArrived(service, t.store + t.storehash, Math.min(BATCH, items.length - i));
         if (t.store + t.storehash) { await load(); if (current.show !== "settings") paintList(); }
       }
     }
-    if (by.size) say(`${items.length} ${WORDS.items}`, "good");
+    arrivingAt("");
     return total;
   }
   // On every visit, and every few minutes while the page is open: a folder the
