@@ -225,6 +225,11 @@ jobs:
           npm install --no-audit --no-fund --global playwright@1.56.1
           playwright install --with-deps chromium
           node bootstrap/screens.mjs site screens
+      - name: A first visit's weight, counted once the page has started (FR-03)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node bootstrap/weight.mjs site
       # Every browser acceptance under test/ runs here, on every pull request
       # and before every deploy: each `test/<suite>/run.mjs` (R4-01 and the
       # rest) and every `*.test.mjs` (PG-01 and the rest). A new suite is in CI
@@ -244,7 +249,14 @@ jobs:
             node "$runner"
             echo "::endgroup::"
           done
-          node --test "${suites[@]}"
+          # Twice, on pull requests and before deploys alike: a check that does
+          # not decide the same way every run (a race with the page) fails here,
+          # on its pull request, instead of on main after the merge.
+          for pass in 1 2; do
+            echo "::group::every *.test.mjs, pass $pass of 2"
+            node --test "${suites[@]}"
+            echo "::endgroup::"
+          done
       - name: Keep the screens
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

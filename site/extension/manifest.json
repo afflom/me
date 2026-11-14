@@ -1,13 +1,12 @@
 {
   "manifest_version": 3,
   "name": "Prism",
-  "version": "1.1.0",
-  "description": "Carries the services you use to your Prism in this browser, with your own sign-in, by reading only.",
-  "host_permissions": "__ORIGINS__",
-  "permissions": ["storage", "unlimitedStorage", "alarms"],
+  "version": "1.2.0",
+  "description": "Your Prism's carrier in this browser: blank until your Prism tells it what to read, with your own sign-in, by reading only.",
+  "host_permissions": ["<all_urls>"],
+  "permissions": ["storage", "unlimitedStorage", "alarms", "scripting"],
   "background": { "service_worker": "background.js", "type": "module" },
   "content_scripts": [
-    { "matches": ["__PRISM__*"], "js": ["bridge.js"], "run_at": "document_start" },
-    { "matches": "__SEEN__", "js": ["seen.js"], "run_at": "document_idle" }
+    { "matches": ["__PRISM__*"], "js": ["bridge.js"], "run_at": "document_start" }
   ]
 }

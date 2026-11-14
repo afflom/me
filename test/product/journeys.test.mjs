@@ -58,5 +58,5 @@ test("every journey that works for the person keeps working, and none works unre
   ]);
   const { broken, unrecorded } = verdict(rows);
   assert.deepEqual(broken.map((r) => `${r.journey.key}: ${r.fresh.why ?? `after a reload: ${r.back.why}`}`), [], "a journey that worked no longer works");
-  assert.deepEqual(unrecorded.map((r) => r.journey.key), [], "these journeys now work: set their status to \"works\" in app/specs/product/spec.json so they are held from now on");
+  assert.deepEqual(unrecorded.map((r) => r.journey.key), [], "these journeys now work: set their status to \"works\" in app/specs/product/journeys/<key>.json so they are held from now on");
 });
