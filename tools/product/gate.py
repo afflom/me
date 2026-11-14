@@ -15,7 +15,8 @@ does not place:
   facet, a facet in the person's view, or a facet that serves no journey or a
   journey that does not exist;
 - a journey without its goal, done-state, measure (effectiveness, efficiency
-  or satisfaction, with a target), status (works or not yet) or walk, or a walk
+  or satisfaction, with a target), status (works or not yet) or walk, a walk
+  that belongs to no journey, or a walk
   test/product/journeys.mjs does not define;
 - a person-view setting the Prism does not require of the person (beyond the
   shrinking 'unrequired' list), or a required setting without its name, reason,
@@ -24,9 +25,14 @@ does not place:
 
 usage: python3 -I tools/product/gate.py [product.json surface.json coherence.json journeys.mjs]
 """
-import json
+import importlib.util
+import pathlib
 import re
 import sys
+
+_spec = importlib.util.spec_from_file_location("record", pathlib.Path(__file__).resolve().parents[1] / "specs/record.py")
+record = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(record)
 
 KINDS = {"effectiveness", "efficiency", "satisfaction"}
 STATUS = {"works", "not yet"}
@@ -81,6 +87,10 @@ def refusals(product, surface, coherence, walks):
             out.append(f"journey {key} has status {j.get('status')!r}, not works or not yet")
         if j.get("walk") and j["walk"] not in walks:
             out.append(f"journey {key} names walk '{j['walk']}', which test/product/journeys.mjs does not define")
+    # A walk with no journey is a journey the record lost (a bad merge drops it).
+    named = {j.get("walk") for j in journeys.values()}
+    for walk in sorted(walks - named):
+        out.append(f"walk '{walk}' in test/product/journeys.mjs belongs to no journey: restore its journey in app/specs/product/journeys/, or remove the walk")
 
     # The front end drives the back end: the person sees only the settings the
     # Prism requires to work, and each required setting names what shows it.
@@ -155,7 +165,7 @@ def refusals(product, surface, coherence, walks):
 
 def main(argv):
     paths = argv[1:] or ["app/specs/product/spec.json", "app/specs/surface/spec.json", "app/specs/coherence/spec.json", "test/product/journeys.mjs"]
-    product, surface, coherence = (json.load(open(p, encoding="utf-8")) for p in paths[:3])
+    product, surface, coherence = (record.load(p) for p in paths[:3])
     source = open(paths[3], encoding="utf-8").read()
     body = source.split("export const walks = {", 1)[1] if "export const walks = {" in source else ""
     walks = set(re.findall(r"^  async (\w+)\(", body, re.M))

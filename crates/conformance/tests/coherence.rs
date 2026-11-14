@@ -40,7 +40,7 @@ fn coherence_co_01() {
                 "Ask shows kept items only as the Boundary allows",
             ),
             (
-                "if (word !== \"allow\" || !used.length) return",
+                "if (word !== \"allow\") return { ...none, mapped, refused: true };",
                 "nothing is shown that the Boundary did not allow",
             ),
         ],
@@ -68,8 +68,8 @@ fn coherence_co_01() {
                 "Ask is answered by the router's answer, from nothing kept while halted",
             ),
             (
-                "homeCards();\n    list.hidden = !items.length;",
-                "an empty Today shows its places' cards, each offering its feeder",
+                "homeCards();\n    paintSetup();\n    list.hidden = !items.length;",
+                "an empty Today leads with Set up, and each place's card offers the step or feeder that fills it",
             ),
         ],
     );
@@ -88,7 +88,10 @@ fn coherence_co_01() {
                 "every listing place must list something",
             ),
             ("pr-clash", "the clash is checked"),
-            ("/^No answer$/", "an Ask nothing kept meets says so"),
+            (
+                "/^Nothing you hold mentions “zebra quantum marmalade”\\./u",
+                "an Ask nothing kept meets says so",
+            ),
             ("/^Paused$/", "Ask while paused shows nothing kept"),
         ],
     );
