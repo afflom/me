@@ -68,6 +68,22 @@ export function buildMail({ to, subject, body, inReplyTo = '', references = '' }
 const ics = (value) => String(value ?? '').replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
 const stamp = (date) => new Date(date).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
 
+// RFC 5545 3.1: a content line longer than 75 octets is folded, CRLF and
+// one space, never inside a character.
+function fold(line) {
+  const out = [];
+  let part = '';
+  let size = 0;
+  for (const ch of line) {
+    const n = new TextEncoder().encode(ch).length;
+    if (size + n > (out.length ? 74 : 75)) { out.push(part); part = ''; size = 0; }
+    part += ch;
+    size += n;
+  }
+  out.push(part);
+  return out.join('\r\n ');
+}
+
 // One VEVENT as an .ics the owner opens in their calendar (METHOD:PUBLISH:
 // it adds an entry to the owner's own calendar and invites no one).
 export function buildEvent({ uid, start, end, summary, description = '', location = '', now = Date.now() }) {
@@ -77,7 +93,7 @@ export function buildEvent({ uid, start, end, summary, description = '', locatio
     'BEGIN:VEVENT', `UID:${ics(uid)}`, `DTSTAMP:${stamp(now)}`, `DTSTART:${stamp(start)}`, `DTEND:${stamp(end)}`,
     `SUMMARY:${ics(summary)}`, ...(description ? [`DESCRIPTION:${ics(description)}`] : []), ...(location ? [`LOCATION:${ics(location)}`] : []),
     'END:VEVENT', 'END:VCALENDAR',
-  ]);
+  ].map(fold));
   return { bytes: text, type: 'text/calendar', name: 'event.ics' };
 }
 
