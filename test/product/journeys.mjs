@@ -249,4 +249,17 @@ export const walks = {
     await page.waitForTimeout(500);
     assert.equal(await app(page).getByRole("region", { name: new RegExp(`^${W.setup}$`, "i") }).filter({ visible: true }).count(), 0, "the Set up card stays after every step is done");
   },
+  // J14: every place in time order: Messages newest first; Calendar ahead soonest first, then what has passed.
+  async j14(page) {
+    assert.ok(await arrived(page), "the person's day never arrives");
+    const before = (shown, a, b, where) => assert.ok(shown.indexOf(a) >= 0 && shown.indexOf(a) < shown.indexOf(b), `${where}: "${a}" is not before "${b}"`);
+    await go(page, "conversations");
+    const messages = await app(page).locator("ol, ul").filter({ hasText: "Lunch on Thursday" }).last().innerText();
+    before(messages, "Lunch on Thursday", "November statement", "Messages");
+    before(messages, "November statement", "Café booking", "Messages");
+    await go(page, "calendar");
+    const calendar = await app(page).locator("ol, ul").filter({ hasText: "Flight to Lisbon" }).last().innerText();
+    before(calendar, surface.words.upcoming, "Design review", "Calendar");
+    before(calendar, "Design review", "Flight to Lisbon", "Calendar");
+  },
 };

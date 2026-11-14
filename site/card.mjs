@@ -587,10 +587,23 @@ export default async function start({ app, reason, $ }) {
       const words = query.toLowerCase().split(/\s+/).filter(Boolean);
       shown = words.length ? items.filter((item) => words.every((w) => `${item.title} ${item.who} ${item.body ?? item.text}`.toLowerCase().includes(w))) : [];
     }
-    if (resonance && current.show !== "search") shown = resonance.order(shown);
     $("pr-count").textContent = shown.length ? String(shown.length) : "";
     if (current.show === "search" && !query) { list.replaceChildren(); return; }
-    list.replaceChildren(...(shown.length ? shown.slice(0, 200).map(rowOf) : [emptyRow()]));
+    if (!shown.length) { list.replaceChildren(emptyRow()); return; }
+    list.replaceChildren(...ordered(shown, current.order));
+  }
+
+  // A place's list in the order PrismSurface gives it: newest first, or what is
+  // ahead soonest first and then what has passed, latest first.
+  const SHOWN = 200;
+  function ordered(shown, order) {
+    const newest = [...shown].sort((a, b) => b.at - a.at);
+    if (order !== "upcoming") return newest.slice(0, SHOWN).map(rowOf);
+    const from = new Date().setHours(0, 0, 0, 0);
+    const ahead = shown.filter((item) => item.at >= from).sort((a, b) => a.at - b.at).slice(0, SHOWN);
+    const past = newest.filter((item) => item.at < from).slice(0, Math.max(0, SHOWN - ahead.length));
+    const heading = (word) => element("li", { className: "pr-section", textContent: WORDS[word] });
+    return [...(ahead.length ? [heading("upcoming"), ...ahead.map(rowOf)] : []), ...(past.length ? [heading("earlier"), ...past.map(rowOf)] : [])];
   }
 
   // The home: a card per place, its count and latest item, and the feeder

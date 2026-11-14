@@ -94,6 +94,7 @@ fn page_pg_02() {
         "surfaceEverySettingInOneSection",
         "surfaceSectionsAreFewAndShort",
         "surfaceSetupIsShortAndWhole",
+        "surfaceEveryListHasItsOrder",
         "surfacePageIsThePersonsView",
         "surfaceMenuIsShort",
         "surfaceActsInTheirRoles",

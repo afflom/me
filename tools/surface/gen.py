@@ -31,6 +31,7 @@ DESIGN = "Foundation.Me.V1.Model"
 ACTS = [a["key"] for a in SPEC["acts"]]
 HOSTS = SPEC["hosts"]
 SHOWS = SPEC["shows"]
+ORDERS = SPEC["orders"]
 GROUPS = [g["key"] for g in SPEC["groups"]]
 DIRECTIONS = ["in", "out", "local"]
 SOURCES = SPEC["sources"]
@@ -93,7 +94,7 @@ def records(kind, rows):
 def place_record(p):
     return (
         f"(record SurfacePlace {{view := {p['view']}, name := {s(p['name'])}, host := {HOSTS.index(p['host'])}, "
-        f"viewpoint := {VIEWPOINTS.index(p['viewpoint'])}, role := {p['role']}, domains := {nats(p['domains'])}, kind := {SHOWS.index(p['show'])}, act := {ACTS.index(p['act'])}}})"
+        f"viewpoint := {VIEWPOINTS.index(p['viewpoint'])}, role := {p['role']}, domains := {nats(p['domains'])}, kind := {SHOWS.index(p['show'])}, act := {ACTS.index(p['act'])}, order := {ORDERS.index(p.get('order', 'none'))}}})"
     )
 
 
@@ -220,6 +221,13 @@ for p_ in SPEC["places"]:
         refuse(f"the place {p_['key']} is filled by {p_['fills']!r}, which is not a setup step")
 
 
+if ORDERS[0] != "none":
+    refuse("the first order is none, for what the person does not see")
+for p_ in SPEC["places"]:
+    listed = p_["viewpoint"] == "person" and p_["show"] == "list"
+    if p_.get("order", "none") not in ORDERS or listed != (p_.get("order", "none") != "none"):
+        refuse(f"the place {p_['key']} must have an order exactly when the person sees it as a list")
+
 FEEDERS = []
 for f in SPEC["feeders"]:
     if f["act"] != "none":
@@ -322,7 +330,8 @@ model = [
     {name: role, type: Nat},
     {name: domains, type: (List Nat)},
     {name: kind, type: Nat},
-    {name: act, type: Nat}
+    {name: act, type: Nat},
+    {name: order, type: Nat}
   ]
 }
 """,
@@ -445,6 +454,9 @@ proofs_defs = [
     # The page is the person's view: a place is undrawn exactly when it is the system's.
     rec("surfacePageIsPersonView", f"[places : (List {M}SurfacePlace)]", "Bool",
         f"(match places\n    | List.nil => true\n    | List.cons place rest => ((if ((project place viewpoint) =? {system}) then ((project place host) =? {undrawn}) else (not ((project place host) =? {undrawn}))) && (surfacePageIsPersonView rest)))", "places"),
+    # Every list the person sees has its order; nothing the person does not see claims one.
+    rec("surfacePlacesOrdered", f"[places : (List {M}SurfacePlace)]", "Bool",
+        f"(match places\n    | List.nil => true\n    | List.cons place rest => ((if (((project place viewpoint) =? {VIEWPOINTS.index('person')}) && ((project place kind) =? {SHOWS.index('list')})) then (not ((project place order) =? 0)) else ((project place order) =? 0)) && (surfacePlacesOrdered rest)))", "places"),
     rec("surfaceActsSound", f"[places : (List {M}SurfacePlace)]", "Bool",
         f"(match places\n    | List.nil => true\n    | List.cons place rest => (((not (surfaceMember (project place act) ({M}surfaceOutboundActs))) || ((((project place role) =? 1) || ((project place role) =? 2)) || ((project place role) =? 4))) && ((if ((project place act) =? {ask}) then ((project place host) =? {composer}) else (not ((project place host) =? {composer}))) && (surfaceActsSound rest))))", "places"),
     defn("surfaceFirstOr", "Nat",
@@ -538,6 +550,7 @@ theorems = [
     theorem("surfaceEverySettingInOneSection", f"((surfaceSettingsSectioned 0 ({M}surfaceSettings)) = true)"),
     theorem("surfaceSectionsAreFewAndShort", f"(((surfaceSectionsShort ({M}surfaceSections)) && ((surfaceSectionCount ({M}surfaceSections)) <=? 4)) = true)"),
     theorem("surfaceSetupIsShortAndWhole", f"(((surfaceSetupCovers 0 ({M}surfaceSections)) && ((1 <=? (surfaceNatCount ({M}surfaceSetup))) && ((surfaceNatCount ({M}surfaceSetup)) <=? 3))) = true)"),
+    theorem("surfaceEveryListHasItsOrder", f"((surfacePlacesOrdered ({M}surfacePlaces)) = true)"),
     theorem("surfacePageIsThePersonsView", f"((surfacePageIsPersonView ({M}surfacePlaces)) = true)"),
     theorem("surfaceMenuIsShort", f"(((surfaceHostCount {nav} ({M}surfacePlaces)) <=? 4) = true)"),
     theorem("surfaceActsInTheirRoles", f"((surfaceActsSound ({M}surfacePlaces)) = true)"),
