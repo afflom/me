@@ -16,6 +16,7 @@
     "lead": "This is a message just to say hello.",
     "at": 880127706000,
     "body": "This is a message just to say hello. So, \"Hello\".",
+    "id": "<1234@local.machine.example>",
     "label": "person"
    }
   },
@@ -34,6 +35,7 @@
     "lead": "This is a message just to say hello.",
     "at": 880127706000,
     "body": "This is a message just to say hello. So, \"Hello\".",
+    "id": "<1234@local.machine.example>",
     "label": "person"
    }
   },
@@ -55,6 +57,7 @@
     "lead": "Hi everyone.",
     "at": 1057049557000,
     "body": "Hi everyone.",
+    "id": "<5678.21-Nov-1997@example.com>",
     "label": "person"
    }
   },
@@ -74,6 +77,7 @@
     "lead": "Testing.",
     "at": -27723426000,
     "body": "Testing.",
+    "id": "<testabcd.1234@silly.example>",
     "label": "person"
    }
   },
@@ -92,6 +96,7 @@
     "lead": "This is a message just to say hello.",
     "at": 880127706000,
     "body": "This is a message just to say hello. So, \"Hello\".",
+    "id": "<1234@local.machine.example>",
     "label": "person"
    }
   },
@@ -110,6 +115,13 @@
     "lead": "This is a reply to your hello.",
     "at": 880128070000,
     "body": "This is a reply to your hello.",
+    "id": "<3456@example.net>",
+    "replyTo": [
+     "<1234@local.machine.example>"
+    ],
+    "refs": [
+     "<1234@local.machine.example>"
+    ],
     "label": "person"
    }
   },
@@ -128,6 +140,14 @@
     "lead": "This is a reply to your reply.",
     "at": 880131600000,
     "body": "This is a reply to your reply.",
+    "id": "<abcd.1234@local.machine.test>",
+    "replyTo": [
+     "<3456@example.net>"
+    ],
+    "refs": [
+     "<1234@local.machine.example>",
+     "<3456@example.net>"
+    ],
     "label": "person"
    }
   },
@@ -146,6 +166,7 @@
     "lead": "This is a message just to say hello.",
     "at": 880127706000,
     "body": "This is a message just to say hello. So, \"Hello\".",
+    "id": "<1234@local.machine.example>",
     "label": "person"
    }
   },
@@ -164,6 +185,7 @@
     "lead": "This is a message just to say hello.",
     "at": 880127706000,
     "body": "This is a message just to say hello. So, \"Hello\".",
+    "id": "<1234@local.machine.example>",
     "label": "person"
    }
   },
@@ -182,6 +204,7 @@
     "lead": "This is a message just to say hello.",
     "at": 880127706000,
     "body": "This is a message just to say hello. So, \"Hello\".",
+    "id": "<1234@local.node.example>",
     "label": "person"
    }
   },
@@ -201,6 +224,7 @@
     "lead": "Testing.",
     "at": -27723480000,
     "body": "Testing.",
+    "id": "<testabcd.1234@silly.test>",
     "label": "person"
    }
   },
@@ -219,6 +243,7 @@
     "lead": "Hi everyone.",
     "at": 1057049557000,
     "body": "Hi everyone.",
+    "id": "<5678.21-Nov-1997@example.com>",
     "label": "person"
    }
   },
@@ -237,6 +262,7 @@
     "lead": "This is a message just to say hello.",
     "at": 880106106000,
     "body": "This is a message just to say hello. So, \"Hello\".",
+    "id": "<1234@local.machine.example>",
     "label": "person"
    }
   },
@@ -247,6 +273,7 @@
    "raw": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//hacksw/handcal//NONSGML v1.0//EN\r\nBEGIN:VEVENT\r\nUID:19970610T172345Z-AF23B2@example.com\r\nDTSTAMP:19970610T172345Z\r\nDTSTART:19970714T170000Z\r\nDTEND:19970715T040000Z\r\nSUMMARY:Bastille Day Party\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "19970610T172345Z-AF23B2@example.com",
     "start": {
      "at": 868899600000
     },
@@ -261,6 +288,7 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//xyz Corp//NONSGML PDA Calendar Version 1.0//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nDTSTAMP:19960704T120000Z\r\nUID:uid1@example.com\r\nORGANIZER:mailto:jsmith@example.com\r\nDTSTART:19960918T143000Z\r\nDTEND:19960920T220000Z\r\nSTATUS:CONFIRMED\r\nCATEGORIES:CONFERENCE\r\nSUMMARY:Networld+Interop Conference\r\nDESCRIPTION:Networld+Interop Conference\r\n  and Exhibit\\nAtlanta World Congress Center\\n\r\n Atlanta\\, Georgia\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "uid1@example.com",
     "start": {
      "at": 843057000000
     },
@@ -278,6 +306,7 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//RDU Software//NONSGML HandCal//EN\r\nVERSION:2.0\r\nBEGIN:VTIMEZONE\r\nTZID:America/New_York\r\nBEGIN:STANDARD\r\nDTSTART:19981025T020000\r\nTZOFFSETFROM:-0400\r\nTZOFFSETTO:-0500\r\nTZNAME:EST\r\nEND:STANDARD\r\nBEGIN:DAYLIGHT\r\nDTSTART:19990404T020000\r\nTZOFFSETFROM:-0500\r\nTZOFFSETTO:-0400\r\nTZNAME:EDT\r\nEND:DAYLIGHT\r\nEND:VTIMEZONE\r\nBEGIN:VEVENT\r\nDTSTAMP:19980309T231000Z\r\nUID:guid-1.example.com\r\nORGANIZER:mailto:mrbig@example.com\r\nATTENDEE;RSVP=TRUE;ROLE=REQ-PARTICIPANT;CUTYPE=GROUP:\r\n mailto:employee-A@example.com\r\nDESCRIPTION:Project XYZ Review Meeting\r\nCATEGORIES:MEETING\r\nCLASS:PUBLIC\r\nCREATED:19980309T130000Z\r\nSUMMARY:XYZ Project Review\r\nDTSTART;TZID=America/New_York:19980312T083000\r\nDTEND;TZID=America/New_York:19980312T093000\r\nLOCATION:1CP Conference Room 4350\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "guid-1.example.com",
     "title": "XYZ Project Review",
     "start": {
      "at": 889709400000
@@ -297,6 +326,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:xyz\r\nVERSION:2.0\r\nPRODID:-//ABC Corporation//NONSGML My Product//EN\r\nBEGIN:VEVENT\r\nDTSTAMP:19970324T120000Z\r\nSEQUENCE:0\r\nUID:uid3@example.com\r\nORGANIZER:mailto:jdoe@example.com\r\nATTENDEE;RSVP=TRUE:mailto:jsmith@example.com\r\nDTSTART:19970324T123000Z\r\nDTEND:19970324T210000Z\r\nCATEGORIES:MEETING,PROJECT\r\nCLASS:PUBLIC\r\nSUMMARY:Calendaring Interoperability Planning Meeting\r\nDESCRIPTION:Discuss how we can test c&s interoperability\\n\r\n using iCalendar and other IETF standards.\r\nLOCATION:LDB Lobby\r\nATTACH;FMTTYPE=application/postscript:ftp://example.com/pub/\r\n conf/bkgrnd.ps\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "sequence": 0,
+    "uid": "uid3@example.com",
     "start": {
      "at": 859206600000
     },
@@ -316,6 +347,8 @@
    "raw": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//ABC Corporation//NONSGML My Product//EN\r\nBEGIN:VTODO\r\nDTSTAMP:19980130T134500Z\r\nSEQUENCE:2\r\nUID:uid4@example.com\r\nORGANIZER:mailto:unclesam@example.com\r\nATTENDEE;PARTSTAT=ACCEPTED:mailto:jqpublic@example.com\r\nDUE:19980415T000000\r\nSTATUS:NEEDS-ACTION\r\nSUMMARY:Submit Income Taxes\r\nBEGIN:VALARM\r\nACTION:AUDIO\r\nTRIGGER:19980403T120000Z\r\nATTACH;FMTTYPE=audio/basic:http://example.com/pub/audio-\r\n files/ssbanner.aud\r\nREPEAT:4\r\nDURATION:PT1H\r\nEND:VALARM\r\nEND:VTODO\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VTODO",
+    "sequence": 2,
+    "uid": "uid4@example.com",
     "title": "Submit Income Taxes",
     "parties": [
      "unclesam@example.com",
@@ -331,6 +364,7 @@
    "raw": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//ABC Corporation//NONSGML My Product//EN\r\nBEGIN:VJOURNAL\r\nDTSTAMP:19970324T120000Z\r\nUID:uid5@example.com\r\nORGANIZER:mailto:jsmith@example.com\r\nSTATUS:DRAFT\r\nCLASS:PUBLIC\r\nCATEGORIES:Project Report,XYZ,Weekly Meeting\r\nDESCRIPTION:Project xyz Review Meeting Minutes\\n\r\n Agenda\\n1. Review of project version 1.0 requirements.\\n2.\r\n  Definition\r\n of project processes.\\n3. Review of project schedule.\\n\r\n Participants: John Smith\\, Jane Doe\\, Jim Dandy\\n-It was\r\n  decided that the requirements need to be signed off by\r\n  product marketing.\\n-Project processes were accepted.\\n\r\n -Project schedule needs to account for scheduled holidays\r\n  and employee vacation time. Check with HR for specific\r\n  dates.\\n-New schedule will be distributed by Friday.\\n-\r\n Next weeks meeting is cancelled. No meeting until 3/23.\r\nEND:VJOURNAL\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VJOURNAL",
+    "uid": "uid5@example.com",
     "parties": [
      "jsmith@example.com"
     ],
@@ -360,6 +394,7 @@
      "at": 867787200000
     },
     "title": "ST. PAUL SAINTS -VS- DULUTH-SUPERIOR DUKES",
+    "uid": "0981234-1234234-23@example.com",
     "parties": [
      "a@example.com"
     ],
@@ -376,6 +411,8 @@
     "start": {
      "at": 867790800000
     },
+    "sequence": 1,
+    "uid": "0981234-1234234-23@example.com",
     "title": "ST. PAUL SAINTS -VS- DULUTH-SUPERIOR DUKES",
     "parties": [
      "a@example.com"
@@ -390,6 +427,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:CANCEL\r\nVERSION:2.0\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nCOMMENT:DUKES forfeit the game\r\nSEQUENCE:2\r\nUID:0981234-1234234-23@example.com\r\nDTSTAMP:19970613T190000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "sequence": 2,
+    "uid": "0981234-1234234-23@example.com",
     "parties": [
      "a@example.com"
     ],
@@ -408,7 +447,9 @@
      "local": "1997-07-02T16:00:00"
     },
     "who": "http://stadium.example.com/",
+    "sequence": 3,
     "title": "ST. PAUL SAINTS -VS- DULUTH-SUPERIOR DUKES",
+    "uid": "0981234-1234234-23@example.com",
     "parties": [
      "a@example.com"
     ],
@@ -422,6 +463,7 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:PUBLISH\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nDTSTAMP:19970614T190000Z\r\nUID:0981234-1234234-23@example.com\r\nDTSTART;VALUE=DATE:19970714\r\nRRULE:FREQ=YEARLY;INTERVAL=1\r\nSUMMARY: Bastille Day\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "0981234-1234234-23@example.com",
     "start": {
      "date": "1997-07-14"
     },
@@ -444,6 +486,8 @@
      "at": 867787200000
     },
     "title": "Conference",
+    "uid": "calsrv.example.com-873970198738777@example.com",
+    "sequence": 0,
     "parties": [
      "A",
      "B",
@@ -461,6 +505,8 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nATTENDEE;PARTSTAT=ACCEPTED:mailto:b@example.com\r\nORGANIZER:mailto:a@example.com\r\nUID:calsrv.example.com-873970198738777@example.com\r\nSEQUENCE:0\r\nREQUEST-STATUS:2.0;Success\r\nDTSTAMP:19970612T190000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "calsrv.example.com-873970198738777@example.com",
+    "sequence": 0,
     "parties": [
      "b@example.com",
      "a@example.com"
@@ -479,6 +525,8 @@
      "at": 867780000000
     },
     "title": "Phone Conference",
+    "uid": "calsrv.example.com-873970198738777@example.com",
+    "sequence": 1,
     "parties": [
      "a@example.com",
      "b@example.com",
@@ -501,6 +549,8 @@
     },
     "title": "Discuss the Merits of the election results",
     "who": "Green Conference Room",
+    "uid": "calsrv.example.com-873970198738777a@example.com",
+    "sequence": 0,
     "parties": [
      "a@example.com",
      "b@example.com",
@@ -521,6 +571,8 @@
     },
     "title": "Discuss the Merits of the election results",
     "who": "Blue Conference Room",
+    "uid": "calsrv.example.com-873970198738777a@example.com",
+    "sequence": 0,
     "parties": [
      "a@example.com",
      "b@example.com",
@@ -541,6 +593,8 @@
     },
     "title": "Discuss the Merits of the election results - changed tomeet B's schedule",
     "who": "Blue Conference Room",
+    "uid": "calsrv.example.com-873970198738777@example.com",
+    "sequence": 1,
     "parties": [
      "a@example.com",
      "b@example.com",
@@ -556,6 +610,8 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:DECLINECOUNTER\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;RSVP=TRUE;CUTYPE=INDIVIDUAL:mailto:b@example.com\r\nCOMMENT:Sorry, I cannot change this meeting time\r\nUID:calsrv.example.com-873970198738777@example.com\r\nSEQUENCE:0\r\nDTSTAMP:19970614T190000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "calsrv.example.com-873970198738777@example.com",
+    "sequence": 0,
     "parties": [
      "a@example.com",
      "b@example.com"
@@ -570,6 +626,8 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;PARTSTAT=DELEGATED;DELEGATED-\r\n TO=\"mailto:e@example.com\":mailto:c@example.com\r\nUID:calsrv.example.com-873970198738777@example.com\r\nSEQUENCE:0\r\nREQUEST-STATUS:2.0;Success\r\nDTSTAMP:19970611T190000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "calsrv.example.com-873970198738777@example.com",
+    "sequence": 0,
     "parties": [
      "a@example.com",
      "c@example.com"
@@ -588,6 +646,8 @@
      "at": 867780000000
     },
     "title": "Phone Conference",
+    "uid": "calsrv.example.com-873970198738777@example.com",
+    "sequence": 0,
     "parties": [
      "a@example.com",
      "c@example.com",
@@ -603,6 +663,8 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;PARTSTAT=ACCEPTED;DELEGATED-\r\n FROM=\"mailto:c@example.com\":mailto:e@example.com\r\nATTENDEE;PARTSTAT=DELEGATED;\r\n DELEGATED-TO=\"mailto:e@example.com\":mailto:c@example.com\r\nUID:calsrv.example.com-873970198738777@example.com\r\nSEQUENCE:0\r\nREQUEST-STATUS:2.0;Success\r\nDTSTAMP:19970614T190000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "calsrv.example.com-873970198738777@example.com",
+    "sequence": 0,
     "parties": [
      "a@example.com",
      "e@example.com",
@@ -618,6 +680,8 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;PARTSTAT=DELEGATED;\r\n DELEGATED-TO=\"mailto:e@example.com\":mailto:c@example.com\r\nATTENDEE;PARTSTAT=DECLINED;\r\n DELEGATED-FROM=\"mailto:c@example.com\":mailto:e@example.com\r\nCOMMENT:Sorry, I will be out of town at that time.\r\nUID:calsrv.example.com-873970198738777@example.com\r\nSEQUENCE:0\r\nREQUEST-STATUS:2.0;Success\r\nDTSTAMP:19970614T190000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "calsrv.example.com-873970198738777@example.com",
+    "sequence": 0,
     "parties": [
      "a@example.com",
      "c@example.com",
@@ -633,6 +697,8 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REQUEST\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;PARTSTAT=DECLINED;\r\n DELEGATED-FROM=\"mailto:c@example.com\":mailto:e@example.com\r\nATTENDEE;RSVP=TRUE:mailto:c@example.com\r\nUID:calsrv.example.com-873970198738777@example.com\r\nSEQUENCE:0\r\nSUMMARY:Phone Conference\r\nDTSTART:19970701T180000Z\r\nDTEND:19970701T200000Z\r\nDTSTAMP:19970614T200000Z\r\nCOMMENT:DELEGATE (ATTENDEE mailto:e@example.com) DECLINED YOUR\r\n INVITATION\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "calsrv.example.com-873970198738777@example.com",
+    "sequence": 0,
     "title": "Phone Conference",
     "start": {
      "at": 867780000000
@@ -652,6 +718,8 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:CANCEL\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;CUTYPE=INDIVIDUAL;mailto:a@example.com\r\nATTENDEE;CUTYPE=INDIVIDUAL:mailto:b@example.com\r\nATTENDEE;CUTYPE=INDIVIDUAL:mailto:c@example.com\r\nATTENDEE;CUTYPE=INDIVIDUAL:mailto:d@example.com\r\nCOMMENT:Mr. B cannot attend.  It's raining.  Lets cancel.\r\nUID:calsrv.example.com-873970198738777@example.com\r\nSEQUENCE:1\r\nSTATUS:CANCELLED\r\nDTSTAMP:19970613T190000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "calsrv.example.com-873970198738777@example.com",
+    "sequence": 1,
     "parties": [
      "a@example.com",
      "b@example.com",
@@ -668,6 +736,8 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:CANCEL\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nCOMMENT:You're off the hook for this meeting\r\nUID:calsrv.example.com-873970198738777@example.com\r\nDTSTAMP:19970613T193000Z\r\nSEQUENCE:1\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "calsrv.example.com-873970198738777@example.com",
+    "sequence": 1,
     "parties": [
      "a@example.com",
      "b@example.com"
@@ -686,6 +756,8 @@
      "at": 867787200000
     },
     "title": "Phone Conference",
+    "uid": "calsrv.example.com-873970198738777@example.com",
+    "sequence": 2,
     "parties": [
      "a@example.com",
      "c@example.com",
@@ -707,6 +779,8 @@
     },
     "repeats": true,
     "title": "Phone Conference",
+    "uid": "123456@example.com",
+    "sequence": 1,
     "parties": [
      "b@example.com",
      "c@example.com",
@@ -761,6 +835,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:REQUEST\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:guid-1@example.com\r\nSEQUENCE:0\r\nRRULE:FREQ=MONTHLY;BYMONTHDAY=1;UNTIL=19980901T210000Z\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nATTENDEE:mailto:c@example.com\r\nATTENDEE:mailto:d@example.com\r\nDESCRIPTION:IETF-C&S Conference Call\r\nCLASS:PUBLIC\r\nSUMMARY:IETF Calendaring Working Group Meeting\r\nDTSTART:19970601T210000Z\r\nDTEND:19970601T220000Z\r\nLOCATION:Conference Call\r\nDTSTAMP:19970526T083000Z\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "guid-1@example.com",
+    "sequence": 0,
     "repeats": true,
     "title": "IETF Calendaring Working Group Meeting",
     "start": {
@@ -783,6 +859,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:REQUEST\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:guid-1@example.com\r\nRECURRENCE-ID:19970701T210000Z\r\nSEQUENCE:1\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nATTENDEE:mailto:c@example.com\r\nATTENDEE:mailto:d@example.com\r\nDESCRIPTION:IETF-C&S Conference Call\r\nCLASS:PUBLIC\r\nSUMMARY:IETF Calendaring Working Group Meeting\r\nDTSTART:19970703T210000Z\r\nDTEND:19970703T220000Z\r\nLOCATION:Conference Call\r\nDTSTAMP:19970626T093000Z\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "guid-1@example.com",
+    "sequence": 1,
     "title": "IETF Calendaring Working Group Meeting",
     "start": {
      "at": 867963600000
@@ -804,6 +882,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:CANCEL\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:guid-1@example.com\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nATTENDEE:mailto:c@example.com\r\nATTENDEE:mailto:d@example.com\r\nRECURRENCE-ID:19970801T210000Z\r\nSEQUENCE:2\r\nSTATUS:CANCELLED\r\nDTSTAMP:19970721T093000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "guid-1@example.com",
+    "sequence": 2,
     "parties": [
      "a@example.com",
      "b@example.com",
@@ -820,6 +900,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:CANCEL\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:guid-1@example.com\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nATTENDEE:mailto:c@example.com\r\nATTENDEE:mailto:d@example.com\r\nDTSTAMP:19970721T103000Z\r\nSTATUS:CANCELLED\r\nSEQUENCE:3\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "guid-1@example.com",
+    "sequence": 3,
     "parties": [
      "a@example.com",
      "b@example.com",
@@ -836,6 +918,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:REQUEST\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:guid-1@example.com\r\nRECURRENCE-ID;THISANDFUTURE:19970901T210000Z\r\nSEQUENCE:3\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE;RSVP=TRUE:mailto:b@example.com\r\nATTENDEE;RSVP=TRUE:mailto:c@example.com\r\nATTENDEE;RSVP=TRUE:mailto:d@example.com\r\nDESCRIPTION:IETF-C&S Discussion\r\nCLASS:PUBLIC\r\nSUMMARY:IETF Calendaring Working Group Meeting\r\nDTSTART:19970901T210000Z\r\nDTEND:19970901T220000Z\r\nLOCATION:Building 32, Microsoft, Seattle, WA\r\nDTSTAMP:19970526T083000Z\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "guid-1@example.com",
+    "sequence": 3,
     "title": "IETF Calendaring Working Group Meeting",
     "start": {
      "at": 873147600000
@@ -857,6 +941,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:ADD\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:123456789@example.com\r\nSEQUENCE:4\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE;RSVP=TRUE:mailto:b@example.com\r\nATTENDEE;RSVP=TRUE:mailto:c@example.com\r\nATTENDEE;RSVP=TRUE:mailto:d@example.com\r\nDESCRIPTION:IETF-C&S Conference Call\r\nCLASS:PUBLIC\r\nSUMMARY:IETF Calendaring Working Group Meeting\r\nDTSTART:19970715T210000Z\r\nDTEND:19970715T220000Z\r\nLOCATION:Conference Call\r\nDTSTAMP:19970629T093000Z\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "123456789@example.com",
+    "sequence": 4,
     "title": "IETF Calendaring Working Group Meeting",
     "start": {
      "at": 869000400000
@@ -878,6 +964,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:REQUEST\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:123456789@example.com\r\nSEQUENCE:0\r\nRRULE:WKST=SU;BYDAY=TU;FREQ=WEEKLY\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE;RSVP=TRUE:mailto:b@example.com\r\nSUMMARY:Review Accounts\r\nDTSTART:19980303T210000Z\r\nDTEND:19980303T220000Z\r\nLOCATION:The White Room\r\nDTSTAMP:19980301T093000Z\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "123456789@example.com",
+    "sequence": 0,
     "repeats": true,
     "title": "Review Accounts",
     "start": {
@@ -898,6 +986,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:REQUEST\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:123456789@example.com\r\nSEQUENCE:7\r\nRRULE:WKST=SU;BYDAY=TU,TH;FREQ=WEEKLY\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE;RSVP=TRUE:mailto:b@example.com\r\nSUMMARY:Review Accounts\r\nDTSTART:19980303T210000Z\r\nDTEND:19980303T220000Z\r\nDTSTAMP:19980303T193000Z\r\nLOCATION:The White Room\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "123456789@example.com",
+    "sequence": 7,
     "repeats": true,
     "title": "Review Accounts",
     "start": {
@@ -918,6 +1008,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:REQUEST\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:123456789@example.com\r\nSEQUENCE:0\r\nRDATE:19980304T180000Z\r\nRDATE:19980311T180000Z\r\nRDATE:19980318T180000Z\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE;RSVP=TRUE:mailto:b@example.com\r\nSUMMARY:Review Accounts\r\nDTSTART:19980304T180000Z\r\nDTEND:19980304T200000Z\r\nDTSTAMP:19980303T193000Z\r\nLOCATION:Conference Room A\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "123456789@example.com",
+    "sequence": 0,
     "title": "Review Accounts",
     "start": {
      "at": 889034400000
@@ -937,6 +1029,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:REQUEST\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:123456789@example.com\r\nSEQUENCE:1\r\nRECURRENCE-ID:19980311T180000Z\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE;RSVP=TRUE:mailto:b@example.com\r\nSUMMARY:Review Accounts\r\nDTSTART:19980311T160000Z\r\nDTEND:19980311T180000Z\r\nDTSTAMP:19980306T193000Z\r\nLOCATION:The Small conference room\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "123456789@example.com",
+    "sequence": 1,
     "title": "Review Accounts",
     "start": {
      "at": 889632000000
@@ -956,6 +1050,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:ADD\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:123456789@example.com\r\nSEQUENCE:2\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE;RSVP=TRUE:mailto:b@example.com\r\nSUMMARY:Review Accounts\r\nDTSTART:19980315T180000Z\r\nDTEND:19980315T200000Z\r\nDTSTAMP:19980307T193000Z\r\nLOCATION:Conference Room A\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "123456789@example.com",
+    "sequence": 2,
     "title": "Review Accounts",
     "start": {
      "at": 889984800000
@@ -975,6 +1071,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:REQUEST\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:123456789@example.com\r\nSEQUENCE:2\r\nRDATE:19980304T180000Z\r\nRDATE:19980311T160000Z\r\nRDATE:19980315T180000Z\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE;RSVP=TRUE:mailto:b@example.com\r\nSUMMARY:Review Accounts\r\nDTSTART:19980304T180000Z\r\nDTEND:19980304T200000Z\r\nDTSTAMP:19980303T193000Z\r\nLOCATION:Conference Room A\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nBEGIN:VEVENT\r\nSEQUENCE:2\r\nUID:123456789@example.com\r\nRECURRENCE-ID:19980311T160000Z\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE;RSVP=TRUE:mailto:b@example.com\r\nSUMMARY:Review Accounts\r\nDTSTART:19980311T160000Z\r\nDTEND:19980304T180000Z\r\nDTSTAMP:19980306T193000Z\r\nLOCATION:The Small conference room\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "123456789@example.com",
+    "sequence": 2,
     "title": "Review Accounts",
     "start": {
      "at": 889034400000
@@ -994,6 +1092,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:COUNTER\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:guid-1@example.com\r\nRECURRENCE-ID:19970715T210000Z\r\nSEQUENCE:4\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;RSVP=TRUE:mailto:a@example.com\r\nATTENDEE;RSVP=TRUE:mailto:b@example.com\r\nATTENDEE;RSVP=TRUE:mailto:c@example.com\r\nATTENDEE;RSVP=TRUE:mailto:d@example.com\r\nDESCRIPTION:IETF-C&S Conference Call\r\nCLASS:PUBLIC\r\nSUMMARY:IETF Calendaring Working Group Meeting\r\nDTSTART:19970715T220000Z\r\nDTEND:19970715T230000Z\r\nLOCATION:Conference Call\r\nCOMMENT:May we bump this by an hour? I have a conflict\r\nDTSTAMP:19970629T094000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "guid-1@example.com",
+    "sequence": 4,
     "title": "IETF Calendaring Working Group Meeting",
     "start": {
      "at": 869004000000
@@ -1015,6 +1115,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:REQUEST\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:guid-1@example.com\r\nSEQUENCE:0\r\nRRULE:FREQ=MONTHLY;BYMONTHDAY=1\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR:mailto:a@example.com\r\nATTENDEE;RSVP=TRUE:mailto:b@example.com\r\nATTENDEE;RSVP=TRUE:mailto:c@example.com\r\nATTENDEE;RSVP=TRUE:mailto:d@example.com\r\nDESCRIPTION:IETF-C&S Conference Call\r\nCLASS:PUBLIC\r\nSUMMARY:IETF Calendaring Working Group Meeting\r\nDTSTART:19970601T210000Z\r\nDTEND:19970601T220000Z\r\nDTSTAMP:19970602T094000Z\r\nLOCATION:Conference Call\r\nSTATUS:CONFIRMED\r\nFOO:BAR\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "guid-1@example.com",
+    "sequence": 0,
     "repeats": true,
     "title": "IETF Calendaring Working Group Meeting",
     "start": {
@@ -1037,6 +1139,8 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nREQUEST-STATUS:3.0;Invalid Property Name;FOO\r\nUID:guid-1@example.com\r\nSEQUENCE:0\r\nDTSTAMP:19970603T094000Z\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "guid-1@example.com",
+    "sequence": 0,
     "parties": [
      "a@example.com",
      "b@example.com"
@@ -1055,6 +1159,8 @@
      "at": 867776400000
     },
     "title": "Create the requirements document",
+    "uid": "calsrv.example.com-873970198738777-00@example.com",
+    "sequence": 0,
     "parties": [
      "a@example.com",
      "b@example.com",
@@ -1071,6 +1177,8 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VTODO\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;PARTSTAT=ACCEPTED:mailto:b@example.com\r\nUID:calsrv.example.com-873970198738777-00@example.com\r\nCOMMENT:I'll send you my input by email\r\nSEQUENCE:0\r\nDTSTAMP:19970717T203000Z\r\nREQUEST-STATUS:2.0;Success\r\nEND:VTODO\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VTODO",
+    "uid": "calsrv.example.com-873970198738777-00@example.com",
+    "sequence": 0,
     "parties": [
      "a@example.com",
      "b@example.com"
@@ -1085,7 +1193,9 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REQUEST\r\nVERSION:2.0\r\nBEGIN:VTODO\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR:mailto:a@example.com\r\nATTENDEE;RSVP=TRUE;CUTYPE=INDIVIDUAL:mailto:b@example.com\r\nATTENDEE;RSVP=TRUE;CUTYPE=INDIVIDUAL:mailto:d@example.com\r\nUID:calsrv.example.com-873970198738777-00@example.com\r\nSUMMARY:Create the requirements document\r\nPRIORITY:1\r\nSEQUENCE:0\r\nSTATUS:IN-PROCESS\r\nDTSTART:19970701T170000Z\r\nDTSTAMP:19970717T230000Z\r\nEND:VTODO\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VTODO",
+    "uid": "calsrv.example.com-873970198738777-00@example.com",
     "title": "Create the requirements document",
+    "sequence": 0,
     "start": {
      "at": 867776400000
     },
@@ -1104,6 +1214,8 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VTODO\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;PARTSTAT=IN-PROCESS:mailto:b@example.com\r\nPERCENT-COMPLETE:75\r\nUID:calsrv.example.com-873970198738777-00@example.com\r\nDTSTAMP:19970717T233000Z\r\nSEQUENCE:0\r\nEND:VTODO\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VTODO",
+    "uid": "calsrv.example.com-873970198738777-00@example.com",
+    "sequence": 0,
     "parties": [
      "a@example.com",
      "b@example.com"
@@ -1118,6 +1230,8 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VTODO\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;PARTSTAT=COMPLETED:mailto:d@example.com\r\nUID:calsrv.example.com-873970198738777-00@example.com\r\nDTSTAMP:19970717T233000Z\r\nSEQUENCE:0\r\nEND:VTODO\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VTODO",
+    "uid": "calsrv.example.com-873970198738777-00@example.com",
+    "sequence": 0,
     "parties": [
      "a@example.com",
      "d@example.com"
@@ -1136,6 +1250,8 @@
      "at": 867776400000
     },
     "title": "Create the requirements document",
+    "uid": "calsrv.example.com-873970198738777-00@example.com",
+    "sequence": 1,
     "parties": [
      "a@example.com",
      "b@example.com",
@@ -1156,6 +1272,8 @@
      "at": 883648800000
     },
     "title": "Send Status Reports to Area Managers",
+    "uid": "calsrv.example.com-873970198738777-00@example.com",
+    "sequence": 0,
     "parties": [
      "a@example.com",
      "b@example.com",
@@ -1171,6 +1289,8 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VTODO\r\nATTENDEE;PARTSTAT=IN-PROCESS:mailto:b@example.com\r\nPERCENT-COMPLETE:75\r\nUID:calsrv.example.com-873970198738777-00@example.com\r\nDTSTAMP:19970717T233000Z\r\nRECURRENCE-ID:19980101T170000Z\r\nSEQUENCE:1\r\nEND:VTODO\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VTODO",
+    "uid": "calsrv.example.com-873970198738777-00@example.com",
+    "sequence": 1,
     "parties": [
      "b@example.com"
     ],
@@ -1188,6 +1308,7 @@
      "at": 875822400000
     },
     "title": "Phone conference minutes",
+    "uid": "0981234-1234234-2410@example.com",
     "parties": [
      "a@example.com"
     ],
@@ -1201,6 +1322,7 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REFRESH\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nATTENDEE:mailto:c@example.com\r\nATTENDEE:mailto:d@example.com\r\nUID:guid-1-12345@example.com\r\nDTSTAMP:19970603T094000\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "guid-1-12345@example.com",
     "parties": [
      "a@example.com",
      "b@example.com",
@@ -1217,6 +1339,8 @@
    "raw": "BEGIN:VCALENDAR\r\nMETHOD:REQUEST\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:example-12345@example.com\r\nSEQUENCE:3\r\nRRULE:FREQ=WEEKLY\r\nRDATE;VALUE=PERIOD:19970819T210000Z/199700819T220000Z\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nDESCRIPTION:IETF-C&S Conference Call\r\nSUMMARY:IETF Calendaring Working Group Meeting\r\nDTSTART:19970801T210000Z\r\nDTEND:19970801T220000Z\r\nRECURRENCE-ID:19970809T210000Z\r\nDTSTAMP:19970726T083000\r\nSTATUS:CONFIRMED\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "example-12345@example.com",
+    "sequence": 3,
     "repeats": true,
     "title": "IETF Calendaring Working Group Meeting",
     "start": {
@@ -1236,6 +1360,7 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REFRESH\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nUID:example-12345@example.com\r\nDTSTAMP:19970603T094000\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n",
    "expect": {
     "component": "VEVENT",
+    "uid": "example-12345@example.com",
     "parties": [
      "a@example.com",
      "b@example.com"
@@ -1330,6 +1455,7 @@
      "user2@example.com"
     ],
     "at": 1210181425000,
+    "id": "<4821E731.5040506@laptop1.example.com>",
     "label": "invitation"
    }
   },
