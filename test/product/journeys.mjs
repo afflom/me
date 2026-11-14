@@ -89,6 +89,9 @@ export const walks = {
     assert.ok(await seen(page, "The café booking is confirmed for Friday.", 3000), "an opened message does not read as written");
     const opened = await text(page);
     for (const machinery of ["Content-Type", "quoted-printable", "=C3", "Earlier words"]) assert.ok(!opened.includes(machinery), `an opened message shows "${machinery}"`);
+    // Its sender is named as written in People too.
+    await go(page, "people");
+    assert.ok(await seen(page, "Jordan Exámple", 5000), "People does not name the sender as written");
   },
   // J2: a Needs me list holding Robin's question; one gesture clears it.
   async j2(page) {

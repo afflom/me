@@ -116,7 +116,7 @@ function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
       .map(([, params, value]) => /CN="?([^";:]+)"?/i.exec(params)?.[1] ?? value.replace(/^mailto:/i, "")).filter(Boolean);
     const notes = reader ? reader.eventText(/^DESCRIPTION(?:;[^:]*)?:(.*)$/mi.exec(unfold(text))?.[1] ?? "") : calendarField(text, "DESCRIPTION");
     const body = [title, span, calendarField(text, "LOCATION"), [...new Set(people)].slice(0, 12).join(", "), notes].filter(Boolean).join("\n");
-    return { ...base, at: Number.isNaN(start) ? base.at : start, allDay, title, who: calendarField(text, "LOCATION"), text, body };
+    return { ...base, at: Number.isNaN(start) ? base.at : start, ...(Number.isNaN(end) ? {} : { end }), allDay, title, who: calendarField(text, "LOCATION"), text, body };
   }
   if (base.media === "contactCard") {
     const field = (name) => calendarField(text, name);
@@ -561,7 +561,7 @@ export default async function start({ app, reason, $ }) {
     let shown = items.filter((item) => (item.domains ?? [item.domain]).some((d) => current.domains.includes(d)));
     if (current.show === "search") {
       const words = query.toLowerCase().split(/\s+/).filter(Boolean);
-      shown = words.length ? items.filter((item) => words.every((w) => `${item.title} ${item.who} ${item.text}`.toLowerCase().includes(w))) : [];
+      shown = words.length ? items.filter((item) => words.every((w) => `${item.title} ${item.who} ${item.body ?? item.text}`.toLowerCase().includes(w))) : [];
     }
     if (resonance && current.show !== "search") shown = resonance.order(shown);
     $("pr-count").textContent = shown.length ? String(shown.length) : "";
