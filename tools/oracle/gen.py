@@ -5,7 +5,9 @@ examples are taken out mechanically:
   - "dashes": an example message between two lines of "----" (RFC 5322
     Appendix A);
   - "vcalendar": every object from BEGIN:VCALENDAR to END:VCALENDAR;
-  - "vcard": every object from BEGIN:VCARD to END:VCARD (RFC 6350).
+  - "vcard": every object from BEGIN:VCARD to END:VCARD (RFC 6350);
+  - "headers": every indented block that opens with a From field and runs to
+    the next line of prose (RFC 6047's example messages).
 An example is kept only if every address in it is at a domain reserved for
 documentation (the spec's "reserved" list, after RFC 2606 and RFC 6761), so no
 real person's address enters the repository; likewise every international
@@ -131,6 +133,23 @@ def content_objects(text, name):
             if all(CONTENT_LINE.match(l) or l.startswith((" ", "\t")) for l in raw):
                 yield "\r\n".join(raw) + "\r\n"
             i = j + 1
+        else:
+            i += 1
+
+
+def headers(text):
+    lines = text.split("\n")
+    i = 0
+    while i < len(lines):
+        if re.match(r"^ {3,}From: ", lines[i]):
+            j = i
+            while j < len(lines) and (not lines[j].strip() or lines[j].startswith("   ")):
+                j += 1
+            block = lines[i:j]
+            while block and not block[-1].strip():
+                block.pop()
+            yield "\r\n".join(dedent(block)) + "\r\n"
+            i = j
         else:
             i += 1
 
@@ -265,7 +284,7 @@ def read_contact(raw):
 corpus = []
 for source in SPEC["sources"]:
     text = unpaginate(fetch(source))
-    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD")}[source["examples"]]
+    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers}[source["examples"]]
     read = {"message": read_message, "calendar": read_calendar, "contact": read_contact}[source["kind"]]
     n = kept = 0
     for raw in take(text):
