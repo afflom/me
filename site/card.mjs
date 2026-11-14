@@ -648,7 +648,7 @@ export default async function start({ app, reason, $ }) {
   let kinds = null;
   const group = (word, rows) => element("li", { className: "pr-group" },
     element("h3", { className: "pr-section", textContent: word }),
-    element("ol", { className: "pr-rows" }, ...rows));
+    element("ol", { className: "pr-group-rows" }, ...rows));
   function ordered(shown, order) {
     const newest = [...shown].sort((a, b) => b.at - a.at);
     if (order === "kinds" && kinds && newest.some((item) => item.labels?.kind)) {
