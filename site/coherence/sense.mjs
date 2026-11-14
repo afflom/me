@@ -6,7 +6,8 @@
 import { VOCABULARY, INTENTS, MEDIA } from "./coherence.mjs";
 
 const DAY = 86_400_000;
-const lower = (text = "") => text.toLowerCase();
+// Lower case with accents folded, so "Joel" finds "Joël".
+const lower = (text = "") => text.toLowerCase().normalize("NFD").replace(/\p{M}+/gu, "").normalize("NFC");
 const escape = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const PATTERNS = VOCABULARY.map((terms) => terms.map((term) => (/^[\p{L}\p{N} :]+$/u.test(term) ? new RegExp(`(?<![\\p{L}\\p{N}])${escape(term)}(?![\\p{L}\\p{N}])`, "u") : { test: (text) => text.includes(term) })));
 
@@ -47,7 +48,7 @@ export function windowOf(prompt, now = Date.now()) {
   return null;
 }
 
-const QUIET = new Set("the and for are but not you your yours with what whats when where which who whom why how does did have has had was were will would can could should may might this that these those there their them they from into onto about over under just than then also any all some its i'm i've me my mine our ours out off get got need needs want wants anything something tell show find list".split(" "));
+const QUIET = new Set("the and for are but not you your yours with what whats when where which who whom why how does did have has had was were will would can could should may might this that these those there their them they from into onto about over under just than then also any all some its i'm i've me my mine our ours out off get got need needs want wants anything something tell told show find list say said says from".split(" "));
 export const termsOf = (text) => lower(text).match(/[\p{L}\p{N}]+/gu)?.filter((w) => w.length > 2 && !QUIET.has(w) && !INTENTS[w] && !WEEKDAYS.includes(w)) ?? [];
 const meets = (have, term) => have.some((w) => w === term || (term.length > 3 && w.length > 3 && (w.startsWith(term) || term.startsWith(w))));
 

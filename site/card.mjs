@@ -917,8 +917,17 @@ export default async function start({ app, reason, $ }) {
             const now = services.state(service.key, report, { halted: halted() });
             row.hidden = now.state === "off";
             const next = service.connect.find((s) => s.key === now.next);
-            const got = report.arrived?.[service.key]?.n ?? 0;
-            state.textContent = now.state === "checking" ? WORDS["service.checking"] : now.state === "live" ? (got ? `${got} ${WORDS.items}` : WORDS["service.live"]) : now.state === "paused" ? WORDS.halted : now.state === "refused" ? WORDS["service.refused"] : next?.word ?? "";
+            // What arrived from this service, and when: the row's first word once anything has.
+            const got = report.arrived?.[service.key] ?? { n: 0, at: 0 };
+            const seen = report.services?.[service.key] ?? {};
+            const when = got.at ? new Date(got.at).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }) : "";
+            state.textContent = now.state === "paused" ? WORDS.halted
+              : now.state === "refused" ? WORDS["service.refused"]
+              : got.n ? `${got.n} ${WORDS.items} · ${when}`
+              : now.state === "checking" ? WORDS["service.checking"]
+              : seen.error || seen.read > 0 ? WORDS["service.failed"]
+              : now.state === "live" || (seen.signedIn && seen.checked) ? WORDS["service.nothing"]
+              : next?.word ?? "";
             // Only the first service that needs a step opens, so the person meets one thing to do.
             if (section.reveal === "until-done" && !touched) row.open = now.state === "step" && first;
             const doneSteps = new Set(service.connect.filter((s) => services.done(service, s, report)).map((s) => s.key));
@@ -1054,7 +1063,14 @@ export default async function start({ app, reason, $ }) {
     const importFile = element("input", { type: "file", accept: ".pvx,application/octet-stream" });
     importFile.setAttribute("aria-label", WORDS.import);
     const importLabel = element("label", { className: "pr-file" }, element("span", { textContent: WORDS.import }), importFile);
-    const backup = settingRow(named("backup"), passphrase, exportButton, importLabel);
+    // The shape of what arrived, with no content in it, for the person to share.
+    const shapeButton = element("button", { type: "button", textContent: WORDS["data.shape"] });
+    shapeButton.addEventListener("click", async () => {
+      const { describe } = await import("./source/shape.mjs");
+      const text = JSON.stringify(describe(items), null, 1);
+      try { await navigator.clipboard.writeText(text); say(WORDS["data.shaped"], "good"); } catch { say(WORDS.unavailable, "bad"); }
+    });
+    const backup = settingRow(named("backup"), passphrase, exportButton, importLabel, shapeButton);
     painters.push(async () => {
       if (!vault) { backup.state.textContent = WORDS.unavailable; return; }
       const where = await vault.persist();

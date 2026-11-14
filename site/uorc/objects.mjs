@@ -48,13 +48,14 @@ export async function loadClient({ base = new URL('./', import.meta.url), fetche
   const module = await WebAssembly.compile(await bytesOf(wasm));
   const { load } = await importer(source);
   const uorc = await load(module);
-  // The basis identity the pinned client writes against travels with it.
-  return Object.assign(uorc, { standardBasis: lock.standardBasis });
+  // The basis identities the pinned client writes against travel with it.
+  return Object.assign(uorc, { standardBases: lock.standardBases });
 }
 
 // The archive's structure, read without decoding it.
-// basis: the identity of the standard basis the pinned client writes against (the lock's standardBasis).
-export function structureOf(uorc, archive, basis) {
+// bases: the identities of the standard bases the pinned client writes against (the lock's standardBases).
+export function structureOf(uorc, archive, bases) {
+  const standard = new Set(Array.isArray(bases) ? bases : typeof bases === 'string' ? [bases] : []);
   let info;
   try { info = uorc.inspect(archive); } catch { return { seal: 'broken', format: 'other', scope: 'other', objects: 'many' }; }
   const frames = Array.isArray(info) ? info : [];
@@ -64,7 +65,7 @@ export function structureOf(uorc, archive, basis) {
     format: frames.length > 0 && frames.every((f) => f.format === 2 && f.profile === 1) ? 'known' : 'other',
     scope: frames.length === 0 ? 'other'
       : frames.every((f) => f.scope === 'self-contained' && f.basis === null) ? 'self'
-      : frames.every((f) => f.scope === 'conditional' && typeof basis === 'string' && f.basis === basis) ? 'standard'
+      : frames.every((f) => f.scope === 'conditional' && standard.has(f.basis)) ? 'standard'
       : 'other',
     objects: one && one.objects === 1 ? 'one' : 'many',
   };
@@ -78,7 +79,7 @@ export function makeObjects({ client, decide, halted = () => 'no' }) {
 
   // Restore the archive within the client's work bound and name what came back.
   async function judge(act, uorc, archive, label) {
-    const s = structureOf(uorc, archive, uorc.standardBasis);
+    const s = structureOf(uorc, archive, uorc.standardBases);
     let restore = 'failed', bytes = null;
     try {
       bytes = uorc.decompress(archive);
