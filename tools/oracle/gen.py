@@ -202,6 +202,16 @@ def read_message(raw):
                 expect["at"] = ms(when)
         except (AttributeError, ValueError, TypeError):
             pass
+    # Where it stands in its conversation (RFC 5322 3.6.4): its own identifier,
+    # the one it replies to, and every one it references, oldest first. The
+    # order of a conversation is this dependence, not the clock.
+    ids = lambda field: re.findall(r"<[^<>\s]+>", str(msg[field] or ""))
+    if ids("message-id"):
+        expect["id"] = ids("message-id")[0]
+    if ids("in-reply-to"):
+        expect["replyTo"] = ids("in-reply-to")
+    if ids("references"):
+        expect["refs"] = ids("references")
     return expect
 
 
@@ -282,6 +292,12 @@ def read_calendar(raw):
                 expect["start"] = start
         elif name == "RRULE":
             expect["repeats"] = True
+        # Its own count of revisions (RFC 5545 3.8.1.4 UID, 3.8.7.4 SEQUENCE):
+        # a later revision of the same UID has the higher SEQUENCE.
+        elif name == "UID" and "uid" not in expect:
+            expect["uid"] = value
+        elif name == "SEQUENCE" and "sequence" not in expect and value.strip().isdigit():
+            expect["sequence"] = int(value)
 
     if people:
         expect["parties"] = [cn or address for address, cn in people.values()]

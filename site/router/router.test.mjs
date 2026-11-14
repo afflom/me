@@ -86,7 +86,7 @@ const ask = (text, halted = "no") => answer(text, { items: [flight, mail], line:
 const flightAnswer = await ask("When is my flight?");
 assert.equal(flightAnswer.mapped.intent, "question");
 assert.deepEqual(flightAnswer.sources, [flight], "the answer draws on the flight");
-assert.match(flightAnswer.sentences[0], /^Flight to Lisbon is on Mon, Nov 16 at 8:00\s?AM, at Airport\.$/u, flightAnswer.sentences[0]);
+assert.match(flightAnswer.sentences[0], /^Flight to Lisbon is on Mon, Nov 16 at 8:00\s?AM \(in 5 days\), at Airport\.$/u, flightAnswer.sentences[0]);
 const lunch = await ask("what did Robin say about lunch?");
 assert.match(lunch.sentences[0], /^Robin Example wrote “Lunch on Thursday\?” on /u);
 assert.deepEqual(lunch.offers.map((o) => o.kind), ["reply"], "a message offers a reply");

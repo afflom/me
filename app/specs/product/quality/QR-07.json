@@ -1,0 +1,16 @@
+{
+  "key": "QR-07",
+  "name": "Things are in the order they make",
+  "characteristic": "functional suitability",
+  "subcharacteristic": "functional correctness",
+  "says": "a message never comes before what it replies to or references, an event's earlier revision is never told as its latest, and the chat's now is the browser's clock",
+  "measures": [
+    {
+      "key": "order-misplaced",
+      "says": "messages and event revisions from the RFC 5322, RFC 5545 and RFC 5546 examples that the Prism places before something they build on, or out of their own SEQUENCE",
+      "direction": "atMost",
+      "threshold": 0,
+      "gate": "test/time/order.test.mjs"
+    }
+  ]
+}
