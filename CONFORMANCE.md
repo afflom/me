@@ -74,6 +74,15 @@ model does not sanction.
 | `KP-01` | `build` | The Prism reads a kappa label as UOR-Foundation/kappa-registry's Kappa::parse does and admits an object under it only when the proved Prism Kappa decision says admit: a label without its colon, on an unknown axis, of the wrong digit count or not in lowercase hex is refused with its own answer, and bytes that do not re-derive, collide on SHA-1 or could not be re-derived are never admitted |
 | `KP-02` | `build` | The browser re-derives a kappa label's digest only with what its host computes (SHA-256 and SHA-512), names every object on SHA-256 as kappa-registry's mandatory secondary axis, never admits on an axis it cannot compute, and obeys no answer from the guest it does not expect |
 
+## me
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `M-01` | `build` | The architecture description declares every stakeholder, concern, component, edge, viewpoint and view it references |
+| `M-02` | `build` | The ISO/IEC 25010:2023 quality model declares all 9 characteristics and 40 subcharacteristics, states each subcharacteristic by a requirement or lists it open, and every parent it names is declared |
+| `M-03` | `build` | Every STRIDE category each component and data flow is open to is answered by a threat or stated open, and no other pair is stated open |
+| `M-04` | `build` | Every compliance obligation is numbered in order and names its evidence |
+
 ## models
 
 | ID | Level | Statement |
@@ -104,6 +113,142 @@ model does not sanction.
 | `PM-03` | `build` | Learning confirms or rejects a belief only on the owner's signal, holds a confirmed or rejected belief against every other signal, and never raises a weight above 15 or lowers it below 1 |
 | `PM-04` | `build` | Chronology never names an Allen relation that the two intervals' endpoints contradict, and never calls two well-formed intervals malformed |
 
+## prism_boundary
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PB-01` | `build` | The app always answers deny when halted is yes |
+| `PB-02` | `build` | The app always answers deny when destination is github |
+| `PB-03` | `build` | The app always answers deny when destination is verifier |
+| `PB-04` | `build` | The app never answers allow when detector is not none |
+| `PB-05` | `build` | The app never answers allow when label is restricted |
+| `PB-06` | `build` | The app never answers allow when destination is outbound and approval is none |
+| `PB-07` | `build` | The app never answers allow when identifier is yes and destination is not browser |
+
+## prism_folder
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PF-01` | `build` | The app always answers refuse when halted is yes |
+| `PF-02` | `build` | The app always answers refuse when action is write |
+| `PF-03` | `build` | The app never answers read when grant is none |
+| `PF-04` | `build` | The app never answers read when grant is prompt |
+| `PF-05` | `build` | The app never answers read when grant is revoked |
+| `PF-06` | `build` | The app never answers read when format is other and action is read |
+| `PF-07` | `build` | The app never answers read when bulk is large and action is read |
+
+## prism_google
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PGO-01` | `build` | The app always answers refuse when halted is yes |
+| `PGO-02` | `build` | The app always answers refuse when service is other |
+| `PGO-03` | `build` | The app never answers fetch when method is write and act is none |
+| `PGO-04` | `build` | The app never answers fetch when token is none |
+| `PGO-05` | `build` | The app never answers fetch when token is expired |
+| `PGO-06` | `build` | The app never answers fetch when scope is none |
+| `PGO-07` | `build` | The app never answers fetch when method is write and scope is readonly |
+
+## prism_google_link
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PGL-01` | `build` | The app always answers revoked when halted is yes |
+| `PGL-02` | `build` | The app never answers granted when actor is not owner and stage is registered |
+| `PGL-03` | `build` | The app never answers granted when actor is not owner and stage is revoked |
+| `PGL-04` | `build` | The app never answers syncing when actor is operator |
+| `PGL-05` | `build` | The app never answers syncing when actor is other |
+| `PGL-06` | `build` | The app never answers granted when stage is unprovisioned |
+| `PGL-07` | `build` | The app never answers syncing when stage is revoked and actor is prism |
+| `PGL-08` | `build` | The app never answers syncing when origin is differs |
+| `PGL-09` | `build` | The app never answers granted when origin is differs |
+
+## prism_host
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PH-01` | `build` | The app always answers refuse when halted is yes |
+| `PH-02` | `build` | The app never answers use when surface is mail |
+| `PH-03` | `build` | The app never answers use when surface is calendar |
+| `PH-04` | `build` | The app never answers use when present is no |
+| `PH-05` | `build` | The app never answers offer when present is no |
+| `PH-06` | `build` | The app never answers use when act is none and grant is none and surface is folder |
+| `PH-07` | `build` | The app never answers use when act is none and surface is contacts |
+| `PH-08` | `build` | The app never answers use when act is none and surface is paste |
+| `PH-09` | `build` | The app never answers use when act is none and surface is files |
+| `PH-10` | `build` | The app never answers use when act is none and surface is drop |
+| `PH-11` | `build` | The app never answers use when act is none and grant is none and surface is extension |
+
+## prism_learning
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PL-01` | `build` | The app never answers confirm when signal is not ownerconfirm |
+| `PL-02` | `build` | The app never answers reject when signal is not ownerreject |
+| `PL-03` | `build` | The app always answers hold when state is confirmed and signal is not ownerreject |
+| `PL-04` | `build` | The app always answers hold when state is rejected and signal is not ownerconfirm |
+| `PL-05` | `build` | The app never answers consolidate when weight is below 10 |
+| `PL-06` | `build` | The app never answers raise when weight is above 14 |
+| `PL-07` | `build` | The app never answers lower when weight is below 2 |
+| `PL-08` | `build` | The app never answers demote when state is not consolidated |
+
+## prism_models
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PMO-01` | `build` | The app never answers run when halted is yes |
+| `PMO-02` | `build` | The app never answers fetch when halted is yes |
+| `PMO-03` | `build` | The app never answers run when source is unlocked |
+| `PMO-04` | `build` | The app never answers fetch when source is unlocked |
+| `PMO-05` | `build` | The app never answers run when route is ungranted |
+| `PMO-06` | `build` | The app never answers fetch when route is ungranted |
+| `PMO-07` | `build` | The app never answers run when runtime is not match |
+| `PMO-08` | `build` | The app never answers run when weights is not match |
+| `PMO-09` | `build` | The app never answers run when format is other |
+
+## prism_r4
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PR-01` | `build` | The app never answers answer when weights is mismatch |
+| `PR-02` | `build` | The app never answers answer when engine is not match |
+| `PR-03` | `build` | The app never answers answer when mode is routed and route is not granted |
+| `PR-04` | `build` | The app never answers answer when mode is compiled and weights is not none |
+| `PR-05` | `build` | The app never answers answer when mode is inprism and weights is not match |
+| `PR-06` | `build` | The app never answers answer when mode is not routed and route is not none |
+| `PR-07` | `build` | The app never answers answer when boundary is not allow |
+
+## prism_source
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PS-01` | `build` | The app always answers refuse when halted is yes |
+| `PS-02` | `build` | The app always answers refuse when act is write |
+| `PS-03` | `build` | The app never answers read when service is other |
+| `PS-04` | `build` | The app never answers read when service is whatsapp and route is own |
+| `PS-05` | `build` | The app never answers read when service is discord and route is own |
+| `PS-06` | `build` | The app never answers read when service is linkedin and route is own |
+
+## prism_vault_restore
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PVR-01` | `build` | The app always answers refuse when address is mismatch |
+| `PVR-02` | `build` | The app always answers refuse when seal is broken |
+| `PVR-03` | `build` | The app always answers refuse when key is missing |
+| `PVR-04` | `build` | The app never answers restore when format is unknown |
+| `PVR-05` | `build` | The app never answers restore when kind is hash |
+
+## prism_vault_store
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PVS-01` | `build` | The app always answers refuse when address is mismatch |
+| `PVS-02` | `build` | The app always answers refuse when boundary is deny |
+| `PVS-03` | `build` | The app never answers store when boundary is hashonly |
+| `PVS-04` | `build` | The app never answers store when key is missing |
+| `PVS-05` | `build` | The app never answers store when boundary is ask |
+
 ## privacy
 
 | ID | Level | Statement |
@@ -117,6 +262,12 @@ model does not sanction.
 | `PD-01` | `build` | Every journey of the product record is walked by a synthetic person whose device holds a day of mail and calendar: a journey recorded as working passes in a fresh and a returning browser on every pull request and on the published page, and a journey that passes while recorded as not yet fails until the record says it works |
 | `PD-02` | `build` | No word or control the product record assigns to the system view is on the screen, in any place, fresh, returning, or with the person's day arrived and an item opened, beyond the debt the record lists; a word not listed fails, and a listed word that no longer shows fails until it is removed, so the debt only shrinks |
 | `PD-03` | `build` | The product record places every part the Prism has: every surface entry in the person's or the system view, every root facet in the system view serving at least one journey, every journey with its goal, done-state, usability measure, status and walk, and every setting in the person's view one the Prism requires of the person; the gate refuses a record that leaves any part unplaced |
+
+## prompts
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `BS-01` | `build` | Every decision spec is built with its full model by the builder, or awaiting the builder with a reason; the awaiting list only shrinks; every generated file is current |
 
 ## r4
 
