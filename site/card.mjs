@@ -153,6 +153,14 @@ const when = (at) => {
 // prism-<version>. When the version served differs from every cache this page
 // keeps, the kept deploy is dropped and the page loads once more, fresh.
 const HEALED_KEY = "me.healed";
+// The order kept items are opened in (F-06): the newest screenful this
+// browser remembers first, in its order, then the rest by when each was kept,
+// latest first.
+export function newestFirst(rows, remembered = []) {
+  const rank = new Map(remembered.map((address, i) => [address, i]));
+  return [...rows].sort((a, b) => (rank.get(a.address) ?? Infinity) - (rank.get(b.address) ?? Infinity) || (b.at ?? 0) - (a.at ?? 0));
+}
+
 export async function heal({ caches: store = globalThis.caches, sw = globalThis.navigator?.serviceWorker, reload = () => location.reload() } = {}) {
   try {
     if (!store || !sw?.controller) return false;
@@ -226,18 +234,34 @@ export default async function start({ app, reason, $ }) {
   // restore decision) and placed by its domain, newest first.
   let items = [];
   const readOnce = new Map();
-  async function load() {
-    if (!vault) return;
-    const rows = await vault.list();
+  // Each load waits for the one before it, so no two read the same item at
+  // once. A load reads at most `most` items it has not opened yet, newest
+  // first, and says how many are left: a returning visit shows its newest
+  // screenful at once and reads the rest after it (F-06, QR-05).
+  // Which are newest is known only once they are opened, so the addresses of
+  // the newest screenful (addresses only, never content) are remembered in
+  // this browser and opened first the next time.
+  const NEWEST_KEY = "me.newest";
+  let loading = Promise.resolve(0);
+  const load = (most = Infinity) => (loading = loading.then(() => loadNow(most), () => loadNow(most)));
+  async function loadNow(most) {
+    if (!vault) return 0;
+    let newest = [];
+    try { newest = JSON.parse(store.get(NEWEST_KEY, "[]")) ?? []; } catch { /* then by when each was kept */ }
+    const rows = newestFirst(await vault.list(), newest);
     const { domainsOf, peopleOf, peoplePlace, between, selfOf, fromMe } = rows.length ? await coherence() : {};
     if (rows.length) reader ??= await import("./read/read.mjs").catch(() => null);
     // Each kept item is opened once: a later load reads only what is new, and lets go of what is gone.
     const read = [];
     const listed = new Set();
+    let opened = 0;
+    let left = 0;
     for (const row of rows) {
       listed.add(row.address);
       let item = readOnce.get(row.address);
+      if (!item && opened >= most) { left += 1; continue; }
       if (!item) {
+        opened += 1;
         const got = await vault.get(row.address);
         if (got.outcome !== "restore" && got.outcome !== "hashonly") continue;
         item = readItem({ address: row.address, outcome: got.outcome, bytes: got.bytes, meta: got.meta, at: row.at });
@@ -259,6 +283,8 @@ export default async function start({ app, reason, $ }) {
       await labelAll(items, { line, halted, me: meNow() }).catch((error) => { for (const item of items) item.labels = null; console.warn(`labels: ${error?.message ?? error}`); });
     }
     people = peopleOf ? { place: peoplePlace, all: peopleOf(items, meNow()), between } : null;
+    if (!left) store.set(NEWEST_KEY, JSON.stringify(items.slice(0, 100).map((item) => item.address)));
+    return left;
   }
 
   // Resonance: every gesture of the owner toward a thing is answered by
@@ -1217,8 +1243,19 @@ export default async function start({ app, reason, $ }) {
   });
 
   go(current.key);
-  await load();
+  // The newest screenful first; the rest are read after the page is ready, a batch at a time.
+  const START = { first: 40, batch: 100 };
+  let unread = await load(START.first);
   go(current.key);
+  (async () => {
+    if (!unread) return;
+    while (unread > 0) {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      unread = await load(START.batch);
+    }
+    // Painted once, when all are read, so nothing the person has opened closes under them.
+    if (current.show !== "settings") paintList();
+  })().catch((error) => console.warn(`load: ${error?.message ?? error}`));
   // The voice comes with the owner's first gesture, never before it.
   const voice = () => import("./voice.mjs").catch((error) => console.warn(`voice: ${error?.message ?? error}`));
   addEventListener("pointerdown", voice, { once: true, capture: true });

@@ -1,0 +1,23 @@
+{
+  "key": "QR-05",
+  "name": "It opens at once",
+  "characteristic": "performance efficiency",
+  "subcharacteristic": "time behaviour",
+  "says": "opening the Prism again, with hundreds of kept messages, shows the newest of them before the person waits for it, and loses none",
+  "measures": [
+    {
+      "key": "restart-ms",
+      "says": "milliseconds from opening the Prism again, with 600 kept real-shaped messages, to the newest of them on the screen",
+      "direction": "atMost",
+      "threshold": 3000,
+      "gate": "test/product/start.test.mjs"
+    },
+    {
+      "key": "restart-lost",
+      "says": "kept messages missing from Messages once the rest are read after opening again",
+      "direction": "atMost",
+      "threshold": 0,
+      "gate": "test/product/start.test.mjs"
+    }
+  ]
+}
