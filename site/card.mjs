@@ -223,20 +223,29 @@ export default async function start({ app, reason, $ }) {
   // Everything kept, read once through the vault (each read is the root's
   // restore decision) and placed by its domain, newest first.
   let items = [];
+  const readOnce = new Map();
   async function load() {
     if (!vault) return;
     const rows = await vault.list();
     const { domainsOf, peopleOf, peoplePlace, between, selfOf, fromMe } = rows.length ? await coherence() : {};
     if (rows.length) reader ??= await import("./read/read.mjs").catch(() => null);
+    // Each kept item is opened once: a later load reads only what is new, and lets go of what is gone.
     const read = [];
+    const listed = new Set();
     for (const row of rows) {
-      const got = await vault.get(row.address);
-      if (got.outcome !== "restore" && got.outcome !== "hashonly") continue;
-      const item = readItem({ address: row.address, outcome: got.outcome, bytes: got.bytes, meta: got.meta, at: row.at });
-      // Its domains: its media's, and each one its words name (the coherence registry's vocabulary).
-      item.domains = item.mapped ?? domainsOf(item);
+      listed.add(row.address);
+      let item = readOnce.get(row.address);
+      if (!item) {
+        const got = await vault.get(row.address);
+        if (got.outcome !== "restore" && got.outcome !== "hashonly") continue;
+        item = readItem({ address: row.address, outcome: got.outcome, bytes: got.bytes, meta: got.meta, at: row.at });
+        // Its domains: its media's, and each one its words name (the coherence registry's vocabulary).
+        item.domains = item.mapped ?? domainsOf(item);
+        readOnce.set(row.address, item);
+      }
       read.push(item);
     }
+    for (const address of readOnce.keys()) if (!listed.has(address)) readOnce.delete(address);
     items = read.sort((a, b) => b.at - a.at);
     // The people in what is kept, for the place that lists them.
     if (selfOf) { inferred = selfOf(items); mineOf = fromMe; }
