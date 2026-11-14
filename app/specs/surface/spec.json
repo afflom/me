@@ -47,15 +47,14 @@
     {"key": "device", "viewpoint": "person", "kind": "detail", "group": "sources", "name": "This device", "source": "file"},
     {"key": "models", "viewpoint": "system", "kind": "detail", "group": "models", "name": "Language models", "source": "none"},
     {"key": "quiet", "viewpoint": "person", "kind": "switch", "group": "attention", "name": "Quiet", "source": "none"},
-    {"key": "backup", "viewpoint": "person", "kind": "detail", "group": "storage", "name": "Backup", "source": "none"},
+    {"key": "backup", "viewpoint": "system", "kind": "detail", "group": "storage", "name": "Backup", "source": "none"},
     {"key": "halt", "viewpoint": "person", "kind": "switch", "group": "halt", "name": "Pause", "source": "none"},
     {"key": "identity", "viewpoint": "person", "kind": "detail", "group": "self", "name": "Who you are", "source": "none"}
   ],
   "sections": [
     {"key": "self", "name": "You", "settings": ["identity"], "reveal": "always", "serves": ["J9", "J12"]},
     {"key": "sources", "name": "Connections", "settings": ["device"], "rows": "services", "reveal": "until-done", "serves": ["J0", "J10", "J12"]},
-    {"key": "attention", "name": "Attention", "settings": ["quiet", "halt"], "reveal": "always", "serves": ["J11", "mine"]},
-    {"key": "storage", "name": "Your data", "settings": ["backup"], "reveal": "on-tap", "serves": ["mine"]}
+    {"key": "attention", "name": "Attention", "settings": ["quiet", "halt"], "reveal": "always", "serves": ["J11", "mine"]}
   ],
   "setup": [
     {"key": "self", "section": "self", "word": "setup.self"},
@@ -111,12 +110,7 @@
     "model.run": "Running",
     "model.refuse": "Refused",
     "model.r4": "R4",
-    "export": "Export",
-    "import": "Import",
-    "passphrase.export": "Backup passphrase",
-    "passphrase.import": "Passphrase",
     "items": "items",
-    "persisted": "Protected",
     "not.verified": "Not verified",
     "offline": "Offline",
     "places": "Places",

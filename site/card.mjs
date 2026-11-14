@@ -1050,7 +1050,14 @@ export default async function start({ app, reason, $ }) {
         await onFiles();
       });
       const filesLabel = element("label", { className: "pr-file" }, element("span", { textContent: WORDS["device.files"] }), files);
-      const row = settingRow(device, addFolder, filesLabel, contacts, allow, forget);
+      // The shape of what arrived, with no content in it, for the person to share.
+      const shape = element("button", { type: "button", textContent: WORDS["data.shape"] });
+      shape.addEventListener("click", async () => {
+        const { describe } = await import("./source/shape.mjs");
+        const text = JSON.stringify(describe(items), null, 1);
+        try { await navigator.clipboard.writeText(text); say(WORDS["data.shaped"], "good"); } catch { say(WORDS.unavailable, "bad"); }
+      });
+      const row = settingRow(device, addFolder, filesLabel, contacts, allow, forget, shape);
       if (!vault) { onFiles = async () => {}; row.state.textContent = WORDS.unavailable; row.row.querySelector(".pr-controls").hidden = true; return; }
       const d = await deviceOf();
       let kept = [];
@@ -1065,6 +1072,7 @@ export default async function start({ app, reason, $ }) {
         contacts.hidden = !shown("contacts");
         allow.hidden = !shown("folder") || !kept.some((f) => f.grant === "prompt");
         forget.hidden = !kept.length;
+        shape.hidden = !items.length;
       };
       const owner = (surface) => async () => (await d.ask({ act: { [surface]: "owner" } }))[surface] === "use";
       const busy = (button, may, work) => async () => {
@@ -1090,46 +1098,8 @@ export default async function start({ app, reason, $ }) {
       store.set(PACE_KEY, paceNow);
     }));
 
-    // This browser: what is kept here, and an encrypted backup of it.
-    const passphrase = element("input", { type: "password", placeholder: WORDS["passphrase.export"], autocomplete: "new-password" });
-    passphrase.setAttribute("aria-label", WORDS["passphrase.export"]);
-    const exportButton = element("button", { type: "button", textContent: WORDS.export });
-    const importFile = element("input", { type: "file", accept: ".pvx,application/octet-stream" });
-    importFile.setAttribute("aria-label", WORDS.import);
-    const importLabel = element("label", { className: "pr-file" }, element("span", { textContent: WORDS.import }), importFile);
-    // The shape of what arrived, with no content in it, for the person to share.
-    const shapeButton = element("button", { type: "button", textContent: WORDS["data.shape"] });
-    shapeButton.addEventListener("click", async () => {
-      const { describe } = await import("./source/shape.mjs");
-      const text = JSON.stringify(describe(items), null, 1);
-      try { await navigator.clipboard.writeText(text); say(WORDS["data.shaped"], "good"); } catch { say(WORDS.unavailable, "bad"); }
-    });
-    const backup = settingRow(named("backup"), passphrase, exportButton, importLabel, shapeButton);
-    painters.push(async () => {
-      if (!vault) { backup.state.textContent = WORDS.unavailable; return; }
-      const where = await vault.persist();
-      backup.state.textContent = `${items.length} ${WORDS.items}${where?.persisted ? ` · ${WORDS.persisted}` : ""}`;
-    });
-    exportButton.addEventListener("click", async () => {
-      if (!vault) return;
-      if (!passphrase.value) { passphrase.focus(); return; }
-      const bytes = await vault.exportTo(passphrase.value);
-      const link = element("a", { href: URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" })), download: "prism-export.pvx" });
-      link.click();
-      URL.revokeObjectURL(link.href);
-      passphrase.value = "";
-    });
-    importFile.addEventListener("change", async () => {
-      const file = importFile.files?.[0];
-      if (!file || !vault) return;
-      if (!passphrase.value) { importFile.value = ""; passphrase.focus(); return; }
-      const result = await vault.importFrom(new Uint8Array(await file.arrayBuffer()), passphrase.value);
-      say(result.outcome === "refuse" ? `${WORDS.refused} · ${result.reason ?? ""}` : WORDS.kept, result.outcome === "refuse" ? "bad" : "good");
-      importFile.value = "";
-      passphrase.value = "";
-      await load();
-      paintSettings();
-    });
+    // This browser keeps what arrives safe on its own: storage it may not clear.
+    painters.push(async () => { await vault?.persist().catch(() => null); });
 
     // Halt: the Boundary denies every move while it is on.
     const halt = switchFor(haltedNow, named("halt").name, (on) => {
