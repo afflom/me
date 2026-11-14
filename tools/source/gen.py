@@ -2,10 +2,15 @@
 
     python3 -I tools/source/gen.py          write site/source/declared.mjs
     python3 -I tools/source/gen.py --check  refuse unless both are current
+    python3 -I tools/source/gen.py --check --contracts FILE  check FILE's contracts instead
 
 from app/specs/source/services.json, after checking each declaration: a key,
 a name, https origins, connect steps of a declared kind with a word of at
-most four words and 28 characters, and an outbound mode.
+most four words and 28 characters, and an outbound mode; and each service's
+contract with its site (app/specs/source/contracts.json): the site's own terms
+quoted, the live routes it allows (never one PrismSource refuses, none where the
+terms bar the extension), history from the site's download, every threat
+answered, and a rest with a step for the owner when the site challenges.
 """
 import json
 import pathlib
@@ -58,6 +63,71 @@ for s in spec["services"]:
             if url and not any(url.startswith(o) for o in s["origins"]):
                 refuse(f"{s['key']} own route URL {url} is off its origins")
 
+# The threat and security model, and the contract with each site
+# (app/specs/source/contracts.json): every declared service has one, grounded in
+# the site's own words, and the routes it reads by stay within it.
+CONTRACTS = pathlib.Path(sys.argv[sys.argv.index("--contracts") + 1]) if "--contracts" in sys.argv else ROOT / "app/specs/source/contracts.json"
+contracts = json.loads(CONTRACTS.read_text())
+threats = {t["key"] for t in contracts["threats"]}
+if not all(t.get("what") and t.get("guard") for t in contracts["threats"]):
+    refuse("every threat says what it is and what guards against it")
+# The routes PrismSource refuses outright for a service (app/specs/source/spec.json).
+model = json.loads((ROOT / "app/specs/source/spec.json").read_text())
+barred = set()
+for rule in model["rules"]:
+    when = {c["field"]: c["value"] for c in rule["when"] if c["op"] == "is"}
+    if rule["then"] == "refuse" and set(when) == {"service", "route"}:
+        barred.add((when["service"], when["route"]))
+day = re.compile(r"\d{4}-\d{2}-\d{2}")
+sites = {}
+for c in contracts["sites"]:
+    key = c["service"]
+    if key in sites:
+        refuse(f"{key} has two contracts")
+    sites[key] = c
+    if not c.get("terms"):
+        refuse(f"{key} contract quotes none of the site's own terms")
+    for term in c["terms"]:
+        if not re.fullmatch(r"https://[a-z0-9.-]+/\S*", term.get("url", "")):
+            refuse(f"{key} term {term.get('url')!r} is not an https page")
+        if not term.get("says") or not term.get("section"):
+            refuse(f"{key} term on {term['url']} quotes no words or names no section")
+        if not (day.fullmatch(term.get("effective", "")) and day.fullmatch(term.get("read", ""))):
+            refuse(f"{key} term on {term['url']} gives no effective and read dates")
+        if not set(term.get("bars", [])) <= {"automation", "extension", "crawl"}:
+            refuse(f"{key} term on {term['url']} bars something undeclared")
+    live = set(c.get("live", []))
+    if not live <= {"seen", "own"}:
+        refuse(f"{key} live routes must be seen or own")
+    for route in live:
+        if (key, route) in barred:
+            refuse(f"{key} contract allows {route} live, which PrismSource refuses")
+    if live and any("extension" in t.get("bars", []) for t in c["terms"]):
+        refuse(f"{key} terms bar the extension itself, so its contract has no live route")
+    if c.get("history") != "export":
+        refuse(f"{key} contract takes history from the site's own download")
+    if c.get("risk") not in ("none", "low", "some"):
+        refuse(f"{key} risk to the owner's account must be none, low or some under its contract")
+    if not c.get("conflict"):
+        refuse(f"{key} contract says nothing of where it meets the terms")
+    if not set(c.get("threats", [])) == threats:
+        refuse(f"{key} contract must answer every threat")
+    off = c.get("backoff")
+    if live and not (off and off.get("on") and type(off.get("hours")) is int and off["hours"] >= 1 and off.get("step")):
+        refuse(f"{key} reads live, so it must rest and show a step when the site challenges it")
+for s in spec["services"]:
+    c = sites.get(s["key"])
+    if not c:
+        refuse(f"{s['key']} has no contract in app/specs/source/contracts.json")
+    used = {r for r, here in (("seen", s.get("seen")), ("own", s.get("own"))) if here}
+    if not used <= set(c["live"]):
+        refuse(f"{s['key']} reads by {sorted(used - set(c['live']))}, which its contract does not allow")
+    if s.get("export") and c["history"] != "export":
+        refuse(f"{s['key']} declares a download its contract does not take")
+if set(sites) - seen_keys:
+    refuse(f"contracts for undeclared services: {sorted(set(sites) - seen_keys)}")
+contracted = {k: {"live": c["live"], "history": c["history"], "risk": c["risk"], "backoff": c["backoff"]} for k, c in sites.items()}
+
 declared = (
     "// Generated by tools/source/gen.py from app/specs/source/services.json. Do not edit.\n"
     f"export const SERVICES = {json.dumps(spec['services'])};\n"
@@ -65,6 +135,7 @@ declared = (
     f"export const STATES = {json.dumps(spec['states'])};\n"
     f"export const BROWSERS = {json.dumps(spec['browsers'])};\n"
     f"export const EXTENSION = {json.dumps(spec['extension'])};\n"
+    f"export const CONTRACTS = {json.dumps(contracted, ensure_ascii=False)};\n"
 )
 outputs = {ROOT / "site/source/declared.mjs": declared}
 if "--check" in sys.argv:
