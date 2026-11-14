@@ -94,7 +94,7 @@ function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
   if (about.intent) base.intent = about.intent;
   if (Array.isArray(about.domains) && about.domains.length) base.mapped = about.domains;
   if (outcome !== "restore") return { ...base, sealed: true, title: "", who: "", text: "", body: "" };
-  const text = lenient.decode(bytes);
+  let text = lenient.decode(bytes);
   if (base.media === "message") {
     const h = headers(text);
     const when = Date.parse(h.date ?? "");
@@ -103,6 +103,9 @@ function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     return { ...base, at: Number.isNaN(when) ? base.at : when, title: words(h.subject ?? "").replace(/\s+/g, " ").trim(), who: person(h.from || h.to), text, body };
   }
   if (base.media === "calendar") {
+    // The event's own fields: the calendar's time zones come first and carry DTSTARTs of their own (1970).
+    const whole = text;
+    text = /BEGIN:(VEVENT|VTODO)[\s\S]*?END:\1/.exec(whole)?.[0] ?? whole;
     const first = icsTime(calendarField(text, "DTSTART"));
     // A repeating event is shown at its next time, not at the first one years ago.
     const start = reader ? reader.nextTime(calendarField(text, "RRULE"), first) : first;
@@ -116,7 +119,7 @@ function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
       .map(([, params, value]) => /CN="?([^";:]+)"?/i.exec(params)?.[1] ?? value.replace(/^mailto:/i, "")).filter(Boolean);
     const notes = reader ? reader.eventText(/^DESCRIPTION(?:;[^:]*)?:(.*)$/mi.exec(unfold(text))?.[1] ?? "") : calendarField(text, "DESCRIPTION");
     const body = [title, span, calendarField(text, "LOCATION"), [...new Set(people)].slice(0, 12).join(", "), notes].filter(Boolean).join("\n");
-    return { ...base, at: Number.isNaN(start) ? base.at : start, ...(Number.isNaN(end) ? {} : { end }), allDay, title, who: calendarField(text, "LOCATION"), text, body };
+    return { ...base, at: Number.isNaN(start) ? base.at : start, ...(Number.isNaN(end) ? {} : { end }), allDay, title, who: calendarField(text, "LOCATION"), text: whole, body };
   }
   if (base.media === "contactCard") {
     const field = (name) => calendarField(text, name);
