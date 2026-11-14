@@ -4,16 +4,20 @@ Each source is a published specification, fetched at its pinned SHA-256. Its
 examples are taken out mechanically:
   - "dashes": an example message between two lines of "----" (RFC 5322
     Appendix A);
-  - "vcalendar": every object from BEGIN:VCALENDAR to END:VCALENDAR.
+  - "vcalendar": every object from BEGIN:VCALENDAR to END:VCALENDAR;
+  - "vcard": every object from BEGIN:VCARD to END:VCARD (RFC 6350).
 An example is kept only if every address in it is at a domain reserved for
 documentation (the spec's "reserved" list, after RFC 2606 and RFC 6761), so no
-real person's address enters the repository.
+real person's address enters the repository; likewise every international
+phone number must be in the fictional range PV-01 allows.
 
 Each kept example is then read by a reference reader written to the source's
 own grammar, independent of the Prism's code: a message by Python's email
 package (policy.default, which implements RFC 5322 and the MIME RFCs), an
 iCalendar object by its content lines (RFC 5545 section 3.1: unfolding,
-parameters, TEXT escapes, DATE and DATE-TIME with TZID, UTC or floating). What
+parameters, TEXT escapes, DATE and DATE-TIME with TZID, UTC or floating), a
+vCard by the same content lines (RFC 6350 section 3.3, the formatted name and
+first email). What
 the reader finds is what test/oracle/read.test.mjs holds the Prism's reading to.
 
 Writes test/oracle/corpus.json. --check refuses a stale one. --cache DIR reads
@@ -103,19 +107,29 @@ def dashes(text):
         yield "\r\n".join(dedent(lines[a + 1 : b])) + "\r\n"
 
 
-def vcalendar(text):
+def objects(name):
+    """Every object from a line BEGIN:<name> to its END:<name> (RFC 5545 3.4, RFC 6350 6.1.1)."""
+    return lambda text: content_objects(text, name)
+
+
+CONTENT_LINE = re.compile(r"^([A-Za-z0-9-]+\.)?[A-Za-z0-9-]+[;:]")
+
+
+def content_objects(text, name):
     lines = text.split("\n")
     i = 0
     while i < len(lines):
-        if lines[i].strip() == "BEGIN:VCALENDAR":
+        if lines[i].strip() == f"BEGIN:{name}":
             j = i
-            while j < len(lines) and lines[j].strip() != "END:VCALENDAR":
+            while j < len(lines) and lines[j].strip() != f"END:{name}":
                 j += 1
             block = lines[i : j + 1]
             # Folded lines keep their one leading space after the block's own indent.
             indent = len(block[0]) - len(block[0].lstrip(" "))
             raw = [l[indent:] if l.strip() else "" for l in block if l.strip()]
-            yield "\r\n".join(raw) + "\r\n"
+            # An object is content lines throughout; a BEGIN named in the prose is not one.
+            if all(CONTENT_LINE.match(l) or l.startswith((" ", "\t")) for l in raw):
+                yield "\r\n".join(raw) + "\r\n"
             i = j + 1
         else:
             i += 1
@@ -124,10 +138,22 @@ def vcalendar(text):
 ADDRESS = re.compile(r"[A-Za-z0-9._%+!$&*=^`{|}~'-]+@([A-Za-z0-9.-]+)")
 
 
+PHONE = re.compile(r"(?<![A-Za-z0-9])\+([0-9][0-9 .()-]*)(?![A-Za-z0-9])")
+
+
+def fictional_phones_only(raw):
+    """Every international number (8 to 15 digits) is in the fictional range 555-0100 to 555-0199, as PV-01 holds."""
+    for m in PHONE.finditer(raw):
+        digits = re.sub(r"\D", "", m.group(1))
+        if digits[:1] in "123456789" and 8 <= len(digits) <= 15 and not (len(digits) == 11 and digits.startswith("1") and digits[4:9] == "55501"):
+            return False
+    return True
+
+
 def documentation_only(raw):
     domains = [d.lower().rstrip(".") for d in ADDRESS.findall(raw)]
     reserved = SPEC["reserved"]
-    return all(any(d == r or d.endswith("." + r) for r in reserved) for d in domains)
+    return all(any(d == r or d.endswith("." + r) for r in reserved) for d in domains) and fictional_phones_only(raw)
 
 
 def ms(dt):
@@ -224,11 +250,23 @@ def read_calendar(raw):
     return expect
 
 
+def read_contact(raw):
+    """RFC 6350: FN is the formatted name (6.2.1); EMAIL the address (6.4.2)."""
+    expect = {}
+    for name, params, value in content_lines(raw):
+        name = name.split(".")[-1]
+        if name == "FN" and "title" not in expect:
+            expect["title"] = text_value(value)
+        elif name == "EMAIL" and "who" not in expect:
+            expect["who"] = value.removeprefix("mailto:")
+    return expect
+
+
 corpus = []
 for source in SPEC["sources"]:
     text = unpaginate(fetch(source))
-    take = {"dashes": dashes, "vcalendar": vcalendar}[source["examples"]]
-    read = {"message": read_message, "calendar": read_calendar}[source["kind"]]
+    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD")}[source["examples"]]
+    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact}[source["kind"]]
     n = kept = 0
     for raw in take(text):
         n += 1

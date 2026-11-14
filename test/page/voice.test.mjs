@@ -10,6 +10,8 @@ import { extname, join, resolve } from "node:path";
 import test from "node:test";
 
 const { chromium } = createRequire(import.meta.url)("playwright");
+// What the owner types comes from the specifications' own examples (RFC 5546 §4.4).
+const { titleOf } = await import(resolve("test/oracle/examples.mjs"));
 const site = resolve(process.env.PAGE_SITE ?? "site");
 const published = process.env.PAGE_URL;
 const types = { ".html": "text/html", ".mjs": "text/javascript", ".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".wasm": "application/wasm", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2", ".webmanifest": "application/manifest+json" };
@@ -62,7 +64,7 @@ test("the Prism answers in just tones and colour, only after a gesture, silent u
     };
 
     // A kept task: the voice answers with the model's chime, in its tone.
-    await note("tasks", "Water the ferns");
+    await note("tasks", titleOf("rfc5546-41"));
     await settle(WORDS.kept);
     assert.equal(voiceFetched.length, 1, "the first gesture loads the voice once");
     await page.waitForFunction(() => window.__tones.length > 0, null, { timeout: 5000 });
@@ -74,7 +76,7 @@ test("the Prism answers in just tones and colour, only after a gesture, silent u
     await page.evaluate(() => localStorage.setItem("me.pace", "quiet"));
     await page.waitForTimeout(VOICE.refractory + 50);
     await page.evaluate(() => { window.__tones.length = 0; document.getElementById("pr-out").classList.remove("pr-glow"); });
-    await note("tasks", "Sweep the porch");
+    await note("tasks", titleOf("rfc5546-47"));
     await settle(WORDS.kept);
     await page.waitForTimeout(300);
     assert.equal(await page.evaluate(() => window.__tones.length), 0, "Quiet sounds nothing");

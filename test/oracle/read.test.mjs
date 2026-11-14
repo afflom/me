@@ -19,7 +19,7 @@ useReader(reader);
 const { corpus } = JSON.parse(readFileSync("test/oracle/corpus.json", "utf8"));
 const spec = JSON.parse(readFileSync("app/specs/oracle/spec.json", "utf8"));
 const encoder = new TextEncoder();
-const MEDIA = { message: "message", calendar: "calendar" };
+const MEDIA = { message: "message", calendar: "calendar", contact: "contactCard" };
 const pad = (n, w = 2) => String(n).padStart(w, "0");
 const localOf = (ms) => { const d = new Date(ms); return `${pad(d.getFullYear(), 4)}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; };
 
@@ -52,7 +52,7 @@ test("the corpus is what the pinned specifications give, read by the reference r
 
 test("the corpus is the specifications' own examples, with something to compare", () => {
   assert.ok(corpus.length >= 50, `only ${corpus.length} examples`);
-  for (const kind of ["message", "calendar"]) assert.ok(corpus.some((c) => c.kind === kind && Object.keys(c.expect).length), `no ${kind} example with a reading`);
+  for (const kind of ["message", "calendar", "contact"]) assert.ok(corpus.some((c) => c.kind === kind && Object.keys(c.expect).length), `no ${kind} example with a reading`);
 });
 
 test("the Prism reads every example as its specification does, beyond the listed debt", () => {
