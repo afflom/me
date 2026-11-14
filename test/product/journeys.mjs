@@ -200,7 +200,8 @@ export const walks = {
     await ask.press("Enter");
     await page.waitForTimeout(3000);
     const found = await app(page).getByRole("list", { name: /ask/i }).last().innerText().catch(() => "");
-    for (const words of ["Lunch on Thursday?", "Time next week", "Your November statement", ...notes]) {
+    // "Café booking" is from Jordan Exámple, in a Gmail-original-shaped mail: the accent is set aside.
+    for (const words of ["Lunch on Thursday?", "Time next week", "Your November statement", "Café booking", ...notes]) {
       assert.ok(found.includes(words), `looking for "example" does not list "${words}": ${found.slice(0, 400)}`);
     }
   },
