@@ -17,6 +17,7 @@
     "at": 880127706000,
     "body": "This is a message just to say hello. So, \"Hello\".",
     "id": "<1234@local.machine.example>",
+    "from": "jdoe@machine.example",
     "label": "person"
    }
   },
@@ -36,6 +37,7 @@
     "at": 880127706000,
     "body": "This is a message just to say hello. So, \"Hello\".",
     "id": "<1234@local.machine.example>",
+    "from": "jdoe@machine.example",
     "label": "person"
    }
   },
@@ -58,6 +60,7 @@
     "at": 1057049557000,
     "body": "Hi everyone.",
     "id": "<5678.21-Nov-1997@example.com>",
+    "from": "john.q.public@example.com",
     "label": "person"
    }
   },
@@ -78,6 +81,7 @@
     "at": -27723426000,
     "body": "Testing.",
     "id": "<testabcd.1234@silly.example>",
+    "from": "pete@silly.example",
     "label": "person"
    }
   },
@@ -97,6 +101,7 @@
     "at": 880127706000,
     "body": "This is a message just to say hello. So, \"Hello\".",
     "id": "<1234@local.machine.example>",
+    "from": "jdoe@machine.example",
     "label": "person"
    }
   },
@@ -116,6 +121,7 @@
     "at": 880128070000,
     "body": "This is a reply to your hello.",
     "id": "<3456@example.net>",
+    "from": "mary@example.net",
     "replyTo": [
      "<1234@local.machine.example>"
     ],
@@ -141,6 +147,7 @@
     "at": 880131600000,
     "body": "This is a reply to your reply.",
     "id": "<abcd.1234@local.machine.test>",
+    "from": "jdoe@machine.example",
     "replyTo": [
      "<3456@example.net>"
     ],
@@ -167,6 +174,7 @@
     "at": 880127706000,
     "body": "This is a message just to say hello. So, \"Hello\".",
     "id": "<1234@local.machine.example>",
+    "from": "jdoe@machine.example",
     "label": "person"
    }
   },
@@ -186,6 +194,7 @@
     "at": 880127706000,
     "body": "This is a message just to say hello. So, \"Hello\".",
     "id": "<1234@local.machine.example>",
+    "from": "jdoe@machine.example",
     "label": "person"
    }
   },
@@ -205,6 +214,7 @@
     "at": 880127706000,
     "body": "This is a message just to say hello. So, \"Hello\".",
     "id": "<1234@local.node.example>",
+    "from": "jdoe@node.example",
     "label": "person"
    }
   },
@@ -225,6 +235,7 @@
     "at": -27723480000,
     "body": "Testing.",
     "id": "<testabcd.1234@silly.test>",
+    "from": "pete@silly.test",
     "label": "person"
    }
   },
@@ -244,6 +255,7 @@
     "at": 1057049557000,
     "body": "Hi everyone.",
     "id": "<5678.21-Nov-1997@example.com>",
+    "from": "john.q.public@example.com",
     "label": "person"
    }
   },
@@ -263,6 +275,7 @@
     "at": 880106106000,
     "body": "This is a message just to say hello. So, \"Hello\".",
     "id": "<1234@local.machine.example>",
+    "from": "jdoe@machine.example",
     "label": "person"
    }
   },
@@ -296,6 +309,9 @@
     "parties": [
      "jsmith@example.com"
     ],
+    "addresses": [
+     "jsmith@example.com"
+    ],
     "label": "event"
    }
   },
@@ -315,6 +331,10 @@
     "parties": [
      "mrbig@example.com",
      "employee-A@example.com"
+    ],
+    "addresses": [
+     "mrbig@example.com",
+     "employee-a@example.com"
     ],
     "label": "event"
    }
@@ -337,6 +357,10 @@
      "jdoe@example.com",
      "jsmith@example.com"
     ],
+    "addresses": [
+     "jdoe@example.com",
+     "jsmith@example.com"
+    ],
     "label": "event"
    }
   },
@@ -354,6 +378,10 @@
      "unclesam@example.com",
      "jqpublic@example.com"
     ],
+    "addresses": [
+     "unclesam@example.com",
+     "jqpublic@example.com"
+    ],
     "label": "event"
    }
   },
@@ -368,6 +396,9 @@
     "parties": [
      "jsmith@example.com"
     ],
+    "addresses": [
+     "jsmith@example.com"
+    ],
     "label": "event"
    }
   },
@@ -378,6 +409,9 @@
    "raw": "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//RDU Software//NONSGML HandCal//EN\r\nBEGIN:VFREEBUSY\r\nORGANIZER:mailto:jsmith@example.com\r\nDTSTART:19980313T141711Z\r\nDTEND:19980410T141711Z\r\nFREEBUSY:19980314T233000Z/19980315T003000Z\r\nFREEBUSY:19980316T153000Z/19980316T163000Z\r\nFREEBUSY:19980318T030000Z/19980318T040000Z\r\nURL:http://www.example.com/calendar/busytime/jsmith.ifb\r\nEND:VFREEBUSY\r\nEND:VCALENDAR\r\n",
    "expect": {
     "parties": [
+     "jsmith@example.com"
+    ],
+    "addresses": [
      "jsmith@example.com"
     ],
     "label": "event"
@@ -396,6 +430,9 @@
     "title": "ST. PAUL SAINTS -VS- DULUTH-SUPERIOR DUKES",
     "uid": "0981234-1234234-23@example.com",
     "parties": [
+     "a@example.com"
+    ],
+    "addresses": [
      "a@example.com"
     ],
     "label": "event"
@@ -417,6 +454,9 @@
     "parties": [
      "a@example.com"
     ],
+    "addresses": [
+     "a@example.com"
+    ],
     "label": "event"
    }
   },
@@ -430,6 +470,9 @@
     "sequence": 2,
     "uid": "0981234-1234234-23@example.com",
     "parties": [
+     "a@example.com"
+    ],
+    "addresses": [
      "a@example.com"
     ],
     "label": "event"
@@ -453,6 +496,9 @@
     "parties": [
      "a@example.com"
     ],
+    "addresses": [
+     "a@example.com"
+    ],
     "label": "event"
    }
   },
@@ -470,6 +516,9 @@
     "repeats": true,
     "title": " Bastille Day",
     "parties": [
+     "a@example.com"
+    ],
+    "addresses": [
      "a@example.com"
     ],
     "label": "event"
@@ -495,6 +544,13 @@
      "Hal",
      "e@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com",
+     "e@example.com"
+    ],
     "label": "event"
    }
   },
@@ -508,6 +564,10 @@
     "uid": "calsrv.example.com-873970198738777@example.com",
     "sequence": 0,
     "parties": [
+     "b@example.com",
+     "a@example.com"
+    ],
+    "addresses": [
      "b@example.com",
      "a@example.com"
     ],
@@ -534,6 +594,13 @@
      "Hal",
      "e@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com",
+     "e@example.com"
+    ],
     "label": "event"
    }
   },
@@ -552,6 +619,11 @@
     "uid": "calsrv.example.com-873970198738777a@example.com",
     "sequence": 0,
     "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "b@example.com",
      "c@example.com"
@@ -578,6 +650,11 @@
      "b@example.com",
      "c@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com"
+    ],
     "label": "event"
    }
   },
@@ -600,6 +677,11 @@
      "b@example.com",
      "c@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com"
+    ],
     "label": "event"
    }
   },
@@ -616,6 +698,10 @@
      "a@example.com",
      "b@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com"
+    ],
     "label": "event"
    }
   },
@@ -629,6 +715,10 @@
     "uid": "calsrv.example.com-873970198738777@example.com",
     "sequence": 0,
     "parties": [
+     "a@example.com",
+     "c@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "c@example.com"
     ],
@@ -653,6 +743,11 @@
      "c@example.com",
      "e@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "c@example.com",
+     "e@example.com"
+    ],
     "label": "event"
    }
   },
@@ -670,6 +765,11 @@
      "e@example.com",
      "c@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "e@example.com",
+     "c@example.com"
+    ],
     "label": "event"
    }
   },
@@ -683,6 +783,11 @@
     "uid": "calsrv.example.com-873970198738777@example.com",
     "sequence": 0,
     "parties": [
+     "a@example.com",
+     "c@example.com",
+     "e@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "c@example.com",
      "e@example.com"
@@ -708,6 +813,11 @@
      "e@example.com",
      "c@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "e@example.com",
+     "c@example.com"
+    ],
     "label": "event"
    }
   },
@@ -721,6 +831,12 @@
     "uid": "calsrv.example.com-873970198738777@example.com",
     "sequence": 1,
     "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "b@example.com",
      "c@example.com",
@@ -742,6 +858,10 @@
      "a@example.com",
      "b@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com"
+    ],
     "label": "event"
    }
   },
@@ -759,6 +879,12 @@
     "uid": "calsrv.example.com-873970198738777@example.com",
     "sequence": 2,
     "parties": [
+     "a@example.com",
+     "c@example.com",
+     "d@example.com",
+     "e@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "c@example.com",
      "d@example.com",
@@ -786,6 +912,11 @@
      "c@example.com",
      "d@example.com"
     ],
+    "addresses": [
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
     "label": "event"
    }
   },
@@ -796,6 +927,9 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nVERSION:2.0\r\nMETHOD:PUBLISH\r\nBEGIN:VFREEBUSY\r\nDTSTAMP:19980101T124100Z\r\nORGANIZER:mailto:a@example.com\r\nDTSTART:19980101T124200Z\r\nDTEND:19980108T124200Z\r\nFREEBUSY:19980101T180000Z/19980101T190000Z\r\nFREEBUSY:19980103T020000Z/19980103T050000Z\r\nFREEBUSY:19980107T020000Z/19980107T050000Z\r\nFREEBUSY:19980113T000000Z/19980113T010000Z\r\nFREEBUSY:19980115T190000Z/19980115T200000Z\r\nFREEBUSY:19980115T220000Z/19980115T230000Z\r\nFREEBUSY:19980116T013000Z/19980116T043000Z\r\nEND:VFREEBUSY\r\nEND:VCALENDAR\r\n",
    "expect": {
     "parties": [
+     "a@example.com"
+    ],
+    "addresses": [
      "a@example.com"
     ],
     "label": "event"
@@ -812,6 +946,11 @@
      "b@example.com",
      "c@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com"
+    ],
     "label": "event"
    }
   },
@@ -822,6 +961,10 @@
    "raw": "BEGIN:VCALENDAR\r\nPRODID:-//Example/ExampleCalendarClient//EN\r\nMETHOD:REPLY\r\nVERSION:2.0\r\nBEGIN:VFREEBUSY\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE:mailto:b@example.com\r\nDTSTART:19970701T080000Z\r\nDTEND:19970701T200000Z\r\nUID:calsrv.example.com-873970198738777@example.com\r\nFREEBUSY:19970701T090000Z/PT1H,19970701T140000Z/PT30M\r\nDTSTAMP:19970613T190030Z\r\nEND:VFREEBUSY\r\nEND:VCALENDAR\r\n",
    "expect": {
     "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "b@example.com"
     ],
@@ -844,6 +987,12 @@
     },
     "who": "Conference Call",
     "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "b@example.com",
      "c@example.com",
@@ -872,6 +1021,12 @@
      "c@example.com",
      "d@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
     "label": "event"
    }
   },
@@ -890,6 +1045,12 @@
      "c@example.com",
      "d@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
     "label": "event"
    }
   },
@@ -903,6 +1064,12 @@
     "uid": "guid-1@example.com",
     "sequence": 3,
     "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "b@example.com",
      "c@example.com",
@@ -931,6 +1098,12 @@
      "c@example.com",
      "d@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
     "label": "event"
    }
   },
@@ -949,6 +1122,12 @@
     },
     "who": "Conference Call",
     "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "b@example.com",
      "c@example.com",
@@ -976,6 +1155,10 @@
      "a@example.com",
      "b@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com"
+    ],
     "label": "event"
    }
   },
@@ -995,6 +1178,10 @@
     },
     "who": "The White Room",
     "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "b@example.com"
     ],
@@ -1019,6 +1206,10 @@
      "a@example.com",
      "b@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com"
+    ],
     "label": "event"
    }
   },
@@ -1037,6 +1228,10 @@
     },
     "who": "The Small conference room",
     "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "b@example.com"
     ],
@@ -1061,6 +1256,10 @@
      "a@example.com",
      "b@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com"
+    ],
     "label": "event"
    }
   },
@@ -1082,6 +1281,10 @@
      "a@example.com",
      "b@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com"
+    ],
     "label": "event"
    }
   },
@@ -1100,6 +1303,12 @@
     },
     "who": "Conference Call",
     "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "b@example.com",
      "c@example.com",
@@ -1129,6 +1338,12 @@
      "c@example.com",
      "d@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
     "label": "event"
    }
   },
@@ -1142,6 +1357,10 @@
     "uid": "guid-1@example.com",
     "sequence": 0,
     "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "b@example.com"
     ],
@@ -1167,6 +1386,12 @@
      "c@example.com",
      "d@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
     "label": "event"
    }
   },
@@ -1180,6 +1405,10 @@
     "uid": "calsrv.example.com-873970198738777-00@example.com",
     "sequence": 0,
     "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "b@example.com"
     ],
@@ -1204,6 +1433,11 @@
      "b@example.com",
      "d@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com",
+     "d@example.com"
+    ],
     "label": "event"
    }
   },
@@ -1220,6 +1454,10 @@
      "a@example.com",
      "b@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com"
+    ],
     "label": "event"
    }
   },
@@ -1233,6 +1471,10 @@
     "uid": "calsrv.example.com-873970198738777-00@example.com",
     "sequence": 0,
     "parties": [
+     "a@example.com",
+     "d@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "d@example.com"
     ],
@@ -1253,6 +1495,11 @@
     "uid": "calsrv.example.com-873970198738777-00@example.com",
     "sequence": 1,
     "parties": [
+     "a@example.com",
+     "b@example.com",
+     "d@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "b@example.com",
      "d@example.com"
@@ -1279,6 +1526,11 @@
      "b@example.com",
      "d@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com",
+     "d@example.com"
+    ],
     "label": "event"
    }
   },
@@ -1292,6 +1544,9 @@
     "uid": "calsrv.example.com-873970198738777-00@example.com",
     "sequence": 1,
     "parties": [
+     "b@example.com"
+    ],
+    "addresses": [
      "b@example.com"
     ],
     "label": "event"
@@ -1312,6 +1567,9 @@
     "parties": [
      "a@example.com"
     ],
+    "addresses": [
+     "a@example.com"
+    ],
     "label": "event"
    }
   },
@@ -1324,6 +1582,12 @@
     "component": "VEVENT",
     "uid": "guid-1-12345@example.com",
     "parties": [
+     "a@example.com",
+     "b@example.com",
+     "c@example.com",
+     "d@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "b@example.com",
      "c@example.com",
@@ -1350,6 +1614,10 @@
      "a@example.com",
      "b@example.com"
     ],
+    "addresses": [
+     "a@example.com",
+     "b@example.com"
+    ],
     "label": "event"
    }
   },
@@ -1362,6 +1630,10 @@
     "component": "VEVENT",
     "uid": "example-12345@example.com",
     "parties": [
+     "a@example.com",
+     "b@example.com"
+    ],
+    "addresses": [
      "a@example.com",
      "b@example.com"
     ],
@@ -1456,6 +1728,7 @@
     ],
     "at": 1210181425000,
     "id": "<4821E731.5040506@laptop1.example.com>",
+    "from": "user1@example.com",
     "label": "invitation"
    }
   },
@@ -1472,6 +1745,7 @@
      "man@netscape.example.com",
      "stevesil@microsoft.example.com"
     ],
+    "from": "sman@netscape.example.com",
     "label": "invitation"
    }
   },
@@ -1490,6 +1764,7 @@
     ],
     "lead": "This is an alternative representation of a \"text/calendar\"",
     "body": "This is an alternative representation of a \"text/calendar\" MIME object. When: 7/1/1997 10:00AM PDT - 7/1/97 10:30AM PDT Where: Organizer: foo1@example.com Summary: Phone Conference",
+    "from": "foo1@example.com",
     "label": "invitation"
    }
   },
@@ -1507,6 +1782,7 @@
     ],
     "lead": "Content-Type: text/calendar; method=REQUEST; charset=US-ASCII",
     "body": "Content-Type: text/calendar; method=REQUEST; charset=US-ASCII Content-Transfer-Encoding: 7bit Content-Disposition: attachment; filename=\"event.ics\" BEGIN:VCALENDAR PRODID:-//Example/ExampleCalendarClient//EN METHOD:REQUEST VERSION:2.0 BEGIN:VEVENT ORGANIZER:mailto:foo1@example.com ATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED:mailto:foo1@example.com ATTENDEE;RSVP=YES;CUTYPE=INDIVIDUAL:mailto:foo2@example.com DTSTAMP:19970611T190000Z DTSTART:19970701T180000Z DTEND:19970701T183000Z SUMMARY:Phone Conference UID:calsvr.example.com-8739701987387771 ATTACH:cid:123456789@example.com SEQUENCE:0 STATUS:CONFIRMED END:VEVENT END:VCALENDAR",
+    "from": "foo1@example.com",
     "label": "invitation"
    }
   },
@@ -1522,6 +1798,7 @@
     "parties": [
      "foo1@example.com"
     ],
+    "from": "foo1@example.com",
     "label": "invitation"
    }
   },
@@ -1538,6 +1815,7 @@
      "foo1@example.com",
      "foo2@example.com"
     ],
+    "from": "foo1@example.com",
     "label": "invitation"
    }
   },
@@ -1556,6 +1834,7 @@
     ],
     "lead": "When: 7/1/1997 10:00PM PDT - 7/1/97 10:30 PM PDT",
     "body": "When: 7/1/1997 10:00PM PDT - 7/1/97 10:30 PM PDT Where: Organizer: foo1@example.com Summary: Let's discuss the attached document",
+    "from": "foo1@example.com",
     "label": "invitation"
    }
   },

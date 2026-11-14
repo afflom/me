@@ -3,6 +3,7 @@
 // PrismChronology's answer ("when <astart> <aend> <bstart> <bend>", minutes
 // from the start of today, one week wide), never this file's.
 import { TODAY } from "./coherence.mjs";
+import { resolver } from "../time/time.mjs";
 
 const DAY = 86_400_000;
 const WEEK_MINUTES = 10080;
@@ -58,7 +59,8 @@ export async function today(items, { now = Date.now(), relate, done, mine = () =
 }
 
 // What needs the person: a message that asks them something, and anything
-// that names a deadline, newest first, until the person clears it. The
+// that names a deadline, newest first, until the person clears it or it is
+// no longer resolved enough to stay. The
 // words that ask and the words of a deadline are the registry's (TODAY.needs).
 const own = (text) => text.split(/\r?\n/).filter((line) => !/^\s*>/.test(line) && !/^On .+wrote:\s*$/.test(line)).join("\n").slice(0, 1200).toLowerCase();
 const phrase = (terms) => new RegExp(terms.map((t) => (/^\w/.test(t) ? "\\b" : "") + t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + (/\w$/.test(t) ? "\\b" : "")).join("|"), "i");
@@ -66,10 +68,16 @@ export function needs(items, { now = Date.now(), done = new Set(), mine = () => 
   const rule = TODAY.needs;
   const asks = phrase(rule.asks);
   const due = phrase(rule.due);
-  const since = now - rule.days * DAY;
+  // It stays while it weighs at least the registry's keep: a thing nothing
+  // resolves halves in the half-life; one a later message references, or
+  // whose sender another kept source names, stays longer (site/time/time.mjs).
+  const weight = resolver(items, rule);
+  // Whatever the person has answered no longer needs them: their own reply
+  // names it (RFC 5322 3.6.4 In-Reply-To, References).
+  const answered = answeredBy(items, mine);
   const out = [];
   for (const item of items) {
-    if (item.sealed || item.media === "calendar" || item.media === "contactCard" || done.has(item.address) || item.at < since || mine(item)) continue;
+    if (item.sealed || item.media === "calendar" || item.media === "contactCard" || done.has(item.address) || mine(item) || (item.id && answered.has(item.id)) || weight(item, now) < rule.keep) continue;
     const words = `${item.title ?? ""}\n${own(item.body ?? "")}`;
     const deadline = due.exec(words);
     if (deadline) { out.push({ item, why: "due", phrase: sentenceOf(words, deadline.index) }); continue; }
@@ -82,4 +90,11 @@ function sentenceOf(text, at) {
   const start = Math.max(0, at);
   const end = text.slice(start).search(/[.!?\n]/);
   return text.slice(start, end < 0 ? undefined : start + end).trim().slice(0, 48);
+}
+
+// The messages the person's own messages reply to or reference.
+export function answeredBy(items, mine = () => false) {
+  const out = new Set();
+  for (const item of items) if (item.media === "message" && !item.sealed && mine(item)) for (const id of [...(item.replyTo ?? []), ...(item.refs ?? [])]) out.add(id);
+  return out;
 }
