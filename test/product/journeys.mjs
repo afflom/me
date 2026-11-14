@@ -83,6 +83,12 @@ export const walks = {
     // Pressing the meeting opens it to read: who it is with, not only its title.
     await app(page).getByText("Design review", { exact: true }).filter({ visible: true }).first().click();
     assert.ok(await seen(page, "Robin Example", 3000), "opening today's meeting does not show who it is with");
+    // A real message reads as it was written: decoded, without its parts' machinery or the history it quotes.
+    await go(page, "conversations");
+    await app(page).getByText("Café booking", { exact: true }).filter({ visible: true }).first().click();
+    assert.ok(await seen(page, "The café booking is confirmed for Friday.", 3000), "an opened message does not read as written");
+    const opened = await text(page);
+    for (const machinery of ["Content-Type", "quoted-printable", "=C3", "Earlier words"]) assert.ok(!opened.includes(machinery), `an opened message shows "${machinery}"`);
   },
   // J2: a Needs me list holding Robin's question; one gesture clears it.
   async j2(page) {

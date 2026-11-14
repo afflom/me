@@ -84,6 +84,8 @@ function icsTime(value) {
   return z ? Date.UTC(+y, mo - 1, +d, +h, +mi, +s) : new Date(+y, mo - 1, +d, +h, +mi, +s).getTime();
 }
 
+// How the person's content reads (site/read/read.mjs), loaded once something is kept.
+let reader = null;
 function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
   const about = meta.about ?? {};
   const base = { address, domain: about.domain ?? 11, media: about.media ?? "plainText", label: meta.label, at: about.at ?? at };
@@ -97,20 +99,23 @@ function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const h = headers(text);
     const when = Date.parse(h.date ?? "");
     // A message the owner sent has no From: the other party is its To.
-    const body = text.split(/\r?\n\r?\n/).slice(1).join("\n\n").trim();
-    return { ...base, at: Number.isNaN(when) ? base.at : when, title: words(h.subject ?? ""), who: person(h.from || h.to), text, body };
+    const body = reader ? reader.messageBody(text) : text.split(/\r?\n\r?\n/).slice(1).join("\n\n").trim();
+    return { ...base, at: Number.isNaN(when) ? base.at : when, title: words(h.subject ?? "").replace(/\s+/g, " ").trim(), who: person(h.from || h.to), text, body };
   }
   if (base.media === "calendar") {
-    const start = icsTime(calendarField(text, "DTSTART"));
+    const first = icsTime(calendarField(text, "DTSTART"));
+    // A repeating event is shown at its next time, not at the first one years ago.
+    const start = reader ? reader.nextTime(calendarField(text, "RRULE"), first) : first;
     const title = calendarField(text, "SUMMARY");
     const allDay = /^\d{8}$/.test(calendarField(text, "DTSTART"));
     // Opened, an event reads as the person would say it: when, where, who, and its notes.
-    const end = icsTime(calendarField(text, "DTEND"));
-    const span = Number.isNaN(start) ? "" : [new Date(start), Number.isNaN(end) ? null : new Date(end)]
+    const end = icsTime(calendarField(text, "DTEND")) - first + start;
+    const span = Number.isNaN(start) ? "" : [new Date(start), allDay || Number.isNaN(end) ? null : new Date(end)]
       .filter(Boolean).map((d, i) => d.toLocaleString(undefined, i === 0 ? (allDay ? { dateStyle: "full" } : { dateStyle: "full", timeStyle: "short" }) : (allDay ? { dateStyle: "full" } : { timeStyle: "short" }))).join(" – ");
     const people = [...unfold(text).matchAll(/^(?:ORGANIZER|ATTENDEE)([^:\r\n]*):(.*)$/gim)]
       .map(([, params, value]) => /CN="?([^";:]+)"?/i.exec(params)?.[1] ?? value.replace(/^mailto:/i, "")).filter(Boolean);
-    const body = [title, span, calendarField(text, "LOCATION"), [...new Set(people)].join(", "), calendarField(text, "DESCRIPTION")].filter(Boolean).join("\n");
+    const notes = reader ? reader.eventText(/^DESCRIPTION(?:;[^:]*)?:(.*)$/mi.exec(unfold(text))?.[1] ?? "") : calendarField(text, "DESCRIPTION");
+    const body = [title, span, calendarField(text, "LOCATION"), [...new Set(people)].slice(0, 12).join(", "), notes].filter(Boolean).join("\n");
     return { ...base, at: Number.isNaN(start) ? base.at : start, allDay, title, who: calendarField(text, "LOCATION"), text, body };
   }
   if (base.media === "contactCard") {
@@ -219,6 +224,7 @@ export default async function start({ app, reason, $ }) {
     if (!vault) return;
     const rows = await vault.list();
     const { domainsOf, peopleOf, peoplePlace, between, selfOf, fromMe } = rows.length ? await coherence() : {};
+    if (rows.length) reader ??= await import("./read/read.mjs").catch(() => null);
     const read = [];
     for (const row of rows) {
       const got = await vault.get(row.address);
