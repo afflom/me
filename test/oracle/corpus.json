@@ -1107,6 +1107,195 @@
    "expect": {
     "text": "foobar"
    }
+  },
+  {
+   "id": "rfc4180-1",
+   "source": "rfc4180",
+   "kind": "csv",
+   "raw": "aaa,bbb,ccc\r\nzzz,yyy,xxx\r\n",
+   "expect": {
+    "rows": [
+     [
+      "aaa",
+      "bbb",
+      "ccc"
+     ],
+     [
+      "zzz",
+      "yyy",
+      "xxx"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "rfc4180-2",
+   "source": "rfc4180",
+   "kind": "csv",
+   "raw": "aaa,bbb,ccc\r\nzzz,yyy,xxx",
+   "expect": {
+    "rows": [
+     [
+      "aaa",
+      "bbb",
+      "ccc"
+     ],
+     [
+      "zzz",
+      "yyy",
+      "xxx"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "rfc4180-3",
+   "source": "rfc4180",
+   "kind": "csv",
+   "raw": "field_name,field_name,field_name\r\naaa,bbb,ccc\r\nzzz,yyy,xxx\r\n",
+   "expect": {
+    "rows": [
+     [
+      "field_name",
+      "field_name",
+      "field_name"
+     ],
+     [
+      "aaa",
+      "bbb",
+      "ccc"
+     ],
+     [
+      "zzz",
+      "yyy",
+      "xxx"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "rfc4180-4",
+   "source": "rfc4180",
+   "kind": "csv",
+   "raw": "aaa,bbb,ccc",
+   "expect": {
+    "rows": [
+     [
+      "aaa",
+      "bbb",
+      "ccc"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "rfc4180-5",
+   "source": "rfc4180",
+   "kind": "csv",
+   "raw": "\"aaa\",\"bbb\",\"ccc\"\r\nzzz,yyy,xxx",
+   "expect": {
+    "rows": [
+     [
+      "aaa",
+      "bbb",
+      "ccc"
+     ],
+     [
+      "zzz",
+      "yyy",
+      "xxx"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "rfc4180-6",
+   "source": "rfc4180",
+   "kind": "csv",
+   "raw": "\"aaa\",\"b\r\nbb\",\"ccc\"\r\nzzz,yyy,xxx",
+   "expect": {
+    "rows": [
+     [
+      "aaa",
+      "b\r\nbb",
+      "ccc"
+     ],
+     [
+      "zzz",
+      "yyy",
+      "xxx"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "rfc4180-7",
+   "source": "rfc4180",
+   "kind": "csv",
+   "raw": "\"aaa\",\"b\"\"bb\",\"ccc\"",
+   "expect": {
+    "rows": [
+     [
+      "aaa",
+      "b\"bb",
+      "ccc"
+     ]
+    ]
+   }
+  },
+  {
+   "id": "otc-1",
+   "source": "otc",
+   "kind": "oneTimeCode",
+   "raw": "{\"message\": \"747723 is your ExampleCo authentication code.\\n\\n@example.com #747723\", \"code\": \"747723\"}",
+   "expect": {
+    "code": "747723"
+   }
+  },
+  {
+   "id": "otc-2",
+   "source": "otc",
+   "kind": "oneTimeCode",
+   "raw": "{\"message\": \"747723 is your ExampleCo authentication code.\\n\\n@example.com #747723 @ecommerce.example\", \"code\": \"747723\"}",
+   "expect": {
+    "code": "747723"
+   }
+  },
+  {
+   "id": "otc-3",
+   "source": "otc",
+   "kind": "oneTimeCode",
+   "raw": "{\"message\": \"something @example.com #747723\", \"code\": null}",
+   "expect": {
+    "code": null
+   }
+  },
+  {
+   "id": "otc-4",
+   "source": "otc",
+   "kind": "oneTimeCode",
+   "raw": "{\"message\": \"#747723 @ecommerce.example @example.com\", \"code\": null}",
+   "expect": {
+    "code": null
+   }
+  },
+  {
+   "id": "otc-5",
+   "source": "otc",
+   "kind": "oneTimeCode",
+   "raw": "{\"message\": \"@example.com code #747723\", \"code\": null}",
+   "expect": {
+    "code": null
+   }
+  },
+  {
+   "id": "otc-6",
+   "source": "otc",
+   "kind": "oneTimeCode",
+   "raw": "{\"message\": \"@example.com #747723 @ecommerce.example $future\", \"code\": \"747723\"}",
+   "expect": {
+    "code": "747723"
+   }
   }
  ]
 }

@@ -111,17 +111,21 @@ assert.throws(() => buildEvent({ uid: 'x', start: '2026-11-13T18:00:00Z', end: '
 checks += 1;
 
 // The owner as a destination: shown, or held while quiet; never delivered.
-const note = { target: 'owner', source: 'vault:def', text: 'Your sister wrote about Sunday.' };
+const note = { target: 'owner', source: 'vault:def', text: A2body };
 ok((await router.prepare(note)).answer === 'show', 'the owner is shown what is theirs');
 paceNow = 'quiet';
 ok((await router.prepare(note)).answer === 'hold', 'quiet is kept');
 ok((await router.prepare({ ...note, urgency: 'urgent' })).answer === 'show', 'only what the owner marked urgent breaks quiet');
 paceNow = 'open';
+// No specification publishes coercive wording; these few lines are written by their shape (an open gap).
 ok((await router.prepare({ ...note, text: 'Final notice: pay immediately or else.' })).answer === 'hold', 'coercive content waits, never pushed');
 ok(asked.filter((t) => t.startsWith('dest ')).every((t) => t.split(' ').length === 10), 'every dest request has its nine fields');
 
 // The detectors and builders.
-ok(toneOf('Only 3 seats left, act now!') === 'coercive' && toneOf('Thanks, see you soon.') === 'calm', 'tone check');
+ok(toneOf('Only 3 seats left, act now!') === 'coercive', 'tone check');
+// Every message the specifications publish reads calm: none is held as coercive.
+const { corpus } = await import('../../test/oracle/examples.mjs');
+ok(corpus.filter((c) => c.kind === 'message').every((c) => toneOf(c.raw.slice(c.raw.search(/\r?\n\r?\n/))) === 'calm'), 'no example message of RFC 5322 or RFC 6047 is coercive');
 ok((await sealOf('abc')) === 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad', 'seal is SHA-256');
 const m = buildMail({ to: 'a@example.org\r\nBcc: x@example.org', subject: 'Hi', body: 'x' });
 ok(!m.bytes.includes('\r\nBcc:') && m.href.startsWith('mailto:a%40example.org'), 'header injection is flattened');

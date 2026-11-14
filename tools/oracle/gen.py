@@ -11,7 +11,11 @@ examples are taken out mechanically:
   - "displayed": each row of an "encoded form / displayed as" table, the
     encoded form and what the specification says it displays as (RFC 2047
     section 8), each without the parentheses around it;
-  - "vectors": each NAME("input") = "output" test vector (RFC 4648 section 10).
+  - "vectors": each NAME("input") = "output" test vector (RFC 4648 section 10);
+  - "csv": each example after "For example:" in RFC 4180 section 2, its
+    written "CRLF" marks made line breaks;
+  - "otc": each example of the WICG origin-bound one-time codes report, the
+    message and the code the report says it carries, or none.
 An example is kept only if every address in it is at a domain reserved for
 documentation (the spec's "reserved" list, after RFC 2606 and RFC 6761), so no
 real person's address enters the repository; likewise every international
@@ -35,6 +39,8 @@ and keeps the fetched sources there.
 usage: python3 -I tools/oracle/gen.py [--check] [--cache DIR]
 """
 import base64
+import csv as csvlib
+import io
 import datetime
 import email
 import email.header
@@ -194,6 +200,40 @@ def vectors(text):
             yield json.dumps({"decoded": m.group(1), "encoded": m.group(2)})
 
 
+def csv_examples(text):
+    lines = text.split("\n")
+    start = next(i for i, l in enumerate(lines) if l.startswith("2.  Definition of the CSV Format"))
+    end = next(i for i, l in enumerate(lines) if i > start and re.match(r"^3\.  ", l))
+    i = start
+    while i < end:
+        if lines[i].rstrip().endswith("For example:"):
+            j = i + 1
+            while j < end and not lines[j].strip():
+                j += 1
+            block = []
+            while j < end and lines[j].startswith("       ") and lines[j].strip():
+                block.append(lines[j][7:])
+                j += 1
+            # A written "CRLF" is a line break; a line without one joins the next
+            # only inside a quoted field, so a block's lines are joined by CRLF
+            # where it is written and stand as written at the end.
+            yield "".join(l[: -len(" CRLF")] + "\r\n" if l.endswith(" CRLF") else l for l in block)
+            i = j
+        else:
+            i += 1
+
+
+def otc_examples(text):
+    for block in re.findall(r'<div class="example">(.*?)</div>', text, re.S):
+        fenced = re.search(r"```\n\"(.*?)\"\n```", block, re.S)
+        inline = re.search(r'(?:The message|code message=\]) `"([^`]*)"`', block)
+        message = fenced.group(1) if fenced else inline.group(1) if inline else None
+        if message is None:
+            continue
+        said = None if "is not an" in block else re.search(r'the \[=code=\] is `"([^"]*)"`', block)
+        yield json.dumps({"message": message, "code": said.group(1) if said else None})
+
+
 ADDRESS = re.compile(r"[A-Za-z0-9._%+!$&*=^`{|}~'-]+@([A-Za-z0-9.-]+)")
 
 
@@ -254,6 +294,23 @@ def read_displayed(raw):
     if python != row["displayed"]:
         refuse(f"RFC 2047 says {row['encoded']!r} displays as {row['displayed']!r}; Python's email.header reads {python!r}")
     return {"text": row["displayed"]}
+
+
+def read_csv(raw):
+    return {"rows": [row for row in csvlib.reader(io.StringIO(raw, newline=""), strict=True)]}
+
+
+OTC_LAST = re.compile(r"^@([^\s@#]+) #([^\s@#]+)(?: @([^\s@#]+))?(?: .*)?$")
+
+
+def read_otc(raw):
+    row = json.loads(raw)
+    last = row["message"].split("\n")[-1]
+    m = OTC_LAST.match(last)
+    parsed = m.group(2) if m else None
+    if parsed != row["code"]:
+        refuse(f"the report says {row['message']!r} carries {row['code']!r}; its parsing rule finds {parsed!r}")
+    return {"code": row["code"]}
 
 
 def read_vector(raw):
@@ -346,8 +403,8 @@ def read_contact(raw):
 corpus = []
 for source in SPEC["sources"]:
     text = unpaginate(fetch(source))
-    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors}[source["examples"]]
-    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector}[source["kind"]]
+    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples}[source["examples"]]
+    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc}[source["kind"]]
     n = kept = 0
     for raw in take(text):
         n += 1

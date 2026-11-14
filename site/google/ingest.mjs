@@ -36,12 +36,16 @@ function hasCard(text) {
 // A one-time code, a password or a reset link sent to the owner.
 const CREDENTIAL = /\b(?:verification code|security code|one[- ]time (?:code|pass(?:code|word))|passcode|login code|sign[- ]in code|your code is|temporary password|reset your password|password reset)\b/i;
 
+// An origin-bound one-time code message (WICG): its last line is "@host #code",
+// one space between, maybe an embedded host and later text after.
+const ORIGIN_BOUND = /(?:^|\n)@[^\s@#]+ #[^\s@#]+(?: [^\n]*)?$/;
+
 // The detectors' report for the Boundary's `detector` field. A miss here is a
 // known limit: the Boundary still never lets the value leave the browser.
 export function detect(bytes) {
   const text = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
   if (hasCard(text)) return 'pci';
-  if (CREDENTIAL.test(text)) return 'credential';
+  if (CREDENTIAL.test(text) || ORIGIN_BOUND.test(text.replace(/\s+$/, ''))) return 'credential';
   return 'none';
 }
 

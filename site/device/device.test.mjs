@@ -2,9 +2,11 @@
 // The device itself is a test double: no disk is read. The content it holds is
 // the oracle corpus (test/oracle/corpus.json): the published specifications'
 // own example messages (RFC 5322, RFC 6047), calendars (RFC 5545, RFC 5546) and
-// cards (RFC 6350). The services' own downloads (WhatsApp, Discord, LinkedIn),
-// Gmail's original-message page and a one-time code have no published
-// specification with examples, so those few are written here by their shape.
+// cards (RFC 6350). Kinds no published specification gives examples of (the
+// services' own downloads, card numbers) are listed as gaps in
+// app/specs/oracle/spec.json and have no content here. Gmail's own pages are
+// stood in for by what its declaration in app/specs/source/services.json says
+// of them, holding the corpus's messages.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { openGuest } from '../google/guest.mjs';
@@ -102,8 +104,7 @@ const device = openDevice({ decide, ingest: ingestInto({ vault }), store, halted
 const takeout = dirOf('Takeout', [
   dirOf('Mail', [entryOf(fileOf('All mail.mbox', MBOX))]),
   dirOf('Calendar', [entryOf(fileOf('me.ics', ICS))]),
-  // No specification publishes a message carrying a one-time code; this one is written by its shape.
-  dirOf('cur', [entryOf(fileOf('1700000000.M1.host:2,S', 'From: c@example.net\r\nSubject: code\r\n\r\nYour verification code is 123456.\r\n'))]),
+  dirOf('cur', [entryOf(fileOf('1700000000.M1.host:2,S', example('rfc5322-3')))]),
   entryOf(fileOf('notes.txt', 'not a source')),
   dirOf('.hidden', [entryOf(fileOf('x.eml', example('rfc5322-13')))]),
 ]);
@@ -112,9 +113,8 @@ await device.addFolder(async (options) => { pickedWith = options; return takeout
 ok(pickedWith.mode === 'read', 'the folder is opened read-only');
 ok((await device.folders()).length === 1 && (await device.folders())[0].grant === 'granted', 'the granted folder is kept');
 const first = await device.readFolders();
-ok(first.files === 3 && first.store === 3 && first.storehash === 1, `mail, calendar and Maildir are kept, other files passed over: ${JSON.stringify(first)}`);
+ok(first.files === 3 && first.store === 4 && first.storehash === 0, `mail, calendar and Maildir are kept, other files passed over: ${JSON.stringify(first)}`);
 ok(kept.every((k) => k.meta.label === 'confidential' && k.meta.identifier === 'yes' && k.meta.pointer.startsWith('/prism/device/')), 'every item is kept confidential, as identifiers that never leave');
-ok(kept.some((k) => k.meta.detector === 'credential'), 'a one-time code is detected');
 ok(!kept.some((k) => new TextDecoder().decode(k.bytes) === example('rfc5322-13')) && !kept.some((k) => new TextDecoder().decode(k.bytes).includes('not a source')), 'hidden folders and other files are never read');
 ok(asked.every((l) => !/ write /.test(l)), 'the device never asks to write');
 const again = await device.readFolders();
@@ -215,7 +215,11 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
   const bg = await import('../extension/background.js');
   const { zip, pack, installed, pull: pullFrom } = await import('./extension.mjs');
   const RAW = example('rfc5322-1');
-  const html = (raw) => `<html><body><pre class="raw_message_text" id="raw_message_text">${raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre></body></html>`;
+  // Gmail's own pages, as its declaration says of them: the original message
+  // inside the element the declaration names (own.item.unwrap), HTML-escaped,
+  // and the feed's links carrying the id the declaration's pattern takes.
+  const gmailOwn = JSON.parse(await readFile(new URL('../../app/specs/source/services.json', import.meta.url), 'utf8')).services.find((s) => s.key === 'gmail').own[0];
+  const html = (raw) => `<html><body><pre class="${gmailOwn.item.unwrap}" id="${gmailOwn.item.unwrap}">${raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</pre></body></html>`;
   const ICS = example('rfc5545-1');
   const calendarZip = zip([{ name: 'calendar.ics', bytes: new TextEncoder().encode(ICS) }, { name: 'notes.txt', bytes: new TextEncoder().encode('x') }]);
   const requests = [];
@@ -387,54 +391,10 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
     ok(s.origins.every((o) => /^https:\/\/[a-z.]+\/$/.test(o)), `${s.key} names https origins only`);
   }
 
-  // The export route: each service's own data download, read only as PrismSource answers.
-  const { exportItems, whatsappLines, csv } = await import('../source/exports.mjs');
-  const { zip } = await import('./extension.mjs');
-  const ios = '[13/11/2026, 09:41:05] Robin Example: Lunch on Thursday?\n[13/11/2026, 09:42:10] Sam Example: Yes,\nnoon works\n[13/11/2026, 09:43:00] Messages and calls are end-to-end encrypted.\n';
-  const android = '11/13/26, 9:41 PM - Robin Example: See you then\n';
-  const w = whatsappLines(ios);
-  ok(w.length === 2 && w[0].from === 'Robin Example' && w[0].at.toISOString() === '2026-11-13T09:41:05.000Z' && w[1].body === 'Yes,\nnoon works', 'a WhatsApp chat (iPhone) is read line by line, day first, continuations kept, WhatsApp\'s own lines left out');
-  ok(whatsappLines(android)[0].at.toISOString() === '2026-11-13T21:41:00.000Z', 'a WhatsApp chat (Android) is read month first, with its 12-hour clock');
-  ok(JSON.stringify(csv('a,"b,""c""\nd"\r\n1,2\n')) === JSON.stringify([['a', 'b,"c"\nd'], ['1', '2']]), 'CSV fields hold commas, quotes and newlines');
-  const discordZip = zip([
-    { name: 'package/messages/index.json', bytes: new TextEncoder().encode('{"111":"Direct Message with Robin Example"}') },
-    { name: 'package/messages/c111/messages.json', bytes: new TextEncoder().encode('[{"ID":1,"Timestamp":"2026-11-12 08:00:00.123000+00:00","Contents":"Draft is ready","Attachments":""}]') },
-    { name: 'package/messages/c222/messages.csv', bytes: new TextEncoder().encode('ID,Timestamp,Contents,Attachments\n2,2026-11-12 09:00:00.000000+00:00,"Hello, server",\n') },
-  ]);
-  const files = [
-    fileOf('WhatsApp Chat with Robin Example.txt', ios),
-    new File([discordZip], 'package.zip', { lastModified: 1 }),
-    fileOf('messages.csv', 'CONVERSATION ID,CONVERSATION TITLE,FROM,SENDER PROFILE URL,TO,RECIPIENT PROFILE URLS,DATE,SUBJECT,CONTENT,FOLDER\nc1,Robin Example,Robin Example,,Person,,2026-11-12 10:00:00 UTC,,"Could we talk, next week?",INBOX\n'),
-    fileOf('Connections.csv', 'Notes:\n"Some notes LinkedIn adds"\n\nFirst Name,Last Name,URL,Email Address,Company,Position,Connected On\nRobin,Example,https://www.linkedin.com/in/example,,Example Co,Designer,12 Nov 2026\n'),
-    fileOf('a.eml', 'From: a@example.com\r\nSubject: hi\r\n\r\nhi\r\n'),
-  ];
-  const { zipEntries } = await import('./zip.mjs');
-  const opened = [files[0], ...(await zipEntries(files[1])).map((e) => Object.assign(e, { archive: 'package.zip' })), ...files.slice(2)];
-  const { items, rest } = await exportItems(opened);
-  const by = (svc) => items.filter((i) => i.service === svc);
-  ok(by('whatsapp').length === 2 && by('discord').length === 2 && by('linkedin').length === 2 && rest.length === 1 && rest[0].name === 'a.eml', `each download is claimed by its service, and other files pass through: ${items.map((i) => i.service)}`);
-  ok(by('whatsapp').every((i) => i.format === 'eml' && formatOfText(i.text) === 'eml' && /^Subject: Robin Example$/m.test(i.text) && /@whatsapp\.invalid>/.test(i.text)), 'a WhatsApp message is kept as a message, in its chat, at an address that cannot be mailed');
-  ok(by('discord').some((i) => /^Subject: Direct Message with Robin Example$/m.test(i.text) && /^Date: Thu, 12 Nov 2026 08:00:00 GMT$/m.test(i.text)) && by('discord').some((i) => /Hello, server/.test(i.text)), 'a Discord message is kept with its channel\'s name and time, from JSON and CSV alike');
-  ok(by('linkedin').some((i) => i.format === 'eml' && /Could we talk, next week\?/.test(i.text)) && by('linkedin').some((i) => i.format === 'vcf' && /FN:Robin Example/.test(i.text) && /ORG:Example Co/.test(i.text)), 'a LinkedIn message is kept as a message, a connection as a contact card');
-  ok(new Set(by('whatsapp').map((i) => i.text.match(/^Message-ID: (.*)$/m)[1])).size === 2 && (await exportItems([files[0]])).items[0].text === by('whatsapp')[0].text, 'each message has its own id, the same on every read');
-  const keptBy = [];
-  const vaultBy = { put: async (bytes, meta) => { keptBy.push(meta); return { outcome: 'store' }; } };
-  let halt = 'no';
-  const heard = {};
-  const reader = openDevice({ decide: folder, source: (rest) => source(rest), arrived: (svc, n) => { heard[svc] = (heard[svc] ?? 0) + n; }, ingest: ingestInto({ vault: vaultBy }), store: memoryStore(), halted: () => halt });
-  const t = await reader.readFiles(files);
-  ok(t.store === 7 && t.refuse === 0, `the downloads are read as PrismSource answers: ${JSON.stringify(t)}`);
-  ok(heard.whatsapp === 2 && heard.discord === 2 && heard.linkedin === 2, `the page hears what each service's download brought in: ${JSON.stringify(heard)}`);
-  halt = 'yes';
-  const before = keptBy.length;
-  await reader.readFiles(files);
-  ok(keptBy.length === before, 'nothing is read from a download while halted');
-  const unasked = openDevice({ decide: folder, ingest: ingestInto({ vault: vaultBy }), store: memoryStore() });
-  const u = await unasked.readFiles(files.slice(0, 1));
-  ok(u.store === 0 && u.refuse === 2, 'without PrismSource no download is read');
-  const inFolder = openDevice({ decide: folder, source: (rest) => source(rest), ingest: ingestInto({ vault: vaultBy }), store: memoryStore() });
-  await inFolder.addFolder(async () => dirOf('Downloads', [entryOf(files[0]), entryOf(files[1])]));
-  ok((await inFolder.readFolders()).store === 4, 'a download that lands in a kept folder is read on the next visit');
+  // The export route: each service's own data download. No service publishes
+  // a definition of its download with examples (the gaps in
+  // app/specs/oracle/spec.json), so none is written here; its CSV files follow
+  // RFC 4180, which test/oracle/read.test.mjs holds the reader to.
 }
 
 console.log(`device: ${checks} checks passed`);
