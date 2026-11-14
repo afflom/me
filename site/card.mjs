@@ -172,7 +172,7 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const sequence = Number(calendarField(text, "SEQUENCE")) || 0;
     const recurrence = calendarField(text, "RECURRENCE-ID");
     // A repeating event is shown at its next time, not at the first one years ago.
-    const start = reader ? reader.nextTime(calendarField(text, "RRULE"), first) : first;
+    const start = reader && components[0] ? reader.nextTime(components[0], first) : first;
     const title = calendarField(text, "SUMMARY");
     const allDay = /^\d{8}$/.test(calendarField(text, "DTSTART"));
     // Opened, an event reads as the person would say it: when, where, who, and its notes.

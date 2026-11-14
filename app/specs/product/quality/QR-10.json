@@ -1,0 +1,16 @@
+{
+  "key": "QR-10",
+  "name": "A repeating event is next when its rule says",
+  "characteristic": "functional suitability",
+  "subcharacteristic": "functional correctness",
+  "says": "from any moment within an RFC 5545 recurrence example's listing, the next instance the Prism gives is the next one the specification lists",
+  "measures": [
+    {
+      "key": "recurrence-misplaced",
+      "says": "moments in the RFC 5545 section 3.8.5.3 examples' listings where the Prism's next instance is not the specification's",
+      "direction": "atMost",
+      "threshold": 0,
+      "gate": "test/time/recur.test.mjs"
+    }
+  ]
+}
