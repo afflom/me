@@ -1,0 +1,686 @@
+{
+  "schema": "prism/prompt/1",
+  "goal": "Decides, for one value of one piece of content coming into the Prism, whether one feature of the Prism maps it: the R4 router sends each value of the content's own schema through the features compiled",
+  "pattern": "decisionTable",
+  "repository": "afflom/me",
+  "app": {
+    "name": "prism-router",
+    "title": "Prism R4 Router",
+    "purpose": "Decides, for one value of one piece of content coming into the Prism, whether one feature of the Prism maps it: the R4 router sends each value of the content's own schema through the features compiled into the Prism, so the Prism holds the owner's data in its own terms. A value the source's schema already types is mapped straight, free text is read by every compiled feature, a feature whose compiled model is missing is skipped, bytes that are not the compiled model never touch the owner's data, and the kill switch stops every mapping.",
+    "fields": [
+      {
+        "name": "source",
+        "kind": "choice",
+        "values": [
+          "note",
+          "message",
+          "calendar",
+          "contact"
+        ],
+        "means": "the schema the content arrived in: the owner's own words, a mail message, a calendar event, or a contact card"
+      },
+      {
+        "name": "value",
+        "kind": "choice",
+        "values": [
+          "text",
+          "subject",
+          "start",
+          "party",
+          "shape"
+        ],
+        "means": "which value of that schema: free text, a subject or summary line, a start time the schema types, the person the schema names, or the shape of the parts it is built of (which headers, parts, attendees and links it has, never what they say)"
+      },
+      {
+        "name": "feature",
+        "kind": "choice",
+        "values": [
+          "time",
+          "intent",
+          "party",
+          "meaning",
+          "kind",
+          "topic"
+        ],
+        "means": "the Prism feature to map it onto: when it happens, what it asks of the owner (a task, an event, a question or a fact), who it is with, what it means, what kind of thing it is (a person writing, an invitation, an update, a receipt, travel or a notice), and what it is about in the words the owner's own content keeps using"
+      },
+      {
+        "name": "provider",
+        "kind": "choice",
+        "values": [
+          "compiled",
+          "absent",
+          "mismatch"
+        ],
+        "means": "the model compiled into the Prism that provides the feature: present with its pinned bytes, absent, or present with other bytes"
+      },
+      {
+        "name": "halted",
+        "kind": "choice",
+        "values": [
+          "no",
+          "yes"
+        ],
+        "means": "whether the owner pressed the kill switch"
+      }
+    ],
+    "outcomes": [
+      "map",
+      "direct",
+      "skip",
+      "refuse"
+    ],
+    "meanings": {
+      "map": "a compiled feature maps the value",
+      "direct": "the value is mapped straight by its schema",
+      "skip": "the feature is passed over",
+      "refuse": "the value is not mapped"
+    },
+    "rules": [
+      {
+        "id": "REQ-001",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "yes"
+          }
+        ],
+        "then": "refuse",
+        "says": "when halted is yes then refuse",
+        "why": "Prism R4 Router: the decision tree's path to refuse"
+      },
+      {
+        "id": "REQ-002",
+        "when": [
+          {
+            "field": "provider",
+            "op": "is",
+            "value": "mismatch"
+          }
+        ],
+        "then": "refuse",
+        "says": "when provider is mismatch then refuse",
+        "why": "Prism R4 Router: the decision tree's path to refuse"
+      },
+      {
+        "id": "REQ-003",
+        "when": [
+          {
+            "field": "value",
+            "op": "is",
+            "value": "start"
+          },
+          {
+            "field": "feature",
+            "op": "is",
+            "value": "time"
+          },
+          {
+            "field": "source",
+            "op": "is",
+            "value": "note"
+          }
+        ],
+        "then": "skip",
+        "says": "when value is start and feature is time and source is note then skip",
+        "why": "Prism R4 Router: the decision tree's path to skip"
+      },
+      {
+        "id": "REQ-004",
+        "when": [
+          {
+            "field": "value",
+            "op": "is",
+            "value": "start"
+          },
+          {
+            "field": "feature",
+            "op": "is",
+            "value": "time"
+          },
+          {
+            "field": "source",
+            "op": "is",
+            "value": "contact"
+          }
+        ],
+        "then": "skip",
+        "says": "when value is start and feature is time and source is contact then skip",
+        "why": "Prism R4 Router: the decision tree's path to skip"
+      },
+      {
+        "id": "REQ-005",
+        "when": [
+          {
+            "field": "value",
+            "op": "is",
+            "value": "start"
+          },
+          {
+            "field": "feature",
+            "op": "is",
+            "value": "time"
+          }
+        ],
+        "then": "direct",
+        "says": "when value is start and feature is time then direct",
+        "why": "Prism R4 Router: the decision tree's path to direct"
+      },
+      {
+        "id": "REQ-006",
+        "when": [
+          {
+            "field": "value",
+            "op": "is",
+            "value": "start"
+          }
+        ],
+        "then": "skip",
+        "says": "when value is start then skip",
+        "why": "Prism R4 Router: the decision tree's path to skip"
+      },
+      {
+        "id": "REQ-007",
+        "when": [
+          {
+            "field": "value",
+            "op": "is",
+            "value": "party"
+          },
+          {
+            "field": "feature",
+            "op": "is",
+            "value": "party"
+          },
+          {
+            "field": "source",
+            "op": "is",
+            "value": "note"
+          }
+        ],
+        "then": "skip",
+        "says": "when value is party and feature is party and source is note then skip",
+        "why": "Prism R4 Router: the decision tree's path to skip"
+      },
+      {
+        "id": "REQ-008",
+        "when": [
+          {
+            "field": "value",
+            "op": "is",
+            "value": "party"
+          },
+          {
+            "field": "feature",
+            "op": "is",
+            "value": "party"
+          }
+        ],
+        "then": "direct",
+        "says": "when value is party and feature is party then direct",
+        "why": "Prism R4 Router: the decision tree's path to direct"
+      },
+      {
+        "id": "REQ-009",
+        "when": [
+          {
+            "field": "value",
+            "op": "is",
+            "value": "party"
+          }
+        ],
+        "then": "skip",
+        "says": "when value is party then skip",
+        "why": "Prism R4 Router: the decision tree's path to skip"
+      },
+      {
+        "id": "REQ-010",
+        "when": [
+          {
+            "field": "value",
+            "op": "is",
+            "value": "shape"
+          },
+          {
+            "field": "feature",
+            "op": "is",
+            "value": "kind"
+          },
+          {
+            "field": "provider",
+            "op": "is",
+            "value": "absent"
+          }
+        ],
+        "then": "skip",
+        "says": "when value is shape and feature is kind and provider is absent then skip",
+        "why": "Prism R4 Router: the decision tree's path to skip"
+      },
+      {
+        "id": "REQ-011",
+        "when": [
+          {
+            "field": "value",
+            "op": "is",
+            "value": "shape"
+          },
+          {
+            "field": "feature",
+            "op": "is",
+            "value": "kind"
+          }
+        ],
+        "then": "map",
+        "says": "when value is shape and feature is kind then map",
+        "why": "Prism R4 Router: the decision tree's path to map"
+      },
+      {
+        "id": "REQ-012",
+        "when": [
+          {
+            "field": "value",
+            "op": "is",
+            "value": "shape"
+          }
+        ],
+        "then": "skip",
+        "says": "when value is shape then skip",
+        "why": "Prism R4 Router: the decision tree's path to skip"
+      },
+      {
+        "id": "REQ-013",
+        "when": [
+          {
+            "field": "provider",
+            "op": "is",
+            "value": "absent"
+          }
+        ],
+        "then": "skip",
+        "says": "when provider is absent then skip",
+        "why": "Prism R4 Router: the decision tree's path to skip"
+      }
+    ],
+    "otherwise": "map",
+    "otherwiseWhy": "Prism R4 Router: the decision tree's path that meets no test",
+    "properties": [
+      {
+        "id": "INV-001",
+        "kind": "always",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "yes"
+          }
+        ],
+        "then": "refuse",
+        "says": "always when halted is yes then refuse",
+        "why": "the kill switch stops every mapping"
+      },
+      {
+        "id": "INV-002",
+        "kind": "always",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "no"
+          },
+          {
+            "field": "provider",
+            "op": "is",
+            "value": "mismatch"
+          }
+        ],
+        "then": "refuse",
+        "says": "always when halted is no and provider is mismatch then refuse",
+        "why": "bytes that are not the compiled model never touch the owner's data"
+      },
+      {
+        "id": "INV-003",
+        "kind": "never",
+        "when": [
+          {
+            "field": "provider",
+            "op": "is",
+            "value": "absent"
+          }
+        ],
+        "then": "map",
+        "says": "never when provider is absent then map",
+        "why": "no feature runs without the model compiled into the Prism for it"
+      },
+      {
+        "id": "INV-004",
+        "kind": "always",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "no"
+          },
+          {
+            "field": "provider",
+            "op": "is",
+            "value": "compiled"
+          },
+          {
+            "field": "value",
+            "op": "is",
+            "value": "text"
+          }
+        ],
+        "then": "map",
+        "says": "always when halted is no and provider is compiled and value is text then map",
+        "why": "the owner's free text is read by every compiled feature, so nothing they wrote is held as a bare string"
+      },
+      {
+        "id": "INV-005",
+        "kind": "always",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "no"
+          },
+          {
+            "field": "provider",
+            "op": "is",
+            "value": "compiled"
+          },
+          {
+            "field": "value",
+            "op": "is",
+            "value": "subject"
+          }
+        ],
+        "then": "map",
+        "says": "always when halted is no and provider is compiled and value is subject then map",
+        "why": "a subject line is free text too"
+      },
+      {
+        "id": "INV-006",
+        "kind": "never",
+        "when": [
+          {
+            "field": "value",
+            "op": "is",
+            "value": "start"
+          }
+        ],
+        "then": "map",
+        "says": "never when value is start then map",
+        "why": "a time the source's schema already types is never re-read by a model"
+      },
+      {
+        "id": "INV-007",
+        "kind": "never",
+        "when": [
+          {
+            "field": "value",
+            "op": "is",
+            "value": "party"
+          }
+        ],
+        "then": "map",
+        "says": "never when value is party then map",
+        "why": "a person the source's schema already names is never re-read by a model"
+      },
+      {
+        "id": "INV-008",
+        "kind": "always",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "no"
+          },
+          {
+            "field": "provider",
+            "op": "is",
+            "value": "absent"
+          },
+          {
+            "field": "source",
+            "op": "is",
+            "value": "calendar"
+          },
+          {
+            "field": "value",
+            "op": "is",
+            "value": "start"
+          },
+          {
+            "field": "feature",
+            "op": "is",
+            "value": "time"
+          }
+        ],
+        "then": "direct",
+        "says": "always when halted is no and provider is absent and source is calendar and value is start and feature is time then direct",
+        "why": "a calendar event's own start lands on the Prism's time feature even with no model"
+      },
+      {
+        "id": "INV-009",
+        "kind": "never",
+        "when": [
+          {
+            "field": "source",
+            "op": "is",
+            "value": "note"
+          },
+          {
+            "field": "value",
+            "op": "is",
+            "value": "start"
+          }
+        ],
+        "then": "direct",
+        "says": "never when source is note and value is start then direct",
+        "why": "the owner's words carry no typed start: their time is read, never assumed"
+      },
+      {
+        "id": "INV-010",
+        "kind": "always",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "no"
+          },
+          {
+            "field": "provider",
+            "op": "is",
+            "value": "compiled"
+          },
+          {
+            "field": "value",
+            "op": "is",
+            "value": "shape"
+          },
+          {
+            "field": "feature",
+            "op": "is",
+            "value": "kind"
+          }
+        ],
+        "then": "map",
+        "says": "always when halted is no and provider is compiled and value is shape and feature is kind then map",
+        "why": "what kind of thing an item is is read from the parts it is built of"
+      },
+      {
+        "id": "INV-011",
+        "kind": "never",
+        "when": [
+          {
+            "field": "value",
+            "op": "is",
+            "value": "shape"
+          },
+          {
+            "field": "feature",
+            "op": "is",
+            "value": "topic"
+          }
+        ],
+        "then": "map",
+        "says": "never when value is shape and feature is topic then map",
+        "why": "the parts an item is built of never say what it is about"
+      },
+      {
+        "id": "INV-012",
+        "kind": "never",
+        "when": [
+          {
+            "field": "value",
+            "op": "is",
+            "value": "shape"
+          },
+          {
+            "field": "feature",
+            "op": "is",
+            "value": "topic"
+          }
+        ],
+        "then": "direct",
+        "says": "never when value is shape and feature is topic then direct",
+        "why": "the parts an item is built of never say what it is about"
+      },
+      {
+        "id": "INV-013",
+        "kind": "never",
+        "when": [
+          {
+            "field": "value",
+            "op": "is",
+            "value": "shape"
+          },
+          {
+            "field": "feature",
+            "op": "is",
+            "value": "party"
+          }
+        ],
+        "then": "map",
+        "says": "never when value is shape and feature is party then map",
+        "why": "the parts an item is built of never say who it is with"
+      },
+      {
+        "id": "INV-014",
+        "kind": "never",
+        "when": [
+          {
+            "field": "value",
+            "op": "is",
+            "value": "shape"
+          },
+          {
+            "field": "feature",
+            "op": "is",
+            "value": "party"
+          }
+        ],
+        "then": "direct",
+        "says": "never when value is shape and feature is party then direct",
+        "why": "the parts an item is built of never say who it is with"
+      },
+      {
+        "id": "INV-015",
+        "kind": "always",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "no"
+          },
+          {
+            "field": "provider",
+            "op": "is",
+            "value": "compiled"
+          },
+          {
+            "field": "value",
+            "op": "is",
+            "value": "text"
+          },
+          {
+            "field": "feature",
+            "op": "is",
+            "value": "topic"
+          }
+        ],
+        "then": "map",
+        "says": "always when halted is no and provider is compiled and value is text and feature is topic then map",
+        "why": "what the owner's content is about is read in its own words"
+      }
+    ],
+    "examples": [
+      {
+        "request": "note text time compiled no",
+        "response": "map"
+      },
+      {
+        "request": "note text intent compiled no",
+        "response": "map"
+      },
+      {
+        "request": "note text meaning absent no",
+        "response": "skip"
+      },
+      {
+        "request": "note text time mismatch no",
+        "response": "refuse"
+      },
+      {
+        "request": "note text time compiled yes",
+        "response": "refuse"
+      },
+      {
+        "request": "calendar start time compiled no",
+        "response": "direct"
+      },
+      {
+        "request": "calendar start intent compiled no",
+        "response": "skip"
+      },
+      {
+        "request": "message party party absent no",
+        "response": "direct"
+      },
+      {
+        "request": "message subject time compiled no",
+        "response": "map"
+      },
+      {
+        "request": "contact start time compiled no",
+        "response": "skip"
+      },
+      {
+        "request": "message shape kind compiled no",
+        "response": "map"
+      },
+      {
+        "request": "message shape topic compiled no",
+        "response": "skip"
+      },
+      {
+        "request": "calendar shape kind absent no",
+        "response": "skip"
+      },
+      {
+        "request": "message text party compiled no",
+        "response": "map"
+      },
+      {
+        "request": "message subject topic compiled no",
+        "response": "map"
+      },
+      {
+        "request": "message shape kind compiled yes",
+        "response": "refuse"
+      }
+    ]
+  }
+}

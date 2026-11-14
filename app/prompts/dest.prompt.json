@@ -1,0 +1,548 @@
+{
+  "schema": "prism/prompt/1",
+  "goal": "Decides where one thing the Prism holds may go next: shown to the owner, held quietly for the owner, prepared as a draft for the owner to act on, delivered to a destination (calendar, mail, another pl",
+  "pattern": "decisionTable",
+  "repository": "afflom/me",
+  "app": {
+    "name": "prism-dest",
+    "title": "Prism Destinations",
+    "purpose": "Decides where one thing the Prism holds may go next: shown to the owner, held quietly for the owner, prepared as a draft for the owner to act on, delivered to a destination (calendar, mail, another platform), or refused. Nothing leaves without the owner's own act on the very bytes they saw, nothing coercive is ever carried or pushed, nothing without a cause is routed, restricted content never leaves, and the owner's quiet is kept.",
+    "fields": [
+      {
+        "name": "target",
+        "kind": "choice",
+        "values": [
+          "owner",
+          "calendar",
+          "mail",
+          "platform",
+          "other"
+        ],
+        "means": "the destination: the owner's own view, their calendar, a mail reply or message, another platform they use (by the device's share sheet or a file), or anything else"
+      },
+      {
+        "name": "verdict",
+        "kind": "choice",
+        "values": [
+          "allow",
+          "ask",
+          "hashonly",
+          "deny"
+        ],
+        "means": "the Boundary's answer for this content to this destination (browser for the owner, outbound for the rest)"
+      },
+      {
+        "name": "cause",
+        "kind": "choice",
+        "values": [
+          "grounded",
+          "orphan"
+        ],
+        "means": "whether the item traces to a source the Prism read or to the owner's own input (grounded), or to nothing (orphan)"
+      },
+      {
+        "name": "act",
+        "kind": "choice",
+        "values": [
+          "none",
+          "owner"
+        ],
+        "means": "whether the owner pressed the button for this very delivery"
+      },
+      {
+        "name": "wording",
+        "kind": "choice",
+        "values": [
+          "seen",
+          "changed"
+        ],
+        "means": "whether the bytes that would go out are exactly the bytes the owner saw when they acted"
+      },
+      {
+        "name": "tone",
+        "kind": "choice",
+        "values": [
+          "calm",
+          "coercive"
+        ],
+        "means": "the tone check of the words: calm, or coercive (pressure, false urgency, guilt, threat, dark pattern)"
+      },
+      {
+        "name": "pace",
+        "kind": "choice",
+        "values": [
+          "open",
+          "quiet"
+        ],
+        "means": "the owner's attention right now: open, or quiet (rest, focus, sleep)"
+      },
+      {
+        "name": "urgency",
+        "kind": "choice",
+        "values": [
+          "normal",
+          "urgent"
+        ],
+        "means": "whether the item is one the owner marked as worth breaking quiet for"
+      },
+      {
+        "name": "halted",
+        "kind": "choice",
+        "values": [
+          "no",
+          "yes"
+        ],
+        "means": "whether the owner pressed the kill switch"
+      }
+    ],
+    "outcomes": [
+      "deliver",
+      "draft",
+      "show",
+      "hold",
+      "refuse"
+    ],
+    "meanings": {
+      "deliver": "handed to the destination exactly as the owner saw it",
+      "draft": "prepared for the owner to review and send",
+      "show": "shown to the owner now",
+      "hold": "kept quietly until the owner looks",
+      "refuse": "it may not go there"
+    },
+    "rules": [
+      {
+        "id": "REQ-001",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "yes"
+          }
+        ],
+        "then": "refuse",
+        "says": "when halted is yes then refuse",
+        "why": "Prism Destinations: the decision tree's path to refuse"
+      },
+      {
+        "id": "REQ-002",
+        "when": [
+          {
+            "field": "target",
+            "op": "is",
+            "value": "other"
+          }
+        ],
+        "then": "refuse",
+        "says": "when target is other then refuse",
+        "why": "Prism Destinations: the decision tree's path to refuse"
+      },
+      {
+        "id": "REQ-003",
+        "when": [
+          {
+            "field": "cause",
+            "op": "is",
+            "value": "orphan"
+          }
+        ],
+        "then": "refuse",
+        "says": "when cause is orphan then refuse",
+        "why": "Prism Destinations: the decision tree's path to refuse"
+      },
+      {
+        "id": "REQ-004",
+        "when": [
+          {
+            "field": "verdict",
+            "op": "is",
+            "value": "deny"
+          }
+        ],
+        "then": "refuse",
+        "says": "when verdict is deny then refuse",
+        "why": "Prism Destinations: the decision tree's path to refuse"
+      },
+      {
+        "id": "REQ-005",
+        "when": [
+          {
+            "field": "target",
+            "op": "is",
+            "value": "owner"
+          },
+          {
+            "field": "tone",
+            "op": "is",
+            "value": "coercive"
+          }
+        ],
+        "then": "hold",
+        "says": "when target is owner and tone is coercive then hold",
+        "why": "Prism Destinations: the decision tree's path to hold"
+      },
+      {
+        "id": "REQ-006",
+        "when": [
+          {
+            "field": "target",
+            "op": "is",
+            "value": "owner"
+          },
+          {
+            "field": "pace",
+            "op": "is",
+            "value": "quiet"
+          },
+          {
+            "field": "urgency",
+            "op": "is",
+            "value": "normal"
+          }
+        ],
+        "then": "hold",
+        "says": "when target is owner and pace is quiet and urgency is normal then hold",
+        "why": "Prism Destinations: the decision tree's path to hold"
+      },
+      {
+        "id": "REQ-007",
+        "when": [
+          {
+            "field": "target",
+            "op": "is",
+            "value": "owner"
+          },
+          {
+            "field": "pace",
+            "op": "is",
+            "value": "quiet"
+          }
+        ],
+        "then": "show",
+        "says": "when target is owner and pace is quiet then show",
+        "why": "Prism Destinations: the decision tree's path to show"
+      },
+      {
+        "id": "REQ-008",
+        "when": [
+          {
+            "field": "target",
+            "op": "is",
+            "value": "owner"
+          }
+        ],
+        "then": "show",
+        "says": "when target is owner then show",
+        "why": "Prism Destinations: the decision tree's path to show"
+      },
+      {
+        "id": "REQ-009",
+        "when": [
+          {
+            "field": "verdict",
+            "op": "is",
+            "value": "hashonly"
+          }
+        ],
+        "then": "refuse",
+        "says": "when verdict is hashonly then refuse",
+        "why": "Prism Destinations: the decision tree's path to refuse"
+      },
+      {
+        "id": "REQ-010",
+        "when": [
+          {
+            "field": "tone",
+            "op": "is",
+            "value": "coercive"
+          }
+        ],
+        "then": "draft",
+        "says": "when tone is coercive then draft",
+        "why": "Prism Destinations: the decision tree's path to draft"
+      },
+      {
+        "id": "REQ-011",
+        "when": [
+          {
+            "field": "act",
+            "op": "is",
+            "value": "none"
+          }
+        ],
+        "then": "draft",
+        "says": "when act is none then draft",
+        "why": "Prism Destinations: the decision tree's path to draft"
+      },
+      {
+        "id": "REQ-012",
+        "when": [
+          {
+            "field": "wording",
+            "op": "is",
+            "value": "changed"
+          }
+        ],
+        "then": "draft",
+        "says": "when wording is changed then draft",
+        "why": "Prism Destinations: the decision tree's path to draft"
+      }
+    ],
+    "otherwise": "deliver",
+    "otherwiseWhy": "Prism Destinations: the decision tree's path that meets no test",
+    "properties": [
+      {
+        "id": "INV-001",
+        "kind": "always",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "yes"
+          }
+        ],
+        "then": "refuse",
+        "says": "always when halted is yes then refuse",
+        "why": "the kill switch stops every route, in and out (constitution P7)"
+      },
+      {
+        "id": "INV-002",
+        "kind": "always",
+        "when": [
+          {
+            "field": "target",
+            "op": "is",
+            "value": "other"
+          }
+        ],
+        "then": "refuse",
+        "says": "always when target is other then refuse",
+        "why": "the Prism routes only to destinations it models"
+      },
+      {
+        "id": "INV-003",
+        "kind": "always",
+        "when": [
+          {
+            "field": "cause",
+            "op": "is",
+            "value": "orphan"
+          }
+        ],
+        "then": "refuse",
+        "says": "always when cause is orphan then refuse",
+        "why": "nothing arises without a cause: every routed item traces to a source or to the owner (Pratityasamutpada, no acausal phenomena)"
+      },
+      {
+        "id": "INV-004",
+        "kind": "always",
+        "when": [
+          {
+            "field": "verdict",
+            "op": "is",
+            "value": "deny"
+          }
+        ],
+        "then": "refuse",
+        "says": "always when verdict is deny then refuse",
+        "why": "the Boundary's deny is final for every destination"
+      },
+      {
+        "id": "INV-005",
+        "kind": "never",
+        "when": [
+          {
+            "field": "act",
+            "op": "is",
+            "value": "none"
+          }
+        ],
+        "then": "deliver",
+        "says": "never when act is none then deliver",
+        "why": "nothing leaves without the owner's own act: the Prism prepares, the owner decides (Ahimsa, no coercion of the owner)"
+      },
+      {
+        "id": "INV-006",
+        "kind": "never",
+        "when": [
+          {
+            "field": "wording",
+            "op": "is",
+            "value": "changed"
+          }
+        ],
+        "then": "deliver",
+        "says": "never when wording is changed then deliver",
+        "why": "what goes out is exactly what the owner saw (Satya, zero drift between what is shown and what is sent)"
+      },
+      {
+        "id": "INV-007",
+        "kind": "never",
+        "when": [
+          {
+            "field": "tone",
+            "op": "is",
+            "value": "coercive"
+          }
+        ],
+        "then": "deliver",
+        "says": "never when tone is coercive then deliver",
+        "why": "coercive words never leave the Prism for another person (Ahimsa; Lokasangraha, the welfare of correspondents)"
+      },
+      {
+        "id": "INV-008",
+        "kind": "never",
+        "when": [
+          {
+            "field": "tone",
+            "op": "is",
+            "value": "coercive"
+          }
+        ],
+        "then": "show",
+        "says": "never when tone is coercive then show",
+        "why": "coercive content is never pushed into the owner's view: it waits, quietly, to be looked at (Humane: zero dark patterns)"
+      },
+      {
+        "id": "INV-009",
+        "kind": "never",
+        "when": [
+          {
+            "field": "verdict",
+            "op": "is",
+            "value": "hashonly"
+          }
+        ],
+        "then": "deliver",
+        "says": "never when verdict is hashonly then deliver",
+        "why": "restricted content never leaves the browser, even with the owner's act (Aparigraha)"
+      },
+      {
+        "id": "INV-010",
+        "kind": "never",
+        "when": [
+          {
+            "field": "verdict",
+            "op": "is",
+            "value": "hashonly"
+          }
+        ],
+        "then": "draft",
+        "says": "never when verdict is hashonly then draft",
+        "why": "restricted content never leaves the browser, even with the owner's act (Aparigraha)"
+      },
+      {
+        "id": "INV-011",
+        "kind": "never",
+        "when": [
+          {
+            "field": "target",
+            "op": "is",
+            "value": "owner"
+          }
+        ],
+        "then": "deliver",
+        "says": "never when target is owner then deliver",
+        "why": "the owner is reached only by being shown or by a quiet hold, never by an outbound act"
+      },
+      {
+        "id": "INV-012",
+        "kind": "never",
+        "when": [
+          {
+            "field": "target",
+            "op": "is",
+            "value": "owner"
+          }
+        ],
+        "then": "draft",
+        "says": "never when target is owner then draft",
+        "why": "the owner is reached only by being shown or by a quiet hold, never by an outbound act"
+      },
+      {
+        "id": "INV-013",
+        "kind": "never",
+        "when": [
+          {
+            "field": "pace",
+            "op": "is",
+            "value": "quiet"
+          },
+          {
+            "field": "urgency",
+            "op": "is",
+            "value": "normal"
+          }
+        ],
+        "then": "show",
+        "says": "never when pace is quiet and urgency is normal then show",
+        "why": "the owner's quiet is kept: only what they marked urgent breaks it (Turiya, the silent witness)"
+      }
+    ],
+    "examples": [
+      {
+        "request": "owner allow grounded none seen calm open normal no",
+        "response": "show"
+      },
+      {
+        "request": "owner allow grounded none seen calm quiet normal no",
+        "response": "hold"
+      },
+      {
+        "request": "owner allow grounded none seen calm quiet urgent no",
+        "response": "show"
+      },
+      {
+        "request": "owner ask grounded none seen coercive open urgent no",
+        "response": "hold"
+      },
+      {
+        "request": "mail ask grounded none seen calm open normal no",
+        "response": "draft"
+      },
+      {
+        "request": "mail ask grounded owner seen calm open normal no",
+        "response": "deliver"
+      },
+      {
+        "request": "mail ask grounded owner changed calm open normal no",
+        "response": "draft"
+      },
+      {
+        "request": "mail allow grounded owner seen coercive open normal no",
+        "response": "draft"
+      },
+      {
+        "request": "calendar allow grounded owner seen calm quiet normal no",
+        "response": "deliver"
+      },
+      {
+        "request": "platform hashonly grounded owner seen calm open normal no",
+        "response": "refuse"
+      },
+      {
+        "request": "calendar allow orphan owner seen calm open normal no",
+        "response": "refuse"
+      },
+      {
+        "request": "mail deny grounded owner seen calm open normal no",
+        "response": "refuse"
+      },
+      {
+        "request": "other allow grounded owner seen calm open normal no",
+        "response": "refuse"
+      },
+      {
+        "request": "mail allow grounded owner seen calm open normal yes",
+        "response": "refuse"
+      },
+      {
+        "request": "mail allow grounded owner seen calm open normal",
+        "response": "invalid"
+      },
+      {
+        "request": "Mail allow grounded owner seen calm open normal no",
+        "response": "invalid"
+      }
+    ]
+  }
+}

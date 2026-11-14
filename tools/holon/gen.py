@@ -6,11 +6,11 @@
   app/specs/curate/spec.json -> keyword "curate": whether one candidate replaces what a facet runs
 
 Outputs, all generated, never hand-edited:
-  app/src/PrismCurate.lex.tex, app/src/PrismCurateProofs.lex.tex
-  app/src/PrismHolon.lex.tex, app/src/PrismHolonProofs.lex.tex, only while
-                         the holon is not in app/prompts/set.json: the Prism's
-                         builder (tools/prompts/gen.py) writes a listed facet's
-                         Lean with its full model
+  app/src/PrismHolon.lex.tex, app/src/PrismHolonProofs.lex.tex,
+  app/src/PrismCurate.lex.tex, app/src/PrismCurateProofs.lex.tex, each only
+                         while its facet is not in app/prompts/set.json: the
+                         Prism's builder (tools/prompts/gen.py) writes a listed
+                         facet's Lean with its full model
   site/holon/table.mjs   both trees in JavaScript, the holon's facets (directive,
                          objective, KPI and floor of each) and the curator's
                          Rule-30 register, objectives and claim form

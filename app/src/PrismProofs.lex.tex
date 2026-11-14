@@ -101,7 +101,7 @@ theorem{
 theorem{
   name: routesDest,
   parameters: [rest : Bytes],
-  statement: ((Prism::route (Prism::facetDest) rest) = (PrismDest::destDispatch rest)),
+  statement: ((Prism::route (Prism::facetDest) rest) = (PrismDest::prismDestDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }
@@ -149,7 +149,7 @@ theorem{
 theorem{
   name: routesUorc,
   parameters: [rest : Bytes],
-  statement: ((Prism::route (Prism::facetUorc) rest) = (PrismUorc::uorcDispatch rest)),
+  statement: ((Prism::route (Prism::facetUorc) rest) = (PrismUorc::prismUorcDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }
@@ -165,7 +165,7 @@ theorem{
 theorem{
   name: routesCurate,
   parameters: [rest : Bytes],
-  statement: ((Prism::route (Prism::facetCurate) rest) = (PrismCurate::curateDispatch rest)),
+  statement: ((Prism::route (Prism::facetCurate) rest) = (PrismCurate::prismCurateDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }
@@ -173,7 +173,7 @@ theorem{
 theorem{
   name: routesResonance,
   parameters: [rest : Bytes],
-  statement: ((Prism::route (Prism::facetResonance) rest) = (PrismResonance::resonanceDispatch rest)),
+  statement: ((Prism::route (Prism::facetResonance) rest) = (PrismResonance::prismResonanceDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }
@@ -181,7 +181,7 @@ theorem{
 theorem{
   name: routesRouter,
   parameters: [rest : Bytes],
-  statement: ((Prism::route (Prism::facetRouter) rest) = (PrismRouter::routerDispatch rest)),
+  statement: ((Prism::route (Prism::facetRouter) rest) = (PrismRouter::prismRouterDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }

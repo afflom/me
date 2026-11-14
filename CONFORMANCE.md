@@ -125,6 +125,49 @@ model does not sanction.
 | `PB-06` | `build` | The app never answers allow when destination is outbound and approval is none |
 | `PB-07` | `build` | The app never answers allow when identifier is yes and destination is not browser |
 
+## prism_curate
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PC-01` | `build` | The app always answers refuse when halted is yes |
+| `PC-02` | `build` | The app always answers refuse when tunable is no |
+| `PC-03` | `build` | The app always answers refuse when label is other |
+| `PC-04` | `build` | The app never answers adopt when defect is some |
+| `PC-05` | `build` | The app never answers recall when defect is some |
+| `PC-06` | `build` | The app never answers adopt when evidence is self |
+| `PC-07` | `build` | The app never answers recall when evidence is self |
+| `PC-08` | `build` | The app never answers adopt when floor is regressed |
+| `PC-09` | `build` | The app never answers recall when floor is regressed |
+| `PC-10` | `build` | The app never answers adopt when move is explore and dominance is equal |
+| `PC-11` | `build` | The app never answers recall when move is explore and dominance is equal |
+| `PC-12` | `build` | The app never answers adopt when move is explore and dominance is dominated |
+| `PC-13` | `build` | The app never answers recall when move is explore and dominance is dominated |
+| `PC-14` | `build` | The app never answers adopt when move is explore and dominance is incomparable |
+| `PC-15` | `build` | The app never answers recall when move is explore and dominance is incomparable |
+| `PC-16` | `build` | The app never answers adopt when move is reconcile and eased is no |
+| `PC-17` | `build` | The app never answers recall when move is reconcile and eased is no |
+| `PC-18` | `build` | The app never answers adopt when claim is known |
+| `PC-19` | `build` | The app never answers recall when claim is new |
+| `PC-20` | `build` | The app never answers refuse when halted is no and tunable is yes and label is admit |
+
+## prism_dest
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PDE-01` | `build` | The app always answers refuse when halted is yes |
+| `PDE-02` | `build` | The app always answers refuse when target is other |
+| `PDE-03` | `build` | The app always answers refuse when cause is orphan |
+| `PDE-04` | `build` | The app always answers refuse when verdict is deny |
+| `PDE-05` | `build` | The app never answers deliver when act is none |
+| `PDE-06` | `build` | The app never answers deliver when wording is changed |
+| `PDE-07` | `build` | The app never answers deliver when tone is coercive |
+| `PDE-08` | `build` | The app never answers show when tone is coercive |
+| `PDE-09` | `build` | The app never answers deliver when verdict is hashonly |
+| `PDE-10` | `build` | The app never answers draft when verdict is hashonly |
+| `PDE-11` | `build` | The app never answers deliver when target is owner |
+| `PDE-12` | `build` | The app never answers draft when target is owner |
+| `PDE-13` | `build` | The app never answers show when pace is quiet and urgency is normal |
+
 ## prism_folder
 
 | ID | Level | Statement |
@@ -235,6 +278,47 @@ model does not sanction.
 | `PR-06` | `build` | The app never answers answer when mode is not routed and route is not none |
 | `PR-07` | `build` | The app never answers answer when boundary is not allow |
 
+## prism_resonance
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PRE-01` | `build` | The app always answers rest when halted is yes |
+| `PRE-02` | `build` | The app always answers recede when halted is no and gesture is dismiss |
+| `PRE-03` | `build` | The app always answers rest when gesture is still |
+| `PRE-04` | `build` | The app never answers chime when attention is quiet |
+| `PRE-05` | `build` | The app never answers bloom when attention is quiet |
+| `PRE-06` | `build` | The app never answers chorus when attention is quiet |
+| `PRE-07` | `build` | The app never answers bloom when belief is rejected |
+| `PRE-08` | `build` | The app never answers chorus when belief is rejected |
+| `PRE-09` | `build` | The app never answers bloom when pace is hurried |
+| `PRE-10` | `build` | The app never answers chorus when pace is hurried |
+| `PRE-11` | `build` | The app never answers chorus when belief is inferred |
+| `PRE-12` | `build` | The app never answers bloom when salience is far and gesture is dwell |
+| `PRE-13` | `build` | The app never answers chorus when salience is far and gesture is dwell |
+| `PRE-14` | `build` | The app never answers bloom when gesture is open |
+| `PRE-15` | `build` | The app never answers chorus when gesture is open |
+| `PRE-16` | `build` | The app never answers chime when phase is night and gesture is open |
+
+## prism_router
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PRO-01` | `build` | The app always answers refuse when halted is yes |
+| `PRO-02` | `build` | The app always answers refuse when halted is no and provider is mismatch |
+| `PRO-03` | `build` | The app never answers map when provider is absent |
+| `PRO-04` | `build` | The app always answers map when halted is no and provider is compiled and value is text |
+| `PRO-05` | `build` | The app always answers map when halted is no and provider is compiled and value is subject |
+| `PRO-06` | `build` | The app never answers map when value is start |
+| `PRO-07` | `build` | The app never answers map when value is party |
+| `PRO-08` | `build` | The app always answers direct when halted is no and provider is absent and source is calendar and value is start and feature is time |
+| `PRO-09` | `build` | The app never answers direct when source is note and value is start |
+| `PRO-10` | `build` | The app always answers map when halted is no and provider is compiled and value is shape and feature is kind |
+| `PRO-11` | `build` | The app never answers map when value is shape and feature is topic |
+| `PRO-12` | `build` | The app never answers direct when value is shape and feature is topic |
+| `PRO-13` | `build` | The app never answers map when value is shape and feature is party |
+| `PRO-14` | `build` | The app never answers direct when value is shape and feature is party |
+| `PRO-15` | `build` | The app always answers map when halted is no and provider is compiled and value is text and feature is topic |
+
 ## prism_source
 
 | ID | Level | Statement |
@@ -245,6 +329,25 @@ model does not sanction.
 | `PS-04` | `build` | The app never answers read when service is whatsapp and route is own |
 | `PS-05` | `build` | The app never answers read when service is discord and route is own |
 | `PS-06` | `build` | The app never answers read when service is linkedin and route is own |
+
+## prism_uorc
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PU-01` | `build` | The app always answers refuse when halted is yes |
+| `PU-02` | `build` | The app always answers refuse when seal is broken |
+| `PU-03` | `build` | The app always answers refuse when format is other |
+| `PU-04` | `build` | The app always answers refuse when scope is other |
+| `PU-05` | `build` | The app always answers refuse when objects is many |
+| `PU-06` | `build` | The app always answers refuse when restore is differs |
+| `PU-07` | `build` | The app always answers refuse when restore is failed |
+| `PU-08` | `build` | The app always answers refuse when kappa is other |
+| `PU-09` | `build` | The app never answers open when act is keep |
+| `PU-10` | `build` | The app never answers keep when act is open |
+| `PU-11` | `build` | The app always answers keep when act is keep and halted is no and seal is ok and format is known and scope is standard and objects is one and restore is same and kappa is admit |
+| `PU-12` | `build` | The app always answers open when act is open and halted is no and seal is ok and format is known and scope is standard and objects is one and restore is same and kappa is admit |
+| `PU-13` | `build` | The app always answers keep when act is keep and halted is no and seal is ok and format is known and scope is self and objects is one and restore is same and kappa is admit |
+| `PU-14` | `build` | The app always answers open when act is open and halted is no and seal is ok and format is known and scope is self and objects is one and restore is same and kappa is admit |
 
 ## prism_vault_restore
 

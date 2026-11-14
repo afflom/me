@@ -1,8 +1,9 @@
 //! The `resonance` suite: one test per scenario in `features/suites/resonance.feature`.
 //!
 //! The Lean kernel proves the guarantees when `just vv` runs `prismpm verify`
-//! on `app/`. These tests hold the claims fixed (ten guarantees, each on
-//! exactly `[Quot.sound, propext]`), check the spec still writes the module
+//! on `app/`. These tests hold the claims fixed (ten guarantees, which the
+//! builder states as sixteen properties, each on
+//! exactly `[Quot.sound, propext]`), check the spec still writes the table
 //! (`tools/facet/gen.py --check`), run the compiled guest over every request
 //! and the learning loop in Node (`site/resonance/resonance.test.mjs`), and
 //! check that the page answers gestures only through the root guest.
@@ -40,23 +41,21 @@ fn run(program: &str, args: &[&str]) {
 #[test]
 fn resonance_rs_01() {
     let text = read("app/src/PrismResonanceProofs.lex.tex");
-    for i in 1..=10 {
-        let name = format!("resonanceInv{i:03}Holds");
+    for i in 1..=16 {
+        let name = format!("inv{i:03}Holds");
         let start = text
             .find(&format!("  name: {name},\n"))
             .unwrap_or_else(|| panic!("{name} is missing"));
         let body = &text[start..start + text[start..].find("\n}\n").expect("closed")];
         assert!(
-            body.contains("parameters: [request : PrismResonance::ResonanceRequest],")
-                && body.contains(&format!(
-                    "statement: ((resonanceBreaksInv{i:03} request) = false),"
-                ))
+            body.contains("parameters: [request : PrismResonance::PrismResonanceRequest],")
+                && body.contains(&format!("statement: ((breaksInv{i:03} request) = false),"))
                 && body.contains("axioms: [Quot.sound, propext]"),
             "{name} changed its statement or its axioms:\n{body}"
         );
     }
     assert!(
-        !text.contains("resonanceInv011Holds"),
+        !text.contains("  name: inv017Holds,\n"),
         "more guarantees than the scenario names"
     );
     assert!(
@@ -70,7 +69,7 @@ fn resonance_rs_01() {
         "PrismResonance and its proofs are lexlean entrypoints"
     );
     assert!(
-        read("app/src/Prism.lex.tex").contains("(PrismResonance::resonanceDispatch rest)"),
+        read("app/src/Prism.lex.tex").contains("(PrismResonance::prismResonanceDispatch rest)"),
         "RS-01: the Prism root routes resonance to PrismResonance"
     );
     run(

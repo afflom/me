@@ -198,7 +198,7 @@ export function validateSpec(input) {
 
   const fields = spec.fields ?? [];
   if (!Array.isArray(fields) || fields.length === 0) refuse('Name at least one field.', 'fields');
-  if (fields.length > 8) refuse('A request has at most eight fields.', 'fields');
+  if (fields.length > 16) refuse('A request has at most sixteen fields.', 'fields');
   const seen = new Set();
   for (const f of fields) {
     if (!WORD.test(f.name ?? '')) refuse(`Field name \`${f.name}\` must be a lower-case word.`, 'fields');

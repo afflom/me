@@ -25,8 +25,8 @@ Feature: holon
     Given the PrismCurate guest built from app/src/PrismCurate.lex.tex, refused unless its SHA-256 is the pinned one
     When every one of its 2048 requests is decided
     Then each answer is the generated mirror's answer and keeps all thirteen guarantees
-    And the Prism root routes "curate <request>" to PrismCurate::curateDispatch
-    And Lean proves the thirteen guarantees with exactly the axioms Quot.sound and propext
+    And the Prism root routes "curate <request>" to PrismCurate::prismCurateDispatch
+    And Lean proves the thirteen guarantees, as twenty properties, with exactly the axioms Quot.sound and propext
 
   @HL-03 @build
   Scenario: The observer runs in the owner's browser on the resonance engine's signals: it measures every facet's KPI from the owner's own gestures, advances the 64-cell Rule-30 register (the spec's vectors), replays each candidate on the window, carries one line to each facet through the root guest, obeys no answer it does not expect, keeps its state (parameters, register, claim labels, no content) in this browser, and hands only adopted parameters to the engine

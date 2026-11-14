@@ -3,7 +3,7 @@
 //! The Lean kernel proves the guarantees when `just vv` runs `prismpm verify`
 //! on `app/`. These tests hold the claims fixed (nine holon guarantees, which
 //! the builder states as twelve properties, and thirteen
-//! curate guarantees, each on exactly `[Quot.sound, propext]`), keep the
+//! curate guarantees, which it states as twenty, each on exactly `[Quot.sound, propext]`), keep the
 //! generated files equal to their specs, and run the compiled guests and the
 //! observer in Node (`site/holon/holon.test.mjs`).
 
@@ -128,7 +128,8 @@ fn holon_hl_01() {
 /// `HL-02`: A candidate replaces what runs only as the proved PrismCurate answers
 #[test]
 fn holon_hl_02() {
-    guarantees("curate", "curate", "PrismCurate", "CurateRequest", 13);
+    // The builder states the thirteen guarantees as twenty properties, one per answer a guarantee never gives.
+    guarantees("", "prismCurate", "PrismCurate", "PrismCurateRequest", 20);
     let spec = read("app/specs/curate/spec.json");
     assert!(
         [

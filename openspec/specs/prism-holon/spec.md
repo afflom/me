@@ -163,9 +163,9 @@ Verified: tested by the acceptance vectors (`rule1`).
 - **WHEN** the request is `yes held owner yes some missed` (an acceptance example)
 - **THEN** the answer SHALL be `refuse`, decided by REQ-001
 
-### Requirement: REQ-002 restore when halted is not yes and floor is regressed
+### Requirement: REQ-002 restore when floor is regressed
 
-The app SHALL answer `restore` when halted is not yes and floor is regressed and no earlier rule matches, because Prism Holon: the decision tree's path to restore.
+The app SHALL answer `restore` when floor is regressed and no earlier rule matches, because Prism Holon: the decision tree's path to restore.
 
 Verified: tested by the acceptance vectors (`rule2`).
 
@@ -174,9 +174,9 @@ Verified: tested by the acceptance vectors (`rule2`).
 - **WHEN** the request is `no regressed owner yes none met` (an acceptance example)
 - **THEN** the answer SHALL be `restore`, decided by REQ-002
 
-### Requirement: REQ-003 hold when halted is not yes and floor is not regressed and signal is self
+### Requirement: REQ-003 hold when signal is self
 
-The app SHALL answer `hold` when halted is not yes and floor is not regressed and signal is self and no earlier rule matches, because Prism Holon: the decision tree's path to hold.
+The app SHALL answer `hold` when signal is self and no earlier rule matches, because Prism Holon: the decision tree's path to hold.
 
 Verified: tested by the acceptance vectors (`rule3`).
 
@@ -185,9 +185,9 @@ Verified: tested by the acceptance vectors (`rule3`).
 - **WHEN** the request is `no held self yes high missed` (an acceptance example)
 - **THEN** the answer SHALL be `hold`, decided by REQ-003
 
-### Requirement: REQ-004 hold when halted is not yes and floor is not regressed and signal is not self and tunable is no
+### Requirement: REQ-004 hold when tunable is no
 
-The app SHALL answer `hold` when halted is not yes and floor is not regressed and signal is not self and tunable is no and no earlier rule matches, because Prism Holon: the decision tree's path to hold.
+The app SHALL answer `hold` when tunable is no and no earlier rule matches, because Prism Holon: the decision tree's path to hold.
 
 Verified: tested by the acceptance vectors (`rule4`).
 
@@ -196,9 +196,9 @@ Verified: tested by the acceptance vectors (`rule4`).
 - **WHEN** the request is `no held owner no high missed` (an acceptance example)
 - **THEN** the answer SHALL be `hold`, decided by REQ-004
 
-### Requirement: REQ-005 reconcile when halted is not yes and floor is not regressed and signal is not self and tunable is not no and dissonance is high
+### Requirement: REQ-005 reconcile when dissonance is high
 
-The app SHALL answer `reconcile` when halted is not yes and floor is not regressed and signal is not self and tunable is not no and dissonance is high and no earlier rule matches, because Prism Holon: the decision tree's path to reconcile.
+The app SHALL answer `reconcile` when dissonance is high and no earlier rule matches, because Prism Holon: the decision tree's path to reconcile.
 
 Verified: tested by the acceptance vectors (`rule5`).
 
@@ -207,9 +207,9 @@ Verified: tested by the acceptance vectors (`rule5`).
 - **WHEN** the request is `no held owner yes high met` (an acceptance example)
 - **THEN** the answer SHALL be `reconcile`, decided by REQ-005
 
-### Requirement: REQ-006 curate when halted is not yes and floor is not regressed and signal is not self and tunable is not no and dissonance is not high and kpi is missed
+### Requirement: REQ-006 curate when kpi is missed
 
-The app SHALL answer `curate` when halted is not yes and floor is not regressed and signal is not self and tunable is not no and dissonance is not high and kpi is missed and no earlier rule matches, because Prism Holon: the decision tree's path to curate.
+The app SHALL answer `curate` when kpi is missed and no earlier rule matches, because Prism Holon: the decision tree's path to curate.
 
 Verified: tested by the acceptance vectors (`rule6`).
 
@@ -218,9 +218,9 @@ Verified: tested by the acceptance vectors (`rule6`).
 - **WHEN** the request is `no held owner yes none missed` (an acceptance example)
 - **THEN** the answer SHALL be `curate`, decided by REQ-006
 
-### Requirement: REQ-007 curate when halted is not yes and floor is not regressed and signal is not self and tunable is not no and dissonance is not high and kpi is not missed and dissonance is some
+### Requirement: REQ-007 curate when dissonance is some
 
-The app SHALL answer `curate` when halted is not yes and floor is not regressed and signal is not self and tunable is not no and dissonance is not high and kpi is not missed and dissonance is some and no earlier rule matches, because Prism Holon: the decision tree's path to curate.
+The app SHALL answer `curate` when dissonance is some and no earlier rule matches, because Prism Holon: the decision tree's path to curate.
 
 Verified: tested by the acceptance vectors (`rule7`).
 
@@ -239,6 +239,17 @@ Verified: tested by the acceptance vectors.
 
 - **WHEN** the request is `no held owner yes none met` (an acceptance example)
 - **THEN** the answer SHALL be `hold`
+
+### Requirement: The first matching rule decides
+
+The app SHALL try REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007 in that order, and the first rule that matches SHALL decide.
+
+Verified: tested by the acceptance vectors.
+
+#### Scenario: Two rules match
+
+- **WHEN** the request is `no held owner yes high missed` (an acceptance example)
+- **THEN** the answer SHALL be `reconcile`, decided by REQ-005, the earlier rule
 
 ### Requirement: Request and answers
 

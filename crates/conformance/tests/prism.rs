@@ -87,17 +87,17 @@ fn prism_pm_01() {
         ("Route", "PrismRoute", "routeDispatch"),
         ("Google", "PrismGoogle", "prismGoogleDispatch"),
         ("Googlelink", "PrismGoogleLink", "prismGoogleLinkDispatch"),
-        ("Dest", "PrismDest", "destDispatch"),
+        ("Dest", "PrismDest", "prismDestDispatch"),
         ("Folder", "PrismFolder", "prismFolderDispatch"),
         ("Host", "PrismHost", "prismHostDispatch"),
         ("Source", "PrismSource", "prismSourceDispatch"),
         ("Model", "PrismModels", "prismModelsDispatch"),
         ("Kappa", "PrismKappa", "kappaDispatch"),
-        ("Uorc", "PrismUorc", "uorcDispatch"),
+        ("Uorc", "PrismUorc", "prismUorcDispatch"),
         ("Holon", "PrismHolon", "prismHolonDispatch"),
-        ("Curate", "PrismCurate", "curateDispatch"),
-        ("Resonance", "PrismResonance", "resonanceDispatch"),
-        ("Router", "PrismRouter", "routerDispatch"),
+        ("Curate", "PrismCurate", "prismCurateDispatch"),
+        ("Resonance", "PrismResonance", "prismResonanceDispatch"),
+        ("Router", "PrismRouter", "prismRouterDispatch"),
     ] {
         let theorem = declaration(&proofs, &format!("routes{facet}"));
         assert!(

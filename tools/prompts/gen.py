@@ -45,7 +45,10 @@ def from_tree(spec):
     tree over choice fields, its guarantees and its examples as pairs. Read as
     the builder's decision table: every root-to-leaf path in then-first order is
     one first-match rule, the path that fails every test is `otherwise`, each
-    guarantee is an always or never property, and every field is a choice."""
+    guarantee is an always or never property, and every field is a choice.
+    A path keeps only its `is` tests: the rules before it already answer every
+    request that passed one of its `is not` tests, so the table stays small enough
+    for the builder's proofs."""
     rules, rest = [], []
 
     def walk(node, path):
@@ -53,7 +56,9 @@ def from_tree(spec):
             if all(c["op"] == "is not" for c in path):
                 rest.append(node)
             else:
-                rules.append((path, node))
+                # First-match drops every `is not`: every leaf under the `then` it
+                # negates is an earlier rule, so a request that took that `then` met one.
+                rules.append(([c for c in path if c["op"] == "is"], node))
             return
         field, value = node["if"]
         walk(node["then"], path + [condition(field, value, True)])

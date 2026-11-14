@@ -96,94 +96,44 @@
         "id": "REQ-002",
         "when": [
           {
-            "field": "halted",
-            "op": "is not",
-            "value": "yes"
-          },
-          {
             "field": "floor",
             "op": "is",
             "value": "regressed"
           }
         ],
         "then": "restore",
-        "says": "when halted is not yes and floor is regressed then restore",
+        "says": "when floor is regressed then restore",
         "why": "Prism Holon: the decision tree's path to restore"
       },
       {
         "id": "REQ-003",
         "when": [
           {
-            "field": "halted",
-            "op": "is not",
-            "value": "yes"
-          },
-          {
-            "field": "floor",
-            "op": "is not",
-            "value": "regressed"
-          },
-          {
             "field": "signal",
             "op": "is",
             "value": "self"
           }
         ],
         "then": "hold",
-        "says": "when halted is not yes and floor is not regressed and signal is self then hold",
+        "says": "when signal is self then hold",
         "why": "Prism Holon: the decision tree's path to hold"
       },
       {
         "id": "REQ-004",
         "when": [
           {
-            "field": "halted",
-            "op": "is not",
-            "value": "yes"
-          },
-          {
-            "field": "floor",
-            "op": "is not",
-            "value": "regressed"
-          },
-          {
-            "field": "signal",
-            "op": "is not",
-            "value": "self"
-          },
-          {
             "field": "tunable",
             "op": "is",
             "value": "no"
           }
         ],
         "then": "hold",
-        "says": "when halted is not yes and floor is not regressed and signal is not self and tunable is no then hold",
+        "says": "when tunable is no then hold",
         "why": "Prism Holon: the decision tree's path to hold"
       },
       {
         "id": "REQ-005",
         "when": [
-          {
-            "field": "halted",
-            "op": "is not",
-            "value": "yes"
-          },
-          {
-            "field": "floor",
-            "op": "is not",
-            "value": "regressed"
-          },
-          {
-            "field": "signal",
-            "op": "is not",
-            "value": "self"
-          },
-          {
-            "field": "tunable",
-            "op": "is not",
-            "value": "no"
-          },
           {
             "field": "dissonance",
             "op": "is",
@@ -191,37 +141,12 @@
           }
         ],
         "then": "reconcile",
-        "says": "when halted is not yes and floor is not regressed and signal is not self and tunable is not no and dissonance is high then reconcile",
+        "says": "when dissonance is high then reconcile",
         "why": "Prism Holon: the decision tree's path to reconcile"
       },
       {
         "id": "REQ-006",
         "when": [
-          {
-            "field": "halted",
-            "op": "is not",
-            "value": "yes"
-          },
-          {
-            "field": "floor",
-            "op": "is not",
-            "value": "regressed"
-          },
-          {
-            "field": "signal",
-            "op": "is not",
-            "value": "self"
-          },
-          {
-            "field": "tunable",
-            "op": "is not",
-            "value": "no"
-          },
-          {
-            "field": "dissonance",
-            "op": "is not",
-            "value": "high"
-          },
           {
             "field": "kpi",
             "op": "is",
@@ -229,42 +154,12 @@
           }
         ],
         "then": "curate",
-        "says": "when halted is not yes and floor is not regressed and signal is not self and tunable is not no and dissonance is not high and kpi is missed then curate",
+        "says": "when kpi is missed then curate",
         "why": "Prism Holon: the decision tree's path to curate"
       },
       {
         "id": "REQ-007",
         "when": [
-          {
-            "field": "halted",
-            "op": "is not",
-            "value": "yes"
-          },
-          {
-            "field": "floor",
-            "op": "is not",
-            "value": "regressed"
-          },
-          {
-            "field": "signal",
-            "op": "is not",
-            "value": "self"
-          },
-          {
-            "field": "tunable",
-            "op": "is not",
-            "value": "no"
-          },
-          {
-            "field": "dissonance",
-            "op": "is not",
-            "value": "high"
-          },
-          {
-            "field": "kpi",
-            "op": "is not",
-            "value": "missed"
-          },
           {
             "field": "dissonance",
             "op": "is",
@@ -272,7 +167,7 @@
           }
         ],
         "then": "curate",
-        "says": "when halted is not yes and floor is not regressed and signal is not self and tunable is not no and dissonance is not high and kpi is not missed and dissonance is some then curate",
+        "says": "when dissonance is some then curate",
         "why": "Prism Holon: the decision tree's path to curate"
       }
     ],

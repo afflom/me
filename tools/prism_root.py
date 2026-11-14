@@ -31,17 +31,17 @@ FACETS = [
     ("route", "PrismRoute", "routeDispatch"),
     ("google", "PrismGoogle", "prismGoogleDispatch"),
     ("googlelink", "PrismGoogleLink", "prismGoogleLinkDispatch"),
-    ("dest", "PrismDest", "destDispatch"),
+    ("dest", "PrismDest", "prismDestDispatch"),
     ("folder", "PrismFolder", "prismFolderDispatch"),
     ("host", "PrismHost", "prismHostDispatch"),
     ("source", "PrismSource", "prismSourceDispatch"),
     ("model", "PrismModels", "prismModelsDispatch"),
     ("kappa", "PrismKappa", "kappaDispatch"),
-    ("uorc", "PrismUorc", "uorcDispatch"),
+    ("uorc", "PrismUorc", "prismUorcDispatch"),
     ("holon", "PrismHolon", "prismHolonDispatch"),
-    ("curate", "PrismCurate", "curateDispatch"),
-    ("resonance", "PrismResonance", "resonanceDispatch"),
-    ("router", "PrismRouter", "routerDispatch"),
+    ("curate", "PrismCurate", "prismCurateDispatch"),
+    ("resonance", "PrismResonance", "prismResonanceDispatch"),
+    ("router", "PrismRouter", "prismRouterDispatch"),
 ]
 REQ_MAX, RESP_MAX, ALLOC = 1107, 16384, 2214
 h = lambda s: "0x" + (s if isinstance(s, bytes) else s.encode()).hex()

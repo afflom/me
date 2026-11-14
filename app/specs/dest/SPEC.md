@@ -5,8 +5,9 @@ Boundary and the vault). `PrismDest` routes it out: to the owner, who is the
 first destination and the Prism's stakeholder, and to the places the owner
 acts in. One request decides where one item may go next.
 
-`spec.json` is the single source. `python3 -I tools/dest/gen.py` writes
-`app/src/PrismDest.lex.tex`, `app/src/PrismDestProofs.lex.tex` and the
+`spec.json` is the single source. The Prism's builder
+(`python3 -I tools/prompts/gen.py`) writes `app/src/PrismDest.lex.tex` and
+`app/src/PrismDestProofs.lex.tex`; `python3 -I tools/dest/gen.py` writes the
 JavaScript mirror `site/dest/table.mjs`; then `lexlean fmt && lexlean lock`
 in `app/`. `python3 -I tools/dest/standalone.py DIR` writes a scratch project
 that builds the standalone guest `site/dest/guest/dest.wasm`.
@@ -49,8 +50,10 @@ the conservatory. Those modules are not imported: their descriptors carry
 
 ## Guarantees
 
-Each is a theorem `destInvNNNHolds` in `PrismDestProofs`, proved by
-`linear_arithmetic` over every request with exactly `[Quot.sound, propext]`.
+Each is a theorem `invNNNHolds` in `PrismDestProofs` about `prismDestJudge`
+(written by the Prism's builder), proved by `linear_arithmetic` over every
+request with exactly `[Quot.sound, propext]`, as thirteen properties: a
+guarantee that names several answers it never gives is one property per answer.
 
 1. Halted: always `refuse`.
 2. Target other: always `refuse`.

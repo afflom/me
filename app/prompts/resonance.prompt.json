@@ -1,0 +1,614 @@
+{
+  "schema": "prism/prompt/1",
+  "goal": "Decides how the Prism answers one gesture of the owner toward one thing it holds: it rests, it whispers, it chimes once, it blooms (the thing comes forward), it gathers a chorus (what belongs with it ",
+  "pattern": "decisionTable",
+  "repository": "afflom/me",
+  "app": {
+    "name": "prism-resonance",
+    "title": "Prism Resonance",
+    "purpose": "Decides how the Prism answers one gesture of the owner toward one thing it holds: it rests, it whispers, it chimes once, it blooms (the thing comes forward), it gathers a chorus (what belongs with it comes forward too), or it recedes. Stillness is answered with stillness, a dismissal is honored at once, a hurried owner is never met with more, the owner's quiet is kept, and nothing the owner rejected is ever brought forward.",
+    "fields": [
+      {
+        "name": "gesture",
+        "kind": "choice",
+        "values": [
+          "open",
+          "dwell",
+          "keep",
+          "dismiss",
+          "still"
+        ],
+        "means": "what the owner did: opened the thing, stayed with it, kept it (a note or a pin), dismissed it, or came to rest"
+      },
+      {
+        "name": "pace",
+        "kind": "choice",
+        "values": [
+          "still",
+          "calm",
+          "hurried"
+        ],
+        "means": "the owner's cadence over their last gestures: at rest, calm, or hurried"
+      },
+      {
+        "name": "salience",
+        "kind": "choice",
+        "values": [
+          "near",
+          "far"
+        ],
+        "means": "whether the thing belongs to the owner's now and today (near) or not (far)"
+      },
+      {
+        "name": "phase",
+        "kind": "choice",
+        "values": [
+          "dawn",
+          "day",
+          "dusk",
+          "night"
+        ],
+        "means": "the owner's local time of day"
+      },
+      {
+        "name": "belief",
+        "kind": "choice",
+        "values": [
+          "inferred",
+          "consolidated",
+          "confirmed",
+          "rejected"
+        ],
+        "means": "the Learning state of the belief that ties the thing to the owner"
+      },
+      {
+        "name": "attention",
+        "kind": "choice",
+        "values": [
+          "open",
+          "quiet"
+        ],
+        "means": "the owner's attention setting: open, or quiet (rest, focus, sleep)"
+      },
+      {
+        "name": "halted",
+        "kind": "choice",
+        "values": [
+          "no",
+          "yes"
+        ],
+        "means": "whether the owner pressed the kill switch"
+      }
+    ],
+    "outcomes": [
+      "rest",
+      "whisper",
+      "chime",
+      "bloom",
+      "chorus",
+      "recede"
+    ],
+    "meanings": {
+      "rest": "nothing answers",
+      "whisper": "a faint answer, nothing moves",
+      "chime": "one tone, once",
+      "bloom": "the thing comes forward",
+      "chorus": "what belongs with it comes forward too",
+      "recede": "the thing steps back"
+    },
+    "rules": [
+      {
+        "id": "REQ-001",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "yes"
+          }
+        ],
+        "then": "rest",
+        "says": "when halted is yes then rest",
+        "why": "Prism Resonance: the decision tree's path to rest"
+      },
+      {
+        "id": "REQ-002",
+        "when": [
+          {
+            "field": "gesture",
+            "op": "is",
+            "value": "dismiss"
+          }
+        ],
+        "then": "recede",
+        "says": "when gesture is dismiss then recede",
+        "why": "Prism Resonance: the decision tree's path to recede"
+      },
+      {
+        "id": "REQ-003",
+        "when": [
+          {
+            "field": "gesture",
+            "op": "is",
+            "value": "still"
+          }
+        ],
+        "then": "rest",
+        "says": "when gesture is still then rest",
+        "why": "Prism Resonance: the decision tree's path to rest"
+      },
+      {
+        "id": "REQ-004",
+        "when": [
+          {
+            "field": "attention",
+            "op": "is",
+            "value": "quiet"
+          }
+        ],
+        "then": "whisper",
+        "says": "when attention is quiet then whisper",
+        "why": "Prism Resonance: the decision tree's path to whisper"
+      },
+      {
+        "id": "REQ-005",
+        "when": [
+          {
+            "field": "belief",
+            "op": "is",
+            "value": "rejected"
+          }
+        ],
+        "then": "whisper",
+        "says": "when belief is rejected then whisper",
+        "why": "Prism Resonance: the decision tree's path to whisper"
+      },
+      {
+        "id": "REQ-006",
+        "when": [
+          {
+            "field": "pace",
+            "op": "is",
+            "value": "hurried"
+          },
+          {
+            "field": "gesture",
+            "op": "is",
+            "value": "keep"
+          }
+        ],
+        "then": "chime",
+        "says": "when pace is hurried and gesture is keep then chime",
+        "why": "Prism Resonance: the decision tree's path to chime"
+      },
+      {
+        "id": "REQ-007",
+        "when": [
+          {
+            "field": "pace",
+            "op": "is",
+            "value": "hurried"
+          }
+        ],
+        "then": "whisper",
+        "says": "when pace is hurried then whisper",
+        "why": "Prism Resonance: the decision tree's path to whisper"
+      },
+      {
+        "id": "REQ-008",
+        "when": [
+          {
+            "field": "gesture",
+            "op": "is",
+            "value": "keep"
+          },
+          {
+            "field": "belief",
+            "op": "is",
+            "value": "inferred"
+          }
+        ],
+        "then": "bloom",
+        "says": "when gesture is keep and belief is inferred then bloom",
+        "why": "Prism Resonance: the decision tree's path to bloom"
+      },
+      {
+        "id": "REQ-009",
+        "when": [
+          {
+            "field": "gesture",
+            "op": "is",
+            "value": "keep"
+          }
+        ],
+        "then": "chorus",
+        "says": "when gesture is keep then chorus",
+        "why": "Prism Resonance: the decision tree's path to chorus"
+      },
+      {
+        "id": "REQ-010",
+        "when": [
+          {
+            "field": "salience",
+            "op": "is",
+            "value": "far"
+          },
+          {
+            "field": "phase",
+            "op": "is",
+            "value": "night"
+          }
+        ],
+        "then": "whisper",
+        "says": "when salience is far and phase is night then whisper",
+        "why": "Prism Resonance: the decision tree's path to whisper"
+      },
+      {
+        "id": "REQ-011",
+        "when": [
+          {
+            "field": "salience",
+            "op": "is",
+            "value": "far"
+          }
+        ],
+        "then": "chime",
+        "says": "when salience is far then chime",
+        "why": "Prism Resonance: the decision tree's path to chime"
+      },
+      {
+        "id": "REQ-012",
+        "when": [
+          {
+            "field": "gesture",
+            "op": "is",
+            "value": "open"
+          },
+          {
+            "field": "phase",
+            "op": "is",
+            "value": "night"
+          }
+        ],
+        "then": "whisper",
+        "says": "when gesture is open and phase is night then whisper",
+        "why": "Prism Resonance: the decision tree's path to whisper"
+      },
+      {
+        "id": "REQ-013",
+        "when": [
+          {
+            "field": "gesture",
+            "op": "is",
+            "value": "open"
+          }
+        ],
+        "then": "chime",
+        "says": "when gesture is open then chime",
+        "why": "Prism Resonance: the decision tree's path to chime"
+      },
+      {
+        "id": "REQ-014",
+        "when": [
+          {
+            "field": "belief",
+            "op": "is",
+            "value": "inferred"
+          }
+        ],
+        "then": "bloom",
+        "says": "when belief is inferred then bloom",
+        "why": "Prism Resonance: the decision tree's path to bloom"
+      }
+    ],
+    "otherwise": "chorus",
+    "otherwiseWhy": "Prism Resonance: the decision tree's path that meets no test",
+    "properties": [
+      {
+        "id": "INV-001",
+        "kind": "always",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "yes"
+          }
+        ],
+        "then": "rest",
+        "says": "always when halted is yes then rest",
+        "why": "the kill switch stills every answer"
+      },
+      {
+        "id": "INV-002",
+        "kind": "always",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "no"
+          },
+          {
+            "field": "gesture",
+            "op": "is",
+            "value": "dismiss"
+          }
+        ],
+        "then": "recede",
+        "says": "always when halted is no and gesture is dismiss then recede",
+        "why": "a dismissal is honored at once and teaches the Prism (Ahimsa: the owner is never pressed)"
+      },
+      {
+        "id": "INV-003",
+        "kind": "always",
+        "when": [
+          {
+            "field": "gesture",
+            "op": "is",
+            "value": "still"
+          }
+        ],
+        "then": "rest",
+        "says": "always when gesture is still then rest",
+        "why": "stillness is answered with stillness (Turiya, the silent witness)"
+      },
+      {
+        "id": "INV-004",
+        "kind": "never",
+        "when": [
+          {
+            "field": "attention",
+            "op": "is",
+            "value": "quiet"
+          }
+        ],
+        "then": "chime",
+        "says": "never when attention is quiet then chime",
+        "why": "the owner's quiet is kept: nothing sounds or comes forward"
+      },
+      {
+        "id": "INV-005",
+        "kind": "never",
+        "when": [
+          {
+            "field": "attention",
+            "op": "is",
+            "value": "quiet"
+          }
+        ],
+        "then": "bloom",
+        "says": "never when attention is quiet then bloom",
+        "why": "the owner's quiet is kept: nothing sounds or comes forward"
+      },
+      {
+        "id": "INV-006",
+        "kind": "never",
+        "when": [
+          {
+            "field": "attention",
+            "op": "is",
+            "value": "quiet"
+          }
+        ],
+        "then": "chorus",
+        "says": "never when attention is quiet then chorus",
+        "why": "the owner's quiet is kept: nothing sounds or comes forward"
+      },
+      {
+        "id": "INV-007",
+        "kind": "never",
+        "when": [
+          {
+            "field": "belief",
+            "op": "is",
+            "value": "rejected"
+          }
+        ],
+        "then": "bloom",
+        "says": "never when belief is rejected then bloom",
+        "why": "what the owner rejected is never brought forward again"
+      },
+      {
+        "id": "INV-008",
+        "kind": "never",
+        "when": [
+          {
+            "field": "belief",
+            "op": "is",
+            "value": "rejected"
+          }
+        ],
+        "then": "chorus",
+        "says": "never when belief is rejected then chorus",
+        "why": "what the owner rejected is never brought forward again"
+      },
+      {
+        "id": "INV-009",
+        "kind": "never",
+        "when": [
+          {
+            "field": "pace",
+            "op": "is",
+            "value": "hurried"
+          }
+        ],
+        "then": "bloom",
+        "says": "never when pace is hurried then bloom",
+        "why": "a hurried owner is never met with more (Humane restorative pacing)"
+      },
+      {
+        "id": "INV-010",
+        "kind": "never",
+        "when": [
+          {
+            "field": "pace",
+            "op": "is",
+            "value": "hurried"
+          }
+        ],
+        "then": "chorus",
+        "says": "never when pace is hurried then chorus",
+        "why": "a hurried owner is never met with more (Humane restorative pacing)"
+      },
+      {
+        "id": "INV-011",
+        "kind": "never",
+        "when": [
+          {
+            "field": "belief",
+            "op": "is",
+            "value": "inferred"
+          }
+        ],
+        "then": "chorus",
+        "says": "never when belief is inferred then chorus",
+        "why": "only a belief that evidence consolidated or the owner confirmed gathers what belongs with it"
+      },
+      {
+        "id": "INV-012",
+        "kind": "never",
+        "when": [
+          {
+            "field": "salience",
+            "op": "is",
+            "value": "far"
+          },
+          {
+            "field": "gesture",
+            "op": "is",
+            "value": "dwell"
+          }
+        ],
+        "then": "bloom",
+        "says": "never when salience is far and gesture is dwell then bloom",
+        "why": "staying with a thing far from the owner's now does not bring it forward; keeping it does"
+      },
+      {
+        "id": "INV-013",
+        "kind": "never",
+        "when": [
+          {
+            "field": "salience",
+            "op": "is",
+            "value": "far"
+          },
+          {
+            "field": "gesture",
+            "op": "is",
+            "value": "dwell"
+          }
+        ],
+        "then": "chorus",
+        "says": "never when salience is far and gesture is dwell then chorus",
+        "why": "staying with a thing far from the owner's now does not bring it forward; keeping it does"
+      },
+      {
+        "id": "INV-014",
+        "kind": "never",
+        "when": [
+          {
+            "field": "gesture",
+            "op": "is",
+            "value": "open"
+          }
+        ],
+        "then": "bloom",
+        "says": "never when gesture is open then bloom",
+        "why": "a glance is not consent: only staying with a thing or keeping it brings it forward"
+      },
+      {
+        "id": "INV-015",
+        "kind": "never",
+        "when": [
+          {
+            "field": "gesture",
+            "op": "is",
+            "value": "open"
+          }
+        ],
+        "then": "chorus",
+        "says": "never when gesture is open then chorus",
+        "why": "a glance is not consent: only staying with a thing or keeping it brings it forward"
+      },
+      {
+        "id": "INV-016",
+        "kind": "never",
+        "when": [
+          {
+            "field": "phase",
+            "op": "is",
+            "value": "night"
+          },
+          {
+            "field": "gesture",
+            "op": "is",
+            "value": "open"
+          }
+        ],
+        "then": "chime",
+        "says": "never when phase is night and gesture is open then chime",
+        "why": "the night is kept soft: a glance at night is answered by a whisper"
+      }
+    ],
+    "examples": [
+      {
+        "request": "dwell calm near day consolidated open no",
+        "response": "chorus"
+      },
+      {
+        "request": "dwell calm near day inferred open no",
+        "response": "bloom"
+      },
+      {
+        "request": "open calm near day inferred open no",
+        "response": "chime"
+      },
+      {
+        "request": "open calm near night inferred open no",
+        "response": "whisper"
+      },
+      {
+        "request": "keep hurried near day confirmed open no",
+        "response": "chime"
+      },
+      {
+        "request": "dwell hurried near day confirmed open no",
+        "response": "whisper"
+      },
+      {
+        "request": "keep calm far dusk inferred open no",
+        "response": "bloom"
+      },
+      {
+        "request": "dwell calm far night consolidated open no",
+        "response": "whisper"
+      },
+      {
+        "request": "dwell calm near day confirmed quiet no",
+        "response": "whisper"
+      },
+      {
+        "request": "dwell calm near day rejected open no",
+        "response": "whisper"
+      },
+      {
+        "request": "dismiss calm near day confirmed open no",
+        "response": "recede"
+      },
+      {
+        "request": "still still near day confirmed open no",
+        "response": "rest"
+      },
+      {
+        "request": "dwell calm near day confirmed open yes",
+        "response": "rest"
+      },
+      {
+        "request": "dwell calm near day confirmed open",
+        "response": "invalid"
+      },
+      {
+        "request": "Dwell calm near day confirmed open no",
+        "response": "invalid"
+      }
+    ]
+  }
+}

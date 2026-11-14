@@ -6,64 +6,64 @@
 \importmodule{Foundation.View.Text.V1.Model}
 \title{Text application model}
 \begin{semanticmodule}
-definition{name: destTargetOwner, parameters: [], result: Nat, body: 0}
+definition{name: prismDestTargetOwner, parameters: [], result: Nat, body: 0}
 
-definition{name: destTargetCalendar, parameters: [], result: Nat, body: 1}
+definition{name: prismDestTargetCalendar, parameters: [], result: Nat, body: 1}
 
-definition{name: destTargetMail, parameters: [], result: Nat, body: 2}
+definition{name: prismDestTargetMail, parameters: [], result: Nat, body: 2}
 
-definition{name: destTargetPlatform, parameters: [], result: Nat, body: 3}
+definition{name: prismDestTargetPlatform, parameters: [], result: Nat, body: 3}
 
-definition{name: destTargetOther, parameters: [], result: Nat, body: 4}
+definition{name: prismDestTargetOther, parameters: [], result: Nat, body: 4}
 
-definition{name: destVerdictAllow, parameters: [], result: Nat, body: 0}
+definition{name: prismDestVerdictAllow, parameters: [], result: Nat, body: 0}
 
-definition{name: destVerdictAsk, parameters: [], result: Nat, body: 1}
+definition{name: prismDestVerdictAsk, parameters: [], result: Nat, body: 1}
 
-definition{name: destVerdictHashonly, parameters: [], result: Nat, body: 2}
+definition{name: prismDestVerdictHashonly, parameters: [], result: Nat, body: 2}
 
-definition{name: destVerdictDeny, parameters: [], result: Nat, body: 3}
+definition{name: prismDestVerdictDeny, parameters: [], result: Nat, body: 3}
 
-definition{name: destCauseGrounded, parameters: [], result: Nat, body: 0}
+definition{name: prismDestCauseGrounded, parameters: [], result: Nat, body: 0}
 
-definition{name: destCauseOrphan, parameters: [], result: Nat, body: 1}
+definition{name: prismDestCauseOrphan, parameters: [], result: Nat, body: 1}
 
-definition{name: destActNone, parameters: [], result: Nat, body: 0}
+definition{name: prismDestActNone, parameters: [], result: Nat, body: 0}
 
-definition{name: destActOwner, parameters: [], result: Nat, body: 1}
+definition{name: prismDestActOwner, parameters: [], result: Nat, body: 1}
 
-definition{name: destWordingSeen, parameters: [], result: Nat, body: 0}
+definition{name: prismDestWordingSeen, parameters: [], result: Nat, body: 0}
 
-definition{name: destWordingChanged, parameters: [], result: Nat, body: 1}
+definition{name: prismDestWordingChanged, parameters: [], result: Nat, body: 1}
 
-definition{name: destToneCalm, parameters: [], result: Nat, body: 0}
+definition{name: prismDestToneCalm, parameters: [], result: Nat, body: 0}
 
-definition{name: destToneCoercive, parameters: [], result: Nat, body: 1}
+definition{name: prismDestToneCoercive, parameters: [], result: Nat, body: 1}
 
-definition{name: destPaceOpen, parameters: [], result: Nat, body: 0}
+definition{name: prismDestPaceOpen, parameters: [], result: Nat, body: 0}
 
-definition{name: destPaceQuiet, parameters: [], result: Nat, body: 1}
+definition{name: prismDestPaceQuiet, parameters: [], result: Nat, body: 1}
 
-definition{name: destUrgencyNormal, parameters: [], result: Nat, body: 0}
+definition{name: prismDestUrgencyNormal, parameters: [], result: Nat, body: 0}
 
-definition{name: destUrgencyUrgent, parameters: [], result: Nat, body: 1}
+definition{name: prismDestUrgencyUrgent, parameters: [], result: Nat, body: 1}
 
-definition{name: destHaltedNo, parameters: [], result: Nat, body: 0}
+definition{name: prismDestHaltedNo, parameters: [], result: Nat, body: 0}
 
-definition{name: destHaltedYes, parameters: [], result: Nat, body: 1}
+definition{name: prismDestHaltedYes, parameters: [], result: Nat, body: 1}
 
-definition{name: destAnswerDeliver, parameters: [], result: Nat, body: 0}
+definition{name: prismDestAnswerDeliver, parameters: [], result: Nat, body: 0}
 
-definition{name: destAnswerDraft, parameters: [], result: Nat, body: 1}
+definition{name: prismDestAnswerDraft, parameters: [], result: Nat, body: 1}
 
-definition{name: destAnswerShow, parameters: [], result: Nat, body: 2}
+definition{name: prismDestAnswerShow, parameters: [], result: Nat, body: 2}
 
-definition{name: destAnswerHold, parameters: [], result: Nat, body: 3}
+definition{name: prismDestAnswerHold, parameters: [], result: Nat, body: 3}
 
-definition{name: destAnswerRefuse, parameters: [], result: Nat, body: 4}
+definition{name: prismDestAnswerRefuse, parameters: [], result: Nat, body: 4}
 
 structure{
-  name: DestRequest,
+  name: PrismDestRequest,
   type_parameters: [],
   parameters: [],
   fields: [
@@ -80,7 +80,7 @@ structure{
 }
 
 definition{
-  name: destByteAt,
+  name: prismDestByteAt,
   parameters: [s : Bytes, i : Nat],
   result: (Option Nat),
   body: (match (prim index s i : (Option UInt8))
@@ -90,7 +90,101 @@ definition{
 }
 
 definition{
-  name: destSliceOf,
+  name: prismDestDigitsValue,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.some [Nat] acc)
+    | Nat.succ rest => (match (prismDestByteAt s i)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (prismDestDigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: prismDestParseDigits,
+  parameters: [s : Bytes],
+  result: (Option Nat),
+  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (prismDestByteAt s 0)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (prismDestDigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismDestParseNumber,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (prismDestParseDigits value),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismDestParseTarget,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6f776e6572 : Bool) then (ctor Option.some [Nat] (prismDestTargetOwner)) else (if (prim equal value 0x63616c656e646172 : Bool) then (ctor Option.some [Nat] (prismDestTargetCalendar)) else (if (prim equal value 0x6d61696c : Bool) then (ctor Option.some [Nat] (prismDestTargetMail)) else (if (prim equal value 0x706c6174666f726d : Bool) then (ctor Option.some [Nat] (prismDestTargetPlatform)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (prismDestTargetOther)) else (ctor Option.none [Nat]))))))
+}
+
+definition{
+  name: prismDestParseVerdict,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x616c6c6f77 : Bool) then (ctor Option.some [Nat] (prismDestVerdictAllow)) else (if (prim equal value 0x61736b : Bool) then (ctor Option.some [Nat] (prismDestVerdictAsk)) else (if (prim equal value 0x686173686f6e6c79 : Bool) then (ctor Option.some [Nat] (prismDestVerdictHashonly)) else (if (prim equal value 0x64656e79 : Bool) then (ctor Option.some [Nat] (prismDestVerdictDeny)) else (ctor Option.none [Nat])))))
+}
+
+definition{
+  name: prismDestParseCause,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x67726f756e646564 : Bool) then (ctor Option.some [Nat] (prismDestCauseGrounded)) else (if (prim equal value 0x6f727068616e : Bool) then (ctor Option.some [Nat] (prismDestCauseOrphan)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismDestParseAct,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f6e65 : Bool) then (ctor Option.some [Nat] (prismDestActNone)) else (if (prim equal value 0x6f776e6572 : Bool) then (ctor Option.some [Nat] (prismDestActOwner)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismDestParseWording,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x7365656e : Bool) then (ctor Option.some [Nat] (prismDestWordingSeen)) else (if (prim equal value 0x6368616e676564 : Bool) then (ctor Option.some [Nat] (prismDestWordingChanged)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismDestParseTone,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x63616c6d : Bool) then (ctor Option.some [Nat] (prismDestToneCalm)) else (if (prim equal value 0x636f657263697665 : Bool) then (ctor Option.some [Nat] (prismDestToneCoercive)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismDestParsePace,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6f70656e : Bool) then (ctor Option.some [Nat] (prismDestPaceOpen)) else (if (prim equal value 0x7175696574 : Bool) then (ctor Option.some [Nat] (prismDestPaceQuiet)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismDestParseUrgency,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f726d616c : Bool) then (ctor Option.some [Nat] (prismDestUrgencyNormal)) else (if (prim equal value 0x757267656e74 : Bool) then (ctor Option.some [Nat] (prismDestUrgencyUrgent)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismDestParseHalted,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (prismDestHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (prismDestHaltedYes)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismDestSliceOf,
   parameters: [s : Bytes, start : Nat, count : Nat],
   result: Bytes,
   body: (match (prim slice s start count : (Option Bytes))
@@ -99,83 +193,20 @@ definition{
 }
 
 definition{
-  name: destFieldEnd,
+  name: prismDestFieldEnd,
   parameters: [s : Bytes, i : Nat, fuel : Nat],
   result: Nat,
   body: (match fuel
     | Nat.zero => i
-    | Nat.succ rest => (match (destByteAt s i)
+    | Nat.succ rest => (match (prismDestByteAt s i)
       | Option.none => i
-      | Option.some d => (if (d =? 32) then i else (destFieldEnd s (i + 1) rest)))),
+      | Option.some d => (if (d =? 32) then i else (prismDestFieldEnd s (i + 1) rest)))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
-  name: destParseTarget,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x6f776e6572 : Bool) then (ctor Option.some [Nat] (destTargetOwner)) else (if (prim equal value 0x63616c656e646172 : Bool) then (ctor Option.some [Nat] (destTargetCalendar)) else (if (prim equal value 0x6d61696c : Bool) then (ctor Option.some [Nat] (destTargetMail)) else (if (prim equal value 0x706c6174666f726d : Bool) then (ctor Option.some [Nat] (destTargetPlatform)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (destTargetOther)) else (ctor Option.none [Nat]))))))
-}
-
-definition{
-  name: destParseVerdict,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x616c6c6f77 : Bool) then (ctor Option.some [Nat] (destVerdictAllow)) else (if (prim equal value 0x61736b : Bool) then (ctor Option.some [Nat] (destVerdictAsk)) else (if (prim equal value 0x686173686f6e6c79 : Bool) then (ctor Option.some [Nat] (destVerdictHashonly)) else (if (prim equal value 0x64656e79 : Bool) then (ctor Option.some [Nat] (destVerdictDeny)) else (ctor Option.none [Nat])))))
-}
-
-definition{
-  name: destParseCause,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x67726f756e646564 : Bool) then (ctor Option.some [Nat] (destCauseGrounded)) else (if (prim equal value 0x6f727068616e : Bool) then (ctor Option.some [Nat] (destCauseOrphan)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: destParseAct,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x6e6f6e65 : Bool) then (ctor Option.some [Nat] (destActNone)) else (if (prim equal value 0x6f776e6572 : Bool) then (ctor Option.some [Nat] (destActOwner)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: destParseWording,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x7365656e : Bool) then (ctor Option.some [Nat] (destWordingSeen)) else (if (prim equal value 0x6368616e676564 : Bool) then (ctor Option.some [Nat] (destWordingChanged)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: destParseTone,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x63616c6d : Bool) then (ctor Option.some [Nat] (destToneCalm)) else (if (prim equal value 0x636f657263697665 : Bool) then (ctor Option.some [Nat] (destToneCoercive)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: destParsePace,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x6f70656e : Bool) then (ctor Option.some [Nat] (destPaceOpen)) else (if (prim equal value 0x7175696574 : Bool) then (ctor Option.some [Nat] (destPaceQuiet)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: destParseUrgency,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x6e6f726d616c : Bool) then (ctor Option.some [Nat] (destUrgencyNormal)) else (if (prim equal value 0x757267656e74 : Bool) then (ctor Option.some [Nat] (destUrgencyUrgent)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: destParseHalted,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (destHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (destHaltedYes)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: destDecodeField9,
+  name: prismDestDecodeField9,
   parameters: [
     s : Bytes,
     start : Nat,
@@ -188,15 +219,15 @@ definition{
     v7 : Nat,
     v8 : Nat
   ],
-  result: (Option DestRequest),
-  body: (let e : Nat := (destFieldEnd s start (Foundation.Bytes::byteLength s)); (match (destParseHalted (destSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [DestRequest])
-    | Option.some v9 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [DestRequest] (record DestRequest {target := v1, verdict := v2, cause := v3, act := v4, wording := v5, tone := v6, pace := v7, urgency := v8, halted := v9})) else (ctor Option.none [DestRequest])))),
+  result: (Option PrismDestRequest),
+  body: (let e : Nat := (prismDestFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismDestParseHalted (prismDestSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismDestRequest])
+    | Option.some v9 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [PrismDestRequest] (record PrismDestRequest {target := v1, verdict := v2, cause := v3, act := v4, wording := v5, tone := v6, pace := v7, urgency := v8, halted := v9})) else (ctor Option.none [PrismDestRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: destDecodeField8,
+  name: prismDestDecodeField8,
   parameters: [
     s : Bytes,
     start : Nat,
@@ -208,104 +239,209 @@ definition{
     v6 : Nat,
     v7 : Nat
   ],
-  result: (Option DestRequest),
-  body: (let e : Nat := (destFieldEnd s start (Foundation.Bytes::byteLength s)); (match (destParseUrgency (destSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [DestRequest])
-    | Option.some v8 => (if (e <? (Foundation.Bytes::byteLength s)) then (destDecodeField9 s (e + 1) v1 v2 v3 v4 v5 v6 v7 v8) else (ctor Option.none [DestRequest])))),
+  result: (Option PrismDestRequest),
+  body: (let e : Nat := (prismDestFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismDestParseUrgency (prismDestSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismDestRequest])
+    | Option.some v8 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismDestDecodeField9 s (e + 1) v1 v2 v3 v4 v5 v6 v7 v8) else (ctor Option.none [PrismDestRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: destDecodeField7,
+  name: prismDestDecodeField7,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat, v6 : Nat],
-  result: (Option DestRequest),
-  body: (let e : Nat := (destFieldEnd s start (Foundation.Bytes::byteLength s)); (match (destParsePace (destSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [DestRequest])
-    | Option.some v7 => (if (e <? (Foundation.Bytes::byteLength s)) then (destDecodeField8 s (e + 1) v1 v2 v3 v4 v5 v6 v7) else (ctor Option.none [DestRequest])))),
+  result: (Option PrismDestRequest),
+  body: (let e : Nat := (prismDestFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismDestParsePace (prismDestSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismDestRequest])
+    | Option.some v7 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismDestDecodeField8 s (e + 1) v1 v2 v3 v4 v5 v6 v7) else (ctor Option.none [PrismDestRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: destDecodeField6,
+  name: prismDestDecodeField6,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat],
-  result: (Option DestRequest),
-  body: (let e : Nat := (destFieldEnd s start (Foundation.Bytes::byteLength s)); (match (destParseTone (destSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [DestRequest])
-    | Option.some v6 => (if (e <? (Foundation.Bytes::byteLength s)) then (destDecodeField7 s (e + 1) v1 v2 v3 v4 v5 v6) else (ctor Option.none [DestRequest])))),
+  result: (Option PrismDestRequest),
+  body: (let e : Nat := (prismDestFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismDestParseTone (prismDestSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismDestRequest])
+    | Option.some v6 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismDestDecodeField7 s (e + 1) v1 v2 v3 v4 v5 v6) else (ctor Option.none [PrismDestRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: destDecodeField5,
+  name: prismDestDecodeField5,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat],
-  result: (Option DestRequest),
-  body: (let e : Nat := (destFieldEnd s start (Foundation.Bytes::byteLength s)); (match (destParseWording (destSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [DestRequest])
-    | Option.some v5 => (if (e <? (Foundation.Bytes::byteLength s)) then (destDecodeField6 s (e + 1) v1 v2 v3 v4 v5) else (ctor Option.none [DestRequest])))),
+  result: (Option PrismDestRequest),
+  body: (let e : Nat := (prismDestFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismDestParseWording (prismDestSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismDestRequest])
+    | Option.some v5 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismDestDecodeField6 s (e + 1) v1 v2 v3 v4 v5) else (ctor Option.none [PrismDestRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: destDecodeField4,
+  name: prismDestDecodeField4,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
-  result: (Option DestRequest),
-  body: (let e : Nat := (destFieldEnd s start (Foundation.Bytes::byteLength s)); (match (destParseAct (destSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [DestRequest])
-    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (destDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [DestRequest])))),
+  result: (Option PrismDestRequest),
+  body: (let e : Nat := (prismDestFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismDestParseAct (prismDestSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismDestRequest])
+    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismDestDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [PrismDestRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: destDecodeField3,
+  name: prismDestDecodeField3,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
-  result: (Option DestRequest),
-  body: (let e : Nat := (destFieldEnd s start (Foundation.Bytes::byteLength s)); (match (destParseCause (destSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [DestRequest])
-    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (destDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [DestRequest])))),
+  result: (Option PrismDestRequest),
+  body: (let e : Nat := (prismDestFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismDestParseCause (prismDestSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismDestRequest])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismDestDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [PrismDestRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: destDecodeField2,
+  name: prismDestDecodeField2,
   parameters: [s : Bytes, start : Nat, v1 : Nat],
-  result: (Option DestRequest),
-  body: (let e : Nat := (destFieldEnd s start (Foundation.Bytes::byteLength s)); (match (destParseVerdict (destSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [DestRequest])
-    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (destDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [DestRequest])))),
+  result: (Option PrismDestRequest),
+  body: (let e : Nat := (prismDestFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismDestParseVerdict (prismDestSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismDestRequest])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismDestDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [PrismDestRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: destDecodeField1,
+  name: prismDestDecodeField1,
   parameters: [s : Bytes, start : Nat],
-  result: (Option DestRequest),
-  body: (let e : Nat := (destFieldEnd s start (Foundation.Bytes::byteLength s)); (match (destParseTarget (destSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [DestRequest])
-    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (destDecodeField2 s (e + 1) v1) else (ctor Option.none [DestRequest])))),
+  result: (Option PrismDestRequest),
+  body: (let e : Nat := (prismDestFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismDestParseTarget (prismDestSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismDestRequest])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismDestDecodeField2 s (e + 1) v1) else (ctor Option.none [PrismDestRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: destJudge,
-  parameters: [request : DestRequest],
-  result: Nat,
-  body: (if ((project request halted) =? (destHaltedYes)) then (destAnswerRefuse) else (if ((project request target) =? (destTargetOther)) then (destAnswerRefuse) else (if ((project request cause) =? (destCauseOrphan)) then (destAnswerRefuse) else (if ((project request verdict) =? (destVerdictDeny)) then (destAnswerRefuse) else (if ((project request target) =? (destTargetOwner)) then (if ((project request tone) =? (destToneCoercive)) then (destAnswerHold) else (if ((project request pace) =? (destPaceQuiet)) then (if ((project request urgency) =? (destUrgencyNormal)) then (destAnswerHold) else (destAnswerShow)) else (destAnswerShow))) else (if ((project request verdict) =? (destVerdictHashonly)) then (destAnswerRefuse) else (if ((project request tone) =? (destToneCoercive)) then (destAnswerDraft) else (if ((project request act) =? (destActNone)) then (destAnswerDraft) else (if ((project request wording) =? (destWordingChanged)) then (destAnswerDraft) else (destAnswerDeliver))))))))))
+  name: prismDestRule1,
+  parameters: [request : PrismDestRequest],
+  result: Bool,
+  body: ((project request halted) =? (prismDestHaltedYes))
 }
 
 definition{
-  name: destEncodeAnswer,
+  name: prismDestRule2,
+  parameters: [request : PrismDestRequest],
+  result: Bool,
+  body: ((project request target) =? (prismDestTargetOther))
+}
+
+definition{
+  name: prismDestRule3,
+  parameters: [request : PrismDestRequest],
+  result: Bool,
+  body: ((project request cause) =? (prismDestCauseOrphan))
+}
+
+definition{
+  name: prismDestRule4,
+  parameters: [request : PrismDestRequest],
+  result: Bool,
+  body: ((project request verdict) =? (prismDestVerdictDeny))
+}
+
+definition{
+  name: prismDestRule5,
+  parameters: [request : PrismDestRequest],
+  result: Bool,
+  body: (((project request target) =? (prismDestTargetOwner)) && ((project request tone) =? (prismDestToneCoercive)))
+}
+
+definition{
+  name: prismDestRule6,
+  parameters: [request : PrismDestRequest],
+  result: Bool,
+  body: ((((project request target) =? (prismDestTargetOwner)) && ((project request pace) =? (prismDestPaceQuiet))) && ((project request urgency) =? (prismDestUrgencyNormal)))
+}
+
+definition{
+  name: prismDestRule7,
+  parameters: [request : PrismDestRequest],
+  result: Bool,
+  body: (((project request target) =? (prismDestTargetOwner)) && ((project request pace) =? (prismDestPaceQuiet)))
+}
+
+definition{
+  name: prismDestRule8,
+  parameters: [request : PrismDestRequest],
+  result: Bool,
+  body: ((project request target) =? (prismDestTargetOwner))
+}
+
+definition{
+  name: prismDestRule9,
+  parameters: [request : PrismDestRequest],
+  result: Bool,
+  body: ((project request verdict) =? (prismDestVerdictHashonly))
+}
+
+definition{
+  name: prismDestRule10,
+  parameters: [request : PrismDestRequest],
+  result: Bool,
+  body: ((project request tone) =? (prismDestToneCoercive))
+}
+
+definition{
+  name: prismDestRule11,
+  parameters: [request : PrismDestRequest],
+  result: Bool,
+  body: ((project request act) =? (prismDestActNone))
+}
+
+definition{
+  name: prismDestRule12,
+  parameters: [request : PrismDestRequest],
+  result: Bool,
+  body: ((project request wording) =? (prismDestWordingChanged))
+}
+
+definition{
+  name: prismDestRule5Misses,
+  parameters: [request : PrismDestRequest],
+  result: Bool,
+  body: ((((project request target) <? (prismDestTargetOwner)) || ((prismDestTargetOwner) <? (project request target))) || (((project request tone) <? (prismDestToneCoercive)) || ((prismDestToneCoercive) <? (project request tone))))
+}
+
+definition{
+  name: prismDestRule6Misses,
+  parameters: [request : PrismDestRequest],
+  result: Bool,
+  body: (((((project request target) <? (prismDestTargetOwner)) || ((prismDestTargetOwner) <? (project request target))) || (((project request pace) <? (prismDestPaceQuiet)) || ((prismDestPaceQuiet) <? (project request pace)))) || (((project request urgency) <? (prismDestUrgencyNormal)) || ((prismDestUrgencyNormal) <? (project request urgency))))
+}
+
+definition{
+  name: prismDestRule7Misses,
+  parameters: [request : PrismDestRequest],
+  result: Bool,
+  body: ((((project request target) <? (prismDestTargetOwner)) || ((prismDestTargetOwner) <? (project request target))) || (((project request pace) <? (prismDestPaceQuiet)) || ((prismDestPaceQuiet) <? (project request pace))))
+}
+
+definition{
+  name: prismDestJudge,
+  parameters: [request : PrismDestRequest],
+  result: Nat,
+  body: (if (prismDestRule1 request) then (prismDestAnswerRefuse) else (if (prismDestRule2 request) then (prismDestAnswerRefuse) else (if (prismDestRule3 request) then (prismDestAnswerRefuse) else (if (prismDestRule4 request) then (prismDestAnswerRefuse) else (if (prismDestRule5Misses request) then (if (prismDestRule6Misses request) then (if (prismDestRule7Misses request) then (if (prismDestRule8 request) then (prismDestAnswerShow) else (if (prismDestRule9 request) then (prismDestAnswerRefuse) else (if (prismDestRule10 request) then (prismDestAnswerDraft) else (if (prismDestRule11 request) then (prismDestAnswerDraft) else (if (prismDestRule12 request) then (prismDestAnswerDraft) else (prismDestAnswerDeliver)))))) else (prismDestAnswerShow)) else (prismDestAnswerHold)) else (prismDestAnswerHold))))))
+}
+
+definition{
+  name: prismDestEncodeAnswer,
   parameters: [code : Nat],
   result: Bytes,
-  body: (if (code =? (destAnswerDeliver)) then 0x64656c69766572 else (if (code =? (destAnswerDraft)) then 0x6472616674 else (if (code =? (destAnswerShow)) then 0x73686f77 else (if (code =? (destAnswerHold)) then 0x686f6c64 else (if (code =? (destAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964)))))
+  body: (if (code =? (prismDestAnswerDeliver)) then 0x64656c69766572 else (if (code =? (prismDestAnswerDraft)) then 0x6472616674 else (if (code =? (prismDestAnswerShow)) then 0x73686f77 else (if (code =? (prismDestAnswerHold)) then 0x686f6c64 else (if (code =? (prismDestAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964)))))
 }
 
 definition{
-  name: destDispatch,
+  name: prismDestDispatch,
   parameters: [value : Bytes],
   result: Bytes,
-  body: (if (66 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (destDecodeField1 value 0)
+  body: (if (232 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (prismDestDecodeField1 value 0)
     | Option.none => 0x696e76616c6964
-    | Option.some request => (destEncodeAnswer (destJudge request)))),
+    | Option.some request => (prismDestEncodeAnswer (prismDestJudge request)))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

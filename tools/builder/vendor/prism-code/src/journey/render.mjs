@@ -26,7 +26,7 @@ const quote = (text) => `"${String(text).replace(/[^\x20-\x7e]/g, '').replace(/[
 
 /** Every identifier the model uses, derived once so the model, the vectors and SPEC.md agree. */
 export function names(spec) {
-  const used = new Set(['Request', 'byteAt', 'digitsValue', 'parseDigits', 'parseNumber', 'sliceOf', 'fieldEnd', 'decodeField1', 'decodeField2', 'decodeField3', 'decodeField4', 'decodeField5', 'decodeField6', 'decodeField7', 'decodeField8', 'judge', 'encodeAnswer', 'dispatch', 'application']);
+  const used = new Set(['Request', 'byteAt', 'digitsValue', 'parseDigits', 'parseNumber', 'sliceOf', 'fieldEnd', 'decodeField1', 'decodeField2', 'decodeField3', 'decodeField4', 'decodeField5', 'decodeField6', 'decodeField7', 'decodeField8', 'decodeField9', 'decodeField10', 'decodeField11', 'decodeField12', 'decodeField13', 'decodeField14', 'decodeField15', 'decodeField16', 'judge', 'encodeAnswer', 'dispatch', 'application']);
   const claim = (base) => {
     let name = base;
     for (let i = 2; used.has(name) || LEAN_RESERVED.has(name); i++) name = `${base}${i}`;

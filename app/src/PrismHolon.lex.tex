@@ -232,91 +232,49 @@ definition{
   name: prismHolonRule2,
   parameters: [request : PrismHolonRequest],
   result: Bool,
-  body: ((not ((project request halted) =? (prismHolonHaltedYes))) && ((project request floor) =? (prismHolonFloorRegressed)))
+  body: ((project request floor) =? (prismHolonFloorRegressed))
 }
 
 definition{
   name: prismHolonRule3,
   parameters: [request : PrismHolonRequest],
   result: Bool,
-  body: (((not ((project request halted) =? (prismHolonHaltedYes))) && (not ((project request floor) =? (prismHolonFloorRegressed)))) && ((project request signal) =? (prismHolonSignalSelf)))
+  body: ((project request signal) =? (prismHolonSignalSelf))
 }
 
 definition{
   name: prismHolonRule4,
   parameters: [request : PrismHolonRequest],
   result: Bool,
-  body: ((((not ((project request halted) =? (prismHolonHaltedYes))) && (not ((project request floor) =? (prismHolonFloorRegressed)))) && (not ((project request signal) =? (prismHolonSignalSelf)))) && ((project request tunable) =? (prismHolonTunableNo)))
+  body: ((project request tunable) =? (prismHolonTunableNo))
 }
 
 definition{
   name: prismHolonRule5,
   parameters: [request : PrismHolonRequest],
   result: Bool,
-  body: (((((not ((project request halted) =? (prismHolonHaltedYes))) && (not ((project request floor) =? (prismHolonFloorRegressed)))) && (not ((project request signal) =? (prismHolonSignalSelf)))) && (not ((project request tunable) =? (prismHolonTunableNo)))) && ((project request dissonance) =? (prismHolonDissonanceHigh)))
+  body: ((project request dissonance) =? (prismHolonDissonanceHigh))
 }
 
 definition{
   name: prismHolonRule6,
   parameters: [request : PrismHolonRequest],
   result: Bool,
-  body: ((((((not ((project request halted) =? (prismHolonHaltedYes))) && (not ((project request floor) =? (prismHolonFloorRegressed)))) && (not ((project request signal) =? (prismHolonSignalSelf)))) && (not ((project request tunable) =? (prismHolonTunableNo)))) && (not ((project request dissonance) =? (prismHolonDissonanceHigh)))) && ((project request kpi) =? (prismHolonKpiMissed)))
+  body: ((project request kpi) =? (prismHolonKpiMissed))
 }
 
 definition{
   name: prismHolonRule7,
   parameters: [request : PrismHolonRequest],
   result: Bool,
-  body: (((((((not ((project request halted) =? (prismHolonHaltedYes))) && (not ((project request floor) =? (prismHolonFloorRegressed)))) && (not ((project request signal) =? (prismHolonSignalSelf)))) && (not ((project request tunable) =? (prismHolonTunableNo)))) && (not ((project request dissonance) =? (prismHolonDissonanceHigh)))) && (not ((project request kpi) =? (prismHolonKpiMissed)))) && ((project request dissonance) =? (prismHolonDissonanceSome)))
-}
-
-definition{
-  name: prismHolonRule2Misses,
-  parameters: [request : PrismHolonRequest],
-  result: Bool,
-  body: (((project request halted) =? (prismHolonHaltedYes)) || (((project request floor) <? (prismHolonFloorRegressed)) || ((prismHolonFloorRegressed) <? (project request floor))))
-}
-
-definition{
-  name: prismHolonRule3Misses,
-  parameters: [request : PrismHolonRequest],
-  result: Bool,
-  body: ((((project request halted) =? (prismHolonHaltedYes)) || ((project request floor) =? (prismHolonFloorRegressed))) || (((project request signal) <? (prismHolonSignalSelf)) || ((prismHolonSignalSelf) <? (project request signal))))
-}
-
-definition{
-  name: prismHolonRule4Misses,
-  parameters: [request : PrismHolonRequest],
-  result: Bool,
-  body: (((((project request halted) =? (prismHolonHaltedYes)) || ((project request floor) =? (prismHolonFloorRegressed))) || ((project request signal) =? (prismHolonSignalSelf))) || (((project request tunable) <? (prismHolonTunableNo)) || ((prismHolonTunableNo) <? (project request tunable))))
-}
-
-definition{
-  name: prismHolonRule5Misses,
-  parameters: [request : PrismHolonRequest],
-  result: Bool,
-  body: ((((((project request halted) =? (prismHolonHaltedYes)) || ((project request floor) =? (prismHolonFloorRegressed))) || ((project request signal) =? (prismHolonSignalSelf))) || ((project request tunable) =? (prismHolonTunableNo))) || (((project request dissonance) <? (prismHolonDissonanceHigh)) || ((prismHolonDissonanceHigh) <? (project request dissonance))))
-}
-
-definition{
-  name: prismHolonRule6Misses,
-  parameters: [request : PrismHolonRequest],
-  result: Bool,
-  body: (((((((project request halted) =? (prismHolonHaltedYes)) || ((project request floor) =? (prismHolonFloorRegressed))) || ((project request signal) =? (prismHolonSignalSelf))) || ((project request tunable) =? (prismHolonTunableNo))) || ((project request dissonance) =? (prismHolonDissonanceHigh))) || (((project request kpi) <? (prismHolonKpiMissed)) || ((prismHolonKpiMissed) <? (project request kpi))))
-}
-
-definition{
-  name: prismHolonRule7Misses,
-  parameters: [request : PrismHolonRequest],
-  result: Bool,
-  body: ((((((((project request halted) =? (prismHolonHaltedYes)) || ((project request floor) =? (prismHolonFloorRegressed))) || ((project request signal) =? (prismHolonSignalSelf))) || ((project request tunable) =? (prismHolonTunableNo))) || ((project request dissonance) =? (prismHolonDissonanceHigh))) || ((project request kpi) =? (prismHolonKpiMissed))) || (((project request dissonance) <? (prismHolonDissonanceSome)) || ((prismHolonDissonanceSome) <? (project request dissonance))))
+  body: ((project request dissonance) =? (prismHolonDissonanceSome))
 }
 
 definition{
   name: prismHolonJudge,
   parameters: [request : PrismHolonRequest],
   result: Nat,
-  body: (if (prismHolonRule1 request) then (prismHolonAnswerRefuse) else (if (prismHolonRule2Misses request) then (if (prismHolonRule3Misses request) then (if (prismHolonRule4Misses request) then (if (prismHolonRule5Misses request) then (if (prismHolonRule6Misses request) then (if (prismHolonRule7Misses request) then (prismHolonAnswerHold) else (prismHolonAnswerCurate)) else (prismHolonAnswerCurate)) else (prismHolonAnswerReconcile)) else (prismHolonAnswerHold)) else (prismHolonAnswerHold)) else (prismHolonAnswerRestore)))
+  body: (if (prismHolonRule1 request) then (prismHolonAnswerRefuse) else (if (prismHolonRule2 request) then (prismHolonAnswerRestore) else (if (prismHolonRule3 request) then (prismHolonAnswerHold) else (if (prismHolonRule4 request) then (prismHolonAnswerHold) else (if (prismHolonRule5 request) then (prismHolonAnswerReconcile) else (if (prismHolonRule6 request) then (prismHolonAnswerCurate) else (if (prismHolonRule7 request) then (prismHolonAnswerCurate) else (prismHolonAnswerHold))))))))
 }
 
 definition{

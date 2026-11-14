@@ -21,8 +21,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 APP = ROOT / "app"
 FACET = sys.argv[1]
 MOD = {"holon": "PrismHolon", "curate": "PrismCurate"}[FACET]
-# The holon is built by the Prism's builder (app/prompts/set.json), which names its definitions after its module.
-DISPATCH = {"holon": "prismHolonDispatch", "curate": "curateDispatch"}[FACET]
+# Both are built by the Prism's builder (app/prompts/set.json), which names their definitions after their module.
+DISPATCH = {"holon": "prismHolonDispatch", "curate": "prismCurateDispatch"}[FACET]
 APPMOD = FACET.capitalize() + "App"
 SPEC = json.loads((APP / f"specs/{FACET}/spec.json").read_text())
 REQ_MAX, RESP_MAX, ALLOC = 128, 16, 256

@@ -59,7 +59,7 @@ const SPEC_INPUT = {
     fields: {
       type: 'array',
       minItems: 1,
-      maxItems: 8,
+      maxItems: 16,
       description: 'One request is these values in order, separated by spaces.',
       items: {
         type: 'object',
