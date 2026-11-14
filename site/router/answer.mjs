@@ -132,7 +132,7 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
 // Events still ahead come first, soonest first; past ones after, latest first.
 function upcoming(a, b, now) {
   const at = (item) => item.start ?? item.at ?? 0;
-  const ahead = (item) => at(item) >= now - 3_600_000;
+  const ahead = (item) => !item.undated && !item.cancelled && at(item) >= now - 3_600_000;
   if (ahead(a) !== ahead(b)) return ahead(a) ? -1 : 1;
   return ahead(a) ? at(a) - at(b) : at(b) - at(a);
 }

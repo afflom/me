@@ -160,7 +160,17 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     // A component ends at the next END of any of the three: RFC 6047's own example closes a VTODO with END:VEVENT.
     const components = [...whole.matchAll(/BEGIN:(?:VEVENT|VTODO|VJOURNAL)[\s\S]*?END:(?:VEVENT|VTODO|VJOURNAL)/g)].map(([component]) => component);
     text = components[0] ?? whole;
-    const first = icsField(text, "DTSTART");
+    // Its time is its own: when it starts, else when it is due (a VTODO), else when the
+    // object was made (DTSTAMP, CREATED, LAST-MODIFIED), never when it arrived here.
+    const timed = icsField(text, "DTSTART");
+    const due = icsField(text, "DUE");
+    const made = ["DTSTAMP", "CREATED", "LAST-MODIFIED"].map((name) => icsField(text, name)).find((t) => !Number.isNaN(t)) ?? NaN;
+    const first = Number.isNaN(timed) ? due : timed;
+    // What it is to the event it names (RFC 5546): its method, identity, revision and instance.
+    const method = calendarField(whole, "METHOD").toUpperCase();
+    const uid = calendarField(text, "UID");
+    const sequence = Number(calendarField(text, "SEQUENCE")) || 0;
+    const recurrence = calendarField(text, "RECURRENCE-ID");
     // A repeating event is shown at its next time, not at the first one years ago.
     const start = reader ? reader.nextTime(calendarField(text, "RRULE"), first) : first;
     const title = calendarField(text, "SUMMARY");
@@ -177,10 +187,9 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     // The object's further events (an iMIP PUBLISH of several) read after it: what, where, and their notes.
     const others = components.slice(1).flatMap((other) => ["SUMMARY", "LOCATION", "DESCRIPTION"].map((name) => calendarField(other.replace(/BEGIN:VALARM[\s\S]*?END:VALARM/g, ""), name)));
     const body = [title, span, calendarField(text, "LOCATION"), [...new Set(people)].slice(0, 12).join(", "), notes, ...comments, ...others].filter(Boolean).join("\n");
-    // Its own count of revisions (RFC 5545 UID and SEQUENCE): the higher SEQUENCE of one UID is the later one.
-    const uid = calendarField(text, "UID");
-    const revision = /^\d+$/.test(calendarField(text, "SEQUENCE")) ? { sequence: Number(calendarField(text, "SEQUENCE")) } : {};
-    return { ...base, ...(uid ? { uid } : {}), ...revision, at: Number.isNaN(start) ? base.at : start, ...(Number.isNaN(end) ? {} : { end }), allDay, title, who: calendarField(text, "LOCATION"), text: whole, body };
+    const at = Number.isNaN(start) ? (Number.isNaN(made) ? base.at : made) : start;
+    return { ...base, at, ...(Number.isNaN(end) ? {} : { end }), allDay, title, who: calendarField(text, "LOCATION"), text: whole, body,
+      ...(Number.isNaN(start) ? { undated: true } : {}), ...(method ? { method } : {}), ...(uid ? { uid, sequence } : {}), ...(recurrence ? { recurrence } : {}) };
   }
   if (base.media === "contactCard") {
     const field = (name) => calendarField(text, name);
@@ -190,13 +199,43 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
   return { ...base, title: first.trim(), who: "", text, body: text.trim() };
 }
 
+// RFC 5546 methods that answer or ask about an event instead of being one.
+const UPDATES = new Set(["REPLY", "CANCEL", "REFRESH", "COUNTER", "DECLINECOUNTER"]);
+// The calendar as the person holds it: each event once, at its latest revision
+// (per instance), with the replies and requests about it folded into it, and a
+// cancellation marking it cancelled. Everything else passes unchanged.
+export function reconcile(items) {
+  const key = (item) => `${item.uid}|${item.recurrence ?? ""}`;
+  const events = new Map();
+  for (const item of items) {
+    if (item.media !== "calendar" || !item.uid || UPDATES.has(item.method)) continue;
+    const have = events.get(key(item));
+    if (!have || item.sequence > have.sequence || (item.sequence === have.sequence && item.at > have.at)) events.set(key(item), item);
+  }
+  const updates = new Map();
+  for (const item of items) {
+    if (item.media !== "calendar" || !UPDATES.has(item.method)) continue;
+    const event = events.get(key(item)) ?? events.get(`${item.uid}|`);
+    if (event) updates.set(event, [...(updates.get(event) ?? []), item]);
+  }
+  const out = [];
+  for (const item of items) {
+    if (item.media !== "calendar" || !item.uid) { if (!UPDATES.has(item.method)) out.push(item); continue; }
+    if (UPDATES.has(item.method) || events.get(key(item)) !== item) continue;
+    const about = updates.get(item) ?? [];
+    // A cancellation of one instance (RECURRENCE-ID) cancels that instance, not the event.
+    const cancelled = about.some((u) => u.method === "CANCEL" && key(u) === key(item) && u.sequence >= item.sequence);
+    out.push(about.length ? { ...item, updates: about, ...(cancelled ? { cancelled } : {}) } : item);
+  }
+  return out;
+}
 
 const short = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" });
 const clock = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
 // Something that happens at a time (an event, or a jot the router gave a time) shows its day and clock.
 const dayClock = new Intl.DateTimeFormat(undefined, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 const dayOnly = new Intl.DateTimeFormat(undefined, { weekday: "short", day: "numeric", month: "short" });
-const scheduled = (item) => (item.start != null || item.media === "calendar") && item.at;
+const scheduled = (item) => (item.start != null || (item.media === "calendar" && !item.undated)) && item.at;
 const whenOfItem = (item) => (scheduled(item) ? (item.allDay ? dayOnly : dayClock).format(new Date(item.at)) : when(item.at));
 const when = (at) => {
   if (!at) return "";
@@ -331,7 +370,7 @@ export default async function start({ app, reason, $ }) {
       read.push(item);
     }
     for (const address of readOnce.keys()) if (!listed.has(address)) readOnce.delete(address);
-    items = read.sort((a, b) => b.at - a.at);
+    items = reconcile(read).sort((a, b) => b.at - a.at);
     // The people in what is kept, for the place that lists them.
     if (selfOf) { inferred = selfOf(items); mineOf = fromMe; }
     // Every item labeled by the readers compiled into the Prism (who it is
@@ -725,7 +764,7 @@ export default async function start({ app, reason, $ }) {
     }
     if (order !== "upcoming") return newest.slice(0, SHOWN).map(rowOf);
     const from = new Date().setHours(0, 0, 0, 0);
-    const ahead = shown.filter((item) => item.at >= from).sort((a, b) => a.at - b.at).slice(0, SHOWN);
+    const ahead = shown.filter((item) => item.at >= from && !item.cancelled).sort((a, b) => a.at - b.at).slice(0, SHOWN);
     const past = newest.filter((item) => item.at < from).slice(0, Math.max(0, SHOWN - ahead.length));
     const heading = (word) => element("li", { className: "pr-section", textContent: WORDS[word] });
     return [...(ahead.length ? [heading("upcoming"), ...ahead.map(rowOf)] : []), ...(past.length ? [heading("earlier"), ...past.map(rowOf)] : [])];
