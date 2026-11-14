@@ -4,7 +4,9 @@ Each source is a published specification, fetched at its pinned SHA-256. Its
 examples are taken out mechanically:
   - "dashes": an example message between two lines of "----" (RFC 5322
     Appendix A);
-  - "vcalendar": every object from BEGIN:VCALENDAR to END:VCALENDAR.
+  - "vcalendar": every object from BEGIN:VCALENDAR to END:VCALENDAR;
+  - "headers": every indented block that opens with a From field and runs to
+    the next line of prose (RFC 6047's example messages).
 An example is kept only if every address in it is at a domain reserved for
 documentation (the spec's "reserved" list, after RFC 2606 and RFC 6761), so no
 real person's address enters the repository.
@@ -121,6 +123,23 @@ def vcalendar(text):
             i += 1
 
 
+def headers(text):
+    lines = text.split("\n")
+    i = 0
+    while i < len(lines):
+        if re.match(r"^ {3,}From: ", lines[i]):
+            j = i
+            while j < len(lines) and (not lines[j].strip() or lines[j].startswith("   ")):
+                j += 1
+            block = lines[i:j]
+            while block and not block[-1].strip():
+                block.pop()
+            yield "\r\n".join(dedent(block)) + "\r\n"
+            i = j
+        else:
+            i += 1
+
+
 ADDRESS = re.compile(r"[A-Za-z0-9._%+!$&*=^`{|}~'-]+@([A-Za-z0-9.-]+)")
 
 
@@ -227,7 +246,7 @@ def read_calendar(raw):
 corpus = []
 for source in SPEC["sources"]:
     text = unpaginate(fetch(source))
-    take = {"dashes": dashes, "vcalendar": vcalendar}[source["examples"]]
+    take = {"dashes": dashes, "vcalendar": vcalendar, "headers": headers}[source["examples"]]
     read = {"message": read_message, "calendar": read_calendar}[source["kind"]]
     n = kept = 0
     for raw in take(text):
