@@ -341,6 +341,12 @@ def read_message(raw):
     ids = lambda field: re.findall(r"<[^<>\s]+>", str(msg[field] or ""))
     if ids("message-id"):
         expect["id"] = ids("message-id")[0]
+    # Its sender's address (RFC 5322 3.6.2 From), by which another source can name them.
+    if msg["from"] is not None:
+        try:
+            expect["from"] = msg["from"].addresses[0].addr_spec.lower()
+        except (IndexError, AttributeError, TypeError):
+            pass
     if ids("in-reply-to"):
         expect["replyTo"] = ids("in-reply-to")
     if ids("references"):
@@ -471,6 +477,7 @@ def read_calendar(raw):
 
     if people:
         expect["parties"] = [cn or address for address, cn in people.values()]
+        expect["addresses"] = [address.lower() for address, cn in people.values()]
     return expect
 
 

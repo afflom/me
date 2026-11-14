@@ -90,3 +90,66 @@ export function relativeOf(at, now = Date.now(), locale = undefined) {
   const [unit, span] = size < PERIODS[5][1] ? PERIODS[4] : size < PERIODS[6][1] ? PERIODS[5] : PERIODS[6];
   return words.format(Math.trunc(gap / span), unit);
 }
+
+// How long a thing stays before the person, from how resolved it is, not from
+// a fixed window (UOR-Framework#2, the thermodynamic lifecycle). Each fiber the
+// content itself pins lowers the thing's context temperature
+// T = free x ln 2 / n, and its weight decays as w = exp(-sum lambda x T x dt)
+// over the spans between pins; lambda is set by the registry's half-life, the
+// time in which a thing nothing has pinned halves. The fibers are what the
+// content shows, never a guess:
+//   - "referenced": a later message replies to it or references it;
+//   - "corroborated": another source the person keeps names its sender (a
+//     contact card, or an event that invites them).
+// What the person answers or clears is done, which is not decay.
+//
+//   const weight = resolver(items, { halfLife, fibers });   weight(item, now) -> 0..1
+const DAY_MS = 86_400_000;
+const senderOf = (item) => /^From:[^\r\n]*?<?([^\s<>"]+@[^\s<>"]+?)>?\s*$/im.exec(item.text ?? "")?.[1]?.toLowerCase() ?? "";
+const addressesOf = (item) => {
+  const text = (item.text ?? "").replace(/\r?\n[ \t]/g, "");
+  if (item.media === "contactCard") return [...text.matchAll(/^(?:[\w-]+\.)?EMAIL[^:\r\n]*:(.+)$/gim)].map(([, v]) => v.trim().replace(/^mailto:/i, "").toLowerCase());
+  if (item.media === "calendar") return [...text.matchAll(/^(?:ORGANIZER|ATTENDEE)[^:\r\n]*:(.+)$/gim)].map(([, v]) => v.trim().replace(/^mailto:/i, "").toLowerCase());
+  return [];
+};
+
+export function resolver(items, { halfLife, fibers }) {
+  const lambda = 1 / (halfLife * DAY_MS);
+  const held = items.filter((item) => !item.sealed);
+  // When each fiber was first pinned, for each identifier and each address.
+  const referenced = new Map();
+  for (const item of held) {
+    if (item.media !== "message") continue;
+    for (const id of new Set([...(item.refs ?? []), ...(item.replyTo ?? [])])) {
+      if (id !== item.id && !(referenced.get(id) <= item.at)) referenced.set(id, item.at);
+    }
+  }
+  const corroborated = new Map();
+  for (const item of held) {
+    for (const address of addressesOf(item)) {
+      const at = item.media === "contactCard" ? -Infinity : item.at;
+      if (!(corroborated.get(address) <= at)) corroborated.set(address, at);
+    }
+  }
+  const pinned = {
+    referenced: (item) => (item.id ? referenced.get(item.id) : undefined),
+    corroborated: (item) => corroborated.get(senderOf(item)),
+  };
+  const n = fibers.length;
+  return (item, now = Date.now()) => {
+    const born = item.at ?? now;
+    // The moments its temperature steps down, in order, from when it came.
+    const steps = fibers.map((f) => pinned[f](item)).filter((at) => at !== undefined).map((at) => Math.max(born, at)).sort((a, b) => a - b);
+    let exposure = 0;
+    let free = n;
+    let from = born;
+    for (const at of steps) {
+      if (at >= now) break;
+      exposure += lambda * ((free * Math.LN2) / n) * (at - from);
+      free -= 1;
+      from = at;
+    }
+    exposure += lambda * ((free * Math.LN2) / n) * Math.max(0, now - from);
+    return Math.exp(-exposure);
+  };
+}
