@@ -64,6 +64,27 @@ function messageShape(raw, head, from) {
   return shapes;
 }
 
+// What the sender says first in their own words: not a greeting, a quote of
+// earlier mail, a signature or a bare link, but their first sentence, at most
+// the sentence provider's "lead" characters. It is what a message asks or tells.
+const QUOTED = [/^On .+wrote:\s*$/, /^-{2,} ?Original Message ?-{2,}/i, /^-- ?$/, /^_{5,}\s*$/];
+const GREETING = /^(hi|hello|hey|dear|good (morning|afternoon|evening))\b[^.!?\n]{0,40}[,!.:]?$/i;
+const SIGNOFF = /^(thanks|thank you|best|cheers|regards|kind regards|best regards|sincerely|sent from my)\b/i;
+export function leadOf(text = "", most = PROVIDERS.sentence.lead) {
+  const own = [];
+  for (const line of text.split(/\r?\n/)) {
+    if (QUOTED.some((r) => r.test(line)) || (/^From: .+/.test(line) && own.length)) break;
+    if (!/^\s*>/.test(line)) own.push(line);
+  }
+  for (const block of own) {
+    const line = block.replace(/\s+/g, " ").trim();
+    if (line.length < 3 || GREETING.test(line) || SIGNOFF.test(line) || /^https?:\/\/\S+$/.test(line)) continue;
+    const sentence = /^(.{12,}?[.!?])(\s|$)/.exec(line)?.[1] ?? line;
+    return sentence.length > most ? `${sentence.slice(0, most - 1).replace(/\s+\S*$/, "")}…` : sentence;
+  }
+  return "";
+}
+
 // The values of one item, by its source's schema.
 export function partsOf(item) {
   const source = SOURCE[item.media] ?? "note";
@@ -78,7 +99,7 @@ export function partsOf(item) {
     const automated = PROVIDERS.kind.automated.some((x) => shape.includes(x));
     const invited = shape.includes("attachment-calendar") ? peopleOfEvent(unfold(raw)) : [];
     const party = invited.length ? invited : [...from, ...to].map((p) => ({ ...p, robot: automated || isRobot(p) }));
-    return { source, values: { subject: item.title ?? "", text: item.body ?? "", party, shape } };
+    return { source, values: { subject: item.title ?? "", text: item.body ?? "", lead: leadOf(item.body ?? ""), party, shape } };
   }
   if (source === "calendar") {
     const text = unfold(raw);

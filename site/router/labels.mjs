@@ -9,7 +9,7 @@
 // reader's lexicon. What is learned stays in this browser, in memory.
 //
 //   const learned = learn(items);
-//   await labelAll(items, { line, halted, learned });  // item.labels = {kind, parties, topics} | null
+//   await labelAll(items, { line, halted, learned });  // item.labels = {kind, parties, topics, lead?} | null
 import { PROVIDERS } from "./table.mjs";
 import { route } from "./router.mjs";
 import { partsOf } from "./parts.mjs";
@@ -63,7 +63,7 @@ export async function labelAll(items, { line, halted, now = Date.now(), learned 
     const topics = r.topics
       .sort((a, b) => (subject.has(b) - subject.has(a)) || ((learned.rarity.get(a) ?? 0) - (learned.rarity.get(b) ?? 0)))
       .slice(0, most);
-    item.labels = { kind: r.kind ?? PROVIDERS.kind.fallback.person, parties: r.parties.filter((p) => !p.robot && !mine(p)).map(({ name, address }) => ({ name, address })), topics };
+    item.labels = { kind: r.kind ?? PROVIDERS.kind.fallback.person, parties: r.parties.filter((p) => !p.robot && !mine(p)).map(({ name, address }) => ({ name, address })), topics, ...(values.lead ? { lead: values.lead } : {}) };
   }
   return items;
 }

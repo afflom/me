@@ -123,6 +123,10 @@ const going = await named("What is going on with Joel?");
 assert.equal(going.sentences.length, 2, "what is going on with someone tells everything that names them: " + going.sentences.join(" "));
 assert.deepEqual(going.offers.map((o) => o.kind), ["reply"], "and offers the reply their message asks for");
 const said = await named("what did Joel say?");
+// A message is told by what its sender says first, and a question keeps its own mark.
+const asking = { ...reply, address: "j2", labels: { kind: "person", parties: [], topics: [], lead: "Can we move the review to 4?" } };
+const told = await answer("what did Joel say?", { items: [asking, review], line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
+assert.match(told.sentences[0], /^Joël Example wrote “Re: Proposal draft for the grant” on .+: Can we move the review to 4\?$/u, told.sentences[0]);
 assert.match(said.sentences[0], /^Joël Example wrote “Re: Proposal draft for the grant” on /u, "what someone said is their mail");
 assert.equal(said.sentences.length, 1, said.sentences.join(" "));
 // Search: a word lists everything that names it, beyond the few the sentences say.

@@ -47,6 +47,9 @@ items.forEach((item, i) => {
   if (JSON.stringify(names) !== JSON.stringify([...expect.parties].sort())) wrong.party.push(`${item.title || item.body.slice(0, 30)}: ${names.join(", ") || "no one"} (a person says ${expect.parties.join(", ") || "no one"})`);
 });
 const share = (bad) => Math.floor((100 * (items.length - bad.length)) / items.length);
+// What each message a person wrote says first, against what a person reads as its first sentence.
+const leads = items.map((item, i) => [item, corpus[i].expect.lead]).filter(([, lead]) => lead);
+const wrongLead = leads.filter(([item, lead]) => item.labels?.lead !== lead).map(([item, lead]) => `${item.title}: ${JSON.stringify(item.labels?.lead)} (a person reads ${JSON.stringify(lead)})`);
 
 // What the content taught the readers.
 const learned = learn(itemsOf());
@@ -57,10 +60,12 @@ const measured = {
   "unlabeled-items": items.filter((item) => !item.labels).length,
   "labeling-ms-per-100": Math.ceil((ms * 100) / many.length),
   "topic-coverage": Math.floor((100 * topicsShown) / items.length),
+  "lead-accuracy": Math.floor((100 * (leads.length - wrongLead.length)) / leads.length),
 };
 console.log(`labels: ${items.length} items; ${JSON.stringify(measured)}; ${learned.people.length} people and ${learned.topics.size} topics learned`);
 if (wrong.kind.length) console.log(`  kind: ${wrong.kind.join("\n        ")}`);
 if (wrong.party.length) console.log(`  party: ${wrong.party.join("\n         ")}`);
+if (wrongLead.length) console.log(`  lead: ${wrongLead.join("\n        ")}`);
 
 // Each measure this file is named the gate of, against its record's own threshold.
 let held = 0;
