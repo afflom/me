@@ -16,7 +16,9 @@ export function today(now = new Date()) {
     "BEGIN:VEVENT", `UID:${uid}@example.org`, `DTSTAMP:${utc(now)}`, `DTSTART:${utc(from)}`, `DTEND:${utc(to)}`, `SUMMARY:${summary}`, `LOCATION:${location}`,
     ...(attendee ? [`ATTENDEE;CN=${attendee.name}:mailto:${attendee.address}`] : []), "END:VEVENT",
   ].join("\r\n");
-  const calendar = (...events) => ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//example//synthetic person//EN", ...events, "END:VCALENDAR", ""].join("\r\n");
+  // As Google's export reads: the calendar's time zone first, with a DTSTART of its own.
+  const zone = ["BEGIN:VTIMEZONE", "TZID:Europe/Lisbon", "BEGIN:STANDARD", "DTSTART:19701025T020000", "TZOFFSETFROM:+0100", "TZOFFSETTO:+0000", "END:STANDARD", "END:VTIMEZONE"].join("\r\n");
+  const calendar = (...events) => ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//example//synthetic person//EN", zone, ...events, "END:VCALENDAR", ""].join("\r\n");
   const mail = (from, subject, body, days) => [
     `From: ${from}`, "To: person@example.org", `Subject: ${subject}`, `Date: ${day(days, 8).toUTCString()}`,
     `Message-ID: <${subject.replace(/\W/g, "").toLowerCase()}@example.org>`, "Content-Type: text/plain; charset=utf-8", "", body, "",
