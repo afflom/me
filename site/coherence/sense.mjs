@@ -51,6 +51,11 @@ export function windowOf(prompt, now = Date.now()) {
 const QUIET = new Set("the and for are but not you your yours with what whats when where which who whom why how does did have has had was were will would can could should may might this that these those there their them they from into onto about over under just than then also any all some its i'm i've me my mine our ours out off get got need needs want wants anything something tell told show find list say said says from".split(" "));
 export const termsOf = (text) => lower(text).match(/[\p{L}\p{N}]+/gu)?.filter((w) => w.length > 2 && !QUIET.has(w) && !INTENTS[w] && !WEEKDAYS.includes(w)) ?? [];
 const meets = (have, term) => have.some((w) => w === term || (term.length > 3 && w.length > 3 && (w.startsWith(term) || term.startsWith(w))));
+// Whether an item names every one of the asked words.
+export const mentions = (item, terms) => {
+  const have = termsOf(`${item.title} ${item.who} ${(item.body ?? item.text ?? "").slice(0, 4000)}`);
+  return terms.length > 0 && terms.every((term) => meets(have, term));
+};
 
 // The kept items an Ask is after, best first: those in its window, those it
 // shares words with, and those in the domains its words name.

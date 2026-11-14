@@ -8,7 +8,7 @@
 import { PROVIDERS } from "./table.mjs";
 import { route } from "./router.mjs";
 import { withoutTime } from "./features.mjs";
-import { drawOn, windowOf, termsOf } from "../coherence/sense.mjs";
+import { drawOn, windowOf, termsOf, mentions } from "../coherence/sense.mjs";
 
 const S = PROVIDERS.sentence;
 const RANK = ["public", "internal", "confidential", "restricted"];
@@ -65,11 +65,12 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
   const ofKind = (item) => (kind === "calendar" ? item.media === "calendar" || item.start != null : item.media === kind && item.start == null);
   const terms = termsOf(text).filter((t) => !Object.values(S.kinds).flat().includes(t));
   const greets = terms.every((t) => S.greet.includes(t) || S.overview.includes(t));
+  // The words that name what is asked about, without the ones that only ask how things stand.
+  const named = terms.filter((t) => !S.overview.includes(t) && !S.greet.includes(t));
   const span = windowOf(text, now);
   let used = drawOn(items, text, { now });
   let lead = [];
-  // A question of how things stand ("what is going on with Robin") is told in several.
-  let many = Boolean(span) || words.some((w) => S.overview.includes(w));
+  let many = Boolean(span);
   if (kind && !span) {
     // Mail and notes newest first; the calendar from what is next.
     const matched = used.filter(ofKind);
@@ -89,14 +90,20 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
     const word = (await line(`boundary ${label} none browser none yes ${halted()}`)).trim();
     if (word !== "allow") return { ...none, mapped, refused: true };
   }
-  // A span, a kind or an overview answers with several; otherwise the best match.
-  const told = many ? used.slice(0, S.most) : used.slice(0, 1);
+  // A span, a kind or an overview answers with several; a name or a topic with
+  // everything that names it; otherwise the best match.
+  const naming = many ? [] : used.filter((item) => mentions(item, named));
+  const told = many ? used.slice(0, S.most) : naming.length > 1 ? naming.slice(0, S.most) : used.slice(0, 1);
   const sentences = [...lead.map((s) => `${s}.`), ...told.map((item) => `${sentenceOf(item, me)}.`)];
+  // Everything held that names the asked words is found: the sentences say
+  // the few, and the list beneath holds those first, then the rest, newest first.
+  const found = named.length ? held.filter((item) => (!kind || ofKind(item)) && mentions(item, named)).sort((a, b) => (b.at ?? 0) - (a.at ?? 0)) : [];
   const offers = told.flatMap((item) => {
     const k = S.offers[item.media === "message" ? "message" : item.media === "plainText" ? "note" : ""];
     return k ? [{ kind: k, item }] : [];
   });
-  return { sentences, sources: used.slice(0, S.most), offers, mapped };
+  const rest = found.filter((item) => !told.includes(item));
+  return { sentences, sources: rest.length ? [...told, ...rest].slice(0, S.find) : used.slice(0, S.most), cited: told, offers, mapped };
 }
 
 // Events still ahead come first, soonest first; past ones after, latest first.

@@ -1175,11 +1175,12 @@ export default async function start({ app, reason, $ }) {
     lastTurn = { node, said: said.sentences.join(" ") };
     const rows = said.sources.map(rowOf);
     drawn.replaceChildren(...rows);
-    const links = said.sources.map((item, i) => {
+    // The sentences link to the items they say; the list beneath holds all that was found.
+    const links = (said.cited ?? said.sources).filter((item) => said.sources.includes(item)).map((item) => {
       const link = element("a", { href: "#", className: "pr-source", textContent: item.title || item.who || "—" });
       link.addEventListener("click", (event) => {
         event.preventDefault();
-        const row = rows[i];
+        const row = rows[said.sources.indexOf(item)];
         if (row.getAttribute("aria-expanded") === "false") row.click();
         row.scrollIntoView({ block: "nearest" });
       });

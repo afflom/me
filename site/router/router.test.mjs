@@ -109,6 +109,31 @@ const calendar = await only("what's on my calendar?");
 assert.match(calendar.sentences[0], /^Flight to Lisbon is on /u, "naming the calendar answers with what is next");
 const notes = await only("what are my notes?");
 assert.equal(notes.sentences[0], "Nothing you hold mentions “notes”.", "a kind with nothing held says so");
+// A name answers with everything that names them; "say" asks about their mail.
+const review = { address: "r", media: "calendar", title: "Grant proposal review", who: "Joël Example, Robin Example", body: "", label: "confidential", at: new Date(2026, 10, 14, 15).getTime(), start: new Date(2026, 10, 14, 15).getTime(), domains: [5] };
+const reply = { address: "j", media: "message", title: "Re: Proposal draft for the grant", who: "Joël Example", body: "I read the draft. Can we move the review to 4?", label: "confidential", at: new Date(2026, 10, 12, 2).getTime(), domains: [4] };
+const named = (text) => answer(text, { items: [review, reply, flight], line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
+const joel = await named("Joel");
+assert.deepEqual(new Set(joel.sources.slice(0, 2)), new Set([review, reply]), "a name without its accent finds the mail and the meeting");
+assert.equal(joel.sentences.length, 2, "and says both: " + joel.sentences.join(" "));
+assert.ok(joel.sentences.some((s) => /^Joël Example wrote “Re: Proposal draft for the grant” on /u.test(s)), joel.sentences.join(" "));
+assert.ok(joel.sentences.some((s) => /^Grant proposal review is on /u.test(s)), joel.sentences.join(" "));
+// Words that only ask how things stand name nothing: both of Joël's items are told, whichever is newer.
+const going = await named("What is going on with Joel?");
+assert.equal(going.sentences.length, 2, "what is going on with someone tells everything that names them: " + going.sentences.join(" "));
+assert.deepEqual(going.offers.map((o) => o.kind), ["reply"], "and offers the reply their message asks for");
+const said = await named("what did Joel say?");
+assert.match(said.sentences[0], /^Joël Example wrote “Re: Proposal draft for the grant” on /u, "what someone said is their mail");
+assert.equal(said.sentences.length, 1, said.sentences.join(" "));
+// Search: a word lists everything that names it, beyond the few the sentences say.
+const many = Array.from({ length: 7 }, (_, i) => ({ address: `g${i}`, media: "message", title: `Garden plan ${i}`, who: "Ana Example", body: "About the garden.", label: "confidential", at: new Date(2026, 10, 1 + i, 9).getTime(), domains: [4] }));
+const garden = await answer("GARDEN", { items: [...many, flight, mail], line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
+// QR-04 "find-missing": items that name the word and are missing from the list.
+const findMissing = many.filter((item) => !garden.sources.includes(item)).length;
+assert.ok(findMissing <= 0, `find-missing: ${findMissing} items that name "garden" are missing from the list`);
+assert.ok(garden.sentences.length <= 3, "while the sentences say only a few");
+assert.ok(garden.cited.every((item) => garden.sources.includes(item)), "and what they say is in the list");
+assert.deepEqual(garden.sources.slice(garden.cited.length).map((i) => i.at), garden.sources.slice(garden.cited.length).map((i) => i.at).sort((a, b) => b - a), "the rest newest first");
 const pausedEmpty = await answer("hello", { items: [], line: boundaryLine, halted: () => "yes", now: WEDNESDAY, keep: false });
 assert.deepEqual(pausedEmpty.sentences, [], "paused, even an empty Prism answers nothing");
 console.log("answer: questions answered in sentences, jots offered to keep");

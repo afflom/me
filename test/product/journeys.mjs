@@ -186,6 +186,29 @@ export const walks = {
     await decision.first().waitFor({ timeout: 10000 }).catch(() => {});
     assert.ok(await decision.count(), "the answer offers no decision");
   },
+  // J14: a word, typed any way, lists everything that names it, beyond the few the answer says.
+  async j14(page) {
+    assert.ok(await arrived(page), "the person's day never arrives");
+    // More things that name the word than the answer says: the mail, and notes the person jots.
+    const jot = app(page).getByRole("textbox").filter({ visible: true }).and(app(page).locator(":not(#pr-prompt)")).first();
+    assert.ok(await jot.count(), "Today has nowhere to jot something down");
+    const notes = ["Garden Example: seeds", "Garden Example: the gate", "Garden Example: water timer"];
+    for (const note of notes) {
+      await jot.fill(note);
+      await jot.press("Enter");
+      await page.waitForTimeout(800);
+    }
+    const ask = app(page).getByRole("textbox", { name: /ask/i }).or(app(page).getByPlaceholder(/ask/i)).first();
+    assert.ok(await ask.count(), "there is nowhere to look for anything");
+    await ask.fill("EXAMPLE");
+    await ask.press("Enter");
+    await page.waitForTimeout(3000);
+    const found = await app(page).getByRole("list", { name: /ask/i }).last().innerText().catch(() => "");
+    // "Café booking" is from Jordan Exámple, in a Gmail-original-shaped mail: the accent is set aside.
+    for (const words of ["Lunch on Thursday?", "Time next week", "Your November statement", "Café booking", ...notes]) {
+      assert.ok(found.includes(words), `looking for "example" does not list "${words}": ${found.slice(0, 400)}`);
+    }
+  },
   // J7: a person's page shows what is open between us.
   async j7(page) {
     assert.ok(await arrived(page), "the person's day never arrives");
@@ -273,8 +296,8 @@ export const walks = {
     await page.waitForTimeout(500);
     assert.equal(await app(page).getByRole("region", { name: new RegExp(`^${W.setup}$`, "i") }).filter({ visible: true }).count(), 0, "the Set up card stays after every step is done");
   },
-  // J14: every place in time order: Messages newest first; Calendar ahead soonest first, then what has passed.
-  async j14(page) {
+  // J15: every place in time order: Messages newest first; Calendar ahead soonest first, then what has passed.
+  async j15(page) {
     assert.ok(await arrived(page), "the person's day never arrives");
     // Headings may be drawn in capitals, so the order is read without case.
     const before = (shown, a, b, where) => {
