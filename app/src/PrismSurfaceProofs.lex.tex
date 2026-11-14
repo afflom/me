@@ -103,6 +103,16 @@ definition{
 }
 
 definition{
+  name: surfacePlacesOrdered,
+  parameters: [places : (List PrismSurface::SurfacePlace)],
+  result: Bool,
+  body: (match places
+    | List.nil => true
+    | List.cons place rest => ((if (((project place viewpoint) =? 0) && ((project place kind) =? 0)) then (not ((project place order) =? 0)) else ((project place order) =? 0)) && (surfacePlacesOrdered rest))),
+  recursive_argument: places
+}
+
+definition{
   name: surfaceActsSound,
   parameters: [places : (List PrismSurface::SurfacePlace)],
   result: Bool,
@@ -443,6 +453,13 @@ theorem{
   name: surfaceSetupIsShortAndWhole,
   parameters: [],
   statement: (((surfaceSetupCovers 0 (PrismSurface::surfaceSections)) && ((1 <=? (surfaceNatCount (PrismSurface::surfaceSetup))) && ((surfaceNatCount (PrismSurface::surfaceSetup)) <=? 3))) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: surfaceEveryListHasItsOrder,
+  parameters: [],
+  statement: ((surfacePlacesOrdered (PrismSurface::surfacePlaces)) = true),
   proof: decide{}
 }
 

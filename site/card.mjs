@@ -280,6 +280,7 @@ export default async function start({ app, reason, $ }) {
     // learned from the person's own content. Under the halt switch, none.
     if (items.length) {
       const { labelAll } = await import("./router/labels.mjs");
+      kinds ??= (await import("./router/table.mjs")).PROVIDERS.kind.kinds;
       await labelAll(items, { line, halted, me: meNow() }).catch((error) => { for (const item of items) item.labels = null; console.warn(`labels: ${error?.message ?? error}`); });
     }
     people = peopleOf ? { place: peoplePlace, all: peopleOf(items, meNow()), between } : null;
@@ -474,6 +475,9 @@ export default async function start({ app, reason, $ }) {
   let query = "";
 
   // A row opens to the item's full words, and closes again.
+  // What the person opened stays open while content arrives and the list is drawn again.
+  // One opening is one gesture, however often its row is drawn again.
+  const openAt = new Map();
   function rowOf(item) {
     const what = item.sealed ? WORDS.sealed : item.title || "—";
     const row = element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}` },
@@ -484,12 +488,21 @@ export default async function start({ app, reason, $ }) {
     row.tabIndex = 0;
     row.setAttribute("role", "button");
     row.setAttribute("aria-expanded", "false");
-    const toggle = () => {
-      const open = row.getAttribute("aria-expanded") === "true";
-      row.setAttribute("aria-expanded", String(!open));
-      if (open) { row.querySelector(".pr-preview")?.remove(); closeOpened(row); }
-      else { row.append(element("pre", { className: "pr-preview", textContent: item.body })); opened.set(row, { item, since: Date.now() }); }
+    const show = (since = Date.now()) => {
+      row.setAttribute("aria-expanded", "true");
+      row.append(element("pre", { className: "pr-preview", textContent: item.body }));
+      opened.set(row, { item, since });
     };
+    const toggle = () => {
+      if (row.getAttribute("aria-expanded") === "true") {
+        row.setAttribute("aria-expanded", "false");
+        row.querySelector(".pr-preview")?.remove(); closeOpened(row); openAt.delete(item.address);
+      } else { const since = Date.now(); show(since); openAt.set(item.address, since); }
+    };
+    if (item.address && openAt.has(item.address)) {
+      for (const [node, open] of opened) if (open.item.address === item.address) opened.delete(node);
+      show(openAt.get(item.address));
+    }
     // A press anywhere on an opened item closes it, unless the person is selecting its words.
     row.addEventListener("click", () => { if (!String(getSelection?.() ?? "")) toggle(); });
     row.addEventListener("keydown", (event) => {
@@ -622,10 +635,35 @@ export default async function start({ app, reason, $ }) {
       const words = query.toLowerCase().split(/\s+/).filter(Boolean);
       shown = words.length ? items.filter((item) => words.every((w) => `${item.title} ${item.who} ${item.body ?? item.text}`.toLowerCase().includes(w))) : [];
     }
-    if (resonance && current.show !== "search") shown = resonance.order(shown);
     $("pr-count").textContent = shown.length ? String(shown.length) : "";
     if (current.show === "search" && !query) { list.replaceChildren(); return; }
-    list.replaceChildren(...(shown.length ? shown.slice(0, 200).map(rowOf) : [emptyRow()]));
+    if (!shown.length) { list.replaceChildren(emptyRow()); return; }
+    list.replaceChildren(...ordered(shown, current.order));
+  }
+
+  // A place's list in the order PrismSurface gives it: newest first, or what is
+  // ahead soonest first and then what has passed, latest first.
+  const SHOWN = 200;
+  // The kinds the compiled readers give, in the order the person meets them.
+  let kinds = null;
+  const group = (word, rows) => element("li", { className: "pr-group" },
+    element("h3", { className: "pr-section", textContent: word }),
+    element("ol", { className: "pr-rows" }, ...rows));
+  function ordered(shown, order) {
+    const newest = [...shown].sort((a, b) => b.at - a.at);
+    if (order === "kinds" && kinds && newest.some((item) => item.labels?.kind)) {
+      const first = newest.slice(0, SHOWN);
+      const known = new Set(kinds.map((k) => k.key));
+      const sections = kinds.map((k) => [k.name, first.filter((item) => item.labels?.kind === k.key)]);
+      sections.push([WORDS.other, first.filter((item) => !known.has(item.labels?.kind))]);
+      return sections.filter(([, rows]) => rows.length).map(([word, rows]) => group(word, rows.map(rowOf)));
+    }
+    if (order !== "upcoming") return newest.slice(0, SHOWN).map(rowOf);
+    const from = new Date().setHours(0, 0, 0, 0);
+    const ahead = shown.filter((item) => item.at >= from).sort((a, b) => a.at - b.at).slice(0, SHOWN);
+    const past = newest.filter((item) => item.at < from).slice(0, Math.max(0, SHOWN - ahead.length));
+    const heading = (word) => element("li", { className: "pr-section", textContent: WORDS[word] });
+    return [...(ahead.length ? [heading("upcoming"), ...ahead.map(rowOf)] : []), ...(past.length ? [heading("earlier"), ...past.map(rowOf)] : [])];
   }
 
   // The home: a card per place, its count and latest item, and the feeder
@@ -1060,7 +1098,14 @@ export default async function start({ app, reason, $ }) {
         await onFiles();
       });
       const filesLabel = element("label", { className: "pr-file" }, element("span", { textContent: WORDS["device.files"] }), files);
-      const row = settingRow(device, addFolder, filesLabel, contacts, allow, forget);
+      // The shape of what arrived, with no content in it, for the person to share.
+      const shape = element("button", { type: "button", textContent: WORDS["data.shape"] });
+      shape.addEventListener("click", async () => {
+        const { describe } = await import("./source/shape.mjs");
+        const text = JSON.stringify(describe(items), null, 1);
+        try { await navigator.clipboard.writeText(text); say(WORDS["data.shaped"], "good"); } catch { say(WORDS.unavailable, "bad"); }
+      });
+      const row = settingRow(device, addFolder, filesLabel, contacts, allow, forget, shape);
       if (!vault) { onFiles = async () => {}; row.state.textContent = WORDS.unavailable; row.row.querySelector(".pr-controls").hidden = true; return; }
       const d = await deviceOf();
       let kept = [];
@@ -1075,6 +1120,7 @@ export default async function start({ app, reason, $ }) {
         contacts.hidden = !shown("contacts");
         allow.hidden = !shown("folder") || !kept.some((f) => f.grant === "prompt");
         forget.hidden = !kept.length;
+        shape.hidden = !items.length;
       };
       const owner = (surface) => async () => (await d.ask({ act: { [surface]: "owner" } }))[surface] === "use";
       const busy = (button, may, work) => async () => {
@@ -1100,46 +1146,8 @@ export default async function start({ app, reason, $ }) {
       store.set(PACE_KEY, paceNow);
     }));
 
-    // This browser: what is kept here, and an encrypted backup of it.
-    const passphrase = element("input", { type: "password", placeholder: WORDS["passphrase.export"], autocomplete: "new-password" });
-    passphrase.setAttribute("aria-label", WORDS["passphrase.export"]);
-    const exportButton = element("button", { type: "button", textContent: WORDS.export });
-    const importFile = element("input", { type: "file", accept: ".pvx,application/octet-stream" });
-    importFile.setAttribute("aria-label", WORDS.import);
-    const importLabel = element("label", { className: "pr-file" }, element("span", { textContent: WORDS.import }), importFile);
-    // The shape of what arrived, with no content in it, for the person to share.
-    const shapeButton = element("button", { type: "button", textContent: WORDS["data.shape"] });
-    shapeButton.addEventListener("click", async () => {
-      const { describe } = await import("./source/shape.mjs");
-      const text = JSON.stringify(describe(items), null, 1);
-      try { await navigator.clipboard.writeText(text); say(WORDS["data.shaped"], "good"); } catch { say(WORDS.unavailable, "bad"); }
-    });
-    const backup = settingRow(named("backup"), passphrase, exportButton, importLabel, shapeButton);
-    painters.push(async () => {
-      if (!vault) { backup.state.textContent = WORDS.unavailable; return; }
-      const where = await vault.persist();
-      backup.state.textContent = `${items.length} ${WORDS.items}${where?.persisted ? ` · ${WORDS.persisted}` : ""}`;
-    });
-    exportButton.addEventListener("click", async () => {
-      if (!vault) return;
-      if (!passphrase.value) { passphrase.focus(); return; }
-      const bytes = await vault.exportTo(passphrase.value);
-      const link = element("a", { href: URL.createObjectURL(new Blob([bytes], { type: "application/octet-stream" })), download: "prism-export.pvx" });
-      link.click();
-      URL.revokeObjectURL(link.href);
-      passphrase.value = "";
-    });
-    importFile.addEventListener("change", async () => {
-      const file = importFile.files?.[0];
-      if (!file || !vault) return;
-      if (!passphrase.value) { importFile.value = ""; passphrase.focus(); return; }
-      const result = await vault.importFrom(new Uint8Array(await file.arrayBuffer()), passphrase.value);
-      say(result.outcome === "refuse" ? `${WORDS.refused} · ${result.reason ?? ""}` : WORDS.kept, result.outcome === "refuse" ? "bad" : "good");
-      importFile.value = "";
-      passphrase.value = "";
-      await load();
-      paintSettings();
-    });
+    // This browser keeps what arrives safe on its own: storage it may not clear.
+    painters.push(async () => { await vault?.persist().catch(() => null); });
 
     // Halt: the Boundary denies every move while it is on.
     const halt = switchFor(haltedNow, named("halt").name, (on) => {

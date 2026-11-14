@@ -181,7 +181,10 @@ export const walks = {
     const said = (await answer.innerText()).trim();
     assert.match(said, /\b(is|are|asked|asks|wrote|meets|meeting|has|wants)\b[^·]*[.?!]/i, `the answer is not a sentence: "${said}"`);
     assert.ok(await answer.getByRole("link").count(), "the answer does not link to where it came from");
-    assert.ok(await answer.getByRole("button", { name: /reply|schedule|keep|let go|done/i }).count(), "the answer offers no decision");
+    // The decision may follow the sentence by a moment; the person waits for it as long as a reply takes.
+    const decision = answer.getByRole("button", { name: /reply|schedule|keep|let go|done/i });
+    await decision.first().waitFor({ timeout: 10000 }).catch(() => {});
+    assert.ok(await decision.count(), "the answer offers no decision");
   },
   // J14: a word, typed any way, lists everything that names it, beyond the few the answer says.
   async j14(page) {
@@ -256,13 +259,14 @@ export const walks = {
     assert.ok(await arrived(page), "the person's day never arrives");
     await go(page, "conversations");
     const headings = await app(page).getByRole("heading").filter({ visible: true }).allInnerTexts();
-    const shown = headings.map((h) => h.trim()).filter((h) => kinds.includes(h));
+    // Headings may be drawn in capitals, so each is read as the kind it names.
+    const shown = headings.map((h) => kinds.find((k) => k.toLowerCase() === h.trim().toLowerCase())).filter(Boolean);
     assert.ok(shown.length >= 2, `Messages are not in sections by kind (headings: ${headings.join(", ") || "none"})`);
     assert.equal(shown[0], kinds[0], `the first section is not "${kinds[0]}"`);
     assert.deepEqual(shown, kinds.filter((k) => shown.includes(k)), "the sections are not in the kinds' order");
     assert.match(await rowOf(page, "Lunch on Thursday?"), /Robin Example/, "a message from a person does not say who it is from");
     const people = await page.evaluate((name) => {
-      const h = [...document.querySelectorAll("#stage h2, #stage h3, #stage [role=heading]")].find((e) => e.innerText.trim() === name);
+      const h = [...document.querySelectorAll("#stage h2, #stage h3, #stage [role=heading]")].find((e) => e.textContent.trim() === name);
       const list = h?.nextElementSibling;
       return list ? [...list.querySelectorAll("li")].map((li) => li.innerText) : [];
     }, kinds[0]);
@@ -291,5 +295,28 @@ export const walks = {
     await app(page).getByRole("button", { name: W.done, exact: true }).filter({ visible: true }).first().click();
     await page.waitForTimeout(500);
     assert.equal(await app(page).getByRole("region", { name: new RegExp(`^${W.setup}$`, "i") }).filter({ visible: true }).count(), 0, "the Set up card stays after every step is done");
+  },
+  // J15: every place in time order: Messages newest first; Calendar ahead soonest first, then what has passed.
+  async j15(page) {
+    assert.ok(await arrived(page), "the person's day never arrives");
+    // Headings may be drawn in capitals, so the order is read without case.
+    const before = (shown, a, b, where) => {
+      const [text, x, y] = [shown, a, b].map((s) => s.toLowerCase());
+      assert.ok(text.indexOf(x) >= 0 && text.indexOf(x) < text.indexOf(y), `${where}: "${a}" is not before "${b}"`);
+    };
+    await go(page, "conversations");
+    const messages = await app(page).locator("ol, ul").filter({ hasText: "Lunch on Thursday" }).last().innerText();
+    // Messages are in sections by kind (J13); within one, newest first.
+    before(messages, "Lunch on Thursday", "Café booking", "Messages");
+    await go(page, "calendar");
+    const calendar = await app(page).locator("ol, ul").filter({ hasText: "Flight to Lisbon" }).last().innerText();
+    before(calendar, surface.words.upcoming, "Design review", "Calendar");
+    before(calendar, "Design review", "Flight to Lisbon", "Calendar");
+    // What the person opened stays open when the list is drawn again.
+    await app(page).getByRole("button", { name: /Design review/ }).first().click();
+    await go(page, "conversations");
+    await go(page, "calendar");
+    const open = app(page).getByRole("button", { name: /Design review/ }).first();
+    assert.equal(await open.getAttribute("aria-expanded"), "true", "Calendar: an opened item closed when the list was drawn again");
   },
 };
