@@ -30,10 +30,10 @@ export function today(now = new Date()) {
     // As Gmail's original reads: MIME parts, an encoded subject, quoted-printable, the history quoted below.
     { service: "gmail", route: "own", kind: "message", format: "eml", text: [
       "From: =?UTF-8?Q?Jordan_Ex=C3=A1mple?= <jordan@example.org>", "To: person@example.org", "Subject: =?UTF-8?Q?Caf=C3=A9_booking?=",
-      `Date: ${day(-1, 9).toUTCString()}`, "Message-ID: <cafe@example.org>", "MIME-Version: 1.0", 'Content-Type: multipart/alternative; boundary="b1"', "",
+      `Date: ${day(-30, 9).toUTCString()}`, "Message-ID: <cafe@example.org>", "MIME-Version: 1.0", 'Content-Type: multipart/alternative; boundary="b1"', "",
       "--b1", 'Content-Type: text/plain; charset="UTF-8"', "Content-Transfer-Encoding: quoted-printable", "",
-      "The caf=C3=A9 booking is confirmed for Friday.", "", "On Mon, Jordan wrote:", "> Earlier words", "",
-      "--b1", 'Content-Type: text/html; charset="UTF-8"', "", "<p>The caf&eacute; booking is confirmed for Friday.</p>", "--b1--", "",
+      "The caf=C3=A9 table is held under your name.", "", "On Mon, Jordan wrote:", "> Earlier words", "",
+      "--b1", 'Content-Type: text/html; charset="UTF-8"', "", "<p>The caf&eacute; table is held under your name.</p>", "--b1--", "",
     ].join("\r\n") },
   ];
 }

@@ -86,7 +86,7 @@ export const walks = {
     // A real message reads as it was written: decoded, without its parts' machinery or the history it quotes.
     await go(page, "conversations");
     await app(page).getByText("Café booking", { exact: true }).filter({ visible: true }).first().click();
-    assert.ok(await seen(page, "The café booking is confirmed for Friday.", 3000), "an opened message does not read as written");
+    assert.ok(await seen(page, "The café table is held under your name.", 3000), "an opened message does not read as written");
     const opened = await text(page);
     for (const machinery of ["Content-Type", "quoted-printable", "=C3", "Earlier words"]) assert.ok(!opened.includes(machinery), `an opened message shows "${machinery}"`);
     // Its sender is named as written in People too.

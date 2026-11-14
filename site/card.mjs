@@ -432,7 +432,8 @@ export default async function start({ app, reason, $ }) {
       if (open) { row.querySelector(".pr-preview")?.remove(); closeOpened(row); }
       else { row.append(element("pre", { className: "pr-preview", textContent: item.body })); opened.set(row, { item, since: Date.now() }); }
     };
-    row.addEventListener("click", (event) => { if (!event.target.closest(".pr-preview")) toggle(); });
+    // A press anywhere on an opened item closes it, unless the person is selecting its words.
+    row.addEventListener("click", () => { if (!String(getSelection?.() ?? "")) toggle(); });
     row.addEventListener("keydown", (event) => {
       if (event.target === row && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); toggle(); }
     });
