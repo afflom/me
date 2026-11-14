@@ -50,7 +50,11 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
   const text = (prompt ?? "").trim();
   const none = { sentences: [], sources: [], offers: [], mapped: null };
   if (!text) return none;
-  const mapped = await route({ source: "note", values: { text }, line, halted, now });
+  // The people the person's content is with (their labels), so a question
+  // that names one of them is read as about that person.
+  const people = [];
+  for (const item of items) for (const p of item.labels?.parties ?? []) if (!people.some((q) => (q.address || q.name) === (p.address || p.name))) people.push(p);
+  const mapped = await route({ source: "note", values: { text }, line, halted, now, learned: { people } });
   if (mapped.refused) return { ...none, mapped };
   if (keep && mapped.intent !== "question") {
     return { sentences: [keptSentence(text, mapped)], sources: [], offers: [{ kind: "keep" }], mapped };
@@ -69,6 +73,13 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
   let used = drawOn(items, text, { now });
   let lead = [];
   let many = Boolean(span);
+  // A question about a person answers with what is between them: everything
+  // drawn that is with them, each with its decision.
+  const named = mapped.parties.map((p) => (p.address || p.name).toLowerCase());
+  if (named.length) {
+    const theirs = used.filter((item) => item.labels?.parties?.some((p) => named.includes((p.address || p.name).toLowerCase())));
+    if (theirs.length) { used = theirs; many = true; }
+  }
   if (kind && !span) {
     // Mail and notes newest first; the calendar from what is next.
     const matched = used.filter(ofKind);
