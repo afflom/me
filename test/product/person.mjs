@@ -16,7 +16,9 @@ export function today(now = new Date()) {
     "BEGIN:VEVENT", `UID:${uid}@example.org`, `DTSTAMP:${utc(now)}`, `DTSTART:${utc(from)}`, `DTEND:${utc(to)}`, `SUMMARY:${summary}`, `LOCATION:${location}`,
     ...(attendee ? [`ATTENDEE;CN=${attendee.name}:mailto:${attendee.address}`] : []), "END:VEVENT",
   ].join("\r\n");
-  const calendar = (...events) => ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//example//synthetic person//EN", ...events, "END:VCALENDAR", ""].join("\r\n");
+  // As Google's export reads: the calendar's time zone first, with a DTSTART of its own.
+  const zone = ["BEGIN:VTIMEZONE", "TZID:Europe/Lisbon", "BEGIN:STANDARD", "DTSTART:19701025T020000", "TZOFFSETFROM:+0100", "TZOFFSETTO:+0000", "END:STANDARD", "END:VTIMEZONE"].join("\r\n");
+  const calendar = (...events) => ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//example//synthetic person//EN", zone, ...events, "END:VCALENDAR", ""].join("\r\n");
   const mail = (from, subject, body, days) => [
     `From: ${from}`, "To: person@example.org", `Subject: ${subject}`, `Date: ${day(days, 8).toUTCString()}`,
     `Message-ID: <${subject.replace(/\W/g, "").toLowerCase()}@example.org>`, "Content-Type: text/plain; charset=utf-8", "", body, "",
@@ -27,6 +29,14 @@ export function today(now = new Date()) {
     { service: "gmail", route: "own", kind: "message", format: "eml", text: mail("Robin Example <robin@example.org>", "Lunch on Thursday?", "Shall we meet at the usual place at noon on Thursday? Let me know.", 0) },
     { service: "gmail", route: "own", kind: "message", format: "eml", text: mail("Sam Example <sam@example.org>", "Time next week", "Could we meet for 30 minutes next week to go over the draft?", 0) },
     { service: "gmail", route: "own", kind: "message", format: "eml", text: mail('"Example Bank" <statements@bank.example.org>', "Your November statement", "Your statement is ready. Payment is due on the 28th.", -1) },
+    // As Gmail's original reads: MIME parts, an encoded subject, quoted-printable, the history quoted below.
+    { service: "gmail", route: "own", kind: "message", format: "eml", text: [
+      "From: =?UTF-8?Q?Jordan_Ex=C3=A1mple?= <jordan@example.org>", "To: person@example.org", "Subject: =?UTF-8?Q?Caf=C3=A9_booking?=",
+      `Date: ${day(-30, 9).toUTCString()}`, "Message-ID: <cafe@example.org>", "MIME-Version: 1.0", 'Content-Type: multipart/alternative; boundary="b1"', "",
+      "--b1", 'Content-Type: text/plain; charset="UTF-8"', "Content-Transfer-Encoding: quoted-printable", "",
+      "The caf=C3=A9 table is held under your name.", "", "On Mon, Jordan wrote:", "> Earlier words", "",
+      "--b1", 'Content-Type: text/html; charset="UTF-8"', "", "<p>The caf&eacute; table is held under your name.</p>", "--b1--", "",
+    ].join("\r\n") },
   ];
 }
 
