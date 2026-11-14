@@ -179,7 +179,7 @@ theorem{
 theorem{
   name: realizabilityBoundaryLabelMatters,
   parameters: [],
-  statement: ((((PrismBoundary::boundaryJudge (record PrismBoundary::BoundaryRequest {label := (PrismBoundary::boundaryLabelPublic), detector := (PrismBoundary::boundaryDetectorNone), destination := (PrismBoundary::boundaryDestinationBrowser), approval := (PrismBoundary::boundaryApprovalNone), identifier := (PrismBoundary::boundaryIdentifierNo), halted := (PrismBoundary::boundaryHaltedNo)})) =? (PrismBoundary::boundaryAnswerAllow)) && ((PrismBoundary::boundaryJudge (record PrismBoundary::BoundaryRequest {label := (PrismBoundary::boundaryLabelRestricted), detector := (PrismBoundary::boundaryDetectorNone), destination := (PrismBoundary::boundaryDestinationBrowser), approval := (PrismBoundary::boundaryApprovalNone), identifier := (PrismBoundary::boundaryIdentifierNo), halted := (PrismBoundary::boundaryHaltedNo)})) =? (PrismBoundary::boundaryAnswerHashonly))) = true),
+  statement: ((((PrismBoundary::prismBoundaryJudge (record PrismBoundary::PrismBoundaryRequest {label := (PrismBoundary::prismBoundaryLabelPublic), detector := (PrismBoundary::prismBoundaryDetectorNone), destination := (PrismBoundary::prismBoundaryDestinationBrowser), approval := (PrismBoundary::prismBoundaryApprovalNone), identifier := (PrismBoundary::prismBoundaryIdentifierNo), halted := (PrismBoundary::prismBoundaryHaltedNo)})) =? (PrismBoundary::prismBoundaryAnswerAllow)) && ((PrismBoundary::prismBoundaryJudge (record PrismBoundary::PrismBoundaryRequest {label := (PrismBoundary::prismBoundaryLabelRestricted), detector := (PrismBoundary::prismBoundaryDetectorNone), destination := (PrismBoundary::prismBoundaryDestinationBrowser), approval := (PrismBoundary::prismBoundaryApprovalNone), identifier := (PrismBoundary::prismBoundaryIdentifierNo), halted := (PrismBoundary::prismBoundaryHaltedNo)})) =? (PrismBoundary::prismBoundaryAnswerHashonly))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -187,7 +187,7 @@ theorem{
 theorem{
   name: realizabilityBoundaryDetectorMatters,
   parameters: [],
-  statement: ((((PrismBoundary::boundaryJudge (record PrismBoundary::BoundaryRequest {label := (PrismBoundary::boundaryLabelPublic), detector := (PrismBoundary::boundaryDetectorNone), destination := (PrismBoundary::boundaryDestinationBrowser), approval := (PrismBoundary::boundaryApprovalNone), identifier := (PrismBoundary::boundaryIdentifierNo), halted := (PrismBoundary::boundaryHaltedNo)})) =? (PrismBoundary::boundaryAnswerAllow)) && ((PrismBoundary::boundaryJudge (record PrismBoundary::BoundaryRequest {label := (PrismBoundary::boundaryLabelPublic), detector := (PrismBoundary::boundaryDetectorPci), destination := (PrismBoundary::boundaryDestinationBrowser), approval := (PrismBoundary::boundaryApprovalNone), identifier := (PrismBoundary::boundaryIdentifierNo), halted := (PrismBoundary::boundaryHaltedNo)})) =? (PrismBoundary::boundaryAnswerHashonly))) = true),
+  statement: ((((PrismBoundary::prismBoundaryJudge (record PrismBoundary::PrismBoundaryRequest {label := (PrismBoundary::prismBoundaryLabelPublic), detector := (PrismBoundary::prismBoundaryDetectorNone), destination := (PrismBoundary::prismBoundaryDestinationBrowser), approval := (PrismBoundary::prismBoundaryApprovalNone), identifier := (PrismBoundary::prismBoundaryIdentifierNo), halted := (PrismBoundary::prismBoundaryHaltedNo)})) =? (PrismBoundary::prismBoundaryAnswerAllow)) && ((PrismBoundary::prismBoundaryJudge (record PrismBoundary::PrismBoundaryRequest {label := (PrismBoundary::prismBoundaryLabelPublic), detector := (PrismBoundary::prismBoundaryDetectorPci), destination := (PrismBoundary::prismBoundaryDestinationBrowser), approval := (PrismBoundary::prismBoundaryApprovalNone), identifier := (PrismBoundary::prismBoundaryIdentifierNo), halted := (PrismBoundary::prismBoundaryHaltedNo)})) =? (PrismBoundary::prismBoundaryAnswerHashonly))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -195,7 +195,7 @@ theorem{
 theorem{
   name: realizabilityBoundaryDestinationMatters,
   parameters: [],
-  statement: ((((PrismBoundary::boundaryJudge (record PrismBoundary::BoundaryRequest {label := (PrismBoundary::boundaryLabelPublic), detector := (PrismBoundary::boundaryDetectorNone), destination := (PrismBoundary::boundaryDestinationGithub), approval := (PrismBoundary::boundaryApprovalOwner), identifier := (PrismBoundary::boundaryIdentifierNo), halted := (PrismBoundary::boundaryHaltedNo)})) =? (PrismBoundary::boundaryAnswerDeny)) && ((PrismBoundary::boundaryJudge (record PrismBoundary::BoundaryRequest {label := (PrismBoundary::boundaryLabelPublic), detector := (PrismBoundary::boundaryDetectorNone), destination := (PrismBoundary::boundaryDestinationBrowser), approval := (PrismBoundary::boundaryApprovalOwner), identifier := (PrismBoundary::boundaryIdentifierNo), halted := (PrismBoundary::boundaryHaltedNo)})) =? (PrismBoundary::boundaryAnswerAllow))) = true),
+  statement: ((((PrismBoundary::prismBoundaryJudge (record PrismBoundary::PrismBoundaryRequest {label := (PrismBoundary::prismBoundaryLabelPublic), detector := (PrismBoundary::prismBoundaryDetectorNone), destination := (PrismBoundary::prismBoundaryDestinationGithub), approval := (PrismBoundary::prismBoundaryApprovalOwner), identifier := (PrismBoundary::prismBoundaryIdentifierNo), halted := (PrismBoundary::prismBoundaryHaltedNo)})) =? (PrismBoundary::prismBoundaryAnswerDeny)) && ((PrismBoundary::prismBoundaryJudge (record PrismBoundary::PrismBoundaryRequest {label := (PrismBoundary::prismBoundaryLabelPublic), detector := (PrismBoundary::prismBoundaryDetectorNone), destination := (PrismBoundary::prismBoundaryDestinationBrowser), approval := (PrismBoundary::prismBoundaryApprovalOwner), identifier := (PrismBoundary::prismBoundaryIdentifierNo), halted := (PrismBoundary::prismBoundaryHaltedNo)})) =? (PrismBoundary::prismBoundaryAnswerAllow))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -203,7 +203,7 @@ theorem{
 theorem{
   name: realizabilityBoundaryApprovalMatters,
   parameters: [],
-  statement: ((((PrismBoundary::boundaryJudge (record PrismBoundary::BoundaryRequest {label := (PrismBoundary::boundaryLabelConfidential), detector := (PrismBoundary::boundaryDetectorNone), destination := (PrismBoundary::boundaryDestinationOutbound), approval := (PrismBoundary::boundaryApprovalNone), identifier := (PrismBoundary::boundaryIdentifierNo), halted := (PrismBoundary::boundaryHaltedNo)})) =? (PrismBoundary::boundaryAnswerAsk)) && ((PrismBoundary::boundaryJudge (record PrismBoundary::BoundaryRequest {label := (PrismBoundary::boundaryLabelConfidential), detector := (PrismBoundary::boundaryDetectorNone), destination := (PrismBoundary::boundaryDestinationOutbound), approval := (PrismBoundary::boundaryApprovalOwner), identifier := (PrismBoundary::boundaryIdentifierNo), halted := (PrismBoundary::boundaryHaltedNo)})) =? (PrismBoundary::boundaryAnswerAllow))) = true),
+  statement: ((((PrismBoundary::prismBoundaryJudge (record PrismBoundary::PrismBoundaryRequest {label := (PrismBoundary::prismBoundaryLabelConfidential), detector := (PrismBoundary::prismBoundaryDetectorNone), destination := (PrismBoundary::prismBoundaryDestinationOutbound), approval := (PrismBoundary::prismBoundaryApprovalNone), identifier := (PrismBoundary::prismBoundaryIdentifierNo), halted := (PrismBoundary::prismBoundaryHaltedNo)})) =? (PrismBoundary::prismBoundaryAnswerAsk)) && ((PrismBoundary::prismBoundaryJudge (record PrismBoundary::PrismBoundaryRequest {label := (PrismBoundary::prismBoundaryLabelConfidential), detector := (PrismBoundary::prismBoundaryDetectorNone), destination := (PrismBoundary::prismBoundaryDestinationOutbound), approval := (PrismBoundary::prismBoundaryApprovalOwner), identifier := (PrismBoundary::prismBoundaryIdentifierNo), halted := (PrismBoundary::prismBoundaryHaltedNo)})) =? (PrismBoundary::prismBoundaryAnswerAllow))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -211,7 +211,7 @@ theorem{
 theorem{
   name: realizabilityBoundaryIdentifierMatters,
   parameters: [],
-  statement: ((((PrismBoundary::boundaryJudge (record PrismBoundary::BoundaryRequest {label := (PrismBoundary::boundaryLabelConfidential), detector := (PrismBoundary::boundaryDetectorNone), destination := (PrismBoundary::boundaryDestinationOutbound), approval := (PrismBoundary::boundaryApprovalNone), identifier := (PrismBoundary::boundaryIdentifierNo), halted := (PrismBoundary::boundaryHaltedNo)})) =? (PrismBoundary::boundaryAnswerAsk)) && ((PrismBoundary::boundaryJudge (record PrismBoundary::BoundaryRequest {label := (PrismBoundary::boundaryLabelConfidential), detector := (PrismBoundary::boundaryDetectorNone), destination := (PrismBoundary::boundaryDestinationOutbound), approval := (PrismBoundary::boundaryApprovalNone), identifier := (PrismBoundary::boundaryIdentifierYes), halted := (PrismBoundary::boundaryHaltedNo)})) =? (PrismBoundary::boundaryAnswerDeny))) = true),
+  statement: ((((PrismBoundary::prismBoundaryJudge (record PrismBoundary::PrismBoundaryRequest {label := (PrismBoundary::prismBoundaryLabelConfidential), detector := (PrismBoundary::prismBoundaryDetectorNone), destination := (PrismBoundary::prismBoundaryDestinationOutbound), approval := (PrismBoundary::prismBoundaryApprovalNone), identifier := (PrismBoundary::prismBoundaryIdentifierNo), halted := (PrismBoundary::prismBoundaryHaltedNo)})) =? (PrismBoundary::prismBoundaryAnswerAsk)) && ((PrismBoundary::prismBoundaryJudge (record PrismBoundary::PrismBoundaryRequest {label := (PrismBoundary::prismBoundaryLabelConfidential), detector := (PrismBoundary::prismBoundaryDetectorNone), destination := (PrismBoundary::prismBoundaryDestinationOutbound), approval := (PrismBoundary::prismBoundaryApprovalNone), identifier := (PrismBoundary::prismBoundaryIdentifierYes), halted := (PrismBoundary::prismBoundaryHaltedNo)})) =? (PrismBoundary::prismBoundaryAnswerDeny))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -219,7 +219,7 @@ theorem{
 theorem{
   name: realizabilityBoundaryHaltedMatters,
   parameters: [],
-  statement: ((((PrismBoundary::boundaryJudge (record PrismBoundary::BoundaryRequest {label := (PrismBoundary::boundaryLabelPublic), detector := (PrismBoundary::boundaryDetectorNone), destination := (PrismBoundary::boundaryDestinationBrowser), approval := (PrismBoundary::boundaryApprovalNone), identifier := (PrismBoundary::boundaryIdentifierNo), halted := (PrismBoundary::boundaryHaltedNo)})) =? (PrismBoundary::boundaryAnswerAllow)) && ((PrismBoundary::boundaryJudge (record PrismBoundary::BoundaryRequest {label := (PrismBoundary::boundaryLabelPublic), detector := (PrismBoundary::boundaryDetectorNone), destination := (PrismBoundary::boundaryDestinationBrowser), approval := (PrismBoundary::boundaryApprovalNone), identifier := (PrismBoundary::boundaryIdentifierNo), halted := (PrismBoundary::boundaryHaltedYes)})) =? (PrismBoundary::boundaryAnswerDeny))) = true),
+  statement: ((((PrismBoundary::prismBoundaryJudge (record PrismBoundary::PrismBoundaryRequest {label := (PrismBoundary::prismBoundaryLabelPublic), detector := (PrismBoundary::prismBoundaryDetectorNone), destination := (PrismBoundary::prismBoundaryDestinationBrowser), approval := (PrismBoundary::prismBoundaryApprovalNone), identifier := (PrismBoundary::prismBoundaryIdentifierNo), halted := (PrismBoundary::prismBoundaryHaltedNo)})) =? (PrismBoundary::prismBoundaryAnswerAllow)) && ((PrismBoundary::prismBoundaryJudge (record PrismBoundary::PrismBoundaryRequest {label := (PrismBoundary::prismBoundaryLabelPublic), detector := (PrismBoundary::prismBoundaryDetectorNone), destination := (PrismBoundary::prismBoundaryDestinationBrowser), approval := (PrismBoundary::prismBoundaryApprovalNone), identifier := (PrismBoundary::prismBoundaryIdentifierNo), halted := (PrismBoundary::prismBoundaryHaltedYes)})) =? (PrismBoundary::prismBoundaryAnswerDeny))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -227,7 +227,7 @@ theorem{
 theorem{
   name: realizabilityLearningStateMatters,
   parameters: [],
-  statement: ((((PrismLearning::learningJudge (record PrismLearning::LearningRequest {state := (PrismLearning::learningStateInferred), weight := 4, signal := (PrismLearning::learningSignalSupport)})) =? (PrismLearning::learningAnswerRaise)) && ((PrismLearning::learningJudge (record PrismLearning::LearningRequest {state := (PrismLearning::learningStateConfirmed), weight := 4, signal := (PrismLearning::learningSignalSupport)})) =? (PrismLearning::learningAnswerHold))) = true),
+  statement: ((((PrismLearning::prismLearningJudge (record PrismLearning::PrismLearningRequest {state := (PrismLearning::prismLearningStateInferred), weight := 4, signal := (PrismLearning::prismLearningSignalSupport)})) =? (PrismLearning::prismLearningAnswerRaise)) && ((PrismLearning::prismLearningJudge (record PrismLearning::PrismLearningRequest {state := (PrismLearning::prismLearningStateConfirmed), weight := 4, signal := (PrismLearning::prismLearningSignalSupport)})) =? (PrismLearning::prismLearningAnswerHold))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -235,7 +235,7 @@ theorem{
 theorem{
   name: realizabilityLearningWeightMatters,
   parameters: [],
-  statement: ((((PrismLearning::learningJudge (record PrismLearning::LearningRequest {state := (PrismLearning::learningStateInferred), weight := 4, signal := (PrismLearning::learningSignalSupport)})) =? (PrismLearning::learningAnswerRaise)) && ((PrismLearning::learningJudge (record PrismLearning::LearningRequest {state := (PrismLearning::learningStateInferred), weight := 10, signal := (PrismLearning::learningSignalSupport)})) =? (PrismLearning::learningAnswerConsolidate))) = true),
+  statement: ((((PrismLearning::prismLearningJudge (record PrismLearning::PrismLearningRequest {state := (PrismLearning::prismLearningStateInferred), weight := 4, signal := (PrismLearning::prismLearningSignalSupport)})) =? (PrismLearning::prismLearningAnswerRaise)) && ((PrismLearning::prismLearningJudge (record PrismLearning::PrismLearningRequest {state := (PrismLearning::prismLearningStateInferred), weight := 10, signal := (PrismLearning::prismLearningSignalSupport)})) =? (PrismLearning::prismLearningAnswerConsolidate))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -243,7 +243,7 @@ theorem{
 theorem{
   name: realizabilityLearningSignalMatters,
   parameters: [],
-  statement: ((((PrismLearning::learningJudge (record PrismLearning::LearningRequest {state := (PrismLearning::learningStateInferred), weight := 4, signal := (PrismLearning::learningSignalSupport)})) =? (PrismLearning::learningAnswerRaise)) && ((PrismLearning::learningJudge (record PrismLearning::LearningRequest {state := (PrismLearning::learningStateInferred), weight := 4, signal := (PrismLearning::learningSignalContradict)})) =? (PrismLearning::learningAnswerLower))) = true),
+  statement: ((((PrismLearning::prismLearningJudge (record PrismLearning::PrismLearningRequest {state := (PrismLearning::prismLearningStateInferred), weight := 4, signal := (PrismLearning::prismLearningSignalSupport)})) =? (PrismLearning::prismLearningAnswerRaise)) && ((PrismLearning::prismLearningJudge (record PrismLearning::PrismLearningRequest {state := (PrismLearning::prismLearningStateInferred), weight := 4, signal := (PrismLearning::prismLearningSignalContradict)})) =? (PrismLearning::prismLearningAnswerLower))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -283,7 +283,7 @@ theorem{
 theorem{
   name: realizabilityVaultStoreBoundaryMatters,
   parameters: [],
-  statement: ((((PrismVaultStore::storeJudge (record PrismVaultStore::StoreRequest {boundary := (PrismVaultStore::storeBoundaryAllow), key := (PrismVaultStore::storeKeyPresent), address := (PrismVaultStore::storeAddressDerived), room := (PrismVaultStore::storeRoomOk)})) =? (PrismVaultStore::storeAnswerStore)) && ((PrismVaultStore::storeJudge (record PrismVaultStore::StoreRequest {boundary := (PrismVaultStore::storeBoundaryHashonly), key := (PrismVaultStore::storeKeyPresent), address := (PrismVaultStore::storeAddressDerived), room := (PrismVaultStore::storeRoomOk)})) =? (PrismVaultStore::storeAnswerStorehash))) = true),
+  statement: ((((PrismVaultStore::prismVaultStoreJudge (record PrismVaultStore::PrismVaultStoreRequest {boundary := (PrismVaultStore::prismVaultStoreBoundaryAllow), key := (PrismVaultStore::prismVaultStoreKeyPresent), address := (PrismVaultStore::prismVaultStoreAddressDerived), room := (PrismVaultStore::prismVaultStoreRoomOk)})) =? (PrismVaultStore::prismVaultStoreAnswerStore)) && ((PrismVaultStore::prismVaultStoreJudge (record PrismVaultStore::PrismVaultStoreRequest {boundary := (PrismVaultStore::prismVaultStoreBoundaryHashonly), key := (PrismVaultStore::prismVaultStoreKeyPresent), address := (PrismVaultStore::prismVaultStoreAddressDerived), room := (PrismVaultStore::prismVaultStoreRoomOk)})) =? (PrismVaultStore::prismVaultStoreAnswerStorehash))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -291,7 +291,7 @@ theorem{
 theorem{
   name: realizabilityVaultStoreKeyMatters,
   parameters: [],
-  statement: ((((PrismVaultStore::storeJudge (record PrismVaultStore::StoreRequest {boundary := (PrismVaultStore::storeBoundaryAllow), key := (PrismVaultStore::storeKeyPresent), address := (PrismVaultStore::storeAddressDerived), room := (PrismVaultStore::storeRoomOk)})) =? (PrismVaultStore::storeAnswerStore)) && ((PrismVaultStore::storeJudge (record PrismVaultStore::StoreRequest {boundary := (PrismVaultStore::storeBoundaryAllow), key := (PrismVaultStore::storeKeyMissing), address := (PrismVaultStore::storeAddressDerived), room := (PrismVaultStore::storeRoomOk)})) =? (PrismVaultStore::storeAnswerRefuse))) = true),
+  statement: ((((PrismVaultStore::prismVaultStoreJudge (record PrismVaultStore::PrismVaultStoreRequest {boundary := (PrismVaultStore::prismVaultStoreBoundaryAllow), key := (PrismVaultStore::prismVaultStoreKeyPresent), address := (PrismVaultStore::prismVaultStoreAddressDerived), room := (PrismVaultStore::prismVaultStoreRoomOk)})) =? (PrismVaultStore::prismVaultStoreAnswerStore)) && ((PrismVaultStore::prismVaultStoreJudge (record PrismVaultStore::PrismVaultStoreRequest {boundary := (PrismVaultStore::prismVaultStoreBoundaryAllow), key := (PrismVaultStore::prismVaultStoreKeyMissing), address := (PrismVaultStore::prismVaultStoreAddressDerived), room := (PrismVaultStore::prismVaultStoreRoomOk)})) =? (PrismVaultStore::prismVaultStoreAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -299,7 +299,7 @@ theorem{
 theorem{
   name: realizabilityVaultStoreAddressMatters,
   parameters: [],
-  statement: ((((PrismVaultStore::storeJudge (record PrismVaultStore::StoreRequest {boundary := (PrismVaultStore::storeBoundaryAllow), key := (PrismVaultStore::storeKeyPresent), address := (PrismVaultStore::storeAddressDerived), room := (PrismVaultStore::storeRoomOk)})) =? (PrismVaultStore::storeAnswerStore)) && ((PrismVaultStore::storeJudge (record PrismVaultStore::StoreRequest {boundary := (PrismVaultStore::storeBoundaryAllow), key := (PrismVaultStore::storeKeyPresent), address := (PrismVaultStore::storeAddressMismatch), room := (PrismVaultStore::storeRoomOk)})) =? (PrismVaultStore::storeAnswerRefuse))) = true),
+  statement: ((((PrismVaultStore::prismVaultStoreJudge (record PrismVaultStore::PrismVaultStoreRequest {boundary := (PrismVaultStore::prismVaultStoreBoundaryAllow), key := (PrismVaultStore::prismVaultStoreKeyPresent), address := (PrismVaultStore::prismVaultStoreAddressDerived), room := (PrismVaultStore::prismVaultStoreRoomOk)})) =? (PrismVaultStore::prismVaultStoreAnswerStore)) && ((PrismVaultStore::prismVaultStoreJudge (record PrismVaultStore::PrismVaultStoreRequest {boundary := (PrismVaultStore::prismVaultStoreBoundaryAllow), key := (PrismVaultStore::prismVaultStoreKeyPresent), address := (PrismVaultStore::prismVaultStoreAddressMismatch), room := (PrismVaultStore::prismVaultStoreRoomOk)})) =? (PrismVaultStore::prismVaultStoreAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -307,7 +307,7 @@ theorem{
 theorem{
   name: realizabilityVaultStoreRoomMatters,
   parameters: [],
-  statement: ((((PrismVaultStore::storeJudge (record PrismVaultStore::StoreRequest {boundary := (PrismVaultStore::storeBoundaryAllow), key := (PrismVaultStore::storeKeyPresent), address := (PrismVaultStore::storeAddressDerived), room := (PrismVaultStore::storeRoomOk)})) =? (PrismVaultStore::storeAnswerStore)) && ((PrismVaultStore::storeJudge (record PrismVaultStore::StoreRequest {boundary := (PrismVaultStore::storeBoundaryAllow), key := (PrismVaultStore::storeKeyPresent), address := (PrismVaultStore::storeAddressDerived), room := (PrismVaultStore::storeRoomFull)})) =? (PrismVaultStore::storeAnswerRefuse))) = true),
+  statement: ((((PrismVaultStore::prismVaultStoreJudge (record PrismVaultStore::PrismVaultStoreRequest {boundary := (PrismVaultStore::prismVaultStoreBoundaryAllow), key := (PrismVaultStore::prismVaultStoreKeyPresent), address := (PrismVaultStore::prismVaultStoreAddressDerived), room := (PrismVaultStore::prismVaultStoreRoomOk)})) =? (PrismVaultStore::prismVaultStoreAnswerStore)) && ((PrismVaultStore::prismVaultStoreJudge (record PrismVaultStore::PrismVaultStoreRequest {boundary := (PrismVaultStore::prismVaultStoreBoundaryAllow), key := (PrismVaultStore::prismVaultStoreKeyPresent), address := (PrismVaultStore::prismVaultStoreAddressDerived), room := (PrismVaultStore::prismVaultStoreRoomFull)})) =? (PrismVaultStore::prismVaultStoreAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -315,7 +315,7 @@ theorem{
 theorem{
   name: realizabilityVaultRestoreKeyMatters,
   parameters: [],
-  statement: ((((PrismVaultRestore::restoreJudge (record PrismVaultRestore::RestoreRequest {key := (PrismVaultRestore::restoreKeyPresent), format := (PrismVaultRestore::restoreFormatKnown), seal := (PrismVaultRestore::restoreSealValid), address := (PrismVaultRestore::restoreAddressDerived), kind := (PrismVaultRestore::restoreKindValue)})) =? (PrismVaultRestore::restoreAnswerRestore)) && ((PrismVaultRestore::restoreJudge (record PrismVaultRestore::RestoreRequest {key := (PrismVaultRestore::restoreKeyMissing), format := (PrismVaultRestore::restoreFormatKnown), seal := (PrismVaultRestore::restoreSealValid), address := (PrismVaultRestore::restoreAddressDerived), kind := (PrismVaultRestore::restoreKindValue)})) =? (PrismVaultRestore::restoreAnswerRefuse))) = true),
+  statement: ((((PrismVaultRestore::prismVaultRestoreJudge (record PrismVaultRestore::PrismVaultRestoreRequest {key := (PrismVaultRestore::prismVaultRestoreKeyPresent), format := (PrismVaultRestore::prismVaultRestoreFormatKnown), seal := (PrismVaultRestore::prismVaultRestoreSealValid), address := (PrismVaultRestore::prismVaultRestoreAddressDerived), kind := (PrismVaultRestore::prismVaultRestoreKindValue)})) =? (PrismVaultRestore::prismVaultRestoreAnswerRestore)) && ((PrismVaultRestore::prismVaultRestoreJudge (record PrismVaultRestore::PrismVaultRestoreRequest {key := (PrismVaultRestore::prismVaultRestoreKeyMissing), format := (PrismVaultRestore::prismVaultRestoreFormatKnown), seal := (PrismVaultRestore::prismVaultRestoreSealValid), address := (PrismVaultRestore::prismVaultRestoreAddressDerived), kind := (PrismVaultRestore::prismVaultRestoreKindValue)})) =? (PrismVaultRestore::prismVaultRestoreAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -323,7 +323,7 @@ theorem{
 theorem{
   name: realizabilityVaultRestoreFormatMatters,
   parameters: [],
-  statement: ((((PrismVaultRestore::restoreJudge (record PrismVaultRestore::RestoreRequest {key := (PrismVaultRestore::restoreKeyPresent), format := (PrismVaultRestore::restoreFormatKnown), seal := (PrismVaultRestore::restoreSealValid), address := (PrismVaultRestore::restoreAddressDerived), kind := (PrismVaultRestore::restoreKindValue)})) =? (PrismVaultRestore::restoreAnswerRestore)) && ((PrismVaultRestore::restoreJudge (record PrismVaultRestore::RestoreRequest {key := (PrismVaultRestore::restoreKeyPresent), format := (PrismVaultRestore::restoreFormatUnknown), seal := (PrismVaultRestore::restoreSealValid), address := (PrismVaultRestore::restoreAddressDerived), kind := (PrismVaultRestore::restoreKindValue)})) =? (PrismVaultRestore::restoreAnswerRefuse))) = true),
+  statement: ((((PrismVaultRestore::prismVaultRestoreJudge (record PrismVaultRestore::PrismVaultRestoreRequest {key := (PrismVaultRestore::prismVaultRestoreKeyPresent), format := (PrismVaultRestore::prismVaultRestoreFormatKnown), seal := (PrismVaultRestore::prismVaultRestoreSealValid), address := (PrismVaultRestore::prismVaultRestoreAddressDerived), kind := (PrismVaultRestore::prismVaultRestoreKindValue)})) =? (PrismVaultRestore::prismVaultRestoreAnswerRestore)) && ((PrismVaultRestore::prismVaultRestoreJudge (record PrismVaultRestore::PrismVaultRestoreRequest {key := (PrismVaultRestore::prismVaultRestoreKeyPresent), format := (PrismVaultRestore::prismVaultRestoreFormatUnknown), seal := (PrismVaultRestore::prismVaultRestoreSealValid), address := (PrismVaultRestore::prismVaultRestoreAddressDerived), kind := (PrismVaultRestore::prismVaultRestoreKindValue)})) =? (PrismVaultRestore::prismVaultRestoreAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -331,7 +331,7 @@ theorem{
 theorem{
   name: realizabilityVaultRestoreSealMatters,
   parameters: [],
-  statement: ((((PrismVaultRestore::restoreJudge (record PrismVaultRestore::RestoreRequest {key := (PrismVaultRestore::restoreKeyPresent), format := (PrismVaultRestore::restoreFormatKnown), seal := (PrismVaultRestore::restoreSealValid), address := (PrismVaultRestore::restoreAddressDerived), kind := (PrismVaultRestore::restoreKindValue)})) =? (PrismVaultRestore::restoreAnswerRestore)) && ((PrismVaultRestore::restoreJudge (record PrismVaultRestore::RestoreRequest {key := (PrismVaultRestore::restoreKeyPresent), format := (PrismVaultRestore::restoreFormatKnown), seal := (PrismVaultRestore::restoreSealBroken), address := (PrismVaultRestore::restoreAddressDerived), kind := (PrismVaultRestore::restoreKindValue)})) =? (PrismVaultRestore::restoreAnswerRefuse))) = true),
+  statement: ((((PrismVaultRestore::prismVaultRestoreJudge (record PrismVaultRestore::PrismVaultRestoreRequest {key := (PrismVaultRestore::prismVaultRestoreKeyPresent), format := (PrismVaultRestore::prismVaultRestoreFormatKnown), seal := (PrismVaultRestore::prismVaultRestoreSealValid), address := (PrismVaultRestore::prismVaultRestoreAddressDerived), kind := (PrismVaultRestore::prismVaultRestoreKindValue)})) =? (PrismVaultRestore::prismVaultRestoreAnswerRestore)) && ((PrismVaultRestore::prismVaultRestoreJudge (record PrismVaultRestore::PrismVaultRestoreRequest {key := (PrismVaultRestore::prismVaultRestoreKeyPresent), format := (PrismVaultRestore::prismVaultRestoreFormatKnown), seal := (PrismVaultRestore::prismVaultRestoreSealBroken), address := (PrismVaultRestore::prismVaultRestoreAddressDerived), kind := (PrismVaultRestore::prismVaultRestoreKindValue)})) =? (PrismVaultRestore::prismVaultRestoreAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -339,7 +339,7 @@ theorem{
 theorem{
   name: realizabilityVaultRestoreAddressMatters,
   parameters: [],
-  statement: ((((PrismVaultRestore::restoreJudge (record PrismVaultRestore::RestoreRequest {key := (PrismVaultRestore::restoreKeyPresent), format := (PrismVaultRestore::restoreFormatKnown), seal := (PrismVaultRestore::restoreSealValid), address := (PrismVaultRestore::restoreAddressDerived), kind := (PrismVaultRestore::restoreKindValue)})) =? (PrismVaultRestore::restoreAnswerRestore)) && ((PrismVaultRestore::restoreJudge (record PrismVaultRestore::RestoreRequest {key := (PrismVaultRestore::restoreKeyPresent), format := (PrismVaultRestore::restoreFormatKnown), seal := (PrismVaultRestore::restoreSealValid), address := (PrismVaultRestore::restoreAddressMismatch), kind := (PrismVaultRestore::restoreKindValue)})) =? (PrismVaultRestore::restoreAnswerRefuse))) = true),
+  statement: ((((PrismVaultRestore::prismVaultRestoreJudge (record PrismVaultRestore::PrismVaultRestoreRequest {key := (PrismVaultRestore::prismVaultRestoreKeyPresent), format := (PrismVaultRestore::prismVaultRestoreFormatKnown), seal := (PrismVaultRestore::prismVaultRestoreSealValid), address := (PrismVaultRestore::prismVaultRestoreAddressDerived), kind := (PrismVaultRestore::prismVaultRestoreKindValue)})) =? (PrismVaultRestore::prismVaultRestoreAnswerRestore)) && ((PrismVaultRestore::prismVaultRestoreJudge (record PrismVaultRestore::PrismVaultRestoreRequest {key := (PrismVaultRestore::prismVaultRestoreKeyPresent), format := (PrismVaultRestore::prismVaultRestoreFormatKnown), seal := (PrismVaultRestore::prismVaultRestoreSealValid), address := (PrismVaultRestore::prismVaultRestoreAddressMismatch), kind := (PrismVaultRestore::prismVaultRestoreKindValue)})) =? (PrismVaultRestore::prismVaultRestoreAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -347,7 +347,7 @@ theorem{
 theorem{
   name: realizabilityVaultRestoreKindMatters,
   parameters: [],
-  statement: ((((PrismVaultRestore::restoreJudge (record PrismVaultRestore::RestoreRequest {key := (PrismVaultRestore::restoreKeyPresent), format := (PrismVaultRestore::restoreFormatKnown), seal := (PrismVaultRestore::restoreSealValid), address := (PrismVaultRestore::restoreAddressDerived), kind := (PrismVaultRestore::restoreKindValue)})) =? (PrismVaultRestore::restoreAnswerRestore)) && ((PrismVaultRestore::restoreJudge (record PrismVaultRestore::RestoreRequest {key := (PrismVaultRestore::restoreKeyPresent), format := (PrismVaultRestore::restoreFormatKnown), seal := (PrismVaultRestore::restoreSealValid), address := (PrismVaultRestore::restoreAddressDerived), kind := (PrismVaultRestore::restoreKindHash)})) =? (PrismVaultRestore::restoreAnswerHashonly))) = true),
+  statement: ((((PrismVaultRestore::prismVaultRestoreJudge (record PrismVaultRestore::PrismVaultRestoreRequest {key := (PrismVaultRestore::prismVaultRestoreKeyPresent), format := (PrismVaultRestore::prismVaultRestoreFormatKnown), seal := (PrismVaultRestore::prismVaultRestoreSealValid), address := (PrismVaultRestore::prismVaultRestoreAddressDerived), kind := (PrismVaultRestore::prismVaultRestoreKindValue)})) =? (PrismVaultRestore::prismVaultRestoreAnswerRestore)) && ((PrismVaultRestore::prismVaultRestoreJudge (record PrismVaultRestore::PrismVaultRestoreRequest {key := (PrismVaultRestore::prismVaultRestoreKeyPresent), format := (PrismVaultRestore::prismVaultRestoreFormatKnown), seal := (PrismVaultRestore::prismVaultRestoreSealValid), address := (PrismVaultRestore::prismVaultRestoreAddressDerived), kind := (PrismVaultRestore::prismVaultRestoreKindHash)})) =? (PrismVaultRestore::prismVaultRestoreAnswerHashonly))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -355,7 +355,7 @@ theorem{
 theorem{
   name: realizabilityR4ModeMatters,
   parameters: [],
-  statement: ((((PrismR4::r4Judge (record PrismR4::R4Request {mode := (PrismR4::r4ModeInprism), engine := (PrismR4::r4EngineMatch), weights := (PrismR4::r4WeightsMatch), route := (PrismR4::r4RouteNone), boundary := (PrismR4::r4BoundaryAllow)})) =? (PrismR4::r4AnswerAnswer)) && ((PrismR4::r4Judge (record PrismR4::R4Request {mode := (PrismR4::r4ModeCompiled), engine := (PrismR4::r4EngineMatch), weights := (PrismR4::r4WeightsMatch), route := (PrismR4::r4RouteNone), boundary := (PrismR4::r4BoundaryAllow)})) =? (PrismR4::r4AnswerRefuse))) = true),
+  statement: ((((PrismR4::prismR4Judge (record PrismR4::PrismR4Request {mode := (PrismR4::prismR4ModeInprism), engine := (PrismR4::prismR4EngineMatch), weights := (PrismR4::prismR4WeightsMatch), route := (PrismR4::prismR4RouteNone), boundary := (PrismR4::prismR4BoundaryAllow)})) =? (PrismR4::prismR4AnswerAnswer)) && ((PrismR4::prismR4Judge (record PrismR4::PrismR4Request {mode := (PrismR4::prismR4ModeCompiled), engine := (PrismR4::prismR4EngineMatch), weights := (PrismR4::prismR4WeightsMatch), route := (PrismR4::prismR4RouteNone), boundary := (PrismR4::prismR4BoundaryAllow)})) =? (PrismR4::prismR4AnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -363,7 +363,7 @@ theorem{
 theorem{
   name: realizabilityR4EngineMatters,
   parameters: [],
-  statement: ((((PrismR4::r4Judge (record PrismR4::R4Request {mode := (PrismR4::r4ModeInprism), engine := (PrismR4::r4EngineMatch), weights := (PrismR4::r4WeightsMatch), route := (PrismR4::r4RouteNone), boundary := (PrismR4::r4BoundaryAllow)})) =? (PrismR4::r4AnswerAnswer)) && ((PrismR4::r4Judge (record PrismR4::R4Request {mode := (PrismR4::r4ModeInprism), engine := (PrismR4::r4EngineMismatch), weights := (PrismR4::r4WeightsMatch), route := (PrismR4::r4RouteNone), boundary := (PrismR4::r4BoundaryAllow)})) =? (PrismR4::r4AnswerRefuse))) = true),
+  statement: ((((PrismR4::prismR4Judge (record PrismR4::PrismR4Request {mode := (PrismR4::prismR4ModeInprism), engine := (PrismR4::prismR4EngineMatch), weights := (PrismR4::prismR4WeightsMatch), route := (PrismR4::prismR4RouteNone), boundary := (PrismR4::prismR4BoundaryAllow)})) =? (PrismR4::prismR4AnswerAnswer)) && ((PrismR4::prismR4Judge (record PrismR4::PrismR4Request {mode := (PrismR4::prismR4ModeInprism), engine := (PrismR4::prismR4EngineMismatch), weights := (PrismR4::prismR4WeightsMatch), route := (PrismR4::prismR4RouteNone), boundary := (PrismR4::prismR4BoundaryAllow)})) =? (PrismR4::prismR4AnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -371,7 +371,7 @@ theorem{
 theorem{
   name: realizabilityR4WeightsMatters,
   parameters: [],
-  statement: ((((PrismR4::r4Judge (record PrismR4::R4Request {mode := (PrismR4::r4ModeInprism), engine := (PrismR4::r4EngineMatch), weights := (PrismR4::r4WeightsMatch), route := (PrismR4::r4RouteNone), boundary := (PrismR4::r4BoundaryAllow)})) =? (PrismR4::r4AnswerAnswer)) && ((PrismR4::r4Judge (record PrismR4::R4Request {mode := (PrismR4::r4ModeInprism), engine := (PrismR4::r4EngineMatch), weights := (PrismR4::r4WeightsMismatch), route := (PrismR4::r4RouteNone), boundary := (PrismR4::r4BoundaryAllow)})) =? (PrismR4::r4AnswerRefuse))) = true),
+  statement: ((((PrismR4::prismR4Judge (record PrismR4::PrismR4Request {mode := (PrismR4::prismR4ModeInprism), engine := (PrismR4::prismR4EngineMatch), weights := (PrismR4::prismR4WeightsMatch), route := (PrismR4::prismR4RouteNone), boundary := (PrismR4::prismR4BoundaryAllow)})) =? (PrismR4::prismR4AnswerAnswer)) && ((PrismR4::prismR4Judge (record PrismR4::PrismR4Request {mode := (PrismR4::prismR4ModeInprism), engine := (PrismR4::prismR4EngineMatch), weights := (PrismR4::prismR4WeightsMismatch), route := (PrismR4::prismR4RouteNone), boundary := (PrismR4::prismR4BoundaryAllow)})) =? (PrismR4::prismR4AnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -379,7 +379,7 @@ theorem{
 theorem{
   name: realizabilityR4RouteMatters,
   parameters: [],
-  statement: ((((PrismR4::r4Judge (record PrismR4::R4Request {mode := (PrismR4::r4ModeInprism), engine := (PrismR4::r4EngineMatch), weights := (PrismR4::r4WeightsMatch), route := (PrismR4::r4RouteNone), boundary := (PrismR4::r4BoundaryAllow)})) =? (PrismR4::r4AnswerAnswer)) && ((PrismR4::r4Judge (record PrismR4::R4Request {mode := (PrismR4::r4ModeInprism), engine := (PrismR4::r4EngineMatch), weights := (PrismR4::r4WeightsMatch), route := (PrismR4::r4RouteGranted), boundary := (PrismR4::r4BoundaryAllow)})) =? (PrismR4::r4AnswerRefuse))) = true),
+  statement: ((((PrismR4::prismR4Judge (record PrismR4::PrismR4Request {mode := (PrismR4::prismR4ModeInprism), engine := (PrismR4::prismR4EngineMatch), weights := (PrismR4::prismR4WeightsMatch), route := (PrismR4::prismR4RouteNone), boundary := (PrismR4::prismR4BoundaryAllow)})) =? (PrismR4::prismR4AnswerAnswer)) && ((PrismR4::prismR4Judge (record PrismR4::PrismR4Request {mode := (PrismR4::prismR4ModeInprism), engine := (PrismR4::prismR4EngineMatch), weights := (PrismR4::prismR4WeightsMatch), route := (PrismR4::prismR4RouteGranted), boundary := (PrismR4::prismR4BoundaryAllow)})) =? (PrismR4::prismR4AnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -387,7 +387,7 @@ theorem{
 theorem{
   name: realizabilityR4BoundaryMatters,
   parameters: [],
-  statement: ((((PrismR4::r4Judge (record PrismR4::R4Request {mode := (PrismR4::r4ModeInprism), engine := (PrismR4::r4EngineMatch), weights := (PrismR4::r4WeightsMatch), route := (PrismR4::r4RouteNone), boundary := (PrismR4::r4BoundaryAllow)})) =? (PrismR4::r4AnswerAnswer)) && ((PrismR4::r4Judge (record PrismR4::R4Request {mode := (PrismR4::r4ModeInprism), engine := (PrismR4::r4EngineMatch), weights := (PrismR4::r4WeightsMatch), route := (PrismR4::r4RouteNone), boundary := (PrismR4::r4BoundaryHashonly)})) =? (PrismR4::r4AnswerReceipt))) = true),
+  statement: ((((PrismR4::prismR4Judge (record PrismR4::PrismR4Request {mode := (PrismR4::prismR4ModeInprism), engine := (PrismR4::prismR4EngineMatch), weights := (PrismR4::prismR4WeightsMatch), route := (PrismR4::prismR4RouteNone), boundary := (PrismR4::prismR4BoundaryAllow)})) =? (PrismR4::prismR4AnswerAnswer)) && ((PrismR4::prismR4Judge (record PrismR4::PrismR4Request {mode := (PrismR4::prismR4ModeInprism), engine := (PrismR4::prismR4EngineMatch), weights := (PrismR4::prismR4WeightsMatch), route := (PrismR4::prismR4RouteNone), boundary := (PrismR4::prismR4BoundaryHashonly)})) =? (PrismR4::prismR4AnswerReceipt))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -395,7 +395,7 @@ theorem{
 theorem{
   name: realizabilityGoogleServiceMatters,
   parameters: [],
-  statement: ((((PrismGoogle::googleJudge (record PrismGoogle::GoogleRequest {service := (PrismGoogle::googleServiceGmail), method := (PrismGoogle::googleMethodRead), scope := (PrismGoogle::googleScopeReadonly), token := (PrismGoogle::googleTokenFresh), act := (PrismGoogle::googleActNone), halted := (PrismGoogle::googleHaltedNo)})) =? (PrismGoogle::googleAnswerFetch)) && ((PrismGoogle::googleJudge (record PrismGoogle::GoogleRequest {service := (PrismGoogle::googleServiceOther), method := (PrismGoogle::googleMethodRead), scope := (PrismGoogle::googleScopeReadonly), token := (PrismGoogle::googleTokenFresh), act := (PrismGoogle::googleActNone), halted := (PrismGoogle::googleHaltedNo)})) =? (PrismGoogle::googleAnswerRefuse))) = true),
+  statement: ((((PrismGoogle::prismGoogleJudge (record PrismGoogle::PrismGoogleRequest {service := (PrismGoogle::prismGoogleServiceGmail), method := (PrismGoogle::prismGoogleMethodRead), scope := (PrismGoogle::prismGoogleScopeReadonly), token := (PrismGoogle::prismGoogleTokenFresh), act := (PrismGoogle::prismGoogleActNone), halted := (PrismGoogle::prismGoogleHaltedNo)})) =? (PrismGoogle::prismGoogleAnswerFetch)) && ((PrismGoogle::prismGoogleJudge (record PrismGoogle::PrismGoogleRequest {service := (PrismGoogle::prismGoogleServiceOther), method := (PrismGoogle::prismGoogleMethodRead), scope := (PrismGoogle::prismGoogleScopeReadonly), token := (PrismGoogle::prismGoogleTokenFresh), act := (PrismGoogle::prismGoogleActNone), halted := (PrismGoogle::prismGoogleHaltedNo)})) =? (PrismGoogle::prismGoogleAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -403,7 +403,7 @@ theorem{
 theorem{
   name: realizabilityGoogleMethodMatters,
   parameters: [],
-  statement: ((((PrismGoogle::googleJudge (record PrismGoogle::GoogleRequest {service := (PrismGoogle::googleServiceGmail), method := (PrismGoogle::googleMethodRead), scope := (PrismGoogle::googleScopeReadonly), token := (PrismGoogle::googleTokenFresh), act := (PrismGoogle::googleActNone), halted := (PrismGoogle::googleHaltedNo)})) =? (PrismGoogle::googleAnswerFetch)) && ((PrismGoogle::googleJudge (record PrismGoogle::GoogleRequest {service := (PrismGoogle::googleServiceGmail), method := (PrismGoogle::googleMethodWrite), scope := (PrismGoogle::googleScopeReadonly), token := (PrismGoogle::googleTokenFresh), act := (PrismGoogle::googleActNone), halted := (PrismGoogle::googleHaltedNo)})) =? (PrismGoogle::googleAnswerAsk))) = true),
+  statement: ((((PrismGoogle::prismGoogleJudge (record PrismGoogle::PrismGoogleRequest {service := (PrismGoogle::prismGoogleServiceGmail), method := (PrismGoogle::prismGoogleMethodRead), scope := (PrismGoogle::prismGoogleScopeReadonly), token := (PrismGoogle::prismGoogleTokenFresh), act := (PrismGoogle::prismGoogleActNone), halted := (PrismGoogle::prismGoogleHaltedNo)})) =? (PrismGoogle::prismGoogleAnswerFetch)) && ((PrismGoogle::prismGoogleJudge (record PrismGoogle::PrismGoogleRequest {service := (PrismGoogle::prismGoogleServiceGmail), method := (PrismGoogle::prismGoogleMethodWrite), scope := (PrismGoogle::prismGoogleScopeReadonly), token := (PrismGoogle::prismGoogleTokenFresh), act := (PrismGoogle::prismGoogleActNone), halted := (PrismGoogle::prismGoogleHaltedNo)})) =? (PrismGoogle::prismGoogleAnswerAsk))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -411,7 +411,7 @@ theorem{
 theorem{
   name: realizabilityGoogleScopeMatters,
   parameters: [],
-  statement: ((((PrismGoogle::googleJudge (record PrismGoogle::GoogleRequest {service := (PrismGoogle::googleServiceGmail), method := (PrismGoogle::googleMethodRead), scope := (PrismGoogle::googleScopeReadonly), token := (PrismGoogle::googleTokenFresh), act := (PrismGoogle::googleActNone), halted := (PrismGoogle::googleHaltedNo)})) =? (PrismGoogle::googleAnswerFetch)) && ((PrismGoogle::googleJudge (record PrismGoogle::GoogleRequest {service := (PrismGoogle::googleServiceGmail), method := (PrismGoogle::googleMethodRead), scope := (PrismGoogle::googleScopeNone), token := (PrismGoogle::googleTokenFresh), act := (PrismGoogle::googleActNone), halted := (PrismGoogle::googleHaltedNo)})) =? (PrismGoogle::googleAnswerConsent))) = true),
+  statement: ((((PrismGoogle::prismGoogleJudge (record PrismGoogle::PrismGoogleRequest {service := (PrismGoogle::prismGoogleServiceGmail), method := (PrismGoogle::prismGoogleMethodRead), scope := (PrismGoogle::prismGoogleScopeReadonly), token := (PrismGoogle::prismGoogleTokenFresh), act := (PrismGoogle::prismGoogleActNone), halted := (PrismGoogle::prismGoogleHaltedNo)})) =? (PrismGoogle::prismGoogleAnswerFetch)) && ((PrismGoogle::prismGoogleJudge (record PrismGoogle::PrismGoogleRequest {service := (PrismGoogle::prismGoogleServiceGmail), method := (PrismGoogle::prismGoogleMethodRead), scope := (PrismGoogle::prismGoogleScopeNone), token := (PrismGoogle::prismGoogleTokenFresh), act := (PrismGoogle::prismGoogleActNone), halted := (PrismGoogle::prismGoogleHaltedNo)})) =? (PrismGoogle::prismGoogleAnswerConsent))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -419,7 +419,7 @@ theorem{
 theorem{
   name: realizabilityGoogleTokenMatters,
   parameters: [],
-  statement: ((((PrismGoogle::googleJudge (record PrismGoogle::GoogleRequest {service := (PrismGoogle::googleServiceGmail), method := (PrismGoogle::googleMethodRead), scope := (PrismGoogle::googleScopeReadonly), token := (PrismGoogle::googleTokenFresh), act := (PrismGoogle::googleActNone), halted := (PrismGoogle::googleHaltedNo)})) =? (PrismGoogle::googleAnswerFetch)) && ((PrismGoogle::googleJudge (record PrismGoogle::GoogleRequest {service := (PrismGoogle::googleServiceGmail), method := (PrismGoogle::googleMethodRead), scope := (PrismGoogle::googleScopeReadonly), token := (PrismGoogle::googleTokenNone), act := (PrismGoogle::googleActNone), halted := (PrismGoogle::googleHaltedNo)})) =? (PrismGoogle::googleAnswerConsent))) = true),
+  statement: ((((PrismGoogle::prismGoogleJudge (record PrismGoogle::PrismGoogleRequest {service := (PrismGoogle::prismGoogleServiceGmail), method := (PrismGoogle::prismGoogleMethodRead), scope := (PrismGoogle::prismGoogleScopeReadonly), token := (PrismGoogle::prismGoogleTokenFresh), act := (PrismGoogle::prismGoogleActNone), halted := (PrismGoogle::prismGoogleHaltedNo)})) =? (PrismGoogle::prismGoogleAnswerFetch)) && ((PrismGoogle::prismGoogleJudge (record PrismGoogle::PrismGoogleRequest {service := (PrismGoogle::prismGoogleServiceGmail), method := (PrismGoogle::prismGoogleMethodRead), scope := (PrismGoogle::prismGoogleScopeReadonly), token := (PrismGoogle::prismGoogleTokenNone), act := (PrismGoogle::prismGoogleActNone), halted := (PrismGoogle::prismGoogleHaltedNo)})) =? (PrismGoogle::prismGoogleAnswerConsent))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -427,7 +427,7 @@ theorem{
 theorem{
   name: realizabilityGoogleActMatters,
   parameters: [],
-  statement: ((((PrismGoogle::googleJudge (record PrismGoogle::GoogleRequest {service := (PrismGoogle::googleServiceGmail), method := (PrismGoogle::googleMethodWrite), scope := (PrismGoogle::googleScopeReadonly), token := (PrismGoogle::googleTokenFresh), act := (PrismGoogle::googleActNone), halted := (PrismGoogle::googleHaltedNo)})) =? (PrismGoogle::googleAnswerAsk)) && ((PrismGoogle::googleJudge (record PrismGoogle::GoogleRequest {service := (PrismGoogle::googleServiceGmail), method := (PrismGoogle::googleMethodWrite), scope := (PrismGoogle::googleScopeReadonly), token := (PrismGoogle::googleTokenFresh), act := (PrismGoogle::googleActOwner), halted := (PrismGoogle::googleHaltedNo)})) =? (PrismGoogle::googleAnswerConsent))) = true),
+  statement: ((((PrismGoogle::prismGoogleJudge (record PrismGoogle::PrismGoogleRequest {service := (PrismGoogle::prismGoogleServiceGmail), method := (PrismGoogle::prismGoogleMethodWrite), scope := (PrismGoogle::prismGoogleScopeReadonly), token := (PrismGoogle::prismGoogleTokenFresh), act := (PrismGoogle::prismGoogleActNone), halted := (PrismGoogle::prismGoogleHaltedNo)})) =? (PrismGoogle::prismGoogleAnswerAsk)) && ((PrismGoogle::prismGoogleJudge (record PrismGoogle::PrismGoogleRequest {service := (PrismGoogle::prismGoogleServiceGmail), method := (PrismGoogle::prismGoogleMethodWrite), scope := (PrismGoogle::prismGoogleScopeReadonly), token := (PrismGoogle::prismGoogleTokenFresh), act := (PrismGoogle::prismGoogleActOwner), halted := (PrismGoogle::prismGoogleHaltedNo)})) =? (PrismGoogle::prismGoogleAnswerConsent))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -435,7 +435,7 @@ theorem{
 theorem{
   name: realizabilityGoogleHaltedMatters,
   parameters: [],
-  statement: ((((PrismGoogle::googleJudge (record PrismGoogle::GoogleRequest {service := (PrismGoogle::googleServiceGmail), method := (PrismGoogle::googleMethodRead), scope := (PrismGoogle::googleScopeReadonly), token := (PrismGoogle::googleTokenFresh), act := (PrismGoogle::googleActNone), halted := (PrismGoogle::googleHaltedNo)})) =? (PrismGoogle::googleAnswerFetch)) && ((PrismGoogle::googleJudge (record PrismGoogle::GoogleRequest {service := (PrismGoogle::googleServiceGmail), method := (PrismGoogle::googleMethodRead), scope := (PrismGoogle::googleScopeReadonly), token := (PrismGoogle::googleTokenFresh), act := (PrismGoogle::googleActNone), halted := (PrismGoogle::googleHaltedYes)})) =? (PrismGoogle::googleAnswerRefuse))) = true),
+  statement: ((((PrismGoogle::prismGoogleJudge (record PrismGoogle::PrismGoogleRequest {service := (PrismGoogle::prismGoogleServiceGmail), method := (PrismGoogle::prismGoogleMethodRead), scope := (PrismGoogle::prismGoogleScopeReadonly), token := (PrismGoogle::prismGoogleTokenFresh), act := (PrismGoogle::prismGoogleActNone), halted := (PrismGoogle::prismGoogleHaltedNo)})) =? (PrismGoogle::prismGoogleAnswerFetch)) && ((PrismGoogle::prismGoogleJudge (record PrismGoogle::PrismGoogleRequest {service := (PrismGoogle::prismGoogleServiceGmail), method := (PrismGoogle::prismGoogleMethodRead), scope := (PrismGoogle::prismGoogleScopeReadonly), token := (PrismGoogle::prismGoogleTokenFresh), act := (PrismGoogle::prismGoogleActNone), halted := (PrismGoogle::prismGoogleHaltedYes)})) =? (PrismGoogle::prismGoogleAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -443,7 +443,7 @@ theorem{
 theorem{
   name: realizabilityGoogleLinkStageMatters,
   parameters: [],
-  statement: ((((PrismGoogleLink::googleLinkJudge (record PrismGoogleLink::GoogleLinkRequest {stage := (PrismGoogleLink::googleLinkStageUnprovisioned), event := (PrismGoogleLink::googleLinkEventProvision), actor := (PrismGoogleLink::googleLinkActorOperator), origin := (PrismGoogleLink::googleLinkOriginMatches), halted := (PrismGoogleLink::googleLinkHaltedNo)})) =? (PrismGoogleLink::googleLinkAnswerRegistered)) && ((PrismGoogleLink::googleLinkJudge (record PrismGoogleLink::GoogleLinkRequest {stage := (PrismGoogleLink::googleLinkStageRegistered), event := (PrismGoogleLink::googleLinkEventProvision), actor := (PrismGoogleLink::googleLinkActorOperator), origin := (PrismGoogleLink::googleLinkOriginMatches), halted := (PrismGoogleLink::googleLinkHaltedNo)})) =? (PrismGoogleLink::googleLinkAnswerRefuse))) = true),
+  statement: ((((PrismGoogleLink::prismGoogleLinkJudge (record PrismGoogleLink::PrismGoogleLinkRequest {stage := (PrismGoogleLink::prismGoogleLinkStageUnprovisioned), event := (PrismGoogleLink::prismGoogleLinkEventProvision), actor := (PrismGoogleLink::prismGoogleLinkActorOperator), origin := (PrismGoogleLink::prismGoogleLinkOriginMatches), halted := (PrismGoogleLink::prismGoogleLinkHaltedNo)})) =? (PrismGoogleLink::prismGoogleLinkAnswerRegistered)) && ((PrismGoogleLink::prismGoogleLinkJudge (record PrismGoogleLink::PrismGoogleLinkRequest {stage := (PrismGoogleLink::prismGoogleLinkStageRegistered), event := (PrismGoogleLink::prismGoogleLinkEventProvision), actor := (PrismGoogleLink::prismGoogleLinkActorOperator), origin := (PrismGoogleLink::prismGoogleLinkOriginMatches), halted := (PrismGoogleLink::prismGoogleLinkHaltedNo)})) =? (PrismGoogleLink::prismGoogleLinkAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -451,7 +451,7 @@ theorem{
 theorem{
   name: realizabilityGoogleLinkEventMatters,
   parameters: [],
-  statement: ((((PrismGoogleLink::googleLinkJudge (record PrismGoogleLink::GoogleLinkRequest {stage := (PrismGoogleLink::googleLinkStageUnprovisioned), event := (PrismGoogleLink::googleLinkEventProvision), actor := (PrismGoogleLink::googleLinkActorOperator), origin := (PrismGoogleLink::googleLinkOriginMatches), halted := (PrismGoogleLink::googleLinkHaltedNo)})) =? (PrismGoogleLink::googleLinkAnswerRegistered)) && ((PrismGoogleLink::googleLinkJudge (record PrismGoogleLink::GoogleLinkRequest {stage := (PrismGoogleLink::googleLinkStageUnprovisioned), event := (PrismGoogleLink::googleLinkEventConsent), actor := (PrismGoogleLink::googleLinkActorOperator), origin := (PrismGoogleLink::googleLinkOriginMatches), halted := (PrismGoogleLink::googleLinkHaltedNo)})) =? (PrismGoogleLink::googleLinkAnswerRefuse))) = true),
+  statement: ((((PrismGoogleLink::prismGoogleLinkJudge (record PrismGoogleLink::PrismGoogleLinkRequest {stage := (PrismGoogleLink::prismGoogleLinkStageUnprovisioned), event := (PrismGoogleLink::prismGoogleLinkEventProvision), actor := (PrismGoogleLink::prismGoogleLinkActorOperator), origin := (PrismGoogleLink::prismGoogleLinkOriginMatches), halted := (PrismGoogleLink::prismGoogleLinkHaltedNo)})) =? (PrismGoogleLink::prismGoogleLinkAnswerRegistered)) && ((PrismGoogleLink::prismGoogleLinkJudge (record PrismGoogleLink::PrismGoogleLinkRequest {stage := (PrismGoogleLink::prismGoogleLinkStageUnprovisioned), event := (PrismGoogleLink::prismGoogleLinkEventConsent), actor := (PrismGoogleLink::prismGoogleLinkActorOperator), origin := (PrismGoogleLink::prismGoogleLinkOriginMatches), halted := (PrismGoogleLink::prismGoogleLinkHaltedNo)})) =? (PrismGoogleLink::prismGoogleLinkAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -459,7 +459,7 @@ theorem{
 theorem{
   name: realizabilityGoogleLinkActorMatters,
   parameters: [],
-  statement: ((((PrismGoogleLink::googleLinkJudge (record PrismGoogleLink::GoogleLinkRequest {stage := (PrismGoogleLink::googleLinkStageUnprovisioned), event := (PrismGoogleLink::googleLinkEventProvision), actor := (PrismGoogleLink::googleLinkActorOperator), origin := (PrismGoogleLink::googleLinkOriginMatches), halted := (PrismGoogleLink::googleLinkHaltedNo)})) =? (PrismGoogleLink::googleLinkAnswerRegistered)) && ((PrismGoogleLink::googleLinkJudge (record PrismGoogleLink::GoogleLinkRequest {stage := (PrismGoogleLink::googleLinkStageUnprovisioned), event := (PrismGoogleLink::googleLinkEventProvision), actor := (PrismGoogleLink::googleLinkActorPrism), origin := (PrismGoogleLink::googleLinkOriginMatches), halted := (PrismGoogleLink::googleLinkHaltedNo)})) =? (PrismGoogleLink::googleLinkAnswerRefuse))) = true),
+  statement: ((((PrismGoogleLink::prismGoogleLinkJudge (record PrismGoogleLink::PrismGoogleLinkRequest {stage := (PrismGoogleLink::prismGoogleLinkStageUnprovisioned), event := (PrismGoogleLink::prismGoogleLinkEventProvision), actor := (PrismGoogleLink::prismGoogleLinkActorOperator), origin := (PrismGoogleLink::prismGoogleLinkOriginMatches), halted := (PrismGoogleLink::prismGoogleLinkHaltedNo)})) =? (PrismGoogleLink::prismGoogleLinkAnswerRegistered)) && ((PrismGoogleLink::prismGoogleLinkJudge (record PrismGoogleLink::PrismGoogleLinkRequest {stage := (PrismGoogleLink::prismGoogleLinkStageUnprovisioned), event := (PrismGoogleLink::prismGoogleLinkEventProvision), actor := (PrismGoogleLink::prismGoogleLinkActorPrism), origin := (PrismGoogleLink::prismGoogleLinkOriginMatches), halted := (PrismGoogleLink::prismGoogleLinkHaltedNo)})) =? (PrismGoogleLink::prismGoogleLinkAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -467,7 +467,7 @@ theorem{
 theorem{
   name: realizabilityGoogleLinkOriginMatters,
   parameters: [],
-  statement: ((((PrismGoogleLink::googleLinkJudge (record PrismGoogleLink::GoogleLinkRequest {stage := (PrismGoogleLink::googleLinkStageUnprovisioned), event := (PrismGoogleLink::googleLinkEventProvision), actor := (PrismGoogleLink::googleLinkActorOperator), origin := (PrismGoogleLink::googleLinkOriginMatches), halted := (PrismGoogleLink::googleLinkHaltedNo)})) =? (PrismGoogleLink::googleLinkAnswerRegistered)) && ((PrismGoogleLink::googleLinkJudge (record PrismGoogleLink::GoogleLinkRequest {stage := (PrismGoogleLink::googleLinkStageUnprovisioned), event := (PrismGoogleLink::googleLinkEventProvision), actor := (PrismGoogleLink::googleLinkActorOperator), origin := (PrismGoogleLink::googleLinkOriginDiffers), halted := (PrismGoogleLink::googleLinkHaltedNo)})) =? (PrismGoogleLink::googleLinkAnswerUnprovisioned))) = true),
+  statement: ((((PrismGoogleLink::prismGoogleLinkJudge (record PrismGoogleLink::PrismGoogleLinkRequest {stage := (PrismGoogleLink::prismGoogleLinkStageUnprovisioned), event := (PrismGoogleLink::prismGoogleLinkEventProvision), actor := (PrismGoogleLink::prismGoogleLinkActorOperator), origin := (PrismGoogleLink::prismGoogleLinkOriginMatches), halted := (PrismGoogleLink::prismGoogleLinkHaltedNo)})) =? (PrismGoogleLink::prismGoogleLinkAnswerRegistered)) && ((PrismGoogleLink::prismGoogleLinkJudge (record PrismGoogleLink::PrismGoogleLinkRequest {stage := (PrismGoogleLink::prismGoogleLinkStageUnprovisioned), event := (PrismGoogleLink::prismGoogleLinkEventProvision), actor := (PrismGoogleLink::prismGoogleLinkActorOperator), origin := (PrismGoogleLink::prismGoogleLinkOriginDiffers), halted := (PrismGoogleLink::prismGoogleLinkHaltedNo)})) =? (PrismGoogleLink::prismGoogleLinkAnswerUnprovisioned))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -475,7 +475,7 @@ theorem{
 theorem{
   name: realizabilityGoogleLinkHaltedMatters,
   parameters: [],
-  statement: ((((PrismGoogleLink::googleLinkJudge (record PrismGoogleLink::GoogleLinkRequest {stage := (PrismGoogleLink::googleLinkStageUnprovisioned), event := (PrismGoogleLink::googleLinkEventProvision), actor := (PrismGoogleLink::googleLinkActorOperator), origin := (PrismGoogleLink::googleLinkOriginMatches), halted := (PrismGoogleLink::googleLinkHaltedNo)})) =? (PrismGoogleLink::googleLinkAnswerRegistered)) && ((PrismGoogleLink::googleLinkJudge (record PrismGoogleLink::GoogleLinkRequest {stage := (PrismGoogleLink::googleLinkStageUnprovisioned), event := (PrismGoogleLink::googleLinkEventProvision), actor := (PrismGoogleLink::googleLinkActorOperator), origin := (PrismGoogleLink::googleLinkOriginMatches), halted := (PrismGoogleLink::googleLinkHaltedYes)})) =? (PrismGoogleLink::googleLinkAnswerRevoked))) = true),
+  statement: ((((PrismGoogleLink::prismGoogleLinkJudge (record PrismGoogleLink::PrismGoogleLinkRequest {stage := (PrismGoogleLink::prismGoogleLinkStageUnprovisioned), event := (PrismGoogleLink::prismGoogleLinkEventProvision), actor := (PrismGoogleLink::prismGoogleLinkActorOperator), origin := (PrismGoogleLink::prismGoogleLinkOriginMatches), halted := (PrismGoogleLink::prismGoogleLinkHaltedNo)})) =? (PrismGoogleLink::prismGoogleLinkAnswerRegistered)) && ((PrismGoogleLink::prismGoogleLinkJudge (record PrismGoogleLink::PrismGoogleLinkRequest {stage := (PrismGoogleLink::prismGoogleLinkStageUnprovisioned), event := (PrismGoogleLink::prismGoogleLinkEventProvision), actor := (PrismGoogleLink::prismGoogleLinkActorOperator), origin := (PrismGoogleLink::prismGoogleLinkOriginMatches), halted := (PrismGoogleLink::prismGoogleLinkHaltedYes)})) =? (PrismGoogleLink::prismGoogleLinkAnswerRevoked))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -555,7 +555,7 @@ theorem{
 theorem{
   name: realizabilityFolderGrantMatters,
   parameters: [],
-  statement: ((((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerRead)) && ((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantNone), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerAsk))) = true),
+  statement: ((((PrismFolder::prismFolderJudge (record PrismFolder::PrismFolderRequest {grant := (PrismFolder::prismFolderGrantGranted), format := (PrismFolder::prismFolderFormatMbox), action := (PrismFolder::prismFolderActionRead), bulk := (PrismFolder::prismFolderBulkSmall), halted := (PrismFolder::prismFolderHaltedNo)})) =? (PrismFolder::prismFolderAnswerRead)) && ((PrismFolder::prismFolderJudge (record PrismFolder::PrismFolderRequest {grant := (PrismFolder::prismFolderGrantNone), format := (PrismFolder::prismFolderFormatMbox), action := (PrismFolder::prismFolderActionRead), bulk := (PrismFolder::prismFolderBulkSmall), halted := (PrismFolder::prismFolderHaltedNo)})) =? (PrismFolder::prismFolderAnswerAsk))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -563,7 +563,7 @@ theorem{
 theorem{
   name: realizabilityFolderFormatMatters,
   parameters: [],
-  statement: ((((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerRead)) && ((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatOther), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerSkip))) = true),
+  statement: ((((PrismFolder::prismFolderJudge (record PrismFolder::PrismFolderRequest {grant := (PrismFolder::prismFolderGrantGranted), format := (PrismFolder::prismFolderFormatMbox), action := (PrismFolder::prismFolderActionRead), bulk := (PrismFolder::prismFolderBulkSmall), halted := (PrismFolder::prismFolderHaltedNo)})) =? (PrismFolder::prismFolderAnswerRead)) && ((PrismFolder::prismFolderJudge (record PrismFolder::PrismFolderRequest {grant := (PrismFolder::prismFolderGrantGranted), format := (PrismFolder::prismFolderFormatOther), action := (PrismFolder::prismFolderActionRead), bulk := (PrismFolder::prismFolderBulkSmall), halted := (PrismFolder::prismFolderHaltedNo)})) =? (PrismFolder::prismFolderAnswerSkip))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -571,7 +571,7 @@ theorem{
 theorem{
   name: realizabilityFolderActionMatters,
   parameters: [],
-  statement: ((((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerRead)) && ((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionWrite), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerRefuse))) = true),
+  statement: ((((PrismFolder::prismFolderJudge (record PrismFolder::PrismFolderRequest {grant := (PrismFolder::prismFolderGrantGranted), format := (PrismFolder::prismFolderFormatMbox), action := (PrismFolder::prismFolderActionRead), bulk := (PrismFolder::prismFolderBulkSmall), halted := (PrismFolder::prismFolderHaltedNo)})) =? (PrismFolder::prismFolderAnswerRead)) && ((PrismFolder::prismFolderJudge (record PrismFolder::PrismFolderRequest {grant := (PrismFolder::prismFolderGrantGranted), format := (PrismFolder::prismFolderFormatMbox), action := (PrismFolder::prismFolderActionWrite), bulk := (PrismFolder::prismFolderBulkSmall), halted := (PrismFolder::prismFolderHaltedNo)})) =? (PrismFolder::prismFolderAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -579,7 +579,7 @@ theorem{
 theorem{
   name: realizabilityFolderBulkMatters,
   parameters: [],
-  statement: ((((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerRead)) && ((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkLarge), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerSkip))) = true),
+  statement: ((((PrismFolder::prismFolderJudge (record PrismFolder::PrismFolderRequest {grant := (PrismFolder::prismFolderGrantGranted), format := (PrismFolder::prismFolderFormatMbox), action := (PrismFolder::prismFolderActionRead), bulk := (PrismFolder::prismFolderBulkSmall), halted := (PrismFolder::prismFolderHaltedNo)})) =? (PrismFolder::prismFolderAnswerRead)) && ((PrismFolder::prismFolderJudge (record PrismFolder::PrismFolderRequest {grant := (PrismFolder::prismFolderGrantGranted), format := (PrismFolder::prismFolderFormatMbox), action := (PrismFolder::prismFolderActionRead), bulk := (PrismFolder::prismFolderBulkLarge), halted := (PrismFolder::prismFolderHaltedNo)})) =? (PrismFolder::prismFolderAnswerSkip))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -587,7 +587,7 @@ theorem{
 theorem{
   name: realizabilityFolderHaltedMatters,
   parameters: [],
-  statement: ((((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedNo)})) =? (PrismFolder::folderAnswerRead)) && ((PrismFolder::folderJudge (record PrismFolder::FolderRequest {grant := (PrismFolder::folderGrantGranted), format := (PrismFolder::folderFormatMbox), action := (PrismFolder::folderActionRead), bulk := (PrismFolder::folderBulkSmall), halted := (PrismFolder::folderHaltedYes)})) =? (PrismFolder::folderAnswerRefuse))) = true),
+  statement: ((((PrismFolder::prismFolderJudge (record PrismFolder::PrismFolderRequest {grant := (PrismFolder::prismFolderGrantGranted), format := (PrismFolder::prismFolderFormatMbox), action := (PrismFolder::prismFolderActionRead), bulk := (PrismFolder::prismFolderBulkSmall), halted := (PrismFolder::prismFolderHaltedNo)})) =? (PrismFolder::prismFolderAnswerRead)) && ((PrismFolder::prismFolderJudge (record PrismFolder::PrismFolderRequest {grant := (PrismFolder::prismFolderGrantGranted), format := (PrismFolder::prismFolderFormatMbox), action := (PrismFolder::prismFolderActionRead), bulk := (PrismFolder::prismFolderBulkSmall), halted := (PrismFolder::prismFolderHaltedYes)})) =? (PrismFolder::prismFolderAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -595,7 +595,7 @@ theorem{
 theorem{
   name: realizabilityHostSurfaceMatters,
   parameters: [],
-  statement: ((((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantKept), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerUse)) && ((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFiles), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantKept), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerOffer))) = true),
+  statement: ((((PrismHost::prismHostJudge (record PrismHost::PrismHostRequest {surface := (PrismHost::prismHostSurfaceFolder), present := (PrismHost::prismHostPresentYes), act := (PrismHost::prismHostActNone), grant := (PrismHost::prismHostGrantKept), halted := (PrismHost::prismHostHaltedNo)})) =? (PrismHost::prismHostAnswerUse)) && ((PrismHost::prismHostJudge (record PrismHost::PrismHostRequest {surface := (PrismHost::prismHostSurfaceFiles), present := (PrismHost::prismHostPresentYes), act := (PrismHost::prismHostActNone), grant := (PrismHost::prismHostGrantKept), halted := (PrismHost::prismHostHaltedNo)})) =? (PrismHost::prismHostAnswerOffer))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -603,7 +603,7 @@ theorem{
 theorem{
   name: realizabilityHostPresentMatters,
   parameters: [],
-  statement: ((((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantKept), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerUse)) && ((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentNo), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantKept), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerRefuse))) = true),
+  statement: ((((PrismHost::prismHostJudge (record PrismHost::PrismHostRequest {surface := (PrismHost::prismHostSurfaceFolder), present := (PrismHost::prismHostPresentYes), act := (PrismHost::prismHostActNone), grant := (PrismHost::prismHostGrantKept), halted := (PrismHost::prismHostHaltedNo)})) =? (PrismHost::prismHostAnswerUse)) && ((PrismHost::prismHostJudge (record PrismHost::PrismHostRequest {surface := (PrismHost::prismHostSurfaceFolder), present := (PrismHost::prismHostPresentNo), act := (PrismHost::prismHostActNone), grant := (PrismHost::prismHostGrantKept), halted := (PrismHost::prismHostHaltedNo)})) =? (PrismHost::prismHostAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -611,7 +611,7 @@ theorem{
 theorem{
   name: realizabilityHostActMatters,
   parameters: [],
-  statement: ((((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantNone), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerOffer)) && ((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActOwner), grant := (PrismHost::hostGrantNone), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerUse))) = true),
+  statement: ((((PrismHost::prismHostJudge (record PrismHost::PrismHostRequest {surface := (PrismHost::prismHostSurfaceFolder), present := (PrismHost::prismHostPresentYes), act := (PrismHost::prismHostActNone), grant := (PrismHost::prismHostGrantNone), halted := (PrismHost::prismHostHaltedNo)})) =? (PrismHost::prismHostAnswerOffer)) && ((PrismHost::prismHostJudge (record PrismHost::PrismHostRequest {surface := (PrismHost::prismHostSurfaceFolder), present := (PrismHost::prismHostPresentYes), act := (PrismHost::prismHostActOwner), grant := (PrismHost::prismHostGrantNone), halted := (PrismHost::prismHostHaltedNo)})) =? (PrismHost::prismHostAnswerUse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -619,7 +619,7 @@ theorem{
 theorem{
   name: realizabilityHostGrantMatters,
   parameters: [],
-  statement: ((((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantKept), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerUse)) && ((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantNone), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerOffer))) = true),
+  statement: ((((PrismHost::prismHostJudge (record PrismHost::PrismHostRequest {surface := (PrismHost::prismHostSurfaceFolder), present := (PrismHost::prismHostPresentYes), act := (PrismHost::prismHostActNone), grant := (PrismHost::prismHostGrantKept), halted := (PrismHost::prismHostHaltedNo)})) =? (PrismHost::prismHostAnswerUse)) && ((PrismHost::prismHostJudge (record PrismHost::PrismHostRequest {surface := (PrismHost::prismHostSurfaceFolder), present := (PrismHost::prismHostPresentYes), act := (PrismHost::prismHostActNone), grant := (PrismHost::prismHostGrantNone), halted := (PrismHost::prismHostHaltedNo)})) =? (PrismHost::prismHostAnswerOffer))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -627,7 +627,7 @@ theorem{
 theorem{
   name: realizabilityHostHaltedMatters,
   parameters: [],
-  statement: ((((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantKept), halted := (PrismHost::hostHaltedNo)})) =? (PrismHost::hostAnswerUse)) && ((PrismHost::hostJudge (record PrismHost::HostRequest {surface := (PrismHost::hostSurfaceFolder), present := (PrismHost::hostPresentYes), act := (PrismHost::hostActNone), grant := (PrismHost::hostGrantKept), halted := (PrismHost::hostHaltedYes)})) =? (PrismHost::hostAnswerRefuse))) = true),
+  statement: ((((PrismHost::prismHostJudge (record PrismHost::PrismHostRequest {surface := (PrismHost::prismHostSurfaceFolder), present := (PrismHost::prismHostPresentYes), act := (PrismHost::prismHostActNone), grant := (PrismHost::prismHostGrantKept), halted := (PrismHost::prismHostHaltedNo)})) =? (PrismHost::prismHostAnswerUse)) && ((PrismHost::prismHostJudge (record PrismHost::PrismHostRequest {surface := (PrismHost::prismHostSurfaceFolder), present := (PrismHost::prismHostPresentYes), act := (PrismHost::prismHostActNone), grant := (PrismHost::prismHostGrantKept), halted := (PrismHost::prismHostHaltedYes)})) =? (PrismHost::prismHostAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -803,7 +803,7 @@ theorem{
 theorem{
   name: realizabilitySourceServiceMatters,
   parameters: [],
-  statement: ((((PrismSource::sourceJudge (record PrismSource::SourceRequest {service := (PrismSource::sourceServiceGmail), route := (PrismSource::sourceRouteOwn), act := (PrismSource::sourceActRead), halted := (PrismSource::sourceHaltedNo)})) =? (PrismSource::sourceAnswerRead)) && ((PrismSource::sourceJudge (record PrismSource::SourceRequest {service := (PrismSource::sourceServiceDiscord), route := (PrismSource::sourceRouteOwn), act := (PrismSource::sourceActRead), halted := (PrismSource::sourceHaltedNo)})) =? (PrismSource::sourceAnswerRefuse))) = true),
+  statement: ((((PrismSource::prismSourceJudge (record PrismSource::PrismSourceRequest {service := (PrismSource::prismSourceServiceGmail), route := (PrismSource::prismSourceRouteOwn), act := (PrismSource::prismSourceActRead), halted := (PrismSource::prismSourceHaltedNo)})) =? (PrismSource::prismSourceAnswerRead)) && ((PrismSource::prismSourceJudge (record PrismSource::PrismSourceRequest {service := (PrismSource::prismSourceServiceDiscord), route := (PrismSource::prismSourceRouteOwn), act := (PrismSource::prismSourceActRead), halted := (PrismSource::prismSourceHaltedNo)})) =? (PrismSource::prismSourceAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -811,7 +811,7 @@ theorem{
 theorem{
   name: realizabilitySourceRouteMatters,
   parameters: [],
-  statement: ((((PrismSource::sourceJudge (record PrismSource::SourceRequest {service := (PrismSource::sourceServiceDiscord), route := (PrismSource::sourceRouteSeen), act := (PrismSource::sourceActRead), halted := (PrismSource::sourceHaltedNo)})) =? (PrismSource::sourceAnswerRead)) && ((PrismSource::sourceJudge (record PrismSource::SourceRequest {service := (PrismSource::sourceServiceDiscord), route := (PrismSource::sourceRouteOwn), act := (PrismSource::sourceActRead), halted := (PrismSource::sourceHaltedNo)})) =? (PrismSource::sourceAnswerRefuse))) = true),
+  statement: ((((PrismSource::prismSourceJudge (record PrismSource::PrismSourceRequest {service := (PrismSource::prismSourceServiceDiscord), route := (PrismSource::prismSourceRouteSeen), act := (PrismSource::prismSourceActRead), halted := (PrismSource::prismSourceHaltedNo)})) =? (PrismSource::prismSourceAnswerRead)) && ((PrismSource::prismSourceJudge (record PrismSource::PrismSourceRequest {service := (PrismSource::prismSourceServiceDiscord), route := (PrismSource::prismSourceRouteOwn), act := (PrismSource::prismSourceActRead), halted := (PrismSource::prismSourceHaltedNo)})) =? (PrismSource::prismSourceAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -819,7 +819,7 @@ theorem{
 theorem{
   name: realizabilitySourceActMatters,
   parameters: [],
-  statement: ((((PrismSource::sourceJudge (record PrismSource::SourceRequest {service := (PrismSource::sourceServiceGmail), route := (PrismSource::sourceRouteOwn), act := (PrismSource::sourceActRead), halted := (PrismSource::sourceHaltedNo)})) =? (PrismSource::sourceAnswerRead)) && ((PrismSource::sourceJudge (record PrismSource::SourceRequest {service := (PrismSource::sourceServiceGmail), route := (PrismSource::sourceRouteOwn), act := (PrismSource::sourceActWrite), halted := (PrismSource::sourceHaltedNo)})) =? (PrismSource::sourceAnswerRefuse))) = true),
+  statement: ((((PrismSource::prismSourceJudge (record PrismSource::PrismSourceRequest {service := (PrismSource::prismSourceServiceGmail), route := (PrismSource::prismSourceRouteOwn), act := (PrismSource::prismSourceActRead), halted := (PrismSource::prismSourceHaltedNo)})) =? (PrismSource::prismSourceAnswerRead)) && ((PrismSource::prismSourceJudge (record PrismSource::PrismSourceRequest {service := (PrismSource::prismSourceServiceGmail), route := (PrismSource::prismSourceRouteOwn), act := (PrismSource::prismSourceActWrite), halted := (PrismSource::prismSourceHaltedNo)})) =? (PrismSource::prismSourceAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -827,7 +827,7 @@ theorem{
 theorem{
   name: realizabilitySourceHaltedMatters,
   parameters: [],
-  statement: ((((PrismSource::sourceJudge (record PrismSource::SourceRequest {service := (PrismSource::sourceServiceGmail), route := (PrismSource::sourceRouteOwn), act := (PrismSource::sourceActRead), halted := (PrismSource::sourceHaltedNo)})) =? (PrismSource::sourceAnswerRead)) && ((PrismSource::sourceJudge (record PrismSource::SourceRequest {service := (PrismSource::sourceServiceGmail), route := (PrismSource::sourceRouteOwn), act := (PrismSource::sourceActRead), halted := (PrismSource::sourceHaltedYes)})) =? (PrismSource::sourceAnswerRefuse))) = true),
+  statement: ((((PrismSource::prismSourceJudge (record PrismSource::PrismSourceRequest {service := (PrismSource::prismSourceServiceGmail), route := (PrismSource::prismSourceRouteOwn), act := (PrismSource::prismSourceActRead), halted := (PrismSource::prismSourceHaltedNo)})) =? (PrismSource::prismSourceAnswerRead)) && ((PrismSource::prismSourceJudge (record PrismSource::PrismSourceRequest {service := (PrismSource::prismSourceServiceGmail), route := (PrismSource::prismSourceRouteOwn), act := (PrismSource::prismSourceActRead), halted := (PrismSource::prismSourceHaltedYes)})) =? (PrismSource::prismSourceAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -995,7 +995,7 @@ theorem{
 theorem{
   name: realizabilityModelsSourceMatters,
   parameters: [],
-  statement: ((((PrismModels::modelsJudge (record PrismModels::ModelsRequest {source := (PrismModels::modelsSourceLocked), format := (PrismModels::modelsFormatOnnx), runtime := (PrismModels::modelsRuntimeMatch), weights := (PrismModels::modelsWeightsMatch), route := (PrismModels::modelsRouteGranted), halted := (PrismModels::modelsHaltedNo)})) =? (PrismModels::modelsAnswerRun)) && ((PrismModels::modelsJudge (record PrismModels::ModelsRequest {source := (PrismModels::modelsSourceUnlocked), format := (PrismModels::modelsFormatOnnx), runtime := (PrismModels::modelsRuntimeMatch), weights := (PrismModels::modelsWeightsMatch), route := (PrismModels::modelsRouteGranted), halted := (PrismModels::modelsHaltedNo)})) =? (PrismModels::modelsAnswerRefuse))) = true),
+  statement: ((((PrismModels::prismModelsJudge (record PrismModels::PrismModelsRequest {source := (PrismModels::prismModelsSourceLocked), format := (PrismModels::prismModelsFormatOnnx), runtime := (PrismModels::prismModelsRuntimeMatch), weights := (PrismModels::prismModelsWeightsMatch), route := (PrismModels::prismModelsRouteGranted), halted := (PrismModels::prismModelsHaltedNo)})) =? (PrismModels::prismModelsAnswerRun)) && ((PrismModels::prismModelsJudge (record PrismModels::PrismModelsRequest {source := (PrismModels::prismModelsSourceUnlocked), format := (PrismModels::prismModelsFormatOnnx), runtime := (PrismModels::prismModelsRuntimeMatch), weights := (PrismModels::prismModelsWeightsMatch), route := (PrismModels::prismModelsRouteGranted), halted := (PrismModels::prismModelsHaltedNo)})) =? (PrismModels::prismModelsAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -1003,7 +1003,7 @@ theorem{
 theorem{
   name: realizabilityModelsFormatMatters,
   parameters: [],
-  statement: ((((PrismModels::modelsJudge (record PrismModels::ModelsRequest {source := (PrismModels::modelsSourceLocked), format := (PrismModels::modelsFormatOnnx), runtime := (PrismModels::modelsRuntimeMatch), weights := (PrismModels::modelsWeightsMatch), route := (PrismModels::modelsRouteGranted), halted := (PrismModels::modelsHaltedNo)})) =? (PrismModels::modelsAnswerRun)) && ((PrismModels::modelsJudge (record PrismModels::ModelsRequest {source := (PrismModels::modelsSourceLocked), format := (PrismModels::modelsFormatOther), runtime := (PrismModels::modelsRuntimeMatch), weights := (PrismModels::modelsWeightsMatch), route := (PrismModels::modelsRouteGranted), halted := (PrismModels::modelsHaltedNo)})) =? (PrismModels::modelsAnswerRefuse))) = true),
+  statement: ((((PrismModels::prismModelsJudge (record PrismModels::PrismModelsRequest {source := (PrismModels::prismModelsSourceLocked), format := (PrismModels::prismModelsFormatOnnx), runtime := (PrismModels::prismModelsRuntimeMatch), weights := (PrismModels::prismModelsWeightsMatch), route := (PrismModels::prismModelsRouteGranted), halted := (PrismModels::prismModelsHaltedNo)})) =? (PrismModels::prismModelsAnswerRun)) && ((PrismModels::prismModelsJudge (record PrismModels::PrismModelsRequest {source := (PrismModels::prismModelsSourceLocked), format := (PrismModels::prismModelsFormatOther), runtime := (PrismModels::prismModelsRuntimeMatch), weights := (PrismModels::prismModelsWeightsMatch), route := (PrismModels::prismModelsRouteGranted), halted := (PrismModels::prismModelsHaltedNo)})) =? (PrismModels::prismModelsAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -1011,7 +1011,7 @@ theorem{
 theorem{
   name: realizabilityModelsRuntimeMatters,
   parameters: [],
-  statement: ((((PrismModels::modelsJudge (record PrismModels::ModelsRequest {source := (PrismModels::modelsSourceLocked), format := (PrismModels::modelsFormatOnnx), runtime := (PrismModels::modelsRuntimeMatch), weights := (PrismModels::modelsWeightsMatch), route := (PrismModels::modelsRouteGranted), halted := (PrismModels::modelsHaltedNo)})) =? (PrismModels::modelsAnswerRun)) && ((PrismModels::modelsJudge (record PrismModels::ModelsRequest {source := (PrismModels::modelsSourceLocked), format := (PrismModels::modelsFormatOnnx), runtime := (PrismModels::modelsRuntimeMismatch), weights := (PrismModels::modelsWeightsMatch), route := (PrismModels::modelsRouteGranted), halted := (PrismModels::modelsHaltedNo)})) =? (PrismModels::modelsAnswerRefuse))) = true),
+  statement: ((((PrismModels::prismModelsJudge (record PrismModels::PrismModelsRequest {source := (PrismModels::prismModelsSourceLocked), format := (PrismModels::prismModelsFormatOnnx), runtime := (PrismModels::prismModelsRuntimeMatch), weights := (PrismModels::prismModelsWeightsMatch), route := (PrismModels::prismModelsRouteGranted), halted := (PrismModels::prismModelsHaltedNo)})) =? (PrismModels::prismModelsAnswerRun)) && ((PrismModels::prismModelsJudge (record PrismModels::PrismModelsRequest {source := (PrismModels::prismModelsSourceLocked), format := (PrismModels::prismModelsFormatOnnx), runtime := (PrismModels::prismModelsRuntimeMismatch), weights := (PrismModels::prismModelsWeightsMatch), route := (PrismModels::prismModelsRouteGranted), halted := (PrismModels::prismModelsHaltedNo)})) =? (PrismModels::prismModelsAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -1019,7 +1019,7 @@ theorem{
 theorem{
   name: realizabilityModelsWeightsMatters,
   parameters: [],
-  statement: ((((PrismModels::modelsJudge (record PrismModels::ModelsRequest {source := (PrismModels::modelsSourceLocked), format := (PrismModels::modelsFormatOnnx), runtime := (PrismModels::modelsRuntimeMatch), weights := (PrismModels::modelsWeightsMatch), route := (PrismModels::modelsRouteGranted), halted := (PrismModels::modelsHaltedNo)})) =? (PrismModels::modelsAnswerRun)) && ((PrismModels::modelsJudge (record PrismModels::ModelsRequest {source := (PrismModels::modelsSourceLocked), format := (PrismModels::modelsFormatOnnx), runtime := (PrismModels::modelsRuntimeMatch), weights := (PrismModels::modelsWeightsMismatch), route := (PrismModels::modelsRouteGranted), halted := (PrismModels::modelsHaltedNo)})) =? (PrismModels::modelsAnswerRefuse))) = true),
+  statement: ((((PrismModels::prismModelsJudge (record PrismModels::PrismModelsRequest {source := (PrismModels::prismModelsSourceLocked), format := (PrismModels::prismModelsFormatOnnx), runtime := (PrismModels::prismModelsRuntimeMatch), weights := (PrismModels::prismModelsWeightsMatch), route := (PrismModels::prismModelsRouteGranted), halted := (PrismModels::prismModelsHaltedNo)})) =? (PrismModels::prismModelsAnswerRun)) && ((PrismModels::prismModelsJudge (record PrismModels::PrismModelsRequest {source := (PrismModels::prismModelsSourceLocked), format := (PrismModels::prismModelsFormatOnnx), runtime := (PrismModels::prismModelsRuntimeMatch), weights := (PrismModels::prismModelsWeightsMismatch), route := (PrismModels::prismModelsRouteGranted), halted := (PrismModels::prismModelsHaltedNo)})) =? (PrismModels::prismModelsAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -1027,7 +1027,7 @@ theorem{
 theorem{
   name: realizabilityModelsRouteMatters,
   parameters: [],
-  statement: ((((PrismModels::modelsJudge (record PrismModels::ModelsRequest {source := (PrismModels::modelsSourceLocked), format := (PrismModels::modelsFormatOnnx), runtime := (PrismModels::modelsRuntimeMatch), weights := (PrismModels::modelsWeightsMatch), route := (PrismModels::modelsRouteGranted), halted := (PrismModels::modelsHaltedNo)})) =? (PrismModels::modelsAnswerRun)) && ((PrismModels::modelsJudge (record PrismModels::ModelsRequest {source := (PrismModels::modelsSourceLocked), format := (PrismModels::modelsFormatOnnx), runtime := (PrismModels::modelsRuntimeMatch), weights := (PrismModels::modelsWeightsMatch), route := (PrismModels::modelsRouteUngranted), halted := (PrismModels::modelsHaltedNo)})) =? (PrismModels::modelsAnswerAsk))) = true),
+  statement: ((((PrismModels::prismModelsJudge (record PrismModels::PrismModelsRequest {source := (PrismModels::prismModelsSourceLocked), format := (PrismModels::prismModelsFormatOnnx), runtime := (PrismModels::prismModelsRuntimeMatch), weights := (PrismModels::prismModelsWeightsMatch), route := (PrismModels::prismModelsRouteGranted), halted := (PrismModels::prismModelsHaltedNo)})) =? (PrismModels::prismModelsAnswerRun)) && ((PrismModels::prismModelsJudge (record PrismModels::PrismModelsRequest {source := (PrismModels::prismModelsSourceLocked), format := (PrismModels::prismModelsFormatOnnx), runtime := (PrismModels::prismModelsRuntimeMatch), weights := (PrismModels::prismModelsWeightsMatch), route := (PrismModels::prismModelsRouteUngranted), halted := (PrismModels::prismModelsHaltedNo)})) =? (PrismModels::prismModelsAnswerAsk))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -1035,7 +1035,7 @@ theorem{
 theorem{
   name: realizabilityModelsHaltedMatters,
   parameters: [],
-  statement: ((((PrismModels::modelsJudge (record PrismModels::ModelsRequest {source := (PrismModels::modelsSourceLocked), format := (PrismModels::modelsFormatOnnx), runtime := (PrismModels::modelsRuntimeMatch), weights := (PrismModels::modelsWeightsMatch), route := (PrismModels::modelsRouteGranted), halted := (PrismModels::modelsHaltedNo)})) =? (PrismModels::modelsAnswerRun)) && ((PrismModels::modelsJudge (record PrismModels::ModelsRequest {source := (PrismModels::modelsSourceLocked), format := (PrismModels::modelsFormatOnnx), runtime := (PrismModels::modelsRuntimeMatch), weights := (PrismModels::modelsWeightsMatch), route := (PrismModels::modelsRouteGranted), halted := (PrismModels::modelsHaltedYes)})) =? (PrismModels::modelsAnswerRefuse))) = true),
+  statement: ((((PrismModels::prismModelsJudge (record PrismModels::PrismModelsRequest {source := (PrismModels::prismModelsSourceLocked), format := (PrismModels::prismModelsFormatOnnx), runtime := (PrismModels::prismModelsRuntimeMatch), weights := (PrismModels::prismModelsWeightsMatch), route := (PrismModels::prismModelsRouteGranted), halted := (PrismModels::prismModelsHaltedNo)})) =? (PrismModels::prismModelsAnswerRun)) && ((PrismModels::prismModelsJudge (record PrismModels::PrismModelsRequest {source := (PrismModels::prismModelsSourceLocked), format := (PrismModels::prismModelsFormatOnnx), runtime := (PrismModels::prismModelsRuntimeMatch), weights := (PrismModels::prismModelsWeightsMatch), route := (PrismModels::prismModelsRouteGranted), halted := (PrismModels::prismModelsHaltedYes)})) =? (PrismModels::prismModelsAnswerRefuse))) = true),
   proof: reflexivity{},
   axioms: []
 }

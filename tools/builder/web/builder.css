@@ -1,0 +1,32 @@
+/* The start page, the gallery and the example pages, on top of the learning
+   catalog's uor.foundation look (learn/devrel.css). */
+main.wide { max-width: 1100px; margin: 0 auto; padding: 32px clamp(16px, 4vw, 36px) 64px; }
+.dim { color: hsl(var(--fd-dim)); }
+.note { border-left: 3px solid hsl(var(--fd-line-strong)); padding: 8px 14px; background: hsl(var(--fd-panel)); }
+.steps { max-width: 46rem; padding-left: 1.2em; }
+.steps li { margin: 10px 0; }
+.cards { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 19rem), 1fr)); gap: 16px; max-width: none; }
+.card { border: 1px solid hsl(var(--fd-line)); border-radius: 8px; padding: 16px; background: hsl(var(--fd-panel)); }
+.card h3 { margin: 0 0 8px; font-size: 21px; }
+.card p { margin: 6px 0; }
+.card .eyebrow { margin: 0; font-size: 12px; }
+.builder { border: 1px solid hsl(var(--fd-line)); border-radius: 8px; padding: 16px; background: hsl(var(--fd-panel)); }
+.builder .row, .try { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 10px 0; }
+.builder textarea { width: 100%; font: 13px/1.5 "JetBrains Mono", ui-monospace, monospace; background: hsl(var(--fd-bg)); color: hsl(var(--fd-fg)); border: 1px solid hsl(var(--fd-line)); border-radius: 6px; padding: 10px; }
+select { max-width: 100%; }
+select, input, button { font: inherit; color: hsl(var(--fd-fg)); background: hsl(var(--fd-bg)); border: 1px solid hsl(var(--fd-line-strong)); border-radius: 6px; padding: 6px 12px; min-height: 40px; }
+button { cursor: pointer; font-weight: 700; }
+button:not(:disabled):hover { border-color: hsl(var(--fd-fg)); }
+button:disabled { opacity: 0.5; cursor: default; }
+.try input { flex: 1 1 12rem; font-family: "JetBrains Mono", ui-monospace, monospace; }
+output { font-family: "JetBrains Mono", ui-monospace, monospace; font-size: 14px; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.source { border-top: 1px solid hsl(var(--fd-line)); padding: 6px 0; }
+.source summary { cursor: pointer; }
+.source pre { max-height: 32rem; }
+.fp code { font-size: 12px; word-break: break-all; }
+.verified .stats dd { font-size: clamp(18px, 2.4vw, 28px); }
+.run { display: grid; gap: 10px; margin: 16px 0 0; }
+.run textarea { width: 100%; font: 13px/1.5 "JetBrains Mono", ui-monospace, monospace; background: hsl(var(--fd-bg)); color: hsl(var(--fd-fg)); border: 1px solid hsl(var(--fd-line)); border-radius: 6px; padding: 10px; }
+.run button { justify-self: start; }
+.trace { font: 14px/1.6 "JetBrains Mono", ui-monospace, monospace; margin: 0; }

@@ -132,36 +132,34 @@ fn models_md_01() {
         "MD-01: PrismModels is a library of the Prism, not a second application root"
     );
     assert!(
-        declaration(&model, "modelsDispatch")
-            .contains("(modelsEncodeAnswer (modelsJudge request))"),
+        declaration(&model, "prismModelsDispatch")
+            .contains("(prismModelsEncodeAnswer (prismModelsJudge request))"),
         "MD-01: the answer must be decided by the judge the guarantees are about"
     );
     for n in 1..=9 {
-        let theorem = declaration(&proofs, &format!("modelsInv00{n}Holds"));
+        let theorem = declaration(&proofs, &format!("inv00{n}Holds"));
         assert!(
-            theorem.contains("parameters: [request : PrismModels::ModelsRequest],")
-                && theorem.contains(&format!(
-                    "statement: ((modelsBreaksInv00{n} request) = false),"
-                ))
+            theorem.contains("parameters: [request : PrismModels::PrismModelsRequest],")
+                && theorem.contains(&format!("statement: ((breaksInv00{n} request) = false),"))
                 && theorem.contains("axioms: [Quot.sound, propext]"),
             "MD-01: guarantee {n} changed its statement or axioms:\n{theorem}"
         );
         assert!(
-            declaration(&proofs, &format!("modelsBreaksInv00{n}"))
-                .contains("(PrismModels::modelsJudge request)"),
+            declaration(&proofs, &format!("breaksInv00{n}"))
+                .contains("(PrismModels::prismModelsJudge request)"),
             "MD-01: guarantee {n} must be about the judge"
         );
     }
     assert!(
-        proofs.find("modelsInv010Holds").is_none(),
+        proofs.find("inv010Holds").is_none(),
         "MD-01: the register counts nine guarantees"
     );
     // INV-001 and INV-005: never run while halted, never run a model the owner did not grant.
-    assert!(declaration(&proofs, "modelsBreaksInv001").contains(
-        "((project request halted) =? (PrismModels::modelsHaltedYes))) && ((PrismModels::modelsJudge request) =? (PrismModels::modelsAnswerRun))"
+    assert!(declaration(&proofs, "breaksInv001").contains(
+        "((project request halted) =? (PrismModels::prismModelsHaltedYes))) && ((PrismModels::prismModelsJudge request) =? (PrismModels::prismModelsAnswerRun))"
     ));
-    assert!(declaration(&proofs, "modelsBreaksInv005").contains(
-        "((project request route) =? (PrismModels::modelsRouteUngranted))) && ((PrismModels::modelsJudge request) =? (PrismModels::modelsAnswerRun))"
+    assert!(declaration(&proofs, "breaksInv005").contains(
+        "((project request route) =? (PrismModels::prismModelsRouteUngranted))) && ((PrismModels::prismModelsJudge request) =? (PrismModels::prismModelsAnswerRun))"
     ));
     let project = read("app/lexlean.toml");
     for entry in ["src/PrismModels.lex.tex", "src/PrismModelsProofs.lex.tex"] {
@@ -171,7 +169,8 @@ fn models_md_01() {
         );
     }
     assert!(
-        read("tools/prism_root.py").contains("(\"model\", \"PrismModels\", \"modelsDispatch\")"),
+        read("tools/prism_root.py")
+            .contains("(\"model\", \"PrismModels\", \"prismModelsDispatch\")"),
         "MD-01: the Prism root must route the model facet"
     );
 

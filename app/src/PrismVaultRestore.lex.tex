@@ -6,34 +6,34 @@
 \importmodule{Foundation.View.Text.V1.Model}
 \title{Text application model}
 \begin{semanticmodule}
-definition{name: restoreKeyPresent, parameters: [], result: Nat, body: 0}
+definition{name: prismVaultRestoreKeyPresent, parameters: [], result: Nat, body: 0}
 
-definition{name: restoreKeyMissing, parameters: [], result: Nat, body: 1}
+definition{name: prismVaultRestoreKeyMissing, parameters: [], result: Nat, body: 1}
 
-definition{name: restoreFormatKnown, parameters: [], result: Nat, body: 0}
+definition{name: prismVaultRestoreFormatKnown, parameters: [], result: Nat, body: 0}
 
-definition{name: restoreFormatUnknown, parameters: [], result: Nat, body: 1}
+definition{name: prismVaultRestoreFormatUnknown, parameters: [], result: Nat, body: 1}
 
-definition{name: restoreSealValid, parameters: [], result: Nat, body: 0}
+definition{name: prismVaultRestoreSealValid, parameters: [], result: Nat, body: 0}
 
-definition{name: restoreSealBroken, parameters: [], result: Nat, body: 1}
+definition{name: prismVaultRestoreSealBroken, parameters: [], result: Nat, body: 1}
 
-definition{name: restoreAddressDerived, parameters: [], result: Nat, body: 0}
+definition{name: prismVaultRestoreAddressDerived, parameters: [], result: Nat, body: 0}
 
-definition{name: restoreAddressMismatch, parameters: [], result: Nat, body: 1}
+definition{name: prismVaultRestoreAddressMismatch, parameters: [], result: Nat, body: 1}
 
-definition{name: restoreKindValue, parameters: [], result: Nat, body: 0}
+definition{name: prismVaultRestoreKindValue, parameters: [], result: Nat, body: 0}
 
-definition{name: restoreKindHash, parameters: [], result: Nat, body: 1}
+definition{name: prismVaultRestoreKindHash, parameters: [], result: Nat, body: 1}
 
-definition{name: restoreAnswerRestore, parameters: [], result: Nat, body: 0}
+definition{name: prismVaultRestoreAnswerRestore, parameters: [], result: Nat, body: 0}
 
-definition{name: restoreAnswerHashonly, parameters: [], result: Nat, body: 1}
+definition{name: prismVaultRestoreAnswerHashonly, parameters: [], result: Nat, body: 1}
 
-definition{name: restoreAnswerRefuse, parameters: [], result: Nat, body: 2}
+definition{name: prismVaultRestoreAnswerRefuse, parameters: [], result: Nat, body: 2}
 
 structure{
-  name: RestoreRequest,
+  name: PrismVaultRestoreRequest,
   type_parameters: [],
   parameters: [],
   fields: [
@@ -46,7 +46,7 @@ structure{
 }
 
 definition{
-  name: restoreByteAt,
+  name: prismVaultRestoreByteAt,
   parameters: [s : Bytes, i : Nat],
   result: (Option Nat),
   body: (match (prim index s i : (Option UInt8))
@@ -56,73 +56,73 @@ definition{
 }
 
 definition{
-  name: restoreDigitsValue,
+  name: prismVaultRestoreDigitsValue,
   parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
   result: (Option Nat),
   body: (match fuel
     | Nat.zero => (ctor Option.some [Nat] acc)
-    | Nat.succ rest => (match (restoreByteAt s i)
+    | Nat.succ rest => (match (prismVaultRestoreByteAt s i)
       | Option.none => (ctor Option.none [Nat])
-      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (restoreDigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (prismVaultRestoreDigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
-  name: restoreParseDigits,
+  name: prismVaultRestoreParseDigits,
   parameters: [s : Bytes],
   result: (Option Nat),
-  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (restoreByteAt s 0)
+  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (prismVaultRestoreByteAt s 0)
     | Option.none => (ctor Option.none [Nat])
-    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (restoreDigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
+    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (prismVaultRestoreDigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: restoreParseNumber,
+  name: prismVaultRestoreParseNumber,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (restoreParseDigits value),
+  body: (prismVaultRestoreParseDigits value),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: restoreParseKey,
+  name: prismVaultRestoreParseKey,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x70726573656e74 : Bool) then (ctor Option.some [Nat] (restoreKeyPresent)) else (if (prim equal value 0x6d697373696e67 : Bool) then (ctor Option.some [Nat] (restoreKeyMissing)) else (ctor Option.none [Nat])))
+  body: (if (prim equal value 0x70726573656e74 : Bool) then (ctor Option.some [Nat] (prismVaultRestoreKeyPresent)) else (if (prim equal value 0x6d697373696e67 : Bool) then (ctor Option.some [Nat] (prismVaultRestoreKeyMissing)) else (ctor Option.none [Nat])))
 }
 
 definition{
-  name: restoreParseFormat,
+  name: prismVaultRestoreParseFormat,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x6b6e6f776e : Bool) then (ctor Option.some [Nat] (restoreFormatKnown)) else (if (prim equal value 0x756e6b6e6f776e : Bool) then (ctor Option.some [Nat] (restoreFormatUnknown)) else (ctor Option.none [Nat])))
+  body: (if (prim equal value 0x6b6e6f776e : Bool) then (ctor Option.some [Nat] (prismVaultRestoreFormatKnown)) else (if (prim equal value 0x756e6b6e6f776e : Bool) then (ctor Option.some [Nat] (prismVaultRestoreFormatUnknown)) else (ctor Option.none [Nat])))
 }
 
 definition{
-  name: restoreParseSeal,
+  name: prismVaultRestoreParseSeal,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x76616c6964 : Bool) then (ctor Option.some [Nat] (restoreSealValid)) else (if (prim equal value 0x62726f6b656e : Bool) then (ctor Option.some [Nat] (restoreSealBroken)) else (ctor Option.none [Nat])))
+  body: (if (prim equal value 0x76616c6964 : Bool) then (ctor Option.some [Nat] (prismVaultRestoreSealValid)) else (if (prim equal value 0x62726f6b656e : Bool) then (ctor Option.some [Nat] (prismVaultRestoreSealBroken)) else (ctor Option.none [Nat])))
 }
 
 definition{
-  name: restoreParseAddress,
+  name: prismVaultRestoreParseAddress,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x64657269766564 : Bool) then (ctor Option.some [Nat] (restoreAddressDerived)) else (if (prim equal value 0x6d69736d61746368 : Bool) then (ctor Option.some [Nat] (restoreAddressMismatch)) else (ctor Option.none [Nat])))
+  body: (if (prim equal value 0x64657269766564 : Bool) then (ctor Option.some [Nat] (prismVaultRestoreAddressDerived)) else (if (prim equal value 0x6d69736d61746368 : Bool) then (ctor Option.some [Nat] (prismVaultRestoreAddressMismatch)) else (ctor Option.none [Nat])))
 }
 
 definition{
-  name: restoreParseKind,
+  name: prismVaultRestoreParseKind,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x76616c7565 : Bool) then (ctor Option.some [Nat] (restoreKindValue)) else (if (prim equal value 0x68617368 : Bool) then (ctor Option.some [Nat] (restoreKindHash)) else (ctor Option.none [Nat])))
+  body: (if (prim equal value 0x76616c7565 : Bool) then (ctor Option.some [Nat] (prismVaultRestoreKindValue)) else (if (prim equal value 0x68617368 : Bool) then (ctor Option.some [Nat] (prismVaultRestoreKindHash)) else (ctor Option.none [Nat])))
 }
 
 definition{
-  name: restoreSliceOf,
+  name: prismVaultRestoreSliceOf,
   parameters: [s : Bytes, start : Nat, count : Nat],
   result: Bytes,
   body: (match (prim slice s start count : (Option Bytes))
@@ -131,131 +131,131 @@ definition{
 }
 
 definition{
-  name: restoreFieldEnd,
+  name: prismVaultRestoreFieldEnd,
   parameters: [s : Bytes, i : Nat, fuel : Nat],
   result: Nat,
   body: (match fuel
     | Nat.zero => i
-    | Nat.succ rest => (match (restoreByteAt s i)
+    | Nat.succ rest => (match (prismVaultRestoreByteAt s i)
       | Option.none => i
-      | Option.some d => (if (d =? 32) then i else (restoreFieldEnd s (i + 1) rest)))),
+      | Option.some d => (if (d =? 32) then i else (prismVaultRestoreFieldEnd s (i + 1) rest)))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
-  name: restoreDecodeField5,
+  name: prismVaultRestoreDecodeField5,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat],
-  result: (Option RestoreRequest),
-  body: (let e : Nat := (restoreFieldEnd s start (Foundation.Bytes::byteLength s)); (match (restoreParseKind (restoreSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [RestoreRequest])
-    | Option.some v5 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [RestoreRequest] (record RestoreRequest {key := v1, format := v2, seal := v3, address := v4, kind := v5})) else (ctor Option.none [RestoreRequest])))),
+  result: (Option PrismVaultRestoreRequest),
+  body: (let e : Nat := (prismVaultRestoreFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismVaultRestoreParseKind (prismVaultRestoreSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismVaultRestoreRequest])
+    | Option.some v5 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [PrismVaultRestoreRequest] (record PrismVaultRestoreRequest {key := v1, format := v2, seal := v3, address := v4, kind := v5})) else (ctor Option.none [PrismVaultRestoreRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: restoreDecodeField4,
+  name: prismVaultRestoreDecodeField4,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
-  result: (Option RestoreRequest),
-  body: (let e : Nat := (restoreFieldEnd s start (Foundation.Bytes::byteLength s)); (match (restoreParseAddress (restoreSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [RestoreRequest])
-    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (restoreDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [RestoreRequest])))),
+  result: (Option PrismVaultRestoreRequest),
+  body: (let e : Nat := (prismVaultRestoreFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismVaultRestoreParseAddress (prismVaultRestoreSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismVaultRestoreRequest])
+    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismVaultRestoreDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [PrismVaultRestoreRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: restoreDecodeField3,
+  name: prismVaultRestoreDecodeField3,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
-  result: (Option RestoreRequest),
-  body: (let e : Nat := (restoreFieldEnd s start (Foundation.Bytes::byteLength s)); (match (restoreParseSeal (restoreSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [RestoreRequest])
-    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (restoreDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [RestoreRequest])))),
+  result: (Option PrismVaultRestoreRequest),
+  body: (let e : Nat := (prismVaultRestoreFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismVaultRestoreParseSeal (prismVaultRestoreSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismVaultRestoreRequest])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismVaultRestoreDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [PrismVaultRestoreRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: restoreDecodeField2,
+  name: prismVaultRestoreDecodeField2,
   parameters: [s : Bytes, start : Nat, v1 : Nat],
-  result: (Option RestoreRequest),
-  body: (let e : Nat := (restoreFieldEnd s start (Foundation.Bytes::byteLength s)); (match (restoreParseFormat (restoreSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [RestoreRequest])
-    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (restoreDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [RestoreRequest])))),
+  result: (Option PrismVaultRestoreRequest),
+  body: (let e : Nat := (prismVaultRestoreFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismVaultRestoreParseFormat (prismVaultRestoreSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismVaultRestoreRequest])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismVaultRestoreDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [PrismVaultRestoreRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: restoreDecodeField1,
+  name: prismVaultRestoreDecodeField1,
   parameters: [s : Bytes, start : Nat],
-  result: (Option RestoreRequest),
-  body: (let e : Nat := (restoreFieldEnd s start (Foundation.Bytes::byteLength s)); (match (restoreParseKey (restoreSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [RestoreRequest])
-    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (restoreDecodeField2 s (e + 1) v1) else (ctor Option.none [RestoreRequest])))),
+  result: (Option PrismVaultRestoreRequest),
+  body: (let e : Nat := (prismVaultRestoreFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismVaultRestoreParseKey (prismVaultRestoreSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismVaultRestoreRequest])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismVaultRestoreDecodeField2 s (e + 1) v1) else (ctor Option.none [PrismVaultRestoreRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: restoreRule1,
-  parameters: [request : RestoreRequest],
+  name: prismVaultRestoreRule1,
+  parameters: [request : PrismVaultRestoreRequest],
   result: Bool,
-  body: ((project request key) =? (restoreKeyMissing))
+  body: ((project request key) =? (prismVaultRestoreKeyMissing))
 }
 
 definition{
-  name: restoreRule2,
-  parameters: [request : RestoreRequest],
+  name: prismVaultRestoreRule2,
+  parameters: [request : PrismVaultRestoreRequest],
   result: Bool,
-  body: ((project request format) =? (restoreFormatUnknown))
+  body: ((project request format) =? (prismVaultRestoreFormatUnknown))
 }
 
 definition{
-  name: restoreRule3,
-  parameters: [request : RestoreRequest],
+  name: prismVaultRestoreRule3,
+  parameters: [request : PrismVaultRestoreRequest],
   result: Bool,
-  body: ((project request seal) =? (restoreSealBroken))
+  body: ((project request seal) =? (prismVaultRestoreSealBroken))
 }
 
 definition{
-  name: restoreRule4,
-  parameters: [request : RestoreRequest],
+  name: prismVaultRestoreRule4,
+  parameters: [request : PrismVaultRestoreRequest],
   result: Bool,
-  body: ((project request address) =? (restoreAddressMismatch))
+  body: ((project request address) =? (prismVaultRestoreAddressMismatch))
 }
 
 definition{
-  name: restoreRule5,
-  parameters: [request : RestoreRequest],
+  name: prismVaultRestoreRule5,
+  parameters: [request : PrismVaultRestoreRequest],
   result: Bool,
-  body: ((project request kind) =? (restoreKindHash))
+  body: ((project request kind) =? (prismVaultRestoreKindHash))
 }
 
 definition{
-  name: restoreRule6,
-  parameters: [request : RestoreRequest],
+  name: prismVaultRestoreRule6,
+  parameters: [request : PrismVaultRestoreRequest],
   result: Bool,
-  body: ((project request kind) =? (restoreKindValue))
+  body: ((project request kind) =? (prismVaultRestoreKindValue))
 }
 
 definition{
-  name: restoreJudge,
-  parameters: [request : RestoreRequest],
+  name: prismVaultRestoreJudge,
+  parameters: [request : PrismVaultRestoreRequest],
   result: Nat,
-  body: (if (restoreRule1 request) then (restoreAnswerRefuse) else (if (restoreRule2 request) then (restoreAnswerRefuse) else (if (restoreRule3 request) then (restoreAnswerRefuse) else (if (restoreRule4 request) then (restoreAnswerRefuse) else (if (restoreRule5 request) then (restoreAnswerHashonly) else (if (restoreRule6 request) then (restoreAnswerRestore) else (restoreAnswerRefuse)))))))
+  body: (if (prismVaultRestoreRule1 request) then (prismVaultRestoreAnswerRefuse) else (if (prismVaultRestoreRule2 request) then (prismVaultRestoreAnswerRefuse) else (if (prismVaultRestoreRule3 request) then (prismVaultRestoreAnswerRefuse) else (if (prismVaultRestoreRule4 request) then (prismVaultRestoreAnswerRefuse) else (if (prismVaultRestoreRule5 request) then (prismVaultRestoreAnswerHashonly) else (if (prismVaultRestoreRule6 request) then (prismVaultRestoreAnswerRestore) else (prismVaultRestoreAnswerRefuse)))))))
 }
 
 definition{
-  name: restoreEncodeAnswer,
+  name: prismVaultRestoreEncodeAnswer,
   parameters: [code : Nat],
   result: Bytes,
-  body: (if (code =? (restoreAnswerRestore)) then 0x726573746f7265 else (if (code =? (restoreAnswerHashonly)) then 0x686173686f6e6c79 else (if (code =? (restoreAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964)))
+  body: (if (code =? (prismVaultRestoreAnswerRestore)) then 0x726573746f7265 else (if (code =? (prismVaultRestoreAnswerHashonly)) then 0x686173686f6e6c79 else (if (code =? (prismVaultRestoreAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964)))
 }
 
 definition{
-  name: restoreDispatch,
+  name: prismVaultRestoreDispatch,
   parameters: [value : Bytes],
   result: Bytes,
-  body: (if (136 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (restoreDecodeField1 value 0)
+  body: (if (136 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (prismVaultRestoreDecodeField1 value 0)
     | Option.none => 0x696e76616c6964
-    | Option.some request => (restoreEncodeAnswer (restoreJudge request)))),
+    | Option.some request => (prismVaultRestoreEncodeAnswer (prismVaultRestoreJudge request)))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

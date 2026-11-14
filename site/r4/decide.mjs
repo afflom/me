@@ -31,7 +31,7 @@ function holds(request, { field, op, value }) {
 }
 
 // A decider backed by the compiled guest: dispatch(bytes) -> bytes. The Prism
-// root routes "r4 <line>" to PrismR4's r4Dispatch; a guest without a root
+// root routes "r4 <line>" to PrismR4's prismR4Dispatch; a guest without a root
 // (the module alone) takes the line with `facet: null`.
 export function guestDecider(dispatch, { facet = "r4" } = {}) {
   const enc = new TextEncoder();

@@ -23,25 +23,23 @@ fn read(path: &str) -> String {
 
 /// Every theorem in a proofs module: `n` of them, each `breaksInvNNN = false`
 /// over every request, each resting on exactly Quot.sound and propext.
-fn proved(proofs: &str, module: &str, prefix: &str, request: &str, n: usize) {
+fn proved(proofs: &str, module: &str, request: &str, n: usize) {
     let text = read(proofs);
     for i in 1..=n {
-        let name = format!("{prefix}Inv{i:03}Holds");
+        let name = format!("inv{i:03}Holds");
         let start = text
             .find(&format!("  name: {name},\n"))
             .unwrap_or_else(|| panic!("{proofs}: {name} is missing"));
         let body = &text[start..start + text[start..].find("\n}\n").expect("closed")];
         assert!(
             body.contains(&format!("parameters: [request : {module}::{request}],"))
-                && body.contains(&format!(
-                    "statement: (({prefix}BreaksInv{i:03} request) = false),"
-                ))
+                && body.contains(&format!("statement: ((breaksInv{i:03} request) = false),"))
                 && body.contains("axioms: [Quot.sound, propext]"),
             "{name} changed its statement or its axioms:\n{body}"
         );
     }
     assert!(
-        !text.contains(&format!("{prefix}Inv{:03}Holds", n + 1)),
+        !text.contains(&format!("inv{:03}Holds", n + 1)),
         "{proofs} has more guarantees than the scenario names"
     );
     assert!(
@@ -77,8 +75,7 @@ fn google_gg_01() {
     proved(
         "app/src/PrismGoogleProofs.lex.tex",
         "PrismGoogle",
-        "google",
-        "GoogleRequest",
+        "PrismGoogleRequest",
         7,
     );
     let page = read("site/google/google.mjs");
@@ -107,8 +104,7 @@ fn google_gg_02() {
     proved(
         "app/src/PrismGoogleLinkProofs.lex.tex",
         "PrismGoogleLink",
-        "googleLink",
-        "GoogleLinkRequest",
+        "PrismGoogleLinkRequest",
         9,
     );
     let platform = read("site/google/platform.json");

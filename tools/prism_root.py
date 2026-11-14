@@ -16,26 +16,26 @@ by reflexivity: the facet codes are literals, so `route` reduces by
 definition, and `linear_arithmetic` cannot see through the Bytes equality.
 Every definition and type name must be unique across app/src, because the
 holo build flattens all modules into one Rust crate: prefix a facet's names
-with the facet (boundaryJudge, BoundaryRequest).
+with the facet (prismBoundaryJudge, PrismBoundaryRequest).
 The guest allocation must stay at least twice the request maximum, and one
 vector must be exactly the allocation long (prismpm PP2009).
 """
 import sys
 FACETS = [
-    ("boundary", "PrismBoundary", "boundaryDispatch"),
-    ("learn", "PrismLearning", "learningDispatch"),
+    ("boundary", "PrismBoundary", "prismBoundaryDispatch"),
+    ("learn", "PrismLearning", "prismLearningDispatch"),
     ("when", "PrismChronology", "chronologyDispatch"),
-    ("store", "PrismVaultStore", "storeDispatch"),
-    ("restore", "PrismVaultRestore", "restoreDispatch"),
-    ("r4", "PrismR4", "r4Dispatch"),
+    ("store", "PrismVaultStore", "prismVaultStoreDispatch"),
+    ("restore", "PrismVaultRestore", "prismVaultRestoreDispatch"),
+    ("r4", "PrismR4", "prismR4Dispatch"),
     ("route", "PrismRoute", "routeDispatch"),
-    ("google", "PrismGoogle", "googleDispatch"),
-    ("googlelink", "PrismGoogleLink", "googleLinkDispatch"),
+    ("google", "PrismGoogle", "prismGoogleDispatch"),
+    ("googlelink", "PrismGoogleLink", "prismGoogleLinkDispatch"),
     ("dest", "PrismDest", "destDispatch"),
-    ("folder", "PrismFolder", "folderDispatch"),
-    ("host", "PrismHost", "hostDispatch"),
-    ("source", "PrismSource", "sourceDispatch"),
-    ("model", "PrismModels", "modelsDispatch"),
+    ("folder", "PrismFolder", "prismFolderDispatch"),
+    ("host", "PrismHost", "prismHostDispatch"),
+    ("source", "PrismSource", "prismSourceDispatch"),
+    ("model", "PrismModels", "prismModelsDispatch"),
     ("kappa", "PrismKappa", "kappaDispatch"),
     ("uorc", "PrismUorc", "uorcDispatch"),
     ("holon", "PrismHolon", "holonDispatch"),

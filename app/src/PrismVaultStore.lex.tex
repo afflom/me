@@ -6,36 +6,36 @@
 \importmodule{Foundation.View.Text.V1.Model}
 \title{Text application model}
 \begin{semanticmodule}
-definition{name: storeBoundaryAllow, parameters: [], result: Nat, body: 0}
+definition{name: prismVaultStoreBoundaryAllow, parameters: [], result: Nat, body: 0}
 
-definition{name: storeBoundaryHashonly, parameters: [], result: Nat, body: 1}
+definition{name: prismVaultStoreBoundaryHashonly, parameters: [], result: Nat, body: 1}
 
-definition{name: storeBoundaryAsk, parameters: [], result: Nat, body: 2}
+definition{name: prismVaultStoreBoundaryAsk, parameters: [], result: Nat, body: 2}
 
-definition{name: storeBoundaryDeny, parameters: [], result: Nat, body: 3}
+definition{name: prismVaultStoreBoundaryDeny, parameters: [], result: Nat, body: 3}
 
-definition{name: storeKeyPresent, parameters: [], result: Nat, body: 0}
+definition{name: prismVaultStoreKeyPresent, parameters: [], result: Nat, body: 0}
 
-definition{name: storeKeyMissing, parameters: [], result: Nat, body: 1}
+definition{name: prismVaultStoreKeyMissing, parameters: [], result: Nat, body: 1}
 
-definition{name: storeAddressDerived, parameters: [], result: Nat, body: 0}
+definition{name: prismVaultStoreAddressDerived, parameters: [], result: Nat, body: 0}
 
-definition{name: storeAddressMismatch, parameters: [], result: Nat, body: 1}
+definition{name: prismVaultStoreAddressMismatch, parameters: [], result: Nat, body: 1}
 
-definition{name: storeRoomOk, parameters: [], result: Nat, body: 0}
+definition{name: prismVaultStoreRoomOk, parameters: [], result: Nat, body: 0}
 
-definition{name: storeRoomFull, parameters: [], result: Nat, body: 1}
+definition{name: prismVaultStoreRoomFull, parameters: [], result: Nat, body: 1}
 
-definition{name: storeAnswerStore, parameters: [], result: Nat, body: 0}
+definition{name: prismVaultStoreAnswerStore, parameters: [], result: Nat, body: 0}
 
-definition{name: storeAnswerStorehash, parameters: [], result: Nat, body: 1}
+definition{name: prismVaultStoreAnswerStorehash, parameters: [], result: Nat, body: 1}
 
-definition{name: storeAnswerAsk, parameters: [], result: Nat, body: 2}
+definition{name: prismVaultStoreAnswerAsk, parameters: [], result: Nat, body: 2}
 
-definition{name: storeAnswerRefuse, parameters: [], result: Nat, body: 3}
+definition{name: prismVaultStoreAnswerRefuse, parameters: [], result: Nat, body: 3}
 
 structure{
-  name: StoreRequest,
+  name: PrismVaultStoreRequest,
   type_parameters: [],
   parameters: [],
   fields: [
@@ -47,7 +47,7 @@ structure{
 }
 
 definition{
-  name: storeByteAt,
+  name: prismVaultStoreByteAt,
   parameters: [s : Bytes, i : Nat],
   result: (Option Nat),
   body: (match (prim index s i : (Option UInt8))
@@ -57,66 +57,66 @@ definition{
 }
 
 definition{
-  name: storeDigitsValue,
+  name: prismVaultStoreDigitsValue,
   parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
   result: (Option Nat),
   body: (match fuel
     | Nat.zero => (ctor Option.some [Nat] acc)
-    | Nat.succ rest => (match (storeByteAt s i)
+    | Nat.succ rest => (match (prismVaultStoreByteAt s i)
       | Option.none => (ctor Option.none [Nat])
-      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (storeDigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (prismVaultStoreDigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
-  name: storeParseDigits,
+  name: prismVaultStoreParseDigits,
   parameters: [s : Bytes],
   result: (Option Nat),
-  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (storeByteAt s 0)
+  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (prismVaultStoreByteAt s 0)
     | Option.none => (ctor Option.none [Nat])
-    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (storeDigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
+    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (prismVaultStoreDigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: storeParseNumber,
+  name: prismVaultStoreParseNumber,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (storeParseDigits value),
+  body: (prismVaultStoreParseDigits value),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: storeParseBoundary,
+  name: prismVaultStoreParseBoundary,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x616c6c6f77 : Bool) then (ctor Option.some [Nat] (storeBoundaryAllow)) else (if (prim equal value 0x686173686f6e6c79 : Bool) then (ctor Option.some [Nat] (storeBoundaryHashonly)) else (if (prim equal value 0x61736b : Bool) then (ctor Option.some [Nat] (storeBoundaryAsk)) else (if (prim equal value 0x64656e79 : Bool) then (ctor Option.some [Nat] (storeBoundaryDeny)) else (ctor Option.none [Nat])))))
+  body: (if (prim equal value 0x616c6c6f77 : Bool) then (ctor Option.some [Nat] (prismVaultStoreBoundaryAllow)) else (if (prim equal value 0x686173686f6e6c79 : Bool) then (ctor Option.some [Nat] (prismVaultStoreBoundaryHashonly)) else (if (prim equal value 0x61736b : Bool) then (ctor Option.some [Nat] (prismVaultStoreBoundaryAsk)) else (if (prim equal value 0x64656e79 : Bool) then (ctor Option.some [Nat] (prismVaultStoreBoundaryDeny)) else (ctor Option.none [Nat])))))
 }
 
 definition{
-  name: storeParseKey,
+  name: prismVaultStoreParseKey,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x70726573656e74 : Bool) then (ctor Option.some [Nat] (storeKeyPresent)) else (if (prim equal value 0x6d697373696e67 : Bool) then (ctor Option.some [Nat] (storeKeyMissing)) else (ctor Option.none [Nat])))
+  body: (if (prim equal value 0x70726573656e74 : Bool) then (ctor Option.some [Nat] (prismVaultStoreKeyPresent)) else (if (prim equal value 0x6d697373696e67 : Bool) then (ctor Option.some [Nat] (prismVaultStoreKeyMissing)) else (ctor Option.none [Nat])))
 }
 
 definition{
-  name: storeParseAddress,
+  name: prismVaultStoreParseAddress,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x64657269766564 : Bool) then (ctor Option.some [Nat] (storeAddressDerived)) else (if (prim equal value 0x6d69736d61746368 : Bool) then (ctor Option.some [Nat] (storeAddressMismatch)) else (ctor Option.none [Nat])))
+  body: (if (prim equal value 0x64657269766564 : Bool) then (ctor Option.some [Nat] (prismVaultStoreAddressDerived)) else (if (prim equal value 0x6d69736d61746368 : Bool) then (ctor Option.some [Nat] (prismVaultStoreAddressMismatch)) else (ctor Option.none [Nat])))
 }
 
 definition{
-  name: storeParseRoom,
+  name: prismVaultStoreParseRoom,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x6f6b : Bool) then (ctor Option.some [Nat] (storeRoomOk)) else (if (prim equal value 0x66756c6c : Bool) then (ctor Option.some [Nat] (storeRoomFull)) else (ctor Option.none [Nat])))
+  body: (if (prim equal value 0x6f6b : Bool) then (ctor Option.some [Nat] (prismVaultStoreRoomOk)) else (if (prim equal value 0x66756c6c : Bool) then (ctor Option.some [Nat] (prismVaultStoreRoomFull)) else (ctor Option.none [Nat])))
 }
 
 definition{
-  name: storeSliceOf,
+  name: prismVaultStoreSliceOf,
   parameters: [s : Bytes, start : Nat, count : Nat],
   result: Bytes,
   body: (match (prim slice s start count : (Option Bytes))
@@ -125,121 +125,121 @@ definition{
 }
 
 definition{
-  name: storeFieldEnd,
+  name: prismVaultStoreFieldEnd,
   parameters: [s : Bytes, i : Nat, fuel : Nat],
   result: Nat,
   body: (match fuel
     | Nat.zero => i
-    | Nat.succ rest => (match (storeByteAt s i)
+    | Nat.succ rest => (match (prismVaultStoreByteAt s i)
       | Option.none => i
-      | Option.some d => (if (d =? 32) then i else (storeFieldEnd s (i + 1) rest)))),
+      | Option.some d => (if (d =? 32) then i else (prismVaultStoreFieldEnd s (i + 1) rest)))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
-  name: storeDecodeField4,
+  name: prismVaultStoreDecodeField4,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
-  result: (Option StoreRequest),
-  body: (let e : Nat := (storeFieldEnd s start (Foundation.Bytes::byteLength s)); (match (storeParseRoom (storeSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [StoreRequest])
-    | Option.some v4 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [StoreRequest] (record StoreRequest {boundary := v1, key := v2, address := v3, room := v4})) else (ctor Option.none [StoreRequest])))),
+  result: (Option PrismVaultStoreRequest),
+  body: (let e : Nat := (prismVaultStoreFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismVaultStoreParseRoom (prismVaultStoreSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismVaultStoreRequest])
+    | Option.some v4 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [PrismVaultStoreRequest] (record PrismVaultStoreRequest {boundary := v1, key := v2, address := v3, room := v4})) else (ctor Option.none [PrismVaultStoreRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: storeDecodeField3,
+  name: prismVaultStoreDecodeField3,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
-  result: (Option StoreRequest),
-  body: (let e : Nat := (storeFieldEnd s start (Foundation.Bytes::byteLength s)); (match (storeParseAddress (storeSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [StoreRequest])
-    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (storeDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [StoreRequest])))),
+  result: (Option PrismVaultStoreRequest),
+  body: (let e : Nat := (prismVaultStoreFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismVaultStoreParseAddress (prismVaultStoreSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismVaultStoreRequest])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismVaultStoreDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [PrismVaultStoreRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: storeDecodeField2,
+  name: prismVaultStoreDecodeField2,
   parameters: [s : Bytes, start : Nat, v1 : Nat],
-  result: (Option StoreRequest),
-  body: (let e : Nat := (storeFieldEnd s start (Foundation.Bytes::byteLength s)); (match (storeParseKey (storeSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [StoreRequest])
-    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (storeDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [StoreRequest])))),
+  result: (Option PrismVaultStoreRequest),
+  body: (let e : Nat := (prismVaultStoreFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismVaultStoreParseKey (prismVaultStoreSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismVaultStoreRequest])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismVaultStoreDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [PrismVaultStoreRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: storeDecodeField1,
+  name: prismVaultStoreDecodeField1,
   parameters: [s : Bytes, start : Nat],
-  result: (Option StoreRequest),
-  body: (let e : Nat := (storeFieldEnd s start (Foundation.Bytes::byteLength s)); (match (storeParseBoundary (storeSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [StoreRequest])
-    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (storeDecodeField2 s (e + 1) v1) else (ctor Option.none [StoreRequest])))),
+  result: (Option PrismVaultStoreRequest),
+  body: (let e : Nat := (prismVaultStoreFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismVaultStoreParseBoundary (prismVaultStoreSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismVaultStoreRequest])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismVaultStoreDecodeField2 s (e + 1) v1) else (ctor Option.none [PrismVaultStoreRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: storeRule1,
-  parameters: [request : StoreRequest],
+  name: prismVaultStoreRule1,
+  parameters: [request : PrismVaultStoreRequest],
   result: Bool,
-  body: ((project request key) =? (storeKeyMissing))
+  body: ((project request key) =? (prismVaultStoreKeyMissing))
 }
 
 definition{
-  name: storeRule2,
-  parameters: [request : StoreRequest],
+  name: prismVaultStoreRule2,
+  parameters: [request : PrismVaultStoreRequest],
   result: Bool,
-  body: ((project request address) =? (storeAddressMismatch))
+  body: ((project request address) =? (prismVaultStoreAddressMismatch))
 }
 
 definition{
-  name: storeRule4,
-  parameters: [request : StoreRequest],
+  name: prismVaultStoreRule3,
+  parameters: [request : PrismVaultStoreRequest],
   result: Bool,
-  body: ((project request room) =? (storeRoomFull))
+  body: ((project request room) =? (prismVaultStoreRoomFull))
 }
 
 definition{
-  name: storeRule5,
-  parameters: [request : StoreRequest],
+  name: prismVaultStoreRule4,
+  parameters: [request : PrismVaultStoreRequest],
   result: Bool,
-  body: ((project request boundary) =? (storeBoundaryAsk))
+  body: ((project request boundary) =? (prismVaultStoreBoundaryAsk))
 }
 
 definition{
-  name: storeRule6,
-  parameters: [request : StoreRequest],
+  name: prismVaultStoreRule5,
+  parameters: [request : PrismVaultStoreRequest],
   result: Bool,
-  body: ((project request boundary) =? (storeBoundaryHashonly))
+  body: ((project request boundary) =? (prismVaultStoreBoundaryHashonly))
 }
 
 definition{
-  name: storeRule7,
-  parameters: [request : StoreRequest],
+  name: prismVaultStoreRule6,
+  parameters: [request : PrismVaultStoreRequest],
   result: Bool,
-  body: ((project request boundary) =? (storeBoundaryAllow))
+  body: ((project request boundary) =? (prismVaultStoreBoundaryAllow))
 }
 
 definition{
-  name: storeJudge,
-  parameters: [request : StoreRequest],
+  name: prismVaultStoreJudge,
+  parameters: [request : PrismVaultStoreRequest],
   result: Nat,
-  body: (if (storeRule1 request) then (storeAnswerRefuse) else (if (storeRule2 request) then (storeAnswerRefuse) else (if (storeRule4 request) then (storeAnswerRefuse) else (if (storeRule5 request) then (storeAnswerAsk) else (if (storeRule6 request) then (storeAnswerStorehash) else (if (storeRule7 request) then (storeAnswerStore) else (storeAnswerRefuse)))))))
+  body: (if (prismVaultStoreRule1 request) then (prismVaultStoreAnswerRefuse) else (if (prismVaultStoreRule2 request) then (prismVaultStoreAnswerRefuse) else (if (prismVaultStoreRule3 request) then (prismVaultStoreAnswerRefuse) else (if (prismVaultStoreRule4 request) then (prismVaultStoreAnswerAsk) else (if (prismVaultStoreRule5 request) then (prismVaultStoreAnswerStorehash) else (if (prismVaultStoreRule6 request) then (prismVaultStoreAnswerStore) else (prismVaultStoreAnswerRefuse)))))))
 }
 
 definition{
-  name: storeEncodeAnswer,
+  name: prismVaultStoreEncodeAnswer,
   parameters: [code : Nat],
   result: Bytes,
-  body: (if (code =? (storeAnswerStore)) then 0x73746f7265 else (if (code =? (storeAnswerStorehash)) then 0x73746f726568617368 else (if (code =? (storeAnswerAsk)) then 0x61736b else (if (code =? (storeAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964))))
+  body: (if (code =? (prismVaultStoreAnswerStore)) then 0x73746f7265 else (if (code =? (prismVaultStoreAnswerStorehash)) then 0x73746f726568617368 else (if (code =? (prismVaultStoreAnswerAsk)) then 0x61736b else (if (code =? (prismVaultStoreAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964))))
 }
 
 definition{
-  name: storeDispatch,
+  name: prismVaultStoreDispatch,
   parameters: [value : Bytes],
   result: Bytes,
-  body: (if (112 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (storeDecodeField1 value 0)
+  body: (if (112 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (prismVaultStoreDecodeField1 value 0)
     | Option.none => 0x696e76616c6964
-    | Option.some request => (storeEncodeAnswer (storeJudge request)))),
+    | Option.some request => (prismVaultStoreEncodeAnswer (prismVaultStoreJudge request)))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}
