@@ -109,6 +109,18 @@ const calendar = await only("what's on my calendar?");
 assert.match(calendar.sentences[0], /^Flight to Lisbon is on /u, "naming the calendar answers with what is next");
 const notes = await only("what are my notes?");
 assert.equal(notes.sentences[0], "Nothing you hold mentions “notes”.", "a kind with nothing held says so");
+// A name answers with everything that names them; "say" asks about their mail.
+const review = { address: "r", media: "calendar", title: "Grant proposal review", who: "Joël Example, Robin Example", body: "", label: "confidential", at: new Date(2026, 10, 14, 15).getTime(), start: new Date(2026, 10, 14, 15).getTime(), domains: [5] };
+const reply = { address: "j", media: "message", title: "Re: Proposal draft for the grant", who: "Joël Example", body: "I read the draft. Can we move the review to 4?", label: "confidential", at: new Date(2026, 10, 12, 2).getTime(), domains: [4] };
+const named = (text) => answer(text, { items: [review, reply, flight], line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
+const joel = await named("Joel");
+assert.deepEqual(new Set(joel.sources.slice(0, 2)), new Set([review, reply]), "a name without its accent finds the mail and the meeting");
+assert.equal(joel.sentences.length, 2, "and says both: " + joel.sentences.join(" "));
+assert.ok(joel.sentences.some((s) => /^Joël Example wrote “Re: Proposal draft for the grant” on /u.test(s)), joel.sentences.join(" "));
+assert.ok(joel.sentences.some((s) => /^Grant proposal review is on /u.test(s)), joel.sentences.join(" "));
+const said = await named("what did Joel say?");
+assert.match(said.sentences[0], /^Joël Example wrote “Re: Proposal draft for the grant” on /u, "what someone said is their mail");
+assert.equal(said.sentences.length, 1, said.sentences.join(" "));
 const pausedEmpty = await answer("hello", { items: [], line: boundaryLine, halted: () => "yes", now: WEDNESDAY, keep: false });
 assert.deepEqual(pausedEmpty.sentences, [], "paused, even an empty Prism answers nothing");
 console.log("answer: questions answered in sentences, jots offered to keep");

@@ -8,7 +8,7 @@
 import { PROVIDERS } from "./table.mjs";
 import { route } from "./router.mjs";
 import { withoutTime } from "./features.mjs";
-import { drawOn, windowOf, termsOf } from "../coherence/sense.mjs";
+import { drawOn, windowOf, termsOf, mentions } from "../coherence/sense.mjs";
 
 const S = PROVIDERS.sentence;
 const RANK = ["public", "internal", "confidential", "restricted"];
@@ -88,8 +88,10 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
     const word = (await line(`boundary ${label} none browser none yes ${halted()}`)).trim();
     if (word !== "allow") return { ...none, mapped, refused: true };
   }
-  // A span, a kind or an overview answers with several; otherwise the best match.
-  const told = many ? used.slice(0, S.most) : used.slice(0, 1);
+  // A span, a kind or an overview answers with several; a name or a topic with
+  // everything that names it; otherwise the best match.
+  const naming = many ? [] : used.filter((item) => mentions(item, terms));
+  const told = many ? used.slice(0, S.most) : naming.length > 1 ? naming.slice(0, S.most) : used.slice(0, 1);
   const sentences = [...lead.map((s) => `${s}.`), ...told.map((item) => `${sentenceOf(item, me)}.`)];
   const offers = told.flatMap((item) => {
     const k = S.offers[item.media === "message" ? "message" : item.media === "plainText" ? "note" : ""];
