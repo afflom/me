@@ -15,7 +15,7 @@ const answers = (win, test, ms) => new Promise((resolve) => {
   win.addEventListener('message', on);
 });
 
-import { EXTENSION } from '../source/declared.mjs';
+import { EXTENSION, SERVICES } from '../source/declared.mjs';
 
 // The extension this page writes (its declared version); one written by an
 // earlier page answers with a lower version, and is then put in place again.
@@ -31,26 +31,37 @@ export async function installed(win = globalThis.window, ms = 400) {
   return (got.version ?? 0) >= VERSION ? 'kept' : 'old';
 }
 
-// The items the extension read: [{format, text}].
+// A service is named to the extension with its declared reading (gmail~2), so
+// raising the reading has the extension carry all it can reach again, once:
+// it keeps what it already carried per name. Everything that comes back is
+// named by the service's own key again.
+export const wired = (service) => ((service.reading ?? 1) > 1 ? `${service.key}~${service.reading}` : service.key);
+export const unwired = (name) => String(name).replace(/~\d+$/, '');
+const byKey = (map) => Object.fromEntries(Object.entries(map ?? {}).map(([k, v]) => [unwired(k), v]));
+
+// The items the extension read: [{service, route, format, text}].
 // `services` are the page's declarations, carried to the extension as data.
 export async function pull(win = globalThis.window, { halted, services, ms = 120000 } = {}) {
   const id = Math.random().toString(36).slice(2);
   const answer = answers(win, (d) => d.prism === 'items' && d.id === id, ms);
-  send(win, { prism: 'pull', id, halted, ...(services ? { services } : {}) });
+  send(win, { prism: 'pull', id, halted, ...(services ? { services: services.map((s) => ({ ...s, key: wired(s) })) } : {}) });
   const got = await answer;
   if (!got) throw Object.assign(new Error('the extension did not answer'), { code: 'extension.silent' });
   if (got.error) throw Object.assign(new Error(got.error), { code: 'extension.error' });
-  return Array.isArray(got.items) ? got.items.filter((i) => typeof i?.text === 'string') : [];
+  return Array.isArray(got.items) ? got.items.filter((i) => typeof i?.text === 'string').map((i) => (i.service ? { ...i, service: unwired(i.service) } : i)) : [];
 }
 
-// Any other ask of the extension (status, pin): its answer, or null when it is not here.
+// Any other ask of the extension (status, pin): its answer, or null when it is
+// not here. A service named in the ask goes by its wired name; the services
+// in the answer come back by their own keys.
 export async function ask(win = globalThis.window, prism, data = {}, ms = 5000) {
   const id = Math.random().toString(36).slice(2);
   const answer = answers(win, (d) => d.prism === 'answer' && d.id === id, ms);
-  send(win, { ...data, prism, id });
+  const declared = data.service && SERVICES.find((s) => s.key === data.service);
+  send(win, { ...data, ...(declared ? { service: wired(declared) } : {}), prism, id });
   const got = await answer;
   if (got?.error) throw Object.assign(new Error(got.error), { code: 'extension.error' });
-  return got;
+  return got?.services ? { ...got, services: byKey(got.services) } : got;
 }
 
 // CRC-32 (IEEE), for the zip.

@@ -47,6 +47,10 @@ for s in spec["services"]:
             refuse(f"{s['key']} step {step['key']} says nothing of how")
         if len(step["word"]) > 28 or len(step["word"].split()) > 4:
             refuse(f"{s['key']} step word {step['word']!r} is longer than a name")
+    if not re.fullmatch(r"[a-z][a-z0-9-]*", s["key"]):
+        refuse(f"{s['key']} key must be lower-case letters, digits and -")
+    if "reading" in s and not (type(s["reading"]) is int and s["reading"] >= 1):
+        refuse(f"{s['key']} reading must be a whole number from 1")
     if s.get("out") not in ("approve", "refused"):
         refuse(f"{s['key']} out must be approve or refused")
     for route in s.get("own", []):
