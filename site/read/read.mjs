@@ -41,7 +41,7 @@ function decode(body, encoding, charset) {
 }
 
 // The leaf parts of a message, each with its type and decoded text.
-function parts(text, depth = 0) {
+function parts(text, depth = 0, attached = false) {
   const { head, body } = split(text);
   const h = fields(head);
   const type = (h["content-type"] ?? "text/plain").split(";")[0].trim().toLowerCase();
@@ -49,11 +49,11 @@ function parts(text, depth = 0) {
   if (type.startsWith("multipart/") && boundary && depth < 8) {
     const out = [];
     for (const chunk of body.split(new RegExp(`\\r?\\n?--${boundary.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:--)?\\r?\\n?`))) {
-      if (chunk.trim()) out.push(...parts(chunk, depth + 1));
+      if (chunk.trim()) out.push(...parts(chunk, depth + 1, attached));
     }
     return out;
   }
-  if ((h["content-disposition"] ?? "").toLowerCase().startsWith("attachment")) return [];
+  if (!attached && (h["content-disposition"] ?? "").toLowerCase().startsWith("attachment")) return [];
   return [{ type, text: decode(body, h["content-transfer-encoding"], param(h["content-type"], "charset")) }];
 }
 
@@ -97,6 +97,11 @@ export function messageBody(raw) {
   const html = all.find((p) => p.type === "text/html" && p.text.trim());
   const text = plain ? plain.text : html ? textOfHtml(html.text) : "";
   return tidy(fresh(text.replace(/\r\n/g, "\n")));
+}
+
+// The events a message carries (RFC 6047 iMIP): its text/calendar parts, inline or attached.
+export function messageEvent(raw) {
+  return parts(raw, 0, true).filter((p) => p.type === "text/calendar" && /^BEGIN:V(EVENT|TODO|JOURNAL)/im.test(p.text)).map((p) => p.text).join("\r\n");
 }
 
 // RFC 5545 text: escapes undone, markup and conferencing boilerplate dropped.

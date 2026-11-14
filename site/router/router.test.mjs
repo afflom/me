@@ -4,6 +4,9 @@
 import assert from "node:assert/strict";
 import { judge, FIELDS, GUARANTEES } from "./table.mjs";
 import { route } from "./router.mjs";
+import { readFileSync } from "node:fs";
+import { readItem, useReader } from "../card.mjs";
+import * as reader from "../read/read.mjs";
 
 const asked = [];
 const line = async (text) => {
@@ -129,15 +132,42 @@ const told = await answer("what did Joel say?", { items: [asking, review], line:
 assert.match(told.sentences[0], /^Joël Example wrote “Re: Proposal draft for the grant” on .+: Can we move the review to 4\?$/u, told.sentences[0]);
 assert.match(said.sentences[0], /^Joël Example wrote “Re: Proposal draft for the grant” on /u, "what someone said is their mail");
 assert.equal(said.sentences.length, 1, said.sentences.join(" "));
-// Search: a word lists everything that names it, beyond the few the sentences say.
-const many = Array.from({ length: 7 }, (_, i) => ({ address: `g${i}`, media: "message", title: `Garden plan ${i}`, who: "Ana Example", body: "About the garden.", label: "confidential", at: new Date(2026, 10, 1 + i, 9).getTime(), domains: [4] }));
-const garden = await answer("GARDEN", { items: [...many, flight, mail], line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
-// QR-04 "find-missing": items that name the word and are missing from the list.
-const findMissing = many.filter((item) => !garden.sources.includes(item)).length;
-assert.ok(findMissing <= 0, `find-missing: ${findMissing} items that name "garden" are missing from the list`);
-assert.ok(garden.sentences.length <= 3, "while the sentences say only a few");
-assert.ok(garden.cited.every((item) => garden.sources.includes(item)), "and what they say is in the list");
-assert.deepEqual(garden.sources.slice(garden.cited.length).map((i) => i.at), garden.sources.slice(garden.cited.length).map((i) => i.at).sort((a, b) => b - a), "the rest newest first");
+// QR-04, search: every word of the validation oracles' examples (test/oracle/corpus.json:
+// RFC 5322, 5545, 5546 and 6047), asked alone, lists every example whose readable text
+// holds it. The readable text is what each specification gives a person to read: the
+// subject and sender the reference reader took, a plain message's body, and the
+// SUMMARY, DESCRIPTION, LOCATION and COMMENT of each calendar component (RFC 5545
+// §3.8.1), outside its alarms. Items are read the way the page reads them.
+const oracle = JSON.parse(readFileSync(new URL("../../test/oracle/corpus.json", import.meta.url), "utf8")).corpus;
+useReader(reader);
+const readable = (example) => {
+  const raw = example.raw.replace(/\r?\n[ \t]/g, "");
+  const cut = raw.indexOf("\r\n\r\n");
+  const texts = [example.expect.title ?? "", example.expect.who ?? ""];
+  let alarm = false;
+  for (const l of raw.split(/\r?\n/)) {
+    if (/^BEGIN:VALARM/i.test(l)) alarm = true;
+    if (/^END:VALARM/i.test(l)) alarm = false;
+    if (!alarm && /^(SUMMARY|DESCRIPTION|LOCATION|COMMENT)[;:]/i.test(l)) texts.push(l.replace(/^[^:]*:/, ""));
+  }
+  if (example.kind === "message" && cut > 0 && !/^(content-type|mime-version):/im.test(raw.slice(0, cut))) texts.push(raw.slice(cut + 4));
+  return texts.join(" ").replace(/\\n/gi, " ").replace(/\\([,;\\])/g, "$1");
+};
+const held = oracle.map((example) => ({ example, text: readable(example), item: { ...readItem({ address: example.id, outcome: "restore", bytes: new TextEncoder().encode(example.raw), meta: { about: { media: example.kind, domain: 4, at: 0 } } }), label: "confidential" } }));
+const words = [...new Set(held.flatMap(({ text }) => text.match(/\p{L}{6,}/gu) ?? []).map((w) => w.toLowerCase()))];
+assert.ok(words.length >= 50, `the oracles give search ${words.length} words`);
+const findLost = [];
+for (const word of words) {
+  const shown = await answer(word.toUpperCase(), { items: held.map((h) => h.item), line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
+  const names = new RegExp(`(?<!\\p{L})${word}(?!\\p{L})`, "iu");
+  for (const { example, text, item } of held) if (names.test(text) && !shown.sources.includes(item)) findLost.push(`${word}: ${example.id}`);
+}
+// QR-04 "find-missing": examples that name the asked word and are missing from the list.
+assert.ok(findLost.length <= 0, `find-missing: ${findLost.length} (${findLost.slice(0, 12).join("; ")})`);
+const conference = await answer("conference", { items: held.map((h) => h.item), line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
+assert.ok(conference.sources.length > 3 && conference.sentences.length <= 3, "while the sentences say only a few");
+assert.ok(conference.cited.every((item) => conference.sources.includes(item)), "and what they say is in the list");
+assert.deepEqual(conference.sources.slice(conference.cited.length).map((i) => i.at), conference.sources.slice(conference.cited.length).map((i) => i.at).sort((a, b) => b - a), "the rest newest first");
 const pausedEmpty = await answer("hello", { items: [], line: boundaryLine, halted: () => "yes", now: WEDNESDAY, keep: false });
 assert.deepEqual(pausedEmpty.sentences, [], "paused, even an empty Prism answers nothing");
 console.log("answer: questions answered in sentences, jots offered to keep");
