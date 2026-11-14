@@ -93,13 +93,15 @@ test("the owner brings content in, every place shows it, Today and Ask answer fr
     const out = () => page.textContent("#pr-out");
     const settled = (pattern) => page.waitForFunction((p) => new RegExp(p).test(document.getElementById("pr-out").textContent), pattern.source, { timeout: 30000 });
 
-    // A fresh profile opens on Today, which offers its feeder rather than nothing.
+    // A fresh profile opens on Today, which leads with Set up rather than nothing.
     assert.equal(await page.textContent("#pr-title"), PLACES.find((p) => p.host === "home").name);
-    // Its device card offers Add files: the press opens the device row's own picker.
-    const offered = page.locator('#pr-home .pr-card-feed[data-feed="device"]').first();
-    assert.ok(await offered.isVisible(), "an empty Today offers to add files");
-    const [chooser] = await Promise.all([page.waitForEvent("filechooser", { timeout: 15000 }), offered.click()]);
-    await chooser.setFiles([ics, eml]);
+    assert.ok(await page.locator("#pr-setup").isVisible(), "an empty Today leads with Set up");
+    // Continue opens a step alone; the device row in Settings takes the person's files.
+    await page.click("#pr-setup .pr-setup-go");
+    await page.click('.pr-go[data-place="boundary"]');
+    const picker = page.locator('#pr-settings label.pr-file input[type="file"][accept*=".ics"]').first();
+    await picker.waitFor({ state: "attached", timeout: 15000 });
+    await picker.setInputFiles([ics, eml]);
     await page.click('.pr-go[data-place="today"]');
     await settled(/^\d+ items$/);
     assert.match(await out(), /^3 items$/);
