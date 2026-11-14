@@ -121,6 +121,13 @@ assert.ok(joel.sentences.some((s) => /^Grant proposal review is on /u.test(s)), 
 const said = await named("what did Joel say?");
 assert.match(said.sentences[0], /^Joël Example wrote “Re: Proposal draft for the grant” on /u, "what someone said is their mail");
 assert.equal(said.sentences.length, 1, said.sentences.join(" "));
+// Search: a word lists everything that names it, beyond the few the sentences say.
+const many = Array.from({ length: 7 }, (_, i) => ({ address: `g${i}`, media: "message", title: `Garden plan ${i}`, who: "Ana Example", body: "About the garden.", label: "confidential", at: new Date(2026, 10, 1 + i, 9).getTime(), domains: [4] }));
+const garden = await answer("GARDEN", { items: [...many, flight, mail], line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
+assert.equal(garden.sources.length, 7, "every item that names the word is listed");
+assert.ok(garden.sentences.length <= 3, "while the sentences say only a few");
+assert.ok(garden.cited.every((item) => garden.sources.includes(item)), "and what they say is in the list");
+assert.deepEqual(garden.sources.slice(garden.cited.length).map((i) => i.at), garden.sources.slice(garden.cited.length).map((i) => i.at).sort((a, b) => b - a), "the rest newest first");
 const pausedEmpty = await answer("hello", { items: [], line: boundaryLine, halted: () => "yes", now: WEDNESDAY, keep: false });
 assert.deepEqual(pausedEmpty.sentences, [], "paused, even an empty Prism answers nothing");
 console.log("answer: questions answered in sentences, jots offered to keep");

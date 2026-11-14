@@ -169,6 +169,28 @@ export const walks = {
     assert.ok(await answer.getByRole("link").count(), "the answer does not link to where it came from");
     assert.ok(await answer.getByRole("button", { name: /reply|schedule|keep|let go|done/i }).count(), "the answer offers no decision");
   },
+  // J13: a word, typed any way, lists everything that names it, beyond the few the answer says.
+  async j13(page) {
+    assert.ok(await arrived(page), "the person's day never arrives");
+    // More things that name the word than the answer says: the mail, and notes the person jots.
+    const jot = app(page).getByRole("textbox").filter({ visible: true }).and(app(page).locator(":not(#pr-prompt)")).first();
+    assert.ok(await jot.count(), "Today has nowhere to jot something down");
+    const notes = ["Garden Example: seeds", "Garden Example: the gate", "Garden Example: water timer"];
+    for (const note of notes) {
+      await jot.fill(note);
+      await jot.press("Enter");
+      await page.waitForTimeout(800);
+    }
+    const ask = app(page).getByRole("textbox", { name: /ask/i }).or(app(page).getByPlaceholder(/ask/i)).first();
+    assert.ok(await ask.count(), "there is nowhere to look for anything");
+    await ask.fill("EXAMPLE");
+    await ask.press("Enter");
+    await page.waitForTimeout(3000);
+    const found = await app(page).getByRole("list", { name: /ask/i }).last().innerText().catch(() => "");
+    for (const words of ["Lunch on Thursday?", "Time next week", "Your November statement", ...notes]) {
+      assert.ok(found.includes(words), `looking for "example" does not list "${words}": ${found.slice(0, 400)}`);
+    }
+  },
   // J7: a person's page shows what is open between us.
   async j7(page) {
     assert.ok(await arrived(page), "the person's day never arrives");

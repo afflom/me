@@ -93,11 +93,15 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
   const naming = many ? [] : used.filter((item) => mentions(item, terms));
   const told = many ? used.slice(0, S.most) : naming.length > 1 ? naming.slice(0, S.most) : used.slice(0, 1);
   const sentences = [...lead.map((s) => `${s}.`), ...told.map((item) => `${sentenceOf(item, me)}.`)];
+  // Everything held that names the asked words is found: the sentences say
+  // the few, and the list beneath holds those first, then the rest, newest first.
+  const found = terms.length ? held.filter((item) => (!kind || ofKind(item)) && mentions(item, terms)).sort((a, b) => (b.at ?? 0) - (a.at ?? 0)) : [];
   const offers = told.flatMap((item) => {
     const k = S.offers[item.media === "message" ? "message" : item.media === "plainText" ? "note" : ""];
     return k ? [{ kind: k, item }] : [];
   });
-  return { sentences, sources: used.slice(0, S.most), offers, mapped };
+  const rest = found.filter((item) => !told.includes(item));
+  return { sentences, sources: rest.length ? [...told, ...rest].slice(0, S.find) : used.slice(0, S.most), cited: told, offers, mapped };
 }
 
 // Events still ahead come first, soonest first; past ones after, latest first.
