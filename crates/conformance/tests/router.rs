@@ -129,13 +129,16 @@ fn router_ru_03() {
     run("node", &["test/router/labels.test.mjs"]);
     let labels = read("site/router/labels.mjs");
     assert!(
-        labels.contains("const r = await route({ source, values, line: once, halted, now, learned });")
-            && labels.contains("if (r.refused) { item.labels = null; continue; }")
+        labels.contains(
+            "const r = await route({ source, values, line: once, halted, now, learned });"
+        ) && labels.contains("if (r.refused) { item.labels = null; continue; }")
             && labels.contains("if (item.sealed) { item.labels = null; continue; }"),
         "RU-03: every label is the router's mapping; a refusal or a sealed item labels nothing"
     );
     assert!(
-        !labels.contains("fetch(") && !labels.contains("localStorage") && !labels.contains("indexedDB"),
+        !labels.contains("fetch(")
+            && !labels.contains("localStorage")
+            && !labels.contains("indexedDB"),
         "RU-03: what the readers learn stays in memory in this browser"
     );
     let card = read("site/card.mjs");
