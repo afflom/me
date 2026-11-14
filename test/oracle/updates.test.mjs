@@ -13,8 +13,8 @@ import { readItem, reconcile, useReader } from "../../site/card.mjs";
 import * as reader from "../../site/read/read.mjs";
 
 useReader(reader);
-// QR-07's thresholds are its quality record's (app/specs/product/quality/QR-07.json).
-const record = JSON.parse(readFileSync(new URL("../../app/specs/product/quality/QR-07.json", import.meta.url), "utf8"));
+// QR-08's thresholds are its quality record's (app/specs/product/quality/QR-08.json).
+const record = JSON.parse(readFileSync(new URL("../../app/specs/product/quality/QR-08.json", import.meta.url), "utf8"));
 const threshold = Object.fromEntries(record.measures.map((m) => [m.key, m.threshold]));
 const corpus = JSON.parse(readFileSync(new URL("corpus.json", import.meta.url), "utf8")).corpus.filter((e) => e.kind === "calendar");
 const ARRIVED = Date.UTC(2026, 10, 14, 12);

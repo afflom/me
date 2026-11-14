@@ -1,23 +1,16 @@
 {
   "key": "QR-07",
-  "name": "Each event once, as it now stands",
+  "name": "Things are in the order they make",
   "characteristic": "functional suitability",
   "subcharacteristic": "functional correctness",
-  "says": "the calendar the person holds is the one RFC 5546 describes: replies, cancellations and requests change the event they name, and nothing is dated by when it arrived",
+  "says": "a message never comes before what it replies to or references, an event's earlier revision is never told as its latest, and the chat's now is the browser's clock",
   "measures": [
     {
-      "key": "update-shown",
-      "says": "replies, cancellations, refresh requests and counter-proposals among the validation oracles' calendar examples (test/oracle/corpus.json) that show as events of their own",
+      "key": "order-misplaced",
+      "says": "messages and event revisions from the RFC 5322, RFC 5545 and RFC 5546 examples that the Prism places before something they build on, or out of their own SEQUENCE",
       "direction": "atMost",
       "threshold": 0,
-      "gate": "test/oracle/updates.test.mjs"
-    },
-    {
-      "key": "undated-placed",
-      "says": "oracle calendar examples with no DTSTART or DUE that are placed at the time they arrived",
-      "direction": "atMost",
-      "threshold": 0,
-      "gate": "test/oracle/updates.test.mjs"
+      "gate": "test/time/order.test.mjs"
     }
   ]
 }

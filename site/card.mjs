@@ -147,7 +147,10 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const event = reader ? reader.messageEvent(text) : "";
     const carried = event ? readItem({ address, outcome, bytes: new TextEncoder().encode(event), meta: { about: { media: "calendar" } } }).body : "";
     const body = [said, carried].filter(Boolean).join("\n\n");
-    return { ...base, at: Number.isNaN(when) ? base.at : when, title: words(h.subject ?? "").replace(/\s+/g, " ").trim(), who: person(h.from || h.to), text, body };
+    // Its place in its conversation (RFC 5322 3.6.4): what it is, what it answers, what it builds on.
+    const ids = (field) => (h[field] ?? "").match(/<[^<>\s]+>/g) ?? [];
+    const place = { ...(ids("message-id").length ? { id: ids("message-id")[0] } : {}), ...(ids("in-reply-to").length ? { replyTo: ids("in-reply-to") } : {}), ...(ids("references").length ? { refs: ids("references") } : {}) };
+    return { ...base, ...place, at: Number.isNaN(when) ? base.at : when, title: words(h.subject ?? "").replace(/\s+/g, " ").trim(), who: person(h.from || h.to), text, body };
   }
   if (base.media === "calendar") {
     // The event's own fields: the calendar's time zones come first and carry DTSTARTs of their own (1970).

@@ -9,6 +9,7 @@ import { PROVIDERS } from "./table.mjs";
 import { route } from "./router.mjs";
 import { withoutTime } from "./features.mjs";
 import { drawOn, windowOf, termsOf, wordsOf, mentions } from "../coherence/sense.mjs";
+import { relativeOf, sequence } from "../time/time.mjs";
 
 const S = PROVIDERS.sentence;
 const RANK = ["public", "internal", "confidential", "restricted"];
@@ -16,30 +17,41 @@ const higher = (a, b) => (RANK.indexOf(b) > RANK.indexOf(a) ? b : a);
 const day = new Intl.DateTimeFormat(undefined, { weekday: "short", month: "short", day: "numeric" });
 const clock = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
 
-// "Mon, Nov 16 at 8:00 AM", or the day alone for an all-day item.
-export function whenOf(at, allDay = false) {
+// "Mon, Nov 16 at 8:00 AM", or the day alone for an all-day item; told from
+// a "now", also how far that is from it, in wall-time's own periods: "(in 2 days)".
+export function whenOf(at, allDay = false, now = null) {
   if (!at) return "";
   const date = new Date(at);
-  return allDay ? day.format(date) : `${day.format(date)}${S.clock}${clock.format(date)}`;
+  const said = allDay ? day.format(date) : `${day.format(date)}${S.clock}${clock.format(date)}`;
+  return Number.isFinite(now) ? said + fill(S.frames.ago, { ago: relativeOf(allDay ? new Date(date).setHours(12) : at, allDay ? new Date(now).setHours(12) : now) }) : said;
 }
+
+// What the browser's clock says now, as the person reads a date and a time.
+const full = new Intl.DateTimeFormat(undefined, { dateStyle: "full", timeStyle: "short" });
+const asksNow = (text, terms) => S.now.phrases.some((p) => text.toLowerCase().includes(p)) || (terms.length > 0 && terms.every((t) => S.now.words.includes(t)));
 
 // A sentence ends once: one that already ends in . ? ! or … keeps its own mark.
 const end = (text) => (/[.?!…]$/u.test(text) ? text : `${text}.`);
 const fill = (frame, parts) => frame.replace(/\{(\w+)\}/g, (_, key) => parts[key] ?? "");
 const whatOf = (item) => item.title || (item.body ?? "").split("\n")[0] || "";
 
-// One sentence about one item, by what kind of thing it is.
-export function sentenceOf(item, me = null) {
-  const parts = { what: whatOf(item), who: item.who ?? "", when: whenOf(item.at, item.allDay) };
+// One sentence about one item, by what kind of thing it is. Told from a "now"
+// and the order of what is held, it says how far the item is from now and,
+// for a message, its place in its own conversation; for an event revised
+// since, that this is an earlier version of it.
+export function sentenceOf(item, me = null, { now = null, order = null } = {}) {
+  const parts = { what: whatOf(item), who: item.who ?? "", when: whenOf(item.at, item.allDay, now) };
+  const place = order?.get(item.address);
   if (item.media === "message") {
     const mine = me?.addresses?.some((a) => (item.who ?? "").toLowerCase().includes(a.toLowerCase()));
     // What the message asks or tells, in the sender's first words, when they say more than its subject.
     const lead = item.labels?.lead ?? "";
     const says = lead && lead.toLowerCase() !== parts.what.toLowerCase() ? fill(S.frames.lead, { lead }) : "";
-    return fill(S.frames.message, { ...parts, who: mine ? (me.name ?? parts.who) : parts.who }) + says;
+    const turn = place?.of > 1 ? fill(S.frames.turn, place) : "";
+    return fill(S.frames.message, { ...parts, who: mine ? (me.name ?? parts.who) : parts.who }) + turn + says;
   }
   if (item.media === "contactCard") return fill(S.frames.contact, parts);
-  if (item.media === "calendar" || item.start != null) return fill(S.frames.event, parts) + (parts.who && item.media === "calendar" ? fill(S.frames.place, parts) : "");
+  if (item.media === "calendar" || item.start != null) return fill(S.frames.event, parts) + (parts.who && item.media === "calendar" ? fill(S.frames.place, parts) : "") + (place && !place.latest ? S.frames.earlier : "");
   return fill(S.frames.note, parts);
 }
 
@@ -57,6 +69,8 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
   if (!text) return none;
   const mapped = await route({ source: "note", values: { text }, line, halted, now });
   if (mapped.refused) return { ...none, mapped };
+  // What time it is is the Prism's own clock, not anything held.
+  if (asksNow(text, termsOf(text))) return { sentences: [end(fill(S.frames.now, { when: full.format(new Date(now)) }))], sources: [], offers: [], mapped };
   if (keep && mapped.intent !== "question") {
     return { sentences: [keptSentence(text, mapped)], sources: [], offers: [{ kind: "keep" }], mapped };
   }
@@ -99,7 +113,8 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
   // everything that names it; otherwise the best match.
   const naming = many ? [] : used.filter((item) => mentions(item, named));
   const told = many ? used.slice(0, S.most) : naming.length > 1 ? naming.slice(0, S.most) : used.slice(0, 1);
-  const sentences = [...lead.map((s) => `${s}.`), ...told.map((item) => end(sentenceOf(item, me)))];
+  const order = sequence(held);
+  const sentences = [...lead.map((s) => `${s}.`), ...told.map((item) => end(sentenceOf(item, me, { now, order })))];
   // Everything held that names the asked words is found: the sentences say
   // the few, and the list beneath holds those first, then the rest, newest first.
   // Asked only words the readers pass over (a kind, a weekday, "should"), those words are what is sought.
