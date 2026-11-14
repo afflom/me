@@ -175,6 +175,7 @@ Never re-derived, vendored, or gated on.
 | --- | --- | --- |
 | `SRC-RFC5322` | https://www.rfc-editor.org/rfc/rfc5322.txt | `OR-01` |
 | `SRC-RFC5545` | https://www.rfc-editor.org/rfc/rfc5545.txt | `OR-01` |
+| `SRC-RFC5545-RECUR` | https://www.rfc-editor.org/rfc/rfc5545.txt | `OR-01` |
 | `SRC-RFC5546` | https://www.rfc-editor.org/rfc/rfc5546.txt | `OR-01` |
 | `SRC-RFC6350` | https://www.rfc-editor.org/rfc/rfc6350.txt | `OR-01` |
 | `SRC-RFC6047` | https://www.rfc-editor.org/rfc/rfc6047.txt | `OR-01` |

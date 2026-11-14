@@ -4,6 +4,7 @@
 // quoted history below it. An event's notes lose their markup and their
 // conferencing boilerplate, and a repeating event is shown at its next time.
 // Loaded only once something is kept, so a first visit carries none of it.
+import { nextInstance } from "../time/recur.mjs";
 
 const unfold = (text) => text.replace(/\r?\n[ \t]/g, " ");
 
@@ -131,31 +132,10 @@ export function eventText(value = "") {
   return tidy(cut >= 0 ? plain.slice(0, cut) : plain);
 }
 
-// A repeating event's next time at or after now (daily, weekly, monthly, yearly; INTERVAL, COUNT, UNTIL).
-export function nextTime(rule, start, now = Date.now()) {
-  if (!rule || !Number.isFinite(start) || start >= now) return start;
-  const get = (name) => new RegExp(`(?:^|;)${name}=([^;]+)`, "i").exec(rule)?.[1];
-  const freq = (get("FREQ") ?? "").toUpperCase();
-  const every = Math.max(1, Number(get("INTERVAL") ?? 1));
-  const count = get("COUNT") ? Number(get("COUNT")) : Infinity;
-  const untilRaw = get("UNTIL");
-  const until = untilRaw ? Date.UTC(+untilRaw.slice(0, 4), +untilRaw.slice(4, 6) - 1, +untilRaw.slice(6, 8), 23, 59, 59) : Infinity;
-  const step = (d, n) => {
-    const x = new Date(d);
-    if (freq === "DAILY") x.setDate(x.getDate() + n * every);
-    else if (freq === "WEEKLY") x.setDate(x.getDate() + 7 * n * every);
-    else if (freq === "MONTHLY") x.setMonth(x.getMonth() + n * every);
-    else if (freq === "YEARLY") x.setFullYear(x.getFullYear() + n * every);
-    else return NaN;
-    return x.getTime();
-  };
-  const span = { DAILY: 864e5, WEEKLY: 6048e5, MONTHLY: 2592e6, YEARLY: 31536e6 }[freq];
-  if (!span) return start;
-  let n = Math.max(0, Math.floor((now - start) / (span * every)) - 1);
-  for (let guard = 0; guard < 64 && n < count; guard += 1, n += 1) {
-    const t = step(start, n);
-    if (Number.isNaN(t) || t > until) return start;
-    if (t >= now) return t;
-  }
-  return start;
+// A repeating event's next time at or after now, by its own rule (site/time/recur.mjs, RFC 5545 3.8.5):
+// once its rule has run out, the last time it had.
+export function nextTime(component, start, now = Date.now()) {
+  if (!/^RRULE[:;]/im.test(component.replace(/\r?\n[ \t]/g, "")) || !Number.isFinite(start) || start >= now) return start;
+  const at = nextInstance(component, now);
+  return Number.isFinite(at) ? at : start;
 }

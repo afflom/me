@@ -1,0 +1,20 @@
+{
+  "key": "F-11",
+  "statement": "A repeating event keeps its own rhythm: its instances are the ones its recurrence rule makes in its own zone's wall-time (RFC 5545 RRULE, EXDATE, RDATE), so it appears at its next time, at the same local hour across a daylight-saving change, and once its rule has run out, at the last time it had",
+  "journeys": [
+    "J0",
+    "J15"
+  ],
+  "calls": [
+    "site/time/recur.mjs#instances",
+    "site/time/recur.mjs#nextInstance",
+    "site/read/read.mjs#nextTime"
+  ],
+  "acceptance": [
+    "test/time/recur.test.mjs",
+    "test/oracle/read.test.mjs"
+  ],
+  "quality": [
+    "QR-10"
+  ]
+}
