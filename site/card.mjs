@@ -104,7 +104,14 @@ function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const start = icsTime(calendarField(text, "DTSTART"));
     const title = calendarField(text, "SUMMARY");
     const allDay = /^\d{8}$/.test(calendarField(text, "DTSTART"));
-    return { ...base, at: Number.isNaN(start) ? base.at : start, allDay, title, who: calendarField(text, "LOCATION"), text, body: calendarField(text, "DESCRIPTION") || title };
+    // Opened, an event reads as the person would say it: when, where, who, and its notes.
+    const end = icsTime(calendarField(text, "DTEND"));
+    const span = Number.isNaN(start) ? "" : [new Date(start), Number.isNaN(end) ? null : new Date(end)]
+      .filter(Boolean).map((d, i) => d.toLocaleString(undefined, i === 0 ? (allDay ? { dateStyle: "full" } : { dateStyle: "full", timeStyle: "short" }) : (allDay ? { dateStyle: "full" } : { timeStyle: "short" }))).join(" – ");
+    const people = [...unfold(text).matchAll(/^(?:ORGANIZER|ATTENDEE)([^:\r\n]*):(.*)$/gim)]
+      .map(([, params, value]) => /CN="?([^";:]+)"?/i.exec(params)?.[1] ?? value.replace(/^mailto:/i, "")).filter(Boolean);
+    const body = [title, span, calendarField(text, "LOCATION"), [...new Set(people)].join(", "), calendarField(text, "DESCRIPTION")].filter(Boolean).join("\n");
+    return { ...base, at: Number.isNaN(start) ? base.at : start, allDay, title, who: calendarField(text, "LOCATION"), text, body };
   }
   if (base.media === "contactCard") {
     const field = (name) => calendarField(text, name);
@@ -222,8 +229,6 @@ export default async function start({ app, reason, $ }) {
       read.push(item);
     }
     items = read.sort((a, b) => b.at - a.at);
-    // Ask is offered once there is something of the person's to ask about.
-    $("pr-ask").hidden = !items.length;
     // The people in what is kept, for the place that lists them.
     if (selfOf) { inferred = selfOf(items); mineOf = fromMe; }
     people = peopleOf ? { place: peoplePlace, all: peopleOf(items, meNow()), between } : null;
@@ -356,11 +361,19 @@ export default async function start({ app, reason, $ }) {
       by.get(item.service).push(item);
     }
     const total = { files: 0, store: 0, storehash: 0, ask: 0, refuse: 0, skip: 0 };
+    // What is arriving shows as it arrives: the service, how far along, and each batch in its places at once.
+    const BATCH = 25;
     for (const [service, items] of by) {
-      const t = await d.source.readItems(items);
-      for (const key of Object.keys(total)) total[key] += t[key] ?? 0;
-      noteArrived(service, t.store + t.storehash, items.length);
+      const name = SERVICES.find((s) => s.key === service)?.name ?? service;
+      for (let i = 0; i < items.length; i += BATCH) {
+        say(`${WORDS.arriving} · ${name} · ${Math.min(i + BATCH, items.length)} ${WORDS["setup.of"]} ${items.length}`);
+        const t = await d.source.readItems(items.slice(i, i + BATCH));
+        for (const key of Object.keys(total)) total[key] += t[key] ?? 0;
+        noteArrived(service, t.store + t.storehash, Math.min(BATCH, items.length - i));
+        if (t.store + t.storehash) { await load(); if (current.show !== "settings") paintList(); }
+      }
     }
+    if (by.size) say(`${items.length} ${WORDS.items}`, "good");
     return total;
   }
   // On every visit, and every few minutes while the page is open: a folder the
@@ -606,9 +619,6 @@ export default async function start({ app, reason, $ }) {
     const left = setupLeft();
     const shown = current.host === "home" && left.length > 0;
     setupCard.hidden = !shown;
-    // While nothing has arrived and set up is not done, Today holds only the card and the note.
-    $("pr-home").hidden = current.host !== "home" || (shown && !items.length);
-    $("pr-ask").hidden = !items.length;
     if (!shown) return false;
     const next = left[0];
     const steps = element("ol", { className: "pr-steps" }, ...SETUP.map((step) => element("li", {

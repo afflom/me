@@ -80,6 +80,9 @@ export const walks = {
     const shown = await text(page);
     assert.match(shown, /due/i, "Today does not show what is due (the payment due on the 28th)");
     assert.ok(shown.includes("Lunch on Thursday"), "Today does not show the message waiting on the person (Robin's lunch question)");
+    // Pressing the meeting opens it to read: who it is with, not only its title.
+    await app(page).getByText("Design review", { exact: true }).filter({ visible: true }).first().click();
+    assert.ok(await seen(page, "Robin Example", 3000), "opening today's meeting does not show who it is with");
   },
   // J2: a Needs me list holding Robin's question; one gesture clears it.
   async j2(page) {
