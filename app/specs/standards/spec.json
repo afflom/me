@@ -665,11 +665,8 @@
    ],
    "inventories": [
     {
-     "extract": "wcag-json",
-     "levels": [
-      "A",
-      "AA"
-     ],
+     "generated": "test/standards/generated/wcag-2.2.json",
+     "vendored": "app/specs/standards/upstream/wcag.json",
      "source": {
       "url": "https://www.w3.org/WAI/WCAG22/wcag.json",
       "sha256": "b6bedebc86e96c4989722dd7ebb49eb604f8b832de04f7a570430c5ebee097e6"
@@ -928,7 +925,12 @@
    ],
    "inventories": [
     {
-     "extract": "aria-html"
+     "generated": "test/standards/generated/wai-aria-1.2.json",
+     "vendored": "app/specs/standards/upstream/wai-aria-1.2.html",
+     "source": {
+      "url": "https://www.w3.org/TR/wai-aria-1.2/",
+      "sha256": "c0fea16fc747779569ab754d2d25bca3e2b7e8a673b8ef5362aeb9ebc73a4849"
+     }
     }
    ],
    "enforcedByKind": {
@@ -1100,6 +1102,19 @@
    "unpinned": "its graded pairs are pinned as the stsb oracle and held by test/oracle/meaning.test.mjs (QR-15); an extractor that reads its annotation guidelines into requirements is pending",
    "governs": [
     "site/router/meaning.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "iso-24617-2",
+   "title": "ISO 24617-2:2020 Language resource management, Semantic annotation framework (SemAF), Part 2: Dialogue acts",
+   "issuer": "ISO/TC 37/SC 4",
+   "text": null,
+   "unpinned": "ISO does not publish the text freely; its general-purpose functions (Inform, the information-seeking functions, the directive and commissive functions) are held through the AMI Meeting Corpus's annotated dialogue acts, pinned as the ami oracle and held by test/oracle/intent.test.mjs (QR-16)",
+   "governs": [
+    "site/router/features.mjs"
    ],
    "realizedBy": [
     "ST-01"
@@ -1536,7 +1551,6 @@
   "site/resonance/resonance.mjs",
   "site/resonance/table.mjs",
   "site/router/answer.mjs",
-  "site/router/features.mjs",
   "site/router/labels.mjs",
   "site/router/router.mjs",
   "site/router/table.mjs",

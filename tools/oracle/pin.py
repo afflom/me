@@ -1,9 +1,12 @@
 """A pinned source: fetched at its SHA-256, refused if it differs; and an RFC's text without its page breaks."""
 import gzip
 import hashlib
+import io
+import json
 import re
 import sys
 import urllib.request
+import zipfile
 
 
 def refuse(why):
@@ -26,6 +29,17 @@ def fetch(source, cache=None):
     # A benchmark published compressed (gzip, RFC 1952) is pinned as published and read uncompressed.
     if source["url"].endswith(".gz"):
         data = gzip.decompress(data)
+    # A corpus published as a zip archive is pinned as published; what is read
+    # of it is the members under the source's "members" folders, as one JSON
+    # object from each member's path to its text in the encoding it declares.
+    if source["url"].endswith(".zip"):
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            held = {
+                name: archive.read(name).decode(source.get("encoding", "utf-8"))
+                for name in sorted(archive.namelist())
+                if any(name.startswith(folder) for folder in source["members"]) and not name.endswith("/")
+            }
+        return json.dumps(held, ensure_ascii=False)
     return data.decode("utf-8")
 
 

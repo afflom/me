@@ -1,7 +1,9 @@
 //! The `generators` suite: every generated file is written by a LexLean program.
 //!
 //! Each directory of generators/ but foundation/ is one LexLean text/3 application
-//! whose generators are modules (generators/system: GenSystem). Native Lean has a
+//! whose generators are modules (generators/system: GenSystem; generators/standards:
+//! GenWcag and GenAria, the WCAG 2.2 criteria and WAI-ARIA 1.2 roles, states and
+//! properties of the standards register). Native Lean has a
 //! fixed time for one program, so families of generators are separate programs;
 //! they share generators/foundation, copied into each. tools/generators/build.sh
 //! builds one in the locked SDK and pins it in its lock.json; tools/generators/run.sh
