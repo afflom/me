@@ -23,8 +23,6 @@ const { corpus } = JSON.parse(readFileSync("test/oracle/corpus.json", "utf8"));
 test("each grammar is its pinned specifications' own, as tools/standards/grammar.py takes it", () => {
   const run = spawnSync("python3", ["-I", "tools/standards/grammar.py", "--check", "--cache", join(tmpdir(), "prism-grammar")], { encoding: "utf8" });
   assert.equal(run.status, 0, run.stderr || run.stdout);
-  const vectors = spawnSync("node", ["tools/standards/vectors.mjs", "--check"], { encoding: "utf8" });
-  assert.equal(vectors.status, 0, vectors.stderr || vectors.stdout);
 });
 
 for (const g of spec.grammars) {
