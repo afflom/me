@@ -1,0 +1,100 @@
+\begin{lexlean}{Foundation.Tar}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\title{Tar archive reader}
+\begin{semanticmodule}
+definition{
+  name: byteOr,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (Foundation.Bytes::byteAt s i)
+    | Option.none => 0
+    | Option.some b => (prim to_nat b : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sameBytes,
+  parameters: [left : Bytes, right : Bytes],
+  result: Bool,
+  body: (prim equal (prim compare_bytes left right : Ordering) (prim compare_bytes 0x00 0x00 : Ordering) : Bool),
+  axioms: [propext]
+}
+
+definition{
+  name: nulFrom,
+  parameters: [s : Bytes, i : Nat, stop : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (stop <? (i + 1)) then stop else (if ((byteOr s i) =? 0) then i else (nulFrom s (i + 1) stop rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: field,
+  parameters: [s : Bytes, start : Nat, width : Nat],
+  result: Bytes,
+  body: (let stop : Nat := (nulFrom s start (start + width) width); (match (Foundation.Bytes::sliceBytes s start (prim subtract stop start : Nat))
+    | Option.none => 0x
+    | Option.some b => b)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: octalFrom,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let b : Nat := (byteOr s i); (if ((b <? 48) || (55 <? b)) then (if ((b =? 32) && (acc =? 0)) then (octalFrom s (i + 1) acc rest) else acc) else (octalFrom s (i + 1) ((prim multiply acc 8 : Nat) + (prim subtract b 48 : Nat)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: entryName,
+  parameters: [s : Bytes, header : Nat],
+  result: Bytes,
+  body: (let name : Bytes := (field s header 100); (let prefix : Bytes := (field s (header + 345) 155); (if ((Foundation.Bytes::byteLength prefix) =? 0) then name else (Foundation.Bytes::appendBytes (Foundation.Bytes::appendBytes prefix 0x2f) name)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: entrySize,
+  parameters: [s : Bytes, header : Nat],
+  result: Nat,
+  body: (octalFrom s (header + 124) 0 12),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: padded,
+  parameters: [size : Nat],
+  result: Nat,
+  body: (prim multiply (prim quotient (size + 511) 512 0 : Nat) 512 : Nat)
+}
+
+definition{
+  name: findFrom,
+  parameters: [s : Bytes, path : Bytes, header : Nat, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (if ((byteOr s header) =? 0) then (ctor Option.none [Bytes]) else (let size : Nat := (entrySize s header); (if (sameBytes (entryName s header) path) then (Foundation.Bytes::sliceBytes s (header + 512) size) else (findFrom s path ((header + 512) + (padded size)) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: find,
+  parameters: [archive : Bytes, path : Bytes],
+  result: (Option Bytes),
+  body: (findFrom archive path 0 (prim quotient (Foundation.Bytes::byteLength archive) 512 0 : Nat)),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
