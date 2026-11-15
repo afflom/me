@@ -32,12 +32,7 @@ definition{
   body: (Foundation.Bytes::appendBytes (cat parts) 0x0a)
 }
 
-definition{
-  name: len,
-  parameters: [s : Bytes],
-  result: Nat,
-  body: (Foundation.Bytes::byteLength s)
-}
+definition{name: len, parameters: [s : Bytes], result: Nat, body: (Foundation.Bytes::byteLength s)}
 
 definition{
   name: same,
@@ -124,9 +119,7 @@ definition{
   name: file,
   parameters: [archive : Bytes, path : Bytes],
   result: Bytes,
-  body: (match (Foundation.Tar::find archive path)
-    | Option.none => 0x
-    | Option.some b => b),
+  body: (match (Foundation.Tar::find archive path) | Option.none => 0x | Option.some b => b),
   axioms: [Quot.sound, propext]
 }
 
@@ -188,9 +181,7 @@ definition{
   name: lead,
   parameters: [s : Bytes, at : (Option Nat)],
   result: Nat,
-  body: (match at
-    | Option.none => 0
-    | Option.some v => (Foundation.Tar::byteOr s v)),
+  body: (match at | Option.none => 0 | Option.some v => (Foundation.Tar::byteOr s v)),
   axioms: [Quot.sound, propext]
 }
 
@@ -206,9 +197,7 @@ definition{
   name: isNull,
   parameters: [s : Bytes, at : (Option Nat)],
   result: Bool,
-  body: (match at
-    | Option.none => true
-    | Option.some v => (startsAt s v (u "null"))),
+  body: (match at | Option.none => true | Option.some v => (startsAt s v (u "null"))),
   axioms: [propext]
 }
 

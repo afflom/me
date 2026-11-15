@@ -4,7 +4,8 @@
 # `prismpm build` and pinned by tools/generators/build.sh. Their Foundation is
 # one module set, generators/foundation/, copied byte for byte into each.
 #   tools/generators/run.sh          write each step's output
-#   tools/generators/run.sh --check  fail when a committed output differs (GN-01)
+#   tools/generators/run.sh --check  fail when a committed output differs, or a
+#                                    program's cases/ no longer get their reports (GN-01)
 #   tools/generators/run.sh --lock P record program P's sources and binary (build.sh)
 # A request is "<generator> <output>\n" and a ustar archive of the step's inputs,
 # and must fit the request bound. A step with "split" runs once per piece of that
@@ -34,6 +35,15 @@ if [ "$mode" = --check ]; then
         echo "GN-01: generators/$p/src/Foundation/$f is not generators/foundation/$f" >&2; exit 1
       fi
     done
+  done
+  # A program's cases/ are planted defects it must keep answering the same way:
+  # NAME.request is a request, NAME.report the report its program must print.
+  for req in generators/*/cases/*.request; do
+    [ -e "$req" ] || continue
+    p=$(echo "$req" | cut -d/ -f2)
+    if ! "generators/$p/bin/prism-generators" run "$req" 2>&1 | cmp -s - "${req%.request}.report"; then
+      echo "GN-01: generators/$p no longer answers $req with ${req%.request}.report" >&2; exit 1
+    fi
   done
 fi
 # js PATH < JSON: the value at a dotted path, one line per element of an array.

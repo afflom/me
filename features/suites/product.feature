@@ -21,7 +21,7 @@ Feature: product
   @PD-03 @build
   Scenario: The product record places every part the Prism has: every surface entry in the person's or the system view, every root facet in the system view serving at least one journey, every journey with its goal, done-state, usability measure, status and walk, and every setting in the person's view one the Prism requires of the person; the gate refuses a record that leaves any part unplaced
     Given app/specs/product/spec.json, the surface, the coherence registry and the walks
-    When tools/generators/run.sh runs the LexLean program generators/product over them, and its build replays each planted defect as an acceptance vector
+    When tools/generators/run.sh runs the LexLean program generators/product over them, and GN-01 replays each planted defect in generators/product/cases
     Then the committed record passes and every planted defect is refused with its reason
 
   @PT-01 @build

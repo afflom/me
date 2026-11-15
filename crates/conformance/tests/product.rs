@@ -3,8 +3,9 @@
 //! The behaviour runs in `pages.yml`: `test/product/screen.test.mjs` and
 //! `test/product/journeys.test.mjs` (on the assembled page, and again on the
 //! published page). The record's gate is the LexLean program
-//! generators/product, run by GN-01, whose acceptance vectors are its planted
-//! defects. These tests hold the wiring fixed.
+//! generators/product, run by GN-01, which also replays its planted defects
+//! (generators/product/cases/) and fails when one gets another report. These
+//! tests hold the wiring fixed.
 
 use std::path::PathBuf;
 
@@ -112,10 +113,20 @@ fn product_pd_03() {
             "PD-03: generators/pipeline.json must run {generator}"
         );
     }
-    let app = read("generators/product/src/Generators.lex.tex");
+    let cases = std::fs::read_dir(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../generators/product/cases"),
+    )
+    .expect("PD-03: generators/product/cases holds the planted defects")
+    .filter(|e| {
+        e.as_ref()
+            .map(|e| e.path().extension().is_some_and(|x| x == "request"))
+            .unwrap_or(false)
+    })
+    .count();
+    assert!(cases > 30, "PD-03: the planted defects are generators/product/cases");
     assert!(
-        app.matches("AcceptanceVector {request").count() > 30,
-        "PD-03: the planted defects are the program's acceptance vectors"
+        read("tools/generators/run.sh").contains("generators/*/cases/*.request"),
+        "PD-03: GN-01 replays every program's cases"
     );
 }
 

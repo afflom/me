@@ -8,19 +8,9 @@
 \importmodule{Foundation.Tar}
 \title{Product gate}
 \begin{semanticmodule}
-definition{
-  name: views,
-  parameters: [],
-  result: Bytes,
-  body: (Check::u "person\nsystem\n")
-}
+definition{name: views, parameters: [], result: Bytes, body: (Check::u "person\nsystem\n")}
 
-definition{
-  name: statuses,
-  parameters: [],
-  result: Bytes,
-  body: (Check::u "works\nnot yet\n")
-}
+definition{name: statuses, parameters: [], result: Bytes, body: (Check::u "works\nnot yet\n")}
 
 definition{
   name: measureKinds,
@@ -29,12 +19,7 @@ definition{
   body: (Check::u "effectiveness\nefficiency\nsatisfaction\n")
 }
 
-definition{
-  name: directions,
-  parameters: [],
-  result: Bytes,
-  body: (Check::u "atLeast\natMost\n")
-}
+definition{name: directions, parameters: [], result: Bytes, body: (Check::u "atLeast\natMost\n")}
 
 definition{
   name: pdAt,
@@ -291,7 +276,15 @@ definition{
 
 definition{
   name: listedFrom,
-  parameters: [s : Bytes, i : Nat, who : Bytes, set : Bytes, before : String, after : String, fuel : Nat],
+  parameters: [
+    s : Bytes,
+    i : Nat,
+    who : Bytes,
+    set : Bytes,
+    before : String,
+    after : String,
+    fuel : Nat
+  ],
   result: Bytes,
   body: (match fuel
     | Nat.zero => 0x
@@ -401,7 +394,14 @@ definition{
 
 definition{
   name: viewOf,
-  parameters: [pf : Bytes, pv : (Option Nat), sf : Bytes, sr : (Option Nat), kind : String, k : Bytes],
+  parameters: [
+    pf : Bytes,
+    pv : (Option Nat),
+    sf : Bytes,
+    sr : (Option Nat),
+    kind : String,
+    k : Bytes
+  ],
   result: Bytes,
   body: (match (ownAt sf sr (Check::u kind) k)
     | Option.none => (Check::str pf (givenAt pf pv (Check::u kind) k))
@@ -411,7 +411,17 @@ definition{
 
 definition{
   name: placedFrom,
-  parameters: [pf : Bytes, pv : (Option Nat), sf : Bytes, sr : (Option Nat), kind : Bytes, sg : Bytes, ks : Bytes, i : Nat, fuel : Nat],
+  parameters: [
+    pf : Bytes,
+    pv : (Option Nat),
+    sf : Bytes,
+    sr : (Option Nat),
+    kind : Bytes,
+    sg : Bytes,
+    ks : Bytes,
+    i : Nat,
+    fuel : Nat
+  ],
   result: Bytes,
   body: (match fuel
     | Nat.zero => 0x
@@ -443,7 +453,14 @@ definition{
 
 definition{
   name: placement,
-  parameters: [pf : Bytes, pv : (Option Nat), sf : Bytes, sr : (Option Nat), kind : String, sg : String],
+  parameters: [
+    pf : Bytes,
+    pv : (Option Nat),
+    sf : Bytes,
+    sr : (Option Nat),
+    kind : String,
+    sg : String
+  ],
   result: Bytes,
   body: (let have : Bytes := (haveKeys sf sr kind); (let given : Bytes := (Check::keys pf (Check::key pf pv kind)); (Foundation.Bytes::appendBytes (placedFrom pf pv sf sr (Check::u kind) (Check::u sg) have 0 ((Foundation.Bytes::byteLength have) + 1)) (extraFrom (Check::u sg) have given 0 ((Foundation.Bytes::byteLength given) + 1))))),
   axioms: [Quot.sound, propext]
@@ -514,7 +531,17 @@ definition{
 
 definition{
   name: settingFrom,
-  parameters: [pf : Bytes, pv : (Option Nat), sf : Bytes, sr : (Option Nat), shown : Bytes, unrequired : Bytes, ks : Bytes, i : Nat, fuel : Nat],
+  parameters: [
+    pf : Bytes,
+    pv : (Option Nat),
+    sf : Bytes,
+    sr : (Option Nat),
+    shown : Bytes,
+    unrequired : Bytes,
+    ks : Bytes,
+    i : Nat,
+    fuel : Nat
+  ],
   result: Bytes,
   body: (match fuel
     | Nat.zero => 0x
@@ -525,7 +552,16 @@ definition{
 
 definition{
   name: systemNames,
-  parameters: [pf : Bytes, pv : (Option Nat), sf : Bytes, sr : (Option Nat), kind : String, field : String, i : Nat, fuel : Nat],
+  parameters: [
+    pf : Bytes,
+    pv : (Option Nat),
+    sf : Bytes,
+    sr : (Option Nat),
+    kind : String,
+    field : String,
+    i : Nat,
+    fuel : Nat
+  ],
   result: Bytes,
   body: (match fuel
     | Nat.zero => 0x
