@@ -1,0 +1,569 @@
+{
+  "schema": "prism/prompt/1",
+  "goal": "Decides whether one object may enter the Prism under its kappa label, the content address of UOR-Foundation/kappa-registry (feat/rewrite-after-poc, commit 618f477745e601f1bf1bd5cc62aed6fea4c8936d): an",
+  "pattern": "decisionTable",
+  "repository": "afflom/me",
+  "app": {
+    "name": "prism-kappa",
+    "title": "Prism Kappa",
+    "purpose": "Decides whether one object may enter the Prism under its kappa label, the content address of UOR-Foundation/kappa-registry (feat/rewrite-after-poc, commit 618f477745e601f1bf1bd5cc62aed6fea4c8936d): an axis name, a colon and the digest in lowercase hex. A label is read as kappa-registry's Kappa::parse reads it, and an object is admitted only when the browser re-derived the very digest the label names.",
+    "fields": [
+      {
+        "name": "colon",
+        "kind": "choice",
+        "values": [
+          "present",
+          "absent"
+        ],
+        "means": "whether the label has the colon that separates its axis from its digest"
+      },
+      {
+        "name": "axis",
+        "kind": "choice",
+        "values": [
+          "sha256",
+          "sha512",
+          "blake3",
+          "sha1",
+          "sha3x256",
+          "keccak256",
+          "other"
+        ],
+        "means": "the axis the label names before its colon, one of kappa-registry's six, or anything else"
+      },
+      {
+        "name": "digits",
+        "kind": "choice",
+        "values": [
+          "right",
+          "wrong"
+        ],
+        "means": "whether the digest has exactly twice its axis's digest length in hex digits"
+      },
+      {
+        "name": "hex",
+        "kind": "choice",
+        "values": [
+          "lower",
+          "bad"
+        ],
+        "means": "whether every digest digit is lowercase hex (0-9, a-f)"
+      },
+      {
+        "name": "digest",
+        "kind": "choice",
+        "values": [
+          "match",
+          "mismatch",
+          "uncomputed",
+          "collision"
+        ],
+        "means": "the one word the request carries: the browser re-derived the label's digest from the object's bytes (match), derived another (mismatch), could not derive it on this host (uncomputed), or found a SHA-1 collision"
+      }
+    ],
+    "outcomes": [
+      "admit",
+      "unverified",
+      "mismatch",
+      "collision",
+      "nocolon",
+      "unknownaxis",
+      "digits",
+      "badhex"
+    ],
+    "meanings": {
+      "admit": "the object enters under its label",
+      "unverified": "the label is well formed, its digest not derived here",
+      "mismatch": "the object's bytes derive another digest",
+      "collision": "the digest is a known SHA-1 collision",
+      "nocolon": "the label has no axis separator",
+      "unknownaxis": "the axis is not one of kappa-registry's six",
+      "digits": "the digest has the wrong length for its axis",
+      "badhex": "the digest is not lowercase hex"
+    },
+    "rules": [
+      {
+        "id": "REQ-001",
+        "when": [
+          {
+            "field": "colon",
+            "op": "is",
+            "value": "absent"
+          }
+        ],
+        "then": "nocolon",
+        "says": "when colon is absent then nocolon",
+        "why": "Prism Kappa: the decision tree's path to nocolon"
+      },
+      {
+        "id": "REQ-002",
+        "when": [
+          {
+            "field": "axis",
+            "op": "is",
+            "value": "other"
+          }
+        ],
+        "then": "unknownaxis",
+        "says": "when axis is other then unknownaxis",
+        "why": "Prism Kappa: the decision tree's path to unknownaxis"
+      },
+      {
+        "id": "REQ-003",
+        "when": [
+          {
+            "field": "digits",
+            "op": "is",
+            "value": "wrong"
+          }
+        ],
+        "then": "digits",
+        "says": "when digits is wrong then digits",
+        "why": "Prism Kappa: the decision tree's path to digits"
+      },
+      {
+        "id": "REQ-004",
+        "when": [
+          {
+            "field": "hex",
+            "op": "is",
+            "value": "bad"
+          }
+        ],
+        "then": "badhex",
+        "says": "when hex is bad then badhex",
+        "why": "Prism Kappa: the decision tree's path to badhex"
+      },
+      {
+        "id": "REQ-005",
+        "when": [
+          {
+            "field": "digest",
+            "op": "is",
+            "value": "collision"
+          }
+        ],
+        "then": "collision",
+        "says": "when digest is collision then collision",
+        "why": "Prism Kappa: the decision tree's path to collision"
+      },
+      {
+        "id": "REQ-006",
+        "when": [
+          {
+            "field": "digest",
+            "op": "is",
+            "value": "mismatch"
+          }
+        ],
+        "then": "mismatch",
+        "says": "when digest is mismatch then mismatch",
+        "why": "Prism Kappa: the decision tree's path to mismatch"
+      },
+      {
+        "id": "REQ-007",
+        "when": [
+          {
+            "field": "digest",
+            "op": "is",
+            "value": "uncomputed"
+          }
+        ],
+        "then": "unverified",
+        "says": "when digest is uncomputed then unverified",
+        "why": "Prism Kappa: the decision tree's path to unverified"
+      }
+    ],
+    "otherwise": "admit",
+    "otherwiseWhy": "Prism Kappa: the decision tree's path that meets no test",
+    "properties": [
+      {
+        "id": "INV-001",
+        "kind": "always",
+        "when": [
+          {
+            "field": "colon",
+            "op": "is",
+            "value": "absent"
+          }
+        ],
+        "then": "nocolon",
+        "says": "always when colon is absent then nocolon",
+        "why": "a label without its colon names no axis (KappaParseError::NoColon)"
+      },
+      {
+        "id": "INV-002",
+        "kind": "always",
+        "when": [
+          {
+            "field": "colon",
+            "op": "is",
+            "value": "present"
+          },
+          {
+            "field": "axis",
+            "op": "is",
+            "value": "other"
+          }
+        ],
+        "then": "unknownaxis",
+        "says": "always when colon is present and axis is other then unknownaxis",
+        "why": "only kappa-registry's six axes are content addresses (KappaParseError::UnknownAxis)"
+      },
+      {
+        "id": "INV-003",
+        "kind": "never",
+        "when": [
+          {
+            "field": "digits",
+            "op": "is",
+            "value": "wrong"
+          }
+        ],
+        "then": "admit",
+        "says": "never when digits is wrong then admit",
+        "why": "a digest of the wrong length for its axis is no address on it (KappaParseError::WrongDigitCount)"
+      },
+      {
+        "id": "INV-004",
+        "kind": "never",
+        "when": [
+          {
+            "field": "digits",
+            "op": "is",
+            "value": "wrong"
+          }
+        ],
+        "then": "unverified",
+        "says": "never when digits is wrong then unverified",
+        "why": "a digest of the wrong length for its axis is no address on it (KappaParseError::WrongDigitCount)"
+      },
+      {
+        "id": "INV-005",
+        "kind": "never",
+        "when": [
+          {
+            "field": "hex",
+            "op": "is",
+            "value": "bad"
+          }
+        ],
+        "then": "admit",
+        "says": "never when hex is bad then admit",
+        "why": "the wire form is lowercase hex only; any other digit refuses (KappaParseError::BadHex)"
+      },
+      {
+        "id": "INV-006",
+        "kind": "never",
+        "when": [
+          {
+            "field": "hex",
+            "op": "is",
+            "value": "bad"
+          }
+        ],
+        "then": "unverified",
+        "says": "never when hex is bad then unverified",
+        "why": "the wire form is lowercase hex only; any other digit refuses (KappaParseError::BadHex)"
+      },
+      {
+        "id": "INV-007",
+        "kind": "never",
+        "when": [
+          {
+            "field": "digest",
+            "op": "is",
+            "value": "mismatch"
+          }
+        ],
+        "then": "admit",
+        "says": "never when digest is mismatch then admit",
+        "why": "bytes that do not re-derive to their label never enter under it (KappaParseError::DigestMismatch)"
+      },
+      {
+        "id": "INV-008",
+        "kind": "never",
+        "when": [
+          {
+            "field": "digest",
+            "op": "is",
+            "value": "mismatch"
+          }
+        ],
+        "then": "unverified",
+        "says": "never when digest is mismatch then unverified",
+        "why": "bytes that do not re-derive to their label never enter under it (KappaParseError::DigestMismatch)"
+      },
+      {
+        "id": "INV-009",
+        "kind": "never",
+        "when": [
+          {
+            "field": "digest",
+            "op": "is",
+            "value": "collision"
+          }
+        ],
+        "then": "admit",
+        "says": "never when digest is collision then admit",
+        "why": "content that collides on SHA-1 is refused (KappaParseError::CollisionDetected)"
+      },
+      {
+        "id": "INV-010",
+        "kind": "never",
+        "when": [
+          {
+            "field": "digest",
+            "op": "is",
+            "value": "collision"
+          }
+        ],
+        "then": "unverified",
+        "says": "never when digest is collision then unverified",
+        "why": "content that collides on SHA-1 is refused (KappaParseError::CollisionDetected)"
+      },
+      {
+        "id": "INV-011",
+        "kind": "never",
+        "when": [
+          {
+            "field": "digest",
+            "op": "is",
+            "value": "uncomputed"
+          }
+        ],
+        "then": "admit",
+        "says": "never when digest is uncomputed then admit",
+        "why": "a digest the browser could not re-derive is never taken as verified"
+      },
+      {
+        "id": "INV-012",
+        "kind": "never",
+        "when": [
+          {
+            "field": "colon",
+            "op": "is",
+            "value": "present"
+          },
+          {
+            "field": "digits",
+            "op": "is",
+            "value": "right"
+          },
+          {
+            "field": "hex",
+            "op": "is",
+            "value": "lower"
+          },
+          {
+            "field": "digest",
+            "op": "is",
+            "value": "match"
+          }
+        ],
+        "then": "nocolon",
+        "says": "never when colon is present and digits is right and hex is lower and digest is match then nocolon",
+        "why": "a well-formed label whose digest the browser re-derived is refused only for naming an unknown axis"
+      },
+      {
+        "id": "INV-013",
+        "kind": "never",
+        "when": [
+          {
+            "field": "colon",
+            "op": "is",
+            "value": "present"
+          },
+          {
+            "field": "digits",
+            "op": "is",
+            "value": "right"
+          },
+          {
+            "field": "hex",
+            "op": "is",
+            "value": "lower"
+          },
+          {
+            "field": "digest",
+            "op": "is",
+            "value": "match"
+          }
+        ],
+        "then": "digits",
+        "says": "never when colon is present and digits is right and hex is lower and digest is match then digits",
+        "why": "a well-formed label whose digest the browser re-derived is refused only for naming an unknown axis"
+      },
+      {
+        "id": "INV-014",
+        "kind": "never",
+        "when": [
+          {
+            "field": "colon",
+            "op": "is",
+            "value": "present"
+          },
+          {
+            "field": "digits",
+            "op": "is",
+            "value": "right"
+          },
+          {
+            "field": "hex",
+            "op": "is",
+            "value": "lower"
+          },
+          {
+            "field": "digest",
+            "op": "is",
+            "value": "match"
+          }
+        ],
+        "then": "badhex",
+        "says": "never when colon is present and digits is right and hex is lower and digest is match then badhex",
+        "why": "a well-formed label whose digest the browser re-derived is refused only for naming an unknown axis"
+      },
+      {
+        "id": "INV-015",
+        "kind": "never",
+        "when": [
+          {
+            "field": "colon",
+            "op": "is",
+            "value": "present"
+          },
+          {
+            "field": "digits",
+            "op": "is",
+            "value": "right"
+          },
+          {
+            "field": "hex",
+            "op": "is",
+            "value": "lower"
+          },
+          {
+            "field": "digest",
+            "op": "is",
+            "value": "match"
+          }
+        ],
+        "then": "mismatch",
+        "says": "never when colon is present and digits is right and hex is lower and digest is match then mismatch",
+        "why": "a well-formed label whose digest the browser re-derived is refused only for naming an unknown axis"
+      },
+      {
+        "id": "INV-016",
+        "kind": "never",
+        "when": [
+          {
+            "field": "colon",
+            "op": "is",
+            "value": "present"
+          },
+          {
+            "field": "digits",
+            "op": "is",
+            "value": "right"
+          },
+          {
+            "field": "hex",
+            "op": "is",
+            "value": "lower"
+          },
+          {
+            "field": "digest",
+            "op": "is",
+            "value": "match"
+          }
+        ],
+        "then": "collision",
+        "says": "never when colon is present and digits is right and hex is lower and digest is match then collision",
+        "why": "a well-formed label whose digest the browser re-derived is refused only for naming an unknown axis"
+      },
+      {
+        "id": "INV-017",
+        "kind": "never",
+        "when": [
+          {
+            "field": "colon",
+            "op": "is",
+            "value": "present"
+          },
+          {
+            "field": "digits",
+            "op": "is",
+            "value": "right"
+          },
+          {
+            "field": "hex",
+            "op": "is",
+            "value": "lower"
+          },
+          {
+            "field": "digest",
+            "op": "is",
+            "value": "match"
+          }
+        ],
+        "then": "unverified",
+        "says": "never when colon is present and digits is right and hex is lower and digest is match then unverified",
+        "why": "a well-formed label whose digest the browser re-derived is refused only for naming an unknown axis"
+      }
+    ],
+    "examples": [
+      {
+        "request": "present sha256 right lower match",
+        "response": "admit"
+      },
+      {
+        "request": "present sha256 right lower mismatch",
+        "response": "mismatch"
+      },
+      {
+        "request": "present sha256 right lower uncomputed",
+        "response": "unverified"
+      },
+      {
+        "request": "present sha256 right bad match",
+        "response": "badhex"
+      },
+      {
+        "request": "present sha256 wrong lower match",
+        "response": "digits"
+      },
+      {
+        "request": "absent other wrong bad match",
+        "response": "nocolon"
+      },
+      {
+        "request": "present other wrong lower match",
+        "response": "unknownaxis"
+      },
+      {
+        "request": "present blake3 right lower uncomputed",
+        "response": "unverified"
+      },
+      {
+        "request": "present sha1 right lower collision",
+        "response": "collision"
+      },
+      {
+        "request": "present sha1 right lower uncomputed",
+        "response": "unverified"
+      },
+      {
+        "request": "present sha3x256 right lower uncomputed",
+        "response": "unverified"
+      },
+      {
+        "request": "present keccak256 right lower uncomputed",
+        "response": "unverified"
+      },
+      {
+        "request": "present sha512 right lower match",
+        "response": "admit"
+      }
+    ]
+  }
+}

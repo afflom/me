@@ -1,7 +1,9 @@
-// A standalone build of PrismKappa (app/src/PrismKappa.lex.tex) so that
-// site/kappa/kappa.test.mjs can run every request without the holo. The page
-// decides through the Prism root's kappa facet instead. Built by
-// tools/kappa/standalone.py (KappaApp routes straight to kappaDispatch); it
+// A standalone build of the kappa facet (app/src/PrismKappaLabel.lex.tex in
+// front of PrismKappa.lex.tex) so that site/kappa/kappa.test.mjs can run every
+// request without the holo. The page decides through the Prism root's kappa
+// facet instead. Built by tools/kappa/standalone.py (KappaApp routes straight
+// to kappaLabelDispatch; the pinned bytes predate the builder's PrismKappa and
+// its reader, which answer every request the same); it
 // exports holo_alloc(len) and holo_run(ptr, len) -> (outPtr << 32 | outLen),
 // that is dispatch(bytes) -> bytes. Bytes whose SHA-256 is not the pinned
 // fingerprint are refused before they compile.

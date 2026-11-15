@@ -2,10 +2,11 @@
 
 The Prism's content address from UOR-Foundation/kappa-registry
 (`feat/rewrite-after-poc`, commit `618f477745e601f1bf1bd5cc62aed6fea4c8936d`):
-`<axis>:<lowercase hex digest>`. The proved facet `PrismKappa`
-(`app/specs/kappa/`) reads the label and decides; `kappa.mjs` re-derives the
-digest with WebCrypto on the axes the spec gives a host algorithm (SHA-256,
-SHA-512) and says match, mismatch or uncomputed.
+`<axis>:<lowercase hex digest>`. The reader `PrismKappaLabel`
+(`app/specs/kappa/`) reads the label and the builder's proved `PrismKappa`
+decides; `kappa.mjs` re-derives the digest with WebCrypto on the axes the
+spec gives a host algorithm (SHA-256, SHA-512) and says match, mismatch or
+uncomputed.
 
 | File | Holds |
 | --- | --- |

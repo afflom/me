@@ -1,30 +1,42 @@
-"""Writes the kappa facet (keyword "kappa") from app/specs/kappa/spec.json.
+"""Writes the kappa facet's reader (keyword "kappa") from app/specs/kappa/spec.json.
 
     python3 -I tools/kappa/gen.py [--check]
 
+The decision itself, the five fields to an answer, is the builder's: the set
+(app/prompts/set.json, tools/prompts/gen.py) writes app/src/PrismKappa.lex.tex
+and PrismKappaProofs.lex.tex, with prismKappaJudge and the guarantees proved
+over it. Run that first: this reads the builder's names from PrismKappa.
+
 Outputs, all generated, never hand-edited:
-  app/src/PrismKappa.lex.tex        the decision: "<label> <digest>" -> answer
-  app/src/PrismKappaProofs.lex.tex  one theorem per guarantee
+  app/src/PrismKappaLabel.lex.tex   the reader: "<label> <digest>" is read into
+                                    a PrismKappa::PrismKappaRequest, decided by
+                                    PrismKappa::prismKappaJudge, and answered
+                                    with the axis it names for admit/unverified
   site/kappa/table.mjs              the axes, reader and tree in JavaScript,
                                     for the adapter and the Node suite's
                                     cross-check against the compiled guest
 
-The model reads the label itself (colon, axis, digit count, lowercase hex),
+The reader reads the label itself (colon, axis, digit count, lowercase hex),
 as kappa-registry's Kappa::parse does; only the digest word comes from the
-browser. The judge is a tree whose every test is `field =? value`, so
-`linear_arithmetic` closes each guarantee with exactly [Quot.sound, propext].
-Every name carries the prefix `kappa`, because the holo flattens every module
-of app/src into one Rust crate.
+browser. `read` and `request` below are the same reader in Python: the
+builder's examples are the spec's raw examples read by them
+(tools/prompts/gen.py). Every name of the reader module carries the prefix
+`kappaLabel`, because the holo flattens every module of app/src into one Rust
+crate.
 """
 import json
 import pathlib
+import re
 import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SPEC = json.loads((ROOT / "app/specs/kappa/spec.json").read_text())
-P = "kappa"
-MOD = "PrismKappa"
-REQ = "KappaRequest"
+P = "kappaLabel"
+MOD = "PrismKappaLabel"
+# The decision module the builder writes from the spec (prism-code's names()).
+DMOD = "".join(w[:1].upper() + w[1:] for w in re.split(r"[^A-Za-z0-9]+", SPEC["name"]) if w)
+DP = DMOD[:1].lower() + DMOD[1:]
+REQ = f"{DMOD}::{DMOD}Request"
 FIELDS = SPEC["fields"]
 ANSWERS = SPEC["outcomes"]
 AXES = SPEC["axes"]
@@ -47,28 +59,91 @@ def hexb(s):
     return "0x" + s.encode().hex()
 
 
+def pascal(s):
+    return "".join(cap(w) for w in re.split(r"[^A-Za-z0-9]+", s) if w)
+
+
 def vdef(field, value):
-    return f"{P}{cap(field)}{cap(value)}"
+    """The builder's constant of one value of one field, in the decision module."""
+    return f"{DMOD}::{DP}{pascal(field)}{pascal(value)}"
 
 
 def adef(answer):
-    return f"{P}Answer{cap(answer)}"
+    """The builder's constant of one answer, in the decision module."""
+    return f"{DMOD}::{DP}Answer{pascal(answer)}"
+
+
+def decision():
+    """The builder's decision module, held to the names this reader uses: its
+    request structure has the spec's fields in order, every value and answer
+    is the constant of its place, and it has the judge of one request."""
+    path = ROOT / f"app/src/{DMOD}.lex.tex"
+    if not path.exists():
+        sys.exit(f"kappa: {path.relative_to(ROOT)} is missing: run python3 -I tools/prompts/gen.py first")
+    text = path.read_text()
+    consts = {m.group(1): int(m.group(2)) for m in re.finditer(r"name: (\w+), parameters: \[\], result: Nat, body: (\d+)\}", text)}
+    faults = []
+    body = re.search(r"name: %sRequest,\s*type_parameters: \[\],\s*parameters: \[\],\s*fields: \[(.*?)\]\s*\}" % DMOD, text, re.S)
+    if not body or re.findall(r"\{name: (\w+), type: Nat\}", body.group(1)) != NAMES:
+        faults.append(f"{DMOD}Request does not have the fields {NAMES}")
+    for f in FIELDS:
+        for i, v in enumerate(f["values"]):
+            if consts.get(vdef(f["name"], v).split("::")[1]) != i:
+                faults.append(f"{vdef(f['name'], v)} is not value {i} of {f['name']}")
+    for i, a in enumerate(ANSWERS):
+        if consts.get(adef(a).split("::")[1]) != i:
+            faults.append(f"{adef(a)} is not answer {i}")
+    if f"name: {DP}Judge,\n  parameters: [request : {DMOD}Request]," not in text:
+        faults.append(f"{DMOD} has no {DP}Judge of one request")
+    if faults:
+        sys.exit("kappa: the builder's decision is not the spec's: " + "; ".join(faults))
+
+
+def read(label, digest):
+    """The label's fields, read as the model reads them: on its UTF-8 bytes."""
+    b = label.encode()
+    c = b.find(b":")
+    if c < 0:
+        return {"colon": "absent", "axis": "other", "digits": "wrong", "hex": "bad", "digest": digest}
+    axis = next((a for a in AXES if a["wire"].encode() == b[:c]), None)
+    digits = b[c + 1:]
+    return {
+        "colon": "present",
+        "axis": axis["id"] if axis else "other",
+        "digits": "right" if axis and len(digits) == 2 * axis["digestBytes"] else "wrong",
+        "hex": "lower" if all(48 <= d <= 57 or 97 <= d <= 102 for d in digits) else "bad",
+        "digest": digest,
+    }
+
+
+def request(line):
+    """The fields of one request line "<label> <digest>", or None when the
+    reader refuses it (too long, no space, or a digest word it does not know)."""
+    label, space, digest = line.partition(" ")
+    if len(line.encode()) > MAXLEN or not space or digest not in VALUES["digest"]:
+        return None
+    return read(label, digest)
+
+
+def judge(r, t=None):
+    t = SPEC["tree"] if t is None else t
+    if isinstance(t, str):
+        return t
+    f, v = t["if"]
+    return judge(r, t["then"] if r[f] == v else t["else"])
+
+
+def answer(line):
+    """The answer the guest gives for one request line."""
+    r = request(line)
+    if r is None:
+        return "invalid"
+    a = judge(r)
+    return a + words(next(x for x in AXES if x["id"] == r["axis"])) if a in NAMED else a
 
 
 def words(axis):
     return f" {axis['wire']} {axis['discriminant']} {axis['digestBytes']}"
-
-
-def tree_depth(t):
-    return 0 if isinstance(t, str) else 1 + max(tree_depth(t["then"]), tree_depth(t["else"]))
-
-
-def lean_tree(t, q=""):
-    if isinstance(t, str):
-        return f"({q}{adef(t)})"
-    f, v = t["if"]
-    return (f"(if ((project request {f}) =? ({q}{vdef(f, v)})) then "
-            f"{lean_tree(t['then'], q)} else {lean_tree(t['else'], q)})")
 
 
 def js_tree(t, ind="  "):
@@ -89,22 +164,16 @@ def chain(pairs, last):
 def module():
     out = []
     w = out.append
-    w(r"""\begin{lexlean}{PrismKappa}
+    w(r"""\begin{lexlean}{PrismKappaLabel}
 \useglossary{lexlean.std.bool@1.2.0}
 \useglossary{lexlean.std.nat@1.2.0}
 \useglossary{prism.arch@1.0.0}
 \importmodule{Foundation.Bytes}
 \importmodule{Foundation.View.Text.V1.Model}
+\importmodule{PrismKappa}
 \title{Text application model}
 \begin{semanticmodule}
 """)
-    for f in FIELDS:
-        for i, v in enumerate(f["values"]):
-            w(f"definition{{name: {vdef(f['name'], v)}, parameters: [], result: Nat, body: {i}}}\n\n")
-    for i, a in enumerate(ANSWERS):
-        w(f"definition{{name: {adef(a)}, parameters: [], result: Nat, body: {i}}}\n\n")
-    fields = ",\n".join(f"    {{name: {n}, type: Nat}}" for n in NAMES)
-    w(f"structure{{\n  name: {REQ},\n  type_parameters: [],\n  parameters: [],\n  fields: [\n{fields}\n  ]\n}}\n\n")
     w(f"""definition{{
   name: {P}ByteAt,
   parameters: [s : Bytes, i : Nat],
@@ -196,7 +265,6 @@ definition{{
 }}
 
 """)
-    w(f"definition{{\n  name: {P}Judge,\n  parameters: [request : {REQ}],\n  result: Nat,\n  body: {lean_tree(SPEC['tree'])}\n}}\n\n")
     enc = INVALID
     for a in reversed(ANSWERS):
         word = hexb(a)
@@ -210,7 +278,7 @@ definition{{
   result: Bytes,
   body: (if ({MAXLEN} <? (Foundation.Bytes::byteLength value)) then {INVALID} else (match ({P}Decode value)
     | Option.none => {INVALID}
-    | Option.some request => ({P}EncodeAnswer ({P}Judge request) (project request axis)))),
+    | Option.some request => ({P}EncodeAnswer ({DMOD}::{DP}Judge request) (project request axis)))),
   axioms: [Quot.sound, propext]
 }}
 \\end{{semanticmodule}}
@@ -219,65 +287,14 @@ definition{{
     return "".join(out)
 
 
-def proofs():
-    q = f"{MOD}::"
-    defs = sorted([q + vdef(f, v) for f in NAMES for v in VALUES[f]] + [q + adef(a) for a in ANSWERS] + [q + f"{P}Judge"])
-    bounds = None
-    for n in NAMES:
-        term = f"((project request {n}) <? {len(VALUES[n])})"
-        bounds = term if bounds is None else f"({bounds} && {term})"
-    out = [r"""\begin{lexlean}{PrismKappaProofs}
-\useglossary{lexlean.std.bool@1.2.0}
-\useglossary{lexlean.std.nat@1.2.0}
-\useglossary{prism.arch@1.0.0}
-\importmodule{PrismKappa}
-\title{Text application model}
-\begin{semanticmodule}
-"""]
-    for i, g in enumerate(SPEC["guarantees"], 1):
-        cond = bounds
-        for f, v in g["when"]:
-            cond = f"({cond} && ((project request {f}) =? ({q}{vdef(f, v)})))"
-        if "always" in g:
-            bad = f"(not (({q}{P}Judge request) =? ({q}{adef(g['always'])})))"
-        else:
-            judged = [f"(({q}{P}Judge request) =? ({q}{adef(a)}))" for a in g["never"]]
-            bad = judged[0]
-            for j in judged[1:]:
-                bad = f"({bad} || {j})"
-        name = f"{P}BreaksInv{i:03}"
-        dl = ",\n".join(f"      {d}" for d in defs + [name])
-        out.append(f"""definition{{
-  name: {name},
-  parameters: [request : {q}{REQ}],
-  result: Bool,
-  body: ({cond} && {bad})
-}}
-
-theorem{{
-  name: {P}Inv{i:03}Holds,
-  parameters: [request : {q}{REQ}],
-  statement: (({name} request) = false),
-  proof: linear_arithmetic{{
-    definitions: [
-{dl}
-    ]
-  }},
-  axioms: [Quot.sound, propext]
-}}
-
-""")
-    out.append("\\end{semanticmodule}\n\\end{lexlean}\n")
-    return "".join(out)
-
-
 def table():
     g = json.dumps([{"id": f"INV-{i:03}", **x} for i, x in enumerate(SPEC["guarantees"], 1)], indent=2)
     axes = json.dumps(AXES, indent=2)
     return f"""// Generated by tools/kappa/gen.py from app/specs/kappa/spec.json. Do not edit.
-// The same reader and tree as PrismKappa.lex.tex, for the adapter and the Node
-// suite's cross-check against the compiled guest. The guest decides; this
-// mirror only names the axes and explains.
+// The same reader as PrismKappaLabel.lex.tex and the same tree as the builder's
+// PrismKappa.lex.tex, for the adapter and the Node suite's cross-check against
+// the compiled guest. The guest decides; this mirror only names the axes and
+// explains.
 
 export const AXES = {axes};
 export const FIELDS = {json.dumps([[n, VALUES[n]] for n in NAMES])};
@@ -322,12 +339,12 @@ export function answer(line) {{
 
 
 def main():
-    d = tree_depth(SPEC["tree"])
-    if d > 11:
-        sys.exit(f"tree depth {d} > 11: Lean's split gives up at 13")
+    decision()
+    wrong = [(q, r, answer(q)) for q, r in SPEC["examples"] if answer(q) != r]
+    if wrong:
+        sys.exit("kappa: the reader does not answer the spec's examples: " + "; ".join(f"{q!r} -> {a!r}, not {r!r}" for q, r, a in wrong))
     outs = {
-        ROOT / "app/src/PrismKappa.lex.tex": module(),
-        ROOT / "app/src/PrismKappaProofs.lex.tex": proofs(),
+        ROOT / f"app/src/{MOD}.lex.tex": module(),
         ROOT / "site/kappa/table.mjs": table(),
     }
     if "--check" in sys.argv:
@@ -339,7 +356,8 @@ def main():
     for p, text in outs.items():
         p.parent.mkdir(exist_ok=True)
         p.write_text(text)
-    print(f"kappa: {len(AXES)} axes, {len(ANSWERS)} answers, {len(SPEC['guarantees'])} guarantees, depth {d}, max line {MAXLEN}")
+    print(f"kappa: {len(AXES)} axes, {len(ANSWERS)} answers, {len(SPEC['examples'])} examples read, max line {MAXLEN}; the decision is {DMOD}'s")
 
 
-main()
+if __name__ == "__main__":
+    main()

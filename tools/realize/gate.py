@@ -65,9 +65,22 @@ def root_facets():
     return [(k, m) for k, m, _ in facets], req_max
 
 
+def deciding(module):
+    """The module that decides for a routed one: the module itself when it has
+    the judge of one request, else the one module it imports that has (a reader
+    in front of a decision, as PrismKappaLabel reads a label for PrismKappa)."""
+    judge = re.compile(r"name: \w+Judge,\s*parameters: \[request : \w+\]")
+    text = (SRC / f"{module}.lex.tex").read_text()
+    if judge.search(text):
+        return module
+    found = [m for m in re.findall(r"\\importmodule\{(\w+)\}", text)
+             if (SRC / f"{m}.lex.tex").exists() and judge.search((SRC / f"{m}.lex.tex").read_text())]
+    return found[0] if len(found) == 1 else module
+
+
 MODEL = json.loads((SPECS / "realizability/spec.json").read_text())
 FACETS, REQ_MAX = root_facets()
-KEYWORD_MODULE = dict(FACETS)
+KEYWORD_MODULE = {k: deciding(m) for k, m in FACETS}
 
 
 def load():

@@ -3,8 +3,9 @@ Feature: kappa
   The Prism addresses objects as UOR-Foundation/kappa-registry does
   (feat/rewrite-after-poc, commit 618f477745e601f1bf1bd5cc62aed6fea4c8936d):
   a kappa label is an axis name, a colon and the digest in lowercase hex, on
-  one of six axes. The proved Prism Kappa decision reads the label itself;
-  the browser only says whether the bytes re-derived to it.
+  one of six axes. Its reader reads the label itself and the proved Prism
+  Kappa decision, built by the Prism's builder, decides; the browser only
+  says whether the bytes re-derived to it.
 
   @KP-01 @build
   Scenario: The Prism reads a kappa label as UOR-Foundation/kappa-registry's Kappa::parse does and admits an object under it only when the proved Prism Kappa decision says admit: a label without its colon, on an unknown axis, of the wrong digit count or not in lowercase hex is refused with its own answer, and bytes that do not re-derive, collide on SHA-1 or could not be re-derived are never admitted
@@ -14,7 +15,7 @@ Feature: kappa
     And it answers collision or mismatch for bytes that collide or do not re-derive
     And it answers unverified, never admit, for a digest the browser could not re-derive
     And it answers admit with the axis, its discriminant and its digest length only for a well-formed label the bytes re-derived to
-    And its eight guarantees are proved with only Quot.sound and propext
+    And its eight guarantees, the builder's seventeen properties, are proved with only Quot.sound and propext
     And the compiled guest gives the generated mirror's answer for every label shape on every axis
 
   @KP-02 @build

@@ -252,6 +252,28 @@ model does not sanction.
 | `PH-10` | `build` | The app never answers use when act is none and surface is drop |
 | `PH-11` | `build` | The app never answers use when act is none and grant is none and surface is extension |
 
+## prism_kappa
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PK-01` | `build` | The app always answers nocolon when colon is absent |
+| `PK-02` | `build` | The app always answers unknownaxis when colon is present and axis is other |
+| `PK-03` | `build` | The app never answers admit when digits is wrong |
+| `PK-04` | `build` | The app never answers unverified when digits is wrong |
+| `PK-05` | `build` | The app never answers admit when hex is bad |
+| `PK-06` | `build` | The app never answers unverified when hex is bad |
+| `PK-07` | `build` | The app never answers admit when digest is mismatch |
+| `PK-08` | `build` | The app never answers unverified when digest is mismatch |
+| `PK-09` | `build` | The app never answers admit when digest is collision |
+| `PK-10` | `build` | The app never answers unverified when digest is collision |
+| `PK-11` | `build` | The app never answers admit when digest is uncomputed |
+| `PK-12` | `build` | The app never answers nocolon when colon is present and digits is right and hex is lower and digest is match |
+| `PK-13` | `build` | The app never answers digits when colon is present and digits is right and hex is lower and digest is match |
+| `PK-14` | `build` | The app never answers badhex when colon is present and digits is right and hex is lower and digest is match |
+| `PK-15` | `build` | The app never answers mismatch when colon is present and digits is right and hex is lower and digest is match |
+| `PK-16` | `build` | The app never answers collision when colon is present and digits is right and hex is lower and digest is match |
+| `PK-17` | `build` | The app never answers unverified when colon is present and digits is right and hex is lower and digest is match |
+
 ## prism_learning
 
 | ID | Level | Statement |

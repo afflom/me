@@ -20,6 +20,7 @@
 \importmodule{PrismCurate}
 \importmodule{PrismDest}
 \importmodule{PrismChronology}
+\importmodule{PrismKappa}
 \importmodule{Architecture}
 \importmodule{Foundation.Arch}
 \title{feature}
@@ -1275,6 +1276,125 @@ definition{
   parameters: [],
   result: String,
   body: "PrismChronologyProofs::inv008Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV001,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv001Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV002,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv002Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV003,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv003Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV004,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv004Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV005,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv005Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV006,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv006Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV007,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv007Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV008,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv008Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV009,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv009Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV010,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv010Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV011,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv011Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV012,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv012Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV013,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv013Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV014,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv014Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV015,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv015Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV016,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv016Holds"
+}
+
+definition{
+  name: acceptPrismKappaINV017,
+  parameters: [],
+  result: String,
+  body: "PrismKappaProofs::inv017Holds"
 }
 
 definition{
@@ -4008,6 +4128,188 @@ definition{
 }
 
 definition{
+  name: featurePrismKappaRule1,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when colon is absent then nocolon", calls := (cons "PrismKappa::prismKappaRule1" (cons "PrismKappa::prismKappaJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaRule2,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when axis is other then unknownaxis", calls := (cons "PrismKappa::prismKappaRule2" (cons "PrismKappa::prismKappaJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaRule3,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when digits is wrong then digits", calls := (cons "PrismKappa::prismKappaRule3" (cons "PrismKappa::prismKappaJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaRule4,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when hex is bad then badhex", calls := (cons "PrismKappa::prismKappaRule4" (cons "PrismKappa::prismKappaJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaRule5,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when digest is collision then collision", calls := (cons "PrismKappa::prismKappaRule5" (cons "PrismKappa::prismKappaJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaRule6,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when digest is mismatch then mismatch", calls := (cons "PrismKappa::prismKappaRule6" (cons "PrismKappa::prismKappaJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaRule7,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when digest is uncomputed then unverified", calls := (cons "PrismKappa::prismKappaRule7" (cons "PrismKappa::prismKappaJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaOtherwise,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "When no rule matches, the answer is admit.", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaRefuseMalformed,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "A request that is not colon, axis, digits, hex, digest in order, separated by single spaces, or is over 136 bytes, is answered invalid.", calls := (cons "PrismKappa::prismKappaDispatch" (cons "PrismKappa::prismKappaDecodeField1" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV001,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "always when colon is absent then nocolon", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV001" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV002,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "always when colon is present and axis is other then unknownaxis", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV002" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV003,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when digits is wrong then admit", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV003" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV004,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when digits is wrong then unverified", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV004" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV005,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when hex is bad then admit", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV005" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV006,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when hex is bad then unverified", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV006" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV007,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when digest is mismatch then admit", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV007" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV008,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when digest is mismatch then unverified", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV008" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV009,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when digest is collision then admit", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV009" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV010,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when digest is collision then unverified", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV010" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV011,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when digest is uncomputed then admit", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV011" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV012,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when colon is present and digits is right and hex is lower and digest is match then nocolon", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV012" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV013,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when colon is present and digits is right and hex is lower and digest is match then digits", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV013" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV014,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when colon is present and digits is right and hex is lower and digest is match then badhex", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV014" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV015,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when colon is present and digits is right and hex is lower and digest is match then mismatch", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV015" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV016,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when colon is present and digits is right and hex is lower and digest is match then collision", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV016" (nil String))})
+}
+
+definition{
+  name: featurePrismKappaINV017,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when colon is present and digits is right and hex is lower and digest is match then unverified", calls := (cons "PrismKappa::prismKappaJudge" (nil String)), acceptance := (cons "Features::acceptPrismKappaINV017" (nil String))})
+}
+
+definition{
   name: journeyPrismBoundaryUser,
   parameters: [],
   result: Foundation.Arch::Journey,
@@ -4257,6 +4559,20 @@ definition{
   parameters: [],
   result: Foundation.Arch::Journey,
   body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderVerifier", steps := (cons "Features::featurePrismChronologyRefuseMalformed" (cons "Features::featurePrismChronologyINV001" (cons "Features::featurePrismChronologyINV002" (cons "Features::featurePrismChronologyINV003" (cons "Features::featurePrismChronologyINV004" (cons "Features::featurePrismChronologyINV005" (cons "Features::featurePrismChronologyINV006" (cons "Features::featurePrismChronologyINV007" (cons "Features::featurePrismChronologyINV008" (nil String))))))))))})
+}
+
+definition{
+  name: journeyPrismKappaUser,
+  parameters: [],
+  result: Foundation.Arch::Journey,
+  body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderUser", steps := (cons "Features::featurePrismKappaRule1" (cons "Features::featurePrismKappaRule2" (cons "Features::featurePrismKappaRule3" (cons "Features::featurePrismKappaRule4" (cons "Features::featurePrismKappaRule5" (cons "Features::featurePrismKappaRule6" (cons "Features::featurePrismKappaRule7" (cons "Features::featurePrismKappaOtherwise" (nil String)))))))))})
+}
+
+definition{
+  name: journeyPrismKappaVerifier,
+  parameters: [],
+  result: Foundation.Arch::Journey,
+  body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderVerifier", steps := (cons "Features::featurePrismKappaRefuseMalformed" (cons "Features::featurePrismKappaINV001" (cons "Features::featurePrismKappaINV002" (cons "Features::featurePrismKappaINV003" (cons "Features::featurePrismKappaINV004" (cons "Features::featurePrismKappaINV005" (cons "Features::featurePrismKappaINV006" (cons "Features::featurePrismKappaINV007" (cons "Features::featurePrismKappaINV008" (cons "Features::featurePrismKappaINV009" (cons "Features::featurePrismKappaINV010" (cons "Features::featurePrismKappaINV011" (cons "Features::featurePrismKappaINV012" (cons "Features::featurePrismKappaINV013" (cons "Features::featurePrismKappaINV014" (cons "Features::featurePrismKappaINV015" (cons "Features::featurePrismKappaINV016" (cons "Features::featurePrismKappaINV017" (nil String)))))))))))))))))))})
 }
 \end{semanticmodule}
 \end{lexlean}

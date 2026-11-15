@@ -1,11 +1,12 @@
 // Kappa labels in the owner's browser: the content address of
 // UOR-Foundation/kappa-registry ("<axis>:<lowercase hex digest>").
 //
-// The Prism's kappa facet (PrismKappa) reads the label and decides; this
-// adapter only re-derives the digest from the bytes with what the browser
-// host offers (WebCrypto's SHA-256 and SHA-512, named by AXES[].host) and
-// carries one word to the facet: match, mismatch or uncomputed. An axis the
-// host cannot compute is never guessed: it answers unverified, never admit.
+// The Prism's kappa facet (the reader PrismKappaLabel, in front of the
+// builder's PrismKappa) reads the label and decides; this adapter only
+// re-derives the digest from the bytes with what the browser host offers
+// (WebCrypto's SHA-256 and SHA-512, named by AXES[].host) and carries one word
+// to the facet: match, mismatch or uncomputed. An axis the host cannot compute
+// is never guessed: it answers unverified, never admit.
 // SHA-1 is not computed here, because kappa-registry admits SHA-1 only with
 // collision detection, which WebCrypto does not offer.
 //

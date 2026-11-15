@@ -763,7 +763,7 @@ theorem{
 theorem{
   name: realizabilityKappaColonMatters,
   parameters: [],
-  statement: ((((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerAdmit)) && ((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonAbsent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerNocolon))) = true),
+  statement: ((((PrismKappa::prismKappaJudge (record PrismKappa::PrismKappaRequest {colon := (PrismKappa::prismKappaColonPresent), axis := (PrismKappa::prismKappaAxisSha256), digits := (PrismKappa::prismKappaDigitsRight), hex := (PrismKappa::prismKappaHexLower), digest := (PrismKappa::prismKappaDigestMatch)})) =? (PrismKappa::prismKappaAnswerAdmit)) && ((PrismKappa::prismKappaJudge (record PrismKappa::PrismKappaRequest {colon := (PrismKappa::prismKappaColonAbsent), axis := (PrismKappa::prismKappaAxisSha256), digits := (PrismKappa::prismKappaDigitsRight), hex := (PrismKappa::prismKappaHexLower), digest := (PrismKappa::prismKappaDigestMatch)})) =? (PrismKappa::prismKappaAnswerNocolon))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -771,7 +771,7 @@ theorem{
 theorem{
   name: realizabilityKappaAxisMatters,
   parameters: [],
-  statement: ((((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerAdmit)) && ((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisOther), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerUnknownaxis))) = true),
+  statement: ((((PrismKappa::prismKappaJudge (record PrismKappa::PrismKappaRequest {colon := (PrismKappa::prismKappaColonPresent), axis := (PrismKappa::prismKappaAxisSha256), digits := (PrismKappa::prismKappaDigitsRight), hex := (PrismKappa::prismKappaHexLower), digest := (PrismKappa::prismKappaDigestMatch)})) =? (PrismKappa::prismKappaAnswerAdmit)) && ((PrismKappa::prismKappaJudge (record PrismKappa::PrismKappaRequest {colon := (PrismKappa::prismKappaColonPresent), axis := (PrismKappa::prismKappaAxisOther), digits := (PrismKappa::prismKappaDigitsRight), hex := (PrismKappa::prismKappaHexLower), digest := (PrismKappa::prismKappaDigestMatch)})) =? (PrismKappa::prismKappaAnswerUnknownaxis))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -779,7 +779,7 @@ theorem{
 theorem{
   name: realizabilityKappaDigitsMatters,
   parameters: [],
-  statement: ((((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerAdmit)) && ((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsWrong), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerDigits))) = true),
+  statement: ((((PrismKappa::prismKappaJudge (record PrismKappa::PrismKappaRequest {colon := (PrismKappa::prismKappaColonPresent), axis := (PrismKappa::prismKappaAxisSha256), digits := (PrismKappa::prismKappaDigitsRight), hex := (PrismKappa::prismKappaHexLower), digest := (PrismKappa::prismKappaDigestMatch)})) =? (PrismKappa::prismKappaAnswerAdmit)) && ((PrismKappa::prismKappaJudge (record PrismKappa::PrismKappaRequest {colon := (PrismKappa::prismKappaColonPresent), axis := (PrismKappa::prismKappaAxisSha256), digits := (PrismKappa::prismKappaDigitsWrong), hex := (PrismKappa::prismKappaHexLower), digest := (PrismKappa::prismKappaDigestMatch)})) =? (PrismKappa::prismKappaAnswerDigits))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -787,7 +787,7 @@ theorem{
 theorem{
   name: realizabilityKappaHexMatters,
   parameters: [],
-  statement: ((((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerAdmit)) && ((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexBad), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerBadhex))) = true),
+  statement: ((((PrismKappa::prismKappaJudge (record PrismKappa::PrismKappaRequest {colon := (PrismKappa::prismKappaColonPresent), axis := (PrismKappa::prismKappaAxisSha256), digits := (PrismKappa::prismKappaDigitsRight), hex := (PrismKappa::prismKappaHexLower), digest := (PrismKappa::prismKappaDigestMatch)})) =? (PrismKappa::prismKappaAnswerAdmit)) && ((PrismKappa::prismKappaJudge (record PrismKappa::PrismKappaRequest {colon := (PrismKappa::prismKappaColonPresent), axis := (PrismKappa::prismKappaAxisSha256), digits := (PrismKappa::prismKappaDigitsRight), hex := (PrismKappa::prismKappaHexBad), digest := (PrismKappa::prismKappaDigestMatch)})) =? (PrismKappa::prismKappaAnswerBadhex))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -795,7 +795,7 @@ theorem{
 theorem{
   name: realizabilityKappaDigestMatters,
   parameters: [],
-  statement: ((((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMatch)})) =? (PrismKappa::kappaAnswerAdmit)) && ((PrismKappa::kappaJudge (record PrismKappa::KappaRequest {colon := (PrismKappa::kappaColonPresent), axis := (PrismKappa::kappaAxisSha256), digits := (PrismKappa::kappaDigitsRight), hex := (PrismKappa::kappaHexLower), digest := (PrismKappa::kappaDigestMismatch)})) =? (PrismKappa::kappaAnswerMismatch))) = true),
+  statement: ((((PrismKappa::prismKappaJudge (record PrismKappa::PrismKappaRequest {colon := (PrismKappa::prismKappaColonPresent), axis := (PrismKappa::prismKappaAxisSha256), digits := (PrismKappa::prismKappaDigitsRight), hex := (PrismKappa::prismKappaHexLower), digest := (PrismKappa::prismKappaDigestMatch)})) =? (PrismKappa::prismKappaAnswerAdmit)) && ((PrismKappa::prismKappaJudge (record PrismKappa::PrismKappaRequest {colon := (PrismKappa::prismKappaColonPresent), axis := (PrismKappa::prismKappaAxisSha256), digits := (PrismKappa::prismKappaDigitsRight), hex := (PrismKappa::prismKappaHexLower), digest := (PrismKappa::prismKappaDigestMismatch)})) =? (PrismKappa::prismKappaAnswerMismatch))) = true),
   proof: reflexivity{},
   axioms: []
 }
