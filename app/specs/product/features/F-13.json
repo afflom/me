@@ -1,13 +1,14 @@
 {
   "key": "F-13",
-  "statement": "Each thing the person holds is listed once, in the place of what it is: one message however many copies were kept, an event on the Calendar and never in Messages or Notes, a to-do or a journal entry in Notes, an invitation mailed to the person on the Calendar as its event, and every row headed by its own first words when it has no subject",
+  "statement": "Each thing the person holds is listed once, in the place of what it is: one message however many copies were kept, an event on the Calendar and never in Messages or Notes, a to-do or a journal entry in Notes, an invitation mailed to the person on the Calendar as its event, and every row headed by its own first words when it has no subject, and a conversation listed once, at its latest message, reading every message in it in order",
   "journeys": [
     "J13"
   ],
   "calls": [
     "site/card.mjs#reconcile",
     "site/card.mjs#readItem",
-    "site/card.mjs#placesOf"
+    "site/card.mjs#placesOf",
+    "site/card.mjs#conversations"
   ],
   "acceptance": [
     "test/oracle/places.test.mjs"

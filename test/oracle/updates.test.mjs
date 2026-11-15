@@ -34,7 +34,7 @@ const items = reference.map(({ example }) => readItem({ address: example.id, out
 const held = reconcile(items);
 
 test("no reply, cancellation or request about an event shows as an event of its own", () => {
-  const shown = held.map((item) => reference[items.indexOf(item)] ?? reference.find((r) => r.example.id === item.address));
+  const shown = held.map((item) => reference[items.indexOf(item)] ?? reference.find((r) => r.example.id === item.address.replace(/#.*$/, "")));
   const updates = shown.filter((r) => UPDATES.includes(r.method)).map((r) => `${r.example.id} ${r.method}`);
   assert.ok(updates.length <= threshold["update-shown"], `"update-shown": ${updates.join(", ")}`);
   assert.ok(reference.some((r) => UPDATES.includes(r.method)), "the oracles hold replies and cancellations to check");

@@ -163,7 +163,11 @@ jobs:
               if [[ ${#holos[@]} -eq 0 ]]; then
                 proved=$(grep -o "\"build_id\": *\"[0-9a-f]\{64\}\"" .prism-proof/verified/manifest.json | grep -o "[0-9a-f]\{64\}")
                 test -n "$proved"
-                prismpm --project app build
+                # PrismPM 0.4.0 refuses a provenance statement here: the lock
+                # sits at the root, not beside the app. `verify` writes the
+                # same holo without one (a487fb6a for #94 both ways), and the
+                # build-id check below is what binds it to the reused proof.
+                prismpm --project app build --no-provenance
                 holos=(app/.prism/build/*/*.holo)
                 test ${#holos[@]} -eq 1
                 built=$(basename "$(dirname "${holos[0]}")")

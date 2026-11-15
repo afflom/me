@@ -154,13 +154,17 @@ const readable = (example) => {
   return texts.join(" ").replace(/\\n/gi, " ").replace(/\\([,;\\])/g, "$1");
 };
 const held = oracle.map((example) => ({ example, text: readable(example), item: { ...readItem({ address: example.id, outcome: "restore", bytes: new TextEncoder().encode(example.raw), meta: { about: { media: example.kind, domain: 4, at: 0 } } }), label: "confidential" } }));
+// A calendar of several events is each of them, as the page holds it.
+const kept = held.flatMap(({ item }) => [item, ...(item.more ?? []), ...(item.carries?.more ?? [])].map((one) => ({ ...one, label: "confidential" })));
+const ofExample = (example) => kept.filter((item) => item.address === example.id || item.address.startsWith(`${example.id}#`));
 const words = [...new Set(held.flatMap(({ text }) => text.match(/\p{L}{6,}/gu) ?? []).map((w) => w.toLowerCase()))];
 assert.ok(words.length >= 50, `the oracles give search ${words.length} words`);
 const findLost = [];
 for (const word of words) {
-  const shown = await answer(word.toUpperCase(), { items: held.map((h) => h.item), line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
+  const shown = await answer(word.toUpperCase(), { items: kept, line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
   const names = new RegExp(`(?<!\\p{L})${word}(?!\\p{L})`, "iu");
-  for (const { example, text, item } of held) if (names.test(text) && !shown.sources.includes(item)) findLost.push(`${word}: ${example.id}`);
+  // An example is found when what the page holds of it is listed (one of its events, when it holds several).
+  for (const { example, text } of held) if (names.test(text) && !ofExample(example).some((item) => shown.sources.includes(item))) findLost.push(`${word}: ${example.id}`);
 }
 // QR-04 "find-missing": examples that name the asked word and are missing from the list.
 assert.ok(findLost.length <= 0, `find-missing: ${findLost.length} (${findLost.slice(0, 12).join("; ")})`);

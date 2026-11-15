@@ -170,9 +170,11 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     // Who it comes from: its sender's address, and the list it came through (RFC 2919 List-Id).
     const list = /<([^<>\s]+)>/.exec(h["list-id"] ?? "")?.[1]?.toLowerCase();
     const from = { ...(addressOf(h.from) ? { from: addressOf(h.from) } : {}), ...(list ? { list } : {}) };
+    // The schema.org objects it carries (a booking, an order), as its sender typed them.
+    const markup = reader?.messageMarkup ? reader.messageMarkup(text) : [];
     // A message without a subject is headed by its first words, as a mail client lists it.
     const title = headerWords(h.subject ?? "").replace(/\s+/g, " ").trim() || headline(said);
-    return { ...base, ...place, ...from, at: Number.isNaN(when) ? base.at : when, title, who: person(h.from || h.to), text, body, ...(carries ? { carries } : {}) };
+    return { ...base, ...place, ...from, ...(markup.length ? { markup } : {}), at: Number.isNaN(when) ? base.at : when, title, who: person(h.from || h.to), text, body, ...(carries ? { carries } : {}) };
   }
   if (base.media === "calendar") {
     // The event's own fields: the calendar's time zones come first and carry DTSTARTs of their own (1970).
@@ -205,17 +207,21 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const notes = reader ? reader.eventText(/^DESCRIPTION(?:;[^:]*)?:(.*)$/mi.exec(unfoldCalendar(text))?.[1] ?? "") : calendarField(text, "DESCRIPTION");
     // Comments to the calendar user (RFC 5545 §3.8.1.4), such as a reply's reason, read after the notes.
     const comments = [...unfoldCalendar(text).matchAll(/^COMMENT(?:;[^:\r\n]*)?:(.*)$/gim)].map(([, value]) => (reader ? reader.eventText(value) : value.trim()));
-    // The object's further events (an iMIP PUBLISH of several) read after it: what, where, and their notes.
-    const others = components.slice(1).flatMap((other) => ["SUMMARY", "LOCATION", "DESCRIPTION"].map((name) => calendarField(other.replace(/BEGIN:VALARM[\s\S]*?END:VALARM/g, ""), name)));
+    // The object's further events (an iMIP PUBLISH of several, an instance's own revision)
+    // are events of their own, each read with the calendar's zones and method.
+    const more = components.length > 1 && !meta.single ? components.slice(1).map((own, i) => {
+      const alone = components.reduce((rest, other) => (other === own ? rest : rest.replace(other, "")), whole);
+      return readItem({ address: `${address}#${i + 1}`, outcome, bytes: new TextEncoder().encode(alone), meta: { ...meta, single: true }, at: base.at });
+    }) : [];
     // Without a summary it is headed by its notes, as a calendar shows it.
     const title = calendarField(text, "SUMMARY") || headline([notes, ...comments].join("\n"));
     const location = calendarField(text, "LOCATION");
-    const body = [title, span, location, [...new Set(people)].slice(0, 12).join(", "), notes, ...comments, ...others].filter(Boolean).join("\n");
+    const body = [title, span, location, [...new Set(people)].slice(0, 12).join(", "), notes, ...comments].filter(Boolean).join("\n");
     const at = Number.isNaN(start) ? (Number.isNaN(made) ? base.at : made) : start;
     // Where it is, else who it is with.
     const who = location || people.find(Boolean) || "";
     return { ...base, ...(component === "VEVENT" ? {} : { component, ...(component === "VFREEBUSY" ? {} : { domain: 9 }) }), at, ...(Number.isNaN(end) ? {} : { end }), allDay, title, who, ...(location ? { where: location } : {}), text: whole, body,
-      ...(Number.isNaN(start) ? { undated: true } : {}), ...(method ? { method } : {}), ...(uid ? { uid, sequence } : {}), ...(recurrence ? { recurrence } : {}) };
+      ...(Number.isNaN(start) ? { undated: true } : {}), ...(method ? { method } : {}), ...(uid ? { uid, sequence } : {}), ...(recurrence ? { recurrence } : {}), ...(more.length ? { more } : {}) };
   }
   if (base.media === "contactCard") {
     const field = (name) => calendarField(text, name);
@@ -237,7 +243,9 @@ export function reconcile(kept) {
   const once = kept.filter((item) => item.media !== "message" || !item.id || (!ids.has(item.id) && ids.add(item.id)));
   // An invitation a message carries (RFC 6047) is also an event, held as the calendar holds it:
   // once by its UID with the calendar's own copy, updated by the replies and cancellations mailed about it.
-  const items = [...once, ...once.filter((item) => item.carries?.uid).map((item) => ({ ...item.carries, domains: [item.carries.domain], label: item.label, via: item.address }))];
+  const carried = once.filter((item) => item.carries?.uid).map((item) => ({ ...item.carries, domains: [item.carries.domain], label: item.label, via: item.address }));
+  // A calendar object of several events is each of them.
+  const items = [...once, ...carried].flatMap((item) => [item, ...(item.more ?? []).map((one) => ({ ...one, domains: [one.domain], label: item.label, ...(item.via ? { via: item.via } : {}) }))]);
   const key = (item) => `${item.uid}|${item.recurrence ?? ""}`;
   const events = new Map();
   for (const item of items) {
@@ -262,6 +270,32 @@ export function reconcile(kept) {
     out.push(about.length ? { ...item, updates: about, ...(cancelled ? { cancelled } : {}) } : item);
   }
   return out;
+}
+
+// A conversation (RFC 5322 3.6.4: messages that reply to or reference each other) is
+// listed once, as a mail client threads it: at its latest message, headed by the subject
+// it began with and how many messages it holds, from everyone in it, and opened it
+// reads every message in the order they answer each other. order is sequence()'s
+// (site/time/time.mjs); a message alone is listed as itself.
+const turnWhen = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
+export function conversations(list, order) {
+  const byRoot = new Map();
+  const out = [];
+  for (const item of list) {
+    const place = item.media === "message" ? order?.get(item.address) : null;
+    if (!place?.root || !(place.of > 1)) { out.push(item); continue; }
+    if (!byRoot.has(place.root)) { byRoot.set(place.root, []); out.push(place.root); }
+    byRoot.get(place.root).push(item);
+  }
+  return out.map((entry) => {
+    if (typeof entry !== "string") return entry;
+    const turns = byRoot.get(entry).sort((a, b) => (order.get(a.address).turn - order.get(b.address).turn) || a.at - b.at);
+    if (turns.length < 2) return turns[0];
+    const latest = turns.reduce((a, b) => (b.at > a.at ? b : a));
+    const who = [...new Set(turns.map((t) => t.who).filter(Boolean))].join(", ");
+    const body = turns.map((t) => `${[t.who, t.at ? turnWhen.format(new Date(t.at)) : ""].filter(Boolean).join(" · ")}\n${t.body ?? ""}`.trim()).join("\n\n");
+    return { ...latest, title: `${turns[0].title || latest.title} · ${turns.length}`, who, body, turns };
+  });
 }
 
 // The places an item is listed in. A message, an event, a to-do and a card are each
@@ -375,6 +409,8 @@ export default async function start({ app, reason, $ }) {
   // Everything kept, read once through the vault (each read is the root's
   // restore decision) and placed by its domain, newest first.
   let items = [];
+  // Each message's place in its conversation, for the place that lists conversations.
+  let threads = null;
   const readOnce = new Map();
   // Each load waits for the one before it, so no two read the same item at
   // once. A load reads at most `most` items it has not opened yet, newest
@@ -426,6 +462,7 @@ export default async function start({ app, reason, $ }) {
       await labelAll(items, { line, halted, me: meNow() }).catch((error) => { for (const item of items) item.labels = null; console.warn(`labels: ${error?.message ?? error}`); });
     }
     people = peopleOf ? { place: peoplePlace, all: peopleOf(items, meNow()), between } : null;
+    threads = items.length ? (await import("./time/time.mjs")).sequence(items) : null;
     if (!left) store.set(NEWEST_KEY, JSON.stringify(items.slice(0, 100).map((item) => item.address)));
     return left;
   }
@@ -639,7 +676,10 @@ export default async function start({ app, reason, $ }) {
     const row = element("li", { className: "pr-item" }, open);
     const show = (since = Date.now()) => {
       open.setAttribute("aria-expanded", "true");
-      row.append(element("pre", { className: "pr-preview", textContent: item.body }));
+      // Opened, it reads on from its row: a first line that only repeats the heading is not said twice.
+      const lines = item.body.split("\n");
+      const said = lines[0].trim() === (item.title ?? "").trim() ? lines.slice(1).join("\n").trim() : item.body;
+      row.append(element("pre", { className: "pr-preview", textContent: said || item.body }));
       opened.set(row, { item, since });
     };
     const toggle = () => {
@@ -688,19 +728,22 @@ export default async function start({ app, reason, $ }) {
     const { agenda, recent, tasks, needs } = await today(items, { relate, done: doneSet(), mine: (item) => mineOf(item, me) });
     if (turn !== painting || current.host !== "home") return;
     const rows = [selfRow()].filter(Boolean);
-    const section = (domain, made) => {
+    // Each part is headed in the person's words: what is upcoming, then the name of
+    // the place that holds the rest (Messages, Notes), never a domain's system name.
+    const placeName = (domain) => PLACES.find((p) => p.host === "nav" && p.domains[0] === domain)?.name ?? DOMAINS[domain];
+    const section = (name, made) => {
       if (!made.length) return;
-      rows.push(element("li", { className: "pr-section", textContent: DOMAINS[domain] }), ...made);
+      rows.push(element("li", { className: "pr-section", textContent: name }), ...made);
     };
-    section(5, agenda.map(({ item, today: now, clash }) => {
+    section(WORDS.upcoming, agenda.map(({ item, today: now, clash }) => {
       const row = rowOf(item);
       row.classList.toggle("pr-now", now);
       if (clash.length) { row.classList.add("pr-clash"); row.title = clash.map(lineOf).join("\n"); }
       return row;
     }));
     if (needs.length) rows.push(needsOf(needs));
-    section(4, recent.map(rowOf));
-    section(9, tasks.map(rowOf));
+    section(placeName(4), recent.map(rowOf));
+    section(placeName(9), tasks.map(rowOf));
     $("pr-count").textContent = "";
     list.hidden = !rows.length;
     list.replaceChildren(...(rows.length ? rows : [emptyRow()]));
@@ -772,7 +815,7 @@ export default async function start({ app, reason, $ }) {
     list.replaceChildren(...(people.all.length ? people.all.slice(0, 200).map((p) => {
       const latest = people.between(p)[0];
       const row = element("li", { className: "pr-item pr-person" },
-        element("span", { className: "pr-when", textContent: latest ? when(latest.at) : "" }),
+        element("span", { className: "pr-when", textContent: latest ? whenOfItem(latest) : "" }),
         element("button", { type: "button", className: "pr-what pr-person-go", textContent: p.name }),
         element("span", { className: "pr-who", textContent: latest?.title ?? "" }));
       row.querySelector("button").addEventListener("click", () => { personOpen = p.key; paintList(); });
@@ -788,6 +831,8 @@ export default async function start({ app, reason, $ }) {
     if (current.host === "home") { paintToday(list).catch((error) => say(error?.message ?? String(error), "bad")); return; }
     if (people && current.key === people.place) { paintPeople(list); return; }
     let shown = items.filter((item) => placesOf(item).some((d) => current.domains.includes(d)));
+    // The place of messages lists conversations.
+    if (current.domains[0] === 4 && threads) shown = conversations(shown, threads);
     if (current.show === "search") {
       const words = query.toLowerCase().split(/\s+/).filter(Boolean);
       shown = words.length ? items.filter((item) => words.every((w) => `${item.title} ${item.who} ${item.body ?? item.text}`.toLowerCase().includes(w))) : [];
@@ -1381,9 +1426,12 @@ export default async function start({ app, reason, $ }) {
       go(place.key, true);
       const { partiesOf } = await coherence();
       const to = partiesOf(item)[0]?.address ?? "";
-      const field = $("pr-act").querySelector("input[type=email]");
+      // The write act sits behind its button: the reply opens it, addressed.
+      if ($("pr-new")?.getAttribute("aria-expanded") === "false") $("pr-new").click();
+      const form = $("pr-compose") ?? $("pr-act");
+      const field = form.querySelector("input[type=email]");
       if (field) field.value = to;
-      $("pr-act").querySelector("textarea")?.focus();
+      form.querySelector("textarea")?.focus();
     }
   }
   function turn(prompt, said) {
@@ -1392,7 +1440,8 @@ export default async function start({ app, reason, $ }) {
     const node = element("li", { className: "pr-turn" }, element("p", { className: "pr-you", textContent: prompt }));
     chat.append(node);
     node.scrollIntoView({ block: "nearest" });
-    lastTurn = { node, said: said.sentences.join(" ") };
+    // One sentence per item, each on its own line, so several answers read as a list.
+    lastTurn = { node, said: said.sentences.join("\n") };
     const rows = said.sources.map(rowOf);
     drawn.replaceChildren(...rows);
     // The sentences link to the items they say; the list beneath holds all that was found.
@@ -1406,10 +1455,15 @@ export default async function start({ app, reason, $ }) {
       });
       return link;
     });
+    // One offer per person: a reply to someone who wrote twice is one reply, and it names them.
+    const offered = new Set();
     const offers = (said.offers ?? []).map(({ kind, item }) => {
       const label = { reply: WORDS.reply, done: WORDS.done, keep: WORDS.keep, connect: WORDS.connect }[kind];
       if (!label) return null;
-      const button = element("button", { type: "button", className: "pr-offer", textContent: label });
+      const whom = item?.who || item?.from || "";
+      if (offered.has(`${kind}|${whom}`)) return null;
+      offered.add(`${kind}|${whom}`);
+      const button = element("button", { type: "button", className: "pr-offer", textContent: kind === "reply" && item?.who ? `${label} · ${item.who}` : label });
       button.addEventListener("click", () => { button.disabled = true; offer(kind, item, prompt).catch((error) => say(error?.message ?? String(error), "bad")); });
       return button;
     }).filter(Boolean);
@@ -1429,7 +1483,7 @@ export default async function start({ app, reason, $ }) {
       const { answer } = await import("./router/answer.mjs");
       const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: false });
       turn(prompt, said);
-      if (said.sentences.length) { say(said.sentences.join(" "), "good"); $("pr-prompt").value = ""; }
+      if (said.sentences.length) { say(said.sentences.join("\n"), "good"); $("pr-prompt").value = ""; }
       else if (haltedNow) say(WORDS.halted, "bad");
       else if (said.refused) say(WORDS["answer.asks"], "warn");
       else say(WORDS["answer.none"], "");

@@ -119,6 +119,32 @@ export function messageBody(raw) {
   return tidy(fresh(text.replace(/\r\n/g, "\n")));
 }
 
+// The schema.org objects a message's HTML carries as JSON-LD (JSON-LD 1.1
+// section 7, "Embedding JSON-LD in HTML Documents"), as mail that books,
+// sells or confirms embeds them: each with its type and the people it names.
+const PEOPLE = ["underName", "customer", "attendee", "broker"];
+export function messageMarkup(raw) {
+  const out = [];
+  const visit = (node) => {
+    if (Array.isArray(node)) return node.forEach(visit);
+    if (!node || typeof node !== "object") return;
+    if (Array.isArray(node["@graph"])) return node["@graph"].forEach(visit);
+    const types = [].concat(node["@type"] ?? []).map((t) => String(t).replace(/^(https?:\/\/schema\.org\/|schema:)/, ""));
+    if (!types.length) return;
+    const people = PEOPLE.flatMap((key) => [].concat(node[key] ?? []))
+      .filter((p) => p && typeof p === "object" && [].concat(p["@type"] ?? []).some((t) => /(^|\/)Person$/.test(String(t))) && p.name)
+      .map((p) => String(p.name).trim());
+    out.push({ types, people });
+  };
+  for (const part of parts(raw)) {
+    if (part.type !== "text/html") continue;
+    for (const [, json] of part.text.matchAll(/<script\b[^>]*type\s*=\s*["']?application\/ld\+json["']?[^>]*>([\s\S]*?)<\/script>/gi)) {
+      try { visit(JSON.parse(json)); } catch { /* not JSON: not markup */ }
+    }
+  }
+  return out;
+}
+
 // The events a message carries (RFC 6047 iMIP): its text/calendar parts, inline or attached.
 export function messageEvent(raw) {
   return parts(raw, 0, true).filter((p) => p.type === "text/calendar" && /^BEGIN:V(EVENT|TODO|JOURNAL)/im.test(p.text)).map((p) => p.text).join("\r\n");

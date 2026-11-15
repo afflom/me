@@ -9,7 +9,8 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { readItem, reconcile, placesOf, useReader } from "../../site/card.mjs";
+import { readItem, reconcile, placesOf, conversations, useReader } from "../../site/card.mjs";
+import { sequence } from "../../site/time/time.mjs";
 import * as reader from "../../site/read/read.mjs";
 import { PLACES } from "../../site/surface/surface.mjs";
 import { PEOPLE } from "../../site/coherence/coherence.mjs";
@@ -73,4 +74,17 @@ test("an invitation a message carries is on the calendar as its event (RFC 6047)
     return !held.some((i) => i.media === "calendar" && i.uid === uid && listedIn(i).includes("calendar"));
   }).map((e) => e.id);
   assert.ok(missed.length <= threshold["invitation-missed"], `"invitation-missed": ${missed.join(", ")}`);
+});
+
+test("a conversation is one row in Messages, holding every message in it (RFC 5322 3.6.4)", () => {
+  // The reference: messages joined by the In-Reply-To and References fields the examples carry.
+  const messages = held.filter((i) => i.media === "message");
+  const idOf = (e) => header(e.raw, "Message-ID").match(/<[^>]+>/)?.[0];
+  const linked = examples.filter((e) => e.kind === "message" && /<[^>]+>/.test(`${header(e.raw, "In-Reply-To")} ${header(e.raw, "References")}`));
+  assert.ok(linked.length >= 2, "the oracles hold a conversation");
+  const rows = conversations(messages.filter((i) => listedIn(i).includes("conversations")), sequence(held));
+  const rowOf = (id) => rows.filter((r) => (r.turns ?? [r]).some((t) => t.id === id));
+  const ids = [...new Set(linked.map(idOf))];
+  const split = ids.filter((id) => rowOf(id).length !== 1 || !rowOf(id)[0].turns).length;
+  assert.ok(split <= threshold["conversation-split"], `"conversation-split": ${split}`);
 });
