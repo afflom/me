@@ -25,10 +25,13 @@ on:
 permissions:
   contents: read
 
-# Main deploys one at a time and is never cancelled; a newer push to a pull
-# request cancels its older run.
+# A newer push to a pull request cancels its older run. Main's gates run as
+# soon as each merge lands, beside each other (a queued merge waited 12 to 27
+# minutes for the one before it); only the publish job is one at a time, never
+# cancelled, and it publishes only main's head, so an older run that finishes
+# later never puts an older page back.
 concurrency:
-  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.event.pull_request.number) || (github.event_name == 'merge_group' && format('pages-mq-{0}', github.run_id)) || 'pages' }}
+  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.event.pull_request.number) || format('pages-run-{0}', github.run_id) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -39,6 +42,8 @@ jobs:
     if: github.repository != 'UOR-Foundation/template'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
+    outputs:
+      current: ${{ steps.head.outputs.current }}
     permissions:
       contents: read
       actions: read
@@ -316,11 +321,33 @@ jobs:
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:
           path: site
+      # Main's gates run beside each other, so this run publishes only if its
+      # commit is still main's head; a newer merge's run publishes that one.
+      - name: Is this commit still main's head
+        id: head
+        if: steps.attest.outcome == 'success'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          head=$(gh api "repos/$REPO/commits/main" --jq .sha)
+          if [[ $head == "$SHA" ]]; then
+            echo "current=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "current=false" >>"$GITHUB_OUTPUT"
+            echo "::notice::main moved on to $head; that merge's run publishes it, not this one"
+          fi
 
   deploy:
     name: publish the page
     needs: build
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.build.outputs.current == 'true'
+    concurrency:
+      group: pages-publish
+      cancel-in-progress: false
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:

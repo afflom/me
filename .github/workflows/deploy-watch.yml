@@ -89,11 +89,14 @@ jobs:
             # its own page that it is live: the publish job opened the published
             # page in a fresh Chromium (PG-01, PD-01, PD-02 live), so nobody
             # checks by hand.
-            before=$(gh api "repos/$REPO/actions/workflows/pages.yml/runs?branch=main&status=success&per_page=10" \
-              --jq "[.workflow_runs[] | select(.head_sha != \"$head\") | .head_sha][0] // empty" 2>/dev/null || true)
+            # Main's runs go side by side and only the head's publishes, so the
+            # last few runs before this one may not have published: tell from the
+            # oldest of them (already-told PRs are skipped below).
+            before=$(gh api "repos/$REPO/actions/workflows/pages.yml/runs?branch=main&status=success&per_page=6" \
+              --jq "[.workflow_runs[] | select(.head_sha != \"$head\") | .head_sha] | last // empty" 2>/dev/null || true)
             commits=$head
             if [[ -n $before ]]; then
-              commits=$(gh api "repos/$REPO/compare/$before...$head" --jq '[.commits[].sha] | join(" ")' 2>/dev/null || echo "$head")
+              commits="$before $(gh api "repos/$REPO/compare/$before...$head" --jq '[.commits[].sha] | join(" ")' 2>/dev/null || echo "$head")"
             fi
             done_prs=" "
             for commit in $commits; do
