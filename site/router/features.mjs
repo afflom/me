@@ -79,17 +79,36 @@ function readTime(text, now) {
   return { start: date.getTime(), allDay: false, spans };
 }
 
-// What it asks of the owner: a question, a task, an event, or a fact.
-function readIntent(text, { timed = false } = {}) {
-  const p = PROVIDERS.intent;
+// Whether a line asks a question: it ends in a question mark or opens with a wh-word.
+export function asksQuestion(text) {
   const t = lower(text).trim();
   const words = wordsOf(t);
-  if (!words.length) return null;
-  const wh = p.question.slice(0, 7);
-  if (t.endsWith("?") || wh.includes(words[0])) return "question";
-  if (p.task.some((cue) => t.startsWith(`${cue} `) || t === cue)) return "task";
+  return words.length > 0 && (t.endsWith("?") || PROVIDERS.intent.question.slice(0, 7).includes(words[0]));
+}
+
+// Whether the intent head (PROVIDERS.intent.head, fit on the AMI Meeting
+// Corpus, QR-16) reads a meaning vector as a task.
+export function headTask(vector) {
+  const head = PROVIDERS.intent.head;
+  if (!head || !vector || vector.length !== head.weights.length) return null;
+  let z = head.bias;
+  for (let k = 0; k < vector.length; k += 1) z += head.weights[k] * vector[k];
+  return z > 0;
+}
+
+// What it asks of the owner: a question, a task, an event, or a fact. Once the
+// meaning model has opened, the head reads a task from what the line means;
+// until then, from the task words.
+async function readIntent(text, { timed = false, meaning = null } = {}) {
+  const p = PROVIDERS.intent;
+  const t = lower(text).trim();
+  if (!wordsOf(t).length) return null;
+  if (asksQuestion(text)) return "question";
+  const task = meaning?.read && p.head?.model === PROVIDERS.meaning?.model ? headTask(await meaning.read(text)) : null;
+  if (task === true) return "task";
+  if (task === null && p.task.some((cue) => t.startsWith(`${cue} `) || t === cue)) return "task";
   if (p.event.some((cue) => has(t, cue))) return "event";
-  if (p.task.some((cue) => has(t, cue))) return "task";
+  if (task === null && p.task.some((cue) => has(t, cue))) return "task";
   return timed ? "event" : "fact";
 }
 
@@ -180,7 +199,7 @@ function readTopic(text, { topics = null } = {}) {
 // on: the router gathers them from every value and kindOf decides once.
 export const READERS = {
   time: (value, { now }) => readTime(value, now),
-  intent: (value, { start }) => readIntent(value, { timed: start != null }),
+  intent: (value, { start, meaning }) => readIntent(value, { timed: start != null, meaning }),
   party: (value, ctx) => readParty(value, ctx),
   kind: (value) => value,
   topic: (value, ctx) => readTopic(value, ctx),

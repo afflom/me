@@ -1,5 +1,6 @@
 #!/bin/sh
-# Runs every step of generators/pipeline.json through the generator programs.
+# Runs every step of generators/<program>/steps.json through its program, the
+# programs in name order. Request bounds are in generators/pipeline.json.
 # Each program is a LexLean text/3 application, generators/<program>/, built by
 # `prismpm build` and pinned by tools/generators/build.sh. Their Foundation is
 # one module set, generators/foundation/, copied byte for byte into each.
@@ -10,14 +11,15 @@
 # and must fit the request bound. A step with "split" runs once per piece of that
 # file, cut at line ends (only before a line matching its "breakBefore", where it has one); a step with "each" runs once per element of a JSON array;
 # either way its output is the outputs joined in order. Outputs under .gen/ are
-# intermediate and never committed.
+# intermediate and never committed; a step reads only the .gen/ outputs of its
+# own program's earlier steps, so programs never depend on each other's order.
 set -eu
 cd "$(dirname "$0")/../.."
 mode=${1:-write}
 
 # A program is pinned to its sources: a change to generators/<program>/ needs build.sh.
 digest() { # digest PROGRAM
-  sources=$(git ls-files --others --cached --exclude-standard "generators/$1" | grep -v -e "^generators/$1/bin/" -e "^generators/$1/lock.json$" | sort)
+  sources=$(git ls-files --others --cached --exclude-standard "generators/$1" | grep -v -e "^generators/$1/bin/" -e "^generators/$1/lock.json$" -e "^generators/$1/steps.json$" | sort)
   printf '{\n  "comment": "Written by tools/generators/build.sh. GN-01 fails when generators/%s or its program no longer match.",\n  "sources": "%s",\n  "program": "%s"\n}\n' \
     "$1" "$(sha256sum $sources | sha256sum | cut -c1-64)" "$(sha256sum "generators/$1/bin/prism-generators" | cut -c1-64)"
 }
@@ -61,9 +63,15 @@ run() { # run GENERATOR OUTPUT STAGE PATHS... -> appends the written file to $wo
   tail -c +9 "$work/report" >> "$work/out"
 }
 
-steps=$(js .steps < generators/pipeline.json)
-echo "$steps" | while read -r step; do
-  program=$(echo "$step" | js .program); gen=$(echo "$step" | js .generator); out=$(echo "$step" | js .output)
+for steps_file in generators/*/steps.json; do
+program=$(basename "$(dirname "$steps_file")")
+: > "$work/made"
+js .steps < "$steps_file" | while read -r step; do
+  gen=$(echo "$step" | js .generator); out=$(echo "$step" | js .output)
+  for f in $(echo "$step" | js .inputs); do
+    case $f in .gen/*) grep -qxF "$f" "$work/made" || {
+      echo "GN-01: $program $gen reads $f, which no earlier step of $steps_file writes" >&2; exit 1; } ;; esac
+  done
   : > "$work/out"
   split_path=$(echo "$step" | js .split)
   each_path=$(echo "$step" | js .each.file)
@@ -102,4 +110,6 @@ echo "$steps" | while read -r step; do
          echo "GN-01: $out is what $gen writes"
        else cp "$work/out" "$out"; echo "wrote $out ($gen)"; fi ;;
   esac
+  echo "$out" >> "$work/made"
+done
 done
