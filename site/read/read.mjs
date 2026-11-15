@@ -7,7 +7,28 @@
 import { nextInstance } from "../time/recur.mjs";
 import { contentType, disposition, entity, transferEncoding } from "./mail.mjs";
 export { messageHeader } from "./mail.mjs";
-export { readCard } from "./vcard.mjs";
+import * as pin from "./guest.mjs";
+
+// A vCard is read by the vcard guest (app/src/PrismVcard.lex.tex, pinned in
+// ./guest.mjs): checked and compiled once, when this module loads, then asked
+// synchronously. Its answers: "line" the JSON of one content line (null when
+// it is none), "cards" each card unfolded (RFC 6350 3.2), NUL-separated.
+const guest = pin.GUESTS?.vcard ?? pin.GUEST;
+const url = new URL(guest.path, new URL("./guest.mjs", import.meta.url));
+const bytes = url.protocol === "file:" ? await (await import("node:fs/promises")).readFile(url) : new Uint8Array(await (await fetch(url)).arrayBuffer());
+export const vcard = await pin.openGuestSync(bytes, guest.sha256);
+// A line beyond the guest's request limit reads as none ("invalid").
+export const readLine = (line) => { const a = vcard(`line\n${line}`); return a === "invalid" ? null : JSON.parse(a); };
+
+// The vCard as its properties: name -> every instance, in order, BEGIN, END and VERSION aside.
+export function readCard(text) {
+  const card = {};
+  for (const raw of (vcard(`cards\n${text}`).split("\0")[0] ?? "").split("\r\n")) {
+    const line = raw ? readLine(raw) : null;
+    if (line && !["BEGIN", "END", "VERSION"].includes(line.name)) (card[line.name] ??= []).push(line);
+  }
+  return card;
+}
 
 function bytesOf(body, encoding) {
   const kind = (encoding ?? "").toLowerCase();

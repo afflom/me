@@ -105,7 +105,9 @@ def uses_of(path, text, parts):
             if r in parts:
                 out.add(r)
         head = "\n".join(text.splitlines()[:6])
-        for m in TWIN_RE.findall(head):
+        # A guest's loader names the modules its guests are built from.
+        built = re.search(r"guests? of ([A-Za-z0-9, ]+), built", head.replace("\n// ", " "))
+        for m in TWIN_RE.findall(head) + (built.group(1).split(", ") if built else []):
             if f"app/src/{m}.lex.tex" in parts:
                 out.add(f"app/src/{m}.lex.tex")
     out.discard(path)
