@@ -5,6 +5,7 @@
 // conferencing boilerplate, and a repeating event is shown at its next time.
 // Loaded only once something is kept, so a first visit carries none of it.
 import { nextInstance } from "../time/recur.mjs";
+export { readCard } from "./vcard.mjs";
 
 const unfold = (text) => text.replace(/\r?\n[ \t]/g, " ");
 

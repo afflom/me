@@ -53,3 +53,32 @@ fn oracle_or_01() {
         "OR-01: the gates run every *.test.mjs, test/oracle among them"
     );
 }
+
+/// `VC-01`: vCard is read as RFC 6350 defines it: the page's property table is derived from the RFC's own ABNF, every RFC 6350 entry of IANA's vCard Elements registry is implemented and exercised by an example line the RFC gives (or one derived from the RFC's own example of a property it applies to), the Prism reads each example line as a reference reader written to RFC 6350 sections 3.3 and 3.4 reads it, and an entry neither met nor in a debt that only shrinks fails the build
+#[test]
+fn oracle_vc_01() {
+    let generator = read("tools/oracle/vcard.py");
+    for needle in [
+        "not the pinned",
+        "def documentation_only",
+        "neither met nor in debt",
+        "is now implemented and exercised",
+        "is stale",
+    ] {
+        assert!(
+            generator.contains(needle),
+            "VC-01: vcard.py must contain `{needle}`"
+        );
+    }
+    let test = read("test/oracle/vcard.test.mjs");
+    for needle in ["\"--check\"", "spec.debt", "planted"] {
+        assert!(
+            test.contains(needle),
+            "VC-01: vcard.test.mjs must contain `{needle}`"
+        );
+    }
+    assert!(
+        read("model/authorities.toml").contains("realized_by = [\"VC-01\"]"),
+        "VC-01: the vCard registry is a cited authority realized by VC-01"
+    );
+}
