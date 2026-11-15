@@ -403,6 +403,14 @@
     {
       "kind": "LinkedIn data archive",
       "why": "LinkedIn's help pages name messages.csv and Connections.csv but publish no definition of their columns. Untested by any oracle; the files follow RFC 4180, which is."
+    },
+    {
+      "kind": "a Web Annotation Set with no id",
+      "why": "The web-platform-tests annotation-model suite (wpt 81999813, app/specs/annotation/spec.json) recognises a body or target only as an IRI, a Choice, a Specific Resource or an object with an id, so its assertion 3.2-targetObjectsRecognized fails the Recommendation's own Examples 42, 43 and 44 (a Composite, a List and an Independents with no id, which section 3.2.8 allows). The annotation guest is the suite's judge and answers as the suite does; no oracle holds it to the Recommendation's reading of a Set until the suite is corrected upstream."
+    },
+    {
+      "kind": "what a Web Annotation selector selects",
+      "why": "The annotation-model suite tests the shape of an annotation only. The Recommendation defines what a TextQuoteSelector, a TextPositionSelector or a refinedBy chain selects in prose, and the Working Group published no test of it, so resolving a citation's selector against a snapshot's text has no oracle yet."
     }
   ],
   "unsourced": [

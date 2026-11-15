@@ -1619,6 +1619,472 @@
    "realizedBy": [
     "ST-01"
    ]
+  },
+  {
+   "key": "w3c-annotation-model",
+   "title": "W3C Web Annotation Data Model, Recommendation 23 February 2017",
+   "issuer": "W3C",
+   "text": {
+    "url": "https://www.w3.org/TR/2017/REC-annotation-model-20170223/",
+    "sha256": "a7513e022f56c0a6f4e99ac11aec03f3451d1ff1ce14054780b3ccfb38fa7980"
+   },
+   "inventories": [
+    {
+     "generated": "test/standards/generated/w3c-annotation-model-annotationMusts.json",
+     "vendored": "app/specs/standards/upstream/annotation-model/annotationMusts.test",
+     "source": {
+      "url": "https://raw.githubusercontent.com/web-platform-tests/wpt/81999813d59bc596c8029aba931bb550ab9f5a28/annotation-model/annotations/annotationMusts.test",
+      "sha256": "7e93d89f1503ec62b6ea208946b9920f47c99c8fa6388b1313825d50da18b4c7"
+     }
+    },
+    {
+     "generated": "test/standards/generated/w3c-annotation-model-annotationOptionals.json",
+     "vendored": "app/specs/standards/upstream/annotation-model/annotationOptionals.test",
+     "source": {
+      "url": "https://raw.githubusercontent.com/web-platform-tests/wpt/81999813d59bc596c8029aba931bb550ab9f5a28/annotation-model/annotations/annotationOptionals.test",
+      "sha256": "8ede6a0468df7f9b9bd4219d5150114a279fa1b087f24ff1b3f74cd1b829be23"
+     }
+    },
+    {
+     "generated": "test/standards/generated/w3c-annotation-model-annotationsAgentOptionals.json",
+     "vendored": "app/specs/standards/upstream/annotation-model/annotationsAgentOptionals.test",
+     "source": {
+      "url": "https://raw.githubusercontent.com/web-platform-tests/wpt/81999813d59bc596c8029aba931bb550ab9f5a28/annotation-model/annotations/annotationsAgentOptionals.test",
+      "sha256": "78748212fc9979e0330d15049121e6da9709020a7b7ca8486944a70746a0197a"
+     }
+    },
+    {
+     "generated": "test/standards/generated/w3c-annotation-model-collectionMusts.json",
+     "vendored": "app/specs/standards/upstream/annotation-model/collectionMusts.test",
+     "source": {
+      "url": "https://raw.githubusercontent.com/web-platform-tests/wpt/81999813d59bc596c8029aba931bb550ab9f5a28/annotation-model/collections/collectionMusts.test",
+      "sha256": "2029caf703b1d2d306694f5dae2dfde722a386152a9ceac33cb8b9e21edd8929"
+     }
+    },
+    {
+     "generated": "test/standards/generated/w3c-annotation-model-collectionOptionals.json",
+     "vendored": "app/specs/standards/upstream/annotation-model/collectionOptionals.test",
+     "source": {
+      "url": "https://raw.githubusercontent.com/web-platform-tests/wpt/81999813d59bc596c8029aba931bb550ab9f5a28/annotation-model/collections/collectionOptionals.test",
+      "sha256": "e9c01c5e1a0567f19e4d1ee9f9722af1cc6b31990e0133c6686da20c0055f92f"
+     }
+    },
+    {
+     "generated": "test/standards/generated/w3c-annotation-model-pageMusts.json",
+     "vendored": "app/specs/standards/upstream/annotation-model/pageMusts.test",
+     "source": {
+      "url": "https://raw.githubusercontent.com/web-platform-tests/wpt/81999813d59bc596c8029aba931bb550ab9f5a28/annotation-model/collections/pages/pageMusts.test",
+      "sha256": "1ec95bd06d2f1364f500a03c2ce5b58fb485839d85e77ac19e645ad7babc80e3"
+     }
+    },
+    {
+     "generated": "test/standards/generated/w3c-annotation-model-pageOptionals.json",
+     "vendored": "app/specs/standards/upstream/annotation-model/pageOptionals.test",
+     "source": {
+      "url": "https://raw.githubusercontent.com/web-platform-tests/wpt/81999813d59bc596c8029aba931bb550ab9f5a28/annotation-model/collections/pages/pageOptionals.test",
+      "sha256": "2fb55531f921164ed54badb4a907f518e319dd886585642dfff995ffccd0910f"
+     }
+    }
+   ],
+   "governs": [
+    "app/src/PrismAnnotation.lex.tex",
+    "app/src/PrismAnnotationTable.lex.tex",
+    "site/annotation/guest.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ],
+   "enforcedBy": {
+    "w3c-annotation-model-3.1-annotationContextValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.1-annotationIdValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.1-annotationTypeValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.1-bodyKeyFound": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.1-targetKeyFound": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.2-targetObjectsRecognized": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.2.1-bodyEWR": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.2.1-bodyFormat": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.2.1-bodyLanguage": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.2.1-bodySingleFormat": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.2.1-bodySingleLanguage": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.2.1-targEWR": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.2.1-targTextDirectionValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.2.4-bodyETB": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.2.4-bodyETBTypeTextualBody": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.2.7-bodyChoice": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.1-annotationCreatedImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.1-annotationCreatedValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.1-annotationCreatorImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.1-annotationGeneratedImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.1-annotationGeneratedValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.1-annotationGeneratorImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.1-annotationModifiedValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.1-annotationSingleCreatorImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.1-bodySingleCreator": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.1-collectionCreatedImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.1-collectionCreatedValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.1-collectionCreatorImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.1-collectionModifiedImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.1-collectionModifiedValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.1-targCreatedValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.1-targModifiedValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.2-annotationCreatorAgentEmail_sha1Implemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.2-annotationCreatorAgentIdImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.2-annotationCreatorAgentNameImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.2-annotationCreatorAgentNicknameImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.2-annotationCreatorAgentSingleNameImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.2-annotationCreatorAgentTypeImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.2-annotationGeneratorAgentHomepageImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.2-annotationGeneratorAgentIdImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.2-annotationGeneratorAgentNameImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.2-annotationGeneratorAgentSingleNameImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.2-annotationGeneratorAgentTypeImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.2-collectionCreatorAgentEmail_sha1Implemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.2-collectionCreatorAgentIdImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.2-collectionCreatorAgentNameImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.2-collectionCreatorAgentNicknameImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.2-collectionCreatorAgentTypeImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.5-annotationMotivationImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.5-annotationSingleMotivationImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.5-bodyPurpose": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.6-annotationRightsValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.6-collectionRightsValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.6-targRightsValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.7-annotationCanonicalValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.7-annotationViaValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.7-targCanonicalValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-3.3.7-targViaValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4-bodySpecificResource": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4-targSpecificResource": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.2-TextDataPositionSelectorValid": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.2-fragmentCssXPathSelectorValid": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.2-selectorFound": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.2-selectorValidIfPresent": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.2.1-fragmentSelector": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.2.4-textQuoteSelectorValid": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.2.7-svgSelectorValid": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.2.8-rangeSelectorValid": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.3-stateFound": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.3-stateValidIfPresent": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.3.1-timeStateValid": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.3.2-httpRequestStateValid": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.3.2-requestHeaderState": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.3.3-refinedBy": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.3.3-refinedByValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.4-annotationStylesheetImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-4.4-styleClass": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.1-collectionContextValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.1-collectionFirstImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.1-collectionIdValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.1-collectionLabelImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.1-collectionLastImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.1-collectionTotalImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.1-collectionTypeValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.2-pageContextValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.2-pageIdValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.2-pageItemsValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.2-pageLabelImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.2-pageNextImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.2-pageNextValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.2-pagePartOfImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.2-pagePartOfValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.2-pagePrevValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.2-pageStartIndexImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.2-pageStartIndexValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.2-pageTotalImplemented": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    },
+    "w3c-annotation-model-5.2-pageTypeValidated": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "an acceptance vector pair of the annotation guest (see enforcement)"
+    }
+   },
+   "enforcement": "the web-platform-tests annotation-model suite's own runner and validator, at the pinned revision, find each assertion listed in enforcedBy holding of one and failing of another of the W3C documents app/specs/annotation/spec.json pins; those documents are acceptance vectors of the annotation guest with the suite's answers, prismpm build runs them and GU-01 holds the pinned wasm to them"
   }
  ],
  "ungoverned": {
