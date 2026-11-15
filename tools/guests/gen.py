@@ -72,6 +72,9 @@ def write(gid, out):
         shutil.copy(APP / name, out / name)
     shutil.copytree(APP / "language", out / "language")
     shutil.copytree(APP / "src/Foundation", out / "src/Foundation")
+    if "memory" in g:
+        # A guest that names its memory is a text-application/2 core: the SDK stdlib's V2 model, byte for byte.
+        shutil.copytree(APP / "specs/guests/stdlib/Foundation", out / "src/Foundation", dirs_exist_ok=True)
     files = []
     for m in g["modules"]:
         for name in (f"{m}.lex.tex", f"{m}Proofs.lex.tex"):
@@ -90,6 +93,12 @@ def write(gid, out):
     for r, a in reversed(vectors(g) + [("", "invalid"), ("x" * (req + 1), "invalid"), ("x" * alloc, "invalid")]):
         vec = f"(cons (record Foundation.View.Text.V1.Model::AcceptanceVector {{request := {h(r)}, response := {h(a)}}}) {vec})"
     module = g["dispatch"].split("::")[0]
+    if "memory" in g:
+        model, profile = "Foundation.View.Text.V2.Model", "prismpm/text-application/2"
+        core = f" coreMemoryPages := ({g['memory'][0]} : UInt32), coreStackBytes := ({g['memory'][1]} : UInt32),"
+    else:
+        model, profile, core = "Foundation.View.Text.V1.Model", "prismpm/text-application/1", ""
+    extra = "\\importmodule{Foundation.View.Text.V2.Model}\n" if "memory" in g else ""
     name = f"prism-{gid}"
     (out / f"src/{appm}.lex.tex").write_text(rf"""\begin{{lexlean}}{{{appm}}}
 \useglossary{{lexlean.std.bool@1.2.0}}
@@ -97,7 +106,7 @@ def write(gid, out):
 \useglossary{{prism.arch@1.0.0}}
 \importmodule{{Foundation.Bytes}}
 \importmodule{{Foundation.View.Text.V1.Model}}
-\importmodule{{{module}}}
+{extra}\importmodule{{{module}}}
 \title{{Text application model}}
 \begin{{semanticmodule}}
 definition{{
@@ -111,8 +120,8 @@ definition{{
 definition{{
   name: application,
   parameters: [],
-  result: Foundation.View.Text.V1.Model::TextApplication,
-  body: (record Foundation.View.Text.V1.Model::TextApplication {{profile := "prismpm/text-application/1", name := "{name}", cargoName := "{name}", cargoVersion := "0.1.0", cargoDescription := "The {gid} decision of the Prism, on its own.", cargoRepository := "https://github.com/afflom/me", cargoHomepage := "https://afflom.github.io/me/", libraryRoots := (cons "Me.{appm}.dispatch" (nil String)), acceptanceVectors := {vec}, entryRoot := "Me.{appm}.dispatch", coreContract := "hologram:guest/core-wasm@1", requestMaximum := ({req} : UInt32), responseMaximum := ({resp} : UInt32), guestAllocationMaximum := ({alloc} : UInt32), capabilitiesEmpty := true, fatArchive := true, primaryLayer := (0 : UInt8), viewLayer := (1 : UInt8), view := (record Foundation.View.Text.V1.Model::TextView {{title := "{name}", heading := "{name}", inputLabel := "Request", submitLabel := "Decide", outputLabel := "Answer", inputError := "Invalid request", responseError := "Invalid response"}})}})
+  result: {model}::TextApplication,
+  body: (record {model}::TextApplication {{profile := "{profile}", name := "{name}", cargoName := "{name}", cargoVersion := "0.1.0", cargoDescription := "The {gid} decision of the Prism, on its own.", cargoRepository := "https://github.com/afflom/me", cargoHomepage := "https://afflom.github.io/me/", libraryRoots := (cons "Me.{appm}.dispatch" (nil String)), acceptanceVectors := {vec}, entryRoot := "Me.{appm}.dispatch", coreContract := "hologram:guest/core-wasm@1", requestMaximum := ({req} : UInt32), responseMaximum := ({resp} : UInt32), guestAllocationMaximum := ({alloc} : UInt32),{core} capabilitiesEmpty := true, fatArchive := true, primaryLayer := (0 : UInt8), viewLayer := (1 : UInt8), view := (record Foundation.View.Text.V1.Model::TextView {{title := "{name}", heading := "{name}", inputLabel := "Request", submitLabel := "Decide", outputLabel := "Answer", inputError := "Invalid request", responseError := "Invalid response"}})}})
 }}
 \end{{semanticmodule}}
 \end{{lexlean}}
