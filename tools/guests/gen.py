@@ -91,13 +91,20 @@ def write(gid, out):
     for r, a in reversed(vectors(g) + [("", "invalid"), ("x" * (req + 1), "invalid"), ("x" * alloc, "invalid")]):
         vec = f"(cons (record Foundation.View.Text.V1.Model::AcceptanceVector {{request := {h(r)}, response := {h(a)}}}) {vec})"
     module = g["dispatch"].split("::")[0]
+    # A guest that needs more than the SDK's default memory (32 pages, 64 KiB of stack)
+    # says so, and is built under the SDK's text-application/2 profile, which carries both.
+    model, profile, v2, memory = "V1", 1, "", ""
+    if "memory" in g:
+        pages, stack = g["memory"]
+        model, profile, v2 = "V2", 2, "\n\\importmodule{Foundation.View.Text.V2.Model}"
+        memory = f"coreMemoryPages := ({pages} : UInt32), coreStackBytes := ({stack} : UInt32), "
     name = f"prism-{gid}"
     (out / f"src/{appm}.lex.tex").write_text(rf"""\begin{{lexlean}}{{{appm}}}
 \useglossary{{lexlean.std.bool@1.2.0}}
 \useglossary{{lexlean.std.nat@1.2.0}}
 \useglossary{{prism.arch@1.0.0}}
 \importmodule{{Foundation.Bytes}}
-\importmodule{{Foundation.View.Text.V1.Model}}
+\importmodule{{Foundation.View.Text.V1.Model}}{v2}
 \importmodule{{{module}}}
 \title{{Text application model}}
 \begin{{semanticmodule}}
@@ -112,8 +119,8 @@ definition{{
 definition{{
   name: application,
   parameters: [],
-  result: Foundation.View.Text.V1.Model::TextApplication,
-  body: (record Foundation.View.Text.V1.Model::TextApplication {{profile := "prismpm/text-application/1", name := "{name}", cargoName := "{name}", cargoVersion := "0.1.0", cargoDescription := "The {gid} decision of the Prism, on its own.", cargoRepository := "https://github.com/afflom/me", cargoHomepage := "https://afflom.github.io/me/", libraryRoots := (cons "Me.{appm}.dispatch" (nil String)), acceptanceVectors := {vec}, entryRoot := "Me.{appm}.dispatch", coreContract := "hologram:guest/core-wasm@1", requestMaximum := ({req} : UInt32), responseMaximum := ({resp} : UInt32), guestAllocationMaximum := ({alloc} : UInt32), capabilitiesEmpty := true, fatArchive := true, primaryLayer := (0 : UInt8), viewLayer := (1 : UInt8), view := (record Foundation.View.Text.V1.Model::TextView {{title := "{name}", heading := "{name}", inputLabel := "Request", submitLabel := "Decide", outputLabel := "Answer", inputError := "Invalid request", responseError := "Invalid response"}})}})
+  result: Foundation.View.Text.{model}.Model::TextApplication,
+  body: (record Foundation.View.Text.{model}.Model::TextApplication {{profile := "prismpm/text-application/{profile}", name := "{name}", cargoName := "{name}", cargoVersion := "0.1.0", cargoDescription := "The {gid} decision of the Prism, on its own.", cargoRepository := "https://github.com/afflom/me", cargoHomepage := "https://afflom.github.io/me/", libraryRoots := (cons "Me.{appm}.dispatch" (nil String)), acceptanceVectors := {vec}, entryRoot := "Me.{appm}.dispatch", coreContract := "hologram:guest/core-wasm@1", requestMaximum := ({req} : UInt32), responseMaximum := ({resp} : UInt32), guestAllocationMaximum := ({alloc} : UInt32), {memory}capabilitiesEmpty := true, fatArchive := true, primaryLayer := (0 : UInt8), viewLayer := (1 : UInt8), view := (record Foundation.View.Text.V1.Model::TextView {{title := "{name}", heading := "{name}", inputLabel := "Request", submitLabel := "Decide", outputLabel := "Answer", inputError := "Invalid request", responseError := "Invalid response"}})}})
 }}
 \end{{semanticmodule}}
 \end{{lexlean}}
