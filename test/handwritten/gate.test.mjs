@@ -18,7 +18,7 @@ const run = (cmd, args, cwd) => spawnSync(cmd, args, { cwd, encoding: "utf8" });
 // ratchet compares with.
 function scratch() {
   const dir = mkdtempSync(join(tmpdir(), "hw-"));
-  const files = run("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard"], ".").stdout.split("\0").filter(Boolean);
+  const files = run("git", ["ls-files", "-z", "--cached"], ".").stdout.split("\0").filter(Boolean);
   for (const f of files) {
     try {
       mkdirSync(dirname(join(dir, f)), { recursive: true });
