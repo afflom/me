@@ -1,9 +1,9 @@
 // CO-02: the coherence gate. tools/coherence/gen.py --check passes on the
 // registry as committed, and refuses each planted defect: a root facet with no
 // model, a live facet whose modules never ask for it, an output nobody takes,
-// a setting nothing drives, a feeder's media with no domain, a domain with no
-// vocabulary. Then the runtime modules it binds: items find their domains by
-// their words, an Ask finds its span, Today asks PrismChronology, and a
+// a setting nothing drives, a feeder's media with no domain. Then the runtime
+// modules it binds: an item's domain is its media's and what it is about its
+// facets of the whole person (ICF), an Ask finds its span, Today asks PrismChronology, and a
 // Takeout zip opens to its entries.
 // usage: node --test test/coherence/coherence.test.mjs
 import assert from "node:assert/strict";
@@ -44,7 +44,6 @@ test("each planted defect is refused (CO-02)", () => {
   assert.match(planted((s) => { for (const f of s.facets) if (f.drives?.settings) f.drives.settings = f.drives.settings.filter((k) => k !== "halt"); }), /setting halt is driven by no live facet/);
   assert.match(planted((s) => { facet(s, "boundary").drives = { settings: ["halt"] }; }), /act 'ask' is driven by no live facet/);
   assert.match(planted((s) => { s.feeders[0].media.push("fax"); }), /'fax', which has no domain/);
-  assert.match(planted((s) => { s.vocabulary[0] = []; }), /every domain of the design model needs its vocabulary/);
   assert.match(planted((s) => { facet(s, "google").drives = { places: ["today"] }; }), /google is sealed but drives the page/);
   assert.match(planted((s) => { facet(s, "dest").drives.acts = ["share"]; }), /act 'write' is driven by no live facet/);
 });
@@ -52,10 +51,9 @@ test("each planted defect is refused (CO-02)", () => {
 const { domainsOf, drawOn, windowOf } = await import(resolve("site/coherence/sense.mjs"));
 const { today } = await import(resolve("site/coherence/today.mjs"));
 
-test("items find their domains by their words, and an Ask its span (CO-03)", () => {
-  const bank = { domain: 4, media: "message", title: "Your November statement", who: "Example Bank", body: "Payment due", at: Date.now() };
-  assert.ok(domainsOf(bank).includes(1), "a statement is about Money");
-  assert.ok(domainsOf(bank).includes(4));
+test("an item's domain is its media's, an Ask finds its span and the facets it is about (CO-03)", () => {
+  const bank = { domain: 4, media: "message", title: "Your November statement", who: "Example Bank", body: "Payment due", at: Date.now(), facets: ["d860"] };
+  assert.deepEqual(domainsOf(bank), [4], "no list of words files it anywhere else");
   const now = new Date(2026, 10, 13, 10).getTime();
   const span = windowOf("what's on tomorrow?", now);
   assert.equal(new Date(span.from).getDate(), 14);
@@ -64,6 +62,12 @@ test("items find their domains by their words, and an Ask its span (CO-03)", () 
   assert.deepEqual(drawOn([bank, flight], "when is my flight?", { now }), [flight]);
   assert.deepEqual(drawOn([bank, flight], "zebra quantum", { now }), []);
   assert.deepEqual(drawOn([{ ...flight, sealed: true }], "flight", { now }), []);
+  // Of two items an Ask's words meet, the one about the facet of the person the
+  // Ask is about (ICF d860, basic economic transactions) comes first, however new the other.
+  const facetsOf = () => ["d860"];
+  const newer = { ...bank, at: bank.at + 1000, facets: [] };
+  assert.deepEqual(drawOn([newer, bank], "payment", { now }), [newer, bank]);
+  assert.deepEqual(drawOn([newer, bank], "payment", { now, vector: [1], near: 2, facetsOf }), [bank, newer]);
 });
 
 test("Today asks PrismChronology what falls today and what clashes (CO-03)", async () => {

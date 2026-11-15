@@ -102,7 +102,7 @@ export async function answer(prompt, options) {
   // What the ask means, near what each item means (PROVIDERS.meaning), as well as the words they share.
   const near = PROVIDERS.meaning?.near ?? 1;
   const close = (item) => (mapped.meaning && item.meaning ? nearness(mapped.meaning, item.meaning) : 0);
-  let used = drawOn(items, text, { now, vector: mapped.meaning, near });
+  let used = drawOn(items, text, { now, vector: mapped.meaning, near, facetsOf: meaning?.facets ?? null });
   let lead = [];
   let many = Boolean(span);
   if (kind && !span) {

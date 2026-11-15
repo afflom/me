@@ -23,8 +23,8 @@ model does not sanction.
 | ID | Level | Statement |
 | --- | --- | --- |
 | `CO-01` | `build` | The owner brings content in through the feeders the coherence registry names and every place that lists things lists it: Today shows the agenda ahead with what falls today and what clashes as PrismChronology answers, and Ask answers at once with the owner's own kept items that meet it, only as the Boundary allows, never while halted |
-| `CO-02` | `build` | Every facet the Prism root routes is one model in the coherence registry with typed ports, live with the page modules that ask it or sealed by a PrismHost surface, and the build refuses a registry whose flow leaves a port unproduced or untaken, a place unfed, an act or setting undriven, a feeder's media without a domain or a domain without vocabulary |
-| `CO-03` | `build` | A kept item belongs to its media's domain and to every domain whose vocabulary in the coherence registry it uses, and an Ask finds the span its intent words name |
+| `CO-02` | `build` | Every facet the Prism root routes is one model in the coherence registry with typed ports, live with the page modules that ask it or sealed by a PrismHost surface, and the build refuses a registry whose flow leaves a port unproduced or untaken, a place unfed, an act or setting undriven or a feeder's media without a domain |
+| `CO-03` | `build` | A kept item belongs to its media's domain and is about the facets of the whole person (WHO ICF) its meaning is nearest, and an Ask finds the span its intent words name and draws first on what is about the facets it is about |
 | `CO-04` | `build` | A zip the owner picks or drops, such as a Google Takeout export, opens in the browser to its entries, stored or deflated and ZIP64 included, each judged by PrismFolder by its own format |
 | `CO-05` | `build` | A returning owner gets the deploy that is served: when the version precache.json names differs from every cache the page keeps, the page drops the kept deploy and loads once more, and every button on Today does something when pressed |
 

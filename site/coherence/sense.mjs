@@ -1,33 +1,18 @@
-// What a kept item is about and what an Ask is after, from the coherence
-// registry only: an item's domains are its media's domain and every domain
-// whose vocabulary it uses; an Ask's window is its intent words; its answer is
-// the kept items that meet it. Nothing here decides whether anything is shown:
+// What a kept item is about and what an Ask is after: an item's domain is its
+// media's (the coherence registry), what it is about is its facets of the
+// whole person (WHO's ICF, site/person/icf.mjs) by meaning; an Ask's window is
+// its intent words; its answer is the kept items that meet it. Nothing here decides whether anything is shown:
 // the Boundary does, on the page.
-import { VOCABULARY, INTENTS, MEDIA } from "./coherence.mjs";
+import { INTENTS, MEDIA } from "./coherence.mjs";
 import { nearness } from "../router/meaning.mjs";
 
 const DAY = 86_400_000;
 // Lower case with accents folded, so "Joel" finds "Joël".
 const lower = (text = "") => text.toLowerCase().normalize("NFD").replace(/\p{M}+/gu, "").normalize("NFC");
-const escape = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const PATTERNS = VOCABULARY.map((terms) => terms.map((term) => (/^[\p{L}\p{N} :]+$/u.test(term) ? new RegExp(`(?<![\\p{L}\\p{N}])${escape(term)}(?![\\p{L}\\p{N}])`, "u") : { test: (text) => text.includes(term) })));
 
-// How many of a domain's terms a text uses.
-const uses = (domain, text) => PATTERNS[domain].reduce((n, pattern) => n + (pattern.test(text) ? 1 : 0), 0);
-
-// The domains an item belongs to: its own, then each domain its title names,
-// or its body names twice.
+// The domains an item belongs to: its own, its media's.
 export function domainsOf(item) {
-  const own = item.domain ?? MEDIA[item.media] ?? VOCABULARY.length - 1;
-  const out = new Set([own]);
-  if (item.sealed) return [...out];
-  const title = lower(`${item.title ?? ""} ${item.who ?? ""}`);
-  const body = lower((item.body ?? item.text ?? "").slice(0, 4000));
-  for (let d = 0; d < VOCABULARY.length; d += 1) {
-    if (d === own) continue;
-    if (uses(d, title) >= 1 || uses(d, body) >= 2) out.add(d);
-  }
-  return [...out];
+  return [item.domain ?? MEDIA[item.media] ?? 0];
 }
 
 const startOfDay = (at) => { const d = new Date(at); d.setHours(0, 0, 0, 0); return d.getTime(); };
@@ -61,15 +46,14 @@ export const mentions = (item, terms) => {
 };
 
 // The kept items an Ask is after, best first: those in its window, those it
-// shares words with, and those in the domains its words name.
+// shares words with, and those about the facets of the person it is about.
 // With the meaning reader's vectors (the asked words' and each item's, site/router/meaning.mjs),
 // an item whose meaning is near the ask's (at least `near`) meets it as a shared word does.
-export function drawOn(items, prompt, { now = Date.now(), most = 5, vector = null, near = 1 } = {}) {
+// facetsOf gives the facets (ICF codes) a meaning vector is about.
+export function drawOn(items, prompt, { now = Date.now(), most = 5, vector = null, near = 1, facetsOf = null } = {}) {
   const asked = [...new Set(termsOf(prompt))];
   const span = windowOf(prompt, now);
-  const named = new Set();
-  const text = lower(prompt);
-  for (let d = 0; d < VOCABULARY.length; d += 1) if (uses(d, text)) named.add(d);
+  const named = new Set(vector && facetsOf ? facetsOf(vector) : []);
   if (!asked.length && !span && !named.size && !vector) return [];
   const scored = [];
   for (const item of items) {
@@ -83,8 +67,7 @@ export function drawOn(items, prompt, { now = Date.now(), most = 5, vector = nul
     if (span && !inSpan && !score) continue;
     // In a span, what happens in it (an event, a timed note) comes before what only arrived in it.
     if (inSpan) score += (item.media === "calendar" && item.component !== "VFREEBUSY") || item.start != null ? 4 : 3;
-    const domains = item.domains ?? domainsOf(item);
-    if (domains.some((d) => named.has(d))) score += 1;
+    if ((item.facets ?? []).some((f) => named.has(f))) score += 1;
     if (score > (span || asked.length ? 1 : 0)) scored.push({ item, score });
   }
   // A span is told in its own order, earliest first.
