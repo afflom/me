@@ -1,0 +1,16 @@
+{
+  "comment": "The steps of the vcard program (generators/vcard/), run in order by tools/generators/run.sh. A step reads repository files and the .gen/ outputs of this program's earlier steps only.",
+  "steps": [
+    {
+      "generator": "vcard",
+      "each": {
+        "file": "test/oracle/vcard.json",
+        "array": ".examples"
+      },
+      "inputs": [
+        "site/read/vcard.table.mjs"
+      ],
+      "output": ".gen/vcard-reads"
+    }
+  ]
+}

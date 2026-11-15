@@ -400,8 +400,8 @@ application's answer is decided by `route`.
 `site/card.html`, `card.css` and `card.mjs` are the Prism's own surface, put in
 the workspace slots by `bootstrap/page.mjs`. The places, acts, settings and
 every visible word are `PrismSurface` (`app/specs/surface/spec.json`, written
-by `tools/surface/gen.py` into the LexLean model, `site/surface/surface.mjs`
-and `site/card.html`; the look's tones into the token block of `site/card.css`). Its 18 guarantees, proved by `decide` against
+by `tools/surface/gen.py` into the LexLean model and `site/card.html`, and by
+the LexLean generator GenSurface into `site/surface/surface.mjs`; the look's tones into the token block of `site/card.css`). Its 18 guarantees, proved by `decide` against
 `Foundation.Me.V1.Model`, place every owner view exactly once, give each place
 exactly its view's role and domains, group the menu by role, keep outbound
 acts in the Correspondent, Planner and Publisher roles, keep a note at its

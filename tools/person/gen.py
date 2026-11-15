@@ -1,38 +1,17 @@
 """The whole-person model, made from WHO's ICF: python3 -I tools/person/gen.py [--check] [--cache DIR]
 
-A twin of a person needs a model of the whole person. The Prism's is the
-International Classification of Functioning, Disability and Health (ICF), as
-WHO publishes it in its classification release, pinned in
-app/specs/oracle/spec.json under `classifications`: the release's archive by
-SHA-256, its licence terms by SHA-256.
-
-The release carries the classification twice, as a tab-separated tabulation
-and as a workbook. Each is read by its own reader (the tabulation by Python's
-csv module, the workbook by its Office Open XML parts, ECMA-376), and the two
-must agree on every entity, field by field, or nothing is written. The
-classification is then held to its own structure, or refused:
-  - every entity's parent is an entity of the release, and there is exactly
-    one root per tabulation (the ICF categories and the ICF qualifiers);
-  - a block's or category's title carries one "- " per level below its root,
-    which the tabulation uses to draw the hierarchy (the model keeps the title
-    without it);
-  - a category's code begins with its component's letter (b, s, d, e; q for
-    a qualifier), and a category under a category extends its parent's code
-    by one level (ICF 2001, coding conventions: one digit for a chapter, two
-    for the second level, one each for the third and fourth);
-  - DepthInKind counts the categories above it plus one, IsLeaf holds exactly
-    when no entity names it as parent, and codes and URIs are unique;
-  - its URIs are WHO's entity and linearization URIs for the entity's own id.
-
-What the model keeps of each entity is every field of the release except the
-browser link (a spreadsheet formula, which is the URI again): its foundation
-URI, linearization URI, code, block id, title, kind, depth in kind, residual,
-leaf, coding note and parent, so every stored entity keeps its code, title
-and URI as the licence requires (terms 1.2.3). Nothing is added to an entity;
-the model's own functions over the entities are marked as the Prism's.
-
-Writes site/person/icf.mjs, which the page loads. --check writes nothing and
-refuses a stale model. --cache DIR reads and keeps the fetched files there.
+The whole person is WHO's ICF release pinned in app/specs/oracle/spec.json
+(`classifications`). Its tabulation (csv) and workbook (OOXML, ECMA-376) must
+agree field by field, and the classification must hold its structure across
+entities: parents in the release, one root per tabulation, a "- " per level in
+titles, codes led by the component's letter and extending the parent's by one
+level, DepthInKind, IsLeaf, unique codes and URIs. Each line on its own is
+generators/person/src/GenIcf.lex.tex's to check: it writes the rows,
+site/person/icf-rows.mjs (tools/generators/run.sh, GN-01), from the tabulation
+kept at app/specs/oracle/icf/, and they must be these entities field by field.
+Every entity keeps its code, title and URI (licence terms 1.2.3); the model's
+own functions in site/person/icf.mjs are marked as the Prism's (1.2.5).
+--check writes nothing and refuses a stale model; --cache DIR keeps fetches.
 """
 import csv
 import hashlib
@@ -162,21 +141,7 @@ LINEAR = "http://id.who.int/icd/release/11/icf/"
 by_uri = {}
 for n, row in enumerate(rows):
     uri, linear = row["Foundation URI"], row["Linearization URI"]
-    if row["ClassKind"] not in ("chapter", "block", "category"):
-        refuse(f"entity {n + 1} is of kind {row['ClassKind']}")
-    if row["IsResidual"] not in ("True", "False") or row["isLeaf"] not in ("True", "False") or not row["DepthInKind"].isdigit():
-        refuse(f"entity {n + 1} has a flag or depth that is not one")
-    if uri:
-        if not uri.startswith(FOUNDATION) or not uri[len(FOUNDATION):].isdigit():
-            refuse(f"entity {n + 1}'s foundation URI {uri} is not a WHO entity URI")
-        if linear != LINEAR + uri[len(FOUNDATION):]:
-            refuse(f"{uri}'s linearization URI {linear} is not its own")
-    else:
-        # A residual category (other specified, unspecified) exists only in the
-        # linearization: its URI is its parent's, then /other or /unspecified.
-        parent = row["Parent"]
-        if row["IsResidual"] != "True" or not parent.startswith(FOUNDATION) or linear not in (LINEAR + parent[len(FOUNDATION):] + "/other", LINEAR + parent[len(FOUNDATION):] + "/unspecified"):
-            refuse(f"entity {n + 1} ({linear}) has no foundation URI and is not a residual of its parent")
+    # Each line on its own (kind, flags, URIs, residuals) is GenIcf's to refuse.
     if linear in by_uri or (uri and uri in by_uri):
         refuse(f"{linear} is in the release twice")
     by_uri[linear] = n
@@ -239,15 +204,16 @@ for n, row in enumerate(rows):
         code,
         row["BlockId"],
         title,
+        level,
         kind,
         int(row["DepthInKind"]),
         row["IsResidual"] == "True",
         leaf,
-        by_uri[row["Parent"]] if row["Parent"] else -1,
+        rows[by_uri[row["Parent"]]]["Foundation URI"][len(FOUNDATION):] if row["Parent"] else None,
         row["CodingNote"],
     ])
 
-counts = {k: sum(1 for e in entities if e[5] == k) for k in ("chapter", "block", "category")}
+counts = {k: sum(1 for e in entities if e[6] == k) for k in ("chapter", "block", "category")}
 release = {
     "title": source["title"],
     "release": source["release"],
@@ -274,18 +240,19 @@ lines = [
     "",
     f"export const RELEASE = Object.freeze({q(release)});",
     "",
-    "// Each entity, in the release's order: foundation id (none for a residual",
-    "// category, which is only in the linearization), linearization id, code, block id, title,",
-    "// kind, depth in kind, residual, leaf, parent (its index, or -1), coding note.",
-    "export const FIELDS = Object.freeze([\"id\", \"linear\", \"code\", \"block\", \"title\", \"kind\", \"depth\", \"residual\", \"leaf\", \"parent\", \"note\"]);",
-    "const ROWS = [",
-    *[f"  {q(e)}," for e in entities],
-    "];",
+    "// Each entity, in the release's order, as generators/person/src/GenIcf.lex.tex",
+    "// writes it from the release's tabulation (app/specs/oracle/icf): foundation id",
+    "// (none for a residual category, which is only in the linearization), linearization",
+    "// id, code, block id, title, level, kind, depth in kind, residual, leaf, parent's",
+    "// foundation id (none for a root), coding note.",
+    "import { ROWS } from \"./icf-rows.mjs\";",
+    "export const FIELDS = Object.freeze([\"id\", \"linear\", \"code\", \"block\", \"title\", \"level\", \"kind\", \"depth\", \"residual\", \"leaf\", \"parent\", \"note\"]);",
     "",
     "// The Prism's own functions over the entities follow (not WHO's: ICF terms 1.2.5).",
+    "const INDEX = new Map(ROWS.flatMap(([id], i) => (id ? [[id, i]] : [])));",
     "const entity = (i) => {",
-    "  const [id, linear, code, block, title, kind, depth, residual, leaf, parent, note] = ROWS[i];",
-    "  return Object.freeze({ index: i, uri: id ? RELEASE.foundation + id : null, release: RELEASE.linearization + linear, code, block, title, kind, depth, residual, leaf, parent, note });",
+    "  const [id, linear, code, block, title, level, kind, depth, residual, leaf, parent, note] = ROWS[i];",
+    "  return Object.freeze({ index: i, uri: id ? RELEASE.foundation + id : null, release: RELEASE.linearization + linear, code, block, title, level, kind, depth, residual, leaf, parent: parent === null ? -1 : INDEX.get(parent), note });",
     "};",
     "export const ENTITIES = Object.freeze(ROWS.map((_, i) => entity(i)));",
     "const BY_CODE = new Map(ENTITIES.filter((e) => e.code).map((e) => [e.code, e]));",
@@ -324,12 +291,43 @@ lines = [
 ]
 text = "\n".join(lines)
 OUT = ROOT / source["model"]
+# The release's tabulation, kept byte for byte so the LexLean generator
+# (generators/person, tools/generators/run.sh) writes the rows from it; and the
+# rows it writes, which must be these entities field by field.
+COPY = ROOT / "app/specs/oracle/icf" / source["tabulation"]
+ROWS_OUT = OUT.with_name("icf-rows.mjs")
+NOTICE = COPY.with_name("NOTICE")
+notice = "\n".join([
+    f"{source['tabulation']} is from {source['title']},",
+    f"exactly as WHO publishes it in {source['url']}",
+    f"(SHA-256 {source['sha256']}), unaltered.",
+    f"{source['licence']['citation']}.",
+    f"Licence terms: {source['licence']['terms']}.",
+    "Written by tools/person/gen.py, which refuses a copy that is not the release's.",
+    "",
+])
 if PLANT:
     sys.exit("person: the planted defect was not refused")
+
+
+def rows_agree():
+    """The rows GenIcf wrote are these entities, field by field."""
+    lines = ROWS_OUT.read_text(encoding="utf-8").splitlines() if ROWS_OUT.exists() else []
+    got = [json.loads(line[len("ROWS.push(") : -len(");")]) for line in lines if line.startswith("ROWS.push(")]
+    if got != entities:
+        refuse(f"{ROWS_OUT.relative_to(ROOT)} is not the release's entities ({len(got)} rows of {len(entities)}): run tools/generators/run.sh")
+
+
 if CHECK:
+    if not COPY.exists() or COPY.read_bytes() != tab_raw or not NOTICE.exists() or NOTICE.read_text(encoding="utf-8") != notice:
+        refuse(f"{COPY.relative_to(ROOT)} is not the release's tabulation: run python3 -I tools/person/gen.py")
     if not OUT.exists() or OUT.read_text(encoding="utf-8") != text:
         refuse(f"{source['model']} is stale: run python3 -I tools/person/gen.py")
+    rows_agree()
     sys.exit(0)
+COPY.parent.mkdir(parents=True, exist_ok=True)
+COPY.write_bytes(tab_raw)
+NOTICE.write_text(notice, encoding="utf-8")
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text(text, encoding="utf-8")
 print(f"person: ICF {source['release']} ({release['version']}), {counts['category']} categories, {counts['block']} blocks, {counts['chapter']} roots, from both forms of the release")

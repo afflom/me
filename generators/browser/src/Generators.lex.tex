@@ -71,7 +71,9 @@ definition{
     | Option.none => (refused 0x6e65656473202e67656e2f62726f777365722d696e64657820616e64207468652070696e6e65642049444c2066696c652074686520746172676574206e616d6573)
     | Option.some reasons => (if ((Foundation.Bytes::byteLength reasons) =? 0) then (written 0x) else (refused reasons))) else (if (Foundation.Tar::sameBytes name 0x62726f7773657261646170746572) then (match (GenBrowser::brCheckAdapter archive target)
     | Option.none => (refused 0x6e65656473202e67656e2f62726f777365722d696e64657820616e642074686520616461707465722074686520746172676574206e616d6573)
-    | Option.some reasons => (if ((Foundation.Bytes::byteLength reasons) =? 0) then (written 0x) else (refused reasons))) else 0x696e76616c6964))))))))))),
+    | Option.some reasons => (if ((Foundation.Bytes::byteLength reasons) =? 0) then (written 0x) else (refused reasons))) else (if (Foundation.Tar::sameBytes name 0x62726f7773657270726f6265) then (match (GenBrowser::brProbe archive)
+    | Option.none => (refused 0x6e65656473202e67656e2f62726f777365722d696e646578)
+    | Option.some file => (written file)) else 0x696e76616c6964)))))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

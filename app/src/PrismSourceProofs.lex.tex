@@ -37,6 +37,8 @@ theorem{
       PrismSource::prismSourceRule5Misses,
       PrismSource::prismSourceRule6,
       PrismSource::prismSourceRule6Misses,
+      PrismSource::prismSourceRule7,
+      PrismSource::prismSourceRule7Misses,
       PrismSource::prismSourceServiceCalendar,
       PrismSource::prismSourceServiceDiscord,
       PrismSource::prismSourceServiceGmail,
@@ -81,6 +83,8 @@ theorem{
       PrismSource::prismSourceRule5Misses,
       PrismSource::prismSourceRule6,
       PrismSource::prismSourceRule6Misses,
+      PrismSource::prismSourceRule7,
+      PrismSource::prismSourceRule7Misses,
       PrismSource::prismSourceServiceCalendar,
       PrismSource::prismSourceServiceDiscord,
       PrismSource::prismSourceServiceGmail,
@@ -125,6 +129,8 @@ theorem{
       PrismSource::prismSourceRule5Misses,
       PrismSource::prismSourceRule6,
       PrismSource::prismSourceRule6Misses,
+      PrismSource::prismSourceRule7,
+      PrismSource::prismSourceRule7Misses,
       PrismSource::prismSourceServiceCalendar,
       PrismSource::prismSourceServiceDiscord,
       PrismSource::prismSourceServiceGmail,
@@ -169,6 +175,8 @@ theorem{
       PrismSource::prismSourceRule5Misses,
       PrismSource::prismSourceRule6,
       PrismSource::prismSourceRule6Misses,
+      PrismSource::prismSourceRule7,
+      PrismSource::prismSourceRule7Misses,
       PrismSource::prismSourceServiceCalendar,
       PrismSource::prismSourceServiceDiscord,
       PrismSource::prismSourceServiceGmail,
@@ -213,6 +221,8 @@ theorem{
       PrismSource::prismSourceRule5Misses,
       PrismSource::prismSourceRule6,
       PrismSource::prismSourceRule6Misses,
+      PrismSource::prismSourceRule7,
+      PrismSource::prismSourceRule7Misses,
       PrismSource::prismSourceServiceCalendar,
       PrismSource::prismSourceServiceDiscord,
       PrismSource::prismSourceServiceGmail,
@@ -257,6 +267,8 @@ theorem{
       PrismSource::prismSourceRule5Misses,
       PrismSource::prismSourceRule6,
       PrismSource::prismSourceRule6Misses,
+      PrismSource::prismSourceRule7,
+      PrismSource::prismSourceRule7Misses,
       PrismSource::prismSourceServiceCalendar,
       PrismSource::prismSourceServiceDiscord,
       PrismSource::prismSourceServiceGmail,
@@ -264,6 +276,52 @@ theorem{
       PrismSource::prismSourceServiceOther,
       PrismSource::prismSourceServiceWhatsapp,
       breaksInv006
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv007,
+  parameters: [request : PrismSource::PrismSourceRequest],
+  result: Bool,
+  body: ((((((((project request service) <? 6) && ((project request route) <? 3)) && ((project request act) <? 2)) && ((project request halted) <? 2)) && ((project request service) =? (PrismSource::prismSourceServiceLinkedin))) && ((project request route) =? (PrismSource::prismSourceRouteSeen))) && ((PrismSource::prismSourceJudge request) =? (PrismSource::prismSourceAnswerRead)))
+}
+
+theorem{
+  name: inv007Holds,
+  parameters: [request : PrismSource::PrismSourceRequest],
+  statement: ((breaksInv007 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismSource::prismSourceActRead,
+      PrismSource::prismSourceActWrite,
+      PrismSource::prismSourceAnswerRead,
+      PrismSource::prismSourceAnswerRefuse,
+      PrismSource::prismSourceHaltedNo,
+      PrismSource::prismSourceHaltedYes,
+      PrismSource::prismSourceJudge,
+      PrismSource::prismSourceRouteExport,
+      PrismSource::prismSourceRouteOwn,
+      PrismSource::prismSourceRouteSeen,
+      PrismSource::prismSourceRule1,
+      PrismSource::prismSourceRule2,
+      PrismSource::prismSourceRule3,
+      PrismSource::prismSourceRule4,
+      PrismSource::prismSourceRule4Misses,
+      PrismSource::prismSourceRule5,
+      PrismSource::prismSourceRule5Misses,
+      PrismSource::prismSourceRule6,
+      PrismSource::prismSourceRule6Misses,
+      PrismSource::prismSourceRule7,
+      PrismSource::prismSourceRule7Misses,
+      PrismSource::prismSourceServiceCalendar,
+      PrismSource::prismSourceServiceDiscord,
+      PrismSource::prismSourceServiceGmail,
+      PrismSource::prismSourceServiceLinkedin,
+      PrismSource::prismSourceServiceOther,
+      PrismSource::prismSourceServiceWhatsapp,
+      breaksInv007
     ]
   },
   axioms: [Quot.sound, propext]
