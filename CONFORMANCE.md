@@ -544,6 +544,21 @@ Never re-derived, vendored, or gated on.
 | `SRC-RFC6473` | https://www.rfc-editor.org/rfc/rfc6473.txt | `VC-01` |
 | `SRC-RFC6869` | https://www.rfc-editor.org/rfc/rfc6869.txt | `VC-01` |
 | `SRC-RFC7852` | https://www.rfc-editor.org/rfc/rfc7852.txt | `VC-01` |
+| `SRC-VOCAB-SCHEMAORG-CURRENT-HTTPS-JSONLD` | https://schema.org/version/30.1/schemaorg-current-https.jsonld | `RT-01` |
+| `SRC-VOCAB-VCARD-PROPERTIES-CSV` | https://www.iana.org/assignments/vcard-elements/properties.csv | `RT-01` |
+| `SRC-VOCAB-ICALENDAR-COMPONENTS-CSV` | https://www.iana.org/assignments/icalendar/components.csv | `RT-01` |
+| `SRC-VOCAB-ICALENDAR-PROPERTIES-CSV` | https://www.iana.org/assignments/icalendar/properties.csv | `RT-01` |
+| `SRC-VOCAB-MESSAGE-HEADERS-XML` | https://www.iana.org/assignments/message-headers/message-headers.xml | `RT-01` |
+| `SRC-VOCAB-JSCONTACT-XML` | https://www.iana.org/assignments/jscontact/jscontact.xml | `RT-01` |
+| `SRC-VOCAB-JSCALENDAR-XML` | https://www.iana.org/assignments/jscalendar/jscalendar.xml | `RT-01` |
+| `SRC-VOCAB-ACTIVITYSTREAMS-OWL-TTL` | https://www.w3.org/ns/activitystreams-owl | `RT-01` |
+| `SRC-VOCAB-PROV-O-TTL` | https://www.w3.org/ns/prov-o | `RT-01` |
+| `SRC-VOCAB-DCTERMS-TTL` | https://www.dublincore.org/specifications/dublin-core/dcmi-terms/dublin_core_terms.ttl | `RT-01` |
+| `SRC-VOCAB-FOAF-RDF` | http://xmlns.com/foaf/spec/index.rdf | `RT-01` |
+| `SRC-VOCAB-SKOS-RDF` | https://www.w3.org/2009/08/skos-reference/skos.rdf | `RT-01` |
+| `SRC-VOCAB-OGP-TTL` | https://ogp.me/ns/ogp.me.ttl | `RT-01` |
+| `SRC-VOCAB-SCHEMAORG-ALL-HTTPS-JSONLD` | https://raw.githubusercontent.com/schemaorg/schemaorg/5f2d8cdec99b7329459ef6584e94b6a840f88471/data/releases/30.1/schemaorg-all-https.jsonld | `RT-01` |
+| `SRC-VOCAB-JSONLDCONTEXT-JSONLD` | https://schema.org/docs/jsonldcontext.jsonld | `RT-01` |
 
 ## Claims that are not conformance IDs
 
