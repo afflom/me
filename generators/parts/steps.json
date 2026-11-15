@@ -132,6 +132,244 @@
         ".gen/pt-root",
         ".gen/pt-mentions"
       ]
+    },
+    {
+      "generator": "ptground",
+      "output": ".gen/pt-ground",
+      "lines": ".gen/pt-parts",
+      "inputs": [
+        "app/specs/parts/spec.json"
+      ]
+    },
+    {
+      "generator": "ptgroundcheck",
+      "output": ".gen/pt-ground-check",
+      "inputs": [
+        ".gen/pt-parts",
+        ".gen/pt-ground"
+      ]
+    },
+    {
+      "generator": "ptstrata",
+      "output": ".gen/pt-strata-check",
+      "inputs": [
+        "app/specs/parts/spec.json"
+      ]
+    },
+    {
+      "generator": "ptconcerns",
+      "output": ".gen/pt-concerns",
+      "inputs": [
+        "app/specs/product/spec.json"
+      ]
+    },
+    {
+      "generator": "ptconcerncheck",
+      "output": ".gen/pt-concern-check",
+      "inputs": [
+        "app/specs/product/spec.json"
+      ]
+    },
+    {
+      "generator": "ptanswers",
+      "output": ".gen/pt-answers",
+      "glob": [
+        "app/specs/product/journeys/*.json"
+      ]
+    },
+    {
+      "generator": "ptwhen",
+      "output": ".gen/pt-when",
+      "glob": [
+        "app/specs/product/journeys/*.json"
+      ]
+    },
+    {
+      "generator": "ptworks",
+      "output": ".gen/pt-works",
+      "glob": [
+        "app/specs/product/journeys/*.json"
+      ]
+    },
+    {
+      "generator": "ptjourneycheck",
+      "output": ".gen/pt-journey-check",
+      "glob": [
+        "app/specs/product/journeys/*.json"
+      ],
+      "inputs": [
+        ".gen/pt-concerns",
+        "app/specs/parts/spec.json"
+      ]
+    },
+    {
+      "generator": "pttrace",
+      "output": ".gen/pt-trace-check",
+      "inputs": [
+        "app/specs/product/spec.json",
+        "app/specs/parts/spec.json",
+        ".gen/pt-concerns",
+        ".gen/pt-answers"
+      ]
+    },
+    {
+      "generator": "ptfj",
+      "output": ".gen/pt-fj",
+      "glob": [
+        "app/specs/product/features/*.json"
+      ],
+      "inputs": [
+        ".gen/pt-parts"
+      ]
+    },
+    {
+      "generator": "ptfa",
+      "output": ".gen/pt-fa",
+      "glob": [
+        "app/specs/product/features/*.json"
+      ],
+      "inputs": [
+        ".gen/pt-parts"
+      ]
+    },
+    {
+      "generator": "ptfacets",
+      "output": ".gen/pt-facets",
+      "glob": [
+        "app/specs/product/facets/*.json"
+      ]
+    },
+    {
+      "generator": "ptcoherence",
+      "output": ".gen/pt-coherence",
+      "glob": [
+        "app/specs/coherence/facets/*.json"
+      ],
+      "inputs": [
+        ".gen/pt-parts"
+      ]
+    },
+    {
+      "generator": "ptdispatch",
+      "output": ".gen/pt-dispatch",
+      "glob": [
+        "app/src/*.lex.tex"
+      ],
+      "inputs": [
+        ".gen/pt-root",
+        ".gen/pt-parts"
+      ]
+    },
+    {
+      "generator": "ptuses",
+      "output": ".gen/pt-uses",
+      "inputs": [
+        ".gen/pt-imports",
+        ".gen/pt-twins",
+        ".gen/pt-parts"
+      ]
+    },
+    {
+      "generator": "ptcarried",
+      "output": ".gen/pt-carried",
+      "inputs": [
+        "app/specs/parts/spec.json",
+        ".gen/pt-ground",
+        ".gen/pt-parts"
+      ]
+    },
+    {
+      "generator": "ptflow",
+      "output": ".gen/pt-flow",
+      "lines": ".gen/pt-parts",
+      "inputs": [
+        ".gen/pt-uses",
+        ".gen/pt-carried",
+        ".gen/pt-fj",
+        ".gen/pt-facets",
+        ".gen/pt-coherence",
+        ".gen/pt-dispatch"
+      ]
+    },
+    {
+      "generator": "ptproofs",
+      "output": ".gen/pt-proofs",
+      "inputs": [
+        ".gen/pt-ground",
+        "app/specs/parts/spec.json"
+      ]
+    },
+    {
+      "generator": "ptserves",
+      "output": ".gen/pt-serves",
+      "inputs": [
+        ".gen/pt-flow",
+        ".gen/pt-uses",
+        ".gen/pt-carried",
+        ".gen/pt-entries",
+        ".gen/pt-root",
+        ".gen/pt-proofs"
+      ]
+    },
+    {
+      "generator": "ptreached",
+      "output": ".gen/pt-reached",
+      "split": "test/parts/reach.txt"
+    },
+    {
+      "generator": "ptnamed",
+      "output": ".gen/pt-named",
+      "glob": [
+        "crates/conformance/tests/*.rs"
+      ],
+      "inputs": [
+        ".gen/pt-parts"
+      ]
+    },
+    {
+      "generator": "ptproved",
+      "output": ".gen/pt-proved",
+      "inputs": [
+        ".gen/pt-uses",
+        ".gen/pt-carried",
+        ".gen/pt-proofs"
+      ]
+    },
+    {
+      "generator": "ptchecked",
+      "output": ".gen/pt-checked",
+      "inputs": [
+        ".gen/pt-parts",
+        ".gen/pt-reached",
+        ".gen/pt-fa",
+        ".gen/pt-named",
+        ".gen/pt-proved"
+      ]
+    },
+    {
+      "generator": "ptcert",
+      "output": ".gen/pt-missing",
+      "lines": ".gen/pt-parts",
+      "inputs": [
+        ".gen/pt-ground",
+        "app/specs/parts/spec.json",
+        ".gen/pt-serves",
+        ".gen/pt-answers",
+        ".gen/pt-when",
+        ".gen/pt-checked"
+      ]
+    },
+    {
+      "generator": "ptdebt",
+      "output": ".gen/pt-debt-check",
+      "inputs": [
+        ".gen/pt-missing",
+        ".gen/pt-ground",
+        "app/specs/parts/spec.json",
+        ".gen/pt-serves",
+        ".gen/pt-answers",
+        ".gen/pt-works"
+      ]
     }
   ]
 }
