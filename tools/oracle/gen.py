@@ -788,6 +788,19 @@ for source in SPEC.get("registries", []):
         f"statement = {q('Every element the ' + source['title'] + ' registers for ' + source['standard'].upper() + ', each read as its section defines it')}",
         'realized_by = ["OR-01"]',
     ]
+# A classification the Prism's models are made of is cited the same way; its
+# evidence is the gate of the generator that makes the model from it.
+for source in SPEC.get("classifications", []):
+    rows += [
+        "",
+        "[[authority]]",
+        f"id = {q('SRC-' + source['key'].upper())}",
+        f"name = {q(source['title'])}",
+        f"citation = {q(source['url'])}",
+        f"checksum = {q('sha256:' + source['sha256'])}",
+        f"statement = {q('Every entity of ' + source['title'] + ', with its code, title and URI, as WHO publishes it; ' + source['licence']['citation'])}",
+        'realized_by = ["WP-01"]',
+    ]
 authorities = "\n".join(rows) + "\n"
 
 if "--check" in args:
@@ -799,4 +812,4 @@ if "--check" in args:
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text(text, encoding="utf-8")
 AUTHORITIES.write_text(authorities, encoding="utf-8")
-print(f"oracle: {len(corpus)} examples from {len(SPEC['sources'])} specifications, each a cited authority")
+print(f"oracle: {len(corpus)} examples from {len(SPEC['sources'])} specifications and {len(SPEC.get('classifications', []))} classifications, each a cited authority")

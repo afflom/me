@@ -44,9 +44,10 @@ fn oracle_or_01() {
     let pinned = spec.matches("\"sha256\"").count();
     assert!(pinned > 0, "OR-01: the oracle pins at least one source");
     assert_eq!(
-        authorities.matches("realized_by = [\"OR-01\"]").count(),
+        authorities.matches("realized_by = [\"OR-01\"]").count()
+            + authorities.matches("realized_by = [\"WP-01\"]").count(),
         pinned,
-        "OR-01: every pinned source is a cited authority realized by OR-01"
+        "OR-01: every pinned source is a cited authority, realized by OR-01 (an example source) or WP-01 (a classification)"
     );
     assert!(
         read(".github/workflows/pages.yml").contains("suites=(test/**/*.test.mjs)"),
