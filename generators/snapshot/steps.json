@@ -1,5 +1,5 @@
 {
-  "comment": "The steps of the snapshot program (generators/snapshot/), run in order by tools/generators/run.sh. jsonpatchoracle applies every case of the json-patch-tests suite (app/specs/oracle/json-patch-tests, pinned in its lock.json) as RFC 6902 says and refuses when any result differs from the case.",
+  "comment": "The steps of the snapshot program (generators/snapshot/), run in order by tools/generators/run.sh. jsonpatchoracle applies every case of the json-patch-tests suite (app/specs/oracle/json-patch-tests) as RFC 6902 says; jcspairs canonicalizes every input of the RFC 8785 author's test data (app/specs/oracle/json-canonicalization) and compares it with its output; jcsnumbers serializes every row of RFC 8785 Appendix B (app/specs/oracle/rfc8785) and writes the rows it held. Each refuses on any difference.",
   "steps": [
     {
       "generator": "jsonpatchoracle",
@@ -8,6 +8,29 @@
         "app/specs/oracle/json-patch-tests/tests.json"
       ],
       "output": ".gen/jsonpatch-oracle"
+    },
+    {
+      "generator": "jcspairs",
+      "inputs": [
+        "app/specs/oracle/json-canonicalization/input/arrays.json",
+        "app/specs/oracle/json-canonicalization/input/french.json",
+        "app/specs/oracle/json-canonicalization/input/structures.json",
+        "app/specs/oracle/json-canonicalization/input/unicode.json",
+        "app/specs/oracle/json-canonicalization/input/values.json",
+        "app/specs/oracle/json-canonicalization/input/weird.json",
+        "app/specs/oracle/json-canonicalization/output/arrays.json",
+        "app/specs/oracle/json-canonicalization/output/french.json",
+        "app/specs/oracle/json-canonicalization/output/structures.json",
+        "app/specs/oracle/json-canonicalization/output/unicode.json",
+        "app/specs/oracle/json-canonicalization/output/values.json",
+        "app/specs/oracle/json-canonicalization/output/weird.json"
+      ],
+      "output": ".gen/jcs-pairs"
+    },
+    {
+      "generator": "jcsnumbers",
+      "split": "app/specs/oracle/rfc8785/rfc8785-appendix-b.txt",
+      "output": "app/specs/oracle/rfc8785/appendix-b.txt"
     }
   ]
 }
