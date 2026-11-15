@@ -4,6 +4,23 @@
   "pieceMaximum": 30720,
   "steps": [
     {
+      "generator": "registerkey",
+      "each": {
+        "file": "app/specs/standards/spec.json",
+        "array": ".standards"
+      },
+      "output": ".gen/register-keys"
+    },
+    {
+      "generator": "systemcheck",
+      "inputs": [
+        "app/specs/system/spec.json",
+        "app/prompts/set.json",
+        ".gen/register-keys"
+      ],
+      "output": ".gen/system-check"
+    },
+    {
       "generator": "archindex",
       "split": "app/src/Architecture.lex.tex",
       "output": ".gen/arch-index"
