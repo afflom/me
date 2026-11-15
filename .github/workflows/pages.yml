@@ -69,6 +69,13 @@ jobs:
       - name: Check that every spec field, rule and setting changes an answer
         shell: bash
         run: python3 -I tools/realize/gate.py --check
+      # HW-01, the shrink-only ratchet: every producer runs in a scratch copy,
+      # every file is compared with the pinned template and frame, and no file
+      # may become hand-written, nor any class of hand-written files grow,
+      # since the base revision (the merge base with main, or main's parent).
+      - name: Check that no hand-written part was added or grew
+        shell: bash
+        run: python3 -I tools/handwritten/gate.py --full --check
       # The proof is the slow part (15 to 25 minutes). This job reuses one
       # exactly as bootstrap.yml and `just app` do: the cache key only finds a
       # candidate, and `xtask

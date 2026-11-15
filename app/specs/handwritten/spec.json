@@ -1,0 +1,328 @@
+{
+  "spec": "me/handwritten-ratchet/1",
+  "about": "Where every tracked file of the Prism comes from. A file is generated when a producer below writes it, upstream when it is byte-equal to the pinned template or named with its hash in a lock, model when it is under a model root, and hand-written otherwise. Hand-written files may only shrink: none may be added, none may grow, and the ledger is tight, after verdant-resonance VR-67..VR-69 (prism/handwritten-ratchet.json, measureHandwrittenAndAxiomRatchetState).",
+  "model": [
+    "app/specs/",
+    "app/prompts/"
+  ],
+  "producers": [
+    {
+      "id": "prompts",
+      "run": [
+        "python3",
+        "-I",
+        "tools/prompts/gen.py"
+      ]
+    },
+    {
+      "id": "coherence",
+      "run": [
+        "python3",
+        "-I",
+        "tools/coherence/gen.py"
+      ]
+    },
+    {
+      "id": "dest",
+      "run": [
+        "python3",
+        "-I",
+        "tools/dest/gen.py"
+      ]
+    },
+    {
+      "id": "holon",
+      "run": [
+        "python3",
+        "-I",
+        "tools/holon/gen.py"
+      ]
+    },
+    {
+      "id": "kappa",
+      "run": [
+        "python3",
+        "-I",
+        "tools/kappa/gen.py"
+      ]
+    },
+    {
+      "id": "oracle",
+      "run": [
+        "python3",
+        "-I",
+        "tools/oracle/gen.py"
+      ]
+    },
+    {
+      "id": "source",
+      "run": [
+        "python3",
+        "-I",
+        "tools/source/gen.py"
+      ]
+    },
+    {
+      "id": "surface",
+      "run": [
+        "python3",
+        "-I",
+        "tools/surface/gen.py"
+      ]
+    },
+    {
+      "id": "uorc",
+      "run": [
+        "python3",
+        "-I",
+        "tools/uorc/gen.py"
+      ]
+    },
+    {
+      "id": "facet-resonance",
+      "run": [
+        "python3",
+        "-I",
+        "tools/facet/gen.py",
+        "app/specs/resonance/spec.json"
+      ]
+    },
+    {
+      "id": "facet-router",
+      "run": [
+        "python3",
+        "-I",
+        "tools/facet/gen.py",
+        "app/specs/router/spec.json"
+      ]
+    },
+    {
+      "id": "realize",
+      "run": [
+        "python3",
+        "-I",
+        "tools/realize/gate.py"
+      ]
+    },
+    {
+      "id": "root",
+      "run": [
+        "python3",
+        "-I",
+        "tools/prism_root.py",
+        "app/src"
+      ]
+    },
+    {
+      "id": "conformance",
+      "run": [
+        "cargo",
+        "run",
+        "-q",
+        "--locked",
+        "-p",
+        "xtask",
+        "--",
+        "check-model",
+        "--write"
+      ],
+      "env": {
+        "CARGO_TARGET_DIR": "@root/target/handwritten-cargo"
+      }
+    }
+  ],
+  "built": [
+    {
+      "id": "guests",
+      "paths": [
+        "site/*/guest/*.wasm",
+        "site/vault/test/guests/*.wasm"
+      ],
+      "by": "tools/guests/build.sh in the locked SDK",
+      "checked": "GU-01 (tools/guests/gen.py check)"
+    },
+    {
+      "id": "drawn",
+      "paths": [
+        "site/og.png",
+        "site/icons/*.png"
+      ],
+      "by": "bootstrap/og.py and bootstrap/icons.py, drawn again by every page build",
+      "checked": "bootstrap/page.mjs refuses an image not drawn for site/app.json"
+    },
+    {
+      "id": "cargo",
+      "paths": [
+        "Cargo.lock"
+      ],
+      "by": "cargo, resolving Cargo.toml",
+      "checked": "every cargo command runs --locked"
+    },
+    {
+      "id": "npm",
+      "paths": [
+        "package-lock.json"
+      ],
+      "by": "npm, resolving package.json",
+      "checked": "npm ci refuses a lock that disagrees"
+    },
+    {
+      "id": "lexlean",
+      "paths": [
+        "app/lexlean.lock"
+      ],
+      "by": "lexlean lock in the locked SDK",
+      "checked": "prismpm verify refuses a stale lock"
+    },
+    {
+      "id": "frame-sync",
+      "paths": [
+        "frame.lock"
+      ],
+      "by": "bootstrap/frame-sync.mjs",
+      "checked": "bootstrap/frame-sync.mjs --check"
+    },
+    {
+      "id": "template-update",
+      "paths": [
+        "template.lock"
+      ],
+      "by": "the template-update workflow",
+      "checked": "prismpm template check"
+    }
+  ],
+  "upstream": {
+    "template": "template.lock",
+    "frame": "frame.lock",
+    "locks": [
+      "template.lock",
+      "frame.lock",
+      "brand.lock"
+    ],
+    "vendored": [
+      {
+        "prefix": "tools/builder/",
+        "repository": "https://github.com/afflom/prism-devrel",
+        "revision": "f8c0300a2c938691d08ede68a21b238e9ed9b994",
+        "subdir": "builder/",
+        "recorded": "tools/builder/VENDOR.md"
+      }
+    ]
+  },
+  "classes": [
+    {
+      "id": "docs",
+      "paths": [
+        "*.md",
+        "**/*.md",
+        "LICENSE-*",
+        "assets/**"
+      ]
+    },
+    {
+      "id": "pins",
+      "paths": [
+        "site/**/*.lock.json",
+        "site/google/platform.json",
+        "site/app.json"
+      ]
+    },
+    {
+      "id": "page-test",
+      "paths": [
+        "site/**/*.test.mjs",
+        "site/vault/test/**",
+        "test/**",
+        "try/test.mjs",
+        "identity/test.mjs",
+        "bootstrap/*.test.mjs"
+      ]
+    },
+    {
+      "id": "extension",
+      "paths": [
+        "site/extension/**"
+      ]
+    },
+    {
+      "id": "page",
+      "paths": [
+        "site/**",
+        "try/**",
+        "identity/**",
+        "frame/**"
+      ]
+    },
+    {
+      "id": "lean",
+      "paths": [
+        "app/src/**",
+        "app/language/**",
+        "app/*"
+      ]
+    },
+    {
+      "id": "conformance",
+      "paths": [
+        "crates/**",
+        "features/**",
+        "model/**",
+        "openspec/**"
+      ]
+    },
+    {
+      "id": "tooling",
+      "paths": [
+        "tools/**",
+        "xtask/**",
+        "bootstrap/**"
+      ]
+    },
+    {
+      "id": "pipeline",
+      "paths": [
+        ".github/**",
+        ".devcontainer/**",
+        ".cargo/**",
+        "Justfile",
+        "*.toml",
+        "*.json",
+        "*.lock",
+        ".gitignore",
+        ".gitattributes"
+      ]
+    }
+  ],
+  "comments": {
+    "slash": [
+      ".mjs",
+      ".js",
+      ".ts",
+      ".rs",
+      ".d.ts"
+    ],
+    "block": [
+      ".css"
+    ],
+    "hash": [
+      ".py",
+      ".sh",
+      ".toml",
+      ".yml",
+      ".yaml",
+      "Justfile",
+      ".gitignore",
+      ".gitattributes",
+      ".txt"
+    ],
+    "percent": [
+      ".tex"
+    ],
+    "markup": [
+      ".html",
+      ".svg",
+      ".md"
+    ]
+  },
+  "self": "app/specs/handwritten/ledger.json"
+}
