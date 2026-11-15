@@ -1,0 +1,20 @@
+{
+  "comment": "The steps tools/generators/run.sh runs through the generators program, in order. requestMaximum is the program's own bound (Generators.lex.tex); pieceMaximum leaves room in it for the request line and the archive's headers.",
+  "requestMaximum": 32768,
+  "pieceMaximum": 30720,
+  "steps": [
+    {
+      "generator": "archindex",
+      "split": "app/src/Architecture.lex.tex",
+      "output": ".gen/arch-index"
+    },
+    {
+      "generator": "system",
+      "inputs": [
+        "app/specs/system/spec.json",
+        ".gen/arch-index"
+      ],
+      "output": "app/src/PrismSystem.lex.tex"
+    }
+  ]
+}
