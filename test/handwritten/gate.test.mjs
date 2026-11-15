@@ -5,28 +5,24 @@
 // usage: node --test test/handwritten/gate.test.mjs
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { cpSync, mkdtempSync, readFileSync, writeFileSync, appendFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, writeFileSync, appendFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import test from "node:test";
 import { mkdirSync, symlinkSync } from "node:fs";
 
 const LEDGER = "app/specs/handwritten/ledger.json";
 const run = (cmd, args, cwd) => spawnSync(cmd, args, { cwd, encoding: "utf8" });
 
-// A scratch git repository holding this tree as its one commit, the base the
+// A scratch git repository holding HEAD's tree as its one commit, the base the
 // ratchet compares with.
 function scratch() {
   const dir = mkdtempSync(join(tmpdir(), "hw-"));
-  const files = run("git", ["ls-files", "-z", "--cached"], ".").stdout.split("\0").filter(Boolean);
-  for (const f of files) {
-    try {
-      mkdirSync(dirname(join(dir, f)), { recursive: true });
-      cpSync(f, join(dir, f));
-    } catch {
-      // a file deleted in the working tree is not part of it
-    }
-  }
+  // The committed tree, not the working one: the page build changes tracked
+  // files (site/app.json gets its attestation) before these suites run.
+  const archive = spawnSync("git", ["archive", "--format=tar", "HEAD"], { maxBuffer: 1 << 30 });
+  assert.equal(archive.status, 0);
+  assert.equal(spawnSync("tar", ["-x", "-C", dir], { input: archive.stdout, maxBuffer: 1 << 30 }).status, 0);
   // The producers' scratch copy and their cargo build stay in this tree's target/.
   mkdirSync("target", { recursive: true });
   symlinkSync(resolve("target"), join(dir, "target"));
@@ -41,8 +37,10 @@ const ledger = (dir) => JSON.parse(readFileSync(join(dir, LEDGER), "utf8"));
 const hand = (dir) => ledger(dir).files.filter((e) => e.is === "hand" && e.lines > 0 && /\.mjs$/.test(e.path))[0].path;
 
 test("the committed tree passes (HW-01)", () => {
-  const r = run("python3", ["-I", "tools/handwritten/gate.py", "--check"], ".");
+  const dir = scratch();
+  const r = run("python3", ["-I", "tools/handwritten/gate.py", "--root", dir, "--check", "--no-base"], ".");
   assert.equal(r.status, 0, r.stderr);
+  rmSync(dir, { recursive: true, force: true });
 });
 
 test("refuses a new hand-written part", () => {
