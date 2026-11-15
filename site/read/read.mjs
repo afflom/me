@@ -6,6 +6,7 @@
 // Loaded only once something is kept, so a first visit carries none of it.
 import { nextInstance } from "../time/recur.mjs";
 import { spanOf } from "../calendar/ical.mjs";
+export { readCard } from "./vcard.mjs";
 
 const unfold = (text) => text.replace(/\r?\n[ \t]/g, " ");
 

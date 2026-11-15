@@ -12,6 +12,7 @@ use repo_model::{codegen, Model};
 
 mod audit;
 mod bootstrap;
+mod pipeline;
 mod proof;
 mod scaffold;
 
@@ -24,6 +25,7 @@ fn main() -> ExitCode {
 
     let result = match task.as_str() {
         "check-model" => check_model(&root, write),
+        "pipeline" => pipeline::pipeline(&root, write),
         "audit-limits" => audit::audit_limits(&root),
         "audit-deferral" => audit::audit_deferral(&root),
         "audit-bootstrap" => bootstrap::audit(&root),
@@ -46,12 +48,13 @@ fn main() -> ExitCode {
                  audit-bootstrap   immutable SDK and least-privilege workflow trust root\n\
                  audit-dependency-updates   SDK ownership and ordinary dependency maintenance\n\
                  validate          run every gate above\n\
+                 pipeline          the workflows equal app/specs/pipeline/spec.json rendered
                  proof-reuse       succeed only if the kept proof binds these exact proof inputs\n\
                  proof-keep <ID>   keep the proof prismpm verify just published, with its inputs\n\
                  new-capability <ID> <level> <suite> <statement>\n\
                                    R3: write the register row, scenario and failing test\n\
                  \n\
-                 --write           check-model only: rewrite the generated file"
+                 --write           check-model and pipeline: rewrite the generated files"
             );
             return ExitCode::from(2);
         }
@@ -133,6 +136,7 @@ fn audit_pii(root: &Path, dir: Option<String>) -> Result<(), Fail> {
 /// The whole normative acceptance gate, in one place.
 fn validate(root: &Path) -> Result<(), Fail> {
     check_model(root, false)?;
+    pipeline::pipeline(root, false)?;
     audit::audit_limits(root)?;
     audit::audit_deferral(root)?;
     bootstrap::audit(root)?;

@@ -27,7 +27,11 @@ examples are taken out mechanically:
     mail that books or sells embeds it (JSON-LD 1.1 section 7);
   - "patterns": each distinct pattern string of a labelled research dataset
     whose category the source names (Mathur et al., "Dark Patterns at Scale",
-    CSCW 2019: the urgency and scarcity lines found on shopping sites).
+    CSCW 2019: the urgency and scarcity lines found on shopping sites);
+  - "pairs": each sentence pair of a graded semantic-similarity benchmark in
+    the genre the source names (the STS Benchmark's image and video captions,
+    Cer et al., SemEval-2017 Task 1), with the similarity its annotators gave it
+    on the benchmark's 0 to 5 scale.
 A source's "label" is the kind of thing its specification says its whole
 messages and events are, or its "labels" the kind each schema.org type it
 carries is; the reference reader adds the people each example is with.
@@ -71,6 +75,7 @@ import email
 import email.header
 import email.policy
 import email.utils
+import gzip
 import hashlib
 import json
 import pathlib
@@ -712,6 +717,20 @@ def read_feed(raw):
     return {"names": names}
 
 
+def pair_examples(text, source):
+    for row in text.splitlines():
+        if not row.strip():
+            continue
+        pair = json.loads(row)
+        if pair.get("genre") == source["genre"]:
+            yield json.dumps({"a": pair["sentence1"], "b": pair["sentence2"], "score": pair["score"]}, ensure_ascii=False)
+
+
+def read_similarity(raw):
+    pair = json.loads(raw)
+    return {"a": pair["a"], "b": pair["b"], "score": pair["score"]}
+
+
 corpus = []
 for source in SPEC["sources"]:
     text = unpaginate(fetch(source))
@@ -720,8 +739,8 @@ for source in SPEC["sources"]:
         if erratum["status"] != "Verified" or text.count(erratum["says"]) != 1:
             refuse(f"{source['key']} erratum {erratum['id']} is not a verified correction of text it holds once")
         text = text.replace(erratum["says"], erratum["should"])
-    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples, "patterns": lambda text: pattern_examples(text, source), "markup": lambda text: markup_examples(text, source), "page": page, "recurrences": recurrences, "definitionLines": definition_lines, "definitionObjects": definition_objects}[source["examples"]]
-    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc, "coercive": read_pattern, "accname": read_accname, "feed": read_feed, "recurrence": read_recurrence, "icalLine": read_ical_line, "icalObject": read_ical_object}[source["kind"]]
+    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples, "patterns": lambda text: pattern_examples(text, source), "markup": lambda text: markup_examples(text, source), "page": page, "recurrences": recurrences, "pairs": lambda text: pair_examples(text, source), "definitionLines": definition_lines, "definitionObjects": definition_objects}[source["examples"]]
+    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc, "coercive": read_pattern, "accname": read_accname, "feed": read_feed, "recurrence": read_recurrence, "similarity": read_similarity, "icalLine": read_ical_line, "icalObject": read_ical_object}[source["kind"]]
     n = kept = 0
     for raw in take(text):
         n += 1
@@ -800,6 +819,22 @@ for source in SPEC.get("classifications", []):
         f"checksum = {q('sha256:' + source['sha256'])}",
         f"statement = {q('Every entity of ' + source['title'] + ', with its code, title and URI, as WHO publishes it; ' + source['licence']['citation'])}",
         'realized_by = ["WP-01"]',
+    ]
+# A source app/specs/oracle/vcard.json pins beyond these (IANA's vCard Elements registry) is cited
+# too; tools/oracle/vcard.py reads it, and VC-01 is the evidence.
+pinned = {s["key"] for s in SPEC["sources"]}
+for source in json.loads((ROOT / "app/specs/oracle/vcard.json").read_text(encoding="utf-8"))["sources"]:
+    if source["key"] in pinned:
+        continue
+    rows += [
+        "",
+        "[[authority]]",
+        f"id = {q('SRC-' + source['key'].upper())}",
+        f"name = {q(source['title'])}",
+        f"citation = {q(source['url'])}",
+        f"checksum = {q('sha256:' + source['sha256'])}",
+        f"statement = {q('The entries ' + source['title'] + ' registers, the full inventory of the standard it serves')}",
+        'realized_by = ["VC-01"]',
     ]
 authorities = "\n".join(rows) + "\n"
 

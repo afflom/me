@@ -1,4 +1,5 @@
 """A pinned source: fetched at its SHA-256, refused if it differs; and an RFC's text without its page breaks."""
+import gzip
 import hashlib
 import re
 import sys
@@ -22,6 +23,9 @@ def fetch(source, cache=None):
     digest = hashlib.sha256(data).hexdigest()
     if digest != source["sha256"]:
         refuse(f"{source['key']} at {source['url']} is {digest}, not the pinned {source['sha256']}")
+    # A benchmark published compressed (gzip, RFC 1952) is pinned as published and read uncompressed.
+    if source["url"].endswith(".gz"):
+        data = gzip.decompress(data)
     return data.decode("utf-8")
 
 
