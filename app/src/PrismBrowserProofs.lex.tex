@@ -1,0 +1,159 @@
+\begin{lexlean}{PrismBrowserProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismBrowser}
+\title{Prism browser capability guarantees}
+\begin{semanticmodule}
+definition{
+  name: browserStandardCount,
+  parameters: [rows : (List PrismBrowser::BrowserStandard)],
+  result: Nat,
+  body: (match rows
+    | List.nil => 0
+    | List.cons row rest => ((browserStandardCount rest) + 1)),
+  recursive_argument: rows
+}
+
+definition{
+  name: browserPinCount,
+  parameters: [rows : (List PrismBrowser::BrowserPin)],
+  result: Nat,
+  body: (match rows
+    | List.nil => 0
+    | List.cons row rest => ((browserPinCount rest) + 1)),
+  recursive_argument: rows
+}
+
+definition{
+  name: browserNameCount,
+  parameters: [rows : (List String)],
+  result: Nat,
+  body: (match rows
+    | List.nil => 0
+    | List.cons row rest => ((browserNameCount rest) + 1)),
+  recursive_argument: rows
+}
+
+definition{
+  name: browserBelow,
+  parameters: [index : Nat, count : Nat],
+  result: Bool,
+  body: ((index + 1) <=? count)
+}
+
+definition{
+  name: browserAdaptersKnown,
+  parameters: [rows : (List Nat)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => ((browserBelow row (browserNameCount (PrismBrowser::browserAdapters))) && (browserAdaptersKnown rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: browserOnlyProbe,
+  parameters: [rows : (List Nat)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => ((row =? (PrismBrowser::browserProbe)) && (browserOnlyProbe rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: browserCalled,
+  parameters: [rows : (List Nat)],
+  result: Bool,
+  body: (match rows
+    | List.nil => false
+    | List.cons row rest => true)
+}
+
+definition{
+  name: browserMembersResolve,
+  parameters: [rows : (List PrismBrowser::BrowserMember)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => (((((browserBelow (project row standard) (browserStandardCount (PrismBrowser::browserStandards))) && (browserBelow (project row idl) (browserPinCount (PrismBrowser::browserIdl)))) && (browserBelow (project row support) (browserPinCount (PrismBrowser::browserSupport)))) && ((browserCalled (project row adapters)) && (browserAdaptersKnown (project row adapters)))) && (browserMembersResolve rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: browserUnshippedProbed,
+  parameters: [rows : (List PrismBrowser::BrowserMember)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => ((if ((project row chrome) =? 0) then (browserOnlyProbe (project row adapters)) else true) && (browserUnshippedProbed rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: browserNewest,
+  parameters: [rows : (List PrismBrowser::BrowserMember)],
+  result: Nat,
+  body: (match rows
+    | List.nil => 0
+    | List.cons row rest => (if ((browserNewest rest) <=? (project row chrome)) then (project row chrome) else (browserNewest rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: browserShipped,
+  parameters: [rows : (List PrismBrowser::BrowserMember)],
+  result: Nat,
+  body: (match rows
+    | List.nil => 0
+    | List.cons row rest => (if ((project row chrome) =? 0) then (browserShipped rest) else ((browserShipped rest) + 1))),
+  recursive_argument: rows
+}
+
+definition{
+  name: browserMemberCount,
+  parameters: [rows : (List PrismBrowser::BrowserMember)],
+  result: Nat,
+  body: (match rows
+    | List.nil => 0
+    | List.cons row rest => ((browserMemberCount rest) + 1)),
+  recursive_argument: rows
+}
+
+theorem{
+  name: browserEveryMemberResolves,
+  parameters: [],
+  statement: ((browserMembersResolve (PrismBrowser::browserMembers)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: browserUnshippedIsOnlyProbed,
+  parameters: [],
+  statement: ((browserUnshippedProbed (PrismBrowser::browserMembers)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: browserFloorIsNewestShipped,
+  parameters: [],
+  statement: ((browserNewest (PrismBrowser::browserMembers)) = (PrismBrowser::browserChromeFloor)),
+  proof: decide{}
+}
+
+theorem{
+  name: browserAllButTwoShip,
+  parameters: [],
+  statement: (((browserShipped (PrismBrowser::browserMembers)) + 2) = (browserMemberCount (PrismBrowser::browserMembers))),
+  proof: decide{}
+}
+
+theorem{
+  name: browserOneIdlPerInterface,
+  parameters: [],
+  statement: ((browserPinCount (PrismBrowser::browserIdl)) = 46),
+  proof: decide{}
+}
+\end{semanticmodule}
+\end{lexlean}

@@ -1,0 +1,14 @@
+// Source: DOM Standard (https://dom.spec.whatwg.org/)
+[Exposed=*]
+interface EventTarget {
+  constructor();
+
+  undefined addEventListener(DOMString type, EventListener? callback, optional (AddEventListenerOptions or boolean) options = {});
+  undefined removeEventListener(DOMString type, EventListener? callback, optional (EventListenerOptions or boolean) options = {});
+  boolean dispatchEvent(Event event);
+};
+
+// Source: Observable (https://wicg.github.io/observable/)
+partial interface EventTarget {
+  Observable when(DOMString type, optional ObservableEventListenerOptions options = {});
+};

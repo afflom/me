@@ -1,0 +1,7 @@
+// Source: Web Cryptography API Level 2 (https://www.w3.org/TR/webcrypto-2/)
+[Exposed=(Window,Worker)]
+interface Crypto {
+  [SecureContext] readonly attribute SubtleCrypto subtle;
+  ArrayBufferView getRandomValues(ArrayBufferView array);
+  [SecureContext] DOMString randomUUID();
+};
