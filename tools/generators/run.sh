@@ -9,7 +9,7 @@
 #   tools/generators/run.sh --lock P record program P's sources and binary (build.sh)
 # A request is "<generator> <output>\n" and a ustar archive of the step's inputs,
 # and must fit the request bound. A step with "split" runs once per piece of that
-# file, cut at line ends; a step with "each" runs once per element of a JSON array;
+# file, cut at line ends (only before a line matching its "breakBefore", where it has one); a step with "each" runs once per element of a JSON array;
 # either way its output is the outputs joined in order. Outputs under .gen/ are
 # intermediate and never committed; a step reads only the .gen/ outputs of its
 # own program's earlier steps, so programs never depend on each other's order.
@@ -86,7 +86,12 @@ js .steps < "$steps_file" | while read -r step; do
     done < "$work/elements"
   elif [ -n "$split_path" ]; then
     rm -rf "$work/pieces"; mkdir -p "$work/pieces"
-    split -C "$piece" -d -a 4 "$split_path" "$work/pieces/p."
+    brk=$(echo "$step" | js .breakBefore)
+    if [ -z "$brk" ]; then split -C "$piece" -d -a 4 "$split_path" "$work/pieces/p."
+    # With "breakBefore", a unit runs to the next line that matches it, and pieces end only between units.
+    else LC_ALL=C awk -v rx="$brk" -v max="$piece" -v out="$work/pieces/p." '
+      function flush() { if (length(p) + length(u) > max && p != "") { printf "%s", p > sprintf("%s%04d", out, n++); p = "" } if (length(u) > max) bad = 1; p = p u; u = "" }
+      $0 ~ rx { flush() } { u = u $0 "\n" } END { flush(); if (bad) exit 1; printf "%s", p > sprintf("%s%04d", out, n) }' "$split_path" || { echo "GN-01: $split_path: a unit before $brk is over $piece bytes" >&2; exit 1; }; fi
     for p in "$work/pieces"/p.*; do
       rm -rf "$work/stage"; mkdir -p "$work/stage/$(dirname "$split_path")"
       cp "$p" "$work/stage/$split_path"
