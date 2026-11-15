@@ -1,16 +1,16 @@
 // The decision guests the vault tests run against, and a stand-in for the app's router.
 //
 // Each guest is the core.wasm built by `prismpm build` from the same LexLean module
-// the app compiles (app/src/PrismBoundary, PrismVaultStore, PrismVaultRestore), with
-// that module's application record restored so it builds on its own. It exports
+// the app compiles (app/src/PrismBoundary, PrismVaultStore, PrismVaultRestore), behind
+// an application record that routes every request to its dispatch. It exports
 // holo_alloc(len) and holo_run(ptr, len) -> (outPtr << 32 | outLen): dispatch(bytes) -> bytes.
 // Bytes whose SHA-256 is not the pinned fingerprint are refused before they are compiled.
-// See README.md in this folder to rebuild them.
+// tools/guests/build.sh rebuilds them whenever their modules change (app/specs/guests, GU-01).
 
 export const GUESTS = {
-  boundary: { file: 'boundary.wasm', sha256: '60f51e90d5b45bd3b68b2120bd8799079e687af8146a9933d4374ddacd1a8f62' },
-  store: { file: 'vault-store.wasm', sha256: '112bfffd14e2915507ae59f5e84efc21722154e22104987d8faa95e447020067' },
-  restore: { file: 'vault-restore.wasm', sha256: '84ed81de6f9b8d941edc4576bd14a059de94721bfcbb7b432d36ebb60e42ba4f' },
+  boundary: { file: 'boundary.wasm', sha256: '1c78a602a06f7e02ac13c9f266f8560d21f9192f3bfac3245044a9aa98395237' },
+  store: { file: 'vault-store.wasm', sha256: '5df72cb97284cd74e29b1884a48d5fc4ccb8b45d6440d28d964ffca30ba0e748' },
+  restore: { file: 'vault-restore.wasm', sha256: '3b2164237a4ff60afbf4a0e6818c79a500ce022f6221d216279d975d0dc6aa7e' },
 };
 
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');

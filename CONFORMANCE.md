@@ -59,6 +59,12 @@ model does not sanction.
 | `GG-02` | `build` | The Google connection moves between stages only as PrismGoogleLink answers: only the owner grants, a client for another origin is never used, and the kill switch or a forget revokes every grant |
 | `GG-03` | `build` | Mail and calendar items read from Google reach only the browser vault, through the detectors, the router and the Boundary, by GET to the two API hosts with the token only in the Authorization header |
 
+## guests
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `GU-01` | `build` | Every standalone decision guest the page runs is built in the locked SDK from the modules the Prism compiles: its recorded source is the project laid out from those modules, its acceptance vectors and its limits, its wasm is the one recorded, and the page pins that wasm |
+
 ## holon
 
 | ID | Level | Statement |

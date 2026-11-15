@@ -10,8 +10,8 @@ answers `open`.
 `spec.json` is the single source. The Prism's builder
 (`python3 -I tools/prompts/gen.py`) writes `app/src/PrismUorc.lex.tex` and
 `app/src/PrismUorcProofs.lex.tex`; `python3 -I tools/uorc/gen.py` writes the
-mirror `site/uorc/table.mjs`; `python3 -I tools/uorc/standalone.py DIR`
-writes the scratch project for `site/uorc/guest/uorc.wasm`.
+mirror `site/uorc/table.mjs`; `tools/guests/build.sh`
+rebuilds `site/uorc/guest/uorc.wasm` whenever its modules change (GU-01).
 
 ## Request
 
