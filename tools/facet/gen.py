@@ -15,7 +15,7 @@ Before writing, every request is judged by the tree and checked against every
 guarantee and every example, so a spec that breaks its own guarantees never
 reaches Lean. The judge is a tree whose every test is `field =? value`, at most
 11 deep, so `linear_arithmetic` closes each guarantee with exactly
-[Quot.sound, propext] (see tools/dest/gen.py, the facet this generalizes).
+[Quot.sound, propext].
 --check compares the outputs on disk with what the spec writes.
 """
 import itertools

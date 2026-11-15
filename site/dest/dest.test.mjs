@@ -4,7 +4,16 @@
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { GUEST, openGuest } from './guest.mjs';
-import { FIELDS, ANSWERS, GUARANTEES, MAX_LINE, judge, line as lineOf } from './table.mjs';
+// The decision as the model states it (app/specs/dest/spec.json): the guest
+// built from it must answer every request as the spec's own tree does.
+const SPEC = JSON.parse(await readFile(new URL('../../app/specs/dest/spec.json', import.meta.url), 'utf8'));
+const FIELDS = SPEC.fields.map((f) => [f.name, f.values]);
+const ANSWERS = SPEC.outcomes;
+const GUARANTEES = SPEC.guarantees.map((g, i) => ({ id: `INV-${String(i + 1).padStart(3, '0')}`, ...g }));
+const MAX_LINE = FIELDS.reduce((n, [, v]) => n + Math.max(...v.map((x) => x.length)), FIELDS.length - 1);
+const walk = (t, r) => (typeof t === 'string' ? t : walk(r[t.if[0]] === t.if[1] ? t.then : t.else, r));
+const judge = (r) => walk(SPEC.tree, r);
+const lineOf = (r) => FIELDS.map(([name]) => r[name]).join(' ');
 import { makeRouter, toneOf, sealOf, buildMail, buildEvent, buildShare } from './dest.mjs';
 import { example } from '../../test/oracle/examples.mjs';
 
@@ -37,6 +46,7 @@ for (const values of product(FIELDS.map(([, v]) => v))) {
   }
   total += 1;
 }
+for (const [request, expected] of SPEC.examples) ok((await dest(request)) === expected, `example ${request} -> ${expected}`);
 assert.equal(total, 2560);
 for (const bad of ['', 'mail', 'Mail allow grounded owner seen calm open normal no', 'mail allow grounded owner seen calm open normal no extra', 'x'.repeat(MAX_LINE + 1)]) {
   ok((await dest(bad)) === 'invalid', `invalid: ${bad.slice(0, 40)}`);
