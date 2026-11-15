@@ -688,19 +688,22 @@ export default async function start({ app, reason, $ }) {
     const { agenda, recent, tasks, needs } = await today(items, { relate, done: doneSet(), mine: (item) => mineOf(item, me) });
     if (turn !== painting || current.host !== "home") return;
     const rows = [selfRow()].filter(Boolean);
-    const section = (domain, made) => {
+    // Each part is headed in the person's words: what is upcoming, then the name of
+    // the place that holds the rest (Messages, Notes), never a domain's system name.
+    const placeName = (domain) => PLACES.find((p) => p.host === "nav" && p.domains[0] === domain)?.name ?? DOMAINS[domain];
+    const section = (name, made) => {
       if (!made.length) return;
-      rows.push(element("li", { className: "pr-section", textContent: DOMAINS[domain] }), ...made);
+      rows.push(element("li", { className: "pr-section", textContent: name }), ...made);
     };
-    section(5, agenda.map(({ item, today: now, clash }) => {
+    section(WORDS.upcoming, agenda.map(({ item, today: now, clash }) => {
       const row = rowOf(item);
       row.classList.toggle("pr-now", now);
       if (clash.length) { row.classList.add("pr-clash"); row.title = clash.map(lineOf).join("\n"); }
       return row;
     }));
     if (needs.length) rows.push(needsOf(needs));
-    section(4, recent.map(rowOf));
-    section(9, tasks.map(rowOf));
+    section(placeName(4), recent.map(rowOf));
+    section(placeName(9), tasks.map(rowOf));
     $("pr-count").textContent = "";
     list.hidden = !rows.length;
     list.replaceChildren(...(rows.length ? rows : [emptyRow()]));
@@ -1381,9 +1384,12 @@ export default async function start({ app, reason, $ }) {
       go(place.key, true);
       const { partiesOf } = await coherence();
       const to = partiesOf(item)[0]?.address ?? "";
-      const field = $("pr-act").querySelector("input[type=email]");
+      // The write act sits behind its button: the reply opens it, addressed.
+      if ($("pr-new")?.getAttribute("aria-expanded") === "false") $("pr-new").click();
+      const form = $("pr-compose") ?? $("pr-act");
+      const field = form.querySelector("input[type=email]");
       if (field) field.value = to;
-      $("pr-act").querySelector("textarea")?.focus();
+      form.querySelector("textarea")?.focus();
     }
   }
   function turn(prompt, said) {
@@ -1392,7 +1398,8 @@ export default async function start({ app, reason, $ }) {
     const node = element("li", { className: "pr-turn" }, element("p", { className: "pr-you", textContent: prompt }));
     chat.append(node);
     node.scrollIntoView({ block: "nearest" });
-    lastTurn = { node, said: said.sentences.join(" ") };
+    // One sentence per item, each on its own line, so several answers read as a list.
+    lastTurn = { node, said: said.sentences.join("\n") };
     const rows = said.sources.map(rowOf);
     drawn.replaceChildren(...rows);
     // The sentences link to the items they say; the list beneath holds all that was found.
@@ -1406,10 +1413,15 @@ export default async function start({ app, reason, $ }) {
       });
       return link;
     });
+    // One offer per person: a reply to someone who wrote twice is one reply, and it names them.
+    const offered = new Set();
     const offers = (said.offers ?? []).map(({ kind, item }) => {
       const label = { reply: WORDS.reply, done: WORDS.done, keep: WORDS.keep, connect: WORDS.connect }[kind];
       if (!label) return null;
-      const button = element("button", { type: "button", className: "pr-offer", textContent: label });
+      const whom = item?.who || item?.from || "";
+      if (offered.has(`${kind}|${whom}`)) return null;
+      offered.add(`${kind}|${whom}`);
+      const button = element("button", { type: "button", className: "pr-offer", textContent: kind === "reply" && item?.who ? `${label} · ${item.who}` : label });
       button.addEventListener("click", () => { button.disabled = true; offer(kind, item, prompt).catch((error) => say(error?.message ?? String(error), "bad")); });
       return button;
     }).filter(Boolean);
@@ -1429,7 +1441,7 @@ export default async function start({ app, reason, $ }) {
       const { answer } = await import("./router/answer.mjs");
       const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: false });
       turn(prompt, said);
-      if (said.sentences.length) { say(said.sentences.join(" "), "good"); $("pr-prompt").value = ""; }
+      if (said.sentences.length) { say(said.sentences.join("\n"), "good"); $("pr-prompt").value = ""; }
       else if (haltedNow) say(WORDS.halted, "bad");
       else if (said.refused) say(WORDS["answer.asks"], "warn");
       else say(WORDS["answer.none"], "");

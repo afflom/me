@@ -67,7 +67,10 @@ export function sequence(items) {
     const steps = [...new Set(group.map((item) => item.sequence ?? 0))].sort((a, b) => a - b);
     for (const item of group) {
       const revision = steps.indexOf(item.sequence ?? 0) + 1;
-      out.set(item.address, { revision, of: steps.length, latest: revision === steps.length });
+      // Current: no later revision of the same instance (RFC 5545 RECURRENCE-ID) is held,
+      // so an instance revised on its own is not an earlier version of the series.
+      const current = !group.some((other) => (other.recurrence ?? "") === (item.recurrence ?? "") && (other.sequence ?? 0) > (item.sequence ?? 0));
+      out.set(item.address, { revision, of: steps.length, latest: revision === steps.length, current });
     }
   }
   return out;
