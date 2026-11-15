@@ -134,12 +134,17 @@ jobs:
             exit 64
           fi
           docker_config=$(mktemp -d)
-          trap 'rm -rf "$docker_config"' EXIT
+          # The SDK's /tmp is a private directory on the runner's own disk, as
+          # bootstrap.yml has it since template 1cb0d36: the patched SDK's build
+          # outgrows a fixed 2 GiB tmpfs.
+          scratch=$(mktemp -d)
+          mkdir -p "$scratch/prismpm-home/.docker"
+          trap 'rm -rf "$docker_config" "$scratch"' EXIT
           printf '{}\n' >"$docker_config/config.json"
           docker run --rm \
             --user "$(id -u):$(id -g)" \
             --group-add "$(stat -c '%g' /var/run/docker.sock)" \
-            --tmpfs /tmp:rw,exec,nosuid,size=2g \
+            --volume "$scratch:/tmp" \
             --volume "$PWD:$PWD" \
             --volume /var/run/docker.sock:/var/run/docker.sock \
             --volume "$docker_config:/tmp/prismpm-home/.docker:ro" \

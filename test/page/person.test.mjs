@@ -94,7 +94,11 @@ test("the owner brings content in, every place shows it, Today and Ask answer fr
     await page.goto(published ?? `http://127.0.0.1:${server.address().port}/me/`);
     await page.waitForSelector("html.pr-ready", { timeout: 60000 });
     const out = () => page.textContent("#pr-out");
-    const settled = (pattern) => page.waitForFunction((p) => new RegExp(p).test(document.getElementById("pr-out").textContent), pattern.source, { timeout: 30000 });
+    // The status line once it matches; a timeout says what it showed instead.
+    const settled = (pattern) => page.waitForFunction((p) => new RegExp(p).test(document.getElementById("pr-out").textContent), pattern.source, { timeout: 30000 })
+      .catch(async (error) => { throw new Error(`status never matched ${pattern}: it shows "${await out()}" (${error.message.split("\n")[0]})`); });
+    // Before a new read, the status is cleared, so the count that settles is the new read's, not the last one's.
+    const fresh = () => page.evaluate(() => { document.getElementById("pr-out").textContent = ""; });
 
     // A fresh profile opens on Today, which leads with Set up rather than nothing.
     assert.equal(await page.textContent("#pr-title"), PLACES.find((p) => p.host === "home").name);
@@ -104,10 +108,12 @@ test("the owner brings content in, every place shows it, Today and Ask answer fr
     await page.click('.pr-go[data-place="boundary"]');
     const picker = page.locator('#pr-settings label.pr-file input[type="file"][accept*=".ics"]').first();
     await picker.waitFor({ state: "attached", timeout: 15000 });
+    // The read finishes where it was started, as the person sees it, before they go on.
+    await fresh();
     await picker.setInputFiles(feed);
-    await page.click('.pr-go[data-place="today"]');
     await settled(/^\d+ items$/);
     assert.match(await out(), /^4 items$/);
+    await page.click('.pr-go[data-place="today"]');
 
     // Today: the agenda first, what falls today marked, the clash marked (PrismChronology).
     await page.waitForFunction(() => document.querySelector("#pr-list .pr-section"), null, { timeout: 10000 });
@@ -121,8 +127,9 @@ test("the owner brings content in, every place shows it, Today and Ask answer fr
     await page.click('.pr-go[data-place="boundary"]');
     const zipInput = page.locator("#pr-settings input[type=file][accept*='.zip']");
     await zipInput.waitFor({ state: "attached", timeout: 15000 });
+    await fresh();
     await zipInput.setInputFiles(takeout);
-    await page.waitForFunction(() => document.getElementById("pr-out").textContent !== "3 items", null, { timeout: 30000 });
+    await settled(/^\d+ items$/);
     assert.match(await out(), /^4 items$/);
 
     // A paste of plain words is a note.

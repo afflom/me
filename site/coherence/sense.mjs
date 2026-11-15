@@ -76,11 +76,13 @@ export function drawOn(items, prompt, { now = Date.now(), most = 5 } = {}) {
     for (const term of asked) if (meets(have, term)) score += 2;
     const inSpan = span && item.at >= span.from && item.at < span.to;
     if (span && !inSpan && !score) continue;
-    if (inSpan) score += 3;
+    // In a span, what happens in it (an event, a timed note) comes before what only arrived in it.
+    if (inSpan) score += (item.media === "calendar" && item.component !== "VFREEBUSY") || item.start != null ? 4 : 3;
     const domains = item.domains ?? domainsOf(item);
     if (domains.some((d) => named.has(d))) score += 1;
     if (score > (span || asked.length ? 1 : 0)) scored.push({ item, score });
   }
+  // A span is told in its own order, earliest first.
   const soon = (item) => (span ? Math.abs(item.at - span.from) : -item.at);
   return scored.sort((a, b) => b.score - a.score || soon(a.item) - soon(b.item)).slice(0, most).map((s) => s.item);
 }
