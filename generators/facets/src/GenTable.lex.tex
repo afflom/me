@@ -68,6 +68,38 @@ definition{
 }
 
 definition{
+  name: tableStarts,
+  parameters: [piece : Bytes],
+  result: Bool,
+  body: (Foundation.Tar::sameBytes (tableSlice piece 0 2) (tableText "{\n")),
+  axioms: [propext]
+}
+
+definition{
+  name: tableEnds,
+  parameters: [piece : Bytes],
+  result: Bool,
+  body: (let n : Nat := (Foundation.Bytes::byteLength piece); (if (n <? 2) then false else (if (Foundation.Tar::sameBytes piece (tableText "}\n")) then true else (if (n <? 3) then false else (Foundation.Tar::sameBytes (tableSlice piece (prim subtract n 3 : Nat) 3) (tableText "\n}\n")))))),
+  axioms: [propext]
+}
+
+definition{
+  name: tableHead,
+  parameters: [facet : Bytes, piece : Bytes],
+  result: Bytes,
+  body: (if (tableStarts piece) then (tableJoin (cons (tableText "// Written by generators/facets (GenTable) from ") (cons (tableSpecPath facet) (cons (tableText ". Do not edit.\n// The facet's spec as the page and its suites read it. The compiled guest\n// decides; judge walks the same tree for the curator's replay and the\n// suites' cross-check.\n\nexport const SPEC = ") (nil Bytes))))) else 0x),
+  axioms: [propext]
+}
+
+definition{
+  name: tableTail,
+  parameters: [piece : Bytes],
+  result: Bytes,
+  body: (if (tableEnds piece) then (Foundation.Bytes::appendBytes (tableText ";\n\n") (tableText "// The fields in the order a request line names them, each with its values.\nexport const FIELDS = SPEC.fields.map((f) => [f.name, f.values]);\nexport const ANSWERS = SPEC.outcomes;\n// The longest request line: every field at its longest value, one space apart.\nexport const MAX_LINE = FIELDS.reduce((n, [, v]) => n + Math.max(...v.map((x) => x.length)), FIELDS.length - 1);\nexport const GUARANTEES = SPEC.guarantees.map((g, i) => ({ id: 'INV-' + String(i + 1).padStart(3, '0'), ...g }));\nexport const SIGNALS = SPEC.signals ?? {};\nexport const TUNABLE = SPEC.tunable ?? [];\nexport const START = SPEC.start ?? {};\nexport const LEARNING = SPEC.learning ?? {};\nexport const PROVIDERS = SPEC.providers;\n\n// The spec's own tree: each test is one field against one value.\nconst walk = (t, r) => (typeof t === 'string' ? t : walk(r[t.if[0]] === t.if[1] ? t.then : t.else, r));\n\nexport function judge(r) {\n  return walk(SPEC.tree, r);\n}\n\nexport function line(r) {\n  return FIELDS.map(([name]) => r[name]).join(' ');\n}\n")) else 0x),
+  axioms: [propext]
+}
+
+definition{
   name: generate,
   parameters: [archive : Bytes, target : Bytes],
   result: (Option Bytes),
@@ -75,7 +107,7 @@ definition{
     | Option.none => (ctor Option.none [Bytes])
     | Option.some facet => (match (Foundation.Tar::find archive (tableSpecPath facet))
       | Option.none => (ctor Option.none [Bytes])
-      | Option.some spec => (if (tableIsFacet spec) then (ctor Option.some [Bytes] (tableJoin (cons (tableText "// Written by generators/facets (GenTable) from ") (cons (tableSpecPath facet) (cons (tableText ". Do not edit.\n// The facet's spec as the page and its suites read it. The compiled guest\n// decides; judge walks the same tree for the curator's replay and the\n// suites' cross-check.\n\nexport const SPEC = ") (cons spec (cons (tableText ";\n\n") (cons (tableText "// The fields in the order a request line names them, each with its values.\nexport const FIELDS = SPEC.fields.map((f) => [f.name, f.values]);\nexport const ANSWERS = SPEC.outcomes;\n// The longest request line: every field at its longest value, one space apart.\nexport const MAX_LINE = FIELDS.reduce((n, [, v]) => n + Math.max(...v.map((x) => x.length)), FIELDS.length - 1);\nexport const GUARANTEES = SPEC.guarantees.map((g, i) => ({ id: 'INV-' + String(i + 1).padStart(3, '0'), ...g }));\nexport const SIGNALS = SPEC.signals ?? {};\nexport const TUNABLE = SPEC.tunable ?? [];\nexport const START = SPEC.start ?? {};\nexport const LEARNING = SPEC.learning ?? {};\nexport const PROVIDERS = SPEC.providers;\n\n// The spec's own tree: each test is one field against one value.\nconst walk = (t, r) => (typeof t === 'string' ? t : walk(r[t.if[0]] === t.if[1] ? t.then : t.else, r));\n\nexport function judge(r) {\n  return walk(SPEC.tree, r);\n}\n\nexport function line(r) {\n  return FIELDS.map(([name]) => r[name]).join(' ');\n}\n") (nil Bytes))))))))) else (ctor Option.none [Bytes])))),
+      | Option.some spec => (if ((tableStarts spec) && (tableEnds spec)) then (if (tableIsFacet spec) then (ctor Option.some [Bytes] (tableJoin (cons (tableHead facet spec) (cons spec (cons (tableTail spec) (nil Bytes)))))) else (ctor Option.none [Bytes])) else (ctor Option.some [Bytes] (tableJoin (cons (tableHead facet spec) (cons spec (cons (tableTail spec) (nil Bytes))))))))),
   axioms: [Quot.sound, propext]
 }
 

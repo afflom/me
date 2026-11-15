@@ -94,7 +94,7 @@ fn router_ru_02() {
     );
     let card = read("site/card.mjs");
     let route = card
-        .find("const mapped = await route({ source: \"note\", values: { text }, line, halted });")
+        .find("const mapped = await route({ source: \"note\", values: { text }, line, halted, learned: meaning ? { meaning } : {} });")
         .expect("RU-02: the page routes the owner's words through the router");
     let refused = card
         .find("if (mapped.refused) {")

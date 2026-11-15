@@ -1038,7 +1038,8 @@ export default async function start({ app, reason, $ }) {
   async function keepNote(place, text, domain = place.domains[0]) {
     if (!vault || !text) return false;
     const { route } = await import("./router/router.mjs");
-    const mapped = await route({ source: "note", values: { text }, line, halted });
+    const meaning = haltedNow ? null : meaningRead();
+    const mapped = await route({ source: "note", values: { text }, line, halted, learned: meaning ? { meaning } : {} });
     if (mapped.refused) { say(WORDS.refused, "bad"); return false; }
     if (mapped.domains.length) domain = mapped.domains[0];
     const label = LABELS[Math.max(...mapped.domains.concat(domain).map((d) => FLOORS[d]))].toLowerCase();
