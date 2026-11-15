@@ -63,7 +63,8 @@ test("everything that says something is headed by its own words", () => {
 });
 
 test("an invitation a message carries is on the calendar as its event (RFC 6047)", () => {
-  const carrying = examples.filter((e) => e.kind === "message" && /BEGIN:VEVENT/.test(e.raw));
+  // The reference reading's own: the messages whose MIME structure carries a text/calendar part.
+  const carrying = examples.filter((e) => e.kind === "message" && e.expect.carries === "text/calendar");
   assert.ok(carrying.length, "the oracles hold invitations");
   const missed = carrying.filter((e) => {
     const uid = /^UID:(.*)$/m.exec(unfold(e.raw))?.[1]?.trim();
