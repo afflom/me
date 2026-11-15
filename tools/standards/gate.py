@@ -207,15 +207,9 @@ def enforcement(spec, requirements, parts, by_part, refusals):
             if r in texts:
                 parts_gate.ENTRIES.add(r)
     reach = parts_gate.suites_reaching(set(parts), texts)
-    reached = {}
-    for part, suites in reach.items():
-        for suite in suites:
-            reached.setdefault(suite, set()).add(part)
+    reached = {s: {p for p, ss in reach.items() if s in ss} for s in set().union(*reach.values())}
     owner = {r["id"]: key for key, reqs in requirements.items() for r in reqs}
-    governs = {}
-    for part, keys in by_part.items():
-        for key in keys:
-            governs.setdefault(key, set()).add(part)
+    governs = {k: {p for p, ks in by_part.items() if k in ks} for k in set().union(*by_part.values())}
     suites = set(t for t in tracked(*SUITES) if "/vendor/" not in t)
     enforced = {}
 
@@ -277,13 +271,11 @@ def main(argv):
     spec = load(SPEC)
     debt = load(DEBT)
     keys = [s["key"] for s in spec["standards"]]
-    for dup in sorted({k for k in keys if keys.count(k) > 1}):
-        refusals.append(f"{dup} is registered twice")
+    refusals += [f"{dup} is registered twice" for dup in sorted({k for k in keys if keys.count(k) > 1})]
 
     requirements = derive(spec, write, refusals)
     rendered = canonical(requirements)
     if write:
-        REQUIREMENTS.parent.mkdir(parents=True, exist_ok=True)
         REQUIREMENTS.write_text(rendered, encoding="utf-8")
     elif not REQUIREMENTS.exists() or REQUIREMENTS.read_text(encoding="utf-8") != rendered:
         refusals.append("test/standards/requirements.json is not what the pinned standards give: run python3 -I tools/standards/gate.py --write")
@@ -305,9 +297,7 @@ def main(argv):
     for p in sorted(set(ungoverned) | set(unassigned)):
         if p not in by_part:
             refusals.append(f"{p} is listed as ungoverned or unassigned but is no part of the Prism")
-    for p, why in ungoverned.items():
-        if not str(why).strip():
-            refusals.append(f"{p} is ungoverned with no reason")
+    refusals += [f"{p} is ungoverned with no reason" for p, why in ungoverned.items() if not str(why).strip()]
 
     if seed:
         if seed in debt:
@@ -321,12 +311,10 @@ def main(argv):
     for key, reqs in requirements.items():
         open_ids = {r["id"] for r in reqs if r["id"] not in enforced}
         listed = set(debt.get(key, []))
-        for rid in sorted(open_ids - listed):
-            refusals.append(f"{key}: {rid} is enforced by no suite and is not in the debt")
+        refusals += [f"{key}: {rid} is enforced by no suite and is not in the debt" for rid in sorted(open_ids - listed)]
         for rid in sorted(listed - open_ids):
             refusals.append(f"{key}: debt {rid} is {'enforced now' if rid in enforced else 'no requirement'}: take it out of the debt")
-    for key in sorted(set(debt) - set(requirements)):
-        refusals.append(f"debt names {key}, which is no measured standard")
+    refusals += [f"debt names {key}, which is no measured standard" for key in sorted(set(debt) - set(requirements))]
 
     if base:
         old_debt = base_json(base, DEBT) or {}
