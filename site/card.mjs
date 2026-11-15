@@ -1090,6 +1090,8 @@ export default async function start({ app, reason, $ }) {
           link.click();
           setTimeout(() => URL.revokeObjectURL(link.href), 1000);
         };
+        const { seenGaps } = await import("./source/shape.mjs");
+        const gapsOf = (key) => seenGaps(items)[key];
         const drawn = services.SERVICES.map((service) => {
           const state = element("span", { className: "pr-state" });
           const steps = element("ol", { className: "pr-steps" });
@@ -1107,9 +1109,13 @@ export default async function start({ app, reason, $ }) {
             const got = report.arrived?.[service.key] ?? { n: 0, at: 0 };
             const seen = report.services?.[service.key] ?? {};
             const when = got.at ? new Date(got.at).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }) : "";
+            // Read from its open tab, but most of what arrived showed no sender, or no time: said plainly.
+            const gap = service.seen ? gapsOf(service.key) : null;
+            const missing = gap?.items ? (gap.noWho * 2 > gap.items ? ` · ${WORDS["service.nowho"]}` : gap.noAt * 2 > gap.items ? ` · ${WORDS["service.notime"]}` : "") : "";
             state.textContent = now.state === "paused" ? WORDS.halted
               : now.state === "refused" ? WORDS["service.refused"]
-              : got.n ? `${got.n} ${WORDS.items} · ${when}`
+              : got.n ? `${got.n} ${WORDS.items} · ${when}${missing}`
+              : now.state === "checking" && service.seen && seen.open && !seen.read ? WORDS["service.unread"]
               : now.state === "checking" ? WORDS["service.checking"]
               : seen.error || seen.read > 0 ? WORDS["service.failed"]
               : now.state === "live" || (seen.signedIn && seen.checked) ? WORDS["service.nothing"]
@@ -1206,7 +1212,11 @@ export default async function start({ app, reason, $ }) {
       const shape = element("button", { type: "button", textContent: WORDS["data.shape"] });
       shape.addEventListener("click", async () => {
         const { describe } = await import("./source/shape.mjs");
-        const text = JSON.stringify(describe(items), null, 1);
+        // Each open tab's rules and what the extension read from it, with no content.
+        const services = await import("./source/services.mjs");
+        const report = await services.probe().catch(() => ({ services: {} }));
+        const tabs = Object.fromEntries(services.SERVICES.filter((s) => s.seen).map((s) => [s.key, { seen: s.seen, open: report.services?.[s.key]?.open, read: report.services?.[s.key]?.read }]));
+        const text = JSON.stringify(describe(items, tabs), null, 1);
         try { await navigator.clipboard.writeText(text); say(WORDS["data.shaped"], "good"); } catch { say(WORDS.unavailable, "bad"); }
       });
       const row = settingRow(device, addFolder, filesLabel, contacts, allow, forget, shape);
@@ -1224,7 +1234,7 @@ export default async function start({ app, reason, $ }) {
         contacts.hidden = !shown("contacts");
         allow.hidden = !shown("folder") || !kept.some((f) => f.grant === "prompt");
         forget.hidden = !kept.length;
-        shape.hidden = !items.length;
+        shape.hidden = !items.length && !servicesShown;
       };
       const owner = (surface) => async () => (await d.ask({ act: { [surface]: "owner" } }))[surface] === "use";
       const busy = (button, may, work) => async () => {
