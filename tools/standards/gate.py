@@ -1,6 +1,6 @@
 """ST-01: every part of the Prism fully implements the standards it answers to.
 
-    python3 -I tools/standards/gate.py [--check | --write] [--base REF] [--cache DIR] [--seed KEY]
+    python3 -I tools/standards/gate.py [--check | --write] [--base REF] [--seed KEY]
 
 The register, app/specs/standards/spec.json, names each standard a part of the
 Prism answers to, the part paths it governs, and where its own normative text
@@ -10,6 +10,12 @@ inventories is extracted mechanically, by a LexLean generator of generators/
 held by GN-01) or by tools/standards/extract/<extract>.py, into requirements: the standard's own MUST, SHALL, SHOULD and MAY sentences,
 its numbered rules, or its registry's elements. Nothing is written by hand.
 The requirements are kept in test/standards/requirements.json.
+
+Every pinned text and inventory source is kept in the repository at
+standards/texts/<sha256>, so the gate (and the LexLean extractors that replace
+these Python ones) reads no network: --write fetches a pin that is not kept yet
+and keeps it, and --check refuses one that is missing. The bytes are public
+upstream text fixed by their hash; PV-01 skips exactly those files.
 
 A requirement is enforced when a suite that reaches a part the standard governs
 says so: a line of that suite carrying `enforces: <id>`, or the register's
@@ -71,10 +77,16 @@ def canonical(value):
     return json.dumps(value, indent=1, ensure_ascii=False, sort_keys=True) + "\n"
 
 
-def fetch(pin, cache, refusals, what):
-    path = cache / pin["sha256"] if cache else None
-    if path and path.exists():
+TEXTS = ROOT / "standards/texts"
+
+
+def fetch(pin, write, refusals, what):
+    path = TEXTS / pin["sha256"]
+    if path.exists():
         data = path.read_bytes()
+    elif not write:
+        refusals.append(f"{what}: {pin['url']} is not kept at standards/texts/{pin['sha256']}: run python3 -I tools/standards/gate.py --write")
+        return None
     else:
         try:
             with urllib.request.urlopen(pin["url"], timeout=60) as response:
@@ -86,7 +98,7 @@ def fetch(pin, cache, refusals, what):
     if digest != pin["sha256"]:
         refusals.append(f"{what}: {pin['url']} is {digest}, not the pinned {pin['sha256']}")
         return None
-    if path:
+    if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
     return data
@@ -133,7 +145,7 @@ def generated(standard, inv, refusals):
     return got
 
 
-def derive(spec, cache, refusals):
+def derive(spec, write, refusals):
     oracle = {s["key"]: s for s in load(ORACLE)["sources"]}
     out = {}
     for standard in spec["standards"]:
@@ -156,7 +168,7 @@ def derive(spec, cache, refusals):
                 refusals.append(f"{key}: no extractor tools/standards/extract/{inv['extract']}.py")
                 continue
             source = inv.get("source") or pin
-            data = fetch(source, cache, refusals, key)
+            data = fetch(source, write, refusals, key)
             if data is None:
                 continue
             try:
@@ -266,7 +278,6 @@ def base_json(ref, path):
 
 def main(argv):
     check, write = "--check" in argv, "--write" in argv
-    cache = pathlib.Path(argv[argv.index("--cache") + 1]) if "--cache" in argv else None
     base = argv[argv.index("--base") + 1] if "--base" in argv else None
     seed = argv[argv.index("--seed") + 1] if "--seed" in argv else None
     refusals = []
@@ -276,7 +287,7 @@ def main(argv):
     for dup in sorted({k for k in keys if keys.count(k) > 1}):
         refusals.append(f"{dup} is registered twice")
 
-    requirements = derive(spec, cache, refusals)
+    requirements = derive(spec, write, refusals)
     rendered = canonical(requirements)
     if write:
         REQUIREMENTS.parent.mkdir(parents=True, exist_ok=True)

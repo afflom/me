@@ -130,17 +130,56 @@ pub fn scan_tracked(root: &Path) -> Result<Vec<Finding>, String> {
         ));
     }
     let deny = deny_terms(root);
+    let kept = kept_texts(root);
     let mut out = Vec::new();
     for rel in listed.stdout.split(|b| *b == 0).filter(|r| !r.is_empty()) {
         let rel = String::from_utf8_lossy(rel).to_string();
         let path = root.join(&rel);
-        if !path.is_file() {
+        if !path.is_file() || kept.contains(&rel) {
             continue;
         }
         let bytes = std::fs::read(&path).map_err(|e| format!("{rel}: {e}"))?;
         out.extend(scan_text(&rel, &String::from_utf8_lossy(&bytes), &deny));
     }
     Ok(out)
+}
+
+/// The kept standard texts: `standards/texts/<sha256>` for every hash that the
+/// standards register (`app/specs/standards/spec.json`) or the oracle
+/// (`app/specs/oracle/spec.json`) pins, and only when the file's own SHA-256 is
+/// that name. They are public upstream text (RFCs, W3C and IANA documents)
+/// fixed by that hash, which ST-01 reads offline; their examples and authors'
+/// addresses are the standards' own words, never the owner's. Any other file
+/// there, or one whose bytes differ from its name, is scanned as usual.
+fn kept_texts(root: &Path) -> std::collections::BTreeSet<String> {
+    let mut pins = std::collections::BTreeSet::new();
+    for spec in [
+        "app/specs/standards/spec.json",
+        "app/specs/oracle/spec.json",
+    ] {
+        let text = std::fs::read_to_string(root.join(spec)).unwrap_or_default();
+        pins.extend(
+            text.split("\"sha256\": \"")
+                .skip(1)
+                .filter_map(|rest| rest.get(..64))
+                .filter(|hex| {
+                    hex.bytes()
+                        .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+                })
+                .map(str::to_string),
+        );
+    }
+    let mut out = std::collections::BTreeSet::new();
+    for pin in pins {
+        let rel = format!("standards/texts/{pin}");
+        let Ok(hashed) = Command::new("sha256sum").arg(root.join(&rel)).output() else {
+            continue;
+        };
+        if hashed.status.success() && hashed.stdout.starts_with(pin.as_bytes()) {
+            out.insert(rel);
+        }
+    }
+    out
 }
 
 /// Every finding in every file under `dir` (the assembled page), with the deny
