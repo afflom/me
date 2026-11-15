@@ -26,9 +26,10 @@ table entry) and what exercises it (example ids); a row with neither is
 refused unless app/specs/oracle/vcard.json lists it in `debt` with a reason.
 
 Writes site/read/vcard.table.mjs and test/oracle/vcard.json; --check refuses
-either if stale. --cache DIR reads and keeps the fetched sources there.
+either if stale. Every source is read from
+app/specs/standards/texts/<sha256>, never from the network; --fetch keeps a pin that is not kept yet.
 
-usage: python3 -I tools/oracle/vcard.py [--check] [--cache DIR]
+usage: python3 -I tools/oracle/vcard.py [--check] [--fetch]
 """
 import json
 import pathlib
@@ -45,7 +46,7 @@ ORACLE = json.loads((ROOT / "app/specs/oracle/spec.json").read_text(encoding="ut
 TABLE = ROOT / "site/read/vcard.table.mjs"
 OUT = ROOT / "test/oracle/vcard.json"
 args = sys.argv[1:]
-cache = pathlib.Path(args[args.index("--cache") + 1]) if "--cache" in args else None
+TEXTS = ROOT / "app/specs/standards/texts"
 STANDARD = SPEC["standard"]
 
 
@@ -53,8 +54,8 @@ def refuse(why):
     sys.exit(f"vcard: {why}")
 
 
-def fetch(source):
-    return abnf.pinned_bytes(source["url"], source["sha256"], cache and cache / f"{source['key']}.txt", refuse).decode("utf-8")
+def fetch(source, headers={}):
+    return abnf.kept_bytes(source["url"], source["sha256"], TEXTS, refuse, "--fetch" in args, headers).decode("utf-8")
 
 
 source = {s["key"]: s for s in SPEC["sources"]}

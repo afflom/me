@@ -21,33 +21,22 @@ must be defined, bound or imported, or the grammar is refused.
 """
 import hashlib
 import re
-import time
 import urllib.request
 
 PAGE_FOOT = re.compile(r"\[Page \d+\]\s*$")
 
 
-def pinned_bytes(url, sha256, path, refuse, headers={}, timeout=60):
-    """The bytes at a URL, from the cache when kept there, refused unless their SHA-256 is the pinned one."""
-    if path and path.exists():
-        data = path.read_bytes()
-    else:
-        # A publisher that refuses or drops one request is asked again before the run fails.
-        for wait in (2, 8, 30, None):
-            try:
-                with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=timeout) as response:
-                    data = response.read()
-                break
-            except OSError:
-                if wait is None:
-                    raise
-                time.sleep(wait)
-        if path:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(data)
-    digest = hashlib.sha256(data).hexdigest()
-    if digest != sha256:
-        refuse(f"{url} is {digest}, not the pinned {sha256}")
+def kept_bytes(url, sha256, texts, refuse, fetch, headers={}, keep=True):
+    """A pinned source's bytes, read from the tree (texts/<sha256>) and never from the network;
+    fetch downloads a pin that is not kept yet and keeps it, unless keep is false (a source that may not be republished).
+    Refused unless their SHA-256 is the pinned one."""
+    path = texts / sha256
+    if not path.exists() and not fetch:
+        refuse(f"{url} is not kept at {path.relative_to(texts.parents[3])}: run this with --fetch")
+    data = path.read_bytes() if path.exists() else urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=120).read()
+    if hashlib.sha256(data).hexdigest() != sha256:
+        refuse(f"{url} is {hashlib.sha256(data).hexdigest()}, not the pinned {sha256}")
+    keep and not path.exists() and path.write_bytes(data)
     return data
 
 

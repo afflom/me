@@ -38,8 +38,9 @@ examples are taken out mechanically:
   - "diaml": each dialogue act of each DiAML file of a source published as
     separate files (DialogBank's gold ISO 24617-2 annotations), with the acts it
     depends on; the source is "held": its publisher states no licence to
-    republish it, so its examples are read from the pinned files whenever a
-    test needs them (--held) and only their count and SHA-256 are committed;
+    republish it, so it is never kept in the tree and no gate reads it: with
+    --fetch its pinned files are downloaded (--held writes their examples
+    outside the repository) and only their count and SHA-256 are committed;
   - "pairs": each sentence pair of a graded semantic-similarity benchmark in
     the genre the source names (the STS Benchmark's image and video captions,
     Cer et al., SemEval-2017 Task 1), with the similarity its annotators gave it
@@ -82,10 +83,10 @@ site/vocab/register.json and its Lean modules (Foundation.Vocab.V1.SchemaOrg,
 every term of eleven other schemas read from their own registries and
 ontologies, each pinned and cited (RT-01). Before it writes, the register is
 held to schema.org's own files: the release's whole graph and attic, the
-JSON-LD context, and every example of the release (the "schemaorg" source). --check refuses either if stale. --cache DIR reads
-and keeps the fetched sources there.
+JSON-LD context, and every example of the release (the "schemaorg" source). --check refuses either if stale. Every source is read from
+app/specs/standards/texts/<sha256>, never from the network; --fetch keeps a pin that is not kept yet.
 
-usage: python3 -I tools/oracle/gen.py [--check] [--cache DIR] [--fit-acts OUT] [--held OUT]
+usage: python3 -I tools/oracle/gen.py [--check] [--fetch] [--fit-acts OUT] [--held OUT]
 """
 import base64
 import csv as csvlib
@@ -114,22 +115,27 @@ SPEC = json.loads((ROOT / "app/specs/oracle/spec.json").read_text(encoding="utf-
 OUT = ROOT / "test/oracle/corpus.json"
 AUTHORITIES = ROOT / "model/authorities.toml"
 args = sys.argv[1:]
-cache = pathlib.Path(args[args.index("--cache") + 1]) if "--cache" in args else None
+TEXTS = ROOT / "app/specs/standards/texts"
 
 
 def refuse(why):
     sys.exit(f"oracle: {why}")
 
 
+def kept_text(url, sha256, headers={}, keep=True):
+    return abnf.kept_bytes(url, sha256, TEXTS, refuse, "--fetch" in args, headers, keep)
+
+
 def fetch(source):
     key = source["key"]
     # A source published as separate files: each pinned by its own SHA-256, the
     # source's by the SHA-256 of theirs in order. One JSON object, name to text.
+    # A held source is never kept in the tree: it is read only with --fetch.
     if "files" in source:
         if hashlib.sha256("".join(source["files"].values()).encode()).hexdigest() != source["sha256"]:
             refuse(f"{key}'s files together are not the pinned {source['sha256']}")
-        return json.dumps({url.rsplit("/", 1)[1]: abnf.pinned_bytes(url, pin, cache and cache / f"{key}.{n}.txt", refuse).decode("utf-8") for n, (url, pin) in enumerate(source["files"].items())}, ensure_ascii=False)
-    data = abnf.pinned_bytes(source["url"], source["sha256"], cache and cache / f"{key}.txt", refuse)
+        return json.dumps({url.rsplit("/", 1)[1]: kept_text(url, pin, keep="held" not in source).decode("utf-8") for url, pin in source["files"].items()}, ensure_ascii=False)
+    data = kept_text(source["url"], source["sha256"])
     # A benchmark published compressed (gzip, RFC 1952) is pinned as published and read uncompressed.
     if source["url"].endswith(".gz"):
         data = gzip.decompress(data)
@@ -727,7 +733,7 @@ PROPERTY_TYPES = {RDF_NS + "Property", OWL + "ObjectProperty", OWL + "DatatypePr
 
 
 def fetch_pin(pin):
-    return abnf.pinned_bytes(pin["url"], pin["sha256"], cache and cache / "vocab" / pin["file"], refuse, {"Accept": "text/turtle, application/rdf+xml;q=0.9, */*;q=0.5", "User-Agent": "prism-oracle/1"})
+    return kept_text(pin["url"], pin["sha256"], {"Accept": "text/turtle, application/rdf+xml;q=0.9, */*;q=0.5", "User-Agent": "prism-oracle/1"})
 
 
 def resolve(base, ref):
@@ -1497,6 +1503,7 @@ if "--fit-acts" in args:
 # --held OUT: the examples of every source held out of the repository (its
 # publisher states no licence to republish them), one JSON object a line, for
 # the tests that read them (test/oracle/intent.test.mjs); written outside it.
+# They are downloaded, so it needs --fetch.
 if "--held" in args:
     out = pathlib.Path(args[args.index("--held") + 1])
     rows = [row for source in SPEC["sources"] if source.get("held") for row in dialogue_examples(fetch(source), source)]
@@ -1508,11 +1515,13 @@ corpus, texts = [], {}
 for source in SPEC["sources"]:
     # A held source's examples never enter the repository: the corpus carries
     # only how many it gave and their SHA-256, which --held must reproduce.
+    # It is opened only with --fetch; without, the committed record is carried forward.
     if source.get("held"):
-        rows = list(dialogue_examples(fetch(source), source))
-        if not rows:
+        kept = [e for e in json.loads(OUT.read_text(encoding="utf-8"))["corpus"] if e["source"] == source["key"]] if "--fetch" not in args else []
+        rows = [] if kept else list(dialogue_examples(fetch(source), source))
+        if not kept and not rows:
             refuse(f"{source['key']} gave no example")
-        corpus.append({"id": f"{source['key']}-held", "source": source["key"], "kind": "held", "raw": "", "expect": read_held(rows)})
+        corpus += kept or [{"id": f"{source['key']}-held", "source": source["key"], "kind": "held", "raw": "", "expect": read_held(rows)}]
         continue
     text = abnf.unpaginate(fetch(source), examples=True)
     # A verified erratum (the RFC Editor's errata) corrects the published text: what it says it says, once.

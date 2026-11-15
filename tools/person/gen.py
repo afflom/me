@@ -1,7 +1,7 @@
-"""The whole-person model, made from WHO's ICF: python3 -I tools/person/gen.py [--check] [--cache DIR]
+"""The whole-person model, made from WHO's ICF: python3 -I tools/person/gen.py [--check] [--fetch]
 
 The whole person is WHO's ICF release pinned in app/specs/oracle/spec.json
-(`classifications`). This fetches it, keeps its tabulation byte for byte at
+(`classifications`). This reads it, keeps its tabulation byte for byte at
 app/specs/oracle/icf/, and refuses a release whose tabulation (csv) and
 workbook (OOXML, ECMA-376) disagree on any field. The classification's own
 structure, each line and across entities, is refused by generators/person
@@ -9,7 +9,8 @@ structure, each line and across entities, is refused by generators/person
 site/person/icf-rows.mjs, must be these entities field by field. Every entity
 keeps its code, title and URI (licence terms 1.2.3); the model's own functions
 in site/person/icf.mjs are marked as the Prism's (1.2.5).
---check writes nothing and refuses a stale model; --cache DIR keeps fetches.
+--check writes nothing and refuses a stale model; the release is read from
+app/specs/standards/texts/<sha256>, and only --fetch keeps a pin that is not kept yet.
 """
 import csv
 import io
@@ -26,7 +27,7 @@ import abnf  # noqa: E402
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SPEC = json.loads((ROOT / "app/specs/oracle/spec.json").read_text(encoding="utf-8"))
 args = sys.argv[1:]
-cache = pathlib.Path(args[args.index("--cache") + 1]) if "--cache" in args else None
+TEXTS = ROOT / "app/specs/standards/texts"
 CHECK = "--check" in args
 # --plant FORM OLD NEW: replace OLD by NEW in the release's tabulation, its
 # workbook or both (FORM), then run every check and write nothing, so a test can
@@ -39,8 +40,8 @@ def refuse(why):
     sys.exit(f"person: {why}")
 
 
-def fetch(key, url, sha256):
-    return abnf.pinned_bytes(url, sha256, cache and cache / key, refuse, {"User-Agent": "prism-person-gen"}, 120)
+def fetch(url, sha256, headers={"User-Agent": "prism-person-gen"}):
+    return abnf.kept_bytes(url, sha256, TEXTS, refuse, "--fetch" in args, headers)
 
 
 def tabulation(raw):
@@ -84,8 +85,8 @@ def workbook(raw):
 source = SPEC["classifications"][0]
 if source["key"] != "icf":
     refuse("the oracle's first classification is not the ICF")
-archive = zipfile.ZipFile(io.BytesIO(fetch("icf.zip", source["url"], source["sha256"])))
-fetch("icd-licence.pdf", source["licence"]["terms"], source["licence"]["termsSha256"])
+archive = zipfile.ZipFile(io.BytesIO(fetch(source["url"], source["sha256"])))
+fetch(source["licence"]["terms"], source["licence"]["termsSha256"])
 tab_raw = archive.read(source["tabulation"])
 book_raw = archive.read(source["workbook"])
 if PLANT:
