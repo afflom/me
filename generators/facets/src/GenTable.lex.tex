@@ -1,0 +1,82 @@
+\begin{lexlean}{GenTable}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\title{Table generator}
+\begin{semanticmodule}
+definition{
+  name: tableText,
+  parameters: [value : String],
+  result: Bytes,
+  body: (Foundation.Utf8::encode value)
+}
+
+definition{
+  name: tableSlice,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (Foundation.Bytes::sliceBytes s start count)
+    | Option.none => 0x
+    | Option.some b => b)
+}
+
+definition{
+  name: tableJoin,
+  parameters: [parts : (List Bytes)],
+  result: Bytes,
+  body: (match parts
+    | List.nil => 0x
+    | List.cons head rest => (Foundation.Bytes::appendBytes head (tableJoin rest))),
+  recursive_argument: parts
+}
+
+definition{
+  name: tableFacet,
+  parameters: [target : Bytes],
+  result: (Option Bytes),
+  body: (let n : Nat := (Foundation.Bytes::byteLength target); (if (n <? 16) then (ctor Option.none [Bytes]) else (if (Foundation.Tar::sameBytes (tableSlice target 0 5) (tableText "site/")) then (if (Foundation.Tar::sameBytes (tableSlice target (prim subtract n 10 : Nat) 10) (tableText "/table.mjs")) then (ctor Option.some [Bytes] (tableSlice target 5 (prim subtract n 15 : Nat))) else (ctor Option.none [Bytes])) else (ctor Option.none [Bytes])))),
+  axioms: [propext]
+}
+
+definition{
+  name: tableSpecPath,
+  parameters: [facet : Bytes],
+  result: Bytes,
+  body: (tableJoin (cons (tableText "app/specs/") (cons facet (cons (tableText "/spec.json") (nil Bytes)))))
+}
+
+definition{
+  name: tableHas,
+  parameters: [spec : Bytes, key : String],
+  result: Bool,
+  body: (match (Foundation.Json::memberAt spec (Foundation.Json::root spec) (tableText key))
+    | Option.none => false
+    | Option.some i => true),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tableIsFacet,
+  parameters: [spec : Bytes],
+  result: Bool,
+  body: (if (tableHas spec "fields") then (if (tableHas spec "outcomes") then (if (tableHas spec "guarantees") then (tableHas spec "tree") else false) else false) else false),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: generate,
+  parameters: [archive : Bytes, target : Bytes],
+  result: (Option Bytes),
+  body: (match (tableFacet target)
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some facet => (match (Foundation.Tar::find archive (tableSpecPath facet))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some spec => (if (tableIsFacet spec) then (ctor Option.some [Bytes] (tableJoin (cons (tableText "// Written by generators/facets (GenTable) from ") (cons (tableSpecPath facet) (cons (tableText ". Do not edit.\n// The facet's spec as the page and its suites read it. The compiled guest\n// decides; judge walks the same tree for the curator's replay and the\n// suites' cross-check.\n\nexport const SPEC = ") (cons spec (cons (tableText ";\n\n") (cons (tableText "// The fields in the order a request line names them, each with its values.\nexport const FIELDS = SPEC.fields.map((f) => [f.name, f.values]);\nexport const ANSWERS = SPEC.outcomes;\n// The longest request line: every field at its longest value, one space apart.\nexport const MAX_LINE = FIELDS.reduce((n, [, v]) => n + Math.max(...v.map((x) => x.length)), FIELDS.length - 1);\nexport const GUARANTEES = SPEC.guarantees.map((g, i) => ({ id: 'INV-' + String(i + 1).padStart(3, '0'), ...g }));\nexport const SIGNALS = SPEC.signals ?? {};\nexport const TUNABLE = SPEC.tunable ?? [];\nexport const START = SPEC.start ?? {};\nexport const LEARNING = SPEC.learning ?? {};\nexport const PROVIDERS = SPEC.providers;\n\n// The spec's own tree: each test is one field against one value.\nconst walk = (t, r) => (typeof t === 'string' ? t : walk(r[t.if[0]] === t.if[1] ? t.then : t.else, r));\n\nexport function judge(r) {\n  return walk(SPEC.tree, r);\n}\n\nexport function line(r) {\n  return FIELDS.map(([name]) => r[name]).join(' ');\n}\n") (nil Bytes))))))))) else (ctor Option.none [Bytes])))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

@@ -69,7 +69,7 @@ def read_examples(facet, spec):
 
 
 def from_tree(spec, examples):
-    """A keyword facet's spec (tools/facet/gen.py and its kin): a binary decision
+    """A keyword facet's spec (dest, uorc, resonance, router and their kin): a binary decision
     tree over choice fields, its guarantees and its examples as pairs. Read as
     the builder's decision table: every root-to-leaf path in then-first order is
     one first-match rule, the path that fails every test is `otherwise`, each

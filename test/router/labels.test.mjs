@@ -4,8 +4,8 @@
 // then taken apart and labeled through the router (site/router/labels.mjs).
 // What each example is (its kind) is what its specification says it is; who
 // it is with is what the reference reader finds. The router's decisions come
-// from the generated tree, which tools/facet/gen.py holds to the compiled
-// guest. Every quality measure of the product record whose gate is this file
+// from the spec's own tree (site/router/table.mjs, written by GenTable),
+// which router.test.mjs holds to the compiled guest. Every quality measure of the product record whose gate is this file
 // is computed here and held to its own threshold.
 // usage: node test/router/labels.test.mjs
 import assert from "node:assert/strict";

@@ -70,15 +70,13 @@ default already refuses it, and INV-002 still holds.
 The modules carry no personal value. They speak of "the owner"; the owner's
 facts live only in the browser.
 - Resonance: the Lean is written by the Prism's builder (`python3 -I tools/prompts/gen.py`),
-  every name carrying the `prismResonance` prefix; the generic
-  `tools/facet/gen.py app/specs/resonance/spec.json` (the dest generator,
-  parameterized by the spec's `facet` record) writes only `site/resonance/table.mjs`.
-  It checks every request against every guarantee and example before writing, and
-  `--check` holds the table to the spec. Its standalone guest comes from
+  every name carrying the `prismResonance` prefix; the LexLean generator
+  `GenTable` (generators/facets, a step of generators/pipeline.json) writes
+  `site/resonance/table.mjs`, the spec as the page reads it, and GN-01 holds it there. Its standalone guest comes from
   `tools/guests/build.sh` (GU-01).
 - Router (the R4 router): the Lean is written by the Prism's builder, every name
-  carrying the `prismRouter` prefix; `tools/facet/gen.py app/specs/router/spec.json`
-  writes `site/router/table.mjs`.
+  carrying the `prismRouter` prefix; `GenTable` (generators/facets) writes
+  `site/router/table.mjs`.
   It decides, for one value of incoming content in its own schema and one Prism
   feature, whether that feature's compiled reader maps it (`map`), the schema's
   own typed value is taken (`direct`), or nothing happens (`skip`, `refuse`).
