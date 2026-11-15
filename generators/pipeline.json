@@ -36,6 +36,20 @@
         ".gen/arch-index"
       ],
       "output": "app/src/PrismSystem.lex.tex"
+    },
+    {
+      "program": "standards",
+      "generator": "wcagfacts",
+      "split": "app/specs/standards/upstream/wcag.json",
+      "output": ".gen/wcag-facts"
+    },
+    {
+      "program": "standards",
+      "generator": "wcag",
+      "inputs": [
+        ".gen/wcag-facts"
+      ],
+      "output": "test/standards/generated/wcag-2.2.json"
     }
   ]
 }
