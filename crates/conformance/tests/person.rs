@@ -49,7 +49,8 @@ fn person_wp_01() {
         "WP-01: the ICF release is a cited authority whose evidence is this ID"
     );
     assert!(
-        read("site/person/icf.mjs").contains("Written by generators/person/src/GenIcfModule.lex.tex"),
+        read("site/person/icf.mjs")
+            .contains("Written by generators/person/src/GenIcfModule.lex.tex"),
         "WP-01: the page's model is written by the LexLean program"
     );
 }
