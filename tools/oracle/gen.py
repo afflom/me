@@ -16,6 +16,9 @@ examples are taken out mechanically:
     written "CRLF" marks made line breaks;
   - "otc": each example of the WICG origin-bound one-time codes report, the
     message and the code the report says it carries, or none;
+  - "recurrences": each example of RFC 5545 section 3.8.5.3, its DTSTART,
+    EXDATE and RRULE lines (one example per RRULE where it gives two, "or")
+    and the instances the specification lists for it after "==>";
   - "page": the whole test page, its cases graded in a browser (the Web
     Platform Tests' accname pages: each case names its expected name);
   - "patterns": each distinct pattern string of a labelled research dataset
@@ -38,6 +41,14 @@ parameters, TEXT escapes, DATE and DATE-TIME with TZID, UTC or floating), a
 vCard by the same content lines (RFC 6350 section 3.3, the formatted name and
 first email). What
 the reader finds is what test/oracle/read.test.mjs holds the Prism's reading to.
+A recurrence example carries the specification's own instances: its listing
+is read as written, a year (or a day) in parentheses with its zone's
+abbreviation, then months and days (or times); "..." ends what is listed, and
+a listing with no "..." of a rule with COUNT or UNTIL is the whole set. Each
+listed instance must carry the abbreviation its zone gives it, or the
+extraction is refused.
+A source's verified errata (RFC Editor) are applied to its text first, each
+replacing the text it says the RFC says, which must occur once.
 A displayed row and a test vector carry the specification's own answer, which
 Python's email.header and base64 must also give, or the extraction is refused.
 
@@ -484,6 +495,98 @@ def read_calendar(raw):
     return expect
 
 
+def recurrences(text):
+    """RFC 5545 3.8.5.3's examples: a description, its iCalendar lines, and the instances listed after "==>"."""
+    lines = text.split("\n")
+    heads = [i for i, l in enumerate(lines) if l.startswith("3.8.5.3.  Recurrence Rule")]
+    ends = [i for i, l in enumerate(lines) if l.startswith("3.8.6.  Alarm Component Properties")]
+    if not heads or not ends:
+        refuse("rfc5545 has no section 3.8.5.3")
+    body = lines[heads[-1] : ends[-1]]
+    start = next(i for i, l in enumerate(body) if l.strip().startswith("Example:  All examples assume"))
+    i, said = start + 1, []
+    while i < len(body):
+        line = body[i]
+        if not line.strip().startswith("DTSTART"):
+            # The description: the paragraph before the example, which ends in ":".
+            if line.strip() and not line.strip().startswith("Note:") and len(line) - len(line.lstrip()) == 6:
+                said = [line.strip()] if not said or said[-1].endswith(":") else said + [line.strip()]
+            i += 1
+            continue
+        # The iCalendar lines, to the listing; a line that opens with a space continues the one before (3.1).
+        props, rules = [], []
+        while i < len(body) and not body[i].strip().startswith("==>"):
+            raw = body[i]
+            if raw.strip() and raw.strip() != "or":
+                if raw.startswith("        ") and not raw.strip().startswith(("DTSTART", "RRULE", "EXDATE", "RDATE")):
+                    if props[-1] == "RRULE":
+                        rules[-1] += raw.strip()
+                    else:
+                        props[-1] += raw.strip()
+                elif raw.strip().startswith("RRULE"):
+                    rules.append(raw.strip())
+                    props.append("RRULE")
+                else:
+                    props.append(raw.strip())
+            i += 1
+        listing = []
+        # The listing runs to a blank line or the next description (a page break can join them).
+        while i < len(body) and body[i].strip() and len(body[i]) - len(body[i].lstrip()) > 6:
+            listing.append(body[i].strip())
+            i += 1
+        others = [p for p in props if p != "RRULE"]
+        title = " ".join(said).rstrip(":")
+        for rule in rules:
+            yield json.dumps({"title": title, "ical": "\r\n".join(others + [rule]) + "\r\n", "listed": " ".join(listing)}, ensure_ascii=False)
+        said = []
+
+
+MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+
+
+def read_recurrence(raw):
+    row = json.loads(raw)
+    props = {name: (params, value) for name, params, value in content_lines(row["ical"])}
+    params, value = props["DTSTART"]
+    zone = zoneinfo.ZoneInfo(params["TZID"])
+    first = datetime.datetime.strptime(value, "%Y%m%dT%H%M%S")
+    listed = row["listed"].removeprefix("==>").replace("...", " \u2016 ")
+    out, cut = [], "\u2016" in listed
+    for head, rest in re.findall(r"\(([^)]*)\)\s*([^(]*)", listed):
+        h = head.split()
+        abbr = h[-1]
+        day = re.fullmatch(r"([A-Z][a-z]+) (\d+), (\d{4}) [A-Z]+", head)
+        if day:
+            # A day, then its times.
+            month, d, y = MONTHS.index(day.group(1)) + 1, int(day.group(2)), int(day.group(3))
+            when = [(y, month, d, int(hh), int(mm)) for hh, mm in re.findall(r"(\d{1,2}):(\d{2})", rest.split("\u2016")[0])]
+        else:
+            # A year (and a time of day), then months and their days.
+            y = int(h[0])
+            t = re.search(r"(\d{1,2}):(\d{2}) (AM|PM)", head)
+            hh, mm = ((int(t.group(1)) % 12 + (12 if t.group(3) == "PM" else 0)), int(t.group(2))) if t else (first.hour, first.minute)
+            when, month = [], None
+            for token in re.findall(r"[A-Z][a-z]+|\d+-\d+|\d+", rest.split("\u2016")[0]):
+                if token in MONTHS:
+                    month = MONTHS.index(token) + 1
+                elif "-" in token:
+                    a, b = map(int, token.split("-"))
+                    when += [(y, month, d, hh, mm) for d in range(a, b + 1)]
+                else:
+                    when.append((y, month, int(token), hh, mm))
+        for y, mo, d, hh, mm in when:
+            local = datetime.datetime(y, mo, d, hh, mm, tzinfo=zone)
+            if local.tzname() != abbr:
+                refuse(f"rfc5545 3.8.5.3 lists {local.isoformat()} as {abbr}, which {params['TZID']} calls {local.tzname()}")
+            out.append(ms(local))
+        if "\u2016" in rest:
+            break
+    rule = props["RRULE"][1]
+    whole = not cut and bool(re.search(r"(^|;)(COUNT|UNTIL)=", rule))
+    expect = {"title": row["title"], "start": {"at": ms(first.replace(tzinfo=zone))}, "rule": rule, "instances": out, "whole": whole}
+    return expect
+
+
 def read_contact(raw):
     """RFC 6350: FN is the formatted name (6.2.1); EMAIL the address (6.4.2)."""
     expect = {}
@@ -543,8 +646,13 @@ def read_feed(raw):
 corpus = []
 for source in SPEC["sources"]:
     text = unpaginate(fetch(source))
-    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples, "patterns": lambda text: pattern_examples(text, source), "page": page}[source["examples"]]
-    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc, "coercive": read_pattern, "accname": read_accname, "feed": read_feed}[source["kind"]]
+    # A verified erratum (the RFC Editor's errata) corrects the published text: what it says it says, once.
+    for erratum in source.get("errata", []):
+        if erratum["status"] != "Verified" or text.count(erratum["says"]) != 1:
+            refuse(f"{source['key']} erratum {erratum['id']} is not a verified correction of text it holds once")
+        text = text.replace(erratum["says"], erratum["should"])
+    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples, "patterns": lambda text: pattern_examples(text, source), "page": page, "recurrences": recurrences}[source["examples"]]
+    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc, "coercive": read_pattern, "accname": read_accname, "feed": read_feed, "recurrence": read_recurrence}[source["kind"]]
     n = kept = 0
     for raw in take(text):
         n += 1

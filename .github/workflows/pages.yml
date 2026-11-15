@@ -25,10 +25,13 @@ on:
 permissions:
   contents: read
 
-# Main deploys one at a time and is never cancelled; a newer push to a pull
-# request cancels its older run.
+# A newer push to a pull request cancels its older run. Main's gates run as
+# soon as each merge lands, beside each other (a queued merge waited 12 to 27
+# minutes for the one before it); only the publish job is one at a time, never
+# cancelled, and it publishes only main's head, so an older run that finishes
+# later never puts an older page back.
 concurrency:
-  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.event.pull_request.number) || (github.event_name == 'merge_group' && format('pages-mq-{0}', github.run_id)) || 'pages' }}
+  group: ${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.event.pull_request.number) || format('pages-run-{0}', github.run_id) }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
@@ -39,8 +42,12 @@ jobs:
     if: github.repository != 'UOR-Foundation/template'
     runs-on: ubuntu-24.04
     timeout-minutes: 45
+    outputs:
+      current: ${{ steps.head.outputs.current }}
     permissions:
       contents: read
+      actions: read
+      pull-requests: read
       id-token: write
       attestations: write
     steps:
@@ -83,11 +90,38 @@ jobs:
       # and a holo built here never carries the build ID of a proof made
       # there (seen on main: same inputs, different build). A page proof is
       # reused only by a later page build, under the same read-time check.
+      #
+      # app/specs is not a proof input: the proof reads the lexlean project
+      # (app/src, app/language and app's own files), and a spec reaches it only
+      # through the .lex.tex a generator writes into app/src. So a change to the
+      # specs alone reuses the proof (xtask proof.rs INPUT_PATHS says the same).
       - name: The proof of these exact proof inputs, kept by an earlier page build
+        id: proof-cache
         uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: .prism-proof
-          key: prism-page-proof-${{ runner.os }}-${{ runner.arch }}-sdk-${{ steps.proof-inputs.outputs.sdk }}-lean-${{ steps.proof-inputs.outputs.lean }}-${{ hashFiles('app/**', 'prismpm.lock', 'Justfile', 'rust-toolchain.toml') }}
+          key: prism-page-proof-${{ runner.os }}-${{ runner.arch }}-sdk-${{ steps.proof-inputs.outputs.sdk }}-lean-${{ steps.proof-inputs.outputs.lean }}-${{ hashFiles('app/**', '!app/specs/**', 'prismpm.lock', 'Justfile', 'rust-toolchain.toml') }}
+      # A cache a pull request saves is never visible to main, so main proved
+      # every merge again (16 to 22 minutes). The merged pull request's own page
+      # build keeps its proof as an artifact; main takes it as a candidate only.
+      # `xtask proof-reuse` still accepts it only if it binds main's checkout,
+      # and any failure here just means: prove in full.
+      - name: On main, the proof the merged pull request's page build kept
+        if: steps.proof-cache.outputs.cache-hit != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          head=$(gh api "repos/$REPO/commits/$SHA/pulls" --jq '[.[] | select(.merged_at != null)][0].head.sha // empty')
+          test -n "$head"
+          run=$(gh api "repos/$REPO/actions/workflows/pages.yml/runs?head_sha=$head&event=pull_request&status=success&per_page=1" --jq '.workflow_runs[0].id // empty')
+          test -n "$run"
+          gh run download "$run" --repo "$REPO" --name prism-page-proof --dir .prism-proof
+          echo "candidate proof from the merged pull request's run $run"
       - name: Build and verify the holo through the locked SDK
         shell: bash
         env:
@@ -100,12 +134,17 @@ jobs:
             exit 64
           fi
           docker_config=$(mktemp -d)
-          trap 'rm -rf "$docker_config"' EXIT
+          # The SDK's /tmp is a private directory on the runner's own disk, as
+          # bootstrap.yml has it since template 1cb0d36: the patched SDK's build
+          # outgrows a fixed 2 GiB tmpfs.
+          scratch=$(mktemp -d)
+          mkdir -p "$scratch/prismpm-home/.docker"
+          trap 'rm -rf "$docker_config" "$scratch"' EXIT
           printf '{}\n' >"$docker_config/config.json"
           docker run --rm \
             --user "$(id -u):$(id -g)" \
             --group-add "$(stat -c '%g' /var/run/docker.sock)" \
-            --tmpfs /tmp:rw,exec,nosuid,size=2g \
+            --volume "$scratch:/tmp" \
             --volume "$PWD:$PWD" \
             --volume /var/run/docker.sock:/var/run/docker.sock \
             --volume "$docker_config:/tmp/prismpm-home/.docker:ro" \
@@ -141,6 +180,16 @@ jobs:
                 fi
               fi
             '
+      # The proof this pull request ran on, for main to take when it merges.
+      - name: Keep the proof for main
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: prism-page-proof
+          path: .prism-proof
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Find the holo
         id: holo
         shell: bash
@@ -277,11 +326,33 @@ jobs:
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:
           path: site
+      # Main's gates run beside each other, so this run publishes only if its
+      # commit is still main's head; a newer merge's run publishes that one.
+      - name: Is this commit still main's head
+        id: head
+        if: steps.attest.outcome == 'success'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          head=$(gh api "repos/$REPO/commits/main" --jq .sha)
+          if [[ $head == "$SHA" ]]; then
+            echo "current=true" >>"$GITHUB_OUTPUT"
+          else
+            echo "current=false" >>"$GITHUB_OUTPUT"
+            echo "::notice::main moved on to $head; that merge's run publishes it, not this one"
+          fi
 
   deploy:
     name: publish the page
     needs: build
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.build.outputs.current == 'true'
+    concurrency:
+      group: pages-publish
+      cancel-in-progress: false
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:

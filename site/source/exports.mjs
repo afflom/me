@@ -17,7 +17,7 @@ async function digest(text) {
 }
 
 // One message, as mail: who said it, in which conversation, when, and what.
-export async function messageOf({ service, from, to, title, at, body }) {
+export async function messageOf({ service, from, to, title, at, body, seen }) {
   const when = Number.isNaN(at.getTime()) ? new Date(0) : at;
   const id = await digest(`${service}\n${title}\n${from}\n${when.toISOString()}\n${body}`);
   return [
@@ -27,6 +27,7 @@ export async function messageOf({ service, from, to, title, at, body }) {
     `Date: ${when.toUTCString()}`,
     `Message-ID: <${id}@${service}.invalid>`,
     `X-Prism-Service: ${service}`,
+    ...(seen ? [`X-Prism-Seen: who=${seen.who ? 'yes' : 'no'}; at=${seen.at ? 'yes' : 'no'}`] : []),
     'Content-Type: text/plain; charset=utf-8',
     '',
     String(body).replace(/\r?\n/g, '\r\n'),
@@ -41,7 +42,8 @@ export async function seenMessage(service, text, now = Date.now()) {
   const item = JSON.parse(text);
   const at = new Date(item.at ?? NaN);
   const where = String(item.where ?? '').trim() || service;
-  return messageOf({ service, from: item.who || where, to: where, title: where, at: Number.isNaN(at.getTime()) ? new Date(now) : at, body: item.words });
+  // What the tab itself showed of who and when, so a reading that misses them can be told apart.
+  return messageOf({ service, from: item.who || where, to: where, title: where, at: Number.isNaN(at.getTime()) ? new Date(now) : at, body: item.words, seen: { who: !!item.who, at: !Number.isNaN(at.getTime()) } });
 }
 
 // RFC 4180 CSV: quoted fields may hold commas, quotes and newlines.
