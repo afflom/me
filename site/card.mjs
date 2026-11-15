@@ -827,7 +827,8 @@ export default async function start({ app, reason, $ }) {
       const from = new Date().setHours(0, 0, 0, 0);
       const next = place.order === "upcoming" ? held.filter((item) => scheduled(item) && item.at >= from && !item.cancelled).sort((a, b) => a.at - b.at)[0] : null;
       const one = people && place.key === people.place ? people.all[0]?.name : (next ?? held.find((item) => item.at <= Date.now()) ?? held[0]);
-      card.querySelector(".pr-card-latest").textContent = typeof one === "string" ? one : one ? (one.sealed ? WORDS.sealed : one.title || "") : "";
+      // The next thing ahead says when it is.
+      card.querySelector(".pr-card-latest").textContent = typeof one === "string" ? one : one ? (one.sealed ? WORDS.sealed : [one.title, one === next ? whenOfItem(one) : ""].filter(Boolean).join(" · ")) : "";
       card.classList.toggle("pr-card-empty", !held.length);
     }
   }
