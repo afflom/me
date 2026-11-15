@@ -1,18 +1,21 @@
 #!/bin/sh
-# Build the generators program (generators/, a LexLean text/3 application) in the
-# locked SDK with no network, and pin it: generators/bin/prism-generators and
-# generators/lock.json, which tools/generators/run.sh --check holds (GN-01).
-#   SDK=<image> tools/generators/build.sh
+# Build one generator program (generators/PROGRAM, a LexLean text/3 application)
+# in the locked SDK with no network, and pin it: generators/PROGRAM/bin and
+# generators/PROGRAM/lock.json, which tools/generators/run.sh --check holds (GN-01).
+#   SDK=<image> tools/generators/build.sh PROGRAM
 set -eu
 ROOT=$(cd "$(dirname "$0")/../.." && pwd)
 SDK=${SDK:?set SDK to the PrismPM SDK image}
+P=${1:?name the program, a directory of generators/}
+D="$ROOT/generators/$P"
+mkdir -p "$D/src/Foundation" && cp -r "$ROOT/generators/foundation/." "$D/src/Foundation/"
 work=$(mktemp -d)
-cp -r "$ROOT/generators/." "$work/"
+cp -r "$D/." "$work/"
 rm -rf "$work/bin" "$work/.lexlean" "$work/.prism"
 docker run --rm -u 0 --network none -v "$work:/w" -w /w --entrypoint sh "$SDK" -c \
   "lexlean lock && lexlean fmt --all && lexlean lock && lexlean verify && prismpm build --no-provenance"
-cp -r "$work/src/." "$ROOT/generators/src/"
-cp "$work/lexlean.lock" "$ROOT/generators/lexlean.lock"
-mkdir -p "$ROOT/generators/bin"
-cp "$(ls "$work"/.prism/build/*/cli/bin/x86_64-unknown-linux-musl/prism-generators | head -n 1)" "$ROOT/generators/bin/prism-generators"
-cd "$ROOT" && tools/generators/run.sh --lock
+cp -r "$work/src/." "$D/src/"
+cp "$work/lexlean.lock" "$D/lexlean.lock"
+mkdir -p "$D/bin"
+cp "$(ls "$work"/.prism/build/*/cli/bin/x86_64-unknown-linux-musl/prism-generators | head -n 1)" "$D/bin/prism-generators"
+cd "$ROOT" && tools/generators/run.sh --lock "$P"

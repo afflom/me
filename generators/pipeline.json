@@ -1,9 +1,10 @@
 {
-  "comment": "The steps tools/generators/run.sh runs through the generators program, in order. requestMaximum is the program's own bound (Generators.lex.tex); pieceMaximum leaves room in it for the request line and the archive's headers.",
+  "comment": "The steps tools/generators/run.sh runs, in order; each names the program (generators/<program>/) whose generator writes its output. requestMaximum is the programs' request bound (their Generators.lex.tex); pieceMaximum leaves room in it for the request line and the archive's headers.",
   "requestMaximum": 32768,
   "pieceMaximum": 30720,
   "steps": [
     {
+      "program": "system",
       "generator": "registerkey",
       "each": {
         "file": "app/specs/standards/spec.json",
@@ -12,6 +13,7 @@
       "output": ".gen/register-keys"
     },
     {
+      "program": "system",
       "generator": "systemcheck",
       "inputs": [
         "app/specs/system/spec.json",
@@ -21,11 +23,13 @@
       "output": ".gen/system-check"
     },
     {
+      "program": "system",
       "generator": "archindex",
       "split": "app/src/Architecture.lex.tex",
       "output": ".gen/arch-index"
     },
     {
+      "program": "system",
       "generator": "system",
       "inputs": [
         "app/specs/system/spec.json",

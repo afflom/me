@@ -55,7 +55,7 @@ model does not sanction.
 
 | ID | Level | Statement |
 | --- | --- | --- |
-| `GN-01` | `build` | Every output generators/pipeline.json names is what its LexLean generator writes, and the program is built from generators/ as it stands |
+| `GN-01` | `build` | Every output generators/pipeline.json names is what its LexLean generator writes, each generator program is built from its sources as they stand, and every program carries generators/foundation byte for byte |
 
 ## google
 

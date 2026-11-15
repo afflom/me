@@ -1,27 +1,39 @@
 #!/bin/sh
-# Runs every step of generators/pipeline.json through the generators program,
-# a LexLean text/3 application built by `prismpm build` in generators/.
+# Runs every step of generators/pipeline.json through the generator programs.
+# Each program is a LexLean text/3 application, generators/<program>/, built by
+# `prismpm build` and pinned by tools/generators/build.sh. Their Foundation is
+# one module set, generators/foundation/, copied byte for byte into each.
 #   tools/generators/run.sh          write each step's output
 #   tools/generators/run.sh --check  fail when a committed output differs (GN-01)
+#   tools/generators/run.sh --lock P record program P's sources and binary (build.sh)
 # A request is "<generator> <output>\n" and a ustar archive of the step's inputs,
-# and must fit the program's request bound. A step with "split" runs once per
-# piece of that file, cut at line ends, and its output is the pieces' outputs
-# joined in order; a step with "each" runs once per element of a JSON array.
-# Outputs under .gen/ are intermediate and never committed.
-#   tools/generators/run.sh --lock           record the program's sources and binary (build.sh)
+# and must fit the request bound. A step with "split" runs once per piece of that
+# file, cut at line ends; a step with "each" runs once per element of a JSON array;
+# either way its output is the outputs joined in order. Outputs under .gen/ are
+# intermediate and never committed.
 set -eu
 cd "$(dirname "$0")/../.."
-program=generators/bin/prism-generators; mode=${1:-write}
+mode=${1:-write}
 
-# The program is pinned to its sources: a change to generators/ needs build.sh.
-digest() {
-  sources=$(git ls-files --others --cached --exclude-standard generators | grep -v -e '^generators/bin/' -e '^generators/lock.json$' -e '^generators/pipeline.json$' | sort)
-  printf '{\n  "comment": "Written by tools/generators/build.sh. GN-01 fails when generators/ or the program no longer match.",\n  "sources": "%s",\n  "program": "%s"\n}\n' \
-    "$(sha256sum $sources | sha256sum | cut -c1-64)" "$(sha256sum "$program" | cut -c1-64)"
+# A program is pinned to its sources: a change to generators/<program>/ needs build.sh.
+digest() { # digest PROGRAM
+  sources=$(git ls-files --others --cached --exclude-standard "generators/$1" | grep -v -e "^generators/$1/bin/" -e "^generators/$1/lock.json$" | sort)
+  printf '{\n  "comment": "Written by tools/generators/build.sh. GN-01 fails when generators/%s or its program no longer match.",\n  "sources": "%s",\n  "program": "%s"\n}\n' \
+    "$1" "$(sha256sum $sources | sha256sum | cut -c1-64)" "$(sha256sum "generators/$1/bin/prism-generators" | cut -c1-64)"
 }
-if [ "$mode" = --lock ]; then digest > generators/lock.json; echo "pinned $program"; exit 0; fi
-if [ "$mode" = --check ] && ! digest | cmp -s - generators/lock.json; then
-  echo "GN-01: generators/ changed since its program was built: run SDK=<image> tools/generators/build.sh" >&2; exit 1
+if [ "$mode" = --lock ]; then digest "$2" > "generators/$2/lock.json"; echo "pinned generators/$2"; exit 0; fi
+if [ "$mode" = --check ]; then
+  for lock in generators/*/lock.json; do
+    p=$(basename "$(dirname "$lock")")
+    if ! digest "$p" | cmp -s - "$lock"; then
+      echo "GN-01: generators/$p changed since its program was built: run SDK=(image) tools/generators/build.sh $p" >&2; exit 1
+    fi
+    for f in $(cd generators/foundation && find . -type f | sort); do
+      if ! cmp -s "generators/foundation/$f" "generators/$p/src/Foundation/$f"; then
+        echo "GN-01: generators/$p/src/Foundation/$f is not generators/foundation/$f" >&2; exit 1
+      fi
+    done
+  done
 fi
 # js PATH < JSON: the value at a dotted path, one line per element of an array.
 js() { python3 -I -c 'import json, sys
@@ -43,7 +55,7 @@ run() { # run GENERATOR OUTPUT STAGE PATHS... -> appends the written file to $wo
   if [ "$size" -gt "$bound" ]; then
     echo "GN-01: $gen for $out: request of $size bytes exceeds the bound $bound; split its input" >&2; exit 1
   fi
-  if ! "$program" run "$work/request" > "$work/report"; then
+  if ! "generators/$program/bin/prism-generators" run "$work/request" > "$work/report"; then
     echo "GN-01: $gen for $out: $(head -c 400 "$work/report")" >&2; exit 1
   fi
   tail -c +9 "$work/report" >> "$work/out"
@@ -51,7 +63,7 @@ run() { # run GENERATOR OUTPUT STAGE PATHS... -> appends the written file to $wo
 
 steps=$(js .steps < generators/pipeline.json)
 echo "$steps" | while read -r step; do
-  gen=$(echo "$step" | js .generator); out=$(echo "$step" | js .output)
+  program=$(echo "$step" | js .program); gen=$(echo "$step" | js .generator); out=$(echo "$step" | js .output)
   : > "$work/out"
   split_path=$(echo "$step" | js .split)
   each_path=$(echo "$step" | js .each.file)

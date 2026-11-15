@@ -1,11 +1,14 @@
 //! The `generators` suite: every generated file is written by a LexLean program.
 //!
-//! generators/ is one LexLean text/3 application whose generators are modules
-//! (GenSystem, ...). tools/generators/build.sh builds it in the locked SDK and pins
-//! the program in generators/lock.json; tools/generators/run.sh runs the steps of
-//! generators/pipeline.json through it.
-//! `GN-01` fails when generators/ changed since the program was built, or a
-//! committed output is not what its generator writes from its inputs.
+//! Each directory of generators/ but foundation/ is one LexLean text/3 application
+//! whose generators are modules (generators/system: GenSystem). Native Lean has a
+//! fixed time for one program, so families of generators are separate programs;
+//! they share generators/foundation, copied into each. tools/generators/build.sh
+//! builds one in the locked SDK and pins it in its lock.json; tools/generators/run.sh
+//! runs the steps of generators/pipeline.json through them.
+//! `GN-01` fails when a program's sources changed since it was built, its Foundation
+//! is not generators/foundation, or a committed output is not what its generator
+//! writes from its inputs.
 
 use std::path::PathBuf;
 use std::process::Command;
@@ -18,7 +21,7 @@ fn root() -> PathBuf {
         .to_path_buf()
 }
 
-/// `GN-01`: every output generators/pipeline.json names is what its LexLean generator writes, and the program is built from generators/ as it stands
+/// `GN-01`: every output generators/pipeline.json names is what its LexLean generator writes, each generator program is built from its sources as they stand, and every program carries generators/foundation byte for byte
 #[test]
 fn generators_gn_01() {
     let out = Command::new("sh")
