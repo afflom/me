@@ -6,7 +6,8 @@
 # A request is "<generator> <output>\n" and a ustar archive of the step's inputs,
 # and must fit the program's request bound. A step with "split" runs once per
 # piece of that file, cut at line ends, and its output is the pieces' outputs
-# joined in order. Outputs under .gen/ are intermediate and never committed.
+# joined in order; a step with "each" runs once per element of a JSON array.
+# Outputs under .gen/ are intermediate and never committed.
 #   tools/generators/run.sh --lock           record the program's sources and binary (build.sh)
 set -eu
 cd "$(dirname "$0")/../.."
@@ -22,8 +23,15 @@ if [ "$mode" = --lock ]; then digest > generators/lock.json; echo "pinned $progr
 if [ "$mode" = --check ] && ! digest | cmp -s - generators/lock.json; then
   echo "GN-01: generators/ changed since its program was built: run SDK=<image> tools/generators/build.sh" >&2; exit 1
 fi
-bound=$(jq -r '.requestMaximum' generators/pipeline.json)
-piece=$(jq -r '.pieceMaximum' generators/pipeline.json)
+# js PATH < JSON: the value at a dotted path, one line per element of an array.
+js() { python3 -I -c 'import json, sys
+v = json.load(sys.stdin)
+for k in sys.argv[1].split(".")[1:]:
+    v = v.get(k) if isinstance(v, dict) else None
+for x in (v if isinstance(v, list) else [] if v is None else [v]):
+    print(x if isinstance(x, str) else json.dumps(x, ensure_ascii=False, separators=(",", ":")))' "$1"; }
+bound=$(js .requestMaximum < generators/pipeline.json)
+piece=$(js .pieceMaximum < generators/pipeline.json)
 work=$(mktemp -d); trap 'rm -rf "$work"' EXIT
 
 run() { # run GENERATOR OUTPUT STAGE PATHS... -> appends the written file to $work/out
@@ -41,12 +49,21 @@ run() { # run GENERATOR OUTPUT STAGE PATHS... -> appends the written file to $wo
   tail -c +9 "$work/report" >> "$work/out"
 }
 
-steps=$(jq -c '.steps[]' generators/pipeline.json)
+steps=$(js .steps < generators/pipeline.json)
 echo "$steps" | while read -r step; do
-  gen=$(echo "$step" | jq -r '.generator'); out=$(echo "$step" | jq -r '.output')
+  gen=$(echo "$step" | js .generator); out=$(echo "$step" | js .output)
   : > "$work/out"
-  split_path=$(echo "$step" | jq -r '.split // empty')
-  if [ -n "$split_path" ]; then
+  split_path=$(echo "$step" | js .split)
+  each_path=$(echo "$step" | js .each.file)
+  if [ -n "$each_path" ]; then
+    # One request per element of a JSON array, each staged as the file itself.
+    js "$(echo "$step" | js .each.array)" < "$each_path" > "$work/elements"
+    while read -r element; do
+      rm -rf "$work/stage"; mkdir -p "$work/stage/$(dirname "$each_path")"
+      printf '%s\n' "$element" > "$work/stage/$each_path"
+      run "$gen" "$out" "$work/stage" "$each_path"
+    done < "$work/elements"
+  elif [ -n "$split_path" ]; then
     rm -rf "$work/pieces"; mkdir -p "$work/pieces"
     split -C "$piece" -d -a 4 "$split_path" "$work/pieces/p."
     for p in "$work/pieces"/p.*; do
@@ -56,10 +73,10 @@ echo "$steps" | while read -r step; do
     done
   else
     rm -rf "$work/stage"; mkdir -p "$work/stage"
-    for f in $(echo "$step" | jq -r '.inputs[]'); do
+    for f in $(echo "$step" | js .inputs); do
       mkdir -p "$work/stage/$(dirname "$f")"; cp "$f" "$work/stage/$f"
     done
-    run "$gen" "$out" "$work/stage" $(echo "$step" | jq -r '.inputs[]')
+    run "$gen" "$out" "$work/stage" $(echo "$step" | js .inputs)
   fi
   case $out in
     .gen/*) mkdir -p "$(dirname "$out")"; cp "$work/out" "$out" ;;
