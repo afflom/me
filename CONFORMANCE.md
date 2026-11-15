@@ -110,6 +110,12 @@ model does not sanction.
 | `PG-03` | `build` | Every act on the page completes end to end: what the owner sends is the very event or message they reviewed and is kept in the place it left from at that domain's floor, every kept item opens to its words, and Ask draws on the kept items that share its words, never while halted, under the highest label it drew on |
 | `VO-01` | `build` | The Prism answers a gesture in tone and colour from PrismSurface's voice: 5-limit just ratios within one octave, a loudness ceiling, a rest between answers, silent under Quiet, and nothing loaded before the owner's first gesture |
 
+## person
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `WP-01` | `build` | The whole-person model is every entity of WHO's ICF release pinned by checksum, with its code, title and URI as WHO publishes it: both forms of the release agree field by field, the classification holds to its own structure (components, levels, codes, leaves, residuals), the page's module is re-derived from the release on every run, and each check refuses its planted defect |
+
 ## prism
 
 | ID | Level | Statement |
@@ -464,6 +470,12 @@ model does not sanction.
 | `RU-02` | `build` | The owner's words are mapped by the R4 router before they are kept: a jot that names a day and a clock lands once, at that time, in the places its intent and its time name, and nothing reaches the vault while the router refuses |
 | `RU-03` | `build` | Every item the owner can read is taken apart and labeled through PrismRouter: its parts are the values of its own schema, the readers learn the owner's people and topics in this browser first, and each item carries the kind of thing it is, who it is with and what it is about, or nothing while halted or sealed |
 
+## standards
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `ST-01` | `build` | Every part of the Prism answers to a registered standard or says why none applies, and every normative requirement of each standard whose text is pinned by checksum, extracted mechanically from that text, is enforced by a suite that reaches a part it governs, beyond a debt list that only shrinks; a standard whose text is not pinned says why |
+
 ## uorc
 
 | ID | Level | Statement |
@@ -503,6 +515,7 @@ Never re-derived, vendored, or gated on.
 | `SRC-APG-FEED` | https://raw.githubusercontent.com/w3c/aria-practices/f14b2490a6728cda85fd7feafbd148b3c3eaf038/content/patterns/feed/examples/js/feedDisplay.js | `OR-01` |
 | `SRC-SCHEMAORG` | https://raw.githubusercontent.com/schemaorg/schemaorg/5f2d8cdec99b7329459ef6584e94b6a840f88471/data/releases/30.1/schemaorg-all-examples.txt | `OR-01` |
 | `SRC-STSB` | https://huggingface.co/datasets/mteb/stsbenchmark-sts/resolve/96943a16ea6a35129e253c659081cb59daf81b30/test.jsonl.gz | `OR-01` |
+| `SRC-ICF` | https://icdcdn.who.int/static/releasefiles/2026-01/SimpleTabulation-ICF-en.zip | `WP-01` |
 
 ## Claims that are not conformance IDs
 
