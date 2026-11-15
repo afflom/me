@@ -13,5 +13,6 @@ for id in $IDS; do
   docker run --rm -u 0 --network none -v "$dir:/w" -w /w --entrypoint sh "$SDK" -c \
     "lexlean lock && lexlean fmt --all && lexlean lock && lexlean verify && prismpm build --no-provenance; status=\$?; chown -R $(id -u):$(id -g) /w; exit \$status"
   python3 -I "$ROOT/tools/guests/gen.py" record "$id" "$(ls "$dir"/.prism/build/*/core-wasm/*.wasm | head -n 1)"
+  (cd "$dir/.prism/build" && find . -name "*.rs" -o -name Cargo.toml | tar -cf "$ROOT/site/read/guest/rust-$id.tar" -T -) || true
   rm -rf "$dir"
 done

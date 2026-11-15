@@ -4,7 +4,7 @@
 // exports holo_alloc(len) and holo_run(ptr, len) -> (outPtr << 32 | outLen);
 // bytes whose SHA-256 is not the pinned one are refused before they compile.
 
-export const GUEST = { path: 'guest/grammar-mail.wasm', sha256: '0c86183cb6c594d508e1ac7cac51d499dc89fe12f8b58ed07733e7f0c7578333' };
+export const GUEST = { path: 'guest/grammar-mail.wasm', sha256: '8d534b14f704073e413b9fe8d6e93497f657d51d39cfb4102feec7a2ff1de94c' };
 
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
 const encoder = new TextEncoder();
