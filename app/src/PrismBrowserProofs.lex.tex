@@ -111,6 +111,53 @@ definition{
   recursive_argument: rows
 }
 
+definition{
+  name: browserHas,
+  parameters: [rows : (List Nat), wanted : Nat],
+  result: Bool,
+  body: (match rows
+    | List.nil => false
+    | List.cons row rest => ((row =? wanted) || (browserHas rest wanted))),
+  recursive_argument: rows
+}
+
+definition{
+  name: browserMemberProbed,
+  parameters: [rows : (List PrismBrowser::BrowserMember), slot : Nat],
+  result: Bool,
+  body: (match rows
+    | List.nil => false
+    | List.cons row rest => (if (slot =? 0) then (browserHas (project row adapters) (PrismBrowser::browserProbe)) else (browserMemberProbed rest (prim subtract slot 1 : Nat)))),
+  recursive_argument: rows
+}
+
+definition{
+  name: browserPathProbed,
+  parameters: [rows : (List Nat)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => ((browserMemberProbed (PrismBrowser::browserMembers) row) && (browserPathProbed rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: browserReachesProbed,
+  parameters: [rows : (List PrismBrowser::BrowserReach)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => ((browserPathProbed (project row path)) && (browserReachesProbed rest))),
+  recursive_argument: rows
+}
+
+theorem{
+  name: browserEveryReachIsModelled,
+  parameters: [],
+  statement: ((browserReachesProbed (PrismBrowser::browserReaches)) = true),
+  proof: decide{}
+}
+
 theorem{
   name: browserEveryMemberResolves,
   parameters: [],

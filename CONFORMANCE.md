@@ -401,6 +401,7 @@ model does not sanction.
 | `PS-04` | `build` | The app never answers read when service is whatsapp and route is own |
 | `PS-05` | `build` | The app never answers read when service is discord and route is own |
 | `PS-06` | `build` | The app never answers read when service is linkedin and route is own |
+| `PS-07` | `build` | The app never answers read when service is linkedin and route is seen |
 
 ## prism_uorc
 

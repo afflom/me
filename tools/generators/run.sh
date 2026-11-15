@@ -67,8 +67,8 @@ for steps_file in generators/*/steps.json; do
 program=$(basename "$(dirname "$steps_file")")
 : > "$work/made"
 js .steps < "$steps_file" | while read -r step; do
-  gen=$(echo "$step" | js .generator); out=$(echo "$step" | js .output)
-  for f in $(echo "$step" | js .inputs); do
+  gen=$(echo "$step" | js .generator); out=$(echo "$step" | js .output); ins=$(echo "$step" | js .inputs)
+  for f in $ins; do
     case $f in .gen/*) grep -qxF "$f" "$work/made" || {
       echo "GN-01: $program $gen reads $f, which no earlier step of $steps_file writes" >&2; exit 1; } ;; esac
   done
@@ -76,12 +76,13 @@ js .steps < "$steps_file" | while read -r step; do
   split_path=$(echo "$step" | js .split)
   each_path=$(echo "$step" | js .each.file)
   if [ -n "$each_path" ]; then
-    # One request per element of a JSON array, each staged as the file itself.
+    # One request per element of a JSON array, each staged as the file itself beside the step's inputs.
     js "$(echo "$step" | js .each.array)" < "$each_path" > "$work/elements"
     while read -r element; do
       rm -rf "$work/stage"; mkdir -p "$work/stage/$(dirname "$each_path")"
       printf '%s\n' "$element" > "$work/stage/$each_path"
-      run "$gen" "$out" "$work/stage" "$each_path"
+      for f in $ins; do mkdir -p "$work/stage/$(dirname "$f")"; cp "$f" "$work/stage/$f"; done
+      run "$gen" "$out" "$work/stage" "$each_path" $ins
     done < "$work/elements"
   elif [ -n "$split_path" ]; then
     rm -rf "$work/pieces"; mkdir -p "$work/pieces"
@@ -98,10 +99,8 @@ js .steps < "$steps_file" | while read -r step; do
     done
   else
     rm -rf "$work/stage"; mkdir -p "$work/stage"
-    for f in $(echo "$step" | js .inputs); do
-      mkdir -p "$work/stage/$(dirname "$f")"; cp "$f" "$work/stage/$f"
-    done
-    run "$gen" "$out" "$work/stage" $(echo "$step" | js .inputs)
+    for f in $ins; do mkdir -p "$work/stage/$(dirname "$f")"; cp "$f" "$work/stage/$f"; done
+    run "$gen" "$out" "$work/stage" $ins
   fi
   case $out in
     .gen/*) mkdir -p "$(dirname "$out")"; cp "$work/out" "$out" ;;

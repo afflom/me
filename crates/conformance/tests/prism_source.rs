@@ -105,3 +105,13 @@ fn prism_source_ps_06() {
         "inv006Holds",
     );
 }
+
+/// `PS-07`: The app never answers read when service is linkedin and route is seen
+#[test]
+fn prism_source_ps_07() {
+    pinned(
+        "breaksInv007",
+        "body: ((((((((project request service) <? 6) && ((project request route) <? 3)) && ((project request act) <? 2)) && ((project request halted) <? 2)) && ((project request service) =? (PrismSource::prismSourceServiceLinkedin))) && ((project request route) =? (PrismSource::prismSourceRouteSeen))) && ((PrismSource::prismSourceJudge request) =? (PrismSource::prismSourceAnswerRead)))",
+        "inv007Holds",
+    );
+}

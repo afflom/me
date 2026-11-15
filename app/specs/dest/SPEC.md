@@ -7,9 +7,8 @@ acts in. One request decides where one item may go next.
 
 `spec.json` is the single source. The Prism's builder
 (`python3 -I tools/prompts/gen.py`) writes `app/src/PrismDest.lex.tex` and
-`app/src/PrismDestProofs.lex.tex`; `python3 -I tools/dest/gen.py` writes the
-JavaScript mirror `site/dest/table.mjs`; then `lexlean fmt && lexlean lock`
-in `app/`. `tools/guests/build.sh` rebuilds the standalone guest
+`app/src/PrismDestProofs.lex.tex`; then `lexlean fmt && lexlean lock`
+in `app/`. The Node suite walks this spec's own tree against the guest. `tools/guests/build.sh` rebuilds the standalone guest
 `site/dest/guest/dest.wasm` whenever its modules change (GU-01).
 
 ## Request

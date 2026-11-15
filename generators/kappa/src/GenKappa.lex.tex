@@ -1,0 +1,291 @@
+\begin{lexlean}{GenKappa}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\title{Kappa generator}
+\begin{semanticmodule}
+definition{
+  name: kU,
+  parameters: [value : String],
+  result: Bytes,
+  body: (Foundation.Utf8::encode value)
+}
+
+definition{
+  name: kCat,
+  parameters: [parts : (List Bytes)],
+  result: Bytes,
+  body: (match parts
+    | List.nil => 0x
+    | List.cons head rest => (Foundation.Bytes::appendBytes head (kCat rest))),
+  recursive_argument: parts
+}
+
+definition{
+  name: kLetter,
+  parameters: [table : Bytes, b : Nat],
+  result: Bytes,
+  body: (Foundation.Json::span table b (b + 1))
+}
+
+definition{
+  name: kDigit,
+  parameters: [d : Nat],
+  result: Bytes,
+  body: (kLetter (kU "0123456789abcdef") d)
+}
+
+definition{
+  name: kDigits,
+  parameters: [n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (n <? 10) then (kDigit n) else (Foundation.Bytes::appendBytes (kDigits (prim quotient n 10 0 : Nat) rest) (kDigit (prim remainder n 10 0 : Nat))))),
+  recursive_argument: fuel
+}
+
+definition{name: kNum, parameters: [n : Nat], result: Bytes, body: (kDigits n 20)}
+
+definition{
+  name: kHexFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr s i); (Foundation.Bytes::appendBytes (Foundation.Bytes::appendBytes (kDigit (prim quotient b 16 0 : Nat)) (kDigit (prim remainder b 16 0 : Nat))) (kHexFrom s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: kHex,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes (kU "0x") (kHexFrom s 0 (Foundation.Bytes::byteLength s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{name: kIsLower, parameters: [b : Nat], result: Bool, body: ((96 <? b) && (b <? 123))}
+
+definition{
+  name: kIsAlnum,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((kIsLower b) || (((64 <? b) && (b <? 91)) || ((47 <? b) && (b <? 58))))
+}
+
+definition{
+  name: kPascalFrom,
+  parameters: [s : Bytes, i : Nat, start : Bool, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr s i); (if (kIsAlnum b) then (Foundation.Bytes::appendBytes (if (start && (kIsLower b)) then (kLetter (kU "ABCDEFGHIJKLMNOPQRSTUVWXYZ") (prim subtract b 97 : Nat)) else (Foundation.Json::span s i (i + 1))) (kPascalFrom s (i + 1) false rest)) else (kPascalFrom s (i + 1) true rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: kPascal,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (kPascalFrom s 0 true (Foundation.Bytes::byteLength s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kLowerFirst,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let b : Nat := (Foundation.Tar::byteOr s 0); (Foundation.Bytes::appendBytes (if ((64 <? b) && (b <? 91)) then (kLetter (kU "abcdefghijklmnopqrstuvwxyz") (prim subtract b 65 : Nat)) else (Foundation.Json::span s 0 1)) (Foundation.Json::span s 1 (Foundation.Bytes::byteLength s)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kVdef,
+  parameters: [d : Bytes, p : Bytes, field : Bytes, value : Bytes],
+  result: Bytes,
+  body: (kCat (cons d (cons (kU "::") (cons p (cons (kPascal field) (cons (kPascal value) (nil Bytes))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kAdef,
+  parameters: [d : Bytes, p : Bytes, word : Bytes],
+  result: Bytes,
+  body: (kCat (cons d (cons (kU "::") (cons p (cons (kU "Answer") (cons (kPascal word) (nil Bytes))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kStr,
+  parameters: [s : Bytes, o : (Option Nat), key : String],
+  result: Bytes,
+  body: (Foundation.Json::textAt s (Foundation.Json::memberAt s o (kU key))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kRaw,
+  parameters: [s : Bytes, o : (Option Nat), key : String],
+  result: Bytes,
+  body: (match (Foundation.Json::memberAt s o (kU key))
+    | Option.none => 0x
+    | Option.some v => (Foundation.Json::span s v (Foundation.Json::valueEnd s v))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kNatFrom,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr s i); (if ((47 <? b) && (b <? 58)) then (kNatFrom s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract b 48 : Nat)) rest) else acc))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: kNat,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (kNatFrom s 0 0 (Foundation.Bytes::byteLength s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kText,
+  parameters: [s : Bytes, o : (Option Nat)],
+  result: Bytes,
+  body: (Foundation.Json::textAt s o),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kFieldFrom,
+  parameters: [s : Bytes, fields : (Option Nat), name : Bytes, k : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (let f : (Option Nat) := (Foundation.Json::elementAt s fields k); (if (Foundation.Tar::sameBytes (kStr s f "name") name) then (Foundation.Json::memberAt s f (kU "values")) else (kFieldFrom s fields name (k + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: kParseAxis,
+  parameters: [s : Bytes, arr : (Option Nat), d : Bytes, p : Bytes, k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (kU "(ctor Option.none [Nat])")
+    | Nat.succ rest => (if ((Foundation.Json::countAt s arr) <? (k + 1)) then (kU "(ctor Option.none [Nat])") else (let e : (Option Nat) := (Foundation.Json::elementAt s arr k); (kCat (cons (kU "(if (prim equal value ") (cons (kHex (kStr s e "wire")) (cons (kU " : Bool) then (ctor Option.some [Nat] (") (cons (kVdef d p (kU "axis") (kStr s e "id")) (cons (kU ")) else ") (cons (kParseAxis s arr d p (k + 1) rest) (cons (kU ")") (nil Bytes)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: kParseDigest,
+  parameters: [s : Bytes, arr : (Option Nat), d : Bytes, p : Bytes, k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (kU "(ctor Option.none [Nat])")
+    | Nat.succ rest => (if ((Foundation.Json::countAt s arr) <? (k + 1)) then (kU "(ctor Option.none [Nat])") else (let e : (Option Nat) := (Foundation.Json::elementAt s arr k); (kCat (cons (kU "(if (prim equal value ") (cons (kHex (kText s e)) (cons (kU " : Bool) then (ctor Option.some [Nat] (") (cons (kVdef d p (kU "digest") (kText s e)) (cons (kU ")) else ") (cons (kParseDigest s arr d p (k + 1) rest) (cons (kU ")") (nil Bytes)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: kHexLength,
+  parameters: [s : Bytes, arr : (Option Nat), d : Bytes, p : Bytes, k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (kU "0")
+    | Nat.succ rest => (if ((Foundation.Json::countAt s arr) <? (k + 1)) then (kU "0") else (let e : (Option Nat) := (Foundation.Json::elementAt s arr k); (kCat (cons (kU "(if (axis =? (") (cons (kVdef d p (kU "axis") (kStr s e "id")) (cons (kU ")) then ") (cons (kNum (prim multiply 2 (kNat (kRaw s e "digestBytes")) : Nat)) (cons (kU " else ") (cons (kHexLength s arr d p (k + 1) rest) (cons (kU ")") (nil Bytes)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: kAxisWords,
+  parameters: [s : Bytes, arr : (Option Nat), d : Bytes, p : Bytes, k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (kU "0x")
+    | Nat.succ rest => (if ((Foundation.Json::countAt s arr) <? (k + 1)) then (kU "0x") else (let e : (Option Nat) := (Foundation.Json::elementAt s arr k); (kCat (cons (kU "(if (axis =? (") (cons (kVdef d p (kU "axis") (kStr s e "id")) (cons (kU ")) then ") (cons (kHex (kCat (cons (kU " ") (cons (kStr s e "wire") (cons (kU " ") (cons (kRaw s e "discriminant") (cons (kU " ") (cons (kRaw s e "digestBytes") (nil Bytes))))))))) (cons (kU " else ") (cons (kAxisWords s arr d p (k + 1) rest) (cons (kU ")") (nil Bytes)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: kWord,
+  parameters: [a : Bytes],
+  result: Bytes,
+  body: (if ((Foundation.Tar::sameBytes a (kU "admit")) || (Foundation.Tar::sameBytes a (kU "unverified"))) then (kCat (cons (kU "(Foundation.Bytes::appendBytes ") (cons (kHex a) (cons (kU " (kappaLabelAxisWords axis))") (nil Bytes))))) else (kHex a)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kEncode,
+  parameters: [s : Bytes, arr : (Option Nat), d : Bytes, p : Bytes, k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (kU "0x696e76616c6964")
+    | Nat.succ rest => (if ((Foundation.Json::countAt s arr) <? (k + 1)) then (kU "0x696e76616c6964") else (let e : (Option Nat) := (Foundation.Json::elementAt s arr k); (kCat (cons (kU "(if (code =? (") (cons (kAdef d p (kText s e)) (cons (kU ")) then ") (cons (kWord (kText s e)) (cons (kU " else ") (cons (kEncode s arr d p (k + 1) rest) (cons (kU ")") (nil Bytes)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: kMaxWire,
+  parameters: [s : Bytes, arr : (Option Nat), k : Nat, best : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => best
+    | Nat.succ rest => (if ((Foundation.Json::countAt s arr) <? (k + 1)) then best else (let e : (Option Nat) := (Foundation.Json::elementAt s arr k); (let n : Nat := (((Foundation.Bytes::byteLength (kStr s e "wire")) + 1) + (prim multiply 2 (kNat (kRaw s e "digestBytes")) : Nat)); (kMaxWire s arr (k + 1) (if (best <? n) then n else best) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: kMaxText,
+  parameters: [s : Bytes, arr : (Option Nat), k : Nat, best : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => best
+    | Nat.succ rest => (if ((Foundation.Json::countAt s arr) <? (k + 1)) then best else (let n : Nat := (Foundation.Bytes::byteLength (kText s (Foundation.Json::elementAt s arr k))); (kMaxText s arr (k + 1) (if (best <? n) then n else best) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: kModule,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let r : (Option Nat) := (Foundation.Json::root s); (let d : Bytes := (kPascal (kStr s r "name")); (let p : Bytes := (kLowerFirst d); (let axes : (Option Nat) := (Foundation.Json::memberAt s r (kU "axes")); (let outcomes : (Option Nat) := (Foundation.Json::memberAt s r (kU "outcomes")); (let fields : (Option Nat) := (Foundation.Json::memberAt s r (kU "fields")); (let digests : (Option Nat) := (kFieldFrom s fields (kU "digest") 0 (Foundation.Json::countAt s fields)); (let maxLine : Nat := (((kMaxWire s axes 0 0 (Foundation.Json::countAt s axes)) + 1) + (kMaxText s digests 0 0 (Foundation.Json::countAt s digests))); (kCat (cons (kU "\\begin{lexlean}{PrismKappaLabel}\n\\useglossary{lexlean.std.bool@1.2.0}\n\\useglossary{lexlean.std.nat@1.2.0}\n\\useglossary{prism.arch@1.0.0}\n\\importmodule{Foundation.Bytes}\n\\importmodule{Foundation.View.Text.V1.Model}\n\\importmodule{") (cons d (cons (kU "}\n\\title{Text application model}\n\\begin{semanticmodule}\ndefinition{\n  name: kappaLabelByteAt,\n  parameters: [s : Bytes, i : Nat],\n  result: (Option Nat),\n  body: (match (prim index s i : (Option UInt8))\n    | Option.none => (ctor Option.none [Nat])\n    | Option.some b => (ctor Option.some [Nat] (prim to_nat b : Nat))),\n  axioms: [Quot.sound, propext]\n}\n\ndefinition{\n  name: kappaLabelSliceOf,\n  parameters: [s : Bytes, start : Nat, count : Nat],\n  result: Bytes,\n  body: (match (prim slice s start count : (Option Bytes))\n    | Option.none => 0x\n    | Option.some part => part)\n}\n\ndefinition{\n  name: kappaLabelStopAt,\n  parameters: [s : Bytes, stop : Nat, i : Nat, fuel : Nat],\n  result: Nat,\n  body: (match fuel\n    | Nat.zero => i\n    | Nat.succ rest => (match (kappaLabelByteAt s i)\n      | Option.none => i\n      | Option.some d => (if (d =? stop) then i else (kappaLabelStopAt s stop (i + 1) rest)))),\n  axioms: [Quot.sound, propext],\n  recursive_argument: fuel\n}\n\ndefinition{\n  name: kappaLabelAllHex,\n  parameters: [s : Bytes, i : Nat, fuel : Nat],\n  result: Bool,\n  body: (match fuel\n    | Nat.zero => true\n    | Nat.succ rest => (match (kappaLabelByteAt s i)\n      | Option.none => true\n      | Option.some d => (if ((d <? 48) || (102 <? d)) then false else (if ((57 <? d) && (d <? 97)) then false else (kappaLabelAllHex s (i + 1) rest))))),\n  axioms: [Quot.sound, propext],\n  recursive_argument: fuel\n}\n\n") (cons (kU "definition{\n  name: kappaLabelParseAxis,\n  parameters: [value : Bytes],\n  result: (Option Nat),\n  body: ") (cons (kParseAxis s axes d p 0 (Foundation.Json::countAt s axes)) (cons (kU "\n}\n\n") (cons (kU "definition{\n  name: kappaLabelParseDigest,\n  parameters: [value : Bytes],\n  result: (Option Nat),\n  body: ") (cons (kParseDigest s digests d p 0 (Foundation.Json::countAt s digests)) (cons (kU "\n}\n\n") (cons (kU "definition{\n  name: kappaLabelHexLength,\n  parameters: [axis : Nat],\n  result: Nat,\n  body: ") (cons (kHexLength s axes d p 0 (Foundation.Json::countAt s axes)) (cons (kU "\n}\n\n") (cons (kU "definition{\n  name: kappaLabelAxisWords,\n  parameters: [axis : Nat],\n  result: Bytes,\n  body: ") (cons (kAxisWords s axes d p 0 (Foundation.Json::countAt s axes)) (cons (kU "\n}\n\n") (cons (kU "definition{\n  name: kappaLabelAxisOf,\n  parameters: [value : Bytes],\n  result: Nat,\n  body: (match (kappaLabelParseAxis value)\n    | Option.none => (") (cons (kVdef d p (kU "axis") (kU "other")) (cons (kU ")\n    | Option.some v => v)\n}\n\n") (cons (kU "definition{\n  name: kappaLabelReadLabel,\n  parameters: [label : Bytes, digest : Nat],\n  result: ") (cons (kCat (cons d (cons (kU "::") (cons d (cons (kU "Request") (nil Bytes)))))) (cons (kU ",\n  body: (let n : Nat := (Foundation.Bytes::byteLength label); (let c : Nat := (kappaLabelStopAt label 58 0 n); (if (c =? n) then ") (cons (kCat (cons (kU "(record ") (cons (kCat (cons d (cons (kU "::") (cons d (cons (kU "Request") (nil Bytes)))))) (cons (kU " {colon := (") (cons (kVdef d p (kU "colon") (kU "absent")) (cons (kU "), axis := (") (cons (kVdef d p (kU "axis") (kU "other")) (cons (kU "), digits := (") (cons (kVdef d p (kU "digits") (kU "wrong")) (cons (kU "), hex := (") (cons (kVdef d p (kU "hex") (kU "bad")) (cons (kU "), digest := digest})") (nil Bytes))))))))))))) (cons (kU " else (let a : Nat := (kappaLabelAxisOf (kappaLabelSliceOf label 0 c)); ") (cons (kCat (cons (kU "(record ") (cons (kCat (cons d (cons (kU "::") (cons d (cons (kU "Request") (nil Bytes)))))) (cons (kU " {colon := (") (cons (kVdef d p (kU "colon") (kU "present")) (cons (kU "), axis := a, digits := (if ((prim subtract n (c + 1) : Nat) =? (kappaLabelHexLength a)) then (") (cons (kVdef d p (kU "digits") (kU "right")) (cons (kU ") else (") (cons (kVdef d p (kU "digits") (kU "wrong")) (cons (kU ")), hex := (if (kappaLabelAllHex label (c + 1) n) then (") (cons (kVdef d p (kU "hex") (kU "lower")) (cons (kU ") else (") (cons (kVdef d p (kU "hex") (kU "bad")) (cons (kU ")), digest := digest})") (nil Bytes))))))))))))))) (cons (kU ")))),\n  axioms: [Quot.sound, propext]\n}\n\n") (cons (kU "definition{\n  name: kappaLabelDecode,\n  parameters: [s : Bytes],\n  result: (Option ") (cons (kCat (cons d (cons (kU "::") (cons d (cons (kU "Request") (nil Bytes)))))) (cons (kU "),\n  body: (let n : Nat := (Foundation.Bytes::byteLength s); (let e : Nat := (kappaLabelStopAt s 32 0 n); (if (e <? n) then (match (kappaLabelParseDigest (kappaLabelSliceOf s (e + 1) (prim subtract n (e + 1) : Nat)))\n    | Option.none => (ctor Option.none [") (cons (kCat (cons d (cons (kU "::") (cons d (cons (kU "Request") (nil Bytes)))))) (cons (kU "])\n    | Option.some d => (ctor Option.some [") (cons (kCat (cons d (cons (kU "::") (cons d (cons (kU "Request") (nil Bytes)))))) (cons (kU "] (kappaLabelReadLabel (kappaLabelSliceOf s 0 e) d))) else (ctor Option.none [") (cons (kCat (cons d (cons (kU "::") (cons d (cons (kU "Request") (nil Bytes)))))) (cons (kU "])))),\n  axioms: [Quot.sound, propext]\n}\n\n") (cons (kU "definition{\n  name: kappaLabelEncodeAnswer,\n  parameters: [code : Nat, axis : Nat],\n  result: Bytes,\n  body: ") (cons (kEncode s outcomes d p 0 (Foundation.Json::countAt s outcomes)) (cons (kU "\n}\n\n") (cons (kU "definition{\n  name: kappaLabelDispatch,\n  parameters: [value : Bytes],\n  result: Bytes,\n  body: (if (") (cons (kNum maxLine) (cons (kU " <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (kappaLabelDecode value)\n    | Option.none => 0x696e76616c6964\n    | Option.some request => (kappaLabelEncodeAnswer (") (cons d (cons (kU "::") (cons p (cons (kU "Judge request) (project request axis)))),\n  axioms: [Quot.sound, propext]\n}\n\\end{semanticmodule}\n\\end{lexlean}\n") (nil Bytes)))))))))))))))))))))))))))))))))))))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kTable,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (kCat (cons (kU "// Written by generators/kappa (GenKappa) from app/specs/kappa/spec.json. Do not edit.\n// The kappa facet's spec as the adapter and its suite read it, with the same\n// reader as PrismKappaLabel.lex.tex. The compiled guest decides.\n\nexport const SPEC = ") (cons s (cons (kU ";\n\n") (cons (kU "export const AXES = SPEC.axes;\nexport const FIELDS = SPEC.fields.map((f) => [f.name, f.values]);\nexport const ANSWERS = SPEC.outcomes;\n// The answers that name the axis they admit under.\nexport const NAMED = ['admit', 'unverified'];\n// The longest well-formed request: the longest label and the longest digest word.\nexport const MAX_LINE = Math.max(...AXES.map((a) => a.wire.length + 1 + 2 * a.digestBytes)) + 1 + Math.max(...SPEC.fields.find((f) => f.name === 'digest').values.map((v) => v.length));\nexport const GUARANTEES = SPEC.guarantees.map((g, i) => ({ id: 'INV-' + String(i + 1).padStart(3, '0'), ...g }));\nexport const EXAMPLES = SPEC.examples;\n\n// The label's fields, read as the model reads them: on its UTF-8 bytes.\nexport function read(label, digest) {\n  const b = new TextEncoder().encode(label);\n  const c = b.indexOf(58);\n  if (c < 0) return { colon: 'absent', axis: 'other', digits: 'wrong', hex: 'bad', digest };\n  const wire = new TextDecoder().decode(b.subarray(0, c));\n  const axis = AXES.find((a) => a.wire === wire);\n  const hex = b.subarray(c + 1);\n  return {\n    colon: 'present',\n    axis: axis ? axis.id : 'other',\n    digits: axis && hex.length === 2 * axis.digestBytes ? 'right' : 'wrong',\n    hex: hex.every((d) => (d >= 48 && d <= 57) || (d >= 97 && d <= 102)) ? 'lower' : 'bad',\n    digest,\n  };\n}\n\n// The spec's own tree: each test is one field against one value.\nconst walk = (t, r) => (typeof t === 'string' ? t : walk(r[t.if[0]] === t.if[1] ? t.then : t.else, r));\n\nexport function judge(r) {\n  return walk(SPEC.tree, r);\n}\n\n// The fields of one request line, as the reader reads them, or null when it\n// refuses the line (too long, no space, or a digest word it does not know).\nexport function request(line) {\n  const space = line.indexOf(' ');\n  const digest = space < 0 ? '' : line.slice(space + 1);\n  if (new TextEncoder().encode(line).length > MAX_LINE || space < 0 || !FIELDS[4][1].includes(digest)) return null;\n  return read(line.slice(0, space), digest);\n}\n\n// The answer the guest gives for one request line.\nexport function answer(line) {\n  const r = request(line);\n  if (!r) return 'invalid';\n  const a = judge(r);\n  const axis = AXES.find((x) => x.id === r.axis);\n  return NAMED.includes(a) ? [a, axis.wire, axis.discriminant, axis.digestBytes].join(' ') : a;\n}\n") (nil Bytes))))))
+}
+
+definition{
+  name: kappaGenerate,
+  parameters: [archive : Bytes, target : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (kU "app/specs/kappa/spec.json"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (if (Foundation.Tar::sameBytes target (kU "app/src/PrismKappaLabel.lex.tex")) then (ctor Option.some [Bytes] (kModule s)) else (if (Foundation.Tar::sameBytes target (kU "site/kappa/table.mjs")) then (ctor Option.some [Bytes] (kTable s)) else (ctor Option.none [Bytes])))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

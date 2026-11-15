@@ -10,9 +10,9 @@ observer reconciles the dissonance between the owner and the Prism.
 `spec.json` is the single source, with `../curate/spec.json`.
 The Prism's builder (`python3 -I tools/prompts/gen.py`) writes
 `app/src/PrismHolon(.Proofs).lex.tex` and `app/src/PrismCurate(.Proofs).lex.tex`;
-`python3 -I tools/holon/gen.py` writes `site/holon/table.mjs`;
-`tools/holon/build.sh` proves and builds the two standalone guests in the
-locked SDK image and pins them in `site/holon/guest.mjs`.
+the LexLean generator `GenHolon` (generators/facets) writes `site/holon/table.mjs`;
+`tools/guests/build.sh` builds the two standalone guests in the locked SDK
+image and pins them in `site/holon/guest.mjs` (GU-01).
 
 ## Facets
 
