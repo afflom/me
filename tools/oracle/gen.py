@@ -763,6 +763,22 @@ for source in SPEC["sources"]:
         f"statement = {q('The examples ' + source['title'] + ' publishes, as its own grammar reads them')}",
         'realized_by = ["OR-01"]',
     ]
+# A source app/specs/oracle/vcard.json pins beyond these (IANA's vCard Elements registry) is cited
+# too; tools/oracle/vcard.py reads it, and VC-01 is the evidence.
+pinned = {s["key"] for s in SPEC["sources"]}
+for source in json.loads((ROOT / "app/specs/oracle/vcard.json").read_text(encoding="utf-8"))["sources"]:
+    if source["key"] in pinned:
+        continue
+    rows += [
+        "",
+        "[[authority]]",
+        f"id = {q('SRC-' + source['key'].upper())}",
+        f"name = {q(source['title'])}",
+        f"citation = {q(source['url'])}",
+        f"checksum = {q('sha256:' + source['sha256'])}",
+        f"statement = {q('The entries ' + source['title'] + ' registers, the full inventory of the standard it serves')}",
+        'realized_by = ["VC-01"]',
+    ]
 authorities = "\n".join(rows) + "\n"
 
 if "--check" in args:

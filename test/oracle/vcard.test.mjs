@@ -25,18 +25,34 @@ test("the table and the examples are what the pinned RFC and registry give", () 
   assert.equal(run.status, 0, run.stderr || run.stdout);
 });
 
+// The lines a reader reads otherwise than the reference reader, and the registry entries
+// a table and its examples leave unmet beyond the debt.
+const wrongLines = (read) => examples.filter((e) => JSON.stringify(read(e.raw)) !== JSON.stringify(e.expect)).map((e) => ({ id: e.id, got: read(e.raw) }));
+const debt = new Set(spec.debt.map((d) => d.name));
+function unmet(entries, properties, parameters) {
+  return entries.filter((e) => !(e.implemented && e.examples.length) && !debt.has(`${e.kind} ${e.name}`)).map((e) => `${e.kind} ${e.name}`)
+    .concat(entries.filter((e) => e.kind === "property" && !properties[e.name]).map((e) => `${e.name} is not in the page's table`))
+    .concat(entries.filter((e) => e.kind === "parameter" && !parameters[e.name]).map((e) => `${e.name} is not in the page's table`));
+}
+
 test("every example line reads as RFC 6350 reads it", () => {
-  const wrong = examples.filter((e) => JSON.stringify(readLine(e.raw)) !== JSON.stringify(e.expect));
-  assert.deepEqual(wrong.map((e) => ({ id: e.id, got: readLine(e.raw) })), []);
+  assert.deepEqual(wrongLines(readLine), []);
 });
 
 test("every registry entry of RFC 6350 is implemented and exercised, or in debt with a reason", () => {
-  const debt = new Set(spec.debt.map((d) => d.name));
-  const unmet = inventory.filter((e) => !(e.implemented && e.examples.length) && !debt.has(`${e.kind} ${e.name}`));
-  assert.deepEqual(unmet.map((e) => `${e.kind} ${e.name}`), []);
-  for (const e of inventory.filter((e) => e.kind === "property")) assert.ok(PROPERTIES[e.name], `${e.name} is not in the page's table`);
-  for (const e of inventory.filter((e) => e.kind === "parameter")) assert.ok(PARAMETERS[e.name], `${e.name} is not in the page's table`);
+  assert.deepEqual(unmet(inventory, PROPERTIES, PARAMETERS), []);
   assert.ok(inventory.filter((e) => e.kind === "property").length >= 35, "RFC 6350 defines at least 35 properties");
+  for (const d of spec.debt) assert.ok(String(d.why ?? "").trim(), `debt ${d.name} gives no reason`);
+});
+
+test("the gates refuse a planted blind reader and a planted dropped property", () => {
+  // A reader that keeps every value as written (no escapes, no components) reads lines wrong.
+  assert.ok(wrongLines((raw) => ({ ...readLine(raw), value: raw.slice(raw.indexOf(":") + 1) })).length > 0);
+  // A table without BDAY, and an entry no example exercises, are refused.
+  const { BDAY, ...dropped } = PROPERTIES;
+  assert.ok(BDAY && unmet(inventory, dropped, PARAMETERS).includes("BDAY is not in the page's table"));
+  const bare = inventory.map((e) => (e.kind === "property" && e.name === "NICKNAME" ? { ...e, examples: [] } : e));
+  assert.ok(unmet(bare, PROPERTIES, PARAMETERS).includes("property NICKNAME"));
 });
 
 test("every whole vCard the RFC gives is read property by property", () => {
