@@ -39,6 +39,9 @@ button.pr-go[aria-current="page"] { background: color-mix(in oklch, var(--vr-ver
 .pr-top { display: flex; align-items: baseline; gap: var(--space-3); padding-block: var(--space-1) var(--space-2); }
 .pr-top h2 { margin: 0; font-family: var(--font-display); font-size: var(--text-30); font-weight: 600; letter-spacing: 0; line-height: 1.15; color: var(--foreground); }
 .pr-top h2:focus { outline: none; }
+/* The place's act waits by its title: the list leads, the form opens on request. */
+.pr-top .pr-new { margin-inline-start: auto; align-self: center; padding-inline: var(--space-4); min-height: 2.75rem; }
+.pr-compose[hidden] { display: none; }
 .pr-count { font-family: var(--font-mono); font-size: var(--text-14); color: var(--vr-verdant); font-variant-numeric: tabular-nums; }
 
 .pr-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: stretch; }
@@ -64,12 +67,12 @@ button.pr-go[aria-current="page"] { background: color-mix(in oklch, var(--vr-ver
 .pr-preview { grid-column: 1 / -1; margin: 0; padding: var(--space-3) var(--space-4); border-radius: var(--radius-inner); background: var(--muted); box-shadow: inset 2px 0 0 var(--vr-solar); font-family: inherit; font-size: var(--text-16, 1rem); line-height: 1.5; white-space: pre-wrap; overflow-wrap: anywhere; }
 
 .pr-list { list-style: none; margin: 0; padding: 0; }
-.pr-item { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr) minmax(0, 12rem); gap: var(--space-3); align-items: baseline; padding: var(--space-3) 0; border-top: var(--border-width) solid var(--border); }
+.pr-item { display: grid; grid-template-columns: 10rem minmax(0, 1fr) minmax(0, 12rem); gap: var(--space-3); align-items: baseline; padding: var(--space-3) 0; border-top: var(--border-width) solid var(--border); }
 .pr-item:first-child { border-top: 0; }
 /* The button that opens a row lends the row its cells, so the row keeps its grid. */
 .pr-open { display: contents; font: inherit; color: inherit; text-align: inherit; cursor: pointer; }
 .pr-item:has(> .pr-open:focus-visible) { outline: 2px solid var(--vr-verdant); outline-offset: 2px; border-radius: var(--radius-inner); }
-.pr-when { font-family: var(--font-mono); font-size: var(--text-14); color: var(--muted-foreground-subtle); font-variant-numeric: tabular-nums; }
+.pr-when { font-family: var(--font-mono); font-size: var(--text-14); color: var(--muted-foreground-subtle); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pr-what { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
 .pr-who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-14); color: var(--muted-foreground); text-align: end; }
 .pr-item:not(.pr-sealed) { cursor: pointer; }
@@ -127,8 +130,9 @@ button.pr-go[aria-current="page"] { background: color-mix(in oklch, var(--vr-ver
 .pr-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 
 /* The rail: the Prism's word, the question, and what happened. */
-#pr-out { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--text-16); font-weight: 500; line-height: 1.45; }
-#pr-out.good { color: var(--vr-verdant); }
+/* The Prism's line reads in the page's own type; a good outcome is marked by its edge, not by colouring the words. */
+#pr-out { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-sans); font-size: var(--text-16); font-weight: 400; line-height: 1.5; color: var(--foreground); }
+#pr-out.good { padding-inline-start: var(--space-3); box-shadow: inset 2px 0 0 var(--vr-verdant); }
 #pr-out.bad, #pr-out.refuse { color: var(--destructive); }
 #pr-out.warn { color: var(--warning); }
 #pr-out.wait { color: var(--muted-foreground); }
@@ -148,8 +152,11 @@ button.pr-go[aria-current="page"] { background: color-mix(in oklch, var(--vr-ver
   .pr-group:last-child { border-right: 0; }
   button.pr-go { width: auto; white-space: nowrap; }
   button.pr-go.pr-sheet { margin: 0 0 0 auto; }
-  .pr-item { grid-template-columns: 3.75rem minmax(0, 1fr); }
-  .pr-who { grid-column: 2; text-align: start; }
+  /* A row on a phone: when and who on one line, what under them at full width. */
+  .pr-item, .pr-need { grid-template-columns: auto minmax(0, 1fr); row-gap: var(--space-1); }
+  .pr-item .pr-when { grid-row: 1; grid-column: 1; }
+  .pr-item .pr-who { grid-row: 1; grid-column: 2; text-align: end; }
+  .pr-item .pr-what { grid-row: 2; grid-column: 1 / -1; }
   .pr-ask { flex-direction: row; align-items: stretch; }
   .pr-ask textarea { flex: 1; min-height: 2.75rem; height: 2.75rem; resize: none; }
   .pr-ask button { align-self: stretch; padding-inline: var(--space-4); }
@@ -231,7 +238,7 @@ html:not(.immersive) body {
 .pr-list > li.pr-needs { list-style: none; }
 .pr-needs h3.pr-section { margin: 0; padding: var(--space-4) 0 var(--space-1); font-family: var(--font-mono); font-size: var(--text-14); font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--vr-verdant); }
 .pr-needs-list { list-style: none; margin: 0; padding: 0; }
-.pr-need { grid-template-columns: 4.5rem minmax(0, 1fr) minmax(0, 12rem); }
+.pr-need { grid-template-columns: 10rem minmax(0, 1fr) minmax(0, 12rem); }
 .pr-done { justify-self: start; padding: var(--space-1) var(--space-3); font-size: var(--text-14); }
 /* People: a row per person, and a person's page under their name. */
 .pr-person-go { justify-self: start; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: start; cursor: pointer; text-decoration: underline; text-underline-offset: 0.2em; }

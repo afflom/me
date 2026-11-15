@@ -886,6 +886,7 @@ export default async function start({ app, reason, $ }) {
   function actForm(place) {
     const act = actOf(place);
     const host = $("pr-act");
+    $("pr-new")?.remove();
     // The act's room is held while it is drawn, and given back when the place has none.
     if (act && act.key !== "none" && place.show !== "search") host.dataset.act = act.key; else delete host.dataset.act;
     if (place.show === "search") {
@@ -897,7 +898,23 @@ export default async function start({ app, reason, $ }) {
     }
     if (!act || act.key === "none") { host.replaceChildren(); return; }
     if (act.key === "note") return host.replaceChildren(noteForm(place));
-    host.replaceChildren(outboundForm(place, act));
+    // What leaves the Prism is written on request: the place's list leads, and
+    // its act waits behind one button by the title until it is pressed.
+    const form = outboundForm(place, act);
+    form.hidden = true;
+    form.id = "pr-compose";
+    const open = element("button", { type: "button", id: "pr-new", className: "pr-new", textContent: act.word });
+    open.setAttribute("aria-expanded", "false");
+    open.setAttribute("aria-controls", "pr-compose");
+    const shown = (yes) => {
+      form.hidden = !yes;
+      open.setAttribute("aria-expanded", String(yes));
+      if (yes) form.querySelector("input, textarea")?.focus();
+    };
+    open.addEventListener("click", () => shown(form.hidden));
+    form.addEventListener("keydown", (event) => { if (event.key === "Escape") { shown(false); open.focus(); } });
+    $("pr-title").parentElement.append(open);
+    host.replaceChildren(form);
   }
 
   // A note is kept at its domain's floor label in the design model, never chosen here.
