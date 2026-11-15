@@ -324,7 +324,8 @@ def base_ledger():
 def ratchet(now, base, ref):
     refusals = []
     for p, e in sorted(now.items()):
-        if e["is"] == "hand" and (p not in base or base[p]["is"] != "hand"):
+        plugin = matches(p, SPEC.get("plugins", {}).get("paths", []))
+        if e["is"] == "hand" and not plugin and (p not in base or base[p]["is"] != "hand"):
             refusals.append(f"{p}: a new hand-written part (it was {base[p]['is'] if p in base else 'absent'} at {ref}); author it in the model or a producer instead")
         elif e["is"] == "hand" and e["lines"] is None and e.get("blob") != base[p].get("blob"):
             refusals.append(f"{p}: a hand-made binary changed; it must come from a producer")
