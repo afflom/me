@@ -1,0 +1,487 @@
+\begin{lexlean}{GenPipeline}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\title{Pipeline generator}
+\begin{semanticmodule}
+definition{
+  name: u,
+  parameters: [value : String],
+  result: Bytes,
+  body: (Foundation.Utf8::encode value)
+}
+
+definition{
+  name: cat,
+  parameters: [parts : (List Bytes)],
+  result: Bytes,
+  body: (match parts
+    | List.nil => 0x
+    | List.cons head rest => (Foundation.Bytes::appendBytes head (cat rest))),
+  recursive_argument: parts
+}
+
+definition{
+  name: app,
+  parameters: [left : Bytes, right : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes left right)
+}
+
+definition{name: len, parameters: [s : Bytes], result: Nat, body: (Foundation.Bytes::byteLength s)}
+
+definition{
+  name: plAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (Foundation.Tar::byteOr s i),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: same,
+  parameters: [left : Bytes, right : Bytes],
+  result: Bool,
+  body: (Foundation.Tar::sameBytes left right),
+  axioms: [propext]
+}
+
+definition{
+  name: plSpan,
+  parameters: [s : Bytes, start : Nat, stop : Nat],
+  result: Bytes,
+  body: (Foundation.Json::span s start stop)
+}
+
+definition{
+  name: padFrom,
+  parameters: [n : Nat, acc : Bytes],
+  result: Bytes,
+  body: (match n | Nat.zero => acc | Nat.succ rest => (padFrom rest (app acc 0x20))),
+  recursive_argument: n
+}
+
+definition{name: pad, parameters: [n : Nat], result: Bytes, body: (padFrom n 0x)}
+
+definition{
+  name: plUnescapeFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let b : Nat := (plAt s i); (if (((len s) <? (i + 1)) || (b =? 34)) then acc else (if (b =? 92) then (match (Foundation.Json::escaped (plAt s (i + 1)))
+      | Option.none => (plUnescapeFrom s (i + 2) acc rest)
+      | Option.some c => (plUnescapeFrom s (i + 2) (app acc c) rest)) else (plUnescapeFrom s (i + 1) (app acc (plSpan s i (i + 1))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: textOf,
+  parameters: [s : Bytes, i : Nat],
+  result: Bytes,
+  body: (plUnescapeFrom s (i + 1) 0x (len s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: lowerFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((len s) <? (i + 1)) then acc else (let b : Nat := (plAt s i); (let c : Bytes := (if ((64 <? b) && (b <? 91)) then (plSpan (u "abcdefghijklmnopqrstuvwxyz") (prim subtract b 65 : Nat) (prim subtract b 64 : Nat)) else (plSpan s i (i + 1))); (lowerFrom s (i + 1) (app acc c) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: lower,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (lowerFrom s 0 0x (len s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: containsFrom,
+  parameters: [s : Bytes, needle : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((len s) <? (i + (len needle))) then false else (if (same (plSpan s i (i + (len needle))) needle) then true else (containsFrom s needle (i + 1) rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: contains,
+  parameters: [s : Bytes, needle : Bytes],
+  result: Bool,
+  body: (containsFrom s needle 0 ((len s) + 1)),
+  axioms: [propext]
+}
+
+definition{
+  name: inTable,
+  parameters: [value : Bytes, table : Bytes],
+  result: Bool,
+  body: ((not (contains value 0x0a)) && (contains (cat (cons 0x0a (cons table (cons 0x0a (nil Bytes))))) (cat (cons 0x0a (cons value (cons 0x0a (nil Bytes))))))),
+  axioms: [propext]
+}
+
+definition{name: isDigit, parameters: [b : Nat], result: Bool, body: ((47 <? b) && (b <? 58))}
+
+definition{
+  name: digitsFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((len s) <? (i + 1)) || (not (isDigit (plAt s i)))) then i else (digitsFrom s (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: digits,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (digitsFrom s i (len s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{name: isSign, parameters: [b : Nat], result: Bool, body: ((b =? 43) || (b =? 45))}
+
+definition{
+  name: exponentEnd,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (if ((len s) <? (i + 1)) then (ctor Option.some [Nat] i) else (if (((plAt s i) =? 101) || ((plAt s i) =? 69)) then (let j : Nat := (if (isSign (plAt s (i + 1))) then (i + 2) else (i + 1)); (let k : Nat := (digits s j); (if (k =? j) then (ctor Option.none [Nat]) else (ctor Option.some [Nat] k)))) else (ctor Option.some [Nat] i))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: isFloat,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: (let i0 : Nat := (if (isSign (plAt s 0)) then 1 else 0); (let word : Bytes := (lower (plSpan s i0 (len s))); (if (inTable word (u "inf\ninfinity\nnan")) then true else (let a : Nat := (digits s i0); (let b : Nat := (if ((plAt s a) =? 46) then (digits s (a + 1)) else a); (let whole : Nat := (prim subtract a i0 : Nat); (let part : Nat := (if (b =? a) then 0 else (prim subtract b (a + 1) : Nat)); (if ((whole + part) =? 0) then false else (match (exponentEnd s b)
+    | Option.none => false
+    | Option.some e => (e =? (len s))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: isAsciiSpace,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 32) || ((8 <? b) && (b <? 14)))
+}
+
+definition{
+  name: unicodeSpaces,
+  parameters: [],
+  result: Bytes,
+  body: 0xc2850ac2a00ae19a800ae280800ae280810ae280820ae280830ae280840ae280850ae280860ae280870ae280880ae280890ae2808a0ae280a80ae280a90ae280af0ae2819f0ae38080
+}
+
+definition{
+  name: startsSpace,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: ((isAsciiSpace (plAt s 0)) || ((inTable (plSpan s 0 2) (unicodeSpaces)) || (inTable (plSpan s 0 3) (unicodeSpaces)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: endsSpace,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: (let n : Nat := (len s); ((isAsciiSpace (plAt s (prim subtract n 1 : Nat))) || (((1 <? n) && (inTable (plSpan s (prim subtract n 2 : Nat) n) (unicodeSpaces))) || ((2 <? n) && (inTable (plSpan s (prim subtract n 3 : Nat) n) (unicodeSpaces)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: reserved,
+  parameters: [],
+  result: Bytes,
+  body: (u "true\nfalse\nyes\nno\non\noff\nnull\n~\ny\nn")
+}
+
+definition{
+  name: plain,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: (let n : Nat := (len s); (if (n =? 0) then false else (if ((startsSpace s) || (endsSpace s)) then false else (if (inTable (lower s) (reserved)) then false else (if (isFloat s) then false else (if (contains 0x2d3f3a2c5b5d7b7d23262a217c3e2722254060 (plSpan s 0 1)) then false else (if ((contains s (u ": ")) || (contains s (u " #"))) then false else (not ((plAt s (prim subtract n 1 : Nat)) =? 58))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: quoteFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((len s) <? (i + 1)) then acc else (let b : Nat := (plAt s i); (let e : Bytes := (if (b =? 34) then (u "\\\"") else (if (b =? 92) then (u "\\\\") else (if (b =? 10) then (u "\\n") else (if (b =? 13) then (u "\\r") else (if (b =? 9) then (u "\\t") else (if (b =? 8) then (u "\\b") else (if (b =? 12) then (u "\\f") else (if (b <? 32) then (app (u "\\u00") (plSpan (u "0123456789abcdef0123456789abcdef") (prim quotient b 16 0 : Nat) ((prim quotient b 16 0 : Nat) + 1))) else (plSpan s i (i + 1)))))))))); (let e2 : Bytes := (if ((b <? 32) && (not ((b =? 10) || ((b =? 13) || ((b =? 9) || ((b =? 8) || (b =? 12))))))) then (app e (plSpan (u "0123456789abcdef") (prim remainder b 16 0 : Nat) ((prim remainder b 16 0 : Nat) + 1))) else e); (quoteFrom s (i + 1) (app acc e2) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: quoted,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (cat (cons 0x22 (cons (quoteFrom s 0 0x (len s)) (cons 0x22 (nil Bytes))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: scalar,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (if (plain s) then s else (quoted s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: keyText,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (if ((same s (u "on")) || (plain s)) then s else (quoted s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: plLineEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((len s) <? (i + 1)) || ((plAt s i) =? 10)) then i else (plLineEnd s (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: blockLines,
+  parameters: [s : Bytes, i : Nat, indent : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let e : Nat := (plLineEnd s i (len s)); (let line : Bytes := (plSpan s i e); (let out : Bytes := (if ((len line) =? 0) then 0x0a else (cat (cons (pad indent) (cons line (cons 0x0a (nil Bytes)))))); (if ((len s) <? (e + 1)) then out else (app out (blockLines s (e + 1) indent rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: block,
+  parameters: [indent : Nat, s : Bytes],
+  result: Bytes,
+  body: (let n : Nat := (len s); (let ends : Bool := ((0 <? n) && ((plAt s (prim subtract n 1 : Nat)) =? 10)); (let body : Bytes := (if ends then (plSpan s 0 (prim subtract n 1 : Nat)) else s); (app (if ends then (u " |\n") else (u " |-\n")) (blockLines body 0 indent ((len body) + 1)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rankFrom,
+  parameters: [key : Bytes, table : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if ((len table) <? (i + 1)) then n else (let e : Nat := (plLineEnd table i (len table)); (if (same (plSpan table i e) key) then n else (rankFrom key table (e + 1) (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: keyOrder,
+  parameters: [],
+  result: Bytes,
+  body: (u "name\nrun-name\nid\non\nif\nneeds\nuses\nruns-on\ntimeout-minutes\noutputs\npermissions\nenvironment\nconcurrency\nstrategy\ndefaults\nwith\nenv\nshell\nworking-directory\ncontinue-on-error\ngroup\ncancel-in-progress\ntypes\nbranches\nbranches-ignore\npaths\npaths-ignore\nworkflows\ncron\njobs\nsteps")
+}
+
+definition{
+  name: rank,
+  parameters: [key : Bytes],
+  result: Nat,
+  body: (rankFrom key (keyOrder) 0 0 ((len (keyOrder)) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: keyAt,
+  parameters: [s : Bytes, k : Nat],
+  result: Bytes,
+  body: (textOf s k),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: valueAt,
+  parameters: [s : Bytes, k : Nat],
+  result: Nat,
+  body: (Foundation.Json::space s ((Foundation.Json::space s ((Foundation.Json::stringEnd s (k + 1)) + 1)) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: lessBytes,
+  parameters: [a : Bytes, b : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((len a) <? (i + 1)) then (i <? (len b)) else (if ((len b) <? (i + 1)) then false else (if ((plAt a i) <? (plAt b i)) then true else (if ((plAt b i) <? (plAt a i)) then false else (lessBytes a b (i + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: before,
+  parameters: [s : Bytes, a : Nat, b : Nat],
+  result: Bool,
+  body: (let ka : Bytes := (keyAt s a); (let kb : Bytes := (keyAt s b); (let runA : Bool := (same ka (u "run")); (let runB : Bool := (same kb (u "run")); (if (runA && (not runB)) then false else (if (runB && (not runA)) then true else (let ra : Nat := (rank ka); (let rb : Nat := (rank kb); ((ra <? rb) || ((ra =? rb) && (lessBytes ka kb 0 ((len ka) + 1)))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nextFrom,
+  parameters: [s : Bytes, i : Nat, prev : Nat, started : Bool, best : (Option Nat), fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => best
+    | Nat.succ rest => (if (not ((plAt s i) =? 34)) then best else (let next : Nat := (Foundation.Json::space s (Foundation.Json::valueEnd s (valueAt s i))); (let after : Bool := ((not started) || (before s prev i)); (let better : Bool := (match best
+      | Option.none => true
+      | Option.some c => (before s i c)); (let chosen : (Option Nat) := (if ((not (same (keyAt s i) (u "#"))) && (after && better)) then (ctor Option.some [Nat] i) else best); (if ((plAt s next) =? 44) then (nextFrom s (Foundation.Json::space s (next + 1)) prev started chosen rest) else chosen))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: nextKey,
+  parameters: [s : Bytes, obj : Nat, prev : Nat, started : Bool],
+  result: (Option Nat),
+  body: (nextFrom s (Foundation.Json::space s (obj + 1)) prev started (ctor Option.none [Nat]) (len s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: notesFor,
+  parameters: [s : Bytes, obj : Nat, key : Bytes],
+  result: (Option Nat),
+  body: (Foundation.Json::memberAt s (Foundation.Json::member s obj (u "#")) key),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: commentsFrom,
+  parameters: [s : Bytes, lines : Nat, n : Nat, indent : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (match (Foundation.Json::element s lines n)
+      | Option.none => 0x
+      | Option.some e => (let text : Bytes := (if ((plAt s e) =? 34) then (textOf s e) else 0x); (app (if ((len text) =? 0) then (app (pad indent) (u "#\n")) else (cat (cons (pad indent) (cons (u "# ") (cons text (cons 0x0a (nil Bytes))))))) (commentsFrom s lines (n + 1) indent rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: comments,
+  parameters: [s : Bytes, lines : (Option Nat), indent : Nat],
+  result: Bytes,
+  body: (match lines | Option.none => 0x | Option.some l => (commentsFrom s l 0 indent (len s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rawLine,
+  parameters: [s : Bytes, v : Nat],
+  result: Bytes,
+  body: (cat (cons 0x20 (cons (plSpan s v (Foundation.Json::valueEnd s v)) (cons 0x0a (nil Bytes))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emit,
+  parameters: [
+    s : Bytes,
+    mode : Nat,
+    p : Nat,
+    indent : Nat,
+    inline : Bool,
+    n : Nat,
+    started : Bool,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let b : Nat := (plAt s p); (if (mode =? 0) then (if (b =? 110) then 0x0a else (if (b =? 34) then (let t : Bytes := (textOf s p); (if (contains t 0x0a) then (block (indent + 2) t) else (cat (cons 0x20 (cons (scalar t) (cons 0x0a (nil Bytes))))))) else (if (b =? 91) then (if ((Foundation.Json::count s p) =? 0) then (u " []\n") else (app 0x0a (emit s 3 p (indent + 2) false 0 false rest))) else (if (b =? 123) then match{
+      branches: [
+        {body: (u " {}\n"), binders: [], constructor: Option.none},
+        {
+          body: (app 0x0a (emit s 2 p (indent + 2) false 0 false rest)),
+          binders: [first],
+          constructor: Option.some
+        }
+      ],
+      scrutinee: (nextKey s p 0 false)
+    } else (rawLine s p))))) else (if (mode =? 1) then (if (b =? 123) then (cat (cons (comments s (notesFor s p (u "")) indent) (cons (pad indent) (cons (u "- ") (cons (emit s 2 p (indent + 2) true 0 false rest) (nil Bytes)))))) else (if ((b =? 34) && (not (contains (textOf s p) 0x0a))) then (cat (cons (pad indent) (cons (u "- ") (cons (scalar (textOf s p)) (cons 0x0a (nil Bytes)))))) else (cat (cons (pad indent) (cons (u "-") (cons (emit s 0 p indent false 0 false rest) (nil Bytes))))))) else (if (mode =? 2) then (match (nextKey s p n started)
+      | Option.none => 0x
+      | Option.some k => (let key : Bytes := (keyAt s k); (cat (cons (if inline then 0x else (app (comments s (notesFor s p key) indent) (pad indent))) (cons (keyText key) (cons (u ":") (cons (emit s 0 (valueAt s k) indent false 0 false rest) (cons (emit s 2 p indent false k true rest) (nil Bytes))))))))) else (match (Foundation.Json::element s p n)
+      | Option.none => 0x
+      | Option.some e => (app (emit s 1 e indent false 0 false rest) (emit s 3 p indent false (n + 1) false rest)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: topFrom,
+  parameters: [s : Bytes, root : Nat, prev : Nat, started : Bool, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (match (nextKey s root prev started)
+      | Option.none => 0x
+      | Option.some k => (let key : Bytes := (keyAt s k); (cat (cons (comments s (notesFor s root key) 0) (cons (keyText key) (cons (u ":") (cons (emit s 0 (valueAt s k) 0 false 0 false (len s)) (cons 0x0a (cons (topFrom s root k true rest) (nil Bytes))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trimFrom,
+  parameters: [s : Bytes, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if ((1 <? n) && (((plAt s (prim subtract n 1 : Nat)) =? 10) && ((plAt s (prim subtract n 2 : Nat)) =? 10))) then (trimFrom s (prim subtract n 1 : Nat) rest) else n)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: render,
+  parameters: [name : Bytes, s : Bytes],
+  result: Bytes,
+  body: (let root : Nat := (Foundation.Json::space s 0); (let head : Bytes := (cat (cons (u "# ") (cons name (cons (u " is rendered from the pipeline model, app/specs/pipeline/workflows/") (cons name (cons (u ".json, by\n# `tools/generators/run.sh`: change the model, not this file.\n") (nil Bytes))))))); (let top : (Option Nat) := (notesFor s root (u "")); (let lead : Bytes := (match top
+    | Option.none => 0x
+    | Option.some l => (app (u "#\n") (comments s top 0))); (let out : Bytes := (cat (cons head (cons lead (cons (topFrom s root 0 false (len s)) (nil Bytes))))); (plSpan out 0 (trimFrom out (len out) (len out)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{name: workflowsDir, parameters: [], result: Bytes, body: (u ".github/workflows/")}
+
+definition{
+  name: workflow,
+  parameters: [archive : Bytes, target : Bytes],
+  result: (Option Bytes),
+  body: (let n : Nat := (len (workflowsDir)); (if (not (same (plSpan target 0 n) (workflowsDir))) then (ctor Option.none [Bytes]) else (let name : Bytes := (plSpan target n (len target)); (match (Foundation.Tar::find archive (cat (cons (u "app/specs/pipeline/workflows/") (cons name (cons (u ".json") (nil Bytes))))))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some model => (ctor Option.some [Bytes] (render name model)))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
