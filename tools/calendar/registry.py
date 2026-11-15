@@ -25,7 +25,12 @@ KINDS = {"components": "component", "properties": "property", "parameters": "par
 
 def registry(source, cache):
     """Every record of the registries: (sub-registry, name, status, [(rfc, section)])."""
-    root = ET.fromstring(fetch(source, cache).encode("utf-8"))
+    return records_of(fetch(source, cache).encode("utf-8"))
+
+
+def records_of(xml):
+    """The records of the registries' XML bytes, as registry() gives them."""
+    root = ET.fromstring(xml)
     out = []
     for sub in root.findall("i:registry", NS):
         for record in sub.findall("i:record", NS):
