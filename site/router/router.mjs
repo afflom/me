@@ -5,7 +5,7 @@
 // takes the value the schema already types, skip and refuse do nothing.
 //
 //   const mapped = await route({ source: "note", values: { text }, line, halted });
-//   // { start, allDay, intent, parties, kind, topics, domains, decisions }
+//   // { start, allDay, intent, parties, kind, topics, meaning, domains, decisions }
 //
 // What the owner's content has taught the readers (the people it is with and
 // the words it keeps using) comes in as `learned` (see labels.mjs).
@@ -16,21 +16,24 @@ const [, VALUE_NAMES] = FIELDS.find(([name]) => name === "value");
 const [, FEATURE_NAMES] = FIELDS.find(([name]) => name === "feature");
 // Time before intent: what a text asks of the owner depends on whether it names a time.
 const ORDER = ["time", ...FEATURE_NAMES.filter((f) => f !== "time")];
-const provider = (feature) => (PROVIDERS[feature]?.kind === "compiled" && READERS[feature] ? "compiled" : "absent");
+// A feature's reader is compiled when the spec compiles it and the page has it: the
+// compiled readers here, and the meaning model once it has opened (learned.meaning).
+const readerOf = (feature, learned) => READERS[feature] ?? learned[feature]?.read;
+const provider = (feature, learned) => (PROVIDERS[feature]?.kind === "compiled" && readerOf(feature, learned) ? "compiled" : "absent");
 
 export async function route({ source, values, line, halted, now = Date.now(), learned = {} }) {
-  const out = { start: null, allDay: false, intent: null, parties: [], kind: null, topics: [], decisions: [] };
+  const out = { start: null, allDay: false, intent: null, parties: [], kind: null, topics: [], meaning: null, decisions: [] };
   const cues = { shapes: [], subject: "", text: "", from: [] };
   for (const feature of ORDER) {
     for (const value of VALUE_NAMES) {
       const given = values[value];
       if (given == null || given === "" || (Array.isArray(given) && !given.length)) continue;
-      const request = `${source} ${value} ${feature} ${provider(feature)} ${halted()}`;
+      const request = `${source} ${value} ${feature} ${provider(feature, learned)} ${halted()}`;
       const answer = (await line(`router ${request}`)).trim();
       out.decisions.push([request, answer]);
       if (answer === "refuse") return { ...out, refused: true, domains: [] };
       if (answer === "direct") take(out, cues, feature, value, given);
-      else if (answer === "map") take(out, cues, feature, value, READERS[feature](given, { now, start: out.start, ...learned }));
+      else if (answer === "map") take(out, cues, feature, value, await readerOf(feature, learned)(given, { now, start: out.start, ...learned }));
     }
   }
   // The kind is decided once, from every cue the router let the kind reader see.
@@ -63,6 +66,9 @@ function take(out, cues, feature, value, got) {
     if (value === "shape") cues.shapes.push(...got);
     else if (value === "subject") cues.subject += ` ${got}`;
     else if (value === "text") cues.text += ` ${got}`;
+  } else if (feature === "meaning") {
+    // What it means: the text's vector, else its subject's.
+    out.meaning ??= got;
   } else if (feature === "topic") {
     for (const t of got) if (!out.topics.includes(t)) out.topics.push(t);
   }
