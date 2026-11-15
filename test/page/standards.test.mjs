@@ -28,7 +28,7 @@ const { example } = await import(resolve("test/oracle/examples.mjs"));
 // The standard and its checker.
 const STANDARD = { name: "WCAG 2.2 AA", tags: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"] };
 const ENGINE = { url: "https://cdn.jsdelivr.net/npm/axe-core@4.10.3/axe.min.js", sha256: "880970c081707360e64f34cea25ff91892f5bc95675b0776925b9709dd8a68bb" };
-// QR-11's measure: rules violated on any screen beyond the debt, at most 0.
+// QR-20's measure: rules violated on any screen beyond the debt, at most 0.
 const MEASURE = "wcag-violations";
 // What still violates it, as "rule at screen": this list only shrinks.
 const DEBT = [];

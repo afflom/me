@@ -60,10 +60,10 @@ test("the Prism keeps at the model's floors, refuses while halted and drafts onl
     // Resonance: keeping the note, opening its row and closing it are each answered by the app.
     const row = page.locator("#pr-list .pr-item").first();
     await row.click();
-    assert.equal(await row.locator(".pr-row").getAttribute("aria-expanded"), "true");
+    assert.equal(await row.locator(".pr-open").getAttribute("aria-expanded"), "true");
     await row.click();
     await page.waitForFunction(() => /\bpr-res-(rest|whisper|chime|bloom|chorus|recede)\b/.test(document.querySelector("#pr-list .pr-item")?.className ?? ""), null, { timeout: 10000 });
-    assert.equal(await row.locator(".pr-row").getAttribute("aria-expanded"), "false");
+    assert.equal(await row.locator(".pr-open").getAttribute("aria-expanded"), "false");
 
     // The system's view is never drawn: no place the back end files into, no model to route.
     assert.equal(await page.locator('.pr-go[data-place="health"]').count(), 0);

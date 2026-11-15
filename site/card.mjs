@@ -590,7 +590,7 @@ export default async function start({ app, reason, $ }) {
       element("span", { className: "pr-who", textContent: item.who || DOMAINS[item.domain] || "" })];
     if (item.sealed || !item.body) return element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}` }, ...parts);
     // A list item holding a button that opens it (WCAG 1.3.1, 4.1.2): the row stays a row of its list.
-    const open = element("button", { type: "button", className: "pr-row" }, ...parts);
+    const open = element("button", { type: "button", className: "pr-open" }, ...parts);
     open.setAttribute("aria-expanded", "false");
     const row = element("li", { className: "pr-item" }, open);
     const show = (since = Date.now()) => {
@@ -1320,7 +1320,7 @@ export default async function start({ app, reason, $ }) {
       link.addEventListener("click", (event) => {
         event.preventDefault();
         const row = rows[said.sources.indexOf(item)];
-        if (row.querySelector(".pr-row")?.getAttribute("aria-expanded") === "false") row.querySelector(".pr-row").click();
+        if (row.querySelector(".pr-open")?.getAttribute("aria-expanded") === "false") row.querySelector(".pr-open").click();
         row.scrollIntoView({ block: "nearest" });
       });
       return link;
