@@ -9,8 +9,8 @@ answers `open`.
 
 `spec.json` is the single source. The Prism's builder
 (`python3 -I tools/prompts/gen.py`) writes `app/src/PrismUorc.lex.tex` and
-`app/src/PrismUorcProofs.lex.tex`; `python3 -I tools/uorc/gen.py` writes the
-mirror `site/uorc/table.mjs`; `tools/guests/build.sh`
+`app/src/PrismUorcProofs.lex.tex`; the Node suite walks this spec's own
+tree against the guest; `tools/guests/build.sh`
 rebuilds `site/uorc/guest/uorc.wasm` whenever its modules change (GU-01).
 
 ## Request

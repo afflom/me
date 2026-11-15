@@ -4,9 +4,9 @@ The Prism answers the owner as afflom/verdant-resonance answers its player,
 without its garden. `spec.json` is the single source:
 the Prism's builder (`python3 -I tools/prompts/gen.py`) writes
 `app/src/PrismResonance.lex.tex` and `app/src/PrismResonanceProofs.lex.tex`;
-`python3 -I tools/facet/gen.py app/specs/resonance/spec.json` writes
-`site/resonance/table.mjs`, after judging all 1920 requests against every
-guarantee and example.
+the LexLean generator `GenTable` (generators/facets) writes
+`site/resonance/table.mjs`, and its Node suite holds the guest to the spec's
+tree and guarantees on all 1920 requests.
 
 ## Request
 

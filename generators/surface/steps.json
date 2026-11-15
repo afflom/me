@@ -1,0 +1,20 @@
+{
+  "comment": "The steps of the surface program (generators/surface/), run in order by tools/generators/run.sh. A step reads repository files and the .gen/ outputs of this program's earlier steps only.",
+  "steps": [
+    {
+      "generator": "surface",
+      "inputs": [
+        "app/specs/surface/spec.json",
+        "site/resonance/resonance.mjs"
+      ],
+      "output": "site/surface/surface.mjs"
+    },
+    {
+      "generator": "cardhtml",
+      "inputs": [
+        "app/specs/surface/spec.json"
+      ],
+      "output": "site/card.html"
+    }
+  ]
+}

@@ -1,0 +1,241 @@
+\begin{lexlean}{Foundation.Json}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Tar}
+\title{JSON path reader}
+\begin{semanticmodule}
+definition{
+  name: at,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (Foundation.Tar::byteOr s i),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: isSpace,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 32) || ((b =? 10) || ((b =? 13) || (b =? 9))))
+}
+
+definition{
+  name: skipSpace,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (isSpace (at s i)) then (skipSpace s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: space,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (skipSpace s i (Foundation.Bytes::byteLength s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: stringEndFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (at s i); (if (b =? 34) then i else (if (b =? 92) then (stringEndFrom s (i + 2) rest) else (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then i else (stringEndFrom s (i + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stringEnd,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (stringEndFrom s i (Foundation.Bytes::byteLength s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nestEnd,
+  parameters: [s : Bytes, i : Nat, depth : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (at s i); (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then i else (if (b =? 34) then (nestEnd s ((stringEnd s (i + 1)) + 1) depth rest) else (if ((b =? 123) || (b =? 91)) then (nestEnd s (i + 1) (depth + 1) rest) else (if ((b =? 125) || (b =? 93)) then (if (depth =? 1) then (i + 1) else (nestEnd s (i + 1) (prim subtract depth 1 : Nat) rest)) else (nestEnd s (i + 1) depth rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: scalarEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (at s i); (if (((Foundation.Bytes::byteLength s) <? (i + 1)) || ((isSpace b) || ((b =? 44) || ((b =? 125) || (b =? 93))))) then i else (scalarEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: valueEnd,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (at s i); (if (b =? 34) then ((stringEnd s (i + 1)) + 1) else (if ((b =? 123) || (b =? 91)) then (nestEnd s (i + 1) 1 (Foundation.Bytes::byteLength s)) else (scalarEnd s i (Foundation.Bytes::byteLength s))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: span,
+  parameters: [s : Bytes, start : Nat, stop : Nat],
+  result: Bytes,
+  body: (match (Foundation.Bytes::sliceBytes s start (prim subtract stop start : Nat))
+    | Option.none => 0x
+    | Option.some b => b)
+}
+
+definition{
+  name: memberFrom,
+  parameters: [s : Bytes, i : Nat, key : Bytes, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (if ((at s i) =? 34) then (let ke : Nat := (stringEnd s (i + 1)); (let colon : Nat := (space s (ke + 1)); (if ((at s colon) =? 58) then (let v : Nat := (space s (colon + 1)); (if (Foundation.Tar::sameBytes (span s (i + 1) ke) key) then (ctor Option.some [Nat] v) else (let next : Nat := (space s (valueEnd s v)); (if ((at s next) =? 44) then (memberFrom s (space s (next + 1)) key rest) else (ctor Option.none [Nat]))))) else (ctor Option.none [Nat])))) else (ctor Option.none [Nat]))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: member,
+  parameters: [s : Bytes, i : Nat, key : Bytes],
+  result: (Option Nat),
+  body: (if ((at s i) =? 123) then (memberFrom s (space s (i + 1)) key (Foundation.Bytes::byteLength s)) else (ctor Option.none [Nat])),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: elementFrom,
+  parameters: [s : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (if ((at s i) =? 93) then (ctor Option.none [Nat]) else (match n
+      | Nat.zero => (ctor Option.some [Nat] i)
+      | Nat.succ m => (let next : Nat := (space s (valueEnd s i)); (if ((at s next) =? 44) then (elementFrom s (space s (next + 1)) m rest) else (ctor Option.none [Nat])))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: element,
+  parameters: [s : Bytes, i : Nat, n : Nat],
+  result: (Option Nat),
+  body: (if ((at s i) =? 91) then (elementFrom s (space s (i + 1)) n (Foundation.Bytes::byteLength s)) else (ctor Option.none [Nat])),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: countFrom,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((at s i) =? 93) then acc else (let next : Nat := (space s (valueEnd s i)); (if ((at s next) =? 44) then (countFrom s (space s (next + 1)) (acc + 1) rest) else (acc + 1))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: count,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (if ((at s i) =? 91) then (countFrom s (space s (i + 1)) 0 (Foundation.Bytes::byteLength s)) else 0),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: escaped,
+  parameters: [b : Nat],
+  result: (Option Bytes),
+  body: (if (b =? 110) then (ctor Option.some [Bytes] 0x0a) else (if (b =? 116) then (ctor Option.some [Bytes] 0x09) else (if (b =? 114) then (ctor Option.some [Bytes] 0x0d) else (if (b =? 34) then (ctor Option.some [Bytes] 0x22) else (if (b =? 92) then (ctor Option.some [Bytes] 0x5c) else (if (b =? 47) then (ctor Option.some [Bytes] 0x2f) else (if (b =? 98) then (ctor Option.some [Bytes] 0x08) else (if (b =? 102) then (ctor Option.some [Bytes] 0x0c) else (ctor Option.none [Bytes])))))))))
+}
+
+definition{
+  name: runEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (at s i); (if (((b =? 34) || (b =? 92)) || ((Foundation.Bytes::byteLength s) <? (i + 1))) then i else (runEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: unescapeFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (let e : Nat := (runEnd s i (Foundation.Bytes::byteLength s)); (let got : Bytes := (Foundation.Bytes::appendBytes acc (span s i e)); (if ((at s e) =? 34) then (ctor Option.some [Bytes] got) else (if ((at s e) =? 92) then (match (escaped (at s (e + 1)))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some c => (unescapeFrom s (e + 2) (Foundation.Bytes::appendBytes got c) rest)) else (ctor Option.none [Bytes])))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: text,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Bytes),
+  body: (if ((at s i) =? 34) then (unescapeFrom s (i + 1) 0x (Foundation.Bytes::byteLength s)) else (ctor Option.none [Bytes])),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: textAt,
+  parameters: [s : Bytes, i : (Option Nat)],
+  result: Bytes,
+  body: (match i
+    | Option.none => 0x
+    | Option.some v => (match (text s v) | Option.none => 0x | Option.some b => b)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: memberAt,
+  parameters: [s : Bytes, i : (Option Nat), key : Bytes],
+  result: (Option Nat),
+  body: (match i | Option.none => (ctor Option.none [Nat]) | Option.some v => (member s v key)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: elementAt,
+  parameters: [s : Bytes, i : (Option Nat), n : Nat],
+  result: (Option Nat),
+  body: (match i | Option.none => (ctor Option.none [Nat]) | Option.some v => (element s v n)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: countAt,
+  parameters: [s : Bytes, i : (Option Nat)],
+  result: Nat,
+  body: (match i | Option.none => 0 | Option.some v => (count s v)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: root,
+  parameters: [s : Bytes],
+  result: (Option Nat),
+  body: (ctor Option.some [Nat] (space s 0)),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

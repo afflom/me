@@ -1,0 +1,219 @@
+\begin{lexlean}{GenLook}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\title{Look generator}
+\begin{semanticmodule}
+definition{
+  name: lookU,
+  parameters: [value : String],
+  result: Bytes,
+  body: (Foundation.Utf8::encode value)
+}
+
+definition{
+  name: lookCat,
+  parameters: [parts : (List Bytes)],
+  result: Bytes,
+  body: (match parts
+    | List.nil => 0x
+    | List.cons head rest => (Foundation.Bytes::appendBytes head (lookCat rest))),
+  recursive_argument: parts
+}
+
+definition{
+  name: lookCompactFrom,
+  parameters: [s : Bytes, i : Nat, stop : Nat, inString : Bool, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (let c : Nat := (Foundation.Tar::byteOr s i); (if inString then (if (c =? 92) then (lookCompactFrom s (i + 2) stop true (Foundation.Bytes::appendBytes acc (Foundation.Json::span s i (i + 2))) rest) else (lookCompactFrom s (i + 1) stop (if (c =? 34) then false else true) (Foundation.Bytes::appendBytes acc (Foundation.Json::span s i (i + 1))) rest)) else (if (c =? 34) then (lookCompactFrom s (i + 1) stop true (Foundation.Bytes::appendBytes acc 0x22) rest) else (if ((c =? 32) || ((c =? 10) || ((c =? 9) || (c =? 13)))) then (lookCompactFrom s (i + 1) stop false acc rest) else (if (c =? 44) then (lookCompactFrom s (i + 1) stop false (Foundation.Bytes::appendBytes acc 0x2c20) rest) else (if (c =? 58) then (lookCompactFrom s (i + 1) stop false (Foundation.Bytes::appendBytes acc 0x3a20) rest) else (lookCompactFrom s (i + 1) stop false (Foundation.Bytes::appendBytes acc (Foundation.Json::span s i (i + 1))) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: lookCompact,
+  parameters: [s : Bytes, pos : (Option Nat)],
+  result: Bytes,
+  body: (match pos
+    | Option.none => 0x
+    | Option.some i => (lookCompactFrom s i (Foundation.Json::valueEnd s i) false 0x (Foundation.Bytes::byteLength s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: lookTextOf,
+  parameters: [s : Bytes, pos : (Option Nat), key : String],
+  result: Bytes,
+  body: (Foundation.Json::textAt s (Foundation.Json::memberAt s pos (lookU key))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: lookHasEvery,
+  parameters: [s : Bytes, keys : (List String)],
+  result: Bool,
+  body: (match keys
+    | List.nil => true
+    | List.cons head rest => (match (Foundation.Json::memberAt s (Foundation.Json::root s) (lookU head))
+      | Option.none => false
+      | Option.some v => (lookHasEvery s rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: keys
+}
+
+definition{
+  name: lookMetricLine,
+  parameters: [s : Bytes, f : (Option Nat)],
+  result: Bytes,
+  body: (let m : (Option Nat) := (Foundation.Json::memberAt s f (lookU "metrics")); (lookCat (cons 0x40666f6e742d66616365207b20666f6e742d66616d696c793a2022 (cons (lookTextOf s f "family") (cons 0x2046616c6c6261636b223b207372633a206c6f63616c2822 (cons (lookTextOf s f "fallback") (cons 0x22293b2073697a652d61646a7573743a20 (cons (lookTextOf s m "size") (cons 0x3b20617363656e742d6f766572726964653a20 (cons (lookTextOf s m "ascent") (cons 0x3b2064657363656e742d6f766572726964653a20 (cons (lookTextOf s m "descent") (cons 0x3b206c696e652d6761702d6f766572726964653a2030253b207d0a (nil Bytes)))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: lookPageFontLine,
+  parameters: [s : Bytes, f : (Option Nat)],
+  result: Bytes,
+  body: (let load : Bytes := (lookTextOf s f "load"); (if ((Foundation.Tar::sameBytes load (lookU "page")) || ((Foundation.Bytes::byteLength load) =? 0)) then (lookCat (cons 0x40666f6e742d66616365207b20666f6e742d66616d696c793a2022 (cons (lookTextOf s f "family") (cons 0x223b207372633a2075726c28222e2f666f6e74732f (cons (lookTextOf s f "file") (cons 0x222920666f726d61742822776f66663222293b20666f6e742d7765696768743a20 (cons (lookCompact s (Foundation.Json::memberAt s f (lookU "weight"))) (cons 0x3b20666f6e742d7374796c653a206e6f726d616c3b20666f6e742d646973706c61793a206f7074696f6e616c3b207d0a (nil Bytes))))))))) else 0x)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: lookFontFacesFrom,
+  parameters: [s : Bytes, fonts : (Option Nat), n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s fonts n)
+      | Option.none => acc
+      | Option.some i => (let f : (Option Nat) := (ctor Option.some [Nat] i); (lookFontFacesFrom s fonts (n + 1) (lookCat (cons acc (cons (lookMetricLine s f) (cons (lookPageFontLine s f) (nil Bytes))))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: lookJoinSemi,
+  parameters: [acc : Bytes, item : Bytes],
+  result: Bytes,
+  body: (if ((Foundation.Bytes::byteLength acc) =? 0) then item else (lookCat (cons acc (cons 0x3b20 (cons item (nil Bytes))))))
+}
+
+definition{
+  name: lookFontVarsFrom,
+  parameters: [s : Bytes, fonts : (Option Nat), n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s fonts n)
+      | Option.none => acc
+      | Option.some i => (let f : (Option Nat) := (ctor Option.some [Nat] i); (let family : Bytes := (lookTextOf s f "family"); (lookFontVarsFrom s fonts (n + 1) (lookJoinSemi acc (lookCat (cons 0x2d2d666f6e742d (cons (lookTextOf s f "key") (cons 0x3a2022 (cons family (cons 0x222c2022 (cons family (cons 0x2046616c6c6261636b222c20 (cons (lookTextOf s f "fallback") (cons 0x2c207365726966 (nil Bytes)))))))))))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: lookToneVarsFrom,
+  parameters: [s : Bytes, tones : (Option Nat), theme : String, n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s tones n)
+      | Option.none => acc
+      | Option.some i => (let t : (Option Nat) := (ctor Option.some [Nat] i); (lookToneVarsFrom s tones theme (n + 1) (lookJoinSemi acc (lookCat (cons 0x2d2d76722d (cons (lookTextOf s t "key") (cons 0x3a20 (cons (lookTextOf s t theme) (nil Bytes))))))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: lookSetsFrom,
+  parameters: [s : Bytes, sets : (Option Nat), key : Bytes, n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s sets n)
+      | Option.none => acc
+      | Option.some i => (lookSetsFrom s sets key (n + 1) (lookJoinSemi acc (lookCat (cons 0x2d2d (cons (Foundation.Json::textAt s (ctor Option.some [Nat] i)) (cons 0x3a20766172282d2d76722d (cons key (cons 0x29 (nil Bytes)))))))) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: lookToneSetsFrom,
+  parameters: [s : Bytes, tones : (Option Nat), n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s tones n)
+      | Option.none => acc
+      | Option.some i => (let t : (Option Nat) := (ctor Option.some [Nat] i); (lookToneSetsFrom s tones (n + 1) (lookSetsFrom s (Foundation.Json::memberAt s t (lookU "sets")) (lookTextOf s t "key") 0 acc (Foundation.Bytes::byteLength s)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: lookThemeLine,
+  parameters: [s : Bytes, look : (Option Nat), theme : String, selector : Bytes, extra : Bytes],
+  result: Bytes,
+  body: (let tones : (Option Nat) := (Foundation.Json::memberAt s look (lookU "tones")); (let fuel : Nat := (Foundation.Bytes::byteLength s); (lookCat (cons selector (cons 0x207b20 (cons (let decls : Bytes := (lookToneSetsFrom s tones 0 (lookToneVarsFrom s tones theme 0 0x fuel) fuel); (if ((Foundation.Bytes::byteLength extra) =? 0) then decls else (lookJoinSemi decls extra))) (cons 0x3b207d0a (nil Bytes)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: lookLookCss,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let look : (Option Nat) := (Foundation.Json::memberAt s (Foundation.Json::root s) (lookU "look")); (let fonts : (Option Nat) := (Foundation.Json::memberAt s look (lookU "fonts")); (let radius : (Option Nat) := (Foundation.Json::memberAt s look (lookU "radius")); (let fuel : Nat := (Foundation.Bytes::byteLength s); (let light : Bytes := (lookCat (cons (lookFontVarsFrom s fonts 0 0x fuel) (cons 0x3b202d2d7261646975732d6f757465723a20 (cons (lookTextOf s radius "outer") (cons 0x3b202d2d7261646975732d696e6e65723a20 (cons (lookTextOf s radius "inner") (nil Bytes))))))); (lookCat (cons 0x2f2a206c6f6f6b3a2067656e6572617465642062792047656e4c6f6f6b202867656e657261746f72732f6c6f6f6b292066726f6d206170702f73706563732f737572666163652f737065632e6a736f6e3b20646f206e6f7420656469742e202a2f0a (cons (lookFontFacesFrom s fonts 0 0x fuel) (cons (lookThemeLine s look "light" 0x3a726f6f74 light) (cons (lookThemeLine s look "dark" 0x2e6461726b 0x) (cons 0x2f2a206c6f6f6b3a20656e64202a2f0a (nil Bytes)))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: lookLookGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (lookU "app/specs/surface/spec.json"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (if (lookHasEvery s (cons "look" (nil String))) then (ctor Option.some [Bytes] (lookLookCss s)) else (ctor Option.none [Bytes]))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: lookFindFrom,
+  parameters: [s : Bytes, pattern : Bytes, i : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + (Foundation.Bytes::byteLength pattern))) then (ctor Option.none [Nat]) else (if (Foundation.Tar::sameBytes (Foundation.Json::span s i (i + (Foundation.Bytes::byteLength pattern))) pattern) then (ctor Option.some [Nat] i) else (lookFindFrom s pattern (i + 1) rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: lookRestGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (lookU "site/card.css"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some piece => (let n : Nat := (Foundation.Bytes::byteLength piece); (if (Foundation.Tar::sameBytes (Foundation.Json::span piece 0 18) 0x2f2a206c6f6f6b3a2067656e657261746564) then (match (lookFindFrom piece 0x2f2a206c6f6f6b3a20656e64202a2f0a 0 n)
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some e => (ctor Option.some [Bytes] (Foundation.Json::span piece (e + 16) n))) else (ctor Option.some [Bytes] piece)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: lookCssGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (lookU ".gen/look.css"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some look => (match (Foundation.Tar::find archive (lookU ".gen/card-rest.css"))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some rest => (ctor Option.some [Bytes] (Foundation.Bytes::appendBytes look rest)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
