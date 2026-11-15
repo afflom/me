@@ -67,6 +67,7 @@ function misses(example) {
   if ("body" in e) { const got = (item.body ?? "").replace(/\s+/g, " ").trim(); same("body", e.body, got.startsWith(e.body) ? e.body : got); }
   // Where it stands in its own order: its conversation (RFC 5322 3.6.4) and its revisions (RFC 5545 UID, SEQUENCE).
   for (const field of ["id", "uid", "sequence"]) if (field in e) same(field, e[field], item[field]);
+  if (example.kind === "message" && "from" in e) same("from", e.from, item.from);
   for (const field of ["replyTo", "refs"]) if (field in e) same(field, JSON.stringify(e[field]), JSON.stringify(item[field] ?? []));
   return out;
 }
