@@ -1,0 +1,23 @@
+{
+  "key": "QR-13",
+  "name": "The whole person, as WHO classifies it",
+  "characteristic": "functional suitability",
+  "subcharacteristic": "functional completeness",
+  "says": "the person model holds every entity of the pinned ICF release, with its code, title and URI, both of WHO's forms of it agree, and each structural check refuses its planted defect",
+  "measures": [
+    {
+      "key": "entities-unkept",
+      "says": "entities of the pinned ICF release the page's model does not hold with their code, title and URI",
+      "direction": "atMost",
+      "threshold": 0,
+      "gate": "test/person/icf.test.mjs"
+    },
+    {
+      "key": "planted-unrefused",
+      "says": "defects planted in the pinned release (forms that disagree, a code outside its component or level, a code used twice, a title out of its level) that the generator does not refuse",
+      "direction": "atMost",
+      "threshold": 0,
+      "gate": "test/person/icf.test.mjs"
+    }
+  ]
+}
