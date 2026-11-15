@@ -409,5 +409,93 @@ definition{
         | Option.some x => (if (vcardSame (Foundation.Json::span example x (Foundation.Json::valueEnd example x)) got) then (vcardApp 0x7772697474656e0a (vcardApp ident 0x0a)) else (vcardApp (vcardU "refused: ") (vcardApp ident (vcardApp (vcardU " reads ") got))))))))))),
   axioms: [Quot.sound, propext]
 }
+
+definition{
+  name: vcardDigit,
+  parameters: [d : Nat],
+  result: Bytes,
+  body: (vcardCut 0x30313233343536373839 d (d + 1))
+}
+
+definition{
+  name: vcardDecimalFrom,
+  parameters: [n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (n <? 10) then (vcardDigit n) else (vcardApp (vcardDecimalFrom (prim quotient n 10 0 : Nat) rest) (vcardDigit (prim remainder n 10 0 : Nat))))),
+  recursive_argument: fuel
+}
+
+definition{name: vcardDecimal, parameters: [n : Nat], result: Bytes, body: (vcardDecimalFrom n 32)}
+
+definition{
+  name: vcardHexFrom,
+  parameters: [s : Bytes, i : Nat, stop : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (let b : Nat := (vcardAt s i); (vcardHexFrom s (i + 1) stop (vcardApp acc (vcardApp (vcardHexDigit (prim quotient b 16 0 : Nat)) (vcardHexDigit (prim remainder b 16 0 : Nat)))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardTree,
+  parameters: [lo : Nat, hi : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (hi =? (lo + 1)) then (vcardApp 0x2876636172645461626c654368756e6b (vcardApp (vcardDecimal lo) 0x29)) else (let mid : Nat := (prim quotient (lo + hi) 2 0 : Nat); (vcardApp 0x28466f756e646174696f6e2e42797465733a3a617070656e64427974657320 (vcardApp (vcardTree lo mid rest) (vcardApp 0x20 (vcardApp (vcardTree mid hi rest) 0x29))))))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardFieldOr,
+  parameters: [t : Bytes, v : Nat, key : Bytes],
+  result: Bytes,
+  body: (let x : Bytes := (Foundation.Json::textAt t (Foundation.Json::member t v key)); (if ((vcardLen x) =? 0) then 0x2d else x)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardRowsFrom,
+  parameters: [t : Bytes, k : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((vcardAt t k) =? 34) then (let ke : Nat := (Foundation.Json::stringEnd t (k + 1)); (let v : Nat := (Foundation.Json::space t ((Foundation.Json::space t (ke + 1)) + 1)); (let row : Bytes := (vcardApp (vcardCut t (k + 1) ke) (vcardApp 0x20 (vcardApp (vcardFieldOr t v 0x7368617065) (vcardApp 0x20 (vcardApp (vcardFieldOr t v 0x636f6d706f6e656e7473) (vcardApp 0x20 (vcardApp (vcardFieldOr t v 0x64656661756c74) 0x0a))))))); (let next : Nat := (Foundation.Json::space t (Foundation.Json::valueEnd t v)); (if ((vcardAt t next) =? 44) then (vcardRowsFrom t (Foundation.Json::space t (next + 1)) (vcardApp acc row) rest) else (vcardApp acc row)))))) else acc)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardChunkDefs,
+  parameters: [rows : Bytes, i : Nat, n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((vcardLen rows) <? (i + 1)) then acc else (let stop : Nat := (if ((vcardLen rows) <? (i + 256)) then (vcardLen rows) else (i + 256)); (vcardChunkDefs rows (i + 256) (n + 1) (vcardApp acc (vcardApp 0x646566696e6974696f6e7b0a20206e616d653a2076636172645461626c654368756e6b (vcardApp (vcardDecimal n) (vcardApp 0x2c0a2020706172616d65746572733a205b5d2c0a2020726573756c743a2042797465732c0a2020626f64793a203078 (vcardApp (vcardHexFrom rows i stop 0x (vcardLen rows)) 0x0a7d0a0a))))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardTableModule,
+  parameters: [t : Bytes],
+  result: Bytes,
+  body: (let rows : Bytes := (vcardRowsFrom t (Foundation.Json::space t ((vcardTableStart t 0 (vcardLen t)) + 1)) 0x (vcardLen t)); (let m : Nat := (prim quotient ((vcardLen rows) + 255) 256 0 : Nat); (vcardApp 0x5c626567696e7b6c65786c65616e7d7b507269736d56636172645461626c657d0a5c757365676c6f73736172797b6c65786c65616e2e7374642e626f6f6c40312e322e307d0a5c757365676c6f73736172797b6c65786c65616e2e7374642e6e617440312e322e307d0a5c757365676c6f73736172797b707269736d2e6172636840312e302e307d0a5c696d706f72746d6f64756c657b466f756e646174696f6e2e42797465737d0a5c7469746c657b54657874206170706c69636174696f6e206d6f64656c7d0a5c626567696e7b73656d616e7469636d6f64756c657d0a (vcardApp (vcardChunkDefs rows 0 0 0x m) (vcardApp 0x646566696e6974696f6e7b0a20206e616d653a2076636172645461626c652c0a2020706172616d65746572733a205b5d2c0a2020726573756c743a2042797465732c0a2020626f64793a2028466f756e646174696f6e2e42797465733a3a617070656e644279746573203078306120 (vcardApp (vcardTree 0 m (m + 1)) 0x290a7d0a5c656e647b73656d616e7469636d6f64756c657d0a5c656e647b6c65786c65616e7d0a)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardTableReport,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (match (Foundation.Tar::find archive 0x736974652f726561642f76636172642e7461626c652e6d6a73)
+    | Option.none => 0x726566757365643a206e6565647320736974652f726561642f76636172642e7461626c652e6d6a73
+    | Option.some t => (vcardApp 0x7772697474656e0a (vcardTableModule t))),
+  axioms: [Quot.sound, propext]
+}
 \end{semanticmodule}
 \end{lexlean}
