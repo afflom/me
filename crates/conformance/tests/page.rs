@@ -69,13 +69,21 @@ fn page_pg_02() {
         .to_path_buf();
     let read = |path: &str| std::fs::read_to_string(root.join(path)).expect(path);
 
-    // The surface's files are what app/specs/surface/spec.json makes, and the
-    // generator refuses any visible word that is not a name.
-    let check = std::process::Command::new("python3")
-        .args(["-I", "tools/surface/gen.py", "--check"])
+    // The surface's files are what app/specs/surface/spec.json makes: the
+    // LexLean generators GenSurfaceModel, GenSurface and GenLook write them,
+    // and GenSurfaceModel refuses any visible word that is not a name.
+    let steps = read("generators/surfacemodel/steps.json");
+    for output in ["app/src/PrismSurface.lex.tex", "app/src/PrismSurfaceProofs.lex.tex"] {
+        assert!(
+            steps.contains(&format!("\"output\": \"{output}\"")),
+            "PG-02: GenSurfaceModel must write {output}"
+        );
+    }
+    let check = std::process::Command::new("sh")
+        .args(["tools/generators/run.sh", "--check"])
         .current_dir(&root)
         .output()
-        .expect("python3 runs the surface generator");
+        .expect("sh runs the generators");
     assert!(
         check.status.success(),
         "PG-02: the surface is stale or holds a word that is not a name: {}",

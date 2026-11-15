@@ -1,0 +1,44 @@
+{
+  "comment": "The steps of the surface model program (generators/surfacemodel/), run in order by tools/generators/run.sh. A step reads repository files and the .gen/ outputs of this program's earlier steps only.",
+  "steps": [
+    {
+      "generator": "surfacesuccess",
+      "inputs": [
+        "app/specs/product/spec.json"
+      ],
+      "output": ".gen/surface-goals"
+    },
+    {
+      "generator": "surfacesuccess",
+      "inputs": [
+        "app/specs/product/journeys/*.json"
+      ],
+      "output": ".gen/surface-journeys"
+    },
+    {
+      "generator": "surfacerows",
+      "inputs": [
+        "app/specs/source/services.json"
+      ],
+      "output": ".gen/surface-rows"
+    },
+    {
+      "generator": "surfacemodel",
+      "inputs": [
+        "app/specs/surface/spec.json",
+        "site/brand/hologram-warm.css",
+        ".gen/surface-goals",
+        ".gen/surface-journeys",
+        ".gen/surface-rows"
+      ],
+      "output": "app/src/PrismSurface.lex.tex"
+    },
+    {
+      "generator": "surfaceproofs",
+      "inputs": [
+        "app/specs/surface/spec.json"
+      ],
+      "output": "app/src/PrismSurfaceProofs.lex.tex"
+    }
+  ]
+}

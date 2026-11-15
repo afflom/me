@@ -1,0 +1,2024 @@
+\begin{lexlean}{GenSurfaceModel}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\title{Surface model generator}
+\begin{semanticmodule}
+definition{
+  name: smoU,
+  parameters: [value : String],
+  result: Bytes,
+  body: (Foundation.Utf8::encode value)
+}
+
+definition{
+  name: smoCat,
+  parameters: [parts : (List Bytes)],
+  result: Bytes,
+  body: (match parts
+    | List.nil => 0x
+    | List.cons head rest => (Foundation.Bytes::appendBytes head (smoCat rest))),
+  recursive_argument: parts
+}
+
+definition{
+  name: smoSep,
+  parameters: [acc : Bytes, sep : Bytes, item : Bytes],
+  result: Bytes,
+  body: (if ((Foundation.Bytes::byteLength item) =? 0) then acc else (if ((Foundation.Bytes::byteLength acc) =? 0) then item else (smoCat (cons acc (cons sep (cons item (nil Bytes)))))))
+}
+
+definition{
+  name: smoAdd,
+  parameters: [acc : Bytes, reason : Bytes],
+  result: Bytes,
+  body: (smoSep acc 0x3b20 reason)
+}
+
+definition{
+  name: smoDigit,
+  parameters: [d : Nat],
+  result: Bytes,
+  body: (Foundation.Json::span (smoU "0123456789") d (d + 1))
+}
+
+definition{
+  name: smoNumber,
+  parameters: [n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (n <? 10) then (smoDigit n) else (Foundation.Bytes::appendBytes (smoNumber (prim quotient n 10 0 : Nat) rest) (smoDigit (prim remainder n 10 0 : Nat))))),
+  recursive_argument: fuel
+}
+
+definition{name: smoNum, parameters: [n : Nat], result: Bytes, body: (smoNumber n 40)}
+
+definition{
+  name: smoDigitsFrom,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr s i); (if ((47 <? b) && (b <? 58)) then (smoDigitsFrom s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract b 48 : Nat)) rest) else acc))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoNatOf,
+  parameters: [s : Bytes, pos : (Option Nat)],
+  result: Nat,
+  body: (match pos | Option.none => 0 | Option.some i => (smoDigitsFrom s i 0 20)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoIsNat,
+  parameters: [s : Bytes, pos : (Option Nat)],
+  result: Bool,
+  body: (match pos
+    | Option.none => false
+    | Option.some i => (let b : Nat := (Foundation.Tar::byteOr s i); ((47 <? b) && (b <? 58)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoRaw,
+  parameters: [s : Bytes, pos : (Option Nat)],
+  result: Bytes,
+  body: (match pos
+    | Option.none => 0x
+    | Option.some i => (Foundation.Json::span s i (Foundation.Json::valueEnd s i))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoQuoted,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (smoCat (cons 0x22 (cons value (cons 0x22 (nil Bytes)))))
+}
+
+definition{
+  name: smoOr,
+  parameters: [value : (Option Nat), fallback : Nat],
+  result: Nat,
+  body: (match value | Option.none => fallback | Option.some v => v)
+}
+
+definition{
+  name: smoKnown,
+  parameters: [value : (Option Nat)],
+  result: Bool,
+  body: (match value | Option.none => false | Option.some v => true)
+}
+
+definition{
+  name: smoHas,
+  parameters: [s : Bytes, pos : (Option Nat), key : String],
+  result: Bool,
+  body: (smoKnown (Foundation.Json::memberAt s pos (smoU key))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoIndexFrom,
+  parameters: [s : Bytes, arr : (Option Nat), wanted : Bytes, n : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (if (Foundation.Tar::sameBytes (Foundation.Json::textAt s e) wanted) then (ctor Option.some [Nat] n) else (smoIndexFrom s arr wanted (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoIndex,
+  parameters: [s : Bytes, arr : (Option Nat), wanted : Bytes],
+  result: (Option Nat),
+  body: (smoIndexFrom s arr wanted 0 (Foundation.Json::countAt s arr)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoKeyIndexFrom,
+  parameters: [s : Bytes, arr : (Option Nat), wanted : Bytes, n : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (if (Foundation.Tar::sameBytes (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "key"))) wanted) then (ctor Option.some [Nat] n) else (smoKeyIndexFrom s arr wanted (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoKeyIndex,
+  parameters: [s : Bytes, arr : (Option Nat), wanted : Bytes],
+  result: (Option Nat),
+  body: (smoKeyIndexFrom s arr wanted 0 (Foundation.Json::countAt s arr)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoFixedIndex,
+  parameters: [values : (List String), wanted : Bytes, n : Nat],
+  result: (Option Nat),
+  body: (match values
+    | List.nil => (ctor Option.none [Nat])
+    | List.cons head rest => (if (Foundation.Tar::sameBytes (smoU head) wanted) then (ctor Option.some [Nat] n) else (smoFixedIndex rest wanted (n + 1)))),
+  axioms: [propext],
+  recursive_argument: values
+}
+
+definition{
+  name: smoCons,
+  parameters: [head : Bytes, tail : Bytes],
+  result: Bytes,
+  body: (smoCat (cons (smoCat (cons 0x28636f6e7320 (cons head (cons 0x20 (cons tail (nil Bytes)))))) (cons 0x29 (nil Bytes))))
+}
+
+definition{
+  name: smoNil,
+  parameters: [kind : String],
+  result: Bytes,
+  body: (smoCat (cons 0x286e696c20 (cons (smoU kind) (cons 0x29 (nil Bytes)))))
+}
+
+definition{
+  name: smoRawChainFrom,
+  parameters: [s : Bytes, arr : (Option Nat), kind : String, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (smoNil kind)
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => (smoNil kind)
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (smoCons (smoRaw s e) (smoRawChainFrom s arr kind (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoRawChain,
+  parameters: [s : Bytes, arr : (Option Nat), kind : String],
+  result: Bytes,
+  body: (smoRawChainFrom s arr kind 0 (Foundation.Bytes::byteLength s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoDefn,
+  parameters: [name : String, result : String, body : Bytes],
+  result: Bytes,
+  body: (let one : Bytes := (smoCat (cons (smoCat (cons 0x646566696e6974696f6e7b6e616d653a20 (cons (smoU name) (cons 0x2c20706172616d65746572733a205b5d2c20726573756c743a20 (cons (smoU result) (nil Bytes)))))) (cons (smoCat (cons 0x2c20626f64793a20 (cons body (cons 0x7d (nil Bytes))))) (nil Bytes)))); (if ((Foundation.Bytes::byteLength one) <=? 100) then (smoCat (cons 0x0a (cons one (cons 0x0a (nil Bytes))))) else (smoCat (cons (smoCat (cons 0x0a646566696e6974696f6e7b0a20206e616d653a20 (cons (smoU name) (cons 0x2c0a2020706172616d65746572733a205b5d2c0a2020726573756c743a20 (cons (smoU result) (nil Bytes)))))) (cons (smoCat (cons 0x2c0a2020626f64793a20 (cons body (cons 0x0a7d0a (nil Bytes))))) (nil Bytes))))))
+}
+
+definition{
+  name: smoHexDigit,
+  parameters: [b : Nat],
+  result: (Option Nat),
+  body: (if ((47 <? b) && (b <? 58)) then (ctor Option.some [Nat] (prim subtract b 48 : Nat)) else (if ((96 <? b) && (b <? 103)) then (ctor Option.some [Nat] (prim subtract b 87 : Nat)) else (if ((64 <? b) && (b <? 71)) then (ctor Option.some [Nat] (prim subtract b 55 : Nat)) else (ctor Option.none [Nat]))))
+}
+
+definition{
+  name: smoHexFrom,
+  parameters: [c : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.some [Nat] acc)
+    | Nat.succ rest => (match (smoHexDigit (Foundation.Tar::byteOr c i))
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some d => (smoHexFrom c (i + 1) ((prim multiply acc 16 : Nat) + d) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoColour,
+  parameters: [c : Bytes],
+  result: (Option Nat),
+  body: (if (((Foundation.Bytes::byteLength c) =? 7) && ((Foundation.Tar::byteOr c 0) =? 35)) then (smoHexFrom c 1 0 6) else (ctor Option.none [Nat])),
+  axioms: [Quot.sound, propext]
+}
+
+definition{name: smoScale, parameters: [], result: Nat, body: 100000000}
+
+definition{
+  name: smoFifth,
+  parameters: [y : Nat],
+  result: Nat,
+  body: (prim quotient (prim multiply (prim quotient (prim multiply (prim quotient (prim multiply (prim quotient (prim multiply y y : Nat) (smoScale) 0 : Nat) y : Nat) (smoScale) 0 : Nat) y : Nat) (smoScale) 0 : Nat) y : Nat) (smoScale) 0 : Nat)
+}
+
+definition{
+  name: smoRootFrom,
+  parameters: [q : Nat, lo : Nat, hi : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => lo
+    | Nat.succ rest => (if (hi <=? (lo + 1)) then (if ((smoFifth hi) <=? q) then hi else lo) else (let mid : Nat := (prim quotient (lo + hi) 2 0 : Nat); (if ((smoFifth mid) <=? q) then (smoRootFrom q mid hi rest) else (smoRootFrom q lo mid rest))))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoLinear,
+  parameters: [c : Nat],
+  result: Nat,
+  body: (if (c <=? 10) then (prim quotient (prim multiply c 1000000000 : Nat) 32946 0 : Nat) else (let x : Nat := (prim quotient (prim multiply ((prim multiply c 1000 : Nat) + 14025) (smoScale) : Nat) 269025 0 : Nat); (let q : Nat := (prim quotient (prim multiply x x : Nat) (smoScale) 0 : Nat); (prim quotient (prim multiply q (smoRootFrom q 0 (smoScale) 64) : Nat) (smoScale) 0 : Nat))))
+}
+
+definition{
+  name: smoLuminance,
+  parameters: [c : Nat],
+  result: Nat,
+  body: ((prim multiply 2126 (smoLinear (prim quotient c 65536 0 : Nat)) : Nat) + ((prim multiply 7152 (smoLinear (prim remainder (prim quotient c 256 0 : Nat) 256 0 : Nat)) : Nat) + (prim multiply 722 (smoLinear (prim remainder c 256 0 : Nat)) : Nat)))
+}
+
+definition{
+  name: smoRatio,
+  parameters: [fore : Nat, back : Nat],
+  result: Nat,
+  body: (let a : Nat := ((smoLuminance fore) + (prim multiply 500 (smoScale) : Nat)); (let b : Nat := ((smoLuminance back) + (prim multiply 500 (smoScale) : Nat)); (if (b <=? a) then (prim quotient (prim multiply 100 a : Nat) b 0 : Nat) else (prim quotient (prim multiply 100 b : Nat) a 0 : Nat))))
+}
+
+definition{
+  name: smoHundredths,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (smoCat (cons (smoNum (prim quotient n 100 0 : Nat)) (cons 0x2e (cons (smoDigit (prim quotient (prim remainder n 100 0 : Nat) 10 0 : Nat)) (cons (smoDigit (prim remainder n 10 0 : Nat)) (nil Bytes))))))
+}
+
+definition{
+  name: smoFracAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (Foundation.Tar::byteOr s i); (if ((47 <? b) && (b <? 58)) then (prim subtract b 48 : Nat) else 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoWholeEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr s i); (if ((47 <? b) && (b <? 58)) then (smoWholeEnd s (i + 1) rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoFloorOf,
+  parameters: [s : Bytes, pos : (Option Nat)],
+  result: Nat,
+  body: (match pos
+    | Option.none => 0
+    | Option.some i => (let e : Nat := (smoWholeEnd s i 20); (let whole : Nat := (prim multiply (smoDigitsFrom s i 0 20) 100 : Nat); (if ((Foundation.Tar::byteOr s e) =? 46) then ((whole + (prim multiply (smoFracAt s (e + 1)) 10 : Nat)) + (smoFracAt s (e + 2))) else whole)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoSpace,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 32) || ((b =? 9) || ((b =? 10) || ((b =? 13) || ((b =? 11) || (b =? 12))))))
+}
+
+definition{
+  name: smoNameFrom,
+  parameters: [
+    t : Bytes,
+    i : Nat,
+    inWord : Bool,
+    words : Nat,
+    points : Nat,
+    lastByte : Nat,
+    fuel : Nat
+  ],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength t) <=? i) then (((words <=? 4) && (points <=? 28)) && (not ((lastByte =? 46) || ((lastByte =? 33) || ((lastByte =? 63) || (lastByte =? 58)))))) else (let b : Nat := (Foundation.Tar::byteOr t i); (if (b =? 10) then false else (let sp : Bool := (smoSpace b); (smoNameFrom t (i + 1) (not sp) (if (sp || inWord) then words else (words + 1)) (if ((prim remainder (prim quotient b 64 0 : Nat) 4 0 : Nat) =? 2) then points else (points + 1)) (if sp then lastByte else b) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoIsName,
+  parameters: [t : Bytes],
+  result: Bool,
+  body: ((0 <? (Foundation.Bytes::byteLength t)) && (smoNameFrom t 0 false 0 0 0 ((Foundation.Bytes::byteLength t) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoNameReason,
+  parameters: [kindName : Bytes, t : Bytes],
+  result: Bytes,
+  body: (if (smoIsName t) then 0x else (smoCat (cons (smoCat (cons 0x74686520 (cons kindName (cons 0x20776f72642022 (cons t (nil Bytes)))))) (cons 0x22206973206e6f742061206e616d653a206174206d6f737420666f757220776f72647320616e6420323820636861726163746572732c206e6f2073656e74656e6365 (nil Bytes))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoNamesFrom,
+  parameters: [s : Bytes, arr : (Option Nat), kindName : String, acc : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (smoNamesFrom s arr kindName (smoAdd acc (smoNameReason (smoU kindName) (Foundation.Json::textAt s e))) (n + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoMemberNamesFrom,
+  parameters: [
+    s : Bytes,
+    arr : (Option Nat),
+    key : String,
+    kindName : String,
+    skipEmpty : Bool,
+    acc : Bytes,
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let t : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU key))); (smoMemberNamesFrom s arr key kindName skipEmpty (if (skipEmpty && ((Foundation.Bytes::byteLength t) =? 0)) then acc else (smoAdd acc (smoNameReason (smoU kindName) t))) (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoFirstKey,
+  parameters: [s : Bytes, pos : (Option Nat)],
+  result: (Option Nat),
+  body: (match pos
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some i => (let k : Nat := (Foundation.Json::space s (i + 1)); (if ((Foundation.Tar::byteOr s k) =? 34) then (ctor Option.some [Nat] k) else (ctor Option.none [Nat])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoValueOf,
+  parameters: [s : Bytes, k : Nat],
+  result: Nat,
+  body: (Foundation.Json::space s ((Foundation.Json::space s ((Foundation.Json::stringEnd s (k + 1)) + 1)) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoNextKey,
+  parameters: [s : Bytes, k : Nat],
+  result: (Option Nat),
+  body: (let next : Nat := (Foundation.Json::space s (Foundation.Json::valueEnd s (smoValueOf s k))); (if ((Foundation.Tar::byteOr s next) =? 44) then (ctor Option.some [Nat] (Foundation.Json::space s (next + 1))) else (ctor Option.none [Nat]))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoWordNames,
+  parameters: [s : Bytes, key : (Option Nat), acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ step => (match key
+      | Option.none => acc
+      | Option.some k => (smoWordNames s (smoNextKey s k) (smoAdd acc (smoNameReason (Foundation.Json::textAt s (ctor Option.some [Nat] k)) (Foundation.Json::textAt s (ctor Option.some [Nat] (smoValueOf s k))))) step))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoWordRecords,
+  parameters: [s : Bytes, key : (Option Nat), fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c2053757266616365576f726429
+    | Nat.succ step => (match key
+      | Option.none => 0x286e696c2053757266616365576f726429
+      | Option.some k => (smoCons (smoCat (cons (smoCat (cons 0x287265636f72642053757266616365576f7264207b6b6579203a3d20 (cons (smoRaw s (ctor Option.some [Nat] k)) (cons 0x2c2074657874203a3d20 (cons (smoRaw s (ctor Option.some [Nat] (smoValueOf s k))) (nil Bytes)))))) (cons 0x7d29 (nil Bytes)))) (smoWordRecords s (smoNextKey s k) step)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoWordsReason,
+  parameters: [s : Bytes, top : (Option Nat)],
+  result: Bytes,
+  body: (smoWordNames s (smoFirstKey s (Foundation.Json::memberAt s top (smoU "words"))) (smoMemberNamesFrom s (Foundation.Json::memberAt s top (smoU "sections")) "name" "section" false (smoMemberNamesFrom s (Foundation.Json::memberAt s top (smoU "settings")) "name" "setting" false (smoMemberNamesFrom s (Foundation.Json::memberAt s top (smoU "groups")) "name" "group" false (smoMemberNamesFrom s (Foundation.Json::memberAt s top (smoU "acts")) "word" "act" true (smoMemberNamesFrom s (Foundation.Json::memberAt s top (smoU "places")) "name" "place" false (smoNamesFrom s (Foundation.Json::memberAt s top (smoU "roles")) "role" (smoNamesFrom s (Foundation.Json::memberAt s top (smoU "labels")) "label" (smoNamesFrom s (Foundation.Json::memberAt s top (smoU "domains")) "domain" 0x 0 (Foundation.Bytes::byteLength s)) 0 (Foundation.Bytes::byteLength s)) 0 (Foundation.Bytes::byteLength s)) 0 (Foundation.Bytes::byteLength s)) 0 (Foundation.Bytes::byteLength s)) 0 (Foundation.Bytes::byteLength s)) 0 (Foundation.Bytes::byteLength s)) 0 (Foundation.Bytes::byteLength s)) (Foundation.Bytes::byteLength s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoFontsFrom,
+  parameters: [s : Bytes, arr : (Option Nat), acc : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let load : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "load"))); (smoFontsFrom s arr (if (((Foundation.Bytes::byteLength load) =? 0) || ((Foundation.Tar::sameBytes load 0x70616765) || (Foundation.Tar::sameBytes load 0x67657374757265))) then acc else (smoAdd acc (smoCat (cons 0x666f6e7420 (cons (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "key"))) (cons 0x206c6f61647320776974682070616765206f7220676573747572652c206e6f7420 (cons load (nil Bytes)))))))) (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoContainsFrom,
+  parameters: [hay : Bytes, needle : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength hay) <? (i + (Foundation.Bytes::byteLength needle))) then false else (if (Foundation.Tar::sameBytes (Foundation.Json::span hay i (i + (Foundation.Bytes::byteLength needle))) needle) then true else (smoContainsFrom hay needle (i + 1) rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoContains,
+  parameters: [hay : Bytes, needle : Bytes],
+  result: Bool,
+  body: (smoContainsFrom hay needle 0 ((Foundation.Bytes::byteLength hay) + 1)),
+  axioms: [propext]
+}
+
+definition{
+  name: smoSetCountFrom,
+  parameters: [s : Bytes, tones : (Option Nat), brandVar : Bytes, acc : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s tones n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (smoSetCountFrom s tones brandVar (if (smoKnown (smoIndex s (Foundation.Json::memberAt s e (smoU "sets")) brandVar)) then (acc + 1) else acc) (n + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoSetsFrom,
+  parameters: [
+    s : Bytes,
+    tones : (Option Nat),
+    key : Bytes,
+    brand : Bytes,
+    arr : (Option Nat),
+    acc : Bytes,
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let brandVar : Bytes := (Foundation.Json::textAt s e); (smoSetsFrom s tones key brand arr (smoAdd (if (smoContains brand (smoCat (cons 0x2d2d (cons brandVar (cons 0x3a (nil Bytes)))))) then acc else (smoAdd acc (smoCat (cons (smoCat (cons 0x74686520746f6e6520 (cons key (cons 0x2073657473202d2d (cons brandVar (nil Bytes)))))) (cons 0x2c20776869636820746865206272616e6420646f6573206e6f7420646566696e65 (nil Bytes)))))) (if ((smoSetCountFrom s tones brandVar 0 0 (Foundation.Bytes::byteLength s)) =? 1) then 0x else (smoCat (cons 0x2d2d (cons brandVar (cons 0x20697320736574206279206d6f7265207468616e206f6e6520746f6e652c20616d6f6e67207468656d20 (cons key (nil Bytes)))))))) (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoThemesCheckFrom,
+  parameters: [
+    s : Bytes,
+    tone : (Option Nat),
+    themes : (Option Nat),
+    key : Bytes,
+    acc : Bytes,
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s themes n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let theme : Bytes := (Foundation.Json::textAt s e); (smoThemesCheckFrom s tone themes key (if (smoKnown (smoColour (Foundation.Json::textAt s (Foundation.Json::memberAt s tone theme)))) then acc else (smoAdd acc (smoCat (cons 0x74686520746f6e6520 (cons key (cons 0x20686173206e6f202372726767626220636f6c6f757220696e20 (cons theme (nil Bytes)))))))) (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoTonesCheckFrom,
+  parameters: [
+    s : Bytes,
+    tones : (Option Nat),
+    themes : (Option Nat),
+    brand : Bytes,
+    acc : Bytes,
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s tones n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let key : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "key"))); (let bad : Bytes := (smoThemesCheckFrom s e themes key 0x 0 (Foundation.Bytes::byteLength s)); (smoTonesCheckFrom s tones themes brand (smoSetsFrom s tones key brand (Foundation.Json::memberAt s e (smoU "sets")) (smoAdd acc bad) 0 (Foundation.Bytes::byteLength s)) (n + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoToneColour,
+  parameters: [s : Bytes, tones : (Option Nat), key : Bytes, theme : Bytes],
+  result: Nat,
+  body: (match (smoKeyIndex s tones key)
+    | Option.none => 0
+    | Option.some t => (smoOr (smoColour (Foundation.Json::textAt s (Foundation.Json::memberAt s (Foundation.Json::elementAt s tones t) theme))) 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoPairThemesFrom,
+  parameters: [
+    s : Bytes,
+    tones : (Option Nat),
+    themes : (Option Nat),
+    pair : (Option Nat),
+    acc : Bytes,
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s themes n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let theme : Bytes := (Foundation.Json::textAt s e); (let fore : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s pair 0)); (let back : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s pair 1)); (let ratio : Nat := (smoRatio (smoToneColour s tones fore theme) (smoToneColour s tones back theme)); (let floor : (Option Nat) := (Foundation.Json::elementAt s pair 2); (smoPairThemesFrom s tones themes pair (if (ratio <? (smoFloorOf s floor)) then (smoAdd acc (smoCat (cons (smoCat (cons fore (cons 0x206f6e20 (cons back (cons 0x20726561647320617420 (nil Bytes)))))) (cons (smoCat (cons (smoHundredths ratio) (cons 0x20696e20 (cons theme (cons 0x2c20756e6465722069747320 (nil Bytes)))))) (cons (smoRaw s floor) (nil Bytes)))))) else acc) (n + 1) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoPairsFrom,
+  parameters: [
+    s : Bytes,
+    tones : (Option Nat),
+    themes : (Option Nat),
+    pairs : (Option Nat),
+    acc : Bytes,
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s pairs n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let fore : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s e 0)); (let back : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s e 1)); (smoPairsFrom s tones themes pairs (if ((smoKnown (smoKeyIndex s tones fore)) && (smoKnown (smoKeyIndex s tones back))) then (smoPairThemesFrom s tones themes e acc 0 (Foundation.Bytes::byteLength s)) else (smoAdd acc (smoCat (cons (smoCat (cons 0x746865207061697220 (cons fore (cons 0x206f6e20 (cons back (nil Bytes)))))) (cons 0x206e616d6573206120746f6e6520746865206c6f6f6b20646f6573206e6f742068617665 (nil Bytes)))))) (n + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoLookReason,
+  parameters: [s : Bytes, top : (Option Nat), brand : Bytes],
+  result: Bytes,
+  body: (let look : (Option Nat) := (Foundation.Json::memberAt s top (smoU "look")); (let tones : (Option Nat) := (Foundation.Json::memberAt s look (smoU "tones")); (let themes : (Option Nat) := (Foundation.Json::memberAt s look (smoU "themes")); (smoPairsFrom s tones themes (Foundation.Json::memberAt s look (smoU "contrast")) (smoTonesCheckFrom s tones themes brand (smoFontsFrom s (Foundation.Json::memberAt s look (smoU "fonts")) 0x 0 (Foundation.Bytes::byteLength s)) 0 (Foundation.Bytes::byteLength s)) 0 (Foundation.Bytes::byteLength s))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoKeysKnownFrom,
+  parameters: [
+    s : Bytes,
+    arr : (Option Nat),
+    within : (Option Nat),
+    what : Bytes,
+    kind : Bytes,
+    acc : Bytes,
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let k : Bytes := (Foundation.Json::textAt s e); (smoKeysKnownFrom s arr within what kind (if (smoKnown (smoKeyIndex s within k)) then acc else (smoAdd acc (smoCat (cons (smoCat (cons what (cons 0x20686f6c647320 (cons k (cons 0x2c207768696368206973206e6f74206120 (nil Bytes)))))) (cons kind (nil Bytes)))))) (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoLineFrom,
+  parameters: [t : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((Foundation.Bytes::byteLength t) <=? i) || ((Foundation.Tar::byteOr t i) =? 10)) then i else (smoLineFrom t (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoLineOfFrom,
+  parameters: [t : Bytes, wanted : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength t) <=? i) then false else (let e : Nat := (smoLineFrom t i ((Foundation.Bytes::byteLength t) + 1)); (if (Foundation.Tar::sameBytes (Foundation.Json::span t i e) wanted) then true else (smoLineOfFrom t wanted (e + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoLineOf,
+  parameters: [t : Bytes, wanted : Bytes],
+  result: Bool,
+  body: (smoLineOfFrom t wanted 0 ((Foundation.Bytes::byteLength t) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoServesFrom,
+  parameters: [
+    s : Bytes,
+    arr : (Option Nat),
+    key : Bytes,
+    success : Bytes,
+    acc : Bytes,
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let k : Bytes := (Foundation.Json::textAt s e); (smoServesFrom s arr key success (if (smoLineOf success k) then acc else (smoAdd acc (smoCat (cons (smoCat (cons 0x7468652073656374696f6e20 (cons key (cons 0x2073657276657320 (cons k (nil Bytes)))))) (cons 0x2c207768696368206973206e6569746865722061206a6f75726e6579206e6f722061206c617374696e6720676f616c206f66207468652070726f64756374207265636f7264 (nil Bytes)))))) (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoKeyIndexAsFrom,
+  parameters: [s : Bytes, arr : (Option Nat), field : String, wanted : Bytes, n : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (if (Foundation.Tar::sameBytes (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU field))) wanted) then (ctor Option.some [Nat] n) else (smoKeyIndexAsFrom s arr field wanted (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoKeyIndexAs,
+  parameters: [s : Bytes, arr : (Option Nat), field : String, wanted : Bytes],
+  result: (Option Nat),
+  body: (smoKeyIndexAsFrom s arr field wanted 0 (Foundation.Json::countAt s arr)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoSectionsFrom,
+  parameters: [
+    s : Bytes,
+    top : (Option Nat),
+    arr : (Option Nat),
+    success : Bytes,
+    rows : Bytes,
+    acc : Bytes,
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let key : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "key"))); (let reveal : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "reveal"))); (let row : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "rows"))); (let a1 : Bytes := (if (smoKnown (smoFixedIndex (cons "always" (cons "until-done" (cons "on-tap" (nil String)))) reveal 0)) then acc else (smoAdd acc (smoCat (cons (smoCat (cons 0x7468652073656374696f6e20 (cons key (cons 0x2072657665616c7320 (cons reveal (nil Bytes)))))) (cons 0x2c206e6f7420616c776179732c20756e74696c2d646f6e65206f72206f6e2d746170 (nil Bytes)))))); (let a2 : Bytes := (smoKeysKnownFrom s (Foundation.Json::memberAt s e (smoU "settings")) (Foundation.Json::memberAt s top (smoU "settings")) (smoCat (cons 0x7468652073656374696f6e20 (cons key (nil Bytes)))) 0x73657474696e67 a1 0 (Foundation.Bytes::byteLength s)); (let a3 : Bytes := (if (((Foundation.Bytes::byteLength row) =? 0) || (smoLineOf rows row)) then a2 else (smoAdd a2 (smoCat (cons (smoCat (cons 0x7468652073656374696f6e20 (cons key (cons 0x20647261777320726f77732066726f6d20 (cons row (nil Bytes)))))) (cons 0x2c207768696368206973206e6f742061206465636c61726174696f6e2074686520507269736d20686173 (nil Bytes)))))); (let a4 : Bytes := (smoServesFrom s (Foundation.Json::memberAt s e (smoU "serves")) key success a3 0 (Foundation.Bytes::byteLength s)); (let a5 : Bytes := (if ((Foundation.Tar::sameBytes reveal 0x756e74696c2d646f6e65) && (not (smoKnown (smoKeyIndexAs s (Foundation.Json::memberAt s top (smoU "setup")) "section" key)))) then (smoAdd a4 (smoCat (cons 0x7468652073656374696f6e20 (cons key (cons 0x2073686f7773206974732064657461696c20756e74696c20646f6e6520627574206973206e6f7420612073657475702073746570 (nil Bytes)))))) else a4); (smoSectionsFrom s top arr success rows a5 (n + 1) rest)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoStepsFrom,
+  parameters: [s : Bytes, top : (Option Nat), arr : (Option Nat), acc : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let key : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "key"))); (let sect : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "section"))); (let word : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "word"))); (let a1 : Bytes := (if ((smoKnown (smoKeyIndex s (Foundation.Json::memberAt s top (smoU "sections")) sect)) && (smoKnown (Foundation.Json::memberAt s (Foundation.Json::memberAt s top (smoU "words")) word))) then acc else (smoAdd acc (smoCat (cons 0x746865207365747570207374657020 (cons key (cons 0x206e616d657320616e20756e6b6e6f776e2073656374696f6e206f7220776f7264 (nil Bytes))))))); (smoStepsFrom s top arr (if ((smoOr (smoKeyIndexAs s arr "section" sect) n) =? n) then a1 else (smoAdd a1 (smoCat (cons 0x7468652073656374696f6e20 (cons sect (cons 0x20697320612073657475702073746570206d6f7265207468616e206f6e6365 (nil Bytes))))))) (n + 1) rest)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoSetupReason,
+  parameters: [s : Bytes, top : (Option Nat), acc : Bytes],
+  result: Bytes,
+  body: (let setup : (Option Nat) := (Foundation.Json::memberAt s top (smoU "setup")); (let count : Nat := (Foundation.Json::countAt s setup); (smoStepsFrom s top setup (if ((1 <=? count) && (count <=? 3)) then acc else (smoAdd acc (smoCat (cons 0x7365742075702068617320 (cons (smoNum count) (cons 0x2073746570733b206120706572736f6e206d65657473206f6e6520746f207468726565 (nil Bytes))))))) 0 (Foundation.Bytes::byteLength s)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoActHasFrom,
+  parameters: [s : Bytes, places : (Option Nat), act : Bytes, d : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (match (Foundation.Json::elementAt s places n)
+      | Option.none => false
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (if ((Foundation.Tar::sameBytes (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "act"))) act) && ((smoIsNat s (Foundation.Json::elementAt s (Foundation.Json::memberAt s e (smoU "domains")) 0)) && ((smoNatOf s (Foundation.Json::elementAt s (Foundation.Json::memberAt s e (smoU "domains")) 0)) =? d))) then true else (smoActHasFrom s places act d (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoActDomainsFrom,
+  parameters: [s : Bytes, places : (Option Nat), act : Bytes, d : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c204e617429
+    | Nat.succ rest => (if (smoActHasFrom s places act d 0 (Foundation.Bytes::byteLength s)) then (smoCons (smoNum d) (smoActDomainsFrom s places act (d + 1) rest)) else (smoActDomainsFrom s places act (d + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoFeederDomains,
+  parameters: [s : Bytes, top : (Option Nat), f : (Option Nat)],
+  result: Bytes,
+  body: (let act : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s f (smoU "act"))); (if (Foundation.Tar::sameBytes act 0x6e6f6e65) then (smoRawChain s (Foundation.Json::memberAt s f (smoU "domains")) "Nat") else (smoActDomainsFrom s (Foundation.Json::memberAt s top (smoU "places")) act 0 64))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoHasNatFrom,
+  parameters: [s : Bytes, arr : (Option Nat), d : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => false
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (((smoNatOf s e) =? d) || (smoHasNatFrom s arr d (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoFeederHas,
+  parameters: [s : Bytes, top : (Option Nat), f : (Option Nat), d : Nat],
+  result: Bool,
+  body: (let act : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s f (smoU "act"))); (if (Foundation.Tar::sameBytes act 0x6e6f6e65) then (smoHasNatFrom s (Foundation.Json::memberAt s f (smoU "domains")) d 0 (Foundation.Bytes::byteLength s)) else (smoActHasFrom s (Foundation.Json::memberAt s top (smoU "places")) act d 0 (Foundation.Bytes::byteLength s)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoFedFrom,
+  parameters: [s : Bytes, top : (Option Nat), feeders : (Option Nat), d : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (match (Foundation.Json::elementAt s feeders n)
+      | Option.none => false
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (if (smoFeederHas s top e d) then true else (smoFedFrom s top feeders d (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoAnyFedFrom,
+  parameters: [s : Bytes, top : (Option Nat), domains : (Option Nat), n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (match (Foundation.Json::elementAt s domains n)
+      | Option.none => false
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (if (smoFedFrom s top (Foundation.Json::memberAt s top (smoU "feeders")) (smoNatOf s e) 0 (Foundation.Bytes::byteLength s)) then true else (smoAnyFedFrom s top domains (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoAnyFed,
+  parameters: [s : Bytes, top : (Option Nat), domains : (Option Nat)],
+  result: Bool,
+  body: (smoAnyFedFrom s top domains 0 (Foundation.Bytes::byteLength s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoPlacesCheckFrom,
+  parameters: [s : Bytes, top : (Option Nat), arr : (Option Nat), acc : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let key : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "key"))); (let order : Bytes := (if (smoHas s e "order") then (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "order"))) else 0x6e6f6e65); (let listed : Bool := ((Foundation.Tar::sameBytes (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "viewpoint"))) 0x706572736f6e) && (Foundation.Tar::sameBytes (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "show"))) 0x6c697374)); (let a1 : Bytes := (if ((smoKnown (smoIndex s (Foundation.Json::memberAt s top (smoU "orders")) order)) && (if listed then (not (Foundation.Tar::sameBytes order 0x6e6f6e65)) else (Foundation.Tar::sameBytes order 0x6e6f6e65))) then acc else (smoAdd acc (smoCat (cons 0x74686520706c61636520 (cons key (cons 0x206d757374206861766520616e206f726465722065786163746c79207768656e2074686520706572736f6e20736565732069742061732061206c697374 (nil Bytes))))))); (let a2 : Bytes := (if ((smoKnown (smoIndex s (Foundation.Json::memberAt s top (smoU "hosts")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "host"))))) && ((smoKnown (smoIndex s (Foundation.Json::memberAt s top (smoU "viewpoints")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "viewpoint"))))) && ((smoKnown (smoIndex s (Foundation.Json::memberAt s top (smoU "shows")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "show"))))) && (smoKnown (smoKeyIndex s (Foundation.Json::memberAt s top (smoU "acts")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "act")))))))) then a1 else (smoAdd a1 (smoCat (cons 0x74686520706c61636520 (cons key (cons 0x206e616d657320616e20756e6b6e6f776e20686f73742c2076696577706f696e742c2073686f77206f7220616374 (nil Bytes))))))); (let fills : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "fills"))); (let a3 : Bytes := (if (((Foundation.Bytes::byteLength fills) =? 0) || (smoKnown (smoKeyIndex s (Foundation.Json::memberAt s top (smoU "setup")) fills))) then a2 else (smoAdd a2 (smoCat (cons (smoCat (cons 0x74686520706c61636520 (cons key (cons 0x2069732066696c6c656420627920 (cons fills (nil Bytes)))))) (cons 0x2c207768696368206973206e6f7420612073657475702073746570 (nil Bytes)))))); (let a4 : Bytes := (if ((not (Foundation.Tar::sameBytes (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "show"))) 0x6c697374)) || (smoAnyFed s top (Foundation.Json::memberAt s e (smoU "domains")))) then a3 else (smoAdd a3 (smoCat (cons 0x74686520706c61636520 (cons key (cons 0x20686173206e6f2066656564657220666f7220616e79206f662069747320646f6d61696e73 (nil Bytes))))))); (smoPlacesCheckFrom s top arr a4 (n + 1) rest)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoFeedersCheckFrom,
+  parameters: [s : Bytes, top : (Option Nat), arr : (Option Nat), acc : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let key : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "key"))); (let act : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "act"))); (smoFeedersCheckFrom s top arr (if (Foundation.Tar::sameBytes act 0x6e6f6e65) then (if ((smoKnown (smoKeyIndex s (Foundation.Json::memberAt s top (smoU "settings")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "setting"))))) && (smoKnown (Foundation.Json::memberAt s (Foundation.Json::memberAt s top (smoU "words")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "word")))))) then acc else (smoAdd acc (smoCat (cons 0x7468652066656564657220 (cons key (cons 0x206e616d657320616e20756e6b6e6f776e2073657474696e67206f7220776f7264 (nil Bytes))))))) else (if (smoKnown (smoKeyIndex s (Foundation.Json::memberAt s top (smoU "acts")) act)) then acc else (smoAdd acc (smoCat (cons 0x7468652066656564657220 (cons key (cons 0x206e616d657320616e20756e6b6e6f776e20616374 (nil Bytes)))))))) (n + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoSettingsCheckFrom,
+  parameters: [s : Bytes, top : (Option Nat), arr : (Option Nat), acc : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let source : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "source"))); (smoSettingsCheckFrom s top arr (if ((smoKnown (smoIndex s (Foundation.Json::memberAt s top (smoU "viewpoints")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "viewpoint"))))) && ((smoKnown (smoFixedIndex (cons "switch" (cons "detail" (nil String))) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "kind"))) 0)) && ((smoKnown (smoKeyIndex s (Foundation.Json::memberAt s top (smoU "groups")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "group"))))) && ((Foundation.Tar::sameBytes source 0x6e6f6e65) || (smoKnown (smoIndex s (Foundation.Json::memberAt s top (smoU "sources")) source)))))) then acc else (smoAdd acc (smoCat (cons 0x7468652073657474696e6720 (cons (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "key"))) (cons 0x206e616d657320616e20756e6b6e6f776e2076696577706f696e742c206b696e642c2067726f7570206f7220736f75726365 (nil Bytes))))))) (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoGroupsCheckFrom,
+  parameters: [s : Bytes, arr : (Option Nat), acc : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (smoGroupsCheckFrom s arr (if (smoKnown (smoFixedIndex (cons "in" (cons "out" (cons "local" (nil String)))) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "direction"))) 0)) then acc else (smoAdd acc (smoCat (cons 0x7468652067726f757020 (cons (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "key"))) (cons 0x20686173206120646972656374696f6e206f74686572207468616e20696e2c206f7574206f72206c6f63616c (nil Bytes))))))) (n + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoFactorsFrom,
+  parameters: [n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c204e617429
+    | Nat.succ rest => (if (n <=? 1) then 0x286e696c204e617429 else (if ((prim remainder n 2 0 : Nat) =? 0) then (smoCons (smoNum 2) (smoFactorsFrom (prim quotient n 2 0 : Nat) rest)) else (if ((prim remainder n 3 0 : Nat) =? 0) then (smoCons (smoNum 3) (smoFactorsFrom (prim quotient n 3 0 : Nat) rest)) else (if ((prim remainder n 5 0 : Nat) =? 0) then (smoCons (smoNum 5) (smoFactorsFrom (prim quotient n 5 0 : Nat) rest)) else (smoCons (smoNum n) 0x286e696c204e617429)))))),
+  recursive_argument: fuel
+}
+
+definition{name: smoFactors, parameters: [n : Nat], result: Bytes, body: (smoFactorsFrom n 64)}
+
+definition{
+  name: smoReduceFrom,
+  parameters: [n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if (n <=? 1) then n else (if ((prim remainder n 2 0 : Nat) =? 0) then (smoReduceFrom (prim quotient n 2 0 : Nat) rest) else (if ((prim remainder n 3 0 : Nat) =? 0) then (smoReduceFrom (prim quotient n 3 0 : Nat) rest) else (if ((prim remainder n 5 0 : Nat) =? 0) then (smoReduceFrom (prim quotient n 5 0 : Nat) rest) else n))))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoFiveLimit,
+  parameters: [n : Nat],
+  result: Bool,
+  body: ((0 <? n) && ((smoReduceFrom n 64) =? 1))
+}
+
+definition{
+  name: smoRatiosCheckFrom,
+  parameters: [s : Bytes, arr : (Option Nat), acc : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (smoRatiosCheckFrom s arr (if ((smoFiveLimit (smoNatOf s (Foundation.Json::elementAt s e 0))) && (smoFiveLimit (smoNatOf s (Foundation.Json::elementAt s e 1)))) then acc else (smoAdd acc 0x74686520766f696365277320726174696f2070617274206861732061207072696d652061626f76652035)) (n + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoDegreesFrom,
+  parameters: [s : Bytes, arr : (Option Nat), bound : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => true
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (((smoNatOf s e) <? bound) && (smoDegreesFrom s arr bound (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoAnswersCheckFrom,
+  parameters: [
+    s : Bytes,
+    tones : (Option Nat),
+    bound : Nat,
+    arr : (Option Nat),
+    acc : Bytes,
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let key : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "key"))); (let a1 : Bytes := (if (smoKnown (smoKeyIndex s tones (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "tone"))))) then acc else (smoAdd acc (smoCat (cons (smoCat (cons 0x74686520616e7377657220 (cons key (cons 0x20736f756e647320696e20 (cons (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "tone"))) (nil Bytes)))))) (cons 0x2c207768696368206973206e6f74206120746f6e65206f6620746865206c6f6f6b (nil Bytes)))))); (smoAnswersCheckFrom s tones bound arr (if (smoDegreesFrom s (Foundation.Json::memberAt s e (smoU "degrees")) bound 0 (Foundation.Bytes::byteLength s)) then a1 else (smoAdd a1 (smoCat (cons 0x74686520616e7377657220 (cons key (cons 0x206e616d6573206120646567726565206f75747369646520746865207363616c65 (nil Bytes))))))) (n + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoOutcomes,
+  parameters: [
+    s : Bytes,
+    top : (Option Nat),
+    answers : (Option Nat),
+    key : (Option Nat),
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ step => (match key
+      | Option.none => acc
+      | Option.some k => (let word : Bytes := (Foundation.Json::textAt s (ctor Option.some [Nat] k)); (let answer : Bytes := (Foundation.Json::textAt s (ctor Option.some [Nat] (smoValueOf s k))); (smoOutcomes s top answers (smoNextKey s k) (if ((smoKnown (Foundation.Json::memberAt s (Foundation.Json::memberAt s top (smoU "words")) word)) && (smoKnown (smoKeyIndex s answers answer))) then acc else (smoAdd acc (smoCat (cons (smoCat (cons 0x746865206f7574636f6d6520 (cons word (cons 0x202d3e20 (cons answer (nil Bytes)))))) (cons 0x206e616d657320616e20756e6b6e6f776e20776f7264206f7220616e73776572 (nil Bytes)))))) step))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoVoiceReason,
+  parameters: [s : Bytes, top : (Option Nat), acc : Bytes],
+  result: Bytes,
+  body: (let voice : (Option Nat) := (Foundation.Json::memberAt s top (smoU "voice")); (let answers : (Option Nat) := (Foundation.Json::memberAt s voice (smoU "answers")); (smoOutcomes s top answers (smoFirstKey s (Foundation.Json::memberAt s voice (smoU "outcomes"))) (smoAnswersCheckFrom s (Foundation.Json::memberAt s (Foundation.Json::memberAt s top (smoU "look")) (smoU "tones")) (Foundation.Json::countAt s (Foundation.Json::memberAt s voice (smoU "scale"))) answers (smoRatiosCheckFrom s (Foundation.Json::memberAt s voice (smoU "partials")) (smoRatiosCheckFrom s (Foundation.Json::memberAt s voice (smoU "scale")) acc 0 (Foundation.Bytes::byteLength s)) 0 (Foundation.Bytes::byteLength s)) 0 (Foundation.Bytes::byteLength s)) (Foundation.Bytes::byteLength s)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoReasons,
+  parameters: [s : Bytes, brand : Bytes, success : Bytes, rows : Bytes],
+  result: Bytes,
+  body: (let top : (Option Nat) := (Foundation.Json::root s); (let a1 : Bytes := (smoLookReason s top brand); (let a2 : Bytes := (smoSectionsFrom s top (Foundation.Json::memberAt s top (smoU "sections")) success rows (smoAdd (smoWordsReason s top) a1) 0 (Foundation.Bytes::byteLength s)); (let a3 : Bytes := (smoSetupReason s top a2); (let a4 : Bytes := (if (Foundation.Tar::sameBytes (Foundation.Json::textAt s (Foundation.Json::elementAt s (Foundation.Json::memberAt s top (smoU "orders")) 0)) 0x6e6f6e65) then a3 else (smoAdd a3 0x746865206669727374206f72646572206973206e6f6e652c20666f7220776861742074686520706572736f6e20646f6573206e6f7420736565)); (let a5 : Bytes := (smoPlacesCheckFrom s top (Foundation.Json::memberAt s top (smoU "places")) (smoFeedersCheckFrom s top (Foundation.Json::memberAt s top (smoU "feeders")) a4 0 (Foundation.Bytes::byteLength s)) 0 (Foundation.Bytes::byteLength s)); (smoVoiceReason s top (smoGroupsCheckFrom s (Foundation.Json::memberAt s top (smoU "groups")) (smoSettingsCheckFrom s top (Foundation.Json::memberAt s top (smoU "settings")) a5 0 (Foundation.Bytes::byteLength s)) 0 (Foundation.Bytes::byteLength s))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoPlaceRecordsFrom,
+  parameters: [s : Bytes, top : (Option Nat), arr : (Option Nat), n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c2053757266616365506c61636529
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => 0x286e696c2053757266616365506c61636529
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (smoCons (smoCat (cons (smoCat (cons (smoCat (cons 0x287265636f72642053757266616365506c616365207b76696577203a3d20 (cons (smoRaw s (Foundation.Json::memberAt s e (smoU "view"))) (cons 0x2c206e616d65203a3d20 (cons (smoRaw s (Foundation.Json::memberAt s e (smoU "name"))) (nil Bytes)))))) (cons (smoCat (cons 0x2c20686f7374203a3d20 (cons (smoNum (smoOr (smoIndex s (Foundation.Json::memberAt s top (smoU "hosts")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "host")))) 0)) (cons 0x2c2076696577706f696e74203a3d20 (cons (smoNum (smoOr (smoIndex s (Foundation.Json::memberAt s top (smoU "viewpoints")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "viewpoint")))) 0)) (nil Bytes)))))) (cons (smoCat (cons 0x2c20726f6c65203a3d20 (cons (smoRaw s (Foundation.Json::memberAt s e (smoU "role"))) (cons 0x2c20646f6d61696e73203a3d20 (cons (smoRawChain s (Foundation.Json::memberAt s e (smoU "domains")) "Nat") (nil Bytes)))))) (cons (smoCat (cons 0x2c206b696e64203a3d20 (cons (smoNum (smoOr (smoIndex s (Foundation.Json::memberAt s top (smoU "shows")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "show")))) 0)) (cons 0x2c20616374203a3d20 (cons (smoNum (smoOr (smoKeyIndex s (Foundation.Json::memberAt s top (smoU "acts")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "act")))) 0)) (nil Bytes)))))) (nil Bytes)))))) (cons (smoCat (cons 0x2c206f72646572203a3d20 (cons (smoNum (smoOr (smoIndex s (Foundation.Json::memberAt s top (smoU "orders")) (if (smoHas s e "order") then (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "order"))) else 0x6e6f6e65)) 0)) (cons 0x7d29 (nil Bytes))))) (nil Bytes)))) (smoPlaceRecordsFrom s top arr (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoGroupRecordsFrom,
+  parameters: [s : Bytes, arr : (Option Nat), n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c205375726661636547726f757029
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => 0x286e696c205375726661636547726f757029
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (smoCons (smoCat (cons (smoCat (cons 0x287265636f7264205375726661636547726f7570207b6e616d65203a3d20 (cons (smoRaw s (Foundation.Json::memberAt s e (smoU "name"))) (cons 0x2c20646972656374696f6e203a3d20 (cons (smoNum (smoOr (smoFixedIndex (cons "in" (cons "out" (cons "local" (nil String)))) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "direction"))) 0) 0)) (nil Bytes)))))) (cons 0x7d29 (nil Bytes)))) (smoGroupRecordsFrom s arr (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoSettingRecordsFrom,
+  parameters: [s : Bytes, top : (Option Nat), arr : (Option Nat), n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c205375726661636553657474696e6729
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => 0x286e696c205375726661636553657474696e6729
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let source : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "source"))); (smoCons (smoCat (cons (smoCat (cons 0x287265636f7264205375726661636553657474696e67207b6e616d65203a3d20 (cons (smoRaw s (Foundation.Json::memberAt s e (smoU "name"))) (cons 0x2c2076696577706f696e74203a3d20 (cons (smoNum (smoOr (smoIndex s (Foundation.Json::memberAt s top (smoU "viewpoints")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "viewpoint")))) 0)) (nil Bytes)))))) (cons (smoCat (cons 0x2c206b696e64203a3d20 (cons (smoNum (smoOr (smoFixedIndex (cons "switch" (cons "detail" (nil String))) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "kind"))) 0) 0)) (cons 0x2c2067726f7570203a3d20 (cons (smoNum (smoOr (smoKeyIndex s (Foundation.Json::memberAt s top (smoU "groups")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "group")))) 0)) (nil Bytes)))))) (cons (smoCat (cons 0x2c20736f75726365203a3d20 (cons (smoNum (smoOr (smoIndex s (Foundation.Json::memberAt s top (smoU "sources")) source) (Foundation.Json::countAt s (Foundation.Json::memberAt s top (smoU "sources"))))) (cons 0x7d29 (nil Bytes))))) (nil Bytes))))) (smoSettingRecordsFrom s top arr (n + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoKeyIndicesFrom,
+  parameters: [s : Bytes, arr : (Option Nat), within : (Option Nat), n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c204e617429
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => 0x286e696c204e617429
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (smoCons (smoNum (smoOr (smoKeyIndex s within (Foundation.Json::textAt s e)) 0)) (smoKeyIndicesFrom s arr within (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoSectionRecordsFrom,
+  parameters: [s : Bytes, top : (Option Nat), arr : (Option Nat), n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c205375726661636553656374696f6e29
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => 0x286e696c205375726661636553656374696f6e29
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (smoCons (smoCat (cons (smoCat (cons 0x287265636f7264205375726661636553656374696f6e207b6e616d65203a3d20 (cons (smoRaw s (Foundation.Json::memberAt s e (smoU "name"))) (cons 0x2c2073657474696e6773203a3d20 (cons (smoKeyIndicesFrom s (Foundation.Json::memberAt s e (smoU "settings")) (Foundation.Json::memberAt s top (smoU "settings")) 0 (Foundation.Bytes::byteLength s)) (nil Bytes)))))) (cons (smoCat (cons 0x2c2072657665616c203a3d20 (cons (smoNum (smoOr (smoFixedIndex (cons "always" (cons "until-done" (cons "on-tap" (nil String)))) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "reveal"))) 0) 0)) (cons 0x2c20736572766573203a3d20 (cons (smoNum (Foundation.Json::countAt s (Foundation.Json::memberAt s e (smoU "serves")))) (nil Bytes)))))) (cons 0x7d29 (nil Bytes))))) (smoSectionRecordsFrom s top arr (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoSetupIndicesFrom,
+  parameters: [s : Bytes, top : (Option Nat), arr : (Option Nat), n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c204e617429
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => 0x286e696c204e617429
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (smoCons (smoNum (smoOr (smoKeyIndex s (Foundation.Json::memberAt s top (smoU "sections")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "section")))) 0)) (smoSetupIndicesFrom s top arr (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoRoutedFrom,
+  parameters: [s : Bytes, top : (Option Nat), arr : (Option Nat), n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c204e617429
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => 0x286e696c204e617429
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let k : Bytes := (Foundation.Json::textAt s e); (if (Foundation.Tar::sameBytes k 0x6f776e65725574746572616e6365) then (smoRoutedFrom s top arr (n + 1) rest) else (smoCons (smoNum (smoOr (smoIndex s (Foundation.Json::memberAt s top (smoU "sources")) k) 0)) (smoRoutedFrom s top arr (n + 1) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoOutboundFrom,
+  parameters: [s : Bytes, arr : (Option Nat), n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c204e617429
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => 0x286e696c204e617429
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let t : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "target"))); (if ((Foundation.Tar::sameBytes t 0x6d61696c) || ((Foundation.Tar::sameBytes t 0x63616c656e646172) || (Foundation.Tar::sameBytes t 0x706c6174666f726d))) then (smoCons (smoNum n) (smoOutboundFrom s arr (n + 1) rest)) else (smoOutboundFrom s arr (n + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoToneRecordsFrom,
+  parameters: [s : Bytes, arr : (Option Nat), n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c2053757266616365546f6e6529
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => 0x286e696c2053757266616365546f6e6529
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (smoCons (smoCat (cons (smoCat (cons 0x287265636f72642053757266616365546f6e65207b6e616d65203a3d20 (cons (smoRaw s (Foundation.Json::memberAt s e (smoU "key"))) (cons 0x2c206461726b203a3d20 (cons (smoNum (smoOr (smoColour (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "dark")))) 0)) (nil Bytes)))))) (cons (smoCat (cons 0x2c206c69676874203a3d20 (cons (smoNum (smoOr (smoColour (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "light")))) 0)) (cons 0x7d29 (nil Bytes))))) (nil Bytes)))) (smoToneRecordsFrom s arr (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoContrastThemesFrom,
+  parameters: [
+    s : Bytes,
+    tones : (Option Nat),
+    themes : (Option Nat),
+    pair : (Option Nat),
+    tail : Bytes,
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => tail
+    | Nat.succ rest => (match (Foundation.Json::elementAt s themes n)
+      | Option.none => tail
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let theme : Bytes := (Foundation.Json::textAt s e); (let fore : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s pair 0)); (let back : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s pair 1)); (smoCons (smoCat (cons (smoCat (cons 0x287265636f72642053757266616365436f6e7472617374207b666f7265203a3d20 (cons (smoNum (smoOr (smoKeyIndex s tones fore) 0)) (cons 0x2c206261636b203a3d20 (cons (smoNum (smoOr (smoKeyIndex s tones back) 0)) (nil Bytes)))))) (cons (smoCat (cons 0x2c207468656d65203a3d20 (cons (smoNum n) (cons 0x2c20726174696f203a3d20 (cons (smoNum (smoRatio (smoToneColour s tones fore theme) (smoToneColour s tones back theme))) (nil Bytes)))))) (cons (smoCat (cons 0x2c20666c6f6f72203a3d20 (cons (smoNum (smoFloorOf s (Foundation.Json::elementAt s pair 2))) (cons 0x7d29 (nil Bytes))))) (nil Bytes))))) (smoContrastThemesFrom s tones themes pair tail (n + 1) rest)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoContrastRecordsFrom,
+  parameters: [
+    s : Bytes,
+    tones : (Option Nat),
+    themes : (Option Nat),
+    arr : (Option Nat),
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c2053757266616365436f6e747261737429
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => 0x286e696c2053757266616365436f6e747261737429
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (smoContrastThemesFrom s tones themes e (smoContrastRecordsFrom s tones themes arr (n + 1) rest) 0 (Foundation.Bytes::byteLength s))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoFeederRecordsFrom,
+  parameters: [s : Bytes, top : (Option Nat), arr : (Option Nat), n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c205375726661636546656564657229
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => 0x286e696c205375726661636546656564657229
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let setting : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "setting"))); (smoCons (smoCat (cons (smoCat (cons 0x287265636f72642053757266616365466565646572207b6e616d65203a3d20 (cons (smoRaw s (Foundation.Json::memberAt s e (smoU "key"))) (cons 0x2c20616374203a3d20 (cons (smoNum (smoOr (smoKeyIndex s (Foundation.Json::memberAt s top (smoU "acts")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "act")))) 0)) (nil Bytes)))))) (cons (smoCat (cons 0x2c2073657474696e67203a3d20 (cons (smoNum (if (Foundation.Tar::sameBytes setting 0x6e6f6e65) then (Foundation.Json::countAt s (Foundation.Json::memberAt s top (smoU "settings"))) else (smoOr (smoKeyIndex s (Foundation.Json::memberAt s top (smoU "settings")) setting) (Foundation.Json::countAt s (Foundation.Json::memberAt s top (smoU "settings")))))) (cons 0x2c20646f6d61696e73203a3d20 (cons (smoFeederDomains s top e) (nil Bytes)))))) (cons 0x7d29 (nil Bytes))))) (smoFeederRecordsFrom s top arr (n + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoRatioRecordsFrom,
+  parameters: [s : Bytes, arr : (Option Nat), n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c2053757266616365526174696f29
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => 0x286e696c2053757266616365526174696f29
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (smoCons (smoCat (cons (smoCat (cons 0x287265636f72642053757266616365526174696f207b6e756d203a3d20 (cons (smoFactors (smoNatOf s (Foundation.Json::elementAt s e 0))) (cons 0x2c2064656e203a3d20 (cons (smoFactors (smoNatOf s (Foundation.Json::elementAt s e 1))) (nil Bytes)))))) (cons 0x7d29 (nil Bytes)))) (smoRatioRecordsFrom s arr (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoAnswerRecordsFrom,
+  parameters: [s : Bytes, tones : (Option Nat), arr : (Option Nat), n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c2053757266616365416e7377657229
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => 0x286e696c2053757266616365416e7377657229
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (smoCons (smoCat (cons (smoCat (cons 0x287265636f72642053757266616365416e73776572207b6e616d65203a3d20 (cons (smoRaw s (Foundation.Json::memberAt s e (smoU "key"))) (cons 0x2c2064656772656573203a3d20 (cons (smoRawChain s (Foundation.Json::memberAt s e (smoU "degrees")) "Nat") (nil Bytes)))))) (cons (smoCat (cons 0x2c206c6576656c203a3d20 (cons (smoRaw s (Foundation.Json::memberAt s e (smoU "level"))) (cons 0x2c20746f6e65203a3d20 (cons (smoNum (smoOr (smoKeyIndex s tones (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "tone")))) 0)) (nil Bytes)))))) (cons 0x7d29 (nil Bytes))))) (smoAnswerRecordsFrom s tones arr (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoHead,
+  parameters: [],
+  result: Bytes,
+  body: 0x5c626567696e7b6c65786c65616e7d7b507269736d537572666163657d0a5c757365676c6f73736172797b6c65786c65616e2e7374642e626f6f6c40312e322e307d0a5c757365676c6f73736172797b6c65786c65616e2e7374642e6e617440312e322e307d0a5c757365676c6f73736172797b707269736d2e6172636840312e302e307d0a5c7469746c657b507269736d20737572666163657d0a5c626567696e7b73656d616e7469636d6f64756c657d0a
+}
+
+definition{
+  name: smoStructures0,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "structure{\n  name: SurfacePlace,\n  type_parameters: [],\n  parameters: [],\n  fields: [\n    {name: view, type: Nat},\n    {name: name, type: String},\n    {name: host, type: Nat},\n    {name: viewpoint, type: Nat},\n    {name: role, type: Nat},\n ")
+}
+
+definition{
+  name: smoStructures1,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "   {name: domains, type: (List Nat)},\n    {name: kind, type: Nat},\n    {name: act, type: Nat},\n    {name: order, type: Nat}\n  ]\n}\n\nstructure{\n  name: SurfaceGroup,\n  type_parameters: [],\n  parameters: [],\n  fields: [{name: name, type: Strin")
+}
+
+definition{
+  name: smoStructures2,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "g}, {name: direction, type: Nat}]\n}\n\nstructure{\n  name: SurfaceSetting,\n  type_parameters: [],\n  parameters: [],\n  fields: [\n    {name: name, type: String},\n    {name: viewpoint, type: Nat},\n    {name: kind, type: Nat},\n    {name: group, ty")
+}
+
+definition{
+  name: smoStructures3,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "pe: Nat},\n    {name: source, type: Nat}\n  ]\n}\n\nstructure{\n  name: SurfaceSection,\n  type_parameters: [],\n  parameters: [],\n  fields: [\n    {name: name, type: String},\n    {name: settings, type: (List Nat)},\n    {name: reveal, type: Nat},\n  ")
+}
+
+definition{
+  name: smoStructures4,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "  {name: serves, type: Nat}\n  ]\n}\n\nstructure{\n  name: SurfaceWord,\n  type_parameters: [],\n  parameters: [],\n  fields: [{name: key, type: String}, {name: text, type: String}]\n}\n\nstructure{\n  name: SurfaceTone,\n  type_parameters: [],\n  parame")
+}
+
+definition{
+  name: smoStructures5,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ters: [],\n  fields: [{name: name, type: String}, {name: dark, type: Nat}, {name: light, type: Nat}]\n}\n\nstructure{\n  name: SurfaceContrast,\n  type_parameters: [],\n  parameters: [],\n  fields: [\n    {name: fore, type: Nat},\n    {name: back, ty")
+}
+
+definition{
+  name: smoStructures6,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "pe: Nat},\n    {name: theme, type: Nat},\n    {name: ratio, type: Nat},\n    {name: floor, type: Nat}\n  ]\n}\n\nstructure{\n  name: SurfaceFeeder,\n  type_parameters: [],\n  parameters: [],\n  fields: [\n    {name: name, type: String},\n    {name: act,")
+}
+
+definition{
+  name: smoStructures7,
+  parameters: [],
+  result: Bytes,
+  body: (smoU " type: Nat},\n    {name: setting, type: Nat},\n    {name: domains, type: (List Nat)}\n  ]\n}\n\nstructure{\n  name: SurfaceRatio,\n  type_parameters: [],\n  parameters: [],\n  fields: [{name: num, type: (List Nat)}, {name: den, type: (List Nat)}]\n}\n\n")
+}
+
+definition{
+  name: smoStructures8,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "structure{\n  name: SurfaceAnswer,\n  type_parameters: [],\n  parameters: [],\n  fields: [\n    {name: name, type: String},\n    {name: degrees, type: (List Nat)},\n    {name: level, type: Nat},\n    {name: tone, type: Nat}\n  ]\n}\n")
+}
+
+definition{
+  name: smoStructures,
+  parameters: [],
+  result: Bytes,
+  body: (smoCat (cons (smoCat (cons (smoStructures0) (cons (smoStructures1) (cons (smoStructures2) (cons (smoStructures3) (nil Bytes)))))) (cons (smoCat (cons (smoStructures4) (cons (smoStructures5) (cons (smoStructures6) (cons (smoStructures7) (nil Bytes)))))) (cons (smoStructures8) (nil Bytes)))))
+}
+
+definition{
+  name: smoTail,
+  parameters: [],
+  result: Bytes,
+  body: 0x5c656e647b73656d616e7469636d6f64756c657d0a5c656e647b6c65786c65616e7d0a
+}
+
+definition{
+  name: smoActWordsFrom,
+  parameters: [s : Bytes, arr : (Option Nat), n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x286e696c20537472696e6729
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => 0x286e696c20537472696e6729
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (smoCons (smoRaw s (Foundation.Json::memberAt s e (smoU "word"))) (smoActWordsFrom s arr (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoModelData,
+  parameters: [s : Bytes, top : (Option Nat)],
+  result: Bytes,
+  body: (smoCat (cons (smoCat (cons (smoDefn "surfaceDomainNames" "(List String)" (smoRawChain s (Foundation.Json::memberAt s top (smoU "domains")) "String")) (cons (smoDefn "surfaceLabelNames" "(List String)" (smoRawChain s (Foundation.Json::memberAt s top (smoU "labels")) "String")) (cons (smoDefn "surfaceRoleNames" "(List String)" (smoRawChain s (Foundation.Json::memberAt s top (smoU "roles")) "String")) (cons (smoDefn "surfaceActWords" "(List String)" (smoActWordsFrom s (Foundation.Json::memberAt s top (smoU "acts")) 0 (Foundation.Bytes::byteLength s))) (nil Bytes)))))) (cons (smoCat (cons (smoDefn "surfaceFloors" "(List Nat)" (smoRawChain s (Foundation.Json::memberAt s top (smoU "floors")) "Nat")) (cons (smoDefn "surfacePlaces" "(List SurfacePlace)" (smoPlaceRecordsFrom s top (Foundation.Json::memberAt s top (smoU "places")) 0 (Foundation.Bytes::byteLength s))) (cons (smoDefn "surfaceGroups" "(List SurfaceGroup)" (smoGroupRecordsFrom s (Foundation.Json::memberAt s top (smoU "groups")) 0 (Foundation.Bytes::byteLength s))) (cons (smoDefn "surfaceSettings" "(List SurfaceSetting)" (smoSettingRecordsFrom s top (Foundation.Json::memberAt s top (smoU "settings")) 0 (Foundation.Bytes::byteLength s))) (nil Bytes)))))) (cons (smoCat (cons (smoDefn "surfaceSections" "(List SurfaceSection)" (smoSectionRecordsFrom s top (Foundation.Json::memberAt s top (smoU "sections")) 0 (Foundation.Bytes::byteLength s))) (cons (smoDefn "surfaceSetup" "(List Nat)" (smoSetupIndicesFrom s top (Foundation.Json::memberAt s top (smoU "setup")) 0 (Foundation.Bytes::byteLength s))) (cons (smoDefn "surfaceWords" "(List SurfaceWord)" (smoWordRecords s (smoFirstKey s (Foundation.Json::memberAt s top (smoU "words"))) (Foundation.Bytes::byteLength s))) (cons (smoDefn "surfaceRoutedSources" "(List Nat)" (smoRoutedFrom s top (Foundation.Json::memberAt s top (smoU "routed")) 0 (Foundation.Bytes::byteLength s))) (nil Bytes)))))) (cons (smoCat (cons (smoDefn "surfaceOutboundActs" "(List Nat)" (smoOutboundFrom s (Foundation.Json::memberAt s top (smoU "acts")) 0 (Foundation.Bytes::byteLength s))) (cons (smoDefn "surfaceGroupCount" "Nat" (smoNum (Foundation.Json::countAt s (Foundation.Json::memberAt s top (smoU "groups"))))) (nil Bytes)))) (nil Bytes)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoModelLook,
+  parameters: [s : Bytes, top : (Option Nat)],
+  result: Bytes,
+  body: (let look : (Option Nat) := (Foundation.Json::memberAt s top (smoU "look")); (let tones : (Option Nat) := (Foundation.Json::memberAt s look (smoU "tones")); (let themes : (Option Nat) := (Foundation.Json::memberAt s look (smoU "themes")); (let voice : (Option Nat) := (Foundation.Json::memberAt s top (smoU "voice")); (smoCat (cons (smoCat (cons (smoDefn "surfaceTones" "(List SurfaceTone)" (smoToneRecordsFrom s tones 0 (Foundation.Bytes::byteLength s))) (cons (smoDefn "surfaceContrasts" "(List SurfaceContrast)" (smoContrastRecordsFrom s tones themes (Foundation.Json::memberAt s look (smoU "contrast")) 0 (Foundation.Bytes::byteLength s))) (cons (smoDefn "surfaceThemeCount" "Nat" (smoNum (Foundation.Json::countAt s themes))) (cons (smoDefn "surfaceFeeders" "(List SurfaceFeeder)" (smoFeederRecordsFrom s top (Foundation.Json::memberAt s top (smoU "feeders")) 0 (Foundation.Bytes::byteLength s))) (nil Bytes)))))) (cons (smoCat (cons (smoDefn "surfaceToneCount" "Nat" (smoNum (Foundation.Json::countAt s tones))) (cons (smoDefn "surfaceScale" "(List SurfaceRatio)" (smoRatioRecordsFrom s (Foundation.Json::memberAt s voice (smoU "scale")) 0 (Foundation.Bytes::byteLength s))) (cons (smoDefn "surfacePartials" "(List SurfaceRatio)" (smoRatioRecordsFrom s (Foundation.Json::memberAt s voice (smoU "partials")) 0 (Foundation.Bytes::byteLength s))) (cons (smoDefn "surfaceAnswers" "(List SurfaceAnswer)" (smoAnswerRecordsFrom s tones (Foundation.Json::memberAt s voice (smoU "answers")) 0 (Foundation.Bytes::byteLength s))) (nil Bytes)))))) (cons (smoCat (cons (smoDefn "surfaceVoiceCeiling" "Nat" (smoRaw s (Foundation.Json::memberAt s voice (smoU "ceiling")))) (cons (smoDefn "surfaceVoiceAttack" "Nat" (smoRaw s (Foundation.Json::memberAt s voice (smoU "attack")))) (cons (smoDefn "surfaceVoiceRelease" "Nat" (smoRaw s (Foundation.Json::memberAt s voice (smoU "release")))) (cons (smoDefn "surfaceVoiceRefractory" "Nat" (smoRaw s (Foundation.Json::memberAt s voice (smoU "refractory")))) (nil Bytes)))))) (nil Bytes))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoModelIndices,
+  parameters: [s : Bytes, top : (Option Nat)],
+  result: Bytes,
+  body: (smoCat (cons (smoCat (cons (smoDefn "surfaceViewpointPerson" "Nat" (smoNum (smoOr (smoIndex s (Foundation.Json::memberAt s top (smoU "viewpoints")) 0x706572736f6e) 0))) (cons (smoDefn "surfaceViewpointSystem" "Nat" (smoNum (smoOr (smoIndex s (Foundation.Json::memberAt s top (smoU "viewpoints")) 0x73797374656d) 0))) (cons (smoDefn "surfaceHostHome" "Nat" (smoNum (smoOr (smoIndex s (Foundation.Json::memberAt s top (smoU "hosts")) 0x686f6d65) 0))) (cons (smoDefn "surfaceHostNav" "Nat" (smoNum (smoOr (smoIndex s (Foundation.Json::memberAt s top (smoU "hosts")) 0x6e6176) 0))) (nil Bytes)))))) (cons (smoCat (cons (smoDefn "surfaceHostComposer" "Nat" (smoNum (smoOr (smoIndex s (Foundation.Json::memberAt s top (smoU "hosts")) 0x636f6d706f736572) 0))) (cons (smoDefn "surfaceHostSheet" "Nat" (smoNum (smoOr (smoIndex s (Foundation.Json::memberAt s top (smoU "hosts")) 0x7368656574) 0))) (cons (smoDefn "surfaceHostNone" "Nat" (smoNum (smoOr (smoIndex s (Foundation.Json::memberAt s top (smoU "hosts")) 0x6e6f6e65) 0))) (cons (smoDefn "surfaceShowList" "Nat" (smoNum (smoOr (smoIndex s (Foundation.Json::memberAt s top (smoU "shows")) 0x6c697374) 0))) (nil Bytes)))))) (cons (smoCat (cons (smoDefn "surfaceActNote" "Nat" (smoNum (smoOr (smoKeyIndex s (Foundation.Json::memberAt s top (smoU "acts")) 0x6e6f7465) 0))) (cons (smoDefn "surfaceActAsk" "Nat" (smoNum (smoOr (smoKeyIndex s (Foundation.Json::memberAt s top (smoU "acts")) 0x61736b) 0))) (nil Bytes)))) (nil Bytes))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoModel,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let top : (Option Nat) := (Foundation.Json::root s); (smoCat (cons (smoCat (cons (smoHead) (cons (smoStructures) (cons (smoModelData s top) (cons (smoModelLook s top) (nil Bytes)))))) (cons (smoCat (cons (smoModelIndices s top) (cons (smoTail) (nil Bytes)))) (nil Bytes))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoProofsHead,
+  parameters: [],
+  result: Bytes,
+  body: (smoCat (cons 0x5c626567696e7b6c65786c65616e7d7b507269736d5375726661636550726f6f66737d0a5c757365676c6f73736172797b6c65786c65616e2e7374642e626f6f6c40312e322e307d0a5c757365676c6f73736172797b6c65786c65616e2e7374642e6e617440312e322e307d0a5c757365676c6f73736172797b707269736d2e6172636840312e302e307d0a5c696d706f72746d6f64756c657b466f756e646174696f6e2e566f6361622e56312e536368656d614f72677d0a5c696d706f72746d6f64756c657b466f756e646174696f6e2e566f6361622e56312e43726f737377616c6b7d0a5c696d706f72746d6f64756c657b466f756e646174696f6e2e4d (cons 0x652e56312e416e63686f72737d0a5c696d706f72746d6f64756c657b466f756e646174696f6e2e4d652e56312e4d6f64656c7d0a5c696d706f72746d6f64756c657b507269736d537572666163657d0a5c7469746c657b507269736d20737572666163652067756172616e746565737d0a5c626567696e7b73656d616e7469636d6f64756c657d0a (nil Bytes))))
+}
+
+definition{
+  name: smoProofs0,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "definition{\n  name: surfaceStringCount,\n  parameters: [values : (List String)],\n  result: Nat,\n  body: (match values | List.nil => 0 | List.cons value rest => ((surfaceStringCount rest) + 1)),\n  recursive_argument: values\n}\n\ndefinition{\n  n")
+}
+
+definition{
+  name: smoProofs1,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ame: surfaceMember,\n  parameters: [wanted : Nat, values : (List Nat)],\n  result: Bool,\n  body: (match values\n    | List.nil => false\n    | List.cons value rest => ((value =? wanted) || (surfaceMember wanted rest))),\n  recursive_argument: va")
+}
+
+definition{
+  name: smoProofs2,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "lues\n}\n\ndefinition{\n  name: surfaceSameNats,\n  parameters: [left : (List Nat), right : (List Nat)],\n  result: Bool,\n  body: (match left\n    | List.nil => (match right | List.nil => true | List.cons other more => false)\n    | List.cons value")
+}
+
+definition{
+  name: smoProofs3,
+  parameters: [],
+  result: Bytes,
+  body: (smoU " rest => (match right\n      | List.nil => false\n      | List.cons other more => ((value =? other) && (surfaceSameNats rest more)))),\n  recursive_argument: left\n}\n\ndefinition{\n  name: surfaceViewCount,\n  parameters: [view : Nat, places : (Li")
+}
+
+definition{
+  name: smoProofs4,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "st PrismSurface::SurfacePlace)],\n  result: Nat,\n  body: (match places\n    | List.nil => 0\n    | List.cons place rest => (if ((project place view) =? view) then ((surfaceViewCount view rest) + 1) else (surfaceViewCount view rest))),\n  recurs")
+}
+
+definition{
+  name: smoProofs5,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ive_argument: places\n}\n\ndefinition{\n  name: surfaceHostCount,\n  parameters: [host : Nat, places : (List PrismSurface::SurfacePlace)],\n  result: Nat,\n  body: (match places\n    | List.nil => 0\n    | List.cons place rest => (if ((project place")
+}
+
+definition{
+  name: smoProofs6,
+  parameters: [],
+  result: Bytes,
+  body: (smoU " host) =? host) then ((surfaceHostCount host rest) + 1) else (surfaceHostCount host rest))),\n  recursive_argument: places\n}\n\ndefinition{\n  name: surfaceOwnerViewsPlaced,\n  parameters: [rows : (List Foundation.Me.V1.Model::DesignView)],\n  re")
+}
+
+definition{
+  name: smoProofs7,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "sult: Bool,\n  body: (match rows\n    | List.nil => true\n    | List.cons row rest => ((if ((project row audience) =? 0) then ((surfaceViewCount (project row index) (PrismSurface::surfacePlaces)) =? 1) else ((surfaceViewCount (project row inde")
+}
+
+definition{
+  name: smoProofs8,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "x) (PrismSurface::surfacePlaces)) =? 0)) && (surfaceOwnerViewsPlaced rest))),\n  recursive_argument: rows\n}\n\ndefinition{\n  name: surfaceRowAgrees,\n  parameters: [\n    place : PrismSurface::SurfacePlace,\n    rows : (List Foundation.Me.V1.Mode")
+}
+
+definition{
+  name: smoProofs9,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "l::DesignView)\n  ],\n  result: Bool,\n  body: (match rows\n    | List.nil => false\n    | List.cons row rest => (if ((project row index) =? (project place view)) then (((project row role) =? (project place role)) && (surfaceSameNats (project ro")
+}
+
+definition{
+  name: smoProofs10,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "w domains) (project place domains))) else (surfaceRowAgrees place rest))),\n  recursive_argument: rows\n}\n\ndefinition{\n  name: surfacePlacesAgree,\n  parameters: [places : (List PrismSurface::SurfacePlace)],\n  result: Bool,\n  body: (match plac")
+}
+
+definition{
+  name: smoProofs11,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "es\n    | List.nil => true\n    | List.cons place rest => ((surfaceRowAgrees place (Foundation.Me.V1.Model::designViews)) && (surfacePlacesAgree rest))),\n  recursive_argument: places\n}\n\ndefinition{\n  name: surfacePageIsPersonView,\n  parameter")
+}
+
+definition{
+  name: smoProofs12,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "s: [places : (List PrismSurface::SurfacePlace)],\n  result: Bool,\n  body: (match places\n    | List.nil => true\n    | List.cons place rest => ((if ((project place viewpoint) =? (PrismSurface::surfaceViewpointSystem)) then ((project place host")
+}
+
+definition{
+  name: smoProofs13,
+  parameters: [],
+  result: Bytes,
+  body: (smoU ") =? (PrismSurface::surfaceHostNone)) else (not ((project place host) =? (PrismSurface::surfaceHostNone)))) && (surfacePageIsPersonView rest))),\n  recursive_argument: places\n}\n\ndefinition{\n  name: surfacePlacesOrdered,\n  parameters: [places")
+}
+
+definition{
+  name: smoProofs14,
+  parameters: [],
+  result: Bytes,
+  body: (smoU " : (List PrismSurface::SurfacePlace)],\n  result: Bool,\n  body: (match places\n    | List.nil => true\n    | List.cons place rest => ((if (((project place viewpoint) =? (PrismSurface::surfaceViewpointPerson)) && ((project place kind) =? (Prism")
+}
+
+definition{
+  name: smoProofs15,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "Surface::surfaceShowList))) then (not ((project place order) =? 0)) else ((project place order) =? 0)) && (surfacePlacesOrdered rest))),\n  recursive_argument: places\n}\n\ndefinition{\n  name: surfaceActsSound,\n  parameters: [places : (List Pri")
+}
+
+definition{
+  name: smoProofs16,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "smSurface::SurfacePlace)],\n  result: Bool,\n  body: (match places\n    | List.nil => true\n    | List.cons place rest => (((not (surfaceMember (project place act) (PrismSurface::surfaceOutboundActs))) || ((((project place role) =? 1) || ((proj")
+}
+
+definition{
+  name: smoProofs17,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ect place role) =? 2)) || ((project place role) =? 4))) && ((if ((project place act) =? (PrismSurface::surfaceActAsk)) then ((project place host) =? (PrismSurface::surfaceHostComposer)) else (not ((project place host) =? (PrismSurface::surf")
+}
+
+definition{
+  name: smoProofs18,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "aceHostComposer)))) && (surfaceActsSound rest)))),\n  recursive_argument: places\n}\n\ndefinition{\n  name: surfaceFirstOr,\n  parameters: [fallback : Nat, values : (List Nat)],\n  result: Nat,\n  body: (match values | List.nil => fallback | List.c")
+}
+
+definition{
+  name: smoProofs19,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ons value rest => value)\n}\n\ndefinition{\n  name: surfaceNotesNeverPublic,\n  parameters: [places : (List PrismSurface::SurfacePlace)],\n  result: Bool,\n  body: (match places\n    | List.nil => true\n    | List.cons place rest => (((not ((project")
+}
+
+definition{
+  name: smoProofs20,
+  parameters: [],
+  result: Bytes,
+  body: (smoU " place act) =? (PrismSurface::surfaceActNote))) || (1 <=? (Foundation.Me.V1.Model::designFloorOf (surfaceFirstOr 0 (project place domains))))) && (surfaceNotesNeverPublic rest))),\n  recursive_argument: places\n}\n\ndefinition{\n  name: surfaceS")
+}
+
+definition{
+  name: smoProofs21,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ourceCount,\n  parameters: [source : Nat, settings : (List PrismSurface::SurfaceSetting)],\n  result: Nat,\n  body: (match settings\n    | List.nil => 0\n    | List.cons setting rest => (if ((project setting source) =? source) then ((surfaceSour")
+}
+
+definition{
+  name: smoProofs22,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ceCount source rest) + 1) else (surfaceSourceCount source rest))),\n  recursive_argument: settings\n}\n\ndefinition{\n  name: surfaceSourcesSet,\n  parameters: [sources : (List Nat)],\n  result: Bool,\n  body: (match sources\n    | List.nil => true\n")
+}
+
+definition{
+  name: smoProofs23,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "    | List.cons source rest => (((surfaceSourceCount source (PrismSurface::surfaceSettings)) =? 1) && (surfaceSourcesSet rest))),\n  recursive_argument: sources\n}\n\ndefinition{\n  name: surfaceGroupUsed,\n  parameters: [group : Nat, settings : ")
+}
+
+definition{
+  name: smoProofs24,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "(List PrismSurface::SurfaceSetting)],\n  result: Bool,\n  body: (match settings\n    | List.nil => false\n    | List.cons setting rest => (((project setting group) =? group) || (surfaceGroupUsed group rest))),\n  recursive_argument: settings\n}\n\n")
+}
+
+definition{
+  name: smoProofs25,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "definition{\n  name: surfaceSettingsGrouped,\n  parameters: [settings : (List PrismSurface::SurfaceSetting)],\n  result: Bool,\n  body: (match settings\n    | List.nil => true\n    | List.cons setting rest => (((project setting group) <? (PrismSu")
+}
+
+definition{
+  name: smoProofs26,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "rface::surfaceGroupCount)) && (surfaceSettingsGrouped rest))),\n  recursive_argument: settings\n}\n\ndefinition{\n  name: surfacePairsRead,\n  parameters: [pairs : (List PrismSurface::SurfaceContrast)],\n  result: Bool,\n  body: (match pairs\n    | ")
+}
+
+definition{
+  name: smoProofs27,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "List.nil => true\n    | List.cons pair rest => (((project pair floor) <=? (project pair ratio)) && (((project pair theme) <? (PrismSurface::surfaceThemeCount)) && (surfacePairsRead rest)))),\n  recursive_argument: pairs\n}\n\ndefinition{\n  name:")
+}
+
+definition{
+  name: smoProofs28,
+  parameters: [],
+  result: Bytes,
+  body: (smoU " surfaceColoursInRange,\n  parameters: [tones : (List PrismSurface::SurfaceTone)],\n  result: Bool,\n  body: (match tones\n    | List.nil => true\n    | List.cons tone rest => (((project tone dark) <? 16777216) && (((project tone light) <? 16777")
+}
+
+definition{
+  name: smoProofs29,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "216) && (surfaceColoursInRange rest)))),\n  recursive_argument: tones\n}\n\ndefinition{\n  name: surfaceThemesDiffer,\n  parameters: [tones : (List PrismSurface::SurfaceTone)],\n  result: Bool,\n  body: (match tones\n    | List.nil => false\n    | Li")
+}
+
+definition{
+  name: smoProofs30,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "st.cons tone rest => ((not ((project tone dark) =? (project tone light))) || (surfaceThemesDiffer rest))),\n  recursive_argument: tones\n}\n\ndefinition{\n  name: surfaceDomainFed,\n  parameters: [domain : Nat, feeders : (List PrismSurface::Surfa")
+}
+
+definition{
+  name: smoProofs31,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ceFeeder)],\n  result: Bool,\n  body: (match feeders\n    | List.nil => false\n    | List.cons f rest => ((surfaceMember domain (project f domains)) || (surfaceDomainFed domain rest))),\n  recursive_argument: feeders\n}\n\ndefinition{\n  name: surfa")
+}
+
+definition{
+  name: smoProofs32,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ceAnyFed,\n  parameters: [domains : (List Nat)],\n  result: Bool,\n  body: (match domains\n    | List.nil => false\n    | List.cons d rest => ((surfaceDomainFed d (PrismSurface::surfaceFeeders)) || (surfaceAnyFed rest))),\n  recursive_argument: d")
+}
+
+definition{
+  name: smoProofs33,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "omains\n}\n\ndefinition{\n  name: surfacePlacesFed,\n  parameters: [places : (List PrismSurface::SurfacePlace)],\n  result: Bool,\n  body: (match places\n    | List.nil => true\n    | List.cons place rest => (((not ((project place kind) =? (PrismSur")
+}
+
+definition{
+  name: smoProofs34,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "face::surfaceShowList))) || (surfaceAnyFed (project place domains))) && (surfacePlacesFed rest))),\n  recursive_argument: places\n}\n\ndefinition{\n  name: surfaceTimes,\n  parameters: [a : Nat, b : Nat],\n  result: Nat,\n  body: (match b | Nat.zer")
+}
+
+definition{
+  name: smoProofs35,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "o => 0 | Nat.succ k => (a + (surfaceTimes a k))),\n  recursive_argument: b\n}\n\ndefinition{\n  name: surfaceProduct,\n  parameters: [factors : (List Nat)],\n  result: Nat,\n  body: (match factors\n    | List.nil => 1\n    | List.cons f rest => (surf")
+}
+
+definition{
+  name: smoProofs36,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "aceTimes f (surfaceProduct rest))),\n  recursive_argument: factors\n}\n\ndefinition{\n  name: surfaceFactorsFiveLimit,\n  parameters: [factors : (List Nat)],\n  result: Bool,\n  body: (match factors\n    | List.nil => true\n    | List.cons f rest => ")
+}
+
+definition{
+  name: smoProofs37,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "((((f =? 2) || (f =? 3)) || (f =? 5)) && (surfaceFactorsFiveLimit rest))),\n  recursive_argument: factors\n}\n\ndefinition{\n  name: surfaceRatiosJust,\n  parameters: [ratios : (List PrismSurface::SurfaceRatio)],\n  result: Bool,\n  body: (match ra")
+}
+
+definition{
+  name: smoProofs38,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "tios\n    | List.nil => true\n    | List.cons r rest => ((surfaceFactorsFiveLimit (project r num)) && ((surfaceFactorsFiveLimit (project r den)) && (surfaceRatiosJust rest)))),\n  recursive_argument: ratios\n}\n\ndefinition{\n  name: surfaceInOcta")
+}
+
+definition{
+  name: smoProofs39,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ve,\n  parameters: [ratios : (List PrismSurface::SurfaceRatio)],\n  result: Bool,\n  body: (match ratios\n    | List.nil => true\n    | List.cons r rest => ((((surfaceProduct (project r den)) <=? (surfaceProduct (project r num))) && ((surfacePro")
+}
+
+definition{
+  name: smoProofs40,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "duct (project r num)) <=? ((surfaceProduct (project r den)) + (surfaceProduct (project r den))))) && (surfaceInOctave rest))),\n  recursive_argument: ratios\n}\n\ndefinition{\n  name: surfaceRising,\n  parameters: [pn : Nat, pd : Nat, ratios : (L")
+}
+
+definition{
+  name: smoProofs41,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ist PrismSurface::SurfaceRatio)],\n  result: Bool,\n  body: (match ratios\n    | List.nil => true\n    | List.cons r rest => (((surfaceTimes pn (surfaceProduct (project r den))) <? (surfaceTimes (surfaceProduct (project r num)) pd)) && (surface")
+}
+
+definition{
+  name: smoProofs42,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "Rising (surfaceProduct (project r num)) (surfaceProduct (project r den)) rest))),\n  recursive_argument: ratios\n}\n\ndefinition{\n  name: surfaceDegreesIn,\n  parameters: [bound : Nat, degrees : (List Nat)],\n  result: Bool,\n  body: (match degree")
+}
+
+definition{
+  name: smoProofs43,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "s\n    | List.nil => true\n    | List.cons d rest => ((d <? bound) && (surfaceDegreesIn bound rest))),\n  recursive_argument: degrees\n}\n\ndefinition{\n  name: surfaceRatioCount,\n  parameters: [ratios : (List PrismSurface::SurfaceRatio)],\n  resul")
+}
+
+definition{
+  name: smoProofs44,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "t: Nat,\n  body: (match ratios | List.nil => 0 | List.cons r rest => ((surfaceRatioCount rest) + 1)),\n  recursive_argument: ratios\n}\n\ndefinition{\n  name: surfaceNatCount,\n  parameters: [values : (List Nat)],\n  result: Nat,\n  body: (match val")
+}
+
+definition{
+  name: smoProofs45,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ues | List.nil => 0 | List.cons v rest => ((surfaceNatCount rest) + 1)),\n  recursive_argument: values\n}\n\ndefinition{\n  name: surfaceAnswersSound,\n  parameters: [answers : (List PrismSurface::SurfaceAnswer)],\n  result: Bool,\n  body: (match a")
+}
+
+definition{
+  name: smoProofs46,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "nswers\n    | List.nil => true\n    | List.cons a rest => ((surfaceDegreesIn (surfaceRatioCount (PrismSurface::surfaceScale)) (project a degrees)) && (((surfaceNatCount (project a degrees)) <=? 3) && (((project a level) <=? 100) && (((project")
+}
+
+definition{
+  name: smoProofs47,
+  parameters: [],
+  result: Bytes,
+  body: (smoU " a tone) <? (PrismSurface::surfaceToneCount)) && (surfaceAnswersSound rest)))))),\n  recursive_argument: answers\n}\n\ndefinition{\n  name: surfaceRestSilent,\n  parameters: [answers : (List PrismSurface::SurfaceAnswer)],\n  result: Bool,\n  body: ")
+}
+
+definition{
+  name: smoProofs48,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "(match answers\n    | List.nil => false\n    | List.cons a rest => ((((project a level) =? 0) && ((surfaceNatCount (project a degrees)) =? 0)) || (surfaceRestSilent rest))),\n  recursive_argument: answers\n}\n\ndefinition{\n  name: surfaceSections")
+}
+
+definition{
+  name: smoProofs49,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "Holding,\n  parameters: [setting : Nat, sections : (List PrismSurface::SurfaceSection)],\n  result: Nat,\n  body: (match sections\n    | List.nil => 0\n    | List.cons section rest => (if (surfaceMember setting (project section settings)) then (")
+}
+
+definition{
+  name: smoProofs50,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "(surfaceSectionsHolding setting rest) + 1) else (surfaceSectionsHolding setting rest))),\n  recursive_argument: sections\n}\n\ndefinition{\n  name: surfaceSettingsSectioned,\n  parameters: [index : Nat, settings : (List PrismSurface::SurfaceSetti")
+}
+
+definition{
+  name: smoProofs51,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ng)],\n  result: Bool,\n  body: (match settings\n    | List.nil => true\n    | List.cons setting rest => (((surfaceSectionsHolding index (PrismSurface::surfaceSections)) =? (if ((project setting viewpoint) =? (PrismSurface::surfaceViewpointSyst")
+}
+
+definition{
+  name: smoProofs52,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "em)) then 0 else 1)) && (surfaceSettingsSectioned (index + 1) rest))),\n  recursive_argument: settings\n}\n\ndefinition{\n  name: surfaceSectionsShort,\n  parameters: [sections : (List PrismSurface::SurfaceSection)],\n  result: Bool,\n  body: (matc")
+}
+
+definition{
+  name: smoProofs53,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "h sections\n    | List.nil => true\n    | List.cons section rest => (((1 <=? (surfaceNatCount (project section settings))) && (((surfaceNatCount (project section settings)) <=? 3) && (1 <=? (project section serves)))) && (surfaceSectionsShort")
+}
+
+definition{
+  name: smoProofs54,
+  parameters: [],
+  result: Bytes,
+  body: (smoU " rest))),\n  recursive_argument: sections\n}\n\ndefinition{\n  name: surfaceSetupCovers,\n  parameters: [index : Nat, sections : (List PrismSurface::SurfaceSection)],\n  result: Bool,\n  body: (match sections\n    | List.nil => true\n    | List.cons ")
+}
+
+definition{
+  name: smoProofs55,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "section rest => ((if ((project section reveal) =? 1) then (surfaceMember index (PrismSurface::surfaceSetup)) else true) && (surfaceSetupCovers (index + 1) rest))),\n  recursive_argument: sections\n}\n\ndefinition{\n  name: surfaceSectionCount,\n ")
+}
+
+definition{
+  name: smoProofs56,
+  parameters: [],
+  result: Bytes,
+  body: (smoU " parameters: [sections : (List PrismSurface::SurfaceSection)],\n  result: Nat,\n  body: (match sections\n    | List.nil => 0\n    | List.cons section rest => ((surfaceSectionCount rest) + 1)),\n  recursive_argument: sections\n}\n\ndefinition{\n  nam")
+}
+
+definition{
+  name: smoProofs57,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "e: surfaceGroupsUsedFrom,\n  parameters: [group : Nat, left : Nat],\n  result: Bool,\n  body: (match left\n    | Nat.zero => true\n    | Nat.succ k => ((surfaceGroupUsed group (PrismSurface::surfaceSettings)) && (surfaceGroupsUsedFrom (group + 1")
+}
+
+definition{
+  name: smoProofs58,
+  parameters: [],
+  result: Bytes,
+  body: (smoU ") k))),\n  recursive_argument: left\n}\n\ndefinition{\n  name: surfaceGroupsUsed,\n  parameters: [],\n  result: Bool,\n  body: (surfaceGroupsUsedFrom 0 (PrismSurface::surfaceGroupCount))\n}\n\ntheorem{\n  name: surfaceEveryOwnerViewPlaced,\n  parameters")
+}
+
+definition{
+  name: smoProofs59,
+  parameters: [],
+  result: Bytes,
+  body: (smoU ": [],\n  statement: ((surfaceOwnerViewsPlaced (Foundation.Me.V1.Model::designViews)) = true),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfacePlacesAreViews,\n  parameters: [],\n  statement: ((surfacePlacesAgree (PrismSurface::surfacePlaces)) = t")
+}
+
+definition{
+  name: smoProofs60,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "rue),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceOneHome,\n  parameters: [],\n  statement: ((surfaceHostCount (PrismSurface::surfaceHostHome) (PrismSurface::surfacePlaces)) = 1),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceOneComposer,\n  p")
+}
+
+definition{
+  name: smoProofs61,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "arameters: [],\n  statement: ((surfaceHostCount (PrismSurface::surfaceHostComposer) (PrismSurface::surfacePlaces)) = 1),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceOneSheet,\n  parameters: [],\n  statement: ((surfaceHostCount (PrismSurface::")
+}
+
+definition{
+  name: smoProofs62,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "surfaceHostSheet) (PrismSurface::surfacePlaces)) = 1),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceEverySettingInOneSection,\n  parameters: [],\n  statement: ((surfaceSettingsSectioned 0 (PrismSurface::surfaceSettings)) = true),\n  proof: dec")
+}
+
+definition{
+  name: smoProofs63,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ide{}\n}\n\ntheorem{\n  name: surfaceSectionsAreFewAndShort,\n  parameters: [],\n  statement: (((surfaceSectionsShort (PrismSurface::surfaceSections)) && ((surfaceSectionCount (PrismSurface::surfaceSections)) <=? 4)) = true),\n  proof: decide{}\n}\n")
+}
+
+definition{
+  name: smoProofs64,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "\ntheorem{\n  name: surfaceSetupIsShortAndWhole,\n  parameters: [],\n  statement: (((surfaceSetupCovers 0 (PrismSurface::surfaceSections)) && ((1 <=? (surfaceNatCount (PrismSurface::surfaceSetup))) && ((surfaceNatCount (PrismSurface::surfaceSet")
+}
+
+definition{
+  name: smoProofs65,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "up)) <=? 3))) = true),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceEveryListHasItsOrder,\n  parameters: [],\n  statement: ((surfacePlacesOrdered (PrismSurface::surfacePlaces)) = true),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfacePageIsThePe")
+}
+
+definition{
+  name: smoProofs66,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "rsonsView,\n  parameters: [],\n  statement: ((surfacePageIsPersonView (PrismSurface::surfacePlaces)) = true),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceMenuIsShort,\n  parameters: [],\n  statement: (((surfaceHostCount (PrismSurface::surfaceH")
+}
+
+definition{
+  name: smoProofs67,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ostNav) (PrismSurface::surfacePlaces)) <=? 4) = true),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceActsInTheirRoles,\n  parameters: [],\n  statement: ((surfaceActsSound (PrismSurface::surfacePlaces)) = true),\n  proof: decide{}\n}\n\ntheorem{\n  ")
+}
+
+definition{
+  name: smoProofs68,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "name: surfaceNotesKeepTheFloor,\n  parameters: [],\n  statement: ((surfaceNotesNeverPublic (PrismSurface::surfacePlaces)) = true),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceFloorsAreTheDesign,\n  parameters: [],\n  statement: ((surfaceSameNa")
+}
+
+definition{
+  name: smoProofs69,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ts (PrismSurface::surfaceFloors) (Foundation.Me.V1.Model::designDomainFloors)) = true),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceEveryDomainNamed,\n  parameters: [],\n  statement: ((surfaceStringCount (PrismSurface::surfaceDomainNames)) =")
+}
+
+definition{
+  name: smoProofs70,
+  parameters: [],
+  result: Bytes,
+  body: (smoU " (Foundation.Me.V1.Model::designDomainCount)),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceEveryRoleNamed,\n  parameters: [],\n  statement: ((surfaceStringCount (PrismSurface::surfaceRoleNames)) = (Foundation.Me.V1.Model::designRoleCount)),\n")
+}
+
+definition{
+  name: smoProofs71,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "  proof: decide{}\n}\n\ntheorem{\n  name: surfaceEveryLabelNamed,\n  parameters: [],\n  statement: ((surfaceStringCount (PrismSurface::surfaceLabelNames)) = 4),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceEverySourceOneSetting,\n  parameters: [],")
+}
+
+definition{
+  name: smoProofs72,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "\n  statement: ((surfaceSourcesSet (PrismSurface::surfaceRoutedSources)) = true),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceSettingsInGroups,\n  parameters: [],\n  statement: ((surfaceSettingsGrouped (PrismSurface::surfaceSettings)) = true)")
+}
+
+definition{
+  name: smoProofs73,
+  parameters: [],
+  result: Bytes,
+  body: (smoU ",\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceNoEmptyGroup,\n  parameters: [],\n  statement: ((surfaceGroupsUsed) = true),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceEveryPairReads,\n  parameters: [],\n  statement: ((surfacePairsRead (PrismS")
+}
+
+definition{
+  name: smoProofs74,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "urface::surfaceContrasts)) = true),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceTonesAreColours,\n  parameters: [],\n  statement: ((surfaceColoursInRange (PrismSurface::surfaceTones)) = true),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceEve")
+}
+
+definition{
+  name: smoProofs75,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "ryPlaceIsFed,\n  parameters: [],\n  statement: ((surfacePlacesFed (PrismSurface::surfacePlaces)) = true),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceTwoThemes,\n  parameters: [],\n  statement: ((surfaceThemesDiffer (PrismSurface::surfaceTones")
+}
+
+definition{
+  name: smoProofs76,
+  parameters: [],
+  result: Bytes,
+  body: (smoU ")) = true),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceVoiceIsJust,\n  parameters: [],\n  statement: (((surfaceRatiosJust (PrismSurface::surfaceScale)) && (surfaceRatiosJust (PrismSurface::surfacePartials))) = true),\n  proof: decide{}\n}\n\nth")
+}
+
+definition{
+  name: smoProofs77,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "eorem{\n  name: surfaceScaleIsOneOctave,\n  parameters: [],\n  statement: (((surfaceInOctave (PrismSurface::surfaceScale)) && (surfaceRising 0 1 (PrismSurface::surfaceScale))) = true),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceAnswersInTheS")
+}
+
+definition{
+  name: smoProofs78,
+  parameters: [],
+  result: Bytes,
+  body: (smoU "cale,\n  parameters: [],\n  statement: ((surfaceAnswersSound (PrismSurface::surfaceAnswers)) = true),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceVoiceHasRest,\n  parameters: [],\n  statement: ((surfaceRestSilent (PrismSurface::surfaceAnswers)")
+}
+
+definition{
+  name: smoProofs79,
+  parameters: [],
+  result: Bytes,
+  body: (smoU ") = true),\n  proof: decide{}\n}\n\ntheorem{\n  name: surfaceVoiceIsHumane,\n  parameters: [],\n  statement: ((((PrismSurface::surfaceVoiceCeiling) <=? 10) && ((5 <=? (PrismSurface::surfaceVoiceAttack)) && (((PrismSurface::surfaceVoiceRelease) <=?")
+}
+
+definition{
+  name: smoProofs80,
+  parameters: [],
+  result: Bytes,
+  body: (smoU " 1500) && (150 <=? (PrismSurface::surfaceVoiceRefractory))))) = true),\n  proof: decide{}\n}\n")
+}
+
+definition{
+  name: smoProofs,
+  parameters: [],
+  result: Bytes,
+  body: (smoCat (cons (smoCat (cons (smoCat (cons (smoCat (cons (smoProofs0) (cons (smoProofs1) (cons (smoProofs2) (cons (smoProofs3) (nil Bytes)))))) (cons (smoCat (cons (smoProofs4) (cons (smoProofs5) (cons (smoProofs6) (cons (smoProofs7) (nil Bytes)))))) (cons (smoCat (cons (smoProofs8) (cons (smoProofs9) (cons (smoProofs10) (cons (smoProofs11) (nil Bytes)))))) (cons (smoCat (cons (smoProofs12) (cons (smoProofs13) (cons (smoProofs14) (cons (smoProofs15) (nil Bytes)))))) (nil Bytes)))))) (cons (smoCat (cons (smoCat (cons (smoProofs16) (cons (smoProofs17) (cons (smoProofs18) (cons (smoProofs19) (nil Bytes)))))) (cons (smoCat (cons (smoProofs20) (cons (smoProofs21) (cons (smoProofs22) (cons (smoProofs23) (nil Bytes)))))) (cons (smoCat (cons (smoProofs24) (cons (smoProofs25) (cons (smoProofs26) (cons (smoProofs27) (nil Bytes)))))) (cons (smoCat (cons (smoProofs28) (cons (smoProofs29) (cons (smoProofs30) (cons (smoProofs31) (nil Bytes)))))) (nil Bytes)))))) (cons (smoCat (cons (smoCat (cons (smoProofs32) (cons (smoProofs33) (cons (smoProofs34) (cons (smoProofs35) (nil Bytes)))))) (cons (smoCat (cons (smoProofs36) (cons (smoProofs37) (cons (smoProofs38) (cons (smoProofs39) (nil Bytes)))))) (cons (smoCat (cons (smoProofs40) (cons (smoProofs41) (cons (smoProofs42) (cons (smoProofs43) (nil Bytes)))))) (cons (smoCat (cons (smoProofs44) (cons (smoProofs45) (cons (smoProofs46) (cons (smoProofs47) (nil Bytes)))))) (nil Bytes)))))) (cons (smoCat (cons (smoCat (cons (smoProofs48) (cons (smoProofs49) (cons (smoProofs50) (cons (smoProofs51) (nil Bytes)))))) (cons (smoCat (cons (smoProofs52) (cons (smoProofs53) (cons (smoProofs54) (cons (smoProofs55) (nil Bytes)))))) (cons (smoCat (cons (smoProofs56) (cons (smoProofs57) (cons (smoProofs58) (cons (smoProofs59) (nil Bytes)))))) (cons (smoCat (cons (smoProofs60) (cons (smoProofs61) (cons (smoProofs62) (cons (smoProofs63) (nil Bytes)))))) (nil Bytes)))))) (nil Bytes)))))) (cons (smoCat (cons (smoCat (cons (smoCat (cons (smoProofs64) (cons (smoProofs65) (cons (smoProofs66) (cons (smoProofs67) (nil Bytes)))))) (cons (smoCat (cons (smoProofs68) (cons (smoProofs69) (cons (smoProofs70) (cons (smoProofs71) (nil Bytes)))))) (cons (smoCat (cons (smoProofs72) (cons (smoProofs73) (cons (smoProofs74) (cons (smoProofs75) (nil Bytes)))))) (cons (smoCat (cons (smoProofs76) (cons (smoProofs77) (cons (smoProofs78) (cons (smoProofs79) (nil Bytes)))))) (nil Bytes)))))) (cons (smoCat (cons (smoProofs80) (cons (smoTail) (nil Bytes)))) (nil Bytes)))) (nil Bytes))))
+}
+
+definition{
+  name: smoFile,
+  parameters: [archive : Bytes, path : String],
+  result: Bytes,
+  body: (match (Foundation.Tar::find archive (smoU path)) | Option.none => 0x | Option.some f => f),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoHasEvery,
+  parameters: [s : Bytes, keys : (List String)],
+  result: Bool,
+  body: (match keys
+    | List.nil => true
+    | List.cons head rest => ((smoKnown (Foundation.Json::memberAt s (Foundation.Json::root s) (smoU head))) && (smoHasEvery s rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: keys
+}
+
+definition{
+  name: smoModelRefusal,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (smoFile archive "app/specs/surface/spec.json"); (let brand : Bytes := (smoFile archive "site/brand/hologram-warm.css"); (if ((not ((smoHasEvery s (cons "domains" (cons "floors" (cons "labels" (cons "roles" (cons "hosts" (cons "viewpoints" (cons "orders" (cons "shows" (cons "acts" (cons "places" (nil String)))))))))))) && (smoHasEvery s (cons "groups" (cons "settings" (cons "sections" (cons "setup" (cons "sources" (cons "routed" (cons "words" (cons "feeders" (cons "look" (cons "voice" (nil String)))))))))))))) || ((Foundation.Bytes::byteLength brand) =? 0)) then 0x6e65656473206170702f73706563732f737572666163652f737065632e6a736f6e2c2077686f6c652c20616e6420736974652f6272616e642f686f6c6f6772616d2d7761726d2e637373 else (smoReasons s brand (Foundation.Bytes::appendBytes (smoFile archive ".gen/surface-goals") (smoFile archive ".gen/surface-journeys")) (smoFile archive ".gen/surface-rows"))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoModelGenerate,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (smoModel (smoFile archive "app/specs/surface/spec.json")),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoProofsGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (if ((Foundation.Bytes::byteLength (smoFile archive "app/specs/surface/spec.json")) =? 0) then (ctor Option.none [Bytes]) else (ctor Option.some [Bytes] (Foundation.Bytes::appendBytes (smoProofsHead) (smoProofs)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoPrefixed,
+  parameters: [t : Bytes, lead : Bytes],
+  result: Bool,
+  body: (((Foundation.Bytes::byteLength lead) <=? (Foundation.Bytes::byteLength t)) && (Foundation.Tar::sameBytes (Foundation.Json::span t 0 (Foundation.Bytes::byteLength lead)) lead)),
+  axioms: [propext]
+}
+
+definition{
+  name: smoEntriesFrom,
+  parameters: [archive : Bytes, header : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength archive) <? (header + 512)) then acc else (let name : Bytes := (Foundation.Tar::entryName archive header); (if ((Foundation.Bytes::byteLength name) =? 0) then acc else (let size : Nat := (Foundation.Tar::entrySize archive header); (let body : Bytes := (Foundation.Json::span archive (header + 512) ((header + 512) + size)); (smoEntriesFrom archive ((header + 512) + (Foundation.Tar::padded size)) (if ((smoPrefixed name 0x6170702f73706563732f70726f647563742f6a6f75726e6579732f) && (smoKnown (Foundation.Json::root body))) then (smoCat (cons acc (cons (Foundation.Json::textAt body (Foundation.Json::memberAt body (Foundation.Json::root body) (smoU "key"))) (cons 0x0a (nil Bytes))))) else acc) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoAlwaysFrom,
+  parameters: [s : Bytes, arr : (Option Nat), acc : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (smoAlwaysFrom s arr (smoCat (cons acc (cons (Foundation.Json::textAt s (Foundation.Json::memberAt s e (smoU "key"))) (cons 0x0a (nil Bytes))))) (n + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: smoSuccessGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (let p : Bytes := (smoFile archive "app/specs/product/spec.json"); (let out : Bytes := (smoEntriesFrom archive 0 (match (Foundation.Json::memberAt p (Foundation.Json::root p) (smoU "always"))
+    | Option.none => 0x
+    | Option.some a => (smoAlwaysFrom p (ctor Option.some [Nat] a) 0x 0 (Foundation.Bytes::byteLength p))) ((Foundation.Bytes::byteLength archive) + 1)); (if ((Foundation.Bytes::byteLength out) =? 0) then (ctor Option.none [Bytes]) else (ctor Option.some [Bytes] out)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: smoRowsGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (let p : Bytes := (smoFile archive "app/specs/source/services.json"); (match (Foundation.Json::memberAt p (Foundation.Json::root p) (smoU "services"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some a => (ctor Option.some [Bytes] 0x73657276696365730a))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
