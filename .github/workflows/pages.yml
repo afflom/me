@@ -157,17 +157,39 @@ jobs:
             --env SDK_IMAGE="$image" \
             "$image" bash -c '
               set -euo pipefail
+              # The one way a holo is built when a proof is reused.
+              # PrismPM 0.4.0 refuses a provenance statement here: the lock
+              # sits at the root, not beside the app. `verify` writes the
+              # same holo without one (a487fb6a for #94 both ways), and the
+              # build-id check below is what binds it to the reused proof.
+              build_holo() { prismpm --project "$1" build --no-provenance; }
+              # A pull request proves in full, so main'"'"'s reused-proof build
+              # never runs on it. Rehearse that build alongside the proof, on
+              # a copy of this tree, so a change that breaks it fails here
+              # and not in main'"'"'s deploy (#94 blocked main this way).
+              rehearsal=
+              if [[ ${PRISM_PROOF_EVENT:-} == pull_request:* ]]; then
+                mkdir -p /tmp/rehearsal
+                tar --exclude=./.git --exclude=./app/.prism --exclude=./.prism-proof --exclude=./target -cf - . | tar -xf - -C /tmp/rehearsal
+                (cd /tmp/rehearsal && build_holo app) >/tmp/rehearsal.log 2>&1 &
+                rehearsal=$!
+              fi
               just app
+              if [[ -n $rehearsal ]]; then
+                if wait "$rehearsal"; then
+                  echo "main'"'"'s reused-proof build works on this tree: $(tail -n 1 /tmp/rehearsal.log)"
+                else
+                  cat /tmp/rehearsal.log >&2
+                  printf "%s\n" "main'"'"'s reused-proof build fails on this tree, so merging it would block the deploy" >&2
+                  exit 1
+                fi
+              fi
               shopt -s nullglob
               holos=(app/.prism/build/*/*.holo)
               if [[ ${#holos[@]} -eq 0 ]]; then
                 proved=$(grep -o "\"build_id\": *\"[0-9a-f]\{64\}\"" .prism-proof/verified/manifest.json | grep -o "[0-9a-f]\{64\}")
                 test -n "$proved"
-                # PrismPM 0.4.0 refuses a provenance statement here: the lock
-                # sits at the root, not beside the app. `verify` writes the
-                # same holo without one (a487fb6a for #94 both ways), and the
-                # build-id check below is what binds it to the reused proof.
-                prismpm --project app build --no-provenance
+                build_holo app
                 holos=(app/.prism/build/*/*.holo)
                 test ${#holos[@]} -eq 1
                 built=$(basename "$(dirname "${holos[0]}")")
