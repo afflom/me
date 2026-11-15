@@ -8,7 +8,7 @@
 //! fixed time for one program, so families of generators are separate programs;
 //! they share generators/foundation, copied into each. tools/generators/build.sh
 //! builds one in the locked SDK and pins it in its lock.json; tools/generators/run.sh
-//! runs the steps of generators/pipeline.json through them.
+//! runs the steps of each generators/<program>/steps.json through them.
 //! `GN-01` fails when a program's sources changed since it was built, its Foundation
 //! is not generators/foundation, or a committed output is not what its generator
 //! writes from its inputs.
@@ -24,7 +24,7 @@ fn root() -> PathBuf {
         .to_path_buf()
 }
 
-/// `GN-01`: every output generators/pipeline.json names is what its LexLean generator writes, each generator program is built from its sources as they stand, and every program carries generators/foundation byte for byte
+/// `GN-01`: every output a generator program's steps.json names is what its LexLean generator writes, each generator program is built from its sources as they stand, and every program carries generators/foundation byte for byte
 #[test]
 fn generators_gn_01() {
     let out = Command::new("sh")

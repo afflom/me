@@ -1,0 +1,25 @@
+{
+  "comment": "The steps of the look program (generators/look/), run in order by tools/generators/run.sh. A step reads repository files and the .gen/ outputs of this program's earlier steps only.",
+  "steps": [
+    {
+      "generator": "look",
+      "inputs": [
+        "app/specs/surface/spec.json"
+      ],
+      "output": ".gen/look.css"
+    },
+    {
+      "generator": "cardrest",
+      "split": "site/card.css",
+      "output": ".gen/card-rest.css"
+    },
+    {
+      "generator": "cardcss",
+      "inputs": [
+        ".gen/look.css",
+        ".gen/card-rest.css"
+      ],
+      "output": "site/card.css"
+    }
+  ]
+}
