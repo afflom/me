@@ -68,12 +68,16 @@ echo "$steps" | while read -r step; do
   split_path=$(echo "$step" | js .split)
   each_path=$(echo "$step" | js .each.file)
   if [ -n "$each_path" ]; then
-    # One request per element of a JSON array, each staged as the file itself.
+    # One request per element of a JSON array, each staged as the file itself,
+    # beside the step's "inputs", which every request carries whole.
     js "$(echo "$step" | js .each.array)" < "$each_path" > "$work/elements"
     while read -r element; do
       rm -rf "$work/stage"; mkdir -p "$work/stage/$(dirname "$each_path")"
       printf '%s\n' "$element" > "$work/stage/$each_path"
-      run "$gen" "$out" "$work/stage" "$each_path"
+      for f in $(echo "$step" | js .inputs); do
+        mkdir -p "$work/stage/$(dirname "$f")"; cp "$f" "$work/stage/$f"
+      done
+      run "$gen" "$out" "$work/stage" "$each_path" $(echo "$step" | js .inputs)
     done < "$work/elements"
   elif [ -n "$split_path" ]; then
     rm -rf "$work/pieces"; mkdir -p "$work/pieces"
