@@ -924,7 +924,8 @@ export default async function start({ app, reason, $ }) {
   let servicesLive = false;
   const SECTION_DONE = {
     self: () => Boolean(declared()),
-    sources: () => servicesLive || items.length > 0,
+    // Connected once something came from a service or a file; a note the person kept is not a service.
+    sources: () => servicesLive || items.some((item) => item.media !== "plainText"),
   };
   const stepDone = (step) => (SECTION_DONE[step.section] ?? (() => false))();
   const setupLeft = () => SETUP.filter((step) => !stepDone(step));
@@ -1481,7 +1482,8 @@ export default async function start({ app, reason, $ }) {
       // The person's words go through the R4 router; a question is answered in
       // sentences from what is held, under the Boundary, with what it drew on.
       const { answer } = await import("./router/answer.mjs");
-      const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: false });
+      // A question is answered; anything else the person says is offered to keep, in its place and time.
+      const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: true });
       turn(prompt, said);
       if (said.sentences.length) { say(said.sentences.join("\n"), "good"); $("pr-prompt").value = ""; }
       else if (haltedNow) say(WORDS.halted, "bad");
