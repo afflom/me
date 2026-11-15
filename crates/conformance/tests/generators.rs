@@ -4,7 +4,8 @@
 //! whose generators are modules (generators/system: GenSystem; generators/standards:
 //! GenWcag and GenAria, the WCAG 2.2 criteria and WAI-ARIA 1.2 roles, states and
 //! properties of the standards register; generators/surface: GenSurface, the page's
-//! surface.mjs and card.html; generators/look: GenLook, card.css's look block). Native Lean has a
+//! surface.mjs and card.html; generators/look: GenLook, card.css's look block;
+//! generators/surfacemodel: GenSurfaceModel, the surface's LexLean model and its proofs). Native Lean has a
 //! fixed time for one program, so families of generators are separate programs;
 //! they share generators/foundation, copied into each. tools/generators/build.sh
 //! builds one in the locked SDK and pins it in its lock.json; tools/generators/run.sh
