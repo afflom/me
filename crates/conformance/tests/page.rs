@@ -26,7 +26,7 @@ fn page_pg_01() {
             "the vault's decisions are the root's, it sees the halt switch, and it keeps values as uorc archives",
         ),
         (
-            "const mapped = await route({ source: \"note\", values: { text }, line, halted });",
+            "const mapped = await route({ source: \"note\", values: { text }, line, halted, learned: meaning ? { meaning } : {} });",
             "the R4 router's decisions are the root's router facet, and it sees the halt switch",
         ),
         (
