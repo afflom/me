@@ -597,6 +597,34 @@
       "output": ".github/workflows/merge-train.yml"
     },
     {
+      "program": "standards",
+      "generator": "wcagfacts",
+      "split": "app/specs/standards/upstream/wcag.json",
+      "output": ".gen/wcag-facts"
+    },
+    {
+      "program": "standards",
+      "generator": "wcag",
+      "inputs": [
+        ".gen/wcag-facts"
+      ],
+      "output": "test/standards/generated/wcag-2.2.json"
+    },
+    {
+      "program": "standards",
+      "generator": "ariafacts",
+      "split": "app/specs/standards/upstream/wai-aria-1.2.html",
+      "output": ".gen/aria-facts"
+    },
+    {
+      "program": "standards",
+      "generator": "aria",
+      "inputs": [
+        ".gen/aria-facts"
+      ],
+      "output": "test/standards/generated/wai-aria-1.2.json"
+    },
+    {
       "program": "person",
       "generator": "icf",
       "split": "app/specs/oracle/icf/SimpleTabulation-ICF-en.txt",
