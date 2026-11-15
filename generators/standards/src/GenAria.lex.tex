@@ -1,0 +1,187 @@
+\begin{lexlean}{GenAria}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{GenWcag}
+\title{Accessible roles generator}
+\begin{semanticmodule}
+definition{
+  name: ariaLowerEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr s i); (if ((96 <? b) && (b <? 123)) then (ariaLowerEnd s (i + 1) rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ariaQuoteFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then i else (if ((Foundation.Tar::byteOr s i) =? 34) then i else (ariaQuoteFrom s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ariaContains,
+  parameters: [s : Bytes, pattern : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then false else (if (((Foundation.Tar::byteOr s i) =? (Foundation.Tar::byteOr pattern 0)) && (GenWcag::startsAt s i pattern)) then true else (ariaContains s pattern (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ariaFact,
+  parameters: [key : String, value : Bytes],
+  result: Bytes,
+  body: (GenWcag::cat (cons (GenWcag::u key) (cons 0x09 (cons value (cons 0x0a (nil Bytes))))))
+}
+
+definition{
+  name: ariaNamed,
+  parameters: [line : Bytes, key : String, p : Nat, start : Nat],
+  result: Bytes,
+  body: (let k : Nat := (ariaLowerEnd line start (Foundation.Bytes::byteLength line)); (if ((start <? k) && ((Foundation.Tar::byteOr line k) =? 34)) then (ariaFact key (Foundation.Json::span line p k)) else 0x)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ariaEventAt,
+  parameters: [line : Bytes, i : Nat],
+  result: Bytes,
+  body: (let b : Nat := (Foundation.Tar::byteOr line i); (if (b =? 60) then (if (GenWcag::startsAt line i 0x3c73656374696f6e20636c6173733d22726f6c65) then (let j : Nat := (ariaQuoteFrom line (i + 20) (Foundation.Bytes::byteLength line)); (if (GenWcag::startsAt line j 0x222069643d22) then (ariaNamed line "role" (j + 6) (j + 6)) else 0x)) else (if (GenWcag::startsAt line i 0x3c2f73656374696f6e3e) then 0x656e640a else 0x)) else (if (b =? 99) then (if (GenWcag::startsAt line i 0x636c6173733d2273746174652d6e616d6522207469746c653d22617269612d) then (ariaNamed line "state" (i + 26) (i + 31)) else (if (GenWcag::startsAt line i 0x636c6173733d2270726f70657274792d6e616d6522207469746c653d22617269612d) then (ariaNamed line "property" (i + 29) (i + 34)) else 0x)) else 0x))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ariaEventsFrom,
+  parameters: [line : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength line) <? (i + 1)) then acc else (ariaEventsFrom line (i + 1) (Foundation.Bytes::appendBytes acc (ariaEventAt line i)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ariaLineFacts,
+  parameters: [line : Bytes],
+  result: Bytes,
+  body: (let n : Nat := (Foundation.Bytes::byteLength line); (let events : Bytes := (ariaEventsFrom line 0 0x n); (if (ariaContains line 0x616273747261637420726f6c65 0 n) then (Foundation.Bytes::appendBytes events 0x61627374726163740a) else events))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ariaFactsFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength s); (if (n <? (i + 1)) then acc else (let e : Nat := (GenWcag::wcagLineEndAt s i n); (ariaFactsFrom s (e + 1) (Foundation.Bytes::appendBytes acc (ariaLineFacts (Foundation.Json::span s i e))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ariaFacts,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (GenWcag::u "app/specs/standards/upstream/wai-aria-1.2.html"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some piece => (ctor Option.some [Bytes] (ariaFactsFrom piece 0 0x (Foundation.Bytes::byteLength piece)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ariaEntry,
+  parameters: [ident : Bytes, kind : Bytes, name : Bytes, text : Bytes],
+  result: Bytes,
+  body: (GenWcag::cat (cons (GenWcag::u " {") (cons 0x0a (cons (GenWcag::wcagMember "id" (Foundation.Bytes::appendBytes (GenWcag::u "wai-aria-1.2-") ident) false) (cons (GenWcag::wcagMember "kind" kind false) (cons (GenWcag::wcagMember "ref" (Foundation.Bytes::appendBytes (GenWcag::u "https://www.w3.org/TR/wai-aria-1.2/#") name) false) (cons (GenWcag::wcagMember "text" text true) (cons (GenWcag::u " }") (nil Bytes)))))))))
+}
+
+definition{
+  name: ariaRole,
+  parameters: [name : Bytes, isAbstract : Bool],
+  result: Bytes,
+  body: (if isAbstract then (ariaEntry (Foundation.Bytes::appendBytes (GenWcag::u "role-") name) (GenWcag::u "abstract role") name (GenWcag::cat (cons (GenWcag::u "the ") (cons name (cons (GenWcag::u " role, which authors must not use") (nil Bytes)))))) else (ariaEntry (Foundation.Bytes::appendBytes (GenWcag::u "role-") name) (GenWcag::u "role") name (GenWcag::cat (cons (GenWcag::u "the ") (cons name (cons (GenWcag::u " role") (nil Bytes)))))))
+}
+
+definition{
+  name: ariaAttribute,
+  parameters: [name : Bytes, kind : String],
+  result: Bytes,
+  body: (ariaEntry name (GenWcag::u kind) name (GenWcag::cat (cons (GenWcag::u "the ") (cons name (cons 0x20 (cons (GenWcag::u kind) (nil Bytes)))))))
+}
+
+definition{
+  name: ariaJoin,
+  parameters: [acc : Bytes, entry : Bytes],
+  result: Bytes,
+  body: (if ((Foundation.Bytes::byteLength acc) =? 0) then entry else (GenWcag::cat (cons acc (cons 0x2c0a (cons entry (nil Bytes))))))
+}
+
+definition{
+  name: ariaClose,
+  parameters: [acc : Bytes, role : Bytes, isAbstract : Bool],
+  result: Bytes,
+  body: (if ((Foundation.Bytes::byteLength role) =? 0) then acc else (ariaJoin acc (ariaRole role isAbstract)))
+}
+
+definition{
+  name: ariaSeen,
+  parameters: [seen : Bytes, name : Bytes],
+  result: Bool,
+  body: (let key : Bytes := (GenWcag::cat (cons 0x0a (cons name (cons 0x0a (nil Bytes))))); (ariaContains seen key 0 (Foundation.Bytes::byteLength seen))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ariaRequirementsFrom,
+  parameters: [
+    s : Bytes,
+    i : Nat,
+    role : Bytes,
+    isAbstract : Bool,
+    seen : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength s); (if (n <? (i + 1)) then (ctor Option.some [Bytes] (ariaClose acc role isAbstract)) else (let e : Nat := (GenWcag::wcagLineEndAt s i n); (let line : Bytes := (Foundation.Json::span s i e); (if (Foundation.Tar::sameBytes line (GenWcag::u "end")) then (ariaRequirementsFrom s (e + 1) 0x false seen (ariaClose acc role isAbstract) rest) else (if (Foundation.Tar::sameBytes line (GenWcag::u "abstract")) then (ariaRequirementsFrom s (e + 1) role true seen acc rest) else (match (GenWcag::wcagValueOf line "role")
+      | Option.some name => (ariaRequirementsFrom s (e + 1) name false seen (ariaClose acc role isAbstract) rest)
+      | Option.none => (match (GenWcag::wcagValueOf line "state")
+        | Option.some name => (if (ariaSeen seen name) then (ariaRequirementsFrom s (e + 1) role isAbstract seen acc rest) else (ariaRequirementsFrom s (e + 1) role isAbstract (GenWcag::cat (cons seen (cons 0x0a (cons name (cons 0x0a (nil Bytes)))))) (ariaJoin acc (ariaAttribute name "state")) rest))
+        | Option.none => (match (GenWcag::wcagValueOf line "property")
+          | Option.some name => (if (ariaSeen seen name) then (ariaRequirementsFrom s (e + 1) role isAbstract seen acc rest) else (ariaRequirementsFrom s (e + 1) role isAbstract (GenWcag::cat (cons seen (cons 0x0a (cons name (cons 0x0a (nil Bytes)))))) (ariaJoin acc (ariaAttribute name "property")) rest))
+          | Option.none => (ctor Option.none [Bytes]))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ariaGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (GenWcag::u ".gen/aria-facts"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (match (ariaRequirementsFrom s 0 0x false 0x 0x (Foundation.Bytes::byteLength s))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some body => (ctor Option.some [Bytes] (GenWcag::cat (cons (GenWcag::u "[") (cons 0x0a (cons body (cons 0x0a (cons (GenWcag::u "]") (cons 0x0a (nil Bytes))))))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
