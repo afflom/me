@@ -6,7 +6,7 @@
 // finds a kept caption from its pair where their words alone miss each other.
 // The model is the one the router spec compiles in (PROVIDERS.meaning), from the
 // pinned lock, admitted by the models decision (app/specs/models/spec.json).
-// QR-13's thresholds are its quality record's.
+// QR-15's thresholds are its quality record's.
 // usage: PAGE_SITE=<built site> node --test test/oracle/meaning.test.mjs
 import assert from "node:assert/strict";
 import { createReadStream, existsSync, readFileSync } from "node:fs";
@@ -22,7 +22,7 @@ const site = resolve(process.env.PAGE_SITE ?? "site");
 const published = process.env.PAGE_URL;
 const types = { ".html": "text/html", ".mjs": "text/javascript", ".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".wasm": "application/wasm", ".svg": "image/svg+xml", ".webmanifest": "application/manifest+json" };
 const read = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
-const record = read("../../app/specs/product/quality/QR-13.json");
+const record = read("../../app/specs/product/quality/QR-15.json");
 const threshold = Object.fromEntries(record.measures.map((m) => [m.key, m.threshold]));
 const models = read("../../app/specs/models/spec.json");
 const pairs = read("corpus.json").corpus.filter((e) => e.kind === "similarity");
@@ -63,7 +63,7 @@ const origin = async () => {
   return `http://127.0.0.1:${server.address().port}/me`;
 };
 
-test("the meaning model ranks the benchmark's pairs as its annotators do, and near is their same topic (QR-13)", { timeout: 900000 }, async () => {
+test("the meaning model ranks the benchmark's pairs as its annotators do, and near is their same topic (QR-15)", { timeout: 900000 }, async () => {
   assert.equal(PROVIDERS.meaning?.kind, "compiled", "the router spec compiles the meaning model in");
   assert.ok(pairs.length >= 500, "the benchmark's captions are in the corpus");
   const browser = await chromium.launch();
@@ -82,7 +82,7 @@ test("the meaning model ranks the benchmark's pairs as its annotators do, and ne
     assert.ok(cosines, "the meaning model opened");
     const rho = Math.round(100 * spearman(cosines, pairs.map((p) => p.expect.score)));
     const agree = Math.round((100 * pairs.filter((p, i) => (cosines[i] >= PROVIDERS.meaning.near) === (p.expect.score >= SAME_TOPIC)).length) / pairs.length);
-    console.log(`# QR-13 meaning-rank ${rho}, near-agreement ${agree}% over ${pairs.length} pairs at near ${PROVIDERS.meaning.near}`);
+    console.log(`# QR-15 meaning-rank ${rho}, near-agreement ${agree}% over ${pairs.length} pairs at near ${PROVIDERS.meaning.near}`);
     assert.ok(rho >= threshold["meaning-rank"], `"meaning-rank": ${rho}`);
     assert.ok(agree >= threshold["near-agreement"], `"near-agreement": ${agree}`);
   } finally {
@@ -90,7 +90,7 @@ test("the meaning model ranks the benchmark's pairs as its annotators do, and ne
   }
 });
 
-test("Ask finds a kept caption from its pair where their words alone miss each other (QR-13)", { timeout: 900000 }, async () => {
+test("Ask finds a kept caption from its pair where their words alone miss each other (QR-15)", { timeout: 900000 }, async () => {
   const note = (p) => ({ address: p.id, title: p.expect.a, body: p.expect.a, media: "plainText", at: 0 });
   const missed = pairs.filter((p) => p.expect.score >= SOME_DETAILS && !drawOn([note(p)], p.expect.b, { now: 0 }).length);
   assert.ok(missed.length, "the benchmark holds pairs whose words miss each other");
@@ -123,7 +123,7 @@ test("Ask finds a kept caption from its pair where their words alone miss each o
       }
       if (!found) lost.push(p.id);
     }
-    console.log(`# QR-13 meaning-missed ${lost.length} of ${missed.length}`);
+    console.log(`# QR-15 meaning-missed ${lost.length} of ${missed.length}`);
     assert.ok(lost.length <= threshold["meaning-missed"], `"meaning-missed": ${lost.join(", ")}`);
     assert.deepEqual(errors, []);
   } finally {
