@@ -40,7 +40,7 @@ const AXIOMS: &str = "axioms: [Quot.sound, propext]";
 /// `breaksInvNNN` check is false for every request, and that check asks
 /// about the facet's own `judge`.
 fn guarantees(id: &str, module: &str, kind: &str, count: usize) {
-    let prefix = kind.to_lowercase();
+    let prefix = format!("{}{}", kind[..1].to_lowercase(), &kind[1..]);
     let proofs = model(&format!("{module}Proofs.lex.tex"));
     for n in 1..=count {
         let theorem = declaration(&proofs, &format!("inv{n:03}Holds"));
@@ -78,20 +78,20 @@ fn prism_pm_01() {
     let prism = model("Prism.lex.tex");
     let proofs = model("PrismProofs.lex.tex");
     for (facet, module, dispatch) in [
-        ("Boundary", "PrismBoundary", "boundaryDispatch"),
-        ("Learn", "PrismLearning", "learningDispatch"),
+        ("Boundary", "PrismBoundary", "prismBoundaryDispatch"),
+        ("Learn", "PrismLearning", "prismLearningDispatch"),
         ("When", "PrismChronology", "chronologyDispatch"),
-        ("Store", "PrismVaultStore", "storeDispatch"),
-        ("Restore", "PrismVaultRestore", "restoreDispatch"),
-        ("R4", "PrismR4", "r4Dispatch"),
+        ("Store", "PrismVaultStore", "prismVaultStoreDispatch"),
+        ("Restore", "PrismVaultRestore", "prismVaultRestoreDispatch"),
+        ("R4", "PrismR4", "prismR4Dispatch"),
         ("Route", "PrismRoute", "routeDispatch"),
-        ("Google", "PrismGoogle", "googleDispatch"),
-        ("Googlelink", "PrismGoogleLink", "googleLinkDispatch"),
+        ("Google", "PrismGoogle", "prismGoogleDispatch"),
+        ("Googlelink", "PrismGoogleLink", "prismGoogleLinkDispatch"),
         ("Dest", "PrismDest", "destDispatch"),
-        ("Folder", "PrismFolder", "folderDispatch"),
-        ("Host", "PrismHost", "hostDispatch"),
-        ("Source", "PrismSource", "sourceDispatch"),
-        ("Model", "PrismModels", "modelsDispatch"),
+        ("Folder", "PrismFolder", "prismFolderDispatch"),
+        ("Host", "PrismHost", "prismHostDispatch"),
+        ("Source", "PrismSource", "prismSourceDispatch"),
+        ("Model", "PrismModels", "prismModelsDispatch"),
         ("Kappa", "PrismKappa", "kappaDispatch"),
         ("Uorc", "PrismUorc", "uorcDispatch"),
         ("Holon", "PrismHolon", "holonDispatch"),
@@ -129,13 +129,13 @@ fn prism_pm_01() {
 /// `PM-02`: The Boundary denies every move while halted and every move to GitHub or the hosted verifier, never allows detected, restricted or identifying data out, and never sends outbound without the owner's approval
 #[test]
 fn prism_pm_02() {
-    guarantees("PM-02", "PrismBoundary", "Boundary", 7);
+    guarantees("PM-02", "PrismBoundary", "PrismBoundary", 7);
 }
 
 /// `PM-03`: Learning confirms or rejects a belief only on the owner's signal, holds a confirmed or rejected belief against every other signal, and never raises a weight above 15 or lowers it below 1
 #[test]
 fn prism_pm_03() {
-    guarantees("PM-03", "PrismLearning", "Learning", 8);
+    guarantees("PM-03", "PrismLearning", "PrismLearning", 8);
 }
 
 /// `PM-04`: Chronology never names an Allen relation that the two intervals' endpoints contradict, and never calls two well-formed intervals malformed

@@ -1,0 +1,301 @@
+{
+  "comment": "Every part of the Prism answers six questions, after verdant resonance's W5HCertificate (Foundation/Ontology/V1/Model, verifyW5HCertificateComplete) and the six interrogatives of the Zachman framework: what it is, why it is there (the stakeholder concern it answers, through the journey and feature that need it, and what is obstructed without it), who acts in it, where it runs (its boundary), when it acts (its temporal regime) and how it is checked. A part is every tracked module of the page (site/**/*.mjs, site/extension/*.js) and every module of the model (app/src/**/*.lex.tex). tools/parts/gate.py derives each part's answers from the record it already has: the product record's concerns, journeys and features, the coherence registry, the Prism root's dispatch, the imports between parts and the suites and proofs that reach them. Only the strata below are written by hand; each part is grounded in the first stratum whose paths match it, and a part no stratum grounds is refused. A part with an unanswered question is refused unless it is in 'debt', which only shrinks.",
+  "agency": [
+    {
+      "key": "prism",
+      "role": "observer",
+      "prime": 2,
+      "means": "the Prism deciding on its own"
+    },
+    {
+      "key": "source",
+      "role": "medium",
+      "prime": 3,
+      "means": "a service or file the owner's content comes from or goes to"
+    },
+    {
+      "key": "person",
+      "role": "player",
+      "prime": 5,
+      "means": "the owner, by their own press, words or files"
+    },
+    {
+      "key": "builder",
+      "role": "verifier",
+      "prime": 7,
+      "means": "whoever builds the Prism and replays its checks before trusting it"
+    }
+  ],
+  "boundaries": [
+    {
+      "key": "page",
+      "means": "the Prism's page in the owner's browser"
+    },
+    {
+      "key": "worker",
+      "means": "a worker of that page, holding the compiled guests"
+    },
+    {
+      "key": "extension",
+      "means": "the Prism's extension in the owner's browser, carrying the page to the owner's services"
+    },
+    {
+      "key": "kernel",
+      "means": "the proof checker, at build: a model module is checked, never run"
+    },
+    {
+      "key": "suite",
+      "means": "a check outside the browser, run on every change"
+    }
+  ],
+  "regimes": [
+    {
+      "key": "build",
+      "means": "when the Prism is built and checked"
+    },
+    {
+      "key": "open",
+      "means": "when the owner opens the Prism"
+    },
+    {
+      "key": "arrival",
+      "means": "when content arrives from a source"
+    },
+    {
+      "key": "gesture",
+      "means": "when the owner presses, writes or asks"
+    },
+    {
+      "key": "rhythm",
+      "means": "on the owner's own periodicities: the day, the week, before what is next"
+    }
+  ],
+  "strata": [
+    {
+      "key": "harness",
+      "paths": [
+        "site/*/guest.mjs",
+        "site/worker-gate.mjs",
+        "site/vault/test/*"
+      ],
+      "what": "a standalone build or fixture that lets a suite run a decision without the page",
+      "without": "a decision could change without any suite noticing",
+      "who": [
+        "builder"
+      ],
+      "where": "suite",
+      "when": [
+        "build"
+      ],
+      "answers": [
+        "working"
+      ]
+    },
+    {
+      "key": "worker",
+      "paths": [
+        "site/guest-worker.mjs",
+        "site/*/*-worker.mjs"
+      ],
+      "what": "a worker that loads compiled guests and answers the page's requests off the main thread",
+      "without": "every decision would run on the page's thread and stall what the owner sees",
+      "who": [
+        "prism"
+      ],
+      "where": "worker"
+    },
+    {
+      "key": "extension",
+      "paths": [
+        "site/extension/*.js"
+      ],
+      "carriedBy": "site/device/extension.mjs",
+      "what": "a file of the extension, blank until the Prism uses it, that reaches the owner's services where they already are in the browser",
+      "without": "the Prism could not hear from or speak to the owner's services",
+      "who": [
+        "prism",
+        "source"
+      ],
+      "where": "extension"
+    },
+    {
+      "key": "device",
+      "paths": [
+        "site/device/*.mjs"
+      ],
+      "what": "a reader of what the owner's own browser and device already hold",
+      "without": "the Prism would ask the owner to configure what the device already knows",
+      "who": [
+        "prism",
+        "source"
+      ],
+      "where": "page"
+    },
+    {
+      "key": "source",
+      "paths": [
+        "site/source/*.mjs",
+        "site/google/*.mjs"
+      ],
+      "what": "a reader of one source's content in the shape that source sends it",
+      "without": "content from that source would not arrive",
+      "who": [
+        "prism",
+        "source"
+      ],
+      "where": "page"
+    },
+    {
+      "key": "table",
+      "paths": [
+        "site/*/table.mjs"
+      ],
+      "what": "a decision table generated from its specification, the same decisions its guest proves",
+      "without": "the page could not decide the facet's questions as the model does",
+      "who": [
+        "prism"
+      ],
+      "where": "page"
+    },
+    {
+      "key": "page",
+      "paths": [
+        "site/*.mjs",
+        "site/*/*.mjs"
+      ],
+      "what": "a module of the page: what the owner sees and does, and the senses behind it",
+      "without": "a journey the owner makes would not be there",
+      "who": [
+        "prism",
+        "person"
+      ],
+      "where": "page"
+    },
+    {
+      "key": "facet-model",
+      "paths": [
+        "app/src/Architecture.lex.tex",
+        "app/src/Design.lex.tex",
+        "app/src/DesignProofs.lex.tex",
+        "app/src/Features.lex.tex",
+        "app/src/Quality.lex.tex",
+        "app/src/Security.lex.tex",
+        "app/src/Compliance.lex.tex",
+        "app/src/Foundation/Arch.lex.tex",
+        "app/src/Foundation/Qual.lex.tex",
+        "app/src/Foundation/Sec.lex.tex",
+        "app/src/Production/*.lex.tex",
+        "app/src/PrismRealizability*.lex.tex"
+      ],
+      "what": "a facet of the Prism's own model: its architecture, design, features, quality, security, compliance or realizability",
+      "without": "a part could be built that no facet of the model defines or holds to account",
+      "who": [
+        "builder"
+      ],
+      "where": "kernel",
+      "when": [
+        "build"
+      ],
+      "answers": [
+        "working",
+        "serves"
+      ]
+    },
+    {
+      "key": "proof",
+      "paths": [
+        "app/src/*Proofs.lex.tex"
+      ],
+      "proves": true,
+      "what": "constructive proofs that the modules it imports decide as their specifications say",
+      "without": "a decision could disagree with its specification unnoticed",
+      "who": [
+        "builder"
+      ],
+      "where": "kernel",
+      "when": [
+        "build"
+      ]
+    },
+    {
+      "key": "decision",
+      "paths": [
+        "app/src/*.lex.tex",
+        "app/src/Foundation/**/*.lex.tex"
+      ],
+      "what": "a compiled decision or model of the Prism, run in its guest",
+      "without": "the questions it decides would have no answer the owner can trust",
+      "who": [
+        "prism"
+      ],
+      "where": "worker"
+    }
+  ],
+  "debt": {
+    "concerns": {
+      "furthest": "no check yet orders the work by the journey furthest from its target"
+    },
+    "parts": {
+      "site/dest/table.mjs": [
+        "why",
+        "when"
+      ],
+      "site/uorc/table.mjs": [
+        "why",
+        "when"
+      ],
+      "site/extension/bridge.js": [
+        "how"
+      ],
+      "site/extension/seen.js": [
+        "how"
+      ],
+      "site/models/model-worker.mjs": [
+        "why",
+        "when"
+      ],
+      "site/models/models.mjs": [
+        "why",
+        "when"
+      ],
+      "site/r4/decide.mjs": [
+        "why",
+        "when",
+        "how"
+      ],
+      "site/r4/fingerprint.mjs": [
+        "why",
+        "when",
+        "how"
+      ],
+      "site/r4/grant.mjs": [
+        "why",
+        "when",
+        "how"
+      ],
+      "site/r4/pieces.mjs": [
+        "why",
+        "when"
+      ],
+      "site/r4/r4-worker.mjs": [
+        "why",
+        "when",
+        "how"
+      ],
+      "site/r4/r4.mjs": [
+        "why",
+        "when"
+      ],
+      "site/r4/receipt.mjs": [
+        "why",
+        "when",
+        "how"
+      ],
+      "site/r4/store.mjs": [
+        "why",
+        "when",
+        "how"
+      ]
+    }
+  }
+}

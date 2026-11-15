@@ -6,38 +6,38 @@
 \importmodule{Foundation.View.Text.V1.Model}
 \title{Text application model}
 \begin{semanticmodule}
-definition{name: sourceServiceGmail, parameters: [], result: Nat, body: 0}
+definition{name: prismSourceServiceGmail, parameters: [], result: Nat, body: 0}
 
-definition{name: sourceServiceCalendar, parameters: [], result: Nat, body: 1}
+definition{name: prismSourceServiceCalendar, parameters: [], result: Nat, body: 1}
 
-definition{name: sourceServiceDiscord, parameters: [], result: Nat, body: 2}
+definition{name: prismSourceServiceDiscord, parameters: [], result: Nat, body: 2}
 
-definition{name: sourceServiceWhatsapp, parameters: [], result: Nat, body: 3}
+definition{name: prismSourceServiceWhatsapp, parameters: [], result: Nat, body: 3}
 
-definition{name: sourceServiceLinkedin, parameters: [], result: Nat, body: 4}
+definition{name: prismSourceServiceLinkedin, parameters: [], result: Nat, body: 4}
 
-definition{name: sourceServiceOther, parameters: [], result: Nat, body: 5}
+definition{name: prismSourceServiceOther, parameters: [], result: Nat, body: 5}
 
-definition{name: sourceRouteSeen, parameters: [], result: Nat, body: 0}
+definition{name: prismSourceRouteSeen, parameters: [], result: Nat, body: 0}
 
-definition{name: sourceRouteOwn, parameters: [], result: Nat, body: 1}
+definition{name: prismSourceRouteOwn, parameters: [], result: Nat, body: 1}
 
-definition{name: sourceRouteExport, parameters: [], result: Nat, body: 2}
+definition{name: prismSourceRouteExport, parameters: [], result: Nat, body: 2}
 
-definition{name: sourceActRead, parameters: [], result: Nat, body: 0}
+definition{name: prismSourceActRead, parameters: [], result: Nat, body: 0}
 
-definition{name: sourceActWrite, parameters: [], result: Nat, body: 1}
+definition{name: prismSourceActWrite, parameters: [], result: Nat, body: 1}
 
-definition{name: sourceHaltedNo, parameters: [], result: Nat, body: 0}
+definition{name: prismSourceHaltedNo, parameters: [], result: Nat, body: 0}
 
-definition{name: sourceHaltedYes, parameters: [], result: Nat, body: 1}
+definition{name: prismSourceHaltedYes, parameters: [], result: Nat, body: 1}
 
-definition{name: sourceAnswerRead, parameters: [], result: Nat, body: 0}
+definition{name: prismSourceAnswerRead, parameters: [], result: Nat, body: 0}
 
-definition{name: sourceAnswerRefuse, parameters: [], result: Nat, body: 1}
+definition{name: prismSourceAnswerRefuse, parameters: [], result: Nat, body: 1}
 
 structure{
-  name: SourceRequest,
+  name: PrismSourceRequest,
   type_parameters: [],
   parameters: [],
   fields: [
@@ -49,7 +49,7 @@ structure{
 }
 
 definition{
-  name: sourceByteAt,
+  name: prismSourceByteAt,
   parameters: [s : Bytes, i : Nat],
   result: (Option Nat),
   body: (match (prim index s i : (Option UInt8))
@@ -59,66 +59,66 @@ definition{
 }
 
 definition{
-  name: sourceDigitsValue,
+  name: prismSourceDigitsValue,
   parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
   result: (Option Nat),
   body: (match fuel
     | Nat.zero => (ctor Option.some [Nat] acc)
-    | Nat.succ rest => (match (sourceByteAt s i)
+    | Nat.succ rest => (match (prismSourceByteAt s i)
       | Option.none => (ctor Option.none [Nat])
-      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (sourceDigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (prismSourceDigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
-  name: sourceParseDigits,
+  name: prismSourceParseDigits,
   parameters: [s : Bytes],
   result: (Option Nat),
-  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (sourceByteAt s 0)
+  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (prismSourceByteAt s 0)
     | Option.none => (ctor Option.none [Nat])
-    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (sourceDigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
+    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (prismSourceDigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: sourceParseNumber,
+  name: prismSourceParseNumber,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (sourceParseDigits value),
+  body: (prismSourceParseDigits value),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: sourceParseService,
+  name: prismSourceParseService,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x676d61696c : Bool) then (ctor Option.some [Nat] (sourceServiceGmail)) else (if (prim equal value 0x63616c656e646172 : Bool) then (ctor Option.some [Nat] (sourceServiceCalendar)) else (if (prim equal value 0x646973636f7264 : Bool) then (ctor Option.some [Nat] (sourceServiceDiscord)) else (if (prim equal value 0x7768617473617070 : Bool) then (ctor Option.some [Nat] (sourceServiceWhatsapp)) else (if (prim equal value 0x6c696e6b6564696e : Bool) then (ctor Option.some [Nat] (sourceServiceLinkedin)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (sourceServiceOther)) else (ctor Option.none [Nat])))))))
+  body: (if (prim equal value 0x676d61696c : Bool) then (ctor Option.some [Nat] (prismSourceServiceGmail)) else (if (prim equal value 0x63616c656e646172 : Bool) then (ctor Option.some [Nat] (prismSourceServiceCalendar)) else (if (prim equal value 0x646973636f7264 : Bool) then (ctor Option.some [Nat] (prismSourceServiceDiscord)) else (if (prim equal value 0x7768617473617070 : Bool) then (ctor Option.some [Nat] (prismSourceServiceWhatsapp)) else (if (prim equal value 0x6c696e6b6564696e : Bool) then (ctor Option.some [Nat] (prismSourceServiceLinkedin)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (prismSourceServiceOther)) else (ctor Option.none [Nat])))))))
 }
 
 definition{
-  name: sourceParseRoute,
+  name: prismSourceParseRoute,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x7365656e : Bool) then (ctor Option.some [Nat] (sourceRouteSeen)) else (if (prim equal value 0x6f776e : Bool) then (ctor Option.some [Nat] (sourceRouteOwn)) else (if (prim equal value 0x6578706f7274 : Bool) then (ctor Option.some [Nat] (sourceRouteExport)) else (ctor Option.none [Nat]))))
+  body: (if (prim equal value 0x7365656e : Bool) then (ctor Option.some [Nat] (prismSourceRouteSeen)) else (if (prim equal value 0x6f776e : Bool) then (ctor Option.some [Nat] (prismSourceRouteOwn)) else (if (prim equal value 0x6578706f7274 : Bool) then (ctor Option.some [Nat] (prismSourceRouteExport)) else (ctor Option.none [Nat]))))
 }
 
 definition{
-  name: sourceParseAct,
+  name: prismSourceParseAct,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x72656164 : Bool) then (ctor Option.some [Nat] (sourceActRead)) else (if (prim equal value 0x7772697465 : Bool) then (ctor Option.some [Nat] (sourceActWrite)) else (ctor Option.none [Nat])))
+  body: (if (prim equal value 0x72656164 : Bool) then (ctor Option.some [Nat] (prismSourceActRead)) else (if (prim equal value 0x7772697465 : Bool) then (ctor Option.some [Nat] (prismSourceActWrite)) else (ctor Option.none [Nat])))
 }
 
 definition{
-  name: sourceParseHalted,
+  name: prismSourceParseHalted,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (sourceHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (sourceHaltedYes)) else (ctor Option.none [Nat])))
+  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (prismSourceHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (prismSourceHaltedYes)) else (ctor Option.none [Nat])))
 }
 
 definition{
-  name: sourceSliceOf,
+  name: prismSourceSliceOf,
   parameters: [s : Bytes, start : Nat, count : Nat],
   result: Bytes,
   body: (match (prim slice s start count : (Option Bytes))
@@ -127,142 +127,142 @@ definition{
 }
 
 definition{
-  name: sourceFieldEnd,
+  name: prismSourceFieldEnd,
   parameters: [s : Bytes, i : Nat, fuel : Nat],
   result: Nat,
   body: (match fuel
     | Nat.zero => i
-    | Nat.succ rest => (match (sourceByteAt s i)
+    | Nat.succ rest => (match (prismSourceByteAt s i)
       | Option.none => i
-      | Option.some d => (if (d =? 32) then i else (sourceFieldEnd s (i + 1) rest)))),
+      | Option.some d => (if (d =? 32) then i else (prismSourceFieldEnd s (i + 1) rest)))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
-  name: sourceDecodeField4,
+  name: prismSourceDecodeField4,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
-  result: (Option SourceRequest),
-  body: (let e : Nat := (sourceFieldEnd s start (Foundation.Bytes::byteLength s)); (match (sourceParseHalted (sourceSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [SourceRequest])
-    | Option.some v4 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [SourceRequest] (record SourceRequest {service := v1, route := v2, act := v3, halted := v4})) else (ctor Option.none [SourceRequest])))),
+  result: (Option PrismSourceRequest),
+  body: (let e : Nat := (prismSourceFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismSourceParseHalted (prismSourceSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismSourceRequest])
+    | Option.some v4 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [PrismSourceRequest] (record PrismSourceRequest {service := v1, route := v2, act := v3, halted := v4})) else (ctor Option.none [PrismSourceRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: sourceDecodeField3,
+  name: prismSourceDecodeField3,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
-  result: (Option SourceRequest),
-  body: (let e : Nat := (sourceFieldEnd s start (Foundation.Bytes::byteLength s)); (match (sourceParseAct (sourceSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [SourceRequest])
-    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (sourceDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [SourceRequest])))),
+  result: (Option PrismSourceRequest),
+  body: (let e : Nat := (prismSourceFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismSourceParseAct (prismSourceSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismSourceRequest])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismSourceDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [PrismSourceRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: sourceDecodeField2,
+  name: prismSourceDecodeField2,
   parameters: [s : Bytes, start : Nat, v1 : Nat],
-  result: (Option SourceRequest),
-  body: (let e : Nat := (sourceFieldEnd s start (Foundation.Bytes::byteLength s)); (match (sourceParseRoute (sourceSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [SourceRequest])
-    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (sourceDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [SourceRequest])))),
+  result: (Option PrismSourceRequest),
+  body: (let e : Nat := (prismSourceFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismSourceParseRoute (prismSourceSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismSourceRequest])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismSourceDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [PrismSourceRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: sourceDecodeField1,
+  name: prismSourceDecodeField1,
   parameters: [s : Bytes, start : Nat],
-  result: (Option SourceRequest),
-  body: (let e : Nat := (sourceFieldEnd s start (Foundation.Bytes::byteLength s)); (match (sourceParseService (sourceSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [SourceRequest])
-    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (sourceDecodeField2 s (e + 1) v1) else (ctor Option.none [SourceRequest])))),
+  result: (Option PrismSourceRequest),
+  body: (let e : Nat := (prismSourceFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismSourceParseService (prismSourceSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismSourceRequest])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismSourceDecodeField2 s (e + 1) v1) else (ctor Option.none [PrismSourceRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: sourceRule1,
-  parameters: [request : SourceRequest],
+  name: prismSourceRule1,
+  parameters: [request : PrismSourceRequest],
   result: Bool,
-  body: ((project request halted) =? (sourceHaltedYes))
+  body: ((project request halted) =? (prismSourceHaltedYes))
 }
 
 definition{
-  name: sourceRule2,
-  parameters: [request : SourceRequest],
+  name: prismSourceRule2,
+  parameters: [request : PrismSourceRequest],
   result: Bool,
-  body: ((project request act) =? (sourceActWrite))
+  body: ((project request act) =? (prismSourceActWrite))
 }
 
 definition{
-  name: sourceRule3,
-  parameters: [request : SourceRequest],
+  name: prismSourceRule3,
+  parameters: [request : PrismSourceRequest],
   result: Bool,
-  body: ((project request service) =? (sourceServiceOther))
+  body: ((project request service) =? (prismSourceServiceOther))
 }
 
 definition{
-  name: sourceRule4,
-  parameters: [request : SourceRequest],
+  name: prismSourceRule4,
+  parameters: [request : PrismSourceRequest],
   result: Bool,
-  body: (((project request service) =? (sourceServiceWhatsapp)) && ((project request route) =? (sourceRouteOwn)))
+  body: (((project request service) =? (prismSourceServiceWhatsapp)) && ((project request route) =? (prismSourceRouteOwn)))
 }
 
 definition{
-  name: sourceRule4Misses,
-  parameters: [request : SourceRequest],
+  name: prismSourceRule5,
+  parameters: [request : PrismSourceRequest],
   result: Bool,
-  body: ((((project request service) <? (sourceServiceWhatsapp)) || ((sourceServiceWhatsapp) <? (project request service))) || (((project request route) <? (sourceRouteOwn)) || ((sourceRouteOwn) <? (project request route))))
+  body: (((project request service) =? (prismSourceServiceDiscord)) && ((project request route) =? (prismSourceRouteOwn)))
 }
 
 definition{
-  name: sourceRule5,
-  parameters: [request : SourceRequest],
+  name: prismSourceRule6,
+  parameters: [request : PrismSourceRequest],
   result: Bool,
-  body: (((project request service) =? (sourceServiceDiscord)) && ((project request route) =? (sourceRouteOwn)))
+  body: (((project request service) =? (prismSourceServiceLinkedin)) && ((project request route) =? (prismSourceRouteOwn)))
 }
 
 definition{
-  name: sourceRule5Misses,
-  parameters: [request : SourceRequest],
+  name: prismSourceRule4Misses,
+  parameters: [request : PrismSourceRequest],
   result: Bool,
-  body: ((((project request service) <? (sourceServiceDiscord)) || ((sourceServiceDiscord) <? (project request service))) || (((project request route) <? (sourceRouteOwn)) || ((sourceRouteOwn) <? (project request route))))
+  body: ((((project request service) <? (prismSourceServiceWhatsapp)) || ((prismSourceServiceWhatsapp) <? (project request service))) || (((project request route) <? (prismSourceRouteOwn)) || ((prismSourceRouteOwn) <? (project request route))))
 }
 
 definition{
-  name: sourceRule6,
-  parameters: [request : SourceRequest],
+  name: prismSourceRule5Misses,
+  parameters: [request : PrismSourceRequest],
   result: Bool,
-  body: (((project request service) =? (sourceServiceLinkedin)) && ((project request route) =? (sourceRouteOwn)))
+  body: ((((project request service) <? (prismSourceServiceDiscord)) || ((prismSourceServiceDiscord) <? (project request service))) || (((project request route) <? (prismSourceRouteOwn)) || ((prismSourceRouteOwn) <? (project request route))))
 }
 
 definition{
-  name: sourceRule6Misses,
-  parameters: [request : SourceRequest],
+  name: prismSourceRule6Misses,
+  parameters: [request : PrismSourceRequest],
   result: Bool,
-  body: ((((project request service) <? (sourceServiceLinkedin)) || ((sourceServiceLinkedin) <? (project request service))) || (((project request route) <? (sourceRouteOwn)) || ((sourceRouteOwn) <? (project request route))))
+  body: ((((project request service) <? (prismSourceServiceLinkedin)) || ((prismSourceServiceLinkedin) <? (project request service))) || (((project request route) <? (prismSourceRouteOwn)) || ((prismSourceRouteOwn) <? (project request route))))
 }
 
 definition{
-  name: sourceJudge,
-  parameters: [request : SourceRequest],
+  name: prismSourceJudge,
+  parameters: [request : PrismSourceRequest],
   result: Nat,
-  body: (if (sourceRule1 request) then (sourceAnswerRefuse) else (if (sourceRule2 request) then (sourceAnswerRefuse) else (if (sourceRule3 request) then (sourceAnswerRefuse) else (if (sourceRule4Misses request) then (if (sourceRule5Misses request) then (if (sourceRule6Misses request) then (sourceAnswerRead) else (sourceAnswerRefuse)) else (sourceAnswerRefuse)) else (sourceAnswerRefuse)))))
+  body: (if (prismSourceRule1 request) then (prismSourceAnswerRefuse) else (if (prismSourceRule2 request) then (prismSourceAnswerRefuse) else (if (prismSourceRule3 request) then (prismSourceAnswerRefuse) else (if (prismSourceRule4Misses request) then (if (prismSourceRule5Misses request) then (if (prismSourceRule6Misses request) then (prismSourceAnswerRead) else (prismSourceAnswerRefuse)) else (prismSourceAnswerRefuse)) else (prismSourceAnswerRefuse)))))
 }
 
 definition{
-  name: sourceEncodeAnswer,
+  name: prismSourceEncodeAnswer,
   parameters: [code : Nat],
   result: Bytes,
-  body: (if (code =? (sourceAnswerRead)) then 0x72656164 else (if (code =? (sourceAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964))
+  body: (if (code =? (prismSourceAnswerRead)) then 0x72656164 else (if (code =? (prismSourceAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964))
 }
 
 definition{
-  name: sourceDispatch,
+  name: prismSourceDispatch,
   parameters: [value : Bytes],
   result: Bytes,
-  body: (if (112 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (sourceDecodeField1 value 0)
+  body: (if (112 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (prismSourceDecodeField1 value 0)
     | Option.none => 0x696e76616c6964
-    | Option.some request => (sourceEncodeAnswer (sourceJudge request)))),
+    | Option.some request => (prismSourceEncodeAnswer (prismSourceJudge request)))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

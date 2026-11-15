@@ -37,7 +37,7 @@ or test is added without the other two.
 | `lexlean verify` (`RZ-01`) | the vault store's judge answers `storehash` where its spec says `store` | rejected (LLV7002 on `PrismRealizabilityProofs`: `rfl` failed on the witness pairs); restoring the judge verifies all 64 realizability theorems with no axioms |
 | `tools/surface/gen.py --check` (`PG-02`) | the look's dark `muted` tone darkened to `#3a4a42` in `app/specs/surface/spec.json` | rejected (`surface: muted on ground reads at 2.03 in dark, under its 4.5`); restoring the tone reports `surface: current` |
 | `test/page/voice.test.mjs` (`VO-01`) | `site/voice.mjs` sounds an answer under Quiet (`if (true) sound(`) | rejected (`Quiet sounds nothing`); restoring `if (!quiet) sound(` passes |
-| `prism_pm_01` | `routesBoundary` states that the boundary facet answers with `PrismLearning::learningDispatch` | rejected (`PM-01: routesBoundary must prove the Boundary facet answers with PrismBoundary::boundaryDispatch`); restoring the statement passes |
+| `prism_pm_01` | `routesBoundary` states that the boundary facet answers with `PrismLearning::prismLearningDispatch` | rejected (`PM-01: routesBoundary must prove the Boundary facet answers with PrismBoundary::prismBoundaryDispatch`); restoring the statement passes |
 | `prismpm verify` | an acceptance vector set without the exact guest-allocation boundary | rejected (PP2009); seen again on the Prism root before its 1024-byte vector was added |
 | `audit-bootstrap` | a floating/copied action, mutable SDK tag, changed universal file, narrowed boundary, shallow/credential-retaining checkout, copied project renderer, omitted standards lock, acceptance bypass, deploy-job signing privilege, incomplete release lifecycle, or a bootstrap that drops a native architecture from main or tags, cancels or replaces a main run, or skips runs by path, condition or matrix exclusion | all rejected |
 | `audit-bootstrap` (`proof_reuse_is_confined`) | a cache key that omits any one of its eight proof inputs, the SDK digest named by a constant, the Lean toolchain read from another file, the ref spliced into the script or dropped, the event line removed, reuse on a tag or on any event, reuse without the read-time check, a stale kept proof surviving a full proof, a recipe that stops proving or keeps a proof without its inputs, a second use of the event, an early exit, and the `merge_group` trigger dropped | all rejected |
@@ -359,7 +359,7 @@ outside the SDK image; the SDK checks run in the pull request's bootstrap job.
 
 `app/` is one Prism text application whose root is `app/src/Prism.lex.tex`,
 written by `tools/prism_root.py`. A request is `<facet> <rest>`. The root reads
-the first word, routes `rest` to that facet's dispatch (`boundaryDispatch`, `learningDispatch`, `chronologyDispatch`), and answers
+the first word, routes `rest` to that facet's dispatch (`prismBoundaryDispatch`, `prismLearningDispatch`, `chronologyDispatch`), and answers
 `invalid request` for an unknown facet, an empty rest or a request over 512
 bytes. The facets are library modules with no `application` record of their
 own, because `prismpm` admits one application root per product (`PP2001`):
@@ -383,7 +383,7 @@ the compiled guest, including the 512, 513 and 1024 byte boundaries.
 
 The holo build compiles every module into one Rust crate, so every type and
 definition name is unique across `app/src`: a facet prefixes its own names
-(`BoundaryRequest`, `boundaryJudge`). The first build of the combined product
+(`BoundaryRequest`, `prismBoundaryJudge`). The first build of the combined product
 failed with `PP5008: two Lean types share the last name component Request`
 and then with Rust `E0428` duplicate definitions until they were prefixed.
 

@@ -118,18 +118,18 @@ fn r4_r4_01() {
         );
     }
     for n in 1..=7 {
-        let theorem = declaration(&proofs, &format!("r4Inv00{n}Holds"));
+        let theorem = declaration(&proofs, &format!("inv00{n}Holds"));
         assert!(
-            theorem.contains("parameters: [request : PrismR4::R4Request],")
-                && theorem.contains(&format!("statement: ((r4BreaksInv00{n} request) = false),"))
+            theorem.contains("parameters: [request : PrismR4::PrismR4Request],")
+                && theorem.contains(&format!("statement: ((breaksInv00{n} request) = false),"))
                 && theorem.contains("axioms: [Quot.sound, propext]"),
             "R4-01: guarantee {n} changed its statement or axioms:\n{theorem}"
         );
     }
     // INV-001: wrong weight bytes are never answered from.
     assert!(
-        declaration(&proofs, "r4BreaksInv001").contains(
-            "((project request weights) =? (PrismR4::r4WeightsMismatch))) && ((PrismR4::r4Judge request) =? (PrismR4::r4AnswerAnswer))"
+        declaration(&proofs, "breaksInv001").contains(
+            "((project request weights) =? (PrismR4::prismR4WeightsMismatch))) && ((PrismR4::prismR4Judge request) =? (PrismR4::prismR4AnswerAnswer))"
         ),
         "R4-01: INV-001 no longer says mismatched weights are never answered from"
     );

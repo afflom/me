@@ -29,7 +29,7 @@
 theorem{
   name: routesBoundary,
   parameters: [rest : Bytes],
-  statement: ((Prism::route (Prism::facetBoundary) rest) = (PrismBoundary::boundaryDispatch rest)),
+  statement: ((Prism::route (Prism::facetBoundary) rest) = (PrismBoundary::prismBoundaryDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }
@@ -37,7 +37,7 @@ theorem{
 theorem{
   name: routesLearn,
   parameters: [rest : Bytes],
-  statement: ((Prism::route (Prism::facetLearn) rest) = (PrismLearning::learningDispatch rest)),
+  statement: ((Prism::route (Prism::facetLearn) rest) = (PrismLearning::prismLearningDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }
@@ -53,7 +53,7 @@ theorem{
 theorem{
   name: routesStore,
   parameters: [rest : Bytes],
-  statement: ((Prism::route (Prism::facetStore) rest) = (PrismVaultStore::storeDispatch rest)),
+  statement: ((Prism::route (Prism::facetStore) rest) = (PrismVaultStore::prismVaultStoreDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }
@@ -61,7 +61,7 @@ theorem{
 theorem{
   name: routesRestore,
   parameters: [rest : Bytes],
-  statement: ((Prism::route (Prism::facetRestore) rest) = (PrismVaultRestore::restoreDispatch rest)),
+  statement: ((Prism::route (Prism::facetRestore) rest) = (PrismVaultRestore::prismVaultRestoreDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }
@@ -69,7 +69,7 @@ theorem{
 theorem{
   name: routesR4,
   parameters: [rest : Bytes],
-  statement: ((Prism::route (Prism::facetR4) rest) = (PrismR4::r4Dispatch rest)),
+  statement: ((Prism::route (Prism::facetR4) rest) = (PrismR4::prismR4Dispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }
@@ -85,7 +85,7 @@ theorem{
 theorem{
   name: routesGoogle,
   parameters: [rest : Bytes],
-  statement: ((Prism::route (Prism::facetGoogle) rest) = (PrismGoogle::googleDispatch rest)),
+  statement: ((Prism::route (Prism::facetGoogle) rest) = (PrismGoogle::prismGoogleDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }
@@ -93,7 +93,7 @@ theorem{
 theorem{
   name: routesGooglelink,
   parameters: [rest : Bytes],
-  statement: ((Prism::route (Prism::facetGooglelink) rest) = (PrismGoogleLink::googleLinkDispatch rest)),
+  statement: ((Prism::route (Prism::facetGooglelink) rest) = (PrismGoogleLink::prismGoogleLinkDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }
@@ -109,7 +109,7 @@ theorem{
 theorem{
   name: routesFolder,
   parameters: [rest : Bytes],
-  statement: ((Prism::route (Prism::facetFolder) rest) = (PrismFolder::folderDispatch rest)),
+  statement: ((Prism::route (Prism::facetFolder) rest) = (PrismFolder::prismFolderDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }
@@ -117,7 +117,7 @@ theorem{
 theorem{
   name: routesHost,
   parameters: [rest : Bytes],
-  statement: ((Prism::route (Prism::facetHost) rest) = (PrismHost::hostDispatch rest)),
+  statement: ((Prism::route (Prism::facetHost) rest) = (PrismHost::prismHostDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }
@@ -125,7 +125,7 @@ theorem{
 theorem{
   name: routesSource,
   parameters: [rest : Bytes],
-  statement: ((Prism::route (Prism::facetSource) rest) = (PrismSource::sourceDispatch rest)),
+  statement: ((Prism::route (Prism::facetSource) rest) = (PrismSource::prismSourceDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }
@@ -133,7 +133,7 @@ theorem{
 theorem{
   name: routesModel,
   parameters: [rest : Bytes],
-  statement: ((Prism::route (Prism::facetModel) rest) = (PrismModels::modelsDispatch rest)),
+  statement: ((Prism::route (Prism::facetModel) rest) = (PrismModels::prismModelsDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }

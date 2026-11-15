@@ -6,50 +6,50 @@
 \importmodule{Foundation.View.Text.V1.Model}
 \title{Text application model}
 \begin{semanticmodule}
-definition{name: r4ModeCompiled, parameters: [], result: Nat, body: 0}
+definition{name: prismR4ModeCompiled, parameters: [], result: Nat, body: 0}
 
-definition{name: r4ModeInprism, parameters: [], result: Nat, body: 1}
+definition{name: prismR4ModeInprism, parameters: [], result: Nat, body: 1}
 
-definition{name: r4ModeRouted, parameters: [], result: Nat, body: 2}
+definition{name: prismR4ModeRouted, parameters: [], result: Nat, body: 2}
 
-definition{name: r4EngineMatch, parameters: [], result: Nat, body: 0}
+definition{name: prismR4EngineMatch, parameters: [], result: Nat, body: 0}
 
-definition{name: r4EngineMismatch, parameters: [], result: Nat, body: 1}
+definition{name: prismR4EngineMismatch, parameters: [], result: Nat, body: 1}
 
-definition{name: r4EngineMissing, parameters: [], result: Nat, body: 2}
+definition{name: prismR4EngineMissing, parameters: [], result: Nat, body: 2}
 
-definition{name: r4WeightsMatch, parameters: [], result: Nat, body: 0}
+definition{name: prismR4WeightsMatch, parameters: [], result: Nat, body: 0}
 
-definition{name: r4WeightsMismatch, parameters: [], result: Nat, body: 1}
+definition{name: prismR4WeightsMismatch, parameters: [], result: Nat, body: 1}
 
-definition{name: r4WeightsMissing, parameters: [], result: Nat, body: 2}
+definition{name: prismR4WeightsMissing, parameters: [], result: Nat, body: 2}
 
-definition{name: r4WeightsNone, parameters: [], result: Nat, body: 3}
+definition{name: prismR4WeightsNone, parameters: [], result: Nat, body: 3}
 
-definition{name: r4RouteNone, parameters: [], result: Nat, body: 0}
+definition{name: prismR4RouteNone, parameters: [], result: Nat, body: 0}
 
-definition{name: r4RouteGranted, parameters: [], result: Nat, body: 1}
+definition{name: prismR4RouteGranted, parameters: [], result: Nat, body: 1}
 
-definition{name: r4RouteUngranted, parameters: [], result: Nat, body: 2}
+definition{name: prismR4RouteUngranted, parameters: [], result: Nat, body: 2}
 
-definition{name: r4BoundaryAllow, parameters: [], result: Nat, body: 0}
+definition{name: prismR4BoundaryAllow, parameters: [], result: Nat, body: 0}
 
-definition{name: r4BoundaryHashonly, parameters: [], result: Nat, body: 1}
+definition{name: prismR4BoundaryHashonly, parameters: [], result: Nat, body: 1}
 
-definition{name: r4BoundaryAsk, parameters: [], result: Nat, body: 2}
+definition{name: prismR4BoundaryAsk, parameters: [], result: Nat, body: 2}
 
-definition{name: r4BoundaryDeny, parameters: [], result: Nat, body: 3}
+definition{name: prismR4BoundaryDeny, parameters: [], result: Nat, body: 3}
 
-definition{name: r4AnswerAnswer, parameters: [], result: Nat, body: 0}
+definition{name: prismR4AnswerAnswer, parameters: [], result: Nat, body: 0}
 
-definition{name: r4AnswerReceipt, parameters: [], result: Nat, body: 1}
+definition{name: prismR4AnswerReceipt, parameters: [], result: Nat, body: 1}
 
-definition{name: r4AnswerAsk, parameters: [], result: Nat, body: 2}
+definition{name: prismR4AnswerAsk, parameters: [], result: Nat, body: 2}
 
-definition{name: r4AnswerRefuse, parameters: [], result: Nat, body: 3}
+definition{name: prismR4AnswerRefuse, parameters: [], result: Nat, body: 3}
 
 structure{
-  name: R4Request,
+  name: PrismR4Request,
   type_parameters: [],
   parameters: [],
   fields: [
@@ -62,7 +62,7 @@ structure{
 }
 
 definition{
-  name: r4ByteAt,
+  name: prismR4ByteAt,
   parameters: [s : Bytes, i : Nat],
   result: (Option Nat),
   body: (match (prim index s i : (Option UInt8))
@@ -72,73 +72,73 @@ definition{
 }
 
 definition{
-  name: r4DigitsValue,
+  name: prismR4DigitsValue,
   parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
   result: (Option Nat),
   body: (match fuel
     | Nat.zero => (ctor Option.some [Nat] acc)
-    | Nat.succ rest => (match (r4ByteAt s i)
+    | Nat.succ rest => (match (prismR4ByteAt s i)
       | Option.none => (ctor Option.none [Nat])
-      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (r4DigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (prismR4DigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
-  name: r4ParseDigits,
+  name: prismR4ParseDigits,
   parameters: [s : Bytes],
   result: (Option Nat),
-  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (r4ByteAt s 0)
+  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (prismR4ByteAt s 0)
     | Option.none => (ctor Option.none [Nat])
-    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (r4DigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
+    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (prismR4DigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: r4ParseNumber,
+  name: prismR4ParseNumber,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (r4ParseDigits value),
+  body: (prismR4ParseDigits value),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: r4ParseMode,
+  name: prismR4ParseMode,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x636f6d70696c6564 : Bool) then (ctor Option.some [Nat] (r4ModeCompiled)) else (if (prim equal value 0x696e707269736d : Bool) then (ctor Option.some [Nat] (r4ModeInprism)) else (if (prim equal value 0x726f75746564 : Bool) then (ctor Option.some [Nat] (r4ModeRouted)) else (ctor Option.none [Nat]))))
+  body: (if (prim equal value 0x636f6d70696c6564 : Bool) then (ctor Option.some [Nat] (prismR4ModeCompiled)) else (if (prim equal value 0x696e707269736d : Bool) then (ctor Option.some [Nat] (prismR4ModeInprism)) else (if (prim equal value 0x726f75746564 : Bool) then (ctor Option.some [Nat] (prismR4ModeRouted)) else (ctor Option.none [Nat]))))
 }
 
 definition{
-  name: r4ParseEngine,
+  name: prismR4ParseEngine,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x6d61746368 : Bool) then (ctor Option.some [Nat] (r4EngineMatch)) else (if (prim equal value 0x6d69736d61746368 : Bool) then (ctor Option.some [Nat] (r4EngineMismatch)) else (if (prim equal value 0x6d697373696e67 : Bool) then (ctor Option.some [Nat] (r4EngineMissing)) else (ctor Option.none [Nat]))))
+  body: (if (prim equal value 0x6d61746368 : Bool) then (ctor Option.some [Nat] (prismR4EngineMatch)) else (if (prim equal value 0x6d69736d61746368 : Bool) then (ctor Option.some [Nat] (prismR4EngineMismatch)) else (if (prim equal value 0x6d697373696e67 : Bool) then (ctor Option.some [Nat] (prismR4EngineMissing)) else (ctor Option.none [Nat]))))
 }
 
 definition{
-  name: r4ParseWeights,
+  name: prismR4ParseWeights,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x6d61746368 : Bool) then (ctor Option.some [Nat] (r4WeightsMatch)) else (if (prim equal value 0x6d69736d61746368 : Bool) then (ctor Option.some [Nat] (r4WeightsMismatch)) else (if (prim equal value 0x6d697373696e67 : Bool) then (ctor Option.some [Nat] (r4WeightsMissing)) else (if (prim equal value 0x6e6f6e65 : Bool) then (ctor Option.some [Nat] (r4WeightsNone)) else (ctor Option.none [Nat])))))
+  body: (if (prim equal value 0x6d61746368 : Bool) then (ctor Option.some [Nat] (prismR4WeightsMatch)) else (if (prim equal value 0x6d69736d61746368 : Bool) then (ctor Option.some [Nat] (prismR4WeightsMismatch)) else (if (prim equal value 0x6d697373696e67 : Bool) then (ctor Option.some [Nat] (prismR4WeightsMissing)) else (if (prim equal value 0x6e6f6e65 : Bool) then (ctor Option.some [Nat] (prismR4WeightsNone)) else (ctor Option.none [Nat])))))
 }
 
 definition{
-  name: r4ParseRoute,
+  name: prismR4ParseRoute,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x6e6f6e65 : Bool) then (ctor Option.some [Nat] (r4RouteNone)) else (if (prim equal value 0x6772616e746564 : Bool) then (ctor Option.some [Nat] (r4RouteGranted)) else (if (prim equal value 0x756e6772616e746564 : Bool) then (ctor Option.some [Nat] (r4RouteUngranted)) else (ctor Option.none [Nat]))))
+  body: (if (prim equal value 0x6e6f6e65 : Bool) then (ctor Option.some [Nat] (prismR4RouteNone)) else (if (prim equal value 0x6772616e746564 : Bool) then (ctor Option.some [Nat] (prismR4RouteGranted)) else (if (prim equal value 0x756e6772616e746564 : Bool) then (ctor Option.some [Nat] (prismR4RouteUngranted)) else (ctor Option.none [Nat]))))
 }
 
 definition{
-  name: r4ParseBoundary,
+  name: prismR4ParseBoundary,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x616c6c6f77 : Bool) then (ctor Option.some [Nat] (r4BoundaryAllow)) else (if (prim equal value 0x686173686f6e6c79 : Bool) then (ctor Option.some [Nat] (r4BoundaryHashonly)) else (if (prim equal value 0x61736b : Bool) then (ctor Option.some [Nat] (r4BoundaryAsk)) else (if (prim equal value 0x64656e79 : Bool) then (ctor Option.some [Nat] (r4BoundaryDeny)) else (ctor Option.none [Nat])))))
+  body: (if (prim equal value 0x616c6c6f77 : Bool) then (ctor Option.some [Nat] (prismR4BoundaryAllow)) else (if (prim equal value 0x686173686f6e6c79 : Bool) then (ctor Option.some [Nat] (prismR4BoundaryHashonly)) else (if (prim equal value 0x61736b : Bool) then (ctor Option.some [Nat] (prismR4BoundaryAsk)) else (if (prim equal value 0x64656e79 : Bool) then (ctor Option.some [Nat] (prismR4BoundaryDeny)) else (ctor Option.none [Nat])))))
 }
 
 definition{
-  name: r4SliceOf,
+  name: prismR4SliceOf,
   parameters: [s : Bytes, start : Nat, count : Nat],
   result: Bytes,
   body: (match (prim slice s start count : (Option Bytes))
@@ -147,208 +147,229 @@ definition{
 }
 
 definition{
-  name: r4FieldEnd,
+  name: prismR4FieldEnd,
   parameters: [s : Bytes, i : Nat, fuel : Nat],
   result: Nat,
   body: (match fuel
     | Nat.zero => i
-    | Nat.succ rest => (match (r4ByteAt s i)
+    | Nat.succ rest => (match (prismR4ByteAt s i)
       | Option.none => i
-      | Option.some d => (if (d =? 32) then i else (r4FieldEnd s (i + 1) rest)))),
+      | Option.some d => (if (d =? 32) then i else (prismR4FieldEnd s (i + 1) rest)))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
-  name: r4DecodeField5,
+  name: prismR4DecodeField5,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat],
-  result: (Option R4Request),
-  body: (let e : Nat := (r4FieldEnd s start (Foundation.Bytes::byteLength s)); (match (r4ParseBoundary (r4SliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [R4Request])
-    | Option.some v5 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [R4Request] (record R4Request {mode := v1, engine := v2, weights := v3, route := v4, boundary := v5})) else (ctor Option.none [R4Request])))),
+  result: (Option PrismR4Request),
+  body: (let e : Nat := (prismR4FieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismR4ParseBoundary (prismR4SliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismR4Request])
+    | Option.some v5 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [PrismR4Request] (record PrismR4Request {mode := v1, engine := v2, weights := v3, route := v4, boundary := v5})) else (ctor Option.none [PrismR4Request])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: r4DecodeField4,
+  name: prismR4DecodeField4,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
-  result: (Option R4Request),
-  body: (let e : Nat := (r4FieldEnd s start (Foundation.Bytes::byteLength s)); (match (r4ParseRoute (r4SliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [R4Request])
-    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (r4DecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [R4Request])))),
+  result: (Option PrismR4Request),
+  body: (let e : Nat := (prismR4FieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismR4ParseRoute (prismR4SliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismR4Request])
+    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismR4DecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [PrismR4Request])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: r4DecodeField3,
+  name: prismR4DecodeField3,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
-  result: (Option R4Request),
-  body: (let e : Nat := (r4FieldEnd s start (Foundation.Bytes::byteLength s)); (match (r4ParseWeights (r4SliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [R4Request])
-    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (r4DecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [R4Request])))),
+  result: (Option PrismR4Request),
+  body: (let e : Nat := (prismR4FieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismR4ParseWeights (prismR4SliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismR4Request])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismR4DecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [PrismR4Request])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: r4DecodeField2,
+  name: prismR4DecodeField2,
   parameters: [s : Bytes, start : Nat, v1 : Nat],
-  result: (Option R4Request),
-  body: (let e : Nat := (r4FieldEnd s start (Foundation.Bytes::byteLength s)); (match (r4ParseEngine (r4SliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [R4Request])
-    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (r4DecodeField3 s (e + 1) v1 v2) else (ctor Option.none [R4Request])))),
+  result: (Option PrismR4Request),
+  body: (let e : Nat := (prismR4FieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismR4ParseEngine (prismR4SliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismR4Request])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismR4DecodeField3 s (e + 1) v1 v2) else (ctor Option.none [PrismR4Request])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: r4DecodeField1,
+  name: prismR4DecodeField1,
   parameters: [s : Bytes, start : Nat],
-  result: (Option R4Request),
-  body: (let e : Nat := (r4FieldEnd s start (Foundation.Bytes::byteLength s)); (match (r4ParseMode (r4SliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [R4Request])
-    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (r4DecodeField2 s (e + 1) v1) else (ctor Option.none [R4Request])))),
+  result: (Option PrismR4Request),
+  body: (let e : Nat := (prismR4FieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismR4ParseMode (prismR4SliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismR4Request])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismR4DecodeField2 s (e + 1) v1) else (ctor Option.none [PrismR4Request])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: r4Rule1,
-  parameters: [request : R4Request],
+  name: prismR4Rule1,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: (not ((project request engine) =? (r4EngineMatch)))
+  body: (not ((project request engine) =? (prismR4EngineMatch)))
 }
 
 definition{
-  name: r4Rule1Misses,
-  parameters: [request : R4Request],
+  name: prismR4Rule2,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: ((project request engine) =? (r4EngineMatch))
+  body: ((project request weights) =? (prismR4WeightsMismatch))
 }
 
 definition{
-  name: r4Rule2,
-  parameters: [request : R4Request],
+  name: prismR4Rule3,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: ((project request weights) =? (r4WeightsMismatch))
+  body: (((project request mode) =? (prismR4ModeCompiled)) && (not ((project request weights) =? (prismR4WeightsNone))))
 }
 
 definition{
-  name: r4Rule3,
-  parameters: [request : R4Request],
+  name: prismR4Rule4,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: (((project request mode) =? (r4ModeCompiled)) && (not ((project request weights) =? (r4WeightsNone))))
+  body: (((project request mode) =? (prismR4ModeCompiled)) && (not ((project request route) =? (prismR4RouteNone))))
 }
 
 definition{
-  name: r4Rule3Misses,
-  parameters: [request : R4Request],
+  name: prismR4Rule5,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: ((((project request mode) <? (r4ModeCompiled)) || ((r4ModeCompiled) <? (project request mode))) || ((project request weights) =? (r4WeightsNone)))
+  body: (((project request mode) =? (prismR4ModeInprism)) && (not ((project request weights) =? (prismR4WeightsMatch))))
 }
 
 definition{
-  name: r4Rule4,
-  parameters: [request : R4Request],
+  name: prismR4Rule6,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: (((project request mode) =? (r4ModeCompiled)) && (not ((project request route) =? (r4RouteNone))))
+  body: (((project request mode) =? (prismR4ModeInprism)) && (not ((project request route) =? (prismR4RouteNone))))
 }
 
 definition{
-  name: r4Rule4Misses,
-  parameters: [request : R4Request],
+  name: prismR4Rule7,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: ((((project request mode) <? (r4ModeCompiled)) || ((r4ModeCompiled) <? (project request mode))) || ((project request route) =? (r4RouteNone)))
+  body: (((project request mode) =? (prismR4ModeRouted)) && (not ((project request route) =? (prismR4RouteGranted))))
 }
 
 definition{
-  name: r4Rule5,
-  parameters: [request : R4Request],
+  name: prismR4Rule8,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: (((project request mode) =? (r4ModeInprism)) && (not ((project request weights) =? (r4WeightsMatch))))
+  body: ((project request weights) =? (prismR4WeightsMissing))
 }
 
 definition{
-  name: r4Rule5Misses,
-  parameters: [request : R4Request],
+  name: prismR4Rule9,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: ((((project request mode) <? (r4ModeInprism)) || ((r4ModeInprism) <? (project request mode))) || ((project request weights) =? (r4WeightsMatch)))
+  body: ((project request boundary) =? (prismR4BoundaryDeny))
 }
 
 definition{
-  name: r4Rule6,
-  parameters: [request : R4Request],
+  name: prismR4Rule10,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: (((project request mode) =? (r4ModeInprism)) && (not ((project request route) =? (r4RouteNone))))
+  body: ((project request boundary) =? (prismR4BoundaryAsk))
 }
 
 definition{
-  name: r4Rule6Misses,
-  parameters: [request : R4Request],
+  name: prismR4Rule11,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: ((((project request mode) <? (r4ModeInprism)) || ((r4ModeInprism) <? (project request mode))) || ((project request route) =? (r4RouteNone)))
+  body: ((project request boundary) =? (prismR4BoundaryHashonly))
 }
 
 definition{
-  name: r4Rule7,
-  parameters: [request : R4Request],
+  name: prismR4Rule1Misses,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: (((project request mode) =? (r4ModeRouted)) && (not ((project request route) =? (r4RouteGranted))))
+  body: ((project request engine) =? (prismR4EngineMatch))
 }
 
 definition{
-  name: r4Rule7Misses,
-  parameters: [request : R4Request],
+  name: prismR4Rule3Misses,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: ((((project request mode) <? (r4ModeRouted)) || ((r4ModeRouted) <? (project request mode))) || ((project request route) =? (r4RouteGranted)))
+  body: ((((project request mode) <? (prismR4ModeCompiled)) || ((prismR4ModeCompiled) <? (project request mode))) || ((project request weights) =? (prismR4WeightsNone)))
 }
 
 definition{
-  name: r4Rule8,
-  parameters: [request : R4Request],
+  name: prismR4Rule4Misses,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: ((project request weights) =? (r4WeightsMissing))
+  body: ((((project request mode) <? (prismR4ModeCompiled)) || ((prismR4ModeCompiled) <? (project request mode))) || ((project request route) =? (prismR4RouteNone)))
 }
 
 definition{
-  name: r4Rule9,
-  parameters: [request : R4Request],
+  name: prismR4Rule5Misses,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: ((project request boundary) =? (r4BoundaryDeny))
+  body: ((((project request mode) <? (prismR4ModeInprism)) || ((prismR4ModeInprism) <? (project request mode))) || ((project request weights) =? (prismR4WeightsMatch)))
 }
 
 definition{
-  name: r4Rule10,
-  parameters: [request : R4Request],
+  name: prismR4Rule6Misses,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: ((project request boundary) =? (r4BoundaryAsk))
+  body: ((((project request mode) <? (prismR4ModeInprism)) || ((prismR4ModeInprism) <? (project request mode))) || ((project request route) =? (prismR4RouteNone)))
 }
 
 definition{
-  name: r4Rule11,
-  parameters: [request : R4Request],
+  name: prismR4Rule7Misses,
+  parameters: [request : PrismR4Request],
   result: Bool,
-  body: ((project request boundary) =? (r4BoundaryHashonly))
+  body: ((((project request mode) <? (prismR4ModeRouted)) || ((prismR4ModeRouted) <? (project request mode))) || ((project request route) =? (prismR4RouteGranted)))
 }
 
 definition{
-  name: r4Judge,
-  parameters: [request : R4Request],
+  name: prismR4StepCompiled,
+  parameters: [request : PrismR4Request],
   result: Nat,
-  body: (if (r4Rule1Misses request) then (if (r4Rule2 request) then (r4AnswerRefuse) else (if (r4Rule3Misses request) then (if (r4Rule4Misses request) then (if (r4Rule5Misses request) then (if (r4Rule6Misses request) then (if (r4Rule7Misses request) then (if (r4Rule8 request) then (r4AnswerRefuse) else (if (r4Rule9 request) then (r4AnswerRefuse) else (if (r4Rule10 request) then (r4AnswerAsk) else (if (r4Rule11 request) then (r4AnswerReceipt) else (r4AnswerAnswer))))) else (r4AnswerRefuse)) else (r4AnswerRefuse)) else (r4AnswerRefuse)) else (r4AnswerRefuse)) else (r4AnswerRefuse))) else (r4AnswerRefuse))
+  body: (if (prismR4Rule1Misses request) then (if (prismR4Rule2 request) then (prismR4AnswerRefuse) else (if (prismR4Rule3Misses request) then (if (prismR4Rule4Misses request) then (if (prismR4Rule8 request) then (prismR4AnswerRefuse) else (if (prismR4Rule9 request) then (prismR4AnswerRefuse) else (if (prismR4Rule10 request) then (prismR4AnswerAsk) else (if (prismR4Rule11 request) then (prismR4AnswerReceipt) else (prismR4AnswerAnswer))))) else (prismR4AnswerRefuse)) else (prismR4AnswerRefuse))) else (prismR4AnswerRefuse))
 }
 
 definition{
-  name: r4EncodeAnswer,
+  name: prismR4StepInprism,
+  parameters: [request : PrismR4Request],
+  result: Nat,
+  body: (if (prismR4Rule1Misses request) then (if (prismR4Rule2 request) then (prismR4AnswerRefuse) else (if (prismR4Rule5Misses request) then (if (prismR4Rule6Misses request) then (if (prismR4Rule8 request) then (prismR4AnswerRefuse) else (if (prismR4Rule9 request) then (prismR4AnswerRefuse) else (if (prismR4Rule10 request) then (prismR4AnswerAsk) else (if (prismR4Rule11 request) then (prismR4AnswerReceipt) else (prismR4AnswerAnswer))))) else (prismR4AnswerRefuse)) else (prismR4AnswerRefuse))) else (prismR4AnswerRefuse))
+}
+
+definition{
+  name: prismR4StepRouted,
+  parameters: [request : PrismR4Request],
+  result: Nat,
+  body: (if (prismR4Rule1Misses request) then (if (prismR4Rule2 request) then (prismR4AnswerRefuse) else (if (prismR4Rule7Misses request) then (if (prismR4Rule8 request) then (prismR4AnswerRefuse) else (if (prismR4Rule9 request) then (prismR4AnswerRefuse) else (if (prismR4Rule10 request) then (prismR4AnswerAsk) else (if (prismR4Rule11 request) then (prismR4AnswerReceipt) else (prismR4AnswerAnswer))))) else (prismR4AnswerRefuse))) else (prismR4AnswerRefuse))
+}
+
+definition{
+  name: prismR4Judge,
+  parameters: [request : PrismR4Request],
+  result: Nat,
+  body: (if ((project request mode) =? (prismR4ModeCompiled)) then (prismR4StepCompiled request) else (if ((project request mode) =? (prismR4ModeInprism)) then (prismR4StepInprism request) else (if ((project request mode) =? (prismR4ModeRouted)) then (prismR4StepRouted request) else (if (prismR4Rule1Misses request) then (if (prismR4Rule2 request) then (prismR4AnswerRefuse) else (if (prismR4Rule8 request) then (prismR4AnswerRefuse) else (if (prismR4Rule9 request) then (prismR4AnswerRefuse) else (if (prismR4Rule10 request) then (prismR4AnswerAsk) else (if (prismR4Rule11 request) then (prismR4AnswerReceipt) else (prismR4AnswerAnswer)))))) else (prismR4AnswerRefuse)))))
+}
+
+definition{
+  name: prismR4EncodeAnswer,
   parameters: [code : Nat],
   result: Bytes,
-  body: (if (code =? (r4AnswerAnswer)) then 0x616e73776572 else (if (code =? (r4AnswerReceipt)) then 0x72656365697074 else (if (code =? (r4AnswerAsk)) then 0x61736b else (if (code =? (r4AnswerRefuse)) then 0x726566757365 else 0x696e76616c6964))))
+  body: (if (code =? (prismR4AnswerAnswer)) then 0x616e73776572 else (if (code =? (prismR4AnswerReceipt)) then 0x72656365697074 else (if (code =? (prismR4AnswerAsk)) then 0x61736b else (if (code =? (prismR4AnswerRefuse)) then 0x726566757365 else 0x696e76616c6964))))
 }
 
 definition{
-  name: r4Dispatch,
+  name: prismR4Dispatch,
   parameters: [value : Bytes],
   result: Bytes,
-  body: (if (136 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (r4DecodeField1 value 0)
+  body: (if (136 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (prismR4DecodeField1 value 0)
     | Option.none => 0x696e76616c6964
-    | Option.some request => (r4EncodeAnswer (r4Judge request)))),
+    | Option.some request => (prismR4EncodeAnswer (prismR4Judge request)))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

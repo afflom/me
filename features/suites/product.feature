@@ -23,3 +23,9 @@ Feature: product
     Given app/specs/product/spec.json, the surface, the coherence registry and the walks
     When test/product/gate.test.mjs runs tools/product/gate.py on the committed record and on each planted defect
     Then the committed record passes and every planted defect is refused with its reason
+
+  @PT-01 @build
+  Scenario: Every part of the Prism, each module of its page and of its model, answers what it is, why it is there, who acts in it, where it runs, when it acts and how it is checked, each answer derived from the record and grounded in a stratum of app/specs/parts/spec.json after verdant's W5H certificate; why traces each part through the features, facets and journeys it serves to the stakeholder concerns they answer, and the gate refuses an ungrounded part, an unanswered question, a concern no journey answers or a working journey no part serves, beyond a debt that only shrinks
+    Given every tracked module of the page and of the model, the parts record, the product record and the coherence registry
+    When test/parts/gate.test.mjs runs tools/parts/gate.py on the committed record and on each planted defect
+    Then the committed record passes and every planted defect is refused with its reason

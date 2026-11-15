@@ -6,200 +6,200 @@
 \title{Text application model}
 \begin{semanticmodule}
 definition{
-  name: storeBreaksInv001,
-  parameters: [request : PrismVaultStore::StoreRequest],
+  name: breaksInv001,
+  parameters: [request : PrismVaultStore::PrismVaultStoreRequest],
   result: Bool,
-  body: (((((((project request boundary) <? 4) && ((project request key) <? 2)) && ((project request address) <? 2)) && ((project request room) <? 2)) && ((project request address) =? (PrismVaultStore::storeAddressMismatch))) && (not ((PrismVaultStore::storeJudge request) =? (PrismVaultStore::storeAnswerRefuse))))
+  body: (((((((project request boundary) <? 4) && ((project request key) <? 2)) && ((project request address) <? 2)) && ((project request room) <? 2)) && ((project request address) =? (PrismVaultStore::prismVaultStoreAddressMismatch))) && (not ((PrismVaultStore::prismVaultStoreJudge request) =? (PrismVaultStore::prismVaultStoreAnswerRefuse))))
 }
 
 theorem{
-  name: storeInv001Holds,
-  parameters: [request : PrismVaultStore::StoreRequest],
-  statement: ((storeBreaksInv001 request) = false),
+  name: inv001Holds,
+  parameters: [request : PrismVaultStore::PrismVaultStoreRequest],
+  statement: ((breaksInv001 request) = false),
   proof: linear_arithmetic{
     definitions: [
-      PrismVaultStore::storeAddressDerived,
-      PrismVaultStore::storeAddressMismatch,
-      PrismVaultStore::storeAnswerAsk,
-      PrismVaultStore::storeAnswerRefuse,
-      PrismVaultStore::storeAnswerStore,
-      PrismVaultStore::storeAnswerStorehash,
-      PrismVaultStore::storeBoundaryAllow,
-      PrismVaultStore::storeBoundaryAsk,
-      PrismVaultStore::storeBoundaryDeny,
-      PrismVaultStore::storeBoundaryHashonly,
-      PrismVaultStore::storeJudge,
-      PrismVaultStore::storeKeyMissing,
-      PrismVaultStore::storeKeyPresent,
-      PrismVaultStore::storeRoomFull,
-      PrismVaultStore::storeRoomOk,
-      PrismVaultStore::storeRule1,
-      PrismVaultStore::storeRule2,
-      PrismVaultStore::storeRule4,
-      PrismVaultStore::storeRule5,
-      PrismVaultStore::storeRule6,
-      PrismVaultStore::storeRule7,
-      storeBreaksInv001
+      PrismVaultStore::prismVaultStoreAddressDerived,
+      PrismVaultStore::prismVaultStoreAddressMismatch,
+      PrismVaultStore::prismVaultStoreAnswerAsk,
+      PrismVaultStore::prismVaultStoreAnswerRefuse,
+      PrismVaultStore::prismVaultStoreAnswerStore,
+      PrismVaultStore::prismVaultStoreAnswerStorehash,
+      PrismVaultStore::prismVaultStoreBoundaryAllow,
+      PrismVaultStore::prismVaultStoreBoundaryAsk,
+      PrismVaultStore::prismVaultStoreBoundaryDeny,
+      PrismVaultStore::prismVaultStoreBoundaryHashonly,
+      PrismVaultStore::prismVaultStoreJudge,
+      PrismVaultStore::prismVaultStoreKeyMissing,
+      PrismVaultStore::prismVaultStoreKeyPresent,
+      PrismVaultStore::prismVaultStoreRoomFull,
+      PrismVaultStore::prismVaultStoreRoomOk,
+      PrismVaultStore::prismVaultStoreRule1,
+      PrismVaultStore::prismVaultStoreRule2,
+      PrismVaultStore::prismVaultStoreRule3,
+      PrismVaultStore::prismVaultStoreRule4,
+      PrismVaultStore::prismVaultStoreRule5,
+      PrismVaultStore::prismVaultStoreRule6,
+      breaksInv001
     ]
   },
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: storeBreaksInv002,
-  parameters: [request : PrismVaultStore::StoreRequest],
+  name: breaksInv002,
+  parameters: [request : PrismVaultStore::PrismVaultStoreRequest],
   result: Bool,
-  body: (((((((project request boundary) <? 4) && ((project request key) <? 2)) && ((project request address) <? 2)) && ((project request room) <? 2)) && ((project request boundary) =? (PrismVaultStore::storeBoundaryDeny))) && (not ((PrismVaultStore::storeJudge request) =? (PrismVaultStore::storeAnswerRefuse))))
+  body: (((((((project request boundary) <? 4) && ((project request key) <? 2)) && ((project request address) <? 2)) && ((project request room) <? 2)) && ((project request boundary) =? (PrismVaultStore::prismVaultStoreBoundaryDeny))) && (not ((PrismVaultStore::prismVaultStoreJudge request) =? (PrismVaultStore::prismVaultStoreAnswerRefuse))))
 }
 
 theorem{
-  name: storeInv002Holds,
-  parameters: [request : PrismVaultStore::StoreRequest],
-  statement: ((storeBreaksInv002 request) = false),
+  name: inv002Holds,
+  parameters: [request : PrismVaultStore::PrismVaultStoreRequest],
+  statement: ((breaksInv002 request) = false),
   proof: linear_arithmetic{
     definitions: [
-      PrismVaultStore::storeAddressDerived,
-      PrismVaultStore::storeAddressMismatch,
-      PrismVaultStore::storeAnswerAsk,
-      PrismVaultStore::storeAnswerRefuse,
-      PrismVaultStore::storeAnswerStore,
-      PrismVaultStore::storeAnswerStorehash,
-      PrismVaultStore::storeBoundaryAllow,
-      PrismVaultStore::storeBoundaryAsk,
-      PrismVaultStore::storeBoundaryDeny,
-      PrismVaultStore::storeBoundaryHashonly,
-      PrismVaultStore::storeJudge,
-      PrismVaultStore::storeKeyMissing,
-      PrismVaultStore::storeKeyPresent,
-      PrismVaultStore::storeRoomFull,
-      PrismVaultStore::storeRoomOk,
-      PrismVaultStore::storeRule1,
-      PrismVaultStore::storeRule2,
-      PrismVaultStore::storeRule4,
-      PrismVaultStore::storeRule5,
-      PrismVaultStore::storeRule6,
-      PrismVaultStore::storeRule7,
-      storeBreaksInv002
+      PrismVaultStore::prismVaultStoreAddressDerived,
+      PrismVaultStore::prismVaultStoreAddressMismatch,
+      PrismVaultStore::prismVaultStoreAnswerAsk,
+      PrismVaultStore::prismVaultStoreAnswerRefuse,
+      PrismVaultStore::prismVaultStoreAnswerStore,
+      PrismVaultStore::prismVaultStoreAnswerStorehash,
+      PrismVaultStore::prismVaultStoreBoundaryAllow,
+      PrismVaultStore::prismVaultStoreBoundaryAsk,
+      PrismVaultStore::prismVaultStoreBoundaryDeny,
+      PrismVaultStore::prismVaultStoreBoundaryHashonly,
+      PrismVaultStore::prismVaultStoreJudge,
+      PrismVaultStore::prismVaultStoreKeyMissing,
+      PrismVaultStore::prismVaultStoreKeyPresent,
+      PrismVaultStore::prismVaultStoreRoomFull,
+      PrismVaultStore::prismVaultStoreRoomOk,
+      PrismVaultStore::prismVaultStoreRule1,
+      PrismVaultStore::prismVaultStoreRule2,
+      PrismVaultStore::prismVaultStoreRule3,
+      PrismVaultStore::prismVaultStoreRule4,
+      PrismVaultStore::prismVaultStoreRule5,
+      PrismVaultStore::prismVaultStoreRule6,
+      breaksInv002
     ]
   },
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: storeBreaksInv003,
-  parameters: [request : PrismVaultStore::StoreRequest],
+  name: breaksInv003,
+  parameters: [request : PrismVaultStore::PrismVaultStoreRequest],
   result: Bool,
-  body: (((((((project request boundary) <? 4) && ((project request key) <? 2)) && ((project request address) <? 2)) && ((project request room) <? 2)) && ((project request boundary) =? (PrismVaultStore::storeBoundaryHashonly))) && ((PrismVaultStore::storeJudge request) =? (PrismVaultStore::storeAnswerStore)))
+  body: (((((((project request boundary) <? 4) && ((project request key) <? 2)) && ((project request address) <? 2)) && ((project request room) <? 2)) && ((project request boundary) =? (PrismVaultStore::prismVaultStoreBoundaryHashonly))) && ((PrismVaultStore::prismVaultStoreJudge request) =? (PrismVaultStore::prismVaultStoreAnswerStore)))
 }
 
 theorem{
-  name: storeInv003Holds,
-  parameters: [request : PrismVaultStore::StoreRequest],
-  statement: ((storeBreaksInv003 request) = false),
+  name: inv003Holds,
+  parameters: [request : PrismVaultStore::PrismVaultStoreRequest],
+  statement: ((breaksInv003 request) = false),
   proof: linear_arithmetic{
     definitions: [
-      PrismVaultStore::storeAddressDerived,
-      PrismVaultStore::storeAddressMismatch,
-      PrismVaultStore::storeAnswerAsk,
-      PrismVaultStore::storeAnswerRefuse,
-      PrismVaultStore::storeAnswerStore,
-      PrismVaultStore::storeAnswerStorehash,
-      PrismVaultStore::storeBoundaryAllow,
-      PrismVaultStore::storeBoundaryAsk,
-      PrismVaultStore::storeBoundaryDeny,
-      PrismVaultStore::storeBoundaryHashonly,
-      PrismVaultStore::storeJudge,
-      PrismVaultStore::storeKeyMissing,
-      PrismVaultStore::storeKeyPresent,
-      PrismVaultStore::storeRoomFull,
-      PrismVaultStore::storeRoomOk,
-      PrismVaultStore::storeRule1,
-      PrismVaultStore::storeRule2,
-      PrismVaultStore::storeRule4,
-      PrismVaultStore::storeRule5,
-      PrismVaultStore::storeRule6,
-      PrismVaultStore::storeRule7,
-      storeBreaksInv003
+      PrismVaultStore::prismVaultStoreAddressDerived,
+      PrismVaultStore::prismVaultStoreAddressMismatch,
+      PrismVaultStore::prismVaultStoreAnswerAsk,
+      PrismVaultStore::prismVaultStoreAnswerRefuse,
+      PrismVaultStore::prismVaultStoreAnswerStore,
+      PrismVaultStore::prismVaultStoreAnswerStorehash,
+      PrismVaultStore::prismVaultStoreBoundaryAllow,
+      PrismVaultStore::prismVaultStoreBoundaryAsk,
+      PrismVaultStore::prismVaultStoreBoundaryDeny,
+      PrismVaultStore::prismVaultStoreBoundaryHashonly,
+      PrismVaultStore::prismVaultStoreJudge,
+      PrismVaultStore::prismVaultStoreKeyMissing,
+      PrismVaultStore::prismVaultStoreKeyPresent,
+      PrismVaultStore::prismVaultStoreRoomFull,
+      PrismVaultStore::prismVaultStoreRoomOk,
+      PrismVaultStore::prismVaultStoreRule1,
+      PrismVaultStore::prismVaultStoreRule2,
+      PrismVaultStore::prismVaultStoreRule3,
+      PrismVaultStore::prismVaultStoreRule4,
+      PrismVaultStore::prismVaultStoreRule5,
+      PrismVaultStore::prismVaultStoreRule6,
+      breaksInv003
     ]
   },
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: storeBreaksInv004,
-  parameters: [request : PrismVaultStore::StoreRequest],
+  name: breaksInv004,
+  parameters: [request : PrismVaultStore::PrismVaultStoreRequest],
   result: Bool,
-  body: (((((((project request boundary) <? 4) && ((project request key) <? 2)) && ((project request address) <? 2)) && ((project request room) <? 2)) && ((project request key) =? (PrismVaultStore::storeKeyMissing))) && ((PrismVaultStore::storeJudge request) =? (PrismVaultStore::storeAnswerStore)))
+  body: (((((((project request boundary) <? 4) && ((project request key) <? 2)) && ((project request address) <? 2)) && ((project request room) <? 2)) && ((project request key) =? (PrismVaultStore::prismVaultStoreKeyMissing))) && ((PrismVaultStore::prismVaultStoreJudge request) =? (PrismVaultStore::prismVaultStoreAnswerStore)))
 }
 
 theorem{
-  name: storeInv004Holds,
-  parameters: [request : PrismVaultStore::StoreRequest],
-  statement: ((storeBreaksInv004 request) = false),
+  name: inv004Holds,
+  parameters: [request : PrismVaultStore::PrismVaultStoreRequest],
+  statement: ((breaksInv004 request) = false),
   proof: linear_arithmetic{
     definitions: [
-      PrismVaultStore::storeAddressDerived,
-      PrismVaultStore::storeAddressMismatch,
-      PrismVaultStore::storeAnswerAsk,
-      PrismVaultStore::storeAnswerRefuse,
-      PrismVaultStore::storeAnswerStore,
-      PrismVaultStore::storeAnswerStorehash,
-      PrismVaultStore::storeBoundaryAllow,
-      PrismVaultStore::storeBoundaryAsk,
-      PrismVaultStore::storeBoundaryDeny,
-      PrismVaultStore::storeBoundaryHashonly,
-      PrismVaultStore::storeJudge,
-      PrismVaultStore::storeKeyMissing,
-      PrismVaultStore::storeKeyPresent,
-      PrismVaultStore::storeRoomFull,
-      PrismVaultStore::storeRoomOk,
-      PrismVaultStore::storeRule1,
-      PrismVaultStore::storeRule2,
-      PrismVaultStore::storeRule4,
-      PrismVaultStore::storeRule5,
-      PrismVaultStore::storeRule6,
-      PrismVaultStore::storeRule7,
-      storeBreaksInv004
+      PrismVaultStore::prismVaultStoreAddressDerived,
+      PrismVaultStore::prismVaultStoreAddressMismatch,
+      PrismVaultStore::prismVaultStoreAnswerAsk,
+      PrismVaultStore::prismVaultStoreAnswerRefuse,
+      PrismVaultStore::prismVaultStoreAnswerStore,
+      PrismVaultStore::prismVaultStoreAnswerStorehash,
+      PrismVaultStore::prismVaultStoreBoundaryAllow,
+      PrismVaultStore::prismVaultStoreBoundaryAsk,
+      PrismVaultStore::prismVaultStoreBoundaryDeny,
+      PrismVaultStore::prismVaultStoreBoundaryHashonly,
+      PrismVaultStore::prismVaultStoreJudge,
+      PrismVaultStore::prismVaultStoreKeyMissing,
+      PrismVaultStore::prismVaultStoreKeyPresent,
+      PrismVaultStore::prismVaultStoreRoomFull,
+      PrismVaultStore::prismVaultStoreRoomOk,
+      PrismVaultStore::prismVaultStoreRule1,
+      PrismVaultStore::prismVaultStoreRule2,
+      PrismVaultStore::prismVaultStoreRule3,
+      PrismVaultStore::prismVaultStoreRule4,
+      PrismVaultStore::prismVaultStoreRule5,
+      PrismVaultStore::prismVaultStoreRule6,
+      breaksInv004
     ]
   },
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: storeBreaksInv005,
-  parameters: [request : PrismVaultStore::StoreRequest],
+  name: breaksInv005,
+  parameters: [request : PrismVaultStore::PrismVaultStoreRequest],
   result: Bool,
-  body: (((((((project request boundary) <? 4) && ((project request key) <? 2)) && ((project request address) <? 2)) && ((project request room) <? 2)) && ((project request boundary) =? (PrismVaultStore::storeBoundaryAsk))) && ((PrismVaultStore::storeJudge request) =? (PrismVaultStore::storeAnswerStore)))
+  body: (((((((project request boundary) <? 4) && ((project request key) <? 2)) && ((project request address) <? 2)) && ((project request room) <? 2)) && ((project request boundary) =? (PrismVaultStore::prismVaultStoreBoundaryAsk))) && ((PrismVaultStore::prismVaultStoreJudge request) =? (PrismVaultStore::prismVaultStoreAnswerStore)))
 }
 
 theorem{
-  name: storeInv005Holds,
-  parameters: [request : PrismVaultStore::StoreRequest],
-  statement: ((storeBreaksInv005 request) = false),
+  name: inv005Holds,
+  parameters: [request : PrismVaultStore::PrismVaultStoreRequest],
+  statement: ((breaksInv005 request) = false),
   proof: linear_arithmetic{
     definitions: [
-      PrismVaultStore::storeAddressDerived,
-      PrismVaultStore::storeAddressMismatch,
-      PrismVaultStore::storeAnswerAsk,
-      PrismVaultStore::storeAnswerRefuse,
-      PrismVaultStore::storeAnswerStore,
-      PrismVaultStore::storeAnswerStorehash,
-      PrismVaultStore::storeBoundaryAllow,
-      PrismVaultStore::storeBoundaryAsk,
-      PrismVaultStore::storeBoundaryDeny,
-      PrismVaultStore::storeBoundaryHashonly,
-      PrismVaultStore::storeJudge,
-      PrismVaultStore::storeKeyMissing,
-      PrismVaultStore::storeKeyPresent,
-      PrismVaultStore::storeRoomFull,
-      PrismVaultStore::storeRoomOk,
-      PrismVaultStore::storeRule1,
-      PrismVaultStore::storeRule2,
-      PrismVaultStore::storeRule4,
-      PrismVaultStore::storeRule5,
-      PrismVaultStore::storeRule6,
-      PrismVaultStore::storeRule7,
-      storeBreaksInv005
+      PrismVaultStore::prismVaultStoreAddressDerived,
+      PrismVaultStore::prismVaultStoreAddressMismatch,
+      PrismVaultStore::prismVaultStoreAnswerAsk,
+      PrismVaultStore::prismVaultStoreAnswerRefuse,
+      PrismVaultStore::prismVaultStoreAnswerStore,
+      PrismVaultStore::prismVaultStoreAnswerStorehash,
+      PrismVaultStore::prismVaultStoreBoundaryAllow,
+      PrismVaultStore::prismVaultStoreBoundaryAsk,
+      PrismVaultStore::prismVaultStoreBoundaryDeny,
+      PrismVaultStore::prismVaultStoreBoundaryHashonly,
+      PrismVaultStore::prismVaultStoreJudge,
+      PrismVaultStore::prismVaultStoreKeyMissing,
+      PrismVaultStore::prismVaultStoreKeyPresent,
+      PrismVaultStore::prismVaultStoreRoomFull,
+      PrismVaultStore::prismVaultStoreRoomOk,
+      PrismVaultStore::prismVaultStoreRule1,
+      PrismVaultStore::prismVaultStoreRule2,
+      PrismVaultStore::prismVaultStoreRule3,
+      PrismVaultStore::prismVaultStoreRule4,
+      PrismVaultStore::prismVaultStoreRule5,
+      PrismVaultStore::prismVaultStoreRule6,
+      breaksInv005
     ]
   },
   axioms: [Quot.sound, propext]
