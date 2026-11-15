@@ -45,6 +45,14 @@
     },
     {
       "program": "browser",
+      "generator": "browserprobe",
+      "inputs": [
+        ".gen/browser-index"
+      ],
+      "output": "site/device/probe.mjs"
+    },
+    {
+      "program": "browser",
       "generator": "browseridl",
       "inputs": [
         ".gen/browser-index",
@@ -555,6 +563,15 @@
         "site/vault/vault.mjs"
       ],
       "output": ".gen/browser/adapter/site/vault/vault.mjs"
+    },
+    {
+      "program": "browser",
+      "generator": "browseradapter",
+      "inputs": [
+        ".gen/browser-index",
+        "site/device/probe.mjs"
+      ],
+      "output": ".gen/browser/adapter/site/device/probe.mjs"
     }
   ]
 }
