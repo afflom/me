@@ -98,7 +98,7 @@ fn product_pd_03() {
             "PD-03: GenProduct.lex.tex must contain `{needle}`"
         );
     }
-    let pipeline = read("generators/pipeline.json");
+    let pipeline = read("generators/product/steps.json");
     for generator in [
         "pdsurface",
         "pdjourney",
@@ -110,7 +110,7 @@ fn product_pd_03() {
     ] {
         assert!(
             pipeline.contains(&format!("\"generator\": \"{generator}\"")),
-            "PD-03: generators/pipeline.json must run {generator}"
+            "PD-03: generators/product/steps.json must run {generator}"
         );
     }
     let cases = std::fs::read_dir(
@@ -156,7 +156,7 @@ fn product_pt_01() {
     // How a part is checked starts from the suites that reach it, which the
     // LexLean program generators/parts writes and GN-01 holds.
     assert!(
-        read("generators/pipeline.json").contains("\"output\": \"test/parts/reach.txt\""),
+        read("generators/parts/steps.json").contains("\"output\": \"test/parts/reach.txt\""),
         "PT-01: generators/parts writes test/parts/reach.txt"
     );
     assert!(

@@ -1,0 +1,137 @@
+{
+  "comment": "The steps of the parts program (generators/parts/), run in order by tools/generators/run.sh. A step reads repository files and the .gen/ outputs of this program's earlier steps only.",
+  "steps": [
+    {
+      "generator": "ptpath",
+      "output": ".gen/pt-parts",
+      "glob": [
+        "site/*.mjs",
+        "site/extension/*.js",
+        "app/src/*.lex.tex",
+        ":(exclude)*/vendor/*",
+        ":(exclude)*/worker-runtime/*",
+        ":(exclude)*.test.mjs"
+      ],
+      "head": true
+    },
+    {
+      "generator": "ptpath",
+      "output": ".gen/pt-helpers",
+      "glob": [
+        "test/*.mjs",
+        "site/*.test.mjs",
+        ":(exclude)*/vendor/*"
+      ],
+      "head": true
+    },
+    {
+      "generator": "ptpath",
+      "output": ".gen/pt-suites",
+      "glob": [
+        "test/*.test.mjs",
+        "site/*.test.mjs",
+        ":(exclude)*/vendor/*"
+      ],
+      "head": true
+    },
+    {
+      "generator": "ptchromium",
+      "output": ".gen/pt-chromium",
+      "glob": [
+        "test/*.test.mjs",
+        "site/*.test.mjs",
+        ":(exclude)*/vendor/*"
+      ]
+    },
+    {
+      "generator": "ptimports",
+      "output": ".gen/pt-imports",
+      "glob": [
+        "site/*.mjs",
+        "site/extension/*.js",
+        "app/src/*.lex.tex",
+        ":(exclude)*/vendor/*",
+        ":(exclude)*/worker-runtime/*",
+        ":(exclude)*.test.mjs"
+      ],
+      "inputs": [
+        ".gen/pt-parts",
+        ".gen/pt-helpers"
+      ]
+    },
+    {
+      "generator": "ptimports",
+      "output": ".gen/pt-tests",
+      "glob": [
+        "test/*.mjs",
+        "site/*.test.mjs",
+        ":(exclude)*/vendor/*"
+      ],
+      "inputs": [
+        ".gen/pt-parts",
+        ".gen/pt-helpers"
+      ]
+    },
+    {
+      "generator": "pttwins",
+      "output": ".gen/pt-twins",
+      "glob": [
+        "site/*.mjs",
+        "site/extension/*.js",
+        "app/src/*.lex.tex",
+        ":(exclude)*/vendor/*",
+        ":(exclude)*/worker-runtime/*",
+        ":(exclude)*.test.mjs"
+      ],
+      "head": true,
+      "inputs": [
+        ".gen/pt-parts"
+      ]
+    },
+    {
+      "generator": "ptentries",
+      "output": ".gen/pt-entries",
+      "glob": [
+        "site/*.html"
+      ],
+      "inputs": [
+        ".gen/pt-parts"
+      ]
+    },
+    {
+      "generator": "ptroot",
+      "output": ".gen/pt-root",
+      "inputs": [
+        "app/specs/parts/spec.json",
+        ".gen/pt-parts"
+      ]
+    },
+    {
+      "generator": "ptmentions",
+      "output": ".gen/pt-mentions",
+      "glob": [
+        "test/*.test.mjs",
+        "site/*.test.mjs",
+        ":(exclude)*/vendor/*"
+      ],
+      "inputs": [
+        ".gen/pt-parts"
+      ]
+    },
+    {
+      "generator": "ptreach",
+      "output": "test/parts/reach.txt",
+      "lines": ".gen/pt-parts",
+      "inputs": [
+        ".gen/pt-imports",
+        ".gen/pt-tests",
+        ".gen/pt-twins",
+        ".gen/pt-suites",
+        ".gen/pt-chromium",
+        ".gen/pt-entries",
+        ".gen/pt-root",
+        ".gen/pt-mentions"
+      ]
+    }
+  ]
+}
