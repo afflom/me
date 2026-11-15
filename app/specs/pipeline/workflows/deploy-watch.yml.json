@@ -1,0 +1,67 @@
+{
+ "name": "deploy watch",
+ "on": {
+  "workflow_run": {
+   "workflows": [
+    "pages"
+   ],
+   "types": [
+    "completed"
+   ]
+  },
+  "schedule": [
+   {
+    "cron": "7,27,47 * * * *"
+   }
+  ],
+  "workflow_dispatch": null
+ },
+ "permissions": {},
+ "concurrency": {
+  "group": "deploy-watch",
+  "cancel-in-progress": false
+ },
+ "jobs": {
+  "watch": {
+   "name": "the live page follows main",
+   "if": "github.repository != 'UOR-Foundation/template'",
+   "runs-on": "ubuntu-24.04",
+   "timeout-minutes": 5,
+   "permissions": {
+    "actions": "write",
+    "contents": "read",
+    "issues": "write",
+    "pull-requests": "write"
+   },
+   "steps": [
+    {
+     "name": "Compare main's head with what is deployed, and act",
+     "shell": "bash",
+     "env": {
+      "GH_TOKEN": "${{ github.token }}",
+      "REPO": "${{ github.repository }}",
+      "OWNER": "${{ github.repository_owner }}",
+      "SERVER": "${{ github.server_url }}"
+     },
+     "run": "set -euo pipefail\nlabel=deploy-blocked\ntitle='The live page is behind main: its deploy is blocked'\nhead=$(gh api \"repos/$REPO/commits/main\" --jq .sha)\ncommitted=$(gh api \"repos/$REPO/commits/$head\" --jq .commit.committer.date)\nage=$(( $(date +%s) - $(date -d \"$committed\" +%s) ))\nrun=$(gh api \"repos/$REPO/actions/workflows/pages.yml/runs?branch=main&head_sha=$head&per_page=20\" \\\n  --jq '[.workflow_runs[] | select(.event == \"push\" or .event == \"workflow_dispatch\")] | sort_by(.created_at) | last // empty')\nissue=$(gh api \"repos/$REPO/issues?state=open&labels=$label&per_page=1\" --jq '.[0].number // empty')\nsay() { printf '%s\\n' \"$*\" | tee -a \"$GITHUB_STEP_SUMMARY\"; }\n\nif [[ -z $run ]]; then\n  # A push from a workflow token starts no workflow; give the push\n  # trigger five minutes, then start the deploy and the gate here.\n  if (( age < 300 )); then\n    say \"main is at $head, committed ${age}s ago; its deploy has not started yet\"\n    exit 0\n  fi\n  say \"main is at $head and nothing deployed it: starting pages and bootstrap on main\"\n  gh api -X POST \"repos/$REPO/actions/workflows/pages.yml/dispatches\" -f ref=main\n  if [[ -z $(gh api \"repos/$REPO/actions/workflows/bootstrap.yml/runs?branch=main&head_sha=$head&per_page=1\" --jq '.workflow_runs[0].id // empty') ]]; then\n    gh api -X POST \"repos/$REPO/actions/workflows/bootstrap.yml/dispatches\" -f ref=main\n  fi\n  exit 0\nfi\n\nid=$(jq -r .id <<<\"$run\")\nstatus=$(jq -r .status <<<\"$run\")\nconclusion=$(jq -r '.conclusion // \"\"' <<<\"$run\")\nattempt=$(jq -r .run_attempt <<<\"$run\")\nurl=$(jq -r .html_url <<<\"$run\")\n\nif [[ $status != completed ]]; then\n  say \"main is at $head; its deploy is $status: $url\"\n  exit 0\nfi\n\nif [[ $conclusion == success ]]; then\n  say \"main is live at $head: $url\"\n  # Every pull request merged since the last live page is told, once, on\n  # its own page that it is live: the publish job opened the published\n  # page in a fresh Chromium (PG-01, PD-01, PD-02 live), so nobody\n  # checks by hand.\n  # Main's runs go side by side and only the head's publishes, so the\n  # last few runs before this one may not have published: tell from the\n  # oldest of them (already-told PRs are skipped below).\n  before=$(gh api \"repos/$REPO/actions/workflows/pages.yml/runs?branch=main&status=success&per_page=6\" \\\n    --jq \"[.workflow_runs[] | select(.head_sha != \\\"$head\\\") | .head_sha] | last // empty\" 2>/dev/null || true)\n  commits=$head\n  if [[ -n $before ]]; then\n    commits=\"$before $(gh api \"repos/$REPO/compare/$before...$head\" --jq '[.commits[].sha] | join(\" \")' 2>/dev/null || echo \"$head\")\"\n  fi\n  done_prs=\" \"\n  for commit in $commits; do\n    for pr in $(gh api \"repos/$REPO/commits/$commit/pulls\" --jq '[.[] | select(.merged_at != null) | .number] | join(\" \")' 2>/dev/null || true); do\n      [[ $done_prs == *\" $pr \"* ]] && continue\n      done_prs+=\"$pr \"\n      seen=$(gh api \"repos/$REPO/issues/$pr/comments?per_page=100\" --jq '[.[] | select(.body | startswith(\"Live:\"))] | length')\n      [[ $seen == 0 ]] || continue\n      gh api -X POST \"repos/$REPO/issues/$pr/comments\" -f body=\"$(printf '%s\\n' \\\n        \"Live: this change is on the published page, as main \\`$head\\`.\" \\\n        \"\" \\\n        \"The publish job opened the published page in a fresh Chromium and its live checks passed (PG-01, PD-01, PD-02): $url\")\" >/dev/null\n      say \"told #$pr it is live\"\n    done\n  done\n  if [[ -n $issue ]]; then\n    gh api -X POST \"repos/$REPO/issues/$issue/comments\" -f body=\"Live again at $head: $url\" >/dev/null\n    gh api -X PATCH \"repos/$REPO/issues/$issue\" -f state=closed -f state_reason=completed >/dev/null\n  fi\n  exit 0\nfi\n\n# Which job and step refused, in the run's own words.\nfailed=$(gh api \"repos/$REPO/actions/runs/$id/attempts/$attempt/jobs\" \\\n  --jq '[.jobs[] | select(.conclusion == \"failure\" or .conclusion == \"cancelled\" or .conclusion == \"timed_out\")] | first // empty')\njob=$(jq -r '.name // \"unknown job\"' <<<\"${failed:-{\\}}\")\nstep=$(jq -r '[.steps[]? | select(.conclusion == \"failure\" or .conclusion == \"cancelled\")] | first | .name // \"unknown step\"' <<<\"${failed:-{\\}}\")\njob_url=$(jq -r \".html_url // \\\"$url\\\"\" <<<\"${failed:-{\\}}\")\n\nif [[ $job == 'publish the page' && $attempt -lt 2 ]]; then\n  say \"main's publish failed at \\\"$step\\\" on attempt $attempt; running the failed jobs once more: $url\"\n  gh api -X POST \"repos/$REPO/actions/runs/$id/rerun-failed-jobs\"\n  exit 0\nfi\n\n# What refused, in the job's own words: the last lines the failing step\n# printed before its error (a gate's refusal), then the failing tests.\njob_id=$(jq -r '.id // empty' <<<\"${failed:-{\\}}\")\ntests=\"\"\nif [[ -n $job_id ]]; then\n  tests=$(gh api \"repos/$REPO/actions/jobs/$job_id/logs\" 2>/dev/null | awk '\n      { sub(/^[0-9TZ:.-]+ /, \"\") }\n      /^not ok [0-9]+ - / { sub(/^not ok [0-9]+ - /, \"\"); if (!seen[$0]++) tests[++t] = $0; next }\n      /^##\\[endgroup\\]/ { n = 0; next }\n      /^##\\[error\\]/ { if (!done) { for (i = 1; i <= n; i++) print \"- \" buf[i]; done = 1 }; next }\n      /^(\\033\\[|\\||##\\[| |\\+ |$)/ { next }\n      { if (n == 6) { for (i = 1; i < 6; i++) buf[i] = buf[i + 1]; n = 5 }; buf[++n] = $0 }\n      END { for (i = 1; i <= t && i <= 10; i++) print \"- \" tests[i] }\n    ' || true)\nfi\n# The pull requests whose merge made main's head: the thread that merged\n# one hears about it on its own pull request, not only in the issue.\nprs=$(gh api \"repos/$REPO/commits/$head/pulls\" --jq '[.[] | select(.merged_at != null) | .number] | join(\" \")' 2>/dev/null || true)\n\nlive=$(gh api \"repos/$REPO/actions/workflows/pages.yml/runs?branch=main&status=success&per_page=1\" \\\n  --jq '.workflow_runs[0] | \"\\(.head_sha) (\\(.updated_at))\"' 2>/dev/null || echo unknown)\nbody=$(printf '%s\\n' \\\n  \"main's deploy is blocked, so the live page is not main.\" \\\n  \"\" \\\n  \"| | |\" \\\n  \"| --- | --- |\" \\\n  \"| main | \\`$head\\` |\" \\\n  \"| refused by | **$job** / **$step** |\" \\\n  \"| run | $job_url |\" \\\n  \"| live page is | \\`$live\\` |\" \\\n  \"| merged by | ${prs:+#${prs// / #}} |\" \\\n  \"\" \\\n  \"${tests:+What refused, from the log:}\" \\\n  \"${tests}\" \\\n  \"\" \\\n  \"Every gate that refused here also runs on pull requests, so the fix lands as a pull request; this issue closes itself when main is live again.\")\nsay \"$body\"\ngh label create \"$label\" --repo \"$REPO\" --color d93f0b --description 'The live page is behind main' --force >/dev/null\nif [[ -n $issue ]]; then\n  last=$(gh api \"repos/$REPO/issues/$issue/comments?per_page=100\" --jq 'last | .body // \"\"')\n  [[ $last == \"$body\" ]] || gh api -X POST \"repos/$REPO/issues/$issue/comments\" -f body=\"$body\" >/dev/null\nelse\n  gh api -X POST \"repos/$REPO/issues\" -f title=\"$title\" -f body=\"$body\" -f \"labels[]=$label\" -f \"assignees[]=$OWNER\" >/dev/null\nfi\n# Once per pull request and commit: the PR whose merge was refused is told\n# on its own page. The same merge result already passed there, so a refusal\n# now means a check that does not decide the same way twice.\nfor pr in $prs; do\n  seen=$(gh api \"repos/$REPO/issues/$pr/comments?per_page=100\" --jq \"[.[] | select(.body | contains(\\\"$head\\\"))] | length\")\n  [[ $seen == 0 ]] || continue\n  gh api -X POST \"repos/$REPO/issues/$pr/comments\" -f body=\"$(printf '%s\\n' \\\n    \"Merging this pull request made main \\`$head\\`, and main's deploy refused it, so the live page is not this change.\" \\\n    \"\" \\\n    \"Refused by **$job** / **$step**: $job_url\" \\\n    \"${tests:+}\" \\\n    \"${tests}\" \\\n    \"\" \\\n    \"These are the same gates this pull request passed. If its checks ran on the same merge result, the refusal comes from a check that does not decide the same way every run: make that check deterministic in a new pull request.\")\" >/dev/null\ndone\n"
+    }
+   ]
+  }
+ },
+ "#": {
+  "name": [
+   "Keeps the live page on main's newest commit, or says loudly that it is not.",
+   "",
+   "After every pages run, every 20 minutes, and on demand, it looks at main's",
+   "head and the page's runs for it:",
+   "  - no deploy was ever started for it (a merge that triggered nothing):",
+   "    start one;",
+   "  - the publish step failed on its first attempt (Pages or the live check",
+   "    can be transient): run the failed jobs once more;",
+   "  - a gate refused it: open, or update, one issue that names the commit, the",
+   "    failing step and the run, assigned to the owner, so the stall is seen;",
+   "  - it is live: close that issue.",
+   "It never re-runs a gate that refused, and never deploys anything but main."
+  ]
+ }
+}
