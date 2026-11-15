@@ -25,9 +25,9 @@ answer, is the Prism's builder's (`app/prompts/set.json`):
 `python3 -I tools/prompts/gen.py` reads each example line into its fields
 with the reader below and writes `app/src/PrismKappa.lex.tex`,
 `app/src/PrismKappaProofs.lex.tex` and the decision's full model. Then
-`python3 -I tools/kappa/gen.py` writes the reader
+the LexLean generator `GenKappa` (generators/kappa, GN-01) writes the reader
 `app/src/PrismKappaLabel.lex.tex`, which the Prism root routes `kappa` to, and
-the JavaScript mirror `site/kappa/table.mjs`; then `lexlean fmt && lexlean
+`site/kappa/table.mjs`, the spec as the adapter reads it; then `lexlean fmt && lexlean
 lock` in `app/`. `tools/guests/build.sh` rebuilds the standalone guest
 `site/kappa/guest/kappa.wasm` whenever its modules change (GU-01).
 

@@ -222,6 +222,13 @@ definition{
 }
 
 definition{
+  name: prismSourceRule7,
+  parameters: [request : PrismSourceRequest],
+  result: Bool,
+  body: (((project request service) =? (prismSourceServiceLinkedin)) && ((project request route) =? (prismSourceRouteSeen)))
+}
+
+definition{
   name: prismSourceRule4Misses,
   parameters: [request : PrismSourceRequest],
   result: Bool,
@@ -243,10 +250,17 @@ definition{
 }
 
 definition{
+  name: prismSourceRule7Misses,
+  parameters: [request : PrismSourceRequest],
+  result: Bool,
+  body: ((((project request service) <? (prismSourceServiceLinkedin)) || ((prismSourceServiceLinkedin) <? (project request service))) || (((project request route) <? (prismSourceRouteSeen)) || ((prismSourceRouteSeen) <? (project request route))))
+}
+
+definition{
   name: prismSourceJudge,
   parameters: [request : PrismSourceRequest],
   result: Nat,
-  body: (if (prismSourceRule1 request) then (prismSourceAnswerRefuse) else (if (prismSourceRule2 request) then (prismSourceAnswerRefuse) else (if (prismSourceRule3 request) then (prismSourceAnswerRefuse) else (if (prismSourceRule4Misses request) then (if (prismSourceRule5Misses request) then (if (prismSourceRule6Misses request) then (prismSourceAnswerRead) else (prismSourceAnswerRefuse)) else (prismSourceAnswerRefuse)) else (prismSourceAnswerRefuse)))))
+  body: (if (prismSourceRule1 request) then (prismSourceAnswerRefuse) else (if (prismSourceRule2 request) then (prismSourceAnswerRefuse) else (if (prismSourceRule3 request) then (prismSourceAnswerRefuse) else (if (prismSourceRule4Misses request) then (if (prismSourceRule5Misses request) then (if (prismSourceRule6Misses request) then (if (prismSourceRule7Misses request) then (prismSourceAnswerRead) else (prismSourceAnswerRefuse)) else (prismSourceAnswerRefuse)) else (prismSourceAnswerRefuse)) else (prismSourceAnswerRefuse)))))
 }
 
 definition{

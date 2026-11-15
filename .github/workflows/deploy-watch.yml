@@ -141,7 +141,11 @@ jobs:
           job_id=$(jq -r '.id // empty' <<<"${failed:-{\}}")
           tests=""
           if [[ -n $job_id ]]; then
-            tests=$(gh api "repos/$REPO/actions/jobs/$job_id/logs" 2>/dev/null | awk '
+            log=$RUNNER_TEMP/job.log
+            if ! gh api "repos/$REPO/actions/jobs/$job_id/logs" >"$log" 2>"$log.err"; then
+              tests="- the job's log could not be read: $(tr '\n' ' ' <"$log.err" | head -c 300)"
+            else
+            tests=$(awk '
                 { sub(/^[0-9TZ:.-]+ /, "") }
                 /^not ok [0-9]+ - / { sub(/^not ok [0-9]+ - /, ""); if (!seen[$0]++) tests[++t] = $0; next }
                 /^##\[endgroup\]/ { n = 0; next }
@@ -149,7 +153,8 @@ jobs:
                 /^(\033\[|\||##\[| |\+ |$)/ { next }
                 { if (n == 6) { for (i = 1; i < 6; i++) buf[i] = buf[i + 1]; n = 5 }; buf[++n] = $0 }
                 END { for (i = 1; i <= t && i <= 10; i++) print "- " tests[i] }
-              ' || true)
+              ' "$log" || true)
+            fi
           fi
           # The pull requests whose merge made main's head: the thread that merged
           # one hears about it on its own pull request, not only in the issue.

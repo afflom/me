@@ -1,0 +1,337 @@
+\begin{lexlean}{GenGuests}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\title{Guest loader generator}
+\begin{semanticmodule}
+definition{
+  name: ggU,
+  parameters: [value : String],
+  result: Bytes,
+  body: (Foundation.Utf8::encode value)
+}
+
+definition{
+  name: ggApp,
+  parameters: [left : Bytes, right : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes left right)
+}
+
+definition{
+  name: ggLen,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (Foundation.Bytes::byteLength s)
+}
+
+definition{
+  name: ggAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (Foundation.Tar::byteOr s i),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ggSame,
+  parameters: [left : Bytes, right : Bytes],
+  result: Bool,
+  body: (Foundation.Tar::sameBytes left right),
+  axioms: [propext]
+}
+
+definition{
+  name: ggSpan,
+  parameters: [s : Bytes, start : Nat, stop : Nat],
+  result: Bytes,
+  body: (Foundation.Json::span s start stop)
+}
+
+definition{
+  name: ggLastSlashFrom,
+  parameters: [s : Bytes, i : Nat, best : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => best
+    | Nat.succ rest => (if ((ggLen s) <? (i + 1)) then best else (ggLastSlashFrom s (i + 1) (if ((ggAt s i) =? 47) then i else best) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ggLastSlash,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (ggLastSlashFrom s 0 0 (ggLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ggField,
+  parameters: [spec : Bytes, e : Nat, key : String],
+  result: Bytes,
+  body: (Foundation.Json::textAt spec (Foundation.Json::member spec e (ggU key))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ggIsTrue,
+  parameters: [spec : Bytes, e : Nat, key : String],
+  result: Bool,
+  body: (match (Foundation.Json::member spec e (ggU key))
+    | Option.none => false
+    | Option.some v => (ggSame (ggSpan spec v (v + 4)) 0x74727565)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ggSha,
+  parameters: [lock : Bytes, gid : Bytes],
+  result: Bytes,
+  body: (Foundation.Json::textAt lock (Foundation.Json::memberAt lock (Foundation.Json::memberAt lock (Foundation.Json::root lock) gid) 0x7761736d)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ggRow,
+  parameters: [spec : Bytes, lock : Bytes, e : Nat, here : Bytes],
+  result: Bytes,
+  body: (let wasm : Bytes := (ggField spec e "wasm"); (ggApp (ggApp (ggApp (ggApp 0x7b20706174683a2027 (ggSpan wasm ((ggLen here) + 1) (ggLen wasm))) 0x272c207368613235363a2027) (ggSha lock (ggField spec e "id"))) 0x27207d)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ggFaulty,
+  parameters: [spec : Bytes, lock : Bytes, e : Nat, here : Bytes],
+  result: Bool,
+  body: (let wasm : Bytes := (ggField spec e "wasm"); ((not (ggSame (ggSpan wasm 0 ((ggLen here) + 1)) (ggApp here 0x2f))) || ((ggLen (ggSha lock (ggField spec e "id"))) =? 0))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ggModsFrom,
+  parameters: [spec : Bytes, ms : (Option Nat), j : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt spec ms j)
+      | Option.none => acc
+      | Option.some m => (ggModsFrom spec ms (j + 1) (ggApp (if ((ggLen acc) =? 0) then acc else (ggApp acc 0x2c20)) (Foundation.Json::textAt spec (ctor Option.some [Nat] m))) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ggPiece,
+  parameters: [spec : Bytes, lock : Bytes, e : Nat, here : Bytes, mode : Nat, acc : Bytes],
+  result: Bytes,
+  body: (if (mode =? 0) then (ggModsFrom spec (Foundation.Json::member spec e 0x6d6f64756c6573) 0 acc (ggLen spec)) else (if (mode =? 1) then (ggApp acc (ggApp (ggApp (ggApp 0x2020 (ggField spec e "as")) 0x3a20) (ggApp (ggRow spec lock e here) 0x2c0a))) else (if (mode =? 2) then (ggApp acc (ggRow spec lock e here)) else (if (mode =? 3) then (ggApp acc 0x78) else (if (mode =? 4) then (if (ggIsTrue spec e "sync") then (ggApp acc 0x78) else acc) else (if (ggFaulty spec lock e here) then (ggApp acc 0x78) else acc)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ggFoldFrom,
+  parameters: [
+    spec : Bytes,
+    lock : Bytes,
+    gs : (Option Nat),
+    target : Bytes,
+    here : Bytes,
+    mode : Nat,
+    i : Nat,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt spec gs i)
+      | Option.none => acc
+      | Option.some e => (ggFoldFrom spec lock gs target here mode (i + 1) (if (ggSame (ggField spec e "pin") target) then (ggPiece spec lock e here mode acc) else acc) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ggFold,
+  parameters: [spec : Bytes, lock : Bytes, target : Bytes, here : Bytes, mode : Nat],
+  result: Bytes,
+  body: (ggFoldFrom spec lock (Foundation.Json::memberAt spec (Foundation.Json::root spec) 0x677565737473) target here mode 0 0x (ggLen spec)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ggHead1P0,
+  parameters: [],
+  result: Bytes,
+  body: 0x2f2f2047656e6572617465642062792067656e657261746f72732f6775657374732066726f6d206170702f73706563732f677565737473202847552d3031293a20746865207374616e64616c6f6e650a2f2f206775657374
+}
+
+definition{name: ggHead1, parameters: [], result: Bytes, body: (ggHead1P0)}
+
+definition{
+  name: ggHead2P0,
+  parameters: [],
+  result: Bytes,
+  body: 0x2c206275696c7420627920746f6f6c732f6775657374732f6275696c642e73682066726f6d20746865206d6f64756c6573207468650a2f2f20507269736d20636f6d70696c65732c20736f20746865204e6f6465207375697465732072756e206576657279207265717565737420776974686f75742074686520686f6c6f2e20
+}
+
+definition{
+  name: ggHead2P1,
+  parameters: [],
+  result: Bytes,
+  body: 0x456163680a2f2f206578706f72747320686f6c6f5f616c6c6f63286c656e2920616e6420686f6c6f5f72756e287074722c206c656e29202d3e20286f7574507472203c3c203332207c206f75744c656e293b0a2f2f2062797465732077686f7365205348412d323536206973206e6f74207468652070696e6e6564206f6e6520
+}
+
+definition{
+  name: ggHead2P2,
+  parameters: [],
+  result: Bytes,
+  body: 0x6172652072656675736564206265666f7265207468657920636f6d70696c652e0a0a
+}
+
+definition{
+  name: ggHead2,
+  parameters: [],
+  result: Bytes,
+  body: (ggApp (ggHead2P0) (ggApp (ggHead2P1) (ggHead2P2)))
+}
+
+definition{
+  name: ggCore1P0,
+  parameters: [],
+  result: Bytes,
+  body: 0x0a636f6e737420686578203d2028753829203d3e2041727261792e66726f6d2875382c20286229203d3e20622e746f537472696e67283136292e706164537461727428322c2027302729292e6a6f696e282727293b0a636f6e737420656e636f646572203d206e65772054657874456e636f64657228293b0a636f6e73742064
+}
+
+definition{
+  name: ggCore1P1,
+  parameters: [],
+  result: Bytes,
+  body: 0x65636f646572203d206e657720546578744465636f64657228277574662d38272c207b20666174616c3a2074727565207d293b0a0a6173796e632066756e6374696f6e20636f6d70696c652862797465732c2073686132353629207b0a2020636f6e737420676f74203d20686578286e65772055696e74384172726179286177
+}
+
+definition{
+  name: ggCore1P2,
+  parameters: [],
+  result: Bytes,
+  body: 0x6169742063727970746f2e737562746c652e64696765737428275348412d323536272c2062797465732929293b0a202069662028676f7420213d3d2073686132353629207468726f77204f626a6563742e61737369676e286e6577204572726f722860677565737420726566757365643a2066696e6765727072696e7420247b
+}
+
+definition{
+  name: ggCore1P3,
+  parameters: [],
+  result: Bytes,
+  body: 0x676f747d206973206e6f7420247b7368613235367d60292c207b20636f64653a2027
+}
+
+definition{
+  name: ggCore1,
+  parameters: [],
+  result: Bytes,
+  body: (ggApp (ggApp (ggCore1P0) (ggCore1P1)) (ggApp (ggCore1P2) (ggCore1P3)))
+}
+
+definition{
+  name: ggCore2P0,
+  parameters: [],
+  result: Bytes,
+  body: 0x2e677565737427207d293b0a202072657475726e20576562417373656d626c792e636f6d70696c65286279746573293b0a7d0a0a66756e6374696f6e2072756e28782c206c696e6529207b0a2020636f6e737420696e707574203d20656e636f6465722e656e636f6465286c696e65293b0a2020636f6e737420707472203d20
+}
+
+definition{
+  name: ggCore2P1,
+  parameters: [],
+  result: Bytes,
+  body: 0x782e686f6c6f5f616c6c6f6328696e7075742e6c656e677468293b0a20206e65772055696e7438417272617928782e6d656d6f72792e6275666665722c207074722c20696e7075742e6c656e677468292e73657428696e707574293b0a2020636f6e7374207061636b6564203d20426967496e742e617355696e744e2836342c
+}
+
+definition{
+  name: ggCore2P2,
+  parameters: [],
+  result: Bytes,
+  body: 0x20426967496e7428782e686f6c6f5f72756e287074722c20696e7075742e6c656e6774682929293b0a202072657475726e206465636f6465722e6465636f6465286e65772055696e7438417272617928782e6d656d6f72792e6275666665722c204e756d626572287061636b6564203e3e2033326e292c204e756d6265722870
+}
+
+definition{
+  name: ggCore2P3,
+  parameters: [],
+  result: Bytes,
+  body: 0x61636b6564202620307866666666666666666e2929293b0a7d0a0a2f2f204120667265736820696e7374616e63652070657220726571756573743a20746865206775657374277320616c6c6f6361746f72206e657665722066726565732c20616e64206e6f2073746174652063617272696573206f7665722e0a6578706f7274
+}
+
+definition{
+  name: ggCore2P4,
+  parameters: [],
+  result: Bytes,
+  body: 0x206173796e632066756e6374696f6e206f70656e47756573742862797465732c2073686132353629207b0a2020636f6e7374206d6f64756c65203d20617761697420636f6d70696c652862797465732c20736861323536293b0a202072657475726e206173796e6320286c696e6529203d3e2072756e28286177616974205765
+}
+
+definition{
+  name: ggCore2P5,
+  parameters: [],
+  result: Bytes,
+  body: 0x62417373656d626c792e696e7374616e7469617465286d6f64756c652c207b7d29292e6578706f7274732c206c696e65293b0a7d0a
+}
+
+definition{
+  name: ggCore2,
+  parameters: [],
+  result: Bytes,
+  body: (ggApp (ggApp (ggCore2P0) (ggApp (ggCore2P1) (ggCore2P2))) (ggApp (ggCore2P3) (ggApp (ggCore2P4) (ggCore2P5))))
+}
+
+definition{
+  name: ggSyncP0,
+  parameters: [],
+  result: Bytes,
+  body: 0x0a2f2f205468652073616d652c20616e7377657265642073796e6368726f6e6f75736c79206f6e636520746865206f6e65206173796e6368726f6e6f757320737465702028636865636b20616e6420636f6d70696c652920697320646f6e652e0a6578706f7274206173796e632066756e6374696f6e206f70656e4775657374
+}
+
+definition{
+  name: ggSyncP1,
+  parameters: [],
+  result: Bytes,
+  body: 0x53796e632862797465732c2073686132353629207b0a2020636f6e7374206d6f64756c65203d20617761697420636f6d70696c652862797465732c20736861323536293b0a202072657475726e20286c696e6529203d3e2072756e286e657720576562417373656d626c792e496e7374616e6365286d6f64756c652c207b7d29
+}
+
+definition{
+  name: ggSyncP2,
+  parameters: [],
+  result: Bytes,
+  body: 0x2e6578706f7274732c206c696e65293b0a7d0a
+}
+
+definition{
+  name: ggSync,
+  parameters: [],
+  result: Bytes,
+  body: (ggApp (ggSyncP0) (ggApp (ggSyncP1) (ggSyncP2)))
+}
+
+definition{
+  name: ggRender,
+  parameters: [spec : Bytes, lock : Bytes, target : Bytes],
+  result: (Option Bytes),
+  body: (let k : Nat := (ggLastSlash target); (let here : Bytes := (ggSpan target 0 k); (let facet : Bytes := (ggSpan here ((ggLastSlash here) + 1) k); (let n : Nat := (ggLen (ggFold spec lock target here 3)); (if (((n =? 0) || (0 <? (ggLen (ggFold spec lock target here 5)))) || (not (ggSame (ggSpan target k (ggLen target)) 0x2f67756573742e6d6a73))) then (ctor Option.none [Bytes]) else (let head : Bytes := (ggApp (ggApp (ggApp (ggApp (ggHead1) (if (n =? 1) then 0x else 0x73)) 0x206f6620) (ggFold spec lock target here 0)) (ggHead2)); (let body : Bytes := (if (n =? 1) then (ggApp (ggApp 0x6578706f727420636f6e7374204755455354203d20 (ggFold spec lock target here 2)) 0x3b0a) else (ggApp (ggApp 0x6578706f727420636f6e737420475545535453203d207b0a (ggFold spec lock target here 1)) 0x7d3b0a)); (ctor Option.some [Bytes] (ggApp (ggApp (ggApp (ggApp (ggApp head body) (ggCore1)) facet) (ggCore2)) (if (0 <? (ggLen (ggFold spec lock target here 4))) then (ggSync) else 0x)))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ggGuestPin,
+  parameters: [archive : Bytes, target : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive 0x6170702f73706563732f6775657374732f737065632e6a736f6e)
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some spec => (match (Foundation.Tar::find archive 0x6170702f73706563732f6775657374732f6c6f636b2e6a736f6e)
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some lock => (ggRender spec lock target))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

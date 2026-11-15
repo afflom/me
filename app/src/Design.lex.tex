@@ -1022,6 +1022,13 @@ definition{
 }
 
 definition{
+  name: processPrismSourceRule7,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismSourcePrismSourceGuest"})
+}
+
+definition{
   name: processPrismSourceOtherwise,
   parameters: [],
   result: Foundation.Arch::SystemProcess,
@@ -10829,31 +10836,38 @@ definition{
 }
 
 definition{
+  name: trPrismSourceRule7,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismSourceUmlStates", order := 8, source := "Design::statePrismSourceDeciding", target := "Design::statePrismSourceAnsweredRefuse", trigger := "Design::processPrismSourceRule7"})
+}
+
+definition{
   name: trPrismSourceOtherwise,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismSourceUmlStates", order := 8, source := "Design::statePrismSourceDeciding", target := "Design::statePrismSourceAnsweredRead", trigger := "Design::processPrismSourceOtherwise"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismSourceUmlStates", order := 9, source := "Design::statePrismSourceDeciding", target := "Design::statePrismSourceAnsweredRead", trigger := "Design::processPrismSourceOtherwise"})
 }
 
 definition{
   name: trPrismSourceResetRead,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismSourceUmlStates", order := 9, source := "Design::statePrismSourceAnsweredRead", target := "Design::statePrismSourceIdle", trigger := "Design::processPrismSourceEncodeAnswer"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismSourceUmlStates", order := 10, source := "Design::statePrismSourceAnsweredRead", target := "Design::statePrismSourceIdle", trigger := "Design::processPrismSourceEncodeAnswer"})
 }
 
 definition{
   name: trPrismSourceResetRefuse,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismSourceUmlStates", order := 10, source := "Design::statePrismSourceAnsweredRefuse", target := "Design::statePrismSourceIdle", trigger := "Design::processPrismSourceEncodeAnswer"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismSourceUmlStates", order := 11, source := "Design::statePrismSourceAnsweredRefuse", target := "Design::statePrismSourceIdle", trigger := "Design::processPrismSourceEncodeAnswer"})
 }
 
 definition{
   name: trPrismSourceResetRefused,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismSourceUmlStates", order := 11, source := "Design::statePrismSourceRefused", target := "Design::statePrismSourceIdle", trigger := "Design::processPrismSourceEncodeAnswer"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismSourceUmlStates", order := 12, source := "Design::statePrismSourceRefused", target := "Design::statePrismSourceIdle", trigger := "Design::processPrismSourceEncodeAnswer"})
 }
 
 definition{

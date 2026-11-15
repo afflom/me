@@ -123,7 +123,6 @@ fn kappa_kp_01() {
         read("app/src/Prism.lex.tex").contains("(PrismKappaLabel::kappaLabelDispatch rest)"),
         "KP-01: the Prism root routes kappa to the reader in front of PrismKappa"
     );
-    run("python3", &["-I", "tools/kappa/gen.py", "--check"]);
     node_suite();
 }
 

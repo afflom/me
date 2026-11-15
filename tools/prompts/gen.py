@@ -16,7 +16,6 @@ the builder the fields its reader reads from each (read_examples).
 With --check nothing is written and any stale prompt or generated file fails.
 """
 
-import importlib.util
 import json
 import pathlib
 import subprocess
@@ -47,19 +46,18 @@ def read_examples(facet, spec):
     """The examples of a spec whose requests are raw lines a reader reads (it
     says how under `read`, as kappa does: the label's colon, axis, digit count
     and hex are read from the label itself), as the builder's field-level pairs.
-    The reader is the facet's own, tools/<facet>/gen.py's `request(line)`, the
-    Python twin of the Lean reader module it writes: each example becomes the
-    fields it reads, in the spec's order, and the first word of the response,
-    which is the decision's answer (the reader adds what it names after it).
-    A line the reader refuses is the reader's example, not the decision's, and
-    a pair two examples read alike is kept once."""
-    path = ROOT / f"tools/{facet}/gen.py"
-    load = importlib.util.spec_from_file_location(f"{facet}_reader", path)
-    reader = importlib.util.module_from_spec(load)
-    load.loader.exec_module(reader)
+    The reader is the facet's own, `request(line)` of site/<facet>/table.mjs,
+    which the facet's LexLean generator writes beside the Lean reader module:
+    each example becomes the fields it reads, in the spec's order, and the first
+    word of the response, which is the decision's answer (the reader adds what
+    it names after it). A line the reader refuses is the reader's example, not
+    the decision's, and a pair two examples read alike is kept once."""
+    table = (ROOT / f"site/{facet}/table.mjs").as_uri()
+    script = "const t = await import(process.argv[1]); const lines = JSON.parse(process.argv[2]); console.log(JSON.stringify(lines.map((l) => t.request(l))));"
+    lines = [line for line, _ in spec["examples"]]
+    read = json.loads(subprocess.run(["node", "--input-type=module", "-e", script, table, json.dumps(lines)], check=True, capture_output=True, text=True).stdout)
     pairs = []
-    for line, response in spec["examples"]:
-        fields = reader.request(line)
+    for (line, response), fields in zip(spec["examples"], read):
         if fields is None:
             continue
         pair = (" ".join(fields[f["name"]] for f in spec["fields"]), response.split(" ")[0])
@@ -69,7 +67,7 @@ def read_examples(facet, spec):
 
 
 def from_tree(spec, examples):
-    """A keyword facet's spec (tools/facet/gen.py and its kin): a binary decision
+    """A keyword facet's spec (dest, uorc, resonance, router and their kin): a binary decision
     tree over choice fields, its guarantees and its examples as pairs. Read as
     the builder's decision table: every root-to-leaf path in then-first order is
     one first-match rule, the path that fails every test is `otherwise`, each

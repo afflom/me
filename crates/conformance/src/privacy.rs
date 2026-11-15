@@ -134,13 +134,29 @@ pub fn scan_tracked(root: &Path) -> Result<Vec<Finding>, String> {
     for rel in listed.stdout.split(|b| *b == 0).filter(|r| !r.is_empty()) {
         let rel = String::from_utf8_lossy(rel).to_string();
         let path = root.join(&rel);
-        if !path.is_file() {
+        if !path.is_file() || kept_text(root, &rel) {
             continue;
         }
         let bytes = std::fs::read(&path).map_err(|e| format!("{rel}: {e}"))?;
         out.extend(scan_text(&rel, &String::from_utf8_lossy(&bytes), &deny));
     }
     Ok(out)
+}
+
+/// A kept standard text: `app/specs/standards/texts/<sha256>` whose bytes hash
+/// to its name. It is public upstream text (RFCs, W3C and IANA documents) that
+/// ST-01 pins and reads offline, so its examples and its authors' addresses
+/// are the standard's own words. Any other file there is scanned as usual.
+fn kept_text(root: &Path, rel: &str) -> bool {
+    rel.strip_prefix("app/specs/standards/texts/")
+        .is_some_and(|pin| {
+            Command::new("sha256sum")
+                .arg(root.join(rel))
+                .output()
+                .is_ok_and(|o| {
+                    o.status.success() && pin.len() == 64 && o.stdout.starts_with(pin.as_bytes())
+                })
+        })
 }
 
 /// Every finding in every file under `dir` (the assembled page), with the deny

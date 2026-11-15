@@ -21,7 +21,7 @@
 export const GUEST = { path: 'guest/folder.wasm', sha256: 'b8b3429d5838113b9da2bb6cbb6f0437e8076b2c54ff614e952967000a7211ec' };
 // And of app/src/PrismHost.lex.tex, for the same suite.
 // And of app/src/PrismSource.lex.tex.
-export const SOURCE_GUEST = { path: 'guest/source.wasm', sha256: 'eee53a3e962b2c5b32160d8297e949dca9e0332e05ca6d4e75786bc07ac3fd59' };
+export const SOURCE_GUEST = { path: 'guest/source.wasm', sha256: '3eb18b9c693628c7b91459112095908ee1ae7801f3cd0c62236dddfbf2a82e2b' };
 export const HOST_GUEST = { path: 'guest/host.wasm', sha256: '7c641243d6cfb2037d52e8a2a74086cd108634374f2827cb9f8b411faf11a601' };
 
 export const LIMIT = 32 * 1024 * 1024; // one read at a time, at most
