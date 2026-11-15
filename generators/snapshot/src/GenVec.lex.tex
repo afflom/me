@@ -1,0 +1,116 @@
+\begin{lexlean}{GenVec}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Tar}
+\importmodule{GenPatch}
+\importmodule{GenJcs}
+\importmodule{GenAddr}
+\importmodule{Sha256}
+\title{Snapshot vector writer}
+\begin{semanticmodule}
+definition{
+  name: vgPair,
+  parameters: [req : Bytes, resp : Bytes],
+  result: Bytes,
+  body: (GenPatch::jpCat 0x5b (GenPatch::jpCat (GenPatch::jpEncode req) (GenPatch::jpCat 0x2c (GenPatch::jpCat (GenPatch::jpEncode resp) 0x5d)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vgJoin,
+  parameters: [acc : Bytes, x : Bytes],
+  result: Bytes,
+  body: (if ((GenPatch::jpLen acc) =? 0) then x else (GenPatch::jpCat acc (GenPatch::jpCat 0x2c0a x)))
+}
+
+definition{
+  name: vgMember,
+  parameters: [el : Bytes, key : Bytes],
+  result: (Option Bytes),
+  body: (match (GenPatch::jpMember el key)
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some m => (ctor Option.some [Bytes] (GenPatch::jpSpan el (project m vstart) (project m vend)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vgApplyOne,
+  parameters: [el : Bytes, acc : Bytes],
+  result: Bytes,
+  body: (match (vgMember el 0x646f63)
+    | Option.none => acc
+    | Option.some d => (match (vgMember el 0x7061746368)
+      | Option.none => acc
+      | Option.some q => (let req : Bytes := (GenPatch::jpCat 0x6170706c790a (GenPatch::jpCat 0x5b (GenPatch::jpCat d (GenPatch::jpCat 0x2c (GenPatch::jpCat q 0x5d))))); (match (vgMember el 0x6578706563746564)
+        | Option.some x => (match (GenJcs::jcCanonicalize x)
+          | Option.none => acc
+          | Option.some c => (vgJoin acc (vgPair req c)))
+        | Option.none => (match (vgMember el 0x6572726f72)
+          | Option.none => acc
+          | Option.some y => (vgJoin acc (vgPair req 0x74686520706174636820646f6573206e6f74206170706c79))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vgApplyFrom,
+  parameters: [cases : Bytes, n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (GenPatch::jpElement cases n)
+      | Option.none => acc
+      | Option.some h => (vgApplyFrom cases (n + 1) (vgApplyOne (GenPatch::jpSpan cases (project h vstart) (project h vend)) acc) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vgJcsFrom,
+  parameters: [s : Bytes, header : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Tar::byteOr s header) =? 0) then acc else (let size : Nat := (Foundation.Tar::entrySize s header); (let nm : Bytes := (Foundation.Tar::entryName s header); (let next : Nat := ((header + 512) + (Foundation.Tar::padded size)); (let k : Nat := (GenAddr::adFind nm 0x2f696e7075742f 0); (if ((GenPatch::jpLen nm) <? (k + 1)) then (vgJcsFrom s next acc rest) else (let out : Bytes := (GenPatch::jpCat (GenPatch::jpSpan nm 0 k) (GenPatch::jpCat 0x2f6f75747075742f (GenPatch::jpSpan nm (k + 7) (GenPatch::jpLen nm)))); (match (Foundation.Tar::find s out)
+      | Option.none => (vgJcsFrom s next acc rest)
+      | Option.some o => (let i : Bytes := (GenPatch::jpSpan s (header + 512) ((header + 512) + size)); (vgJcsFrom s next (vgJoin (vgJoin acc (vgPair (GenPatch::jpCat 0x63616e6f6e6963616c0a i) o)) (vgPair (GenPatch::jpCat 0x616464726573730a i) (GenPatch::jpCat 0x7368613235363a (Sha256::sha256Hex o)))) rest))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vgLineEndFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (GenPatch::jpAt s i); (if ((b =? 13) || ((b =? 10) || ((GenPatch::jpLen s) <? (i + 1)))) then i else (vgLineEndFrom s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vgShaFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let p : Nat := (GenAddr::adFind s 0x4c656e203d20 i); (if ((GenPatch::jpLen s) <? (p + 1)) then acc else (let pe : Nat := (vgLineEndFrom s p 16); (let m : Nat := (GenAddr::adFind s 0x4d7367203d20 p); (let me : Nat := (vgLineEndFrom s m ((GenPatch::jpLen s) + 1)); (let d : Nat := (GenAddr::adFind s 0x4d44203d20 m); (let req : Bytes := (GenPatch::jpCat 0x7368613235360a (GenPatch::jpCat (GenPatch::jpSpan s p pe) (GenPatch::jpCat 0x0a (GenPatch::jpSpan s m me)))); (vgShaFrom s (d + 69) (vgJoin acc (vgPair req (GenPatch::jpSpan s d (d + 69)))) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vgVectors,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive 0x6170702f73706563732f6f7261636c652f6a736f6e2d70617463682d74657374732f737065635f74657374732e6a736f6e)
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some t => (match (Foundation.Tar::find archive 0x6170702f73706563732f6f7261636c652f6e6973742d636176702d7368613235362f53484132353653686f72744d73672e727370)
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some r => (let cases : Bytes := (GenPatch::jpCompact t); (let a : Bytes := (vgApplyFrom cases 0 0x ((GenPatch::jpCount cases) + 1)); (let j : Bytes := (vgJcsFrom archive 0 a ((prim quotient (GenPatch::jpLen archive) 512 0 : Nat) + 1)); (let x : Bytes := (vgShaFrom r 0 j ((prim quotient (GenPatch::jpLen r) 8 0 : Nat) + 1)); (ctor Option.some [Bytes] (GenPatch::jpCat 0x7b226e616d65223a22736e617073686f74222c22636f6d6d656e74223a2254686520616363657074616e636520766563746f7273206f662074686520736e617073686f7420677565737420286170702f7372632f507269736d536e617073686f742e6c65782e746578292c207772697474656e2066726f6d20746865206f7261636c657320756e646572206170702f73706563732f6f7261636c652062792074686520736e617073686f74766563746f72732073746570206f662067656e657261746f72732f736e617073686f742f73746570732e6a736f6e2c207768696368207361797320776861742065616368206f6e652069732e222c226578616d706c6573223a5b0a (GenPatch::jpCat x 0x0a5d7d0a))))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

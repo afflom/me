@@ -5704,6 +5704,136 @@
    "text": "The property value KIND:device registered by IANA's vCard Elements registry is read as its RFC defines it"
   }
  ],
+ "rfc6901": [
+  {
+   "id": "rfc6901-4-a29c85e1",
+   "kind": "must",
+   "ref": "RFC 6901 4",
+   "text": "o If the currently referenced value is a JSON array, the reference token MUST contain either:"
+  },
+  {
+   "id": "rfc6901-5-3520c6ca",
+   "kind": "must",
+   "ref": "RFC 6901 5",
+   "text": "Per [RFC4627], Section 2.5, all instances of quotation mark '\"' (%x22), reverse solidus '\\' (%x5C), and control (%x00-1F) characters MUST be escaped."
+  },
+  {
+   "id": "rfc6901-7-c1ea989d",
+   "kind": "should",
+   "ref": "RFC 6901 7",
+   "text": "An application of JSON Pointer SHOULD specify the impact and handling of each type of error."
+  }
+ ],
+ "rfc6902": [
+  {
+   "id": "rfc6902-4-174d230e",
+   "kind": "must",
+   "ref": "RFC 6902 4",
+   "text": "Its value MUST be one of \"add\", \"remove\", \"replace\", \"move\", \"copy\", or \"test\"; other values are errors."
+  },
+  {
+   "id": "rfc6902-4-30dabaa7",
+   "kind": "must",
+   "ref": "RFC 6902 4",
+   "text": "Additionally, operation objects MUST have exactly one \"path\" member."
+  },
+  {
+   "id": "rfc6902-4-5d946f07",
+   "kind": "must",
+   "ref": "RFC 6902 4",
+   "text": "Operation objects MUST have exactly one \"op\" member, whose value indicates the operation to perform."
+  },
+  {
+   "id": "rfc6902-4-d4abf196",
+   "kind": "must",
+   "ref": "RFC 6902 4",
+   "text": "Members that are not explicitly defined for the operation in question MUST be ignored (i.e., the operation will complete as if the undefined member did not appear in the object)."
+  },
+  {
+   "id": "rfc6902-4.1-06d0e10d",
+   "kind": "must",
+   "ref": "RFC 6902 4.1",
+   "text": "When the operation is applied, the target location MUST reference one of:"
+  },
+  {
+   "id": "rfc6902-4.1-ae9fcb99",
+   "kind": "must",
+   "ref": "RFC 6902 4.1",
+   "text": "The operation object MUST contain a \"value\" member whose content specifies the value to be added."
+  },
+  {
+   "id": "rfc6902-4.1-dd5c908f",
+   "kind": "must",
+   "ref": "RFC 6902 4.1",
+   "text": "The specified index MUST NOT be greater than the number of elements in the array."
+  },
+  {
+   "id": "rfc6902-4.2-2b1ef42f",
+   "kind": "must",
+   "ref": "RFC 6902 4.2",
+   "text": "The target location MUST exist for the operation to be successful."
+  },
+  {
+   "id": "rfc6902-4.3-2b1ef42f",
+   "kind": "must",
+   "ref": "RFC 6902 4.3",
+   "text": "The target location MUST exist for the operation to be successful."
+  },
+  {
+   "id": "rfc6902-4.3-460c075d",
+   "kind": "must",
+   "ref": "RFC 6902 4.3",
+   "text": "The operation object MUST contain a \"value\" member whose content specifies the replacement value."
+  },
+  {
+   "id": "rfc6902-4.4-8bf2ea5e",
+   "kind": "must",
+   "ref": "RFC 6902 4.4",
+   "text": "The \"from\" location MUST NOT be a proper prefix of the \"path\" location; i.e., a location cannot be moved into one of its children."
+  },
+  {
+   "id": "rfc6902-4.4-96f491da",
+   "kind": "must",
+   "ref": "RFC 6902 4.4",
+   "text": "The operation object MUST contain a \"from\" member, which is a string containing a JSON Pointer value that references the location in the target document to move the value from."
+  },
+  {
+   "id": "rfc6902-4.4-c85200d6",
+   "kind": "must",
+   "ref": "RFC 6902 4.4",
+   "text": "The \"from\" location MUST exist for the operation to be successful."
+  },
+  {
+   "id": "rfc6902-4.5-2c90fd3c",
+   "kind": "must",
+   "ref": "RFC 6902 4.5",
+   "text": "The operation object MUST contain a \"from\" member, which is a string containing a JSON Pointer value that references the location in the target document to copy the value from."
+  },
+  {
+   "id": "rfc6902-4.5-c85200d6",
+   "kind": "must",
+   "ref": "RFC 6902 4.5",
+   "text": "The \"from\" location MUST exist for the operation to be successful."
+  },
+  {
+   "id": "rfc6902-4.6-159a78dd",
+   "kind": "must",
+   "ref": "RFC 6902 4.6",
+   "text": "The target location MUST be equal to the \"value\" value for the operation to be considered successful."
+  },
+  {
+   "id": "rfc6902-4.6-dca29c99",
+   "kind": "must",
+   "ref": "RFC 6902 4.6",
+   "text": "The operation object MUST contain a \"value\" member that conveys the value to be compared to the target location's value."
+  },
+  {
+   "id": "rfc6902-5-ec058a4b",
+   "kind": "should",
+   "ref": "RFC 6902 5",
+   "text": "If a normative requirement is violated by a JSON Patch document, or if an operation is not successful, evaluation of the JSON Patch document SHOULD terminate and application of the entire patch document SHALL NOT be deemed successful."
+  }
+ ],
  "rfc7852": [
   {
    "id": "rfc7852-parameter-value-TYPE-main-number-TEL",
@@ -5742,6 +5872,170 @@
    "kind": "element",
    "ref": "RFC 8605 2.1",
    "text": "The property CONTACT-URI registered by IANA's vCard Elements registry is read as its RFC defines it"
+  }
+ ],
+ "rfc8785": [
+  {
+   "id": "rfc8785-3-4f497a80",
+   "kind": "should",
+   "ref": "RFC 8785 3",
+   "text": "Appendix F describes the RECOMMENDED way of adding JCS support to existing JSON tools."
+  },
+  {
+   "id": "rfc8785-3.1-14f3ad1b",
+   "kind": "must",
+   "ref": "RFC 8785 3.1",
+   "text": "* JSON string data MUST be expressible as Unicode [UNICODE]."
+  },
+  {
+   "id": "rfc8785-3.1-19737ffb",
+   "kind": "must",
+   "ref": "RFC 8785 3.1",
+   "text": "An additional constraint is that parsed JSON string data MUST NOT be altered during subsequent serializations."
+  },
+  {
+   "id": "rfc8785-3.1-321d353e",
+   "kind": "must",
+   "ref": "RFC 8785 3.1",
+   "text": "Irrespective of the method used, the data to be serialized MUST be adapted for I-JSON [RFC7493] formatting, which implies the following:"
+  },
+  {
+   "id": "rfc8785-3.1-89b727e4",
+   "kind": "must",
+   "ref": "RFC 8785 3.1",
+   "text": "That is, all components involved in a scheme depending on JCS MUST preserve Unicode string data \"as is\"."
+  },
+  {
+   "id": "rfc8785-3.1-95a5d7cd",
+   "kind": "must",
+   "ref": "RFC 8785 3.1",
+   "text": "* JSON objects MUST NOT exhibit duplicate property names."
+  },
+  {
+   "id": "rfc8785-3.1-b5bb857d",
+   "kind": "should",
+   "ref": "RFC 8785 3.1",
+   "text": "For applications needing higher precision or longer integers than offered by IEEE 754 double precision, it is RECOMMENDED to represent such numbers as JSON strings; see Appendix D for details on how this can be performed in an interoperable and extensible way."
+  },
+  {
+   "id": "rfc8785-3.1-ffeae857",
+   "kind": "must",
+   "ref": "RFC 8785 3.1",
+   "text": "* JSON number data MUST be expressible as IEEE 754 [IEEE754] double- precision values."
+  },
+  {
+   "id": "rfc8785-3.2.1-f7828dcb",
+   "kind": "must",
+   "ref": "RFC 8785 3.2.1",
+   "text": "Whitespace between JSON tokens MUST NOT be emitted."
+  },
+  {
+   "id": "rfc8785-3.2.2.1-d73f46ac",
+   "kind": "must",
+   "ref": "RFC 8785 3.2.2.1",
+   "text": "In accordance with JSON [RFC8259], the literals \"null\", \"true\", and \"false\" MUST be serialized as null, true, and false, respectively."
+  },
+  {
+   "id": "rfc8785-3.2.2.2-2eedd5b0",
+   "kind": "must",
+   "ref": "RFC 8785 3.2.2.2",
+   "text": "Since invalid Unicode data like \"lone surrogates\" (e.g., U+DEAD) may lead to interoperability issues including broken signatures, occurrences of such data MUST cause a compliant JCS implementation to terminate with an appropriate error."
+  },
+  {
+   "id": "rfc8785-3.2.2.2-4e479461",
+   "kind": "must",
+   "ref": "RFC 8785 3.2.2.2",
+   "text": "* If the Unicode value is outside of the ASCII control character range, it MUST be serialized \"as is\" unless it is equivalent to U+005C (\\) or U+0022 (\"), which MUST be serialized as \\\\ and \\\", respectively."
+  },
+  {
+   "id": "rfc8785-3.2.2.2-5658b4ab",
+   "kind": "must",
+   "ref": "RFC 8785 3.2.2.2",
+   "text": "* If the Unicode value falls within the traditional ASCII control character range (U+0000 through U+001F), it MUST be serialized using lowercase hexadecimal Unicode notation (\\uhhhh) unless it is in the set of predefined JSON control characters U+0008, U+0009, U+000A, U+000C, or U+000D, which MUST be serialized as \\b, \\t, \\n, \\f, and \\r, respectively."
+  },
+  {
+   "id": "rfc8785-3.2.2.2-7e32fd81",
+   "kind": "must",
+   "ref": "RFC 8785 3.2.2.2",
+   "text": "For JSON string data (which includes JSON object property names as well), each Unicode code point MUST be serialized as described below (see Section 24.3.2.2 of [ECMA-262]):"
+  },
+  {
+   "id": "rfc8785-3.2.2.2-bdf9de0e",
+   "kind": "must",
+   "ref": "RFC 8785 3.2.2.2",
+   "text": "Finally, the resulting sequence of Unicode code points MUST be enclosed in double quotes (\")."
+  },
+  {
+   "id": "rfc8785-3.2.2.3-2f82800e",
+   "kind": "must",
+   "ref": "RFC 8785 3.2.2.3",
+   "text": "Since Not a Number (NaN) and Infinity are not permitted in JSON, occurrences of NaN or Infinity MUST cause a compliant JCS implementation to terminate with an appropriate error."
+  },
+  {
+   "id": "rfc8785-3.2.2.3-44488107",
+   "kind": "must",
+   "ref": "RFC 8785 3.2.2.3",
+   "text": "Such data MUST be serialized according to Section 7.1.12.1 of [ECMA-262], including the \"Note 2\" enhancement."
+  },
+  {
+   "id": "rfc8785-3.2.3-0281d99a",
+   "kind": "must",
+   "ref": "RFC 8785 3.2.3",
+   "text": "When a JSON object is about to have its properties sorted, the following measures MUST be adhered to:"
+  },
+  {
+   "id": "rfc8785-3.2.3-36b63a1b",
+   "kind": "must",
+   "ref": "RFC 8785 3.2.3",
+   "text": "* JSON array data MUST also be scanned for the presence of JSON objects (if an object is found, then its properties MUST be sorted), but array element order MUST NOT be changed."
+  },
+  {
+   "id": "rfc8785-3.2.3-8ee23ccb",
+   "kind": "must",
+   "ref": "RFC 8785 3.2.3",
+   "text": "* JSON object properties MUST be sorted recursively, which means that JSON child Objects MUST have their properties sorted as well."
+  },
+  {
+   "id": "rfc8785-3.2.4-42882237",
+   "kind": "must",
+   "ref": "RFC 8785 3.2.4",
+   "text": "Finally, in order to create a platform-independent representation, the result of the preceding step MUST be encoded in UTF-8."
+  },
+  {
+   "id": "rfc8785-5-a93c4d93",
+   "kind": "must",
+   "ref": "RFC 8785 5",
+   "text": "If any of these steps fail, the operation in progress MUST be aborted."
+  },
+  {
+   "id": "rfc8785-5-f7ceb343",
+   "kind": "must",
+   "ref": "RFC 8785 5",
+   "text": "When JCS is applied to signature schemes like the one described in Appendix F, applications MUST perform the following operations before acting upon received data:"
+  },
+  {
+   "id": "rfc8785-B-f6a97ac2",
+   "kind": "should",
+   "ref": "RFC 8785 B",
+   "text": "(1) For maximum compliance with the ECMAScript \"JSON\" object, values that are to be interpreted as true integers SHOULD be in the range -9007199254740991 to 9007199254740991."
+  },
+  {
+   "id": "rfc8785-D-c076c308",
+   "kind": "must",
+   "ref": "RFC 8785 D",
+   "text": "Due to the above, numbers that do not have a natural place in the current JSON ecosystem MUST be wrapped using the JSON string type."
+  },
+  {
+   "id": "rfc8785-E-0ee0bc2a",
+   "kind": "must",
+   "ref": "RFC 8785 E",
+   "text": "This can, depending on JSON parsing method, lead to interoperability problems, which MUST be dealt with by JCS-compliant applications targeting a wider audience."
+  },
+  {
+   "id": "rfc8785-E-cc549aff",
+   "kind": "must",
+   "ref": "RFC 8785 E",
+   "text": "That is, stream- and schema-based parsing MUST treat subtypes as \"pure\" (immutable) JSON string types and perform the actual conversion to the designated native type in a subsequent step."
   }
  ],
  "rfc9554": [

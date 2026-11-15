@@ -1058,9 +1058,151 @@
    "key": "rfc8785",
    "title": "RFC 8785 JSON Canonicalization Scheme",
    "issuer": "IETF",
+   "text": {
+    "url": "https://www.rfc-editor.org/rfc/rfc8785.txt",
+    "sha256": "63d52294eb0e3f0014174288186d388b4ddbf2c67d1ce8af1d9726eb0c3ab240"
+   },
+   "inventories": [
+    {
+     "extract": "bcp14"
+    }
+   ],
+   "governs": [
+    "app/src/PrismSnapshot.lex.tex",
+    "site/snapshot/guest.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ],
+   "enforcedBy": {
+    "rfc8785-3.1-19737ffb": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the RFC 8785 author's test data (cyberphone/json-canonicalization) unicode.json: the unnormalized A\\u030a is serialized as those two code points, not normalized; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    },
+    "rfc8785-3.1-89b727e4": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the RFC 8785 author's test data (cyberphone/json-canonicalization) unicode.json: the unnormalized A\\u030a is serialized as those two code points, not normalized; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    },
+    "rfc8785-3.2.1-f7828dcb": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the RFC 8785 author's test data (cyberphone/json-canonicalization) every input, whitespace between tokens included, is answered by its output byte for byte, which has none; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    },
+    "rfc8785-3.2.2.1-d73f46ac": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the RFC 8785 author's test data (cyberphone/json-canonicalization) values.json: [null, true, false] is answered as [null,true,false]; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    },
+    "rfc8785-3.2.2.2-4e479461": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the RFC 8785 author's test data (cyberphone/json-canonicalization) values.json and weird.json: non-control code points are written as is, and \\\\ and \\\" as escapes; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    },
+    "rfc8785-3.2.2.2-5658b4ab": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the RFC 8785 author's test data (cyberphone/json-canonicalization) values.json: U+000F is written \\u000f and U+000A as \\n; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    },
+    "rfc8785-3.2.2.2-7e32fd81": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the RFC 8785 author's test data (cyberphone/json-canonicalization) values.json, weird.json, french.json: every string and property name is answered byte for byte as the output serializes it; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    },
+    "rfc8785-3.2.2.2-bdf9de0e": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the RFC 8785 author's test data (cyberphone/json-canonicalization) every string of every output is enclosed in double quotes, byte for byte; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    },
+    "rfc8785-3.2.2.3-44488107": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the RFC 8785 author's test data (cyberphone/json-canonicalization) values.json: 333333333.33333329, 1E30, 4.50, 2e-3 and 1e-27 are answered as ECMAScript serializes them; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    },
+    "rfc8785-3.2.3-0281d99a": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the RFC 8785 author's test data (cyberphone/json-canonicalization) weird.json and french.json: properties are sorted by UTF-16 code units, the surrogate pair of U+1F602 before U+FB33, not by locale; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    },
+    "rfc8785-3.2.3-36b63a1b": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the RFC 8785 author's test data (cyberphone/json-canonicalization) arrays.json: the object inside the array has its properties sorted and the array keeps its order; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    },
+    "rfc8785-3.2.3-8ee23ccb": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the RFC 8785 author's test data (cyberphone/json-canonicalization) structures.json: child objects have their properties sorted at every depth; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    },
+    "rfc8785-3.2.4-42882237": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the RFC 8785 author's test data (cyberphone/json-canonicalization) weird.json, french.json and values.json: the answer is the UTF-8 bytes of the output file; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    }
+   }
+  },
+  {
+   "key": "rfc6902",
+   "title": "RFC 6902 JavaScript Object Notation (JSON) Patch",
+   "issuer": "IETF",
+   "text": {
+    "url": "https://www.rfc-editor.org/rfc/rfc6902.txt",
+    "sha256": "ded8fa1754ab1566fd72611c9d5bcde931cd2bdf8351889e2ef5b50efdf1eed4"
+   },
+   "inventories": [
+    {
+     "extract": "bcp14"
+    }
+   ],
+   "governs": [
+    "app/src/PrismSnapshot.lex.tex",
+    "site/snapshot/guest.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ],
+   "enforcedBy": {
+    "rfc6902-4-5d946f07": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "json-patch-tests spec_tests.json (RFC 6902 Appendix A) case A.13, an operation with two op members, is answered by refusal; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    },
+    "rfc6902-4-d4abf196": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "json-patch-tests spec_tests.json (RFC 6902 Appendix A) case A.11, an add with the undefined member xyz, is answered by the document the add alone gives; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    },
+    "rfc6902-4.1-06d0e10d": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "json-patch-tests spec_tests.json (RFC 6902 Appendix A) case A.12 and the 4.1 missing-object case, adds whose target's parent does not exist, are answered by refusal; A.1, A.2, A.10 and A.16 by the added documents; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    },
+    "rfc6902-4.6-159a78dd": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "json-patch-tests spec_tests.json (RFC 6902 Appendix A) case A.8 is answered by the unchanged document, A.9 (a different string) and A.15 (number against string) by refusal; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    },
+    "rfc6902-5-ec058a4b": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "json-patch-tests spec_tests.json (RFC 6902 Appendix A) case A.9, A.12, A.13, A.15 and 4.1, patches with an operation that fails or a document that violates the RFC, are answered by refusal of the whole patch, not a partial document; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+    }
+   }
+  },
+  {
+   "key": "rfc6901",
+   "title": "RFC 6901 JavaScript Object Notation (JSON) Pointer",
+   "issuer": "IETF",
+   "text": {
+    "url": "https://www.rfc-editor.org/rfc/rfc6901.txt",
+    "sha256": "12f9f4fc13d686aa4fbe7d144d70166cd3fcd4ab89174c2b13bda8f4b55e49da"
+   },
+   "inventories": [
+    {
+     "extract": "bcp14"
+    }
+   ],
+   "governs": [
+    "app/src/PrismSnapshot.lex.tex",
+    "site/snapshot/guest.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "nist-fips-180-4",
+   "title": "FIPS PUB 180-4 Secure Hash Standard (SHS), August 2015",
+   "issuer": "NIST",
    "text": null,
-   "unpinned": "pinning with the bcp14 extractor and its test vectors",
-   "governs": [],
+   "unpinned": "NIST publishes the standard as a PDF (NIST.FIPS.180-4.pdf, SHA-256 0455b406d89648d20cbde375561e19c245b9815e894164c2670772e3d54deb82) and no extractor reads its requirements yet; its SHA-256 is held meanwhile by NIST's own CAVP vectors (app/specs/oracle/nist-cavp-sha256): every ShortMsg message is an acceptance vector of the snapshot guest, and generators/snapshot runs the Monte Carlo test",
+   "governs": [
+    "app/src/PrismSnapshot.lex.tex",
+    "site/snapshot/guest.mjs"
+   ],
    "realizedBy": [
     "ST-01"
    ]
