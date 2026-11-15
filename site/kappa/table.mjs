@@ -114,12 +114,19 @@ export function judge(r) {
   return walk(SPEC.tree, r);
 }
 
-// The answer the guest gives for one request line.
-export function answer(line) {
+// The fields of one request line, as the reader reads them, or null when it
+// refuses the line (too long, no space, or a digest word it does not know).
+export function request(line) {
   const space = line.indexOf(' ');
   const digest = space < 0 ? '' : line.slice(space + 1);
-  if (new TextEncoder().encode(line).length > MAX_LINE || space < 0 || !FIELDS[4][1].includes(digest)) return 'invalid';
-  const r = read(line.slice(0, space), digest);
+  if (new TextEncoder().encode(line).length > MAX_LINE || space < 0 || !FIELDS[4][1].includes(digest)) return null;
+  return read(line.slice(0, space), digest);
+}
+
+// The answer the guest gives for one request line.
+export function answer(line) {
+  const r = request(line);
+  if (!r) return 'invalid';
   const a = judge(r);
   const axis = AXES.find((x) => x.id === r.axis);
   return NAMED.includes(a) ? [a, axis.wire, axis.discriminant, axis.digestBytes].join(' ') : a;
