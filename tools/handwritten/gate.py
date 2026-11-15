@@ -208,6 +208,9 @@ def generated_claims(files):
         for p in files:
             (work / p).parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / p, work / p)
+        # Producers that list the tree with git (tools/parts/gate.py) see the same files.
+        git("init", "-q", cwd=work)
+        git("add", "-A", "--", ".", cwd=work)
         if (ROOT / "node_modules").exists():
             os.symlink((ROOT / "node_modules").resolve(), work / "node_modules")
 

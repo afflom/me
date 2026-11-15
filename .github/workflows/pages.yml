@@ -71,11 +71,26 @@ jobs:
         run: python3 -I tools/realize/gate.py --check
       # HW-01, the shrink-only ratchet: every producer runs in a scratch copy,
       # every file is compared with the pinned template and frame, and no file
-      # may become hand-written, nor any class of hand-written files grow,
+      # may become hand-written, nor the hand-written total grow,
       # since the base revision (the merge base with main, or main's parent).
       - name: Check that no hand-written part was added or grew
         shell: bash
         run: python3 -I tools/handwritten/gate.py --full --check
+      # ST-01 before the slow proof too: every part answers to a registered
+      # standard, and every requirement extracted from each standard's pinned
+      # text is enforced by a suite or listed as debt; on a pull request the
+      # debt may not grow past the base branch's.
+      - name: Check that every part fully implements its standards
+        shell: bash
+        env:
+          BASE: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+          if [[ -n $BASE ]]; then
+            python3 -I tools/standards/gate.py --check --base "origin/$BASE"
+          else
+            python3 -I tools/standards/gate.py --check
+          fi
       # The proof is the slow part (15 to 25 minutes). This job reuses one
       # exactly as bootstrap.yml and `just app` do: the cache key only finds a
       # candidate, and `xtask
