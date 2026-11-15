@@ -2,6 +2,7 @@
 // kept, each once (by address, else by name), with everything that is
 // between the person and them. Read from the items' own words only.
 import { PEOPLE } from "./coherence.mjs";
+import { mailboxesIn } from "../read/mail.mjs";
 export const peoplePlace = PEOPLE.place;
 
 const unfold = (text) => (text ?? "").replace(/\r?\n[ \t]/g, "");
@@ -16,37 +17,16 @@ const words = (value = "") => value.replace(/=\?([^?]+)\?([bqBQ])\?([^?]*)\?=/g,
 });
 const clean = (name) => words(name).replace(/^"|"$/g, "").replace(/\\([,;])/g, "$1").trim();
 
-// RFC 5322 3.2.2: a comment is parenthesised (nested, with quoted pairs) outside a quoted string, and is not the name.
-function uncomment(value = "") {
-  let out = "", depth = 0, quoted = false;
-  for (let i = 0; i < value.length; i++) {
-    const c = value[i];
-    if (c === "\\" && (quoted || depth)) { if (!depth) out += c + (value[i + 1] ?? ""); i++; continue; }
-    if (!depth && c === '"') quoted = !quoted;
-    if (!quoted && c === "(") { depth++; continue; }
-    if (!quoted && depth && c === ")") { depth--; continue; }
-    if (!depth) out += c;
-  }
-  return out.replace(/\s+/g, " ").trim();
-}
-
-function mailbox(raw = "") {
-  const value = uncomment(raw);
-  const named = /^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/.exec(value);
-  if (named) return { name: clean(named[1]) || named[2], address: named[2].toLowerCase() };
-  const bare = value.trim().replace(/[<>]/g, "");
-  return /@/.test(bare) ? { name: bare, address: bare.toLowerCase() } : bare ? { name: bare, address: "" } : null;
-}
+// A mailbox as the person knows it (RFC 5322 3.4, read by its grammar in site/read/mail.mjs): its name, else its address.
+const known = ({ name, address }) => ({ name: clean(name) || address, address: address.toLowerCase() });
 
 // Who an item is with, as [{name, address}].
 export function partiesOf(item) {
   if (item.sealed) return [];
   const text = unfold(item.text);
   if (item.media === "message") {
-    const head = text.split(/\r?\n\r?\n/, 1)[0];
-    const from = /^From:\s*(.*)$/mi.exec(head)?.[1];
-    const one = mailbox(from ?? /^To:\s*(.*)$/mi.exec(head)?.[1] ?? "");
-    return one ? [one] : [];
+    const [one] = mailboxesIn(item.text, ["from"]).concat(mailboxesIn(item.text, ["to"]));
+    return one ? [known(one)] : [];
   }
   if (item.media === "calendar") {
     const out = [];
@@ -71,19 +51,14 @@ export function selfOf(items) {
   const counts = new Map();
   for (const item of items) {
     if (item.sealed || item.media !== "message") continue;
-    const head = unfold(item.text).split(/\r?\n\r?\n/, 1)[0];
     const seen = new Set();
-    for (const field of ["Delivered-To", "To", "Cc"]) {
-      const value = new RegExp(`^${field}:\\s*(.*)$`, "mi").exec(head)?.[1] ?? "";
-      for (const part of value.split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)) {
-        const one = mailbox(part);
-        if (!one?.address || seen.has(one.address)) continue;
-        seen.add(one.address);
-        const at = counts.get(one.address) ?? { address: one.address, name: "", count: 0 };
-        at.count += 1;
-        if (one.name && one.name !== one.address) at.name ||= one.name;
-        counts.set(one.address, at);
-      }
+    for (const one of mailboxesIn(item.text, ["delivered-to", "to", "cc"]).map(known)) {
+      if (!one.address || seen.has(one.address)) continue;
+      seen.add(one.address);
+      const at = counts.get(one.address) ?? { address: one.address, name: "", count: 0 };
+      at.count += 1;
+      if (one.name && one.name !== one.address) at.name ||= one.name;
+      counts.set(one.address, at);
     }
   }
   const top = [...counts.values()].sort((a, b) => b.count - a.count)[0];

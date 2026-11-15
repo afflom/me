@@ -239,6 +239,148 @@
    "text": "In order to cause a SPACE to be displayed within a portion of encoded text, the SPACE MUST be encoded as part of the 'encoded-word'."
   }
  ],
+ "rfc2183": [
+  {
+   "id": "rfc2183-1-ad027fe0",
+   "kind": "must",
+   "ref": "RFC 2183 1",
+   "text": "The keywords MUST, MUST NOT, REQUIRED, SHALL, SHALL NOT, SHOULD, SHOULD NOT, RECOMMENDED, MAY, and OPTIONAL, when they appear in this document, are to be interpreted as described in [RFC 2119]."
+  },
+  {
+   "id": "rfc2183-10-2528d620",
+   "kind": "must",
+   "ref": "RFC 2183 10",
+   "text": "+ Added reference to RFC 2119 to define MUST, SHOULD, etc. keywords."
+  },
+  {
+   "id": "rfc2183-2-01fd5fd7",
+   "kind": "should",
+   "ref": "RFC 2183 2",
+   "text": "A short parameter value containing only ASCII characters, but including `tspecials' characters, SHOULD be represented as `quoted-string'."
+  },
+  {
+   "id": "rfc2183-2-7f8790ce",
+   "kind": "must",
+   "ref": "RFC 2183 2",
+   "text": "quoted-date-time := quoted-string ; contents MUST be an RFC 822 `date-time' ; numeric timezones (+HHMM or -HHMM) MUST be used"
+  },
+  {
+   "id": "rfc2183-2-b422c6d1",
+   "kind": "must",
+   "ref": "RFC 2183 2",
+   "text": "Parameter values longer than 78 characters, or which contain non-ASCII characters, MUST be encoded as specified in [RFC 2184]."
+  },
+  {
+   "id": "rfc2183-2-ce0e8509",
+   "kind": "should",
+   "ref": "RFC 2183 2",
+   "text": "A short (length <= 78 characters) parameter value containing only non-`tspecials' characters SHOULD be represented as a single `token'."
+  },
+  {
+   "id": "rfc2183-2.3-3babb97e",
+   "kind": "should",
+   "ref": "RFC 2183 2.3",
+   "text": "The suggested filename SHOULD be checked (and possibly changed) to see that it conforms to local filesystem conventions, does not overwrite an existing file, and does not present a security problem (see Security Considerations below)."
+  },
+  {
+   "id": "rfc2183-2.3-a1fd7ff7",
+   "kind": "should",
+   "ref": "RFC 2183 2.3",
+   "text": "The receiving MUA SHOULD NOT respect any directory path information that may seem to be present in the filename parameter."
+  },
+  {
+   "id": "rfc2183-2.4-5a5f2f4b",
+   "kind": "may",
+   "ref": "RFC 2183 2.4",
+   "text": "The creation-date parameter MAY be used to indicate the date at which the file was created."
+  },
+  {
+   "id": "rfc2183-2.4-e9ede57a",
+   "kind": "must",
+   "ref": "RFC 2183 2.4",
+   "text": "If this parameter is included, the paramter value MUST be a quoted-string which contains a representation of the creation date of the file in [RFC 822] `date-time' format."
+  },
+  {
+   "id": "rfc2183-2.5-7017b453",
+   "kind": "may",
+   "ref": "RFC 2183 2.5",
+   "text": "The modification-date parameter MAY be used to indicate the date at which the file was last modified."
+  },
+  {
+   "id": "rfc2183-2.5-b0dddd85",
+   "kind": "must",
+   "ref": "RFC 2183 2.5",
+   "text": "If the modification-date parameter is included, the paramter value MUST be a quoted-string which contains a representation of the last modification date of the file in [RFC 822] `date-time' format."
+  },
+  {
+   "id": "rfc2183-2.6-2fa66289",
+   "kind": "must",
+   "ref": "RFC 2183 2.6",
+   "text": "If the read-date parameter is included, the parameter value MUST be a quoted-string which contains a representation of the last-read date of the file in [RFC 822] `date- time' format."
+  },
+  {
+   "id": "rfc2183-2.6-94c5e858",
+   "kind": "may",
+   "ref": "RFC 2183 2.6",
+   "text": "The read-date parameter MAY be used to indicate the date at which the file was last read."
+  }
+ ],
+ "rfc2231": [
+  {
+   "id": "rfc2231-3-5266ef30",
+   "kind": "must",
+   "ref": "RFC 2231 3",
+   "text": "(2) the mechanism MUST NOT depend on parameter ordering since MIME states that parameters are not order sensitive."
+  },
+  {
+   "id": "rfc2231-3-7f34d22d",
+   "kind": "must",
+   "ref": "RFC 2231 3",
+   "text": "Any such mechanism MUST be compatible with existing MIME processors."
+  },
+  {
+   "id": "rfc2231-3-8c7d488f",
+   "kind": "must",
+   "ref": "RFC 2231 3",
+   "text": "(1) the mechanism MUST NOT change the syntax of MIME media type and disposition lines, and"
+  },
+  {
+   "id": "rfc2231-4-167aff85",
+   "kind": "must",
+   "ref": "RFC 2231 4",
+   "text": "Note also that the single quote delimiters MUST be present even when one of the field values is omitted."
+  },
+  {
+   "id": "rfc2231-4-37d56ae0",
+   "kind": "must",
+   "ref": "RFC 2231 4",
+   "text": "This MUST NOT be done in order to indicate a default character set or language -- parameter field definitions MUST NOT assign a default character set or language."
+  },
+  {
+   "id": "rfc2231-4.1-6518f60a",
+   "kind": "must",
+   "ref": "RFC 2231 4.1",
+   "text": "(5) If the first segment of a continued parameter value is encoded the language and character set field delimiters MUST be present even when the fields are left blank."
+  },
+  {
+   "id": "rfc2231-4.1-d1704bb6",
+   "kind": "must",
+   "ref": "RFC 2231 4.1",
+   "text": "(4) The first segment of a continuation MUST be encoded if language and character set information are given."
+  },
+  {
+   "id": "rfc2231-6-f890b0cc",
+   "kind": "should",
+   "ref": "RFC 2231 6",
+   "text": "IMAP4 [RFC-2060] servers SHOULD decode parameter value continuations when generating the BODY and BODYSTRUCTURE fetch attributes."
+  },
+  {
+   "id": "rfc2231-8-00d97953",
+   "kind": "should",
+   "ref": "RFC 2231 8",
+   "text": "If and when such facilities are developed they SHOULD be used in preference to the language labeling facilities specified here."
+  }
+ ],
  "rfc4155": [
   {
    "id": "rfc4155-2-212b9275",
@@ -401,6 +543,7 @@
    "text": "These pad bits MUST be set to zero by conforming encoders, which is described in the descriptions on padding below."
   }
  ],
+ "rfc5234": [],
  "rfc5322": [
   {
    "id": "rfc5322-1.2.3-13ac78e9",
@@ -6169,6 +6312,898 @@
    "kind": "element",
    "ref": "RFC 6350 4.7",
    "text": "The value type utc-offset registered by IANA's vCard Elements registry is read as its RFC defines it"
+  }
+ ],
+ "rfc6473": [
+  {
+   "id": "rfc6473-property-value-KIND-application",
+   "kind": "element",
+   "ref": "RFC 6473 3",
+   "text": "The property value KIND:application registered by IANA's vCard Elements registry is read as its RFC defines it"
+  }
+ ],
+ "rfc6474": [
+  {
+   "id": "rfc6474-2.1-fac486f9",
+   "kind": "must",
+   "ref": "RFC 6474 2.1",
+   "text": "Value type and VALUE parameter MUST match."
+  },
+  {
+   "id": "rfc6474-2.2-fac486f9",
+   "kind": "must",
+   "ref": "RFC 6474 2.2",
+   "text": "Value type and VALUE parameter MUST match."
+  },
+  {
+   "id": "rfc6474-2.3-fac486f9",
+   "kind": "must",
+   "ref": "RFC 6474 2.3",
+   "text": "Value type and VALUE parameter MUST match."
+  },
+  {
+   "id": "rfc6474-property-BIRTHPLACE",
+   "kind": "element",
+   "ref": "RFC 6474 2.1",
+   "text": "The property BIRTHPLACE registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc6474-property-DEATHDATE",
+   "kind": "element",
+   "ref": "RFC 6474 2.3",
+   "text": "The property DEATHDATE registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc6474-property-DEATHPLACE",
+   "kind": "element",
+   "ref": "RFC 6474 2.2",
+   "text": "The property DEATHPLACE registered by IANA's vCard Elements registry is read as its RFC defines it"
+  }
+ ],
+ "rfc6715": [
+  {
+   "id": "rfc6715-parameter-INDEX",
+   "kind": "element",
+   "ref": "RFC 6715 3.1",
+   "text": "The parameter INDEX registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc6715-parameter-LEVEL",
+   "kind": "element",
+   "ref": "RFC 6715 3.2",
+   "text": "The parameter LEVEL registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc6715-parameter-value-LEVEL-average-EXPERTISE",
+   "kind": "element",
+   "ref": "RFC 6715 3.2",
+   "text": "The parameter value LEVEL=average registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc6715-parameter-value-LEVEL-beginner-EXPERTISE",
+   "kind": "element",
+   "ref": "RFC 6715 3.2",
+   "text": "The parameter value LEVEL=beginner registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc6715-parameter-value-LEVEL-expert-EXPERTISE",
+   "kind": "element",
+   "ref": "RFC 6715 3.2",
+   "text": "The parameter value LEVEL=expert registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc6715-parameter-value-LEVEL-high-HOBBY",
+   "kind": "element",
+   "ref": "RFC 6715 3.2",
+   "text": "The parameter value LEVEL=high registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc6715-parameter-value-LEVEL-high-INTEREST",
+   "kind": "element",
+   "ref": "RFC 6715 3.2",
+   "text": "The parameter value LEVEL=high registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc6715-parameter-value-LEVEL-low-HOBBY",
+   "kind": "element",
+   "ref": "RFC 6715 3.2",
+   "text": "The parameter value LEVEL=low registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc6715-parameter-value-LEVEL-low-INTEREST",
+   "kind": "element",
+   "ref": "RFC 6715 3.2",
+   "text": "The parameter value LEVEL=low registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc6715-parameter-value-LEVEL-medium-HOBBY",
+   "kind": "element",
+   "ref": "RFC 6715 3.2",
+   "text": "The parameter value LEVEL=medium registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc6715-parameter-value-LEVEL-medium-INTEREST",
+   "kind": "element",
+   "ref": "RFC 6715 3.2",
+   "text": "The parameter value LEVEL=medium registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc6715-property-EXPERTISE",
+   "kind": "element",
+   "ref": "RFC 6715 2.1",
+   "text": "The property EXPERTISE registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc6715-property-HOBBY",
+   "kind": "element",
+   "ref": "RFC 6715 2.2",
+   "text": "The property HOBBY registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc6715-property-INTEREST",
+   "kind": "element",
+   "ref": "RFC 6715 2.3",
+   "text": "The property INTEREST registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc6715-property-ORG-DIRECTORY",
+   "kind": "element",
+   "ref": "RFC 6715 2.4",
+   "text": "The property ORG-DIRECTORY registered by IANA's vCard Elements registry is read as its RFC defines it"
+  }
+ ],
+ "rfc6869": [
+  {
+   "id": "rfc6869-property-value-KIND-device",
+   "kind": "element",
+   "ref": "RFC 6869 3",
+   "text": "The property value KIND:device registered by IANA's vCard Elements registry is read as its RFC defines it"
+  }
+ ],
+ "rfc7852": [
+  {
+   "id": "rfc7852-parameter-value-TYPE-main-number-TEL",
+   "kind": "element",
+   "ref": "RFC 7852",
+   "text": "The parameter value TYPE=main-number registered by IANA's vCard Elements registry is read as its RFC defines it"
+  }
+ ],
+ "rfc8605": [
+  {
+   "id": "rfc8605-2.1-adb670d6",
+   "kind": "must",
+   "ref": "RFC 8605 2.1",
+   "text": "If multiple CONTACT-URI properties are used, the vCard PREF parameter MUST be used to describe the most preferred property as described in Section 5.3 of RFC 6350 [RFC6350]."
+  },
+  {
+   "id": "rfc8605-2.1-c6f93699",
+   "kind": "must",
+   "ref": "RFC 8605 2.1",
+   "text": "At least one \"mailto\", \"http\", or \"https\" URI value MUST be provided."
+  },
+  {
+   "id": "rfc8605-2.1-f6969aaa",
+   "kind": "may",
+   "ref": "RFC 8605 2.1",
+   "text": "Additional CONTACT-URI properties MAY be provided to describe other contact methods."
+  },
+  {
+   "id": "rfc8605-parameter-CC",
+   "kind": "element",
+   "ref": "RFC 8605 3.1",
+   "text": "The parameter CC registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc8605-property-CONTACT-URI",
+   "kind": "element",
+   "ref": "RFC 8605 2.1",
+   "text": "The property CONTACT-URI registered by IANA's vCard Elements registry is read as its RFC defines it"
+  }
+ ],
+ "rfc9554": [
+  {
+   "id": "rfc9554-2.1-17a21ce6",
+   "kind": "should",
+   "ref": "RFC 9554 2.1",
+   "text": "Implementations SHOULD write a combined value of these components in the street address component for backwards compatibility, but they SHOULD ignore the street component during reads if the ADR property value contains any of the new components."
+  },
+  {
+   "id": "rfc9554-2.1-2cda4f6c",
+   "kind": "must",
+   "ref": "RFC 9554 2.1",
+   "text": "The component values MUST be specified in their corresponding position."
+  },
+  {
+   "id": "rfc9554-2.2-93e05be9",
+   "kind": "should",
+   "ref": "RFC 9554 2.2",
+   "text": "Reading N property values, implementations SHOULD ignore any value in the backwards-compatible component if an equal value is set in the new component accordingly."
+  },
+  {
+   "id": "rfc9554-2.2-b57daf95",
+   "kind": "should",
+   "ref": "RFC 9554 2.2",
+   "text": "For backwards compatibility, implementations SHOULD add such values to both the newly defined components and their backwards-compatible counterpart."
+  },
+  {
+   "id": "rfc9554-3.1-07cdd224",
+   "kind": "may",
+   "ref": "RFC 9554 3.1",
+   "text": "The following are OPTIONAL ; but MUST NOT occur more than once. ;"
+  },
+  {
+   "id": "rfc9554-3.1-e458f0e8",
+   "kind": "may",
+   "ref": "RFC 9554 3.1",
+   "text": "The following are OPTIONAL ; and MAY occur more than once. ;"
+  },
+  {
+   "id": "rfc9554-3.2-07cdd224",
+   "kind": "may",
+   "ref": "RFC 9554 3.2",
+   "text": "The following are OPTIONAL ; but MUST NOT occur more than once. ;"
+  },
+  {
+   "id": "rfc9554-3.2-4ac4de7f",
+   "kind": "must",
+   "ref": "RFC 9554 3.2",
+   "text": "Multiple occurrences of this property MUST be distinguished by the LANGUAGE parameter."
+  },
+  {
+   "id": "rfc9554-3.2-e458f0e8",
+   "kind": "may",
+   "ref": "RFC 9554 3.2",
+   "text": "The following are OPTIONAL ; and MAY occur more than once. ;"
+  },
+  {
+   "id": "rfc9554-3.3-0b22f4b5",
+   "kind": "must",
+   "ref": "RFC 9554 3.3",
+   "text": "The LANGUAGE parameter MUST NOT be assigned to this property."
+  },
+  {
+   "id": "rfc9554-3.4-07cdd224",
+   "kind": "may",
+   "ref": "RFC 9554 3.4",
+   "text": "The following are OPTIONAL ; but MUST NOT occur more than once. ;"
+  },
+  {
+   "id": "rfc9554-3.4-08dd2971",
+   "kind": "should",
+   "ref": "RFC 9554 3.4",
+   "text": "Multiple pronouns in the same language SHOULD use the PREF parameter; otherwise, the order of preference is implementation- specific."
+  },
+  {
+   "id": "rfc9554-3.4-c776eee6",
+   "kind": "may",
+   "ref": "RFC 9554 3.4",
+   "text": "Multiple occurrences of this property MAY define pronouns for multiple languages, preferences, and contexts."
+  },
+  {
+   "id": "rfc9554-3.4-e458f0e8",
+   "kind": "may",
+   "ref": "RFC 9554 3.4",
+   "text": "The following are OPTIONAL ; and MAY occur more than once. ;"
+  },
+  {
+   "id": "rfc9554-3.5-33017661",
+   "kind": "must",
+   "ref": "RFC 9554 3.5",
+   "text": "In addition to the typical use of this property with URI values, it also allows setting usernames for social media services as free-text TEXT values, in which case the service name MUST be provided as a parameter."
+  },
+  {
+   "id": "rfc9554-3.5-59c448c8",
+   "kind": "must",
+   "ref": "RFC 9554 3.5",
+   "text": "Names MUST be considered equal if they match case- insensitively."
+  },
+  {
+   "id": "rfc9554-3.5-846ba1a8",
+   "kind": "must",
+   "ref": "RFC 9554 3.5",
+   "text": "In either case, it MUST NOT be assigned more than once."
+  },
+  {
+   "id": "rfc9554-3.5-c4fc01a5",
+   "kind": "must",
+   "ref": "RFC 9554 3.5",
+   "text": "The SERVICE-TYPE parameter MUST be assigned to this property if the value type is TEXT, and it MAY be assigned if the value type is URI."
+  },
+  {
+   "id": "rfc9554-4.10-0ef23e96",
+   "kind": "must",
+   "ref": "RFC 9554 4.10",
+   "text": "The IMPP or SOCIALPROFILE value type MUST be URI."
+  },
+  {
+   "id": "rfc9554-4.10-9a6fd5d6",
+   "kind": "may",
+   "ref": "RFC 9554 4.10",
+   "text": "This parameter MAY be specified on an IMPP or a SOCIALPROFILE property to name the user with that property value."
+  },
+  {
+   "id": "rfc9554-4.10-ecf4af7a",
+   "kind": "must",
+   "ref": "RFC 9554 4.10",
+   "text": "Its value is case-sensitive; its letter cases MUST be preserved."
+  },
+  {
+   "id": "rfc9554-4.3-4baa3563",
+   "kind": "may",
+   "ref": "RFC 9554 4.3",
+   "text": "This parameter MAY be set on any property to define the point in time when the property was created."
+  },
+  {
+   "id": "rfc9554-4.3-b0e3f1ef",
+   "kind": "should",
+   "ref": "RFC 9554 4.3",
+   "text": "Generally, updating a property value SHOULD NOT change the creation timestamp."
+  },
+  {
+   "id": "rfc9554-4.3-ef65afcb",
+   "kind": "must",
+   "ref": "RFC 9554 4.3",
+   "text": "The value MUST be a valid TIMESTAMP value as defined in Section 4.3.5 of [RFC6350]."
+  },
+  {
+   "id": "rfc9554-4.4-248e7c55",
+   "kind": "should",
+   "ref": "RFC 9554 4.4",
+   "text": "This property parameter SHOULD be specified on a property if the property value is derived from some other properties in the same vCard."
+  },
+  {
+   "id": "rfc9554-4.4-c1240a7f",
+   "kind": "must",
+   "ref": "RFC 9554 4.4",
+   "text": "When present with a value of \"true\", clients MUST NOT update the property."
+  },
+  {
+   "id": "rfc9554-4.6-1a3b2976",
+   "kind": "must",
+   "ref": "RFC 9554 4.6",
+   "text": "If a component value is set in the property on which the PHONETIC parameter is set, then a component value also MUST be set at that same position in the related property."
+  },
+  {
+   "id": "rfc9554-4.6-45d9f5ac",
+   "kind": "must",
+   "ref": "RFC 9554 4.6",
+   "text": "The ALTID (Section 5.4 of [RFC6350]) parameter MUST be set with equal values on both the related property and the property having the PHONETIC parameter set."
+  },
+  {
+   "id": "rfc9554-4.6-4ccb8062",
+   "kind": "may",
+   "ref": "RFC 9554 4.6",
+   "text": "If more than one same-named property has both the PHONETIC parameter set and an equal ALTID parameter value, then at most, one of these properties MAY not have the LANGUAGE parameter set, and all others MUST have the LANGUAGE parameter set."
+  },
+  {
+   "id": "rfc9554-4.6-5bf73a3e",
+   "kind": "must",
+   "ref": "RFC 9554 4.6",
+   "text": "The parameter value indicates the phonetic system and MUST be one of the values enumerated in the IANA \"vCard Parameter Values\" registry (Section 7.4)."
+  },
+  {
+   "id": "rfc9554-4.6-69e103db",
+   "kind": "must",
+   "ref": "RFC 9554 4.6",
+   "text": "The SCRIPT (Section 4.8) parameter MUST be set in addition to the PHONETIC parameter."
+  },
+  {
+   "id": "rfc9554-4.6-7d04e9d6",
+   "kind": "must",
+   "ref": "RFC 9554 4.6",
+   "text": "The LANGUAGE parameters MUST NOT have equal values."
+  },
+  {
+   "id": "rfc9554-4.6-bdd3e0f4",
+   "kind": "must",
+   "ref": "RFC 9554 4.6",
+   "text": "The value type of the property on which the PHONETIC parameter is set MUST be of the same type as its related property."
+  },
+  {
+   "id": "rfc9554-4.6-dea0169e",
+   "kind": "should",
+   "ref": "RFC 9554 4.6",
+   "text": "The LANGUAGE parameter value SHOULD NOT contain a script subtag in its Language-Tag value, and any such subtag MUST be ignored in favor of the SCRIPT (Section 4.8) parameter value."
+  },
+  {
+   "id": "rfc9554-4.7-4418143c",
+   "kind": "should",
+   "ref": "RFC 9554 4.7",
+   "text": "If an application makes use of PROP-ID, it SHOULD assign a unique identifier to each sibling property of the same name within their embedding component."
+  },
+  {
+   "id": "rfc9554-4.7-76534b84",
+   "kind": "must",
+   "ref": "RFC 9554 4.7",
+   "text": "A valid PROP- ID value must be of 1 and a maximum of 255 octets in size, and it MUST only contain the ASCII alphanumeric characters (\"A-Za-z0-9\"), hyphen (-), and underscore (\"_\")."
+  },
+  {
+   "id": "rfc9554-4.7-d0b17872",
+   "kind": "may",
+   "ref": "RFC 9554 4.7",
+   "text": "The same identifier MAY be used for properties of a different name, and it MAY also be assigned to a same-named property that is not a sibling."
+  },
+  {
+   "id": "rfc9554-4.8-a216de8e",
+   "kind": "must",
+   "ref": "RFC 9554 4.8",
+   "text": "The value MUST be a script subtag as defined in Section 2.2.3 of [RFC5646]."
+  },
+  {
+   "id": "rfc9554-4.9-3f3efa7d",
+   "kind": "may",
+   "ref": "RFC 9554 4.9",
+   "text": "This parameter MAY be specified on an Instant Messaging and Presence Protocol (IMPP) or a SOCIALPROFILE property to name the online service associated with that property value."
+  },
+  {
+   "id": "rfc9554-4.9-ecf4af7a",
+   "kind": "must",
+   "ref": "RFC 9554 4.9",
+   "text": "Its value is case-sensitive; its letter cases MUST be preserved."
+  },
+  {
+   "id": "rfc9554-parameter-AUTHOR",
+   "kind": "element",
+   "ref": "RFC 9554 4.1",
+   "text": "The parameter AUTHOR registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-parameter-AUTHOR-NAME",
+   "kind": "element",
+   "ref": "RFC 9554 4.2",
+   "text": "The parameter AUTHOR-NAME registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-parameter-CREATED",
+   "kind": "element",
+   "ref": "RFC 9554 4.3",
+   "text": "The parameter CREATED registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-parameter-DERIVED",
+   "kind": "element",
+   "ref": "RFC 9554 4.4",
+   "text": "The parameter DERIVED registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-parameter-PHONETIC",
+   "kind": "element",
+   "ref": "RFC 9554 4.6",
+   "text": "The parameter PHONETIC registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-parameter-PROP-ID",
+   "kind": "element",
+   "ref": "RFC 9554 4.7",
+   "text": "The parameter PROP-ID registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-parameter-SCRIPT",
+   "kind": "element",
+   "ref": "RFC 9554 4.8",
+   "text": "The parameter SCRIPT registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-parameter-SERVICE-TYPE",
+   "kind": "element",
+   "ref": "RFC 9554 4.9",
+   "text": "The parameter SERVICE-TYPE registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-parameter-USERNAME",
+   "kind": "element",
+   "ref": "RFC 9554 4.10",
+   "text": "The parameter USERNAME registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-parameter-value-PHONETIC-ipa-ADR",
+   "kind": "element",
+   "ref": "RFC 9554 4.6",
+   "text": "The parameter value PHONETIC=ipa registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-parameter-value-PHONETIC-jyut-ADR",
+   "kind": "element",
+   "ref": "RFC 9554 4.6",
+   "text": "The parameter value PHONETIC=jyut registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-parameter-value-PHONETIC-piny-ADR",
+   "kind": "element",
+   "ref": "RFC 9554 4.6",
+   "text": "The parameter value PHONETIC=piny registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-parameter-value-PHONETIC-script-ADR",
+   "kind": "element",
+   "ref": "RFC 9554 4.6",
+   "text": "The parameter value PHONETIC=script registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-parameter-value-TYPE-billing-ADR",
+   "kind": "element",
+   "ref": "RFC 9554 5.1",
+   "text": "The parameter value TYPE=billing registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-parameter-value-TYPE-delivery-ADR",
+   "kind": "element",
+   "ref": "RFC 9554 5.2",
+   "text": "The parameter value TYPE=delivery registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-property-CREATED",
+   "kind": "element",
+   "ref": "RFC 9554 3.1",
+   "text": "The property CREATED registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-property-GRAMGENDER",
+   "kind": "element",
+   "ref": "RFC 9554 3.2",
+   "text": "The property GRAMGENDER registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-property-LANGUAGE",
+   "kind": "element",
+   "ref": "RFC 9554 3.3",
+   "text": "The property LANGUAGE registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-property-PRONOUNS",
+   "kind": "element",
+   "ref": "RFC 9554 3.4",
+   "text": "The property PRONOUNS registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-property-SOCIALPROFILE",
+   "kind": "element",
+   "ref": "RFC 9554 3.5",
+   "text": "The property SOCIALPROFILE registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-property-value-GRAMGENDER-animate",
+   "kind": "element",
+   "ref": "RFC 9554 3.2",
+   "text": "The property value GRAMGENDER:animate registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-property-value-GRAMGENDER-common",
+   "kind": "element",
+   "ref": "RFC 9554 3.2",
+   "text": "The property value GRAMGENDER:common registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-property-value-GRAMGENDER-feminine",
+   "kind": "element",
+   "ref": "RFC 9554 3.2",
+   "text": "The property value GRAMGENDER:feminine registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-property-value-GRAMGENDER-inanimate",
+   "kind": "element",
+   "ref": "RFC 9554 3.2",
+   "text": "The property value GRAMGENDER:inanimate registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-property-value-GRAMGENDER-masculine",
+   "kind": "element",
+   "ref": "RFC 9554 3.2",
+   "text": "The property value GRAMGENDER:masculine registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9554-property-value-GRAMGENDER-neuter",
+   "kind": "element",
+   "ref": "RFC 9554 3.2",
+   "text": "The property value GRAMGENDER:neuter registered by IANA's vCard Elements registry is read as its RFC defines it"
+  }
+ ],
+ "rfc9555": [
+  {
+   "id": "rfc9555-2.1.1-5b8ff21f",
+   "kind": "must",
+   "ref": "RFC 9555 2.1.1",
+   "text": "Implementations that convert a vCard without a UID property MUST generate a unique identifier as value for the uid property."
+  },
+  {
+   "id": "rfc9555-2.1.1-c21b04dd",
+   "kind": "should",
+   "ref": "RFC 9555 2.1.1",
+   "text": "This value SHOULD be the same when converting the same vCard multiple times, but how to achieve this is implementation- specific."
+  },
+  {
+   "id": "rfc9555-2.1.2-522f4f3c",
+   "kind": "must",
+   "ref": "RFC 9555 2.1.2",
+   "text": "Whatever identifier generation scheme implementations use, they MUST generate values that are valid according to the definition of the Id type in [RFC9553]."
+  },
+  {
+   "id": "rfc9555-2.11.1-b1890c60",
+   "kind": "may",
+   "ref": "RFC 9555 2.11.1",
+   "text": "In this case, the PREF parameter does not have a JSContact counterpart; however, the implementors MAY insert the entries by order of preference."
+  },
+  {
+   "id": "rfc9555-2.15-24eb0717",
+   "kind": "may",
+   "ref": "RFC 9555 2.15",
+   "text": "Implementations MAY choose to convert differently if they deem that more appropriate."
+  },
+  {
+   "id": "rfc9555-2.15-5c169719",
+   "kind": "may",
+   "ref": "RFC 9555 2.15",
+   "text": "This section defines JSContact properties by which such vCard properties and parameters MAY be represented in JSContact."
+  },
+  {
+   "id": "rfc9555-2.15.2-e4e48495",
+   "kind": "must",
+   "ref": "RFC 9555 2.15.2",
+   "text": "The value MUST be a JSON object containing vCard property parameters as defined in Section 3.3 of [RFC7095]."
+  },
+  {
+   "id": "rfc9555-2.15.3-5a96ba55",
+   "kind": "must",
+   "ref": "RFC 9555 2.15.3",
+   "text": "The case- insensitive value MUST be valid according to the \"name\" ABNF defined in Section 3.3 of [RFC6350]."
+  },
+  {
+   "id": "rfc9555-2.2.5-1170b314",
+   "kind": "must",
+   "ref": "RFC 9555 2.2.5",
+   "text": "The value MUST be a language tag as defined in [RFC5646]."
+  },
+  {
+   "id": "rfc9555-2.2.7-89a72665",
+   "kind": "must",
+   "ref": "RFC 9555 2.2.7",
+   "text": "The value MUST be a URI as defined in Section 3 of [RFC3986]"
+  },
+  {
+   "id": "rfc9555-2.3.13-c820bd7b",
+   "kind": "must",
+   "ref": "RFC 9555 2.3.13",
+   "text": "In all other cases, the values convert verbatim, but lowercase MUST be used for the JSContact value."
+  },
+  {
+   "id": "rfc9555-2.3.7-739c7452",
+   "kind": "may",
+   "ref": "RFC 9555 2.3.7",
+   "text": "If the DERIVED parameter is set to \"true\" on a vCard property, then implementations MAY choose not to convert that property."
+  },
+  {
+   "id": "rfc9555-2.3.9-4d500408",
+   "kind": "must",
+   "ref": "RFC 9555 2.3.9",
+   "text": "It exclusively is for use in jCard and MUST NOT be set in a vCard."
+  },
+  {
+   "id": "rfc9555-2.3.9-f834b3b8",
+   "kind": "may",
+   "ref": "RFC 9555 2.3.9",
+   "text": "Implementations that still wish to preserve the exact property group name of a vCard property MAY set the jCard \"group\" parameter in the JSContact properties vCardProps or vCardParams as defined in Section 2.15."
+  },
+  {
+   "id": "rfc9555-2.5.5-07bb0539",
+   "kind": "must",
+   "ref": "RFC 9555 2.5.5",
+   "text": "The order in the components property MUST follow the order of values in the N structured value when read from left to right."
+  },
+  {
+   "id": "rfc9555-2.5.5-95cbb42a",
+   "kind": "must",
+   "ref": "RFC 9555 2.5.5",
+   "text": "If the JSCOMPS parameter is not set, then the Name object's isOrdered property value is \"false\", and the defaultSeparator property MUST NOT be set."
+  },
+  {
+   "id": "rfc9555-2.5.5-e4ead202",
+   "kind": "must",
+   "ref": "RFC 9555 2.5.5",
+   "text": "The order in the components property MUST adhere to the order of the JSCOMPS parameter value."
+  },
+  {
+   "id": "rfc9555-2.6.1-0d678c1e",
+   "kind": "must",
+   "ref": "RFC 9555 2.6.1",
+   "text": "If the JSCOMPS parameter is not set, then the Address object's isOrdered property value is \"false\", and the defaultSeparator property MUST NOT be set."
+  },
+  {
+   "id": "rfc9555-2.6.1-4ebfa758",
+   "kind": "should",
+   "ref": "RFC 9555 2.6.1",
+   "text": "Implementations SHOULD set these new components, even if all their values are the empty string."
+  },
+  {
+   "id": "rfc9555-2.6.1-e4ead202",
+   "kind": "must",
+   "ref": "RFC 9555 2.6.1",
+   "text": "The order in the components property MUST adhere to the order of the JSCOMPS parameter value."
+  },
+  {
+   "id": "rfc9555-2.6.1-fd2fd358",
+   "kind": "must",
+   "ref": "RFC 9555 2.6.1",
+   "text": "The order in the components property MUST follow the order of values in the ADR structured value when read from left to right."
+  },
+  {
+   "id": "rfc9555-2.7.6-bfd9c4c0",
+   "kind": "should",
+   "ref": "RFC 9555 2.7.6",
+   "text": "Accordingly, an implementation SHOULD only set the Phone object's features property if the TEL property actually has a TEL-specific TYPE parameter set."
+  },
+  {
+   "id": "rfc9555-2.8.3-75336180",
+   "kind": "must",
+   "ref": "RFC 9555 2.8.3",
+   "text": "That being said, implementations MUST convert the properties to the _same_ address for the following cases:"
+  },
+  {
+   "id": "rfc9555-2.9.4-742f86b3",
+   "kind": "may",
+   "ref": "RFC 9555 2.9.4",
+   "text": "Implementations MAY allow representation of organizational units without the organizational name."
+  },
+  {
+   "id": "rfc9555-2.9.4-ab52dab2",
+   "kind": "must",
+   "ref": "RFC 9555 2.9.4",
+   "text": "In this case, the first component of the ORG value MUST be an empty string (e.g., ORG:;DepartmentA)."
+  },
+  {
+   "id": "rfc9555-3.1-1007918e",
+   "kind": "should",
+   "ref": "RFC 9555 3.1",
+   "text": "- If the Name object's full property is not set, then implementations SHOULD derive the full name from the Name object's components property values."
+  },
+  {
+   "id": "rfc9555-3.1-7860f6e0",
+   "kind": "must",
+   "ref": "RFC 9555 3.1",
+   "text": "Implementations MUST set the DERIVED parameter on the FN property."
+  },
+  {
+   "id": "rfc9555-3.1-b768a29f",
+   "kind": "must",
+   "ref": "RFC 9555 3.1",
+   "text": "- If the Name object's full property is set, then implementations MUST use its value for the vCard FN property."
+  },
+  {
+   "id": "rfc9555-3.1-db549839",
+   "kind": "must",
+   "ref": "RFC 9555 3.1",
+   "text": "* Multivalued JSContact properties convert to separate instances of their equivalent vCard property, and each of the PROP-ID parameters MUST be set to the Id-typed key of the converted value (see Section 2.3.18)."
+  },
+  {
+   "id": "rfc9555-3.1-ecb86919",
+   "kind": "must",
+   "ref": "RFC 9555 3.1",
+   "text": "- Otherwise, the FN property MUST be set to the empty value."
+  },
+  {
+   "id": "rfc9555-3.1.1-146c2fff",
+   "kind": "may",
+   "ref": "RFC 9555 3.1.1",
+   "text": "This specification defines the new JSPROP (Section 3.2.1) vCard property and JSPTR (Section 3.3.2) vCard parameter by which such JSContact properties MAY be represented in vCard."
+  },
+  {
+   "id": "rfc9555-3.1.1-24eb0717",
+   "kind": "may",
+   "ref": "RFC 9555 3.1.1",
+   "text": "Implementations MAY choose to convert differently if they deem that more appropriate."
+  },
+  {
+   "id": "rfc9555-3.2.1-30db1434",
+   "kind": "may",
+   "ref": "RFC 9555 3.2.1",
+   "text": "The following is OPTIONAL ; and MAY occur more than once. ;"
+  },
+  {
+   "id": "rfc9555-3.2.1-4b65873a",
+   "kind": "must",
+   "ref": "RFC 9555 3.2.1",
+   "text": "The pointer MUST NOT reference into an array."
+  },
+  {
+   "id": "rfc9555-3.2.1-63a8c6f5",
+   "kind": "must",
+   "ref": "RFC 9555 3.2.1",
+   "text": "The JSPTR parameter MUST be set for this property."
+  },
+  {
+   "id": "rfc9555-3.2.1-9f3c8f42",
+   "kind": "must",
+   "ref": "RFC 9555 3.2.1",
+   "text": "The PatchObject MUST be valid, including the restriction that an invalid PatchObject MUST NOT be applied."
+  },
+  {
+   "id": "rfc9555-3.2.1-aee8c304",
+   "kind": "must",
+   "ref": "RFC 9555 3.2.1",
+   "text": "When converting from vCard to JSContact, the PatchObject MUST only be applied after all other vCard properties have already been converted."
+  },
+  {
+   "id": "rfc9555-3.2.1-e69cb24f",
+   "kind": "must",
+   "ref": "RFC 9555 3.2.1",
+   "text": "The following are REQUIRED and MUST NOT ; occur more than once ( \";\" jsptr-param ) / ; see next section ( \";\" \"VALUE\" \"=\" \"TEXT\") ; ;"
+  },
+  {
+   "id": "rfc9555-3.2.1-ec11f6bb",
+   "kind": "must",
+   "ref": "RFC 9555 3.2.1",
+   "text": "The format of the JSON value MUST be compact, e.g., without insignificant whitespace as defined in Section 2 of [RFC8259]."
+  },
+  {
+   "id": "rfc9555-3.3.1-02c6acb8",
+   "kind": "must",
+   "ref": "RFC 9555 3.3.1",
+   "text": "If this parameter is set and its value is valid (see later), then implementations MUST set the isOrdered property of the Name or Address object to \"true\"."
+  },
+  {
+   "id": "rfc9555-3.3.1-260eaca2",
+   "kind": "must",
+   "ref": "RFC 9555 3.3.1",
+   "text": "The second index is zero by default, in which case it MUST be omitted (as well as the leading COMMA)."
+  },
+  {
+   "id": "rfc9555-3.3.1-6324cc38",
+   "kind": "must",
+   "ref": "RFC 9555 3.3.1",
+   "text": "All following entries processed in order result in an ordered list of JSContact components and MUST be one of the following two kinds:"
+  },
+  {
+   "id": "rfc9555-3.3.1-8475d40c",
+   "kind": "must",
+   "ref": "RFC 9555 3.3.1",
+   "text": "It starts with the LATIN SMALL LETTER S (U+0073) character, followed by the COMMA (U+002C) character, followed by zero or more \"param-value\" characters (see Section 3.3 of [RFC6350]), where the COMMA (U+002C) and SEMICOLON (U+003B) characters MUST be escaped according to the rules defined in Section 3.4 of [RFC6350]."
+  },
+  {
+   "id": "rfc9555-3.3.1-a9ecb234",
+   "kind": "must",
+   "ref": "RFC 9555 3.3.1",
+   "text": "Otherwise, they MUST set the isOrdered property value to \"false\"."
+  },
+  {
+   "id": "rfc9555-3.3.1-ae3b2f27",
+   "kind": "must",
+   "ref": "RFC 9555 3.3.1",
+   "text": "Its value MUST be quoted."
+  },
+  {
+   "id": "rfc9555-3.3.1-b4c424a2",
+   "kind": "must",
+   "ref": "RFC 9555 3.3.1",
+   "text": "Otherwise, the first entry MUST be a separator entry."
+  },
+  {
+   "id": "rfc9555-3.3.2-10f71668",
+   "kind": "must",
+   "ref": "RFC 9555 3.3.2",
+   "text": "Note that the value MUST be quoted according to the \"param-value\" ABNF in [RFC6350]."
+  },
+  {
+   "id": "rfc9555-3.3.2-3a6c4ecb",
+   "kind": "must",
+   "ref": "RFC 9555 3.3.2",
+   "text": "This parameter has a single value that MUST be a valid JSON pointer as defined in [RFC6901]."
+  },
+  {
+   "id": "rfc9555-parameter-JSCOMPS",
+   "kind": "element",
+   "ref": "RFC 9555 3.3.1",
+   "text": "The parameter JSCOMPS registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9555-parameter-JSPTR",
+   "kind": "element",
+   "ref": "RFC 9555 3.3.2",
+   "text": "The parameter JSPTR registered by IANA's vCard Elements registry is read as its RFC defines it"
+  },
+  {
+   "id": "rfc9555-property-JSPROP",
+   "kind": "element",
+   "ref": "RFC 9555 3.2.1",
+   "text": "The property JSPROP registered by IANA's vCard Elements registry is read as its RFC defines it"
   }
  ],
  "wai-aria-1.2": [
