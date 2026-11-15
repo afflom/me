@@ -136,7 +136,6 @@ jobs:
             python3 -I tools/realize/gate.py --check &&
               python3 -I tools/standards/gate.py --check --base "$main" &&
               python3 -I tools/parts/gate.py &&
-              python3 -I tools/product/gate.py &&
               python3 -I tools/guests/gen.py check &&
               { [[ ! -f tools/handwritten/gate.py ]] || python3 -I tools/handwritten/gate.py; } &&
               docker run --rm \

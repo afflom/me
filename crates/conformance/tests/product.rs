@@ -1,9 +1,10 @@
 //! The `product` suite: `features/suites/product.feature`.
 //!
-//! The behaviour runs in `pages.yml`: `test/product/gate.test.mjs` (the
-//! record's gate and its planted defects), `test/product/screen.test.mjs` and
+//! The behaviour runs in `pages.yml`: `test/product/screen.test.mjs` and
 //! `test/product/journeys.test.mjs` (on the assembled page, and again on the
-//! published page). These tests hold the wiring fixed.
+//! published page). The record's gate is the LexLean program
+//! generators/product, run by GN-01, whose acceptance vectors are its planted
+//! defects. These tests hold the wiring fixed.
 
 use std::path::PathBuf;
 
@@ -83,7 +84,7 @@ fn product_pd_02() {
 /// `PD-03`: The product record places every part the Prism has: every surface entry in the person's or the system view, every root facet in the system view serving at least one journey, every journey with its goal, done-state, usability measure, status and walk, and every setting in the person's view one the Prism requires of the person; the gate refuses a record that leaves any part unplaced
 #[test]
 fn product_pd_03() {
-    let gate = read("tools/product/gate.py");
+    let gate = read("generators/product/src/GenProduct.lex.tex");
     for needle in [
         "is in the Prism but not in the product record",
         "serves no journey",
@@ -93,13 +94,28 @@ fn product_pd_03() {
     ] {
         assert!(
             gate.contains(needle),
-            "PD-03: gate.py must contain `{needle}`"
+            "PD-03: GenProduct.lex.tex must contain `{needle}`"
         );
     }
-    let test = read("test/product/gate.test.mjs");
+    let pipeline = read("generators/pipeline.json");
+    for generator in [
+        "pdsurface",
+        "pdjourney",
+        "pdorphans",
+        "pdfacet",
+        "pdfacetsmissing",
+        "pdfeature",
+        "pdquality",
+    ] {
+        assert!(
+            pipeline.contains(&format!("\"generator\": \"{generator}\"")),
+            "PD-03: generators/pipeline.json must run {generator}"
+        );
+    }
+    let app = read("generators/product/src/Generators.lex.tex");
     assert!(
-        test.contains("tools/product/gate.py"),
-        "PD-03: the planted defects run the gate"
+        app.matches("AcceptanceVector {request").count() > 30,
+        "PD-03: the planted defects are the program's acceptance vectors"
     );
 }
 

@@ -80,9 +80,14 @@ echo "$steps" | while read -r step; do
       mkdir -p "$work/with/$(dirname "$i")"; cp "$i" "$work/with/$i"
       room=$((room - $(wc -c < "$i") - 1024))
     done
-    for f in $(set -f; git ls-files -- $globs); do
+    if [ "$room" -lt 4096 ]; then echo "GN-01: $gen for $out: its inputs leave no room for a piece; split them" >&2; exit 1; fi
+    if ! files=$(set -f; git ls-files -- $globs) || [ -z "$files" ]; then
+      echo "GN-01: $gen for $out: its globs match no tracked file" >&2; exit 1
+    fi
+    for f in $files; do
       rm -rf "$work/pieces"; mkdir -p "$work/pieces"
       split -C "$room" -d -a 4 "$f" "$work/pieces/p."
+      [ -s "$f" ] || : > "$work/pieces/p.0000"
       for p in "$work/pieces"/p.*; do
         rm -rf "$work/stage"; cp -r "$work/with" "$work/stage"; mkdir -p "$work/stage/$(dirname "$f")"
         cp "$p" "$work/stage/$f"
