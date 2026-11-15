@@ -428,8 +428,36 @@ export default async function start({ app, reason, $ }) {
     people = peopleOf ? { place: peoplePlace, all: peopleOf(items, meNow()), between } : null;
     threads = items.length ? (await import("./time/time.mjs")).sequence(items) : null;
     if (!left) store.set(NEWEST_KEY, JSON.stringify(items.slice(0, 100).map((item) => item.address)));
+    meanItems();
     return left;
   }
+
+  // What each kept thing means, read by the router's meaning model (compiled into
+  // the Prism, site/router/meaning.mjs) after the page is drawn, so the chat and
+  // search find things by what they mean as well as by their words. The model
+  // opens once, in the background; until it has, the words alone are used.
+  let meaning = null;
+  let meaningOpen = false;
+  let meaning$ = null;
+  const meaningOf = () => (meaning$ ??= import("./router/meaning.mjs").then(({ meaningReader }) => (meaning = meaningReader({ line, halted }))));
+  let meaningRun = null;
+  function meanItems() {
+    if (meaningRun || haltedNow) return meaningRun;
+    meaningRun = (async () => {
+      const reader = await meaningOf();
+      for (;;) {
+        const todo = items.filter((item) => !item.sealed && !item.meaning).slice(0, 64);
+        if (!todo.length) break;
+        const vectors = await reader.embed(todo.map((item) => `${item.title ?? ""}\n${item.body ?? ""}`));
+        if (!vectors) break;
+        meaningOpen = true;
+        todo.forEach((item, i) => { item.meaning = vectors[i]; });
+      }
+    })().catch((error) => console.warn(`meaning: ${error?.message ?? error}`)).finally(() => { meaningRun = null; });
+    return meaningRun;
+  }
+  // The meaning reader as the router reads with it, once it has opened.
+  const meaningRead = () => (meaningOpen && meaning ? { read: async (text) => (await meaning.embed([text]))?.[0] ?? null } : null);
 
   // Resonance: every gesture of the owner toward a thing is answered by
   // PrismResonance and teaches PrismLearning, through the root guest. What it
@@ -888,7 +916,8 @@ export default async function start({ app, reason, $ }) {
   let servicesLive = false;
   const SECTION_DONE = {
     self: () => Boolean(declared()),
-    sources: () => servicesLive || items.length > 0,
+    // Connected once something came from a service or a file; a note the person kept is not a service.
+    sources: () => servicesLive || items.some((item) => item.media !== "plainText"),
   };
   const stepDone = (step) => (SECTION_DONE[step.section] ?? (() => false))();
   const setupLeft = () => SETUP.filter((step) => !stepDone(step));
@@ -1445,7 +1474,8 @@ export default async function start({ app, reason, $ }) {
       // The person's words go through the R4 router; a question is answered in
       // sentences from what is held, under the Boundary, with what it drew on.
       const { answer } = await import("./router/answer.mjs");
-      const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: false });
+      // A question is answered; anything else the person says is offered to keep, in its place and time.
+      const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: true, meaning: haltedNow ? null : meaningRead() });
       turn(prompt, said);
       if (said.sentences.length) { say(said.sentences.join("\n"), "good"); $("pr-prompt").value = ""; }
       else if (haltedNow) say(WORDS.halted, "bad");
