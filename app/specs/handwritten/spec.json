@@ -7,6 +7,14 @@
   ],
   "producers": [
     {
+      "id": "generators",
+      "run": [
+        "sh",
+        "tools/generators/run.sh"
+      ],
+      "lexlean": true
+    },
+    {
       "id": "prompts",
       "run": [
         "python3",
@@ -104,15 +112,6 @@
         "-I",
         "tools/facet/gen.py",
         "app/specs/router/spec.json"
-      ],
-      "lexlean": false
-    },
-    {
-      "id": "system",
-      "run": [
-        "python3",
-        "-I",
-        "tools/system/gen.py"
       ],
       "lexlean": false
     },
