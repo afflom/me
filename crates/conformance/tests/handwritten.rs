@@ -32,8 +32,9 @@ fn handwritten_hw_01() {
         "HW-01: the hand-written spec does not hold the tree:\n{}",
         String::from_utf8_lossy(&out.stderr)
     );
-    let pipeline = std::fs::read_to_string(root().join("app/specs/pipeline/workflows/pages.yml.json"))
-        .expect("the pipeline model is committed");
+    let pipeline =
+        std::fs::read_to_string(root().join("app/specs/pipeline/workflows/pages.yml.json"))
+            .expect("the pipeline model is committed");
     assert!(
         pipeline.contains("tools/handwritten/gate.py --check"),
         "HW-01: the page build must run the ratchet"
