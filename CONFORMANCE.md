@@ -470,6 +470,12 @@ model does not sanction.
 | --- | --- | --- |
 | `ST-01` | `build` | Every part of the Prism answers to a registered standard or says why none applies, and every normative requirement of each standard whose text is pinned by checksum, extracted mechanically from that text, is enforced by a suite that reaches a part it governs, beyond a debt list that only shrinks; a standard whose text is not pinned says why |
 
+## system
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `SY-01` | `build` | The Prism is modeled as one system (app/specs/system, written into app/src/PrismSystem): its OPM system diagram names the main process, the person as agent and the two states of the attribute it changes, the instrument, input and result, and zooms into the parts; every decision is one part's, a part no decision realizes is on an owed list that only shrinks, and every standard the system answers to is in the standards register with an evidenced obligation |
+
 ## uorc
 
 | ID | Level | Statement |
