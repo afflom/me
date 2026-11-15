@@ -16,7 +16,9 @@ import * as pin from "./guest.mjs";
 const guest = pin.GUESTS?.vcard ?? pin.GUEST;
 const url = new URL(guest.path, new URL("./guest.mjs", import.meta.url));
 const bytes = url.protocol === "file:" ? await (await import("node:fs/promises")).readFile(url) : new Uint8Array(await (await fetch(url)).arrayBuffer());
-export const vcard = await pin.openGuestSync(bytes, guest.sha256);
+const ask = await pin.openGuestSync(bytes, guest.sha256);
+// A request beyond the guest's limits traps it; that is its refusal, "invalid".
+export const vcard = (request) => { try { return ask(request); } catch (error) { if (error instanceof WebAssembly.RuntimeError) return "invalid"; throw error; } };
 // A line beyond the guest's request limit reads as none ("invalid").
 export const readLine = (line) => { const a = vcard(`line\n${line}`); return a === "invalid" ? null : JSON.parse(a); };
 

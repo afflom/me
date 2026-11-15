@@ -165,6 +165,15 @@ const lone = /^EMAIL[^:]*:(.*)\r$/m.exec(ORACLE.filter((c) => c.kind === 'contac
 const cards = contactCards([{ name: [doeName], email: [doeEmail], tel: [] }, { name: [], email: [lone] }], vcard);
 ok(contactItems(cards, vcard).length === 2 && cards.includes(`FN:${doeName.replace(/;/g, '\\;')}`) && cards.includes(`FN:${lone}`), 'picked contacts become vCards');
 ok((await device.readContacts([{ name: [/^FN[^:]*:(.*)\r$/m.exec(doe)[1]], email: [doeEmail] }])).store === 1, 'picked contacts are kept');
+// A value's line break never adds a request line, a contact the guest refuses
+// (its request beyond the limit) is passed over, and a card beyond the limit
+// (J. Doe's own, its EMAIL line repeated until it is) is still one CRLF card.
+const doeLine = /^EMAIL[^\r]*\r\n/m.exec(doe)[0];
+ok(!contactCards([{ name: [`${doeName}\nemail ${lone}`], email: [doeEmail] }], vcard).includes(`EMAIL:${lone}`), 'a line break in a picked value adds no property');
+ok(contactCards([{ name: [doeName.repeat(600)], email: [doeEmail] }], vcard) === '' && (await device.readContacts([{ name: [doeName.repeat(600)], email: [doeEmail] }])).skip === 1, 'a contact the guest refuses is passed over');
+const big = doe.replace(doeLine, doeLine.repeat(Math.ceil(4096 / doeLine.length) + 1));
+const bigItems = contactItems(`${big.replace(/\r\n/g, '\n')}trailing words\n${doe}`, vcard);
+ok(big.length > 4096 && bigItems.length === 2 && bigItems[0] === big.trimEnd() + '\r\n' && !/[^\r]\n/.test(bigItems[0]), 'a card beyond the guest\'s limit is cut at END:VCARD and kept in CRLF lines');
 
 // The host rule: lanes from the cores and memory the browser reports, as uorc states it.
 ok(lanes({ hardwareConcurrency: 8, deviceMemory: 8 }) === 8 && lanes({ hardwareConcurrency: 32, deviceMemory: 64 }) === HOST.coreLimit && lanes({ hardwareConcurrency: 8, deviceMemory: 1 }) === 2 && lanes({ hardwareConcurrency: 8 }) === 4 && lanes({}) === 1, 'lanes follow the host rule');

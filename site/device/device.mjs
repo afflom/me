@@ -112,18 +112,23 @@ export function formatOfText(text) {
 }
 
 // The contact picker's answer, as vCards: one the vcard guest writes per
-// contact (app/src/PrismVcard.lex.tex "write": FN, else the first email or tel).
+// contact (app/src/PrismVcard.lex.tex "write": FN, else the first email or
+// tel). A value's line breaks become spaces, since a request is read by its
+// lines; a contact the guest refuses writes nothing.
 export function contactCards(contacts, vcard) {
-  return contacts.map((c) => vcard(['write', c.name?.[0] ?? '', ...(c.email ?? []).map((e) => `email ${e}`), ...(c.tel ?? []).map((n) => `tel ${n}`)].join('\n'))).join('');
+  const flat = (s) => String(s).replace(/[\r\n]+/g, ' ');
+  return contacts.map((c) => vcard(['write', flat(c.name?.[0] ?? ''), ...(c.email ?? []).map((e) => `email ${flat(e)}`), ...(c.tel ?? []).map((n) => `tel ${flat(n)}`)].join('\n'))).filter((card) => card !== 'invalid').join('');
 }
 
 // vCard: one item per card, as the vcard guest unfolds it ("cards"), asked a
-// card at a time to stay within its request limit; a card beyond the limit is
-// kept as written.
+// card at a time to stay within its request limit. A card beyond the limit
+// (one carrying a photo, say) is cut at its END:VCARD and kept folded as
+// written, in CRLF lines.
 export function contactItems(text, vcard) {
   return text.split(/(?=^BEGIN:VCARD)/im).flatMap((piece) => {
     const cards = vcard(`cards\n${piece}`);
-    return cards === 'invalid' ? (/^BEGIN:VCARD/i.test(piece) ? [piece] : []) : cards.split('\0').filter(Boolean);
+    if (cards !== 'invalid') return cards.split('\0').filter(Boolean);
+    return (piece.replace(/\r?\n/g, '\n').match(/^BEGIN:VCARD\n[\s\S]*?\nEND:VCARD$/im) ?? []).map((card) => card.replace(/\n/g, '\r\n') + '\r\n');
   });
 }
 
@@ -357,7 +362,10 @@ export function openDevice({ decide, ingest, vcard, source = async () => 'refuse
     },
     // Contacts the owner picked in the browser's contact picker.
     async readContacts(contacts) {
-      return contacts.length ? this.readText(contactCards(contacts, vcard)) : tallyOf();
+      const cards = contacts.map((c) => contactCards([c], vcard)).filter(Boolean);
+      const read = cards.length ? await this.readText(cards.join('')) : tallyOf();
+      read.skip += contacts.length - cards.length;
+      return read;
     },
   };
 }
