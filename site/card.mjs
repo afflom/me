@@ -188,6 +188,19 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
       ...(Number.isNaN(start) ? { undated: true } : {}), ...(method ? { method } : {}), ...(uid ? { uid, sequence } : {}), ...(recurrence ? { recurrence } : {}), ...(more.length ? { more } : {}) };
   }
   if (base.media === "contactCard") {
+    // Every property it holds, read as RFC 6350 defines it (site/read/vcard.mjs).
+    const card = reader?.readCard ? reader.readCard(text) : null;
+    if (card) {
+      // Of several instances, the one the card prefers (5.3 PREF: 1 is most preferred).
+      const first = (name) => [...(card[name] ?? [])].sort((a, b) => Number(a.params.PREF?.[0] ?? 101) - Number(b.params.PREF?.[0] ?? 101))[0];
+      const words = (v) => (Array.isArray(v) ? v.flat().filter(Boolean).join(" ") : v);
+      const n = first("N")?.value;
+      const title = words(first("FN")?.value ?? "") || (n ? [n[3], n[1], n[2], n[0], n[4]].map(words).filter(Boolean).join(" ") : "");
+      const who = (first("EMAIL")?.value ?? "").replace(/^mailto:/i, "") || words(first("TEL")?.value ?? "") || words(first("ORG")?.value ?? "");
+      // What a person reads of it: each text value it holds, in the card's order.
+      const body = Object.values(card).flat().filter((l) => l.type === "text" && l.name !== "FN").map((l) => words(l.value)).filter(Boolean).join("\n");
+      return { ...base, title, who, contact: card, text, body };
+    }
     const field = (name) => calendarField(text, name);
     return { ...base, title: field("FN") || field("N").split(";").filter(Boolean).reverse().join(" "), who: field("EMAIL") || field("TEL") || field("ORG"), text, body: [field("EMAIL"), field("TEL"), field("ORG"), field("ADR").replace(/;+/g, " ").trim()].filter(Boolean).join("\n") };
   }

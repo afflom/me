@@ -7,6 +7,7 @@
 import { nextInstance } from "../time/recur.mjs";
 import { contentType, disposition, entity, transferEncoding } from "./mail.mjs";
 export { messageHeader } from "./mail.mjs";
+export { readCard } from "./vcard.mjs";
 
 function bytesOf(body, encoding) {
   const kind = (encoding ?? "").toLowerCase();
