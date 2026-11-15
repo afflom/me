@@ -152,6 +152,22 @@
       ],
       "dispatch": "PrismHost::prismHostDispatch",
       "vectors": "host"
+    },
+    {
+      "id": "vcard",
+      "wasm": "site/read/guest/vcard.wasm",
+      "pin": "site/read/guest.mjs",
+      "modules": [
+        "PrismVcardTable",
+        "PrismVcard"
+      ],
+      "dispatch": "PrismVcard::vcardDispatch",
+      "vectors": "spec:vcard",
+      "limits": [
+        4096,
+        8192,
+        8192
+      ]
     }
   ]
 }
