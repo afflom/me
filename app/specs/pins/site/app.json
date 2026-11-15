@@ -1,0 +1,98 @@
+{
+  "name": "me",
+  "shortName": "me",
+  "tagline": "",
+  "live": "https://afflom.github.io/me/",
+  "purpose": "A Prism of its owner, generic until the owner's own content fills it in their browser. Send a facet and its fields: boundary decides whether a labeled fact may move, learn moves a belief's weight on a signal, when relates two intervals. Anything else is refused.",
+  "inputLabel": "Request: facet, then its fields",
+  "placeholder": "boundary public none browser none no no",
+  "submitLabel": "Ask",
+  "outputLabel": "Answer",
+  "answers": {
+    "positive": [
+      "allow"
+    ],
+    "negative": [
+      "deny"
+    ],
+    "refusal": "invalid request"
+  },
+  "promise": {
+    "headline": "Nothing of yours leaves your browser unless the proved Boundary allows it.",
+    "detail": "Every request is routed to the facet that decides it, and each facet's guarantees are proved in Lean 4: nothing moves while halted, nothing goes to GitHub or the hosted verifier, and nothing goes out without your approval."
+  },
+  "claim": "PM-01: the Prism answers a request naming a known facet with exactly that facet's decision of the rest, and refuses every other request.",
+  "proposition": {
+    "name": "routes",
+    "text": "route facetBoundary rest = PrismBoundary.dispatch rest\nroute facetLearn rest = PrismLearning.dispatch rest\nroute facetWhen rest = PrismChronology.dispatch rest\nroute facetUnknown rest = refusal",
+    "plain": "Each request is answered by the facet it names, and only by that facet."
+  },
+  "theorems": [
+    {
+      "name": "routesBoundary, routesLearn, routesWhen, refusesUnknownFacet",
+      "statement": "route facet rest = that facet's dispatch rest, and refusal for an unknown facet",
+      "how": "Proved by linear arithmetic over the facet codes, checked by the Lean kernel by prismpm verify in CI",
+      "where": "app/src/Prism.lex.tex"
+    },
+    {
+      "name": "Boundary inv001Holds to inv007Holds",
+      "statement": "deny while halted, deny to GitHub, deny to the verifier, never allow detected or restricted data, never outbound without approval, never an identifier outside the browser",
+      "how": "Proved by linear arithmetic for every request, axioms Quot.sound and propext only",
+      "where": "app/src/PrismBoundaryProofs.lex.tex"
+    },
+    {
+      "name": "Learning inv001Holds to inv008Holds",
+      "statement": "only the owner confirms or rejects; confirmed and rejected beliefs hold; weights stay within bounds",
+      "how": "Proved by linear arithmetic for every request, axioms Quot.sound and propext only",
+      "where": "app/src/PrismLearningProofs.lex.tex"
+    },
+    {
+      "name": "Chronology inv001Holds to inv008Holds",
+      "statement": "no Allen relation the endpoints contradict; well-formed intervals are never malformed",
+      "how": "Proved by linear arithmetic for every request, axioms Quot.sound and propext only",
+      "where": "app/src/PrismChronologyProofs.lex.tex"
+    }
+  ],
+  "pinned": [
+    {
+      "name": "prism_pm_01 to prism_pm_04",
+      "what": "Each theorem's exact statement and axioms, that every guarantee is about the facet's own judge, and that the application's answer is decided by route. A string-matching test, not a theorem: a planted defect fails it.",
+      "where": "crates/conformance/tests/prism.rs"
+    }
+  ],
+  "trusted": [
+    {
+      "name": "SDK image",
+      "value": "the digest prismpm.lock pins; see the bootstrap workflow's log"
+    },
+    {
+      "name": "Lean toolchain",
+      "value": "leanprover/lean4:v4.32.1"
+    },
+    {
+      "name": "LexLean compiler semantics",
+      "value": "5262e5b4c8b5668ae7066ad686757a6bb7f80c941d515fb9d586894fbc7de69a"
+    },
+    {
+      "name": "prism-code runtime, vendored",
+      "value": "0.2.0, see try/vendor/prism-code/VENDOR.md"
+    },
+    {
+      "name": "Your browser",
+      "value": "runs the WebAssembly guest and this page"
+    }
+  ],
+  "attestations": {
+    "proof": {
+      "id": "printed by prismpm verify in every bootstrap run",
+      "url": "https://github.com/afflom/me/actions/workflows/bootstrap.yml"
+    },
+    "build": {
+      "id": "printed by prismpm verify in every pages run; an instance records it here",
+      "url": "https://github.com/afflom/me/actions/workflows/pages.yml"
+    }
+  },
+  "repository": "https://github.com/afflom/me",
+  "report": "https://github.com/afflom/me/blob/main/TEMPLATE-VERIFICATION.md",
+  "inputMode": "text"
+}

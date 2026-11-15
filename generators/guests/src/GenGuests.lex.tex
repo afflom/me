@@ -333,5 +333,13 @@ definition{
       | Option.some lock => (ggRender spec lock target))),
   axioms: [Quot.sound, propext]
 }
+
+definition{
+  name: ggPagePin,
+  parameters: [archive : Bytes, target : Bytes],
+  result: (Option Bytes),
+  body: (if (ggSame (ggSpan target 0 5) 0x736974652f) then (Foundation.Tar::find archive (ggApp 0x6170702f73706563732f70696e732f target)) else (ctor Option.none [Bytes])),
+  axioms: [Quot.sound, propext]
+}
 \end{semanticmodule}
 \end{lexlean}

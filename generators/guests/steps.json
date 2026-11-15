@@ -1,5 +1,5 @@
 {
-  "comment": "The steps of the guests program (generators/guests/), run in order by tools/generators/run.sh: each writes one site/<facet>/guest.mjs, the loader of the guests app/specs/guests/spec.json pins there, from that spec and its lock.",
+  "comment": "The steps of the guests program (generators/guests/), run in order by tools/generators/run.sh. guestpin writes each site/<facet>/guest.mjs, the loader of the guests app/specs/guests/spec.json pins there, from that spec and its lock; pagepin writes each pin the page reads (site/app.json and the *.lock.json and platform.json pins) from its model, app/specs/pins/<the same path>.",
   "steps": [
     {
       "generator": "guestpin",
@@ -48,6 +48,41 @@
         "app/specs/guests/spec.json"
       ],
       "output": "site/uorc/guest.mjs"
+    },
+    {
+      "generator": "pagepin",
+      "inputs": [
+        "app/specs/pins/site/app.json"
+      ],
+      "output": "site/app.json"
+    },
+    {
+      "generator": "pagepin",
+      "inputs": [
+        "app/specs/pins/site/google/platform.json"
+      ],
+      "output": "site/google/platform.json"
+    },
+    {
+      "generator": "pagepin",
+      "inputs": [
+        "app/specs/pins/site/models/models.lock.json"
+      ],
+      "output": "site/models/models.lock.json"
+    },
+    {
+      "generator": "pagepin",
+      "inputs": [
+        "app/specs/pins/site/r4/r4.lock.json"
+      ],
+      "output": "site/r4/r4.lock.json"
+    },
+    {
+      "generator": "pagepin",
+      "inputs": [
+        "app/specs/pins/site/uorc/uorc.lock.json"
+      ],
+      "output": "site/uorc/uorc.lock.json"
     }
   ]
 }
