@@ -91,12 +91,20 @@ definition{
 }
 
 definition{
+  name: brReachLine,
+  parameters: [s : Bytes, i : Nat],
+  result: Bytes,
+  body: (let n : Nat := (Foundation.Bytes::byteLength s); (let q : Nat := (brByteEnd s i n 34 n); (let e : Nat := (brFindFrom s (brU "(nil Nat)") q n); (brCat3 (brCat3 (brU "P ") (Foundation.Json::span s i q) 0x) (brDigitsOf s q e (prim subtract e q : Nat)) (brU "\n"))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: brIndexFrom,
   parameters: [s : Bytes, i : Nat, fuel : Nat],
   result: Bytes,
   body: (match fuel
     | Nat.zero => 0x
-    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength s); (if (n <? (i + 1)) then 0x else (let b : Nat := (Foundation.Tar::byteOr s i); (if ((b =? 34) && (brStarts s i (brU "\"site/"))) then (let q : Nat := (brByteEnd s (i + 1) n 34 n); (brCat3 (brU "A ") (Foundation.Json::span s (i + 1) q) (Foundation.Bytes::appendBytes (brU "\n") (brIndexFrom s (q + 1) rest)))) else (if ((b =? 114) && (brStarts s i (brU "record BrowserMember {iface := \""))) then (let j : Nat := (i + 32); (Foundation.Bytes::appendBytes (brMemberLine s j) (brIndexFrom s j rest))) else (brIndexFrom s (i + 1) rest))))))),
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength s); (if (n <? (i + 1)) then 0x else (let b : Nat := (Foundation.Tar::byteOr s i); (if ((b =? 34) && (brStarts s i (brU "\"site/"))) then (let q : Nat := (brByteEnd s (i + 1) n 34 n); (brCat3 (brU "A ") (Foundation.Json::span s (i + 1) q) (Foundation.Bytes::appendBytes (brU "\n") (brIndexFrom s (q + 1) rest)))) else (if ((b =? 114) && (brStarts s i (brU "record BrowserMember {iface := \""))) then (let j : Nat := (i + 32); (Foundation.Bytes::appendBytes (brMemberLine s j) (brIndexFrom s j rest))) else (if ((b =? 114) && (brStarts s i (brU "record BrowserReach {surface := \""))) then (let j : Nat := (i + 33); (Foundation.Bytes::appendBytes (brReachLine s j) (brIndexFrom s j rest))) else (brIndexFrom s (i + 1) rest)))))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
@@ -219,6 +227,60 @@ definition{
       | Option.some text => (match (brAdapterAt index 0 path 0 (Foundation.Bytes::byteLength index))
         | Option.none => (ctor Option.some [Bytes] (Foundation.Bytes::appendBytes path (brU " is not an adapter PrismBrowser names\n")))
         | Option.some slot => (ctor Option.some [Bytes] (brAdapterProblems index 0 slot text (Foundation.Bytes::byteLength index))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: brMemberName,
+  parameters: [index : Bytes, i : Nat, slot : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength index); (if (n <? (i + 1)) then 0x else (let e : Nat := (brByteEnd index i n 10 n); (let line : Bytes := (Foundation.Json::span index i e); (if (brStarts line 0 (brU "M ")) then (if (slot =? 0) then (let m : Nat := (Foundation.Bytes::byteLength line); (let w1 : Nat := (brByteEnd line 2 m 32 m); (let w2 : Nat := (brByteEnd line (w1 + 1) m 32 m); (let mem : Bytes := (Foundation.Json::span line (w1 + 1) w2); (if (Foundation.Tar::sameBytes mem (brU "constructor")) then (Foundation.Json::span line 2 w1) else mem))))) else (brMemberName index (e + 1) (prim subtract slot 1 : Nat) rest)) else (brMemberName index (e + 1) slot rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brPathNames,
+  parameters: [index : Bytes, line : Bytes, i : Nat, lead : Bool, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let m : Nat := (Foundation.Bytes::byteLength line); (if (m <? (i + 1)) then 0x else (let e : Nat := (brByteEnd line i m 32 m); (let slot : Nat := (brNatFrom line i e 0 (prim subtract e i : Nat)); (brCat3 (brCat3 (if lead then 0x else (brU ", ")) (brU "'") (brMemberName index 0 slot (Foundation.Bytes::byteLength index))) (brU "'") (brPathNames index line (e + 1) false rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brSurfaceList,
+  parameters: [index : Bytes, i : Nat, prev : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength index); (if (n <? (i + 1)) then 0x else (let e : Nat := (brByteEnd index i n 10 n); (let line : Bytes := (Foundation.Json::span index i e); (if (brStarts line 0 (brU "P ")) then (let m : Nat := (Foundation.Bytes::byteLength line); (let surface : Bytes := (Foundation.Json::span line 2 (brByteEnd line 2 m 32 m)); (if (Foundation.Tar::sameBytes surface prev) then (brSurfaceList index (e + 1) prev rest) else (brCat3 (brCat3 (if ((Foundation.Bytes::byteLength prev) =? 0) then 0x else (brU ", ")) (brU "'") surface) (brU "'") (brSurfaceList index (e + 1) surface rest))))) else (brSurfaceList index (e + 1) prev rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brReachRows,
+  parameters: [index : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength index); (if (n <? (i + 1)) then 0x else (let e : Nat := (brByteEnd index i n 10 n); (let line : Bytes := (Foundation.Json::span index i e); (if (brStarts line 0 (brU "P ")) then (let m : Nat := (Foundation.Bytes::byteLength line); (let w1 : Nat := (brByteEnd line 2 m 32 m); (let w2 : Nat := (brByteEnd line (w1 + 1) m 32 m); (brCat3 (brCat3 (brU "  ['") (Foundation.Json::span line 2 w1) (brU "', ")) (brCat3 (Foundation.Json::span line (w1 + 1) w2) (brU ", [") (brPathNames index line (w2 + 1) true m)) (Foundation.Bytes::appendBytes (brU "]],\n") (brReachRows index (e + 1) rest)))))) else (brReachRows index (e + 1) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brProbe,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (brU ".gen/browser-index"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some index => (let n : Nat := (Foundation.Bytes::byteLength index); (ctor Option.some [Bytes] (brCat3 (brCat3 (brU "// Written by GenBrowser (browserprobe) from browserReaches in app/src/PrismBrowser.lex.tex.\n// Each reach is a surface, a way, and a path of members from the global object;\n// every member on a path is in the model, pinned to its Web IDL and its Chrome support.\n\n") (brU "export const SURFACES = [") (brSurfaceList index 0 0x n)) (brCat3 (brU "];\n\nconst REACHES = [\n") (brReachRows index 0 n) (brU "];\n\n")) (brU "const reach = (g, path) => path.reduce((at, step) => at?.[step], g) != null;\n\n// What this browser reports, surface by surface: yes when, for one of a surface's\n// ways, every path of that way reaches a value.\nexport function probed(g = globalThis) {\n  const ways = Object.fromEntries(SURFACES.map((surface) => [surface, new Map()]));\n  for (const [surface, way, path] of REACHES) ways[surface].set(way, (ways[surface].get(way) ?? true) && reach(g, path));\n  return Object.fromEntries(SURFACES.map((surface) => [surface, [...ways[surface].values()].some(Boolean) ? 'yes' : 'no']));\n}\n"))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

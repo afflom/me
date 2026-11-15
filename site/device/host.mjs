@@ -4,13 +4,14 @@
 // This file reports what the browser exposes; it decides nothing.
 
 import { BROWSERS } from '../source/declared.mjs';
+import { SURFACES, probed } from './probe.mjs';
+
+export { SURFACES };
 
 // The host rule uorc states for its page (Uorc.Page::pageWorker): one lane per
 // core, at most coreLimit, and at most workersPerGiB per GiB the browser
 // reports (unreportedGiB when it reports none).
 export const HOST = { coreLimit: 16, workersPerGiB: 2, unreportedGiB: 2 };
-
-export const SURFACES = ['folder', 'files', 'drop', 'paste', 'contacts', 'workers', 'mail', 'calendar', 'extension'];
 
 // Whether this browser can load the owner's Prism extension: a desktop browser
 // that reports one of the declared brands (app/specs/source/services.json).
@@ -20,23 +21,12 @@ export function capable(nav = globalThis.navigator, browsers = BROWSERS) {
   return data.brands.some((b) => browsers.includes(b?.brand));
 }
 
-// What this browser reports, surface by surface, as the guest's `present`.
+// What this browser reports, surface by surface, as the guest's `present`: the
+// surfaces probe.mjs reaches (written from the browser capability model), and the
+// extension only where this browser can load it.
 export function present(g = globalThis) {
-  const doc = g.document;
-  const yes = (cond) => (cond ? 'yes' : 'no');
-  return {
-    folder: yes(typeof g.showDirectoryPicker === 'function' && typeof g.indexedDB !== 'undefined'),
-    files: yes(typeof g.File === 'function' && !!doc),
-    drop: yes(typeof g.DataTransfer === 'function' && !!doc),
-    paste: yes(typeof g.ClipboardEvent === 'function' && !!doc),
-    contacts: yes(typeof g.navigator?.contacts?.select === 'function'),
-    workers: yes(typeof g.Worker === 'function' || (g.navigator?.hardwareConcurrency ?? 0) > 0),
-    // A live account on another origin is there for every browser; the guest names it sealed.
-    mail: 'yes',
-    calendar: 'yes',
-    // The owner's Prism extension reads those accounts with the owner's own sign-in.
-    extension: yes(!!doc && capable(g.navigator)),
-  };
+  const here = probed(g);
+  return { ...here, extension: here.extension === 'yes' && capable(g.navigator) ? 'yes' : 'no' };
 }
 
 // The lanes the host rule allows on this device.
