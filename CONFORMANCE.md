@@ -100,7 +100,6 @@ model does not sanction.
 | ID | Level | Statement |
 | --- | --- | --- |
 | `OR-01` | `build` | Every example of each specification the oracle pins by checksum, kept only where its addresses are at documentation domains, is read by the Prism as a reference reader written to that specification's own grammar reads it, beyond a debt list that only shrinks; the corpus is re-derived from the pinned sources on every run, and each pinned source is a cited authority whose evidence is this ID |
-| `VC-01` | `build` | vCard is read as RFC 6350 defines it: the page's property table is derived from the RFC's own ABNF, every RFC 6350 entry of IANA's vCard Elements registry is implemented and exercised by an example line the RFC gives (or one derived from the RFC's own example of a property it applies to), the Prism reads each example line as a reference reader written to RFC 6350 sections 3.3 and 3.4 reads it, and an entry neither met nor in a debt that only shrinks fails the build |
 
 ## page
 
@@ -110,6 +109,12 @@ model does not sanction.
 | `PG-02` | `build` | The page is PrismSurface made visible: one place per owner view of the design model, drawn only when it is in the person's view and never when it is the system's, showing that view's domains under its role, every act and setting in its modeled place, every visible word a name from the model, every list place fed by a source or an act, and every colour a tone of its modeled look read at its contrast |
 | `PG-03` | `build` | Every act on the page completes end to end: what the owner sends is the very event or message they reviewed and is kept in the place it left from at that domain's floor, every kept item opens to its words, and Ask draws on the kept items that share its words, never while halted, under the highest label it drew on |
 | `VO-01` | `build` | The Prism answers a gesture in tone and colour from PrismSurface's voice: 5-limit just ratios within one octave, a loudness ceiling, a rest between answers, silent under Quiet, and nothing loaded before the owner's first gesture |
+
+## person
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `WP-01` | `build` | The whole-person model is every entity of WHO's ICF release pinned by checksum, with its code, title and URI as WHO publishes it: both forms of the release agree field by field, the classification holds to its own structure (components, levels, codes, leaves, residuals), the page's module is re-derived from the release on every run, and each check refuses its planted defect |
 
 ## prism
 
@@ -471,6 +476,12 @@ model does not sanction.
 | --- | --- | --- |
 | `ST-01` | `build` | Every part of the Prism answers to a registered standard or says why none applies, and every normative requirement of each standard whose text is pinned by checksum, extracted mechanically from that text, is enforced by a suite that reaches a part it governs, beyond a debt list that only shrinks; a standard whose text is not pinned says why |
 
+## system
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `SY-01` | `build` | The Prism is modeled as one system (app/specs/system, written into app/src/PrismSystem): its OPM system diagram names the main process, the person as agent and the two states of the attribute it changes, the instrument, input and result, and zooms into the parts; every decision is one part's, a part no decision realizes is on an owed list that only shrinks, and every standard the system answers to is in the standards register with an evidenced obligation |
+
 ## uorc
 
 | ID | Level | Statement |
@@ -509,7 +520,7 @@ Never re-derived, vendored, or gated on.
 | `SRC-WPT-COMP-NAME-FROM-CONTENT` | https://raw.githubusercontent.com/web-platform-tests/wpt/cc8dcb79914d9bc3356ce6641d040022a52f20d8/accname/name/comp_name_from_content.html | `OR-01` |
 | `SRC-APG-FEED` | https://raw.githubusercontent.com/w3c/aria-practices/f14b2490a6728cda85fd7feafbd148b3c3eaf038/content/patterns/feed/examples/js/feedDisplay.js | `OR-01` |
 | `SRC-SCHEMAORG` | https://raw.githubusercontent.com/schemaorg/schemaorg/5f2d8cdec99b7329459ef6584e94b6a840f88471/data/releases/30.1/schemaorg-all-examples.txt | `OR-01` |
-| `SRC-IANA-VCARD` | https://www.iana.org/assignments/vcard-elements/vcard-elements.xml | `VC-01` |
+| `SRC-ICF` | https://icdcdn.who.int/static/releasefiles/2026-01/SimpleTabulation-ICF-en.zip | `WP-01` |
 
 ## Claims that are not conformance IDs
 

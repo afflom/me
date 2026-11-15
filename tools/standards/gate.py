@@ -213,6 +213,23 @@ def enforcement(spec, requirements, parts, by_part, refusals):
     for standard in spec["standards"]:
         for rid, entry in sorted(standard.get("enforcedBy", {}).items()):
             claim(rid, entry.get("suite", ""), f"{standard['key']} enforcedBy {rid}")
+        # A standard may enforce every requirement of a kind alike; an id's own entry comes first.
+        by_kind = standard.get("enforcedByKind", {})
+        for kind in sorted(by_kind):
+            if kind not in {r["kind"] for r in requirements.get(standard["key"], [])}:
+                refusals.append(f"{standard['key']} enforcedByKind names {kind!r}, which is the kind of none of its requirements")
+        for r in requirements.get(standard["key"], []):
+            entry = by_kind.get(r["kind"])
+            if entry and r["id"] not in standard.get("enforcedBy", {}):
+                claim(r["id"], entry.get("suite", ""), f"{standard['key']} enforcedByKind {r['kind']}")
+        # A requirement its suite checks and finds failing is not enforced yet: it stays debt,
+        # with why, and the suite fails once it holds so the debt shrinks.
+        for rid, why in sorted(standard.get("failing", {}).items()):
+            if rid not in enforced:
+                refusals.append(f"{standard['key']} lists {rid} as failing, but no suite checks it")
+            elif not str(why).strip():
+                refusals.append(f"{standard['key']} lists {rid} as failing with no reason")
+            enforced.pop(rid, None)
     return enforced
 
 
