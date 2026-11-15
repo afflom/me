@@ -144,7 +144,7 @@ pub fn scan_tracked(root: &Path) -> Result<Vec<Finding>, String> {
     Ok(out)
 }
 
-/// The kept standard texts: `standards/texts/<sha256>` for every hash that the
+/// The kept standard texts: `app/specs/standards/texts/<sha256>` for every hash that the
 /// standards register (`app/specs/standards/spec.json`) or the oracle
 /// (`app/specs/oracle/spec.json`) pins, and only when the file's own SHA-256 is
 /// that name. They are public upstream text (RFCs, W3C and IANA documents)
@@ -171,7 +171,7 @@ fn kept_texts(root: &Path) -> std::collections::BTreeSet<String> {
     }
     let mut out = std::collections::BTreeSet::new();
     for pin in pins {
-        let rel = format!("standards/texts/{pin}");
+        let rel = format!("app/specs/standards/texts/{pin}");
         let Ok(hashed) = Command::new("sha256sum").arg(root.join(&rel)).output() else {
             continue;
         };

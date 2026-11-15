@@ -12,7 +12,7 @@ its numbered rules, or its registry's elements. Nothing is written by hand.
 The requirements are kept in test/standards/requirements.json.
 
 Every pinned text and inventory source is kept in the repository at
-standards/texts/<sha256>, so the gate (and the LexLean extractors that replace
+app/specs/standards/texts/<sha256>, so the gate (and the LexLean extractors that replace
 these Python ones) reads no network: --write fetches a pin that is not kept yet
 and keeps it, and --check refuses one that is missing. The bytes are public
 upstream text fixed by their hash; PV-01 skips exactly those files.
@@ -77,7 +77,7 @@ def canonical(value):
     return json.dumps(value, indent=1, ensure_ascii=False, sort_keys=True) + "\n"
 
 
-TEXTS = ROOT / "standards/texts"
+TEXTS = ROOT / "app/specs/standards/texts"
 
 
 def fetch(pin, write, refusals, what):
@@ -85,7 +85,7 @@ def fetch(pin, write, refusals, what):
     if path.exists():
         data = path.read_bytes()
     elif not write:
-        refusals.append(f"{what}: {pin['url']} is not kept at standards/texts/{pin['sha256']}: run python3 -I tools/standards/gate.py --write")
+        refusals.append(f"{what}: {pin['url']} is not kept at app/specs/standards/texts/{pin['sha256']}: run python3 -I tools/standards/gate.py --write")
         return None
     else:
         try:
