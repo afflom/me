@@ -8,7 +8,7 @@
 #   tools/generators/run.sh --lock P record program P's sources and binary (build.sh)
 # A request is "<generator> <output>\n" and a ustar archive of the step's inputs,
 # and must fit the request bound. A step with "split" runs once per piece of that
-# file, cut at line ends (only before a line matching "breakBefore", where given); a step with "each" runs once per element of a JSON array;
+# file, cut at line ends (only before a line matching its "breakBefore", where it has one); a step with "each" runs once per element of a JSON array;
 # either way its output is the outputs joined in order. Outputs under .gen/ are
 # intermediate and never committed.
 set -eu
@@ -61,33 +61,6 @@ run() { # run GENERATOR OUTPUT STAGE PATHS... -> appends the written file to $wo
   tail -c +9 "$work/report" >> "$work/out"
 }
 
-# pin PATH: a pinned upstream file a step names under "pinned" ({"file", "entries"}: each entry an
-# object of the file with its path, url and sha256), fetched once into a cache and refused if its
-# bytes are not the pinned ones. Every other path is the repository's own file.
-cache=${PRISM_PIN_CACHE:-${XDG_CACHE_HOME:-$HOME/.cache}/prism-pins}
-pins() { # pins STEP -> "path url sha256" lines
-  pf=$(echo "$1" | js .pinned.file); [ -n "$pf" ] || return 0
-  for e in $(echo "$1" | js .pinned.entries); do
-    js "$e" < "$pf" | python3 -I -c 'import json, sys
-for l in sys.stdin:
-    v = json.loads(l); print(v["path"], v["url"], v["sha256"])'
-  done
-}
-source_of() { # source_of STEP PATH -> the file to stage for PATH
-  line=$(pins "$1" | awk -v p="$2" '$1 == p')
-  if [ -z "$line" ]; then printf '%s\n' "$2"; return; fi
-  set -- $line; mkdir -p "$cache"
-  if [ ! -f "$cache/$3" ]; then
-    python3 -I -c 'import sys, urllib.request
-with urllib.request.urlopen(sys.argv[1], timeout=60) as r: open(sys.argv[2], "wb").write(r.read())' "$2" "$cache/$3.part"
-    mv "$cache/$3.part" "$cache/$3"
-  fi
-  if [ "$(sha256sum < "$cache/$3" | cut -c1-64)" != "$3" ]; then
-    rm -f "$cache/$3"; echo "GN-01: $2 is not the pinned $3" >&2; exit 1
-  fi
-  printf '%s\n' "$cache/$3"
-}
-
 steps=$(js .steps < generators/pipeline.json)
 echo "$steps" | while read -r step; do
   program=$(echo "$step" | js .program); gen=$(echo "$step" | js .generator); out=$(echo "$step" | js .output)
@@ -104,32 +77,12 @@ echo "$steps" | while read -r step; do
     done < "$work/elements"
   elif [ -n "$split_path" ]; then
     rm -rf "$work/pieces"; mkdir -p "$work/pieces"
-    from=$(source_of "$step" "$split_path")
     brk=$(echo "$step" | js .breakBefore)
-    if [ -n "$brk" ]; then
-      # Pieces end only before a line that matches: a unit (a section, a record) is never cut.
-      python3 -I -c 'import re, sys
-data, rx, bound, out = open(sys.argv[1], "rb").read(), re.compile(sys.argv[2].encode()), int(sys.argv[3]), sys.argv[4]
-units, cur = [], b""
-lines = data.split(b"\n")
-for line in [l + b"\n" for l in lines[:-1]] + ([lines[-1]] if lines[-1] else []):
-    if cur and rx.search(line):
-        units.append(cur); cur = b""
-    cur += line
-units += [cur] if cur else []
-pieces, piece = [], b""
-for u in units:
-    if len(u) > bound:
-        sys.exit(f"GN-01: {sys.argv[1]}: a unit of {len(u)} bytes is over the bound {bound}: {u[:60]!r}")
-    if piece and len(piece) + len(u) > bound:
-        pieces.append(piece); piece = b""
-    piece += u
-pieces += [piece] if piece else []
-for i, p in enumerate(pieces):
-    open(f"{out}{i:04d}", "wb").write(p)' "$from" "$brk" "$piece" "$work/pieces/p."
-    else
-      split -C "$piece" -d -a 4 "$from" "$work/pieces/p."
-    fi
+    if [ -z "$brk" ]; then split -C "$piece" -d -a 4 "$split_path" "$work/pieces/p."
+    # With "breakBefore", a unit runs to the next line that matches it, and pieces end only between units.
+    else LC_ALL=C awk -v rx="$brk" -v max="$piece" -v out="$work/pieces/p." '
+      function flush() { if (length(p) + length(u) > max && p != "") { printf "%s", p > sprintf("%s%04d", out, n++); p = "" } if (length(u) > max) bad = 1; p = p u; u = "" }
+      $0 ~ rx { flush() } { u = u $0 "\n" } END { flush(); if (bad) exit 1; printf "%s", p > sprintf("%s%04d", out, n) }' "$split_path" || { echo "GN-01: $split_path: a unit before $brk is over $piece bytes" >&2; exit 1; }; fi
     for p in "$work/pieces"/p.*; do
       rm -rf "$work/stage"; mkdir -p "$work/stage/$(dirname "$split_path")"
       cp "$p" "$work/stage/$split_path"
@@ -138,7 +91,7 @@ for i, p in enumerate(pieces):
   else
     rm -rf "$work/stage"; mkdir -p "$work/stage"
     for f in $(echo "$step" | js .inputs); do
-      mkdir -p "$work/stage/$(dirname "$f")"; cp "$(source_of "$step" "$f")" "$work/stage/$f"
+      mkdir -p "$work/stage/$(dirname "$f")"; cp "$f" "$work/stage/$f"
     done
     run "$gen" "$out" "$work/stage" $(echo "$step" | js .inputs)
   fi

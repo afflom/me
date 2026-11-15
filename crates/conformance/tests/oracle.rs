@@ -19,8 +19,7 @@ fn read(path: &str) -> String {
 /// `OR-01`: Every example of each specification the oracle pins by checksum, kept only where its addresses are at documentation domains, is read by the Prism as a reference reader written to that specification's own grammar reads it, beyond a debt list that only shrinks; the corpus is re-derived from the pinned sources on every run, and each pinned source is a cited authority whose evidence is this ID
 #[test]
 fn oracle_or_01() {
-    // The generator and its pinning (tools/oracle/pin.py).
-    let generator = read("tools/oracle/gen.py") + &read("tools/oracle/pin.py");
+    let generator = read("tools/oracle/gen.py");
     for needle in [
         "not the pinned",
         "def documentation_only",
@@ -41,9 +40,7 @@ fn oracle_or_01() {
     }
     let spec = read("app/specs/oracle/spec.json");
     let authorities = read("model/authorities.toml");
-    // The calendar's pinned registry (app/specs/calendar/spec.json) is cited too.
-    let calendar = read("app/specs/calendar/spec.json");
-    let pinned = spec.matches("\"sha256\"").count() + calendar.matches("\"registry\": {").count();
+    let pinned = spec.matches("\"sha256\"").count();
     assert!(pinned > 0, "OR-01: the oracle pins at least one source");
     assert_eq!(
         authorities.matches("realized_by = [\"OR-01\"]").count()

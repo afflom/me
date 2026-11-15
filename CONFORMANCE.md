@@ -532,8 +532,6 @@ Never re-derived, vendored, or gated on.
 | `SRC-RFC5322` | https://www.rfc-editor.org/rfc/rfc5322.txt | `OR-01` |
 | `SRC-RFC5545` | https://www.rfc-editor.org/rfc/rfc5545.txt | `OR-01` |
 | `SRC-RFC5545-RECUR` | https://www.rfc-editor.org/rfc/rfc5545.txt | `OR-01` |
-| `SRC-RFC5545-LINES` | https://www.rfc-editor.org/rfc/rfc5545.txt | `OR-01` |
-| `SRC-RFC5545-OBJECTS` | https://www.rfc-editor.org/rfc/rfc5545.txt | `OR-01` |
 | `SRC-RFC5546` | https://www.rfc-editor.org/rfc/rfc5546.txt | `OR-01` |
 | `SRC-RFC6350` | https://www.rfc-editor.org/rfc/rfc6350.txt | `OR-01` |
 | `SRC-RFC6047` | https://www.rfc-editor.org/rfc/rfc6047.txt | `OR-01` |
@@ -549,7 +547,6 @@ Never re-derived, vendored, or gated on.
 | `SRC-SCHEMAORG` | https://raw.githubusercontent.com/schemaorg/schemaorg/5f2d8cdec99b7329459ef6584e94b6a840f88471/data/releases/30.1/schemaorg-all-examples.txt | `OR-01` |
 | `SRC-STSB` | https://huggingface.co/datasets/mteb/stsbenchmark-sts/resolve/96943a16ea6a35129e253c659081cb59daf81b30/test.jsonl.gz | `OR-01` |
 | `SRC-AMI` | https://groups.inf.ed.ac.uk/ami/AMICorpusAnnotations/ami_public_manual_1.6.2.zip | `OR-01` |
-| `SRC-IANA-ICALENDAR` | https://www.iana.org/assignments/icalendar/icalendar.xml | `OR-01` |
 | `SRC-ICF` | https://icdcdn.who.int/static/releasefiles/2026-01/SimpleTabulation-ICF-en.zip | `WP-01` |
 | `SRC-IANA-VCARD` | https://www.iana.org/assignments/vcard-elements/vcard-elements.xml | `VC-01` |
 | `SRC-RFC6474` | https://www.rfc-editor.org/rfc/rfc6474.txt | `VC-01` |

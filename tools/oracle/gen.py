@@ -110,17 +110,69 @@ args = sys.argv[1:]
 cache = pathlib.Path(args[args.index("--cache") + 1]) if "--cache" in args else None
 
 
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
-from pin import PAGE_FOOT, fetch as fetch_pinned, refuse, unpaginate  # noqa: E402
-import ical  # noqa: E402
-
-sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "calendar"))
-import rfc5545  # noqa: E402
-import registry as calendar_registry  # noqa: E402
+def refuse(why):
+    sys.exit(f"oracle: {why}")
 
 
 def fetch(source):
-    return fetch_pinned(source, cache)
+    path = cache / f"{source['key']}.txt" if cache else None
+    if path and path.exists():
+        data = path.read_bytes()
+    else:
+        with urllib.request.urlopen(source["url"], timeout=60) as response:
+            data = response.read()
+        if path:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+    digest = hashlib.sha256(data).hexdigest()
+    if digest != source["sha256"]:
+        refuse(f"{source['key']} at {source['url']} is {digest}, not the pinned {source['sha256']}")
+    # A benchmark published compressed (gzip, RFC 1952) is pinned as published and read uncompressed.
+    if source["url"].endswith(".gz"):
+        data = gzip.decompress(data)
+    # A corpus published as a zip archive is pinned as published; what is read
+    # of it is the members under the source's "members" folders, as one JSON
+    # object from each member's path to its text in the encoding it declares.
+    if source["url"].endswith(".zip"):
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            held = {
+                name: archive.read(name).decode(source.get("encoding", "utf-8"))
+                for name in sorted(archive.namelist())
+                if any(name.startswith(folder) for folder in source["members"]) and not name.endswith("/")
+            }
+        return json.dumps(held, ensure_ascii=False)
+    return data.decode("utf-8")
+
+
+PAGE_FOOT = re.compile(r"\[Page \d+\]\s*$")
+
+
+def unpaginate(text):
+    """The RFC's text without its page breaks: footer, form feed, header and the padding around them."""
+    lines = text.replace("\r\n", "\n").split("\n")
+    out = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.startswith("\f"):
+            while out and not out[-1].strip():
+                out.pop()
+            if out and PAGE_FOOT.search(out[-1]):
+                out.pop()
+            while out and not out[-1].strip():
+                out.pop()
+            i += 1
+            if i < len(lines) and lines[i].startswith("RFC "):
+                i += 1
+            while i < len(lines) and not lines[i].strip():
+                i += 1
+            # A break between two lines of one indented example joins them; elsewhere it is a paragraph break.
+            if not (out and i < len(lines) and out[-1].startswith("   ") and lines[i].startswith("   ")):
+                out.append("")
+            continue
+        out.append(line)
+        i += 1
+    return "\n".join(out)
 
 
 def dedent(block):
@@ -530,58 +582,7 @@ def read_calendar(raw):
     if people:
         expect["parties"] = [cn or address for address, cn in people.values()]
         expect["addresses"] = [address.lower() for address, cn in people.values()]
-    # Every property, read by its value type, and when it starts and ends, its own time zones applied (3.6.5).
-    expect["tree"] = ical.tree(raw, REGISTRY())
-    when = ical.span(raw, REGISTRY())
-    if when:
-        expect["span"] = when
-        if "at" in when["start"] and "start" in expect and "at" not in expect["start"]:
-            expect["start"] = {"at": when["start"]["at"]}
-        elif "at" in when["start"] and "start" in expect:
-            expect["start"]["at"] = when["start"]["at"]
     return expect
-
-
-_registry = None
-
-
-def REGISTRY():
-    global _registry
-    if _registry is None:
-        _registry = calendar_registry.load()
-    return _registry
-
-
-def definition_lines(text):
-    """Each content line RFC 5545 section 3 shows as an example of a parameter, value type or property."""
-    for d in rfc5545.definitions(text, sorted(REGISTRY()["values"])).values():
-        if d["kind"] == "component":
-            continue
-        for line in d["examples"]:
-            yield json.dumps({"section": d["section"], "kind": d["kind"], "element": d["name"], "line": line + "\r\n"}, ensure_ascii=False)
-
-
-def definition_objects(text):
-    """Each whole object RFC 5545 section 3 shows as an example of a component."""
-    for d in rfc5545.definitions(text, sorted(REGISTRY()["values"])).values():
-        if d["kind"] != "component":
-            continue
-        for obj in d["examples"]:
-            yield json.dumps({"section": d["section"], "kind": d["kind"], "element": d["name"], "ical": obj}, ensure_ascii=False)
-
-
-def read_ical_line(raw):
-    row = json.loads(raw)
-    return {"section": row["section"], "element": row["element"], "props": ical.tree(row["line"], REGISTRY())["props"]}
-
-
-def read_ical_object(raw):
-    row = json.loads(raw)
-    out = {"section": row["section"], "element": row["element"], "tree": ical.tree(row["ical"], REGISTRY())}
-    when = ical.span(row["ical"], REGISTRY())
-    if when:
-        out["span"] = when
-    return out
 
 
 def recurrences(text):
@@ -1479,8 +1480,8 @@ for source in SPEC["sources"]:
             refuse(f"{source['key']} erratum {erratum['id']} is not a verified correction of text it holds once")
         text = text.replace(erratum["says"], erratum["should"])
     texts[source["key"]] = text
-    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples, "patterns": lambda text: pattern_examples(text, source), "markup": lambda text: markup_examples(text, source), "page": page, "recurrences": recurrences, "pairs": lambda text: pair_examples(text, source), "acts": lambda text: act_examples(text, source), "definitionLines": definition_lines, "definitionObjects": definition_objects}[source["examples"]]
-    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc, "coercive": read_pattern, "accname": read_accname, "feed": read_feed, "recurrence": read_recurrence, "similarity": read_similarity, "act": read_act, "icalLine": read_ical_line, "icalObject": read_ical_object}[source["kind"]]
+    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples, "patterns": lambda text: pattern_examples(text, source), "markup": lambda text: markup_examples(text, source), "page": page, "recurrences": recurrences, "pairs": lambda text: pair_examples(text, source), "acts": lambda text: act_examples(text, source)}[source["examples"]]
+    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc, "coercive": read_pattern, "accname": read_accname, "feed": read_feed, "recurrence": read_recurrence, "similarity": read_similarity, "act": read_act}[source["kind"]]
     n = kept = 0
     for raw in take(text):
         n += 1
@@ -1533,18 +1534,6 @@ for source in SPEC["sources"]:
         f"citation = {q(source['url'])}",
         f"checksum = {q('sha256:' + source['sha256'])}",
         f"statement = {q('The examples ' + source['title'] + ' publishes, as its own grammar reads them')}",
-        'realized_by = ["OR-01"]',
-    ]
-# A pinned registry is cited too: what it registers is what the reader knows (generators/calendar).
-for source in [json.loads((ROOT / "app/specs/calendar/spec.json").read_text(encoding="utf-8"))["registry"]]:
-    rows += [
-        "",
-        "[[authority]]",
-        f"id = {q('SRC-' + source['key'].upper())}",
-        f"name = {q(source['title'])}",
-        f"citation = {q(source['url'])}",
-        f"checksum = {q('sha256:' + source['sha256'])}",
-        f"statement = {q('Every element the ' + source['title'] + ' registers for ' + source['standard'].upper() + ', each read as its section defines it')}",
         'realized_by = ["OR-01"]',
     ]
 # A classification the Prism's models are made of is cited the same way; its

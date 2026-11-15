@@ -519,10 +519,18 @@ definition{
 }
 
 definition{
+  name: calOnlyFile,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (if ((Foundation.Tar::byteOr archive 0) =? 0) then (ctor Option.none [Bytes]) else (Foundation.Bytes::sliceBytes archive 512 (Foundation.Tar::entrySize archive 0))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: tokens,
   parameters: [archive : Bytes],
   result: (Option Bytes),
-  body: (match (Foundation.Tar::find archive (calU "upstream/icalendar.xml"))
+  body: (match (calOnlyFile archive)
     | Option.none => (ctor Option.none [Bytes])
     | Option.some piece => (ctor Option.some [Bytes] (calXmlFrom piece 0 0x (calLen piece)))),
   axioms: [Quot.sound, propext]
@@ -734,7 +742,7 @@ definition{
   name: definitions,
   parameters: [archive : Bytes],
   result: (Option Bytes),
-  body: (match (Foundation.Tar::find archive (calU "upstream/rfc5545.txt"))
+  body: (match (calOnlyFile archive)
     | Option.none => (ctor Option.none [Bytes])
     | Option.some piece => (let text : Bytes := (calUnpaginate piece); (ctor Option.some [Bytes] (calWalk text 0 0x 0 0x 0x 0x 0x 0x 0x ((calLen text) + 1))))),
   axioms: [Quot.sound, propext]
@@ -953,6 +961,87 @@ definition{
     | Nat.succ rest => (if ((calLen b) <? (i + 1)) then 0x else (calApp3 (calFieldOf (calLineAt b i) 0) 0x0a (calNamesFromLines b (calNextLine b i) rest)))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
+}
+
+definition{
+  name: calKindOf,
+  parameters: [sub : Bytes],
+  result: Bytes,
+  body: (if (calSame sub (calU "components")) then (calU "component") else (if (calSame sub (calU "properties")) then (calU "property") else (if (calSame sub (calU "parameters")) then (calU "parameter") else (if (calSame sub (calU "value-data-types")) then (calU "value") else 0x)))),
+  axioms: [propext]
+}
+
+definition{
+  name: calRefOf,
+  parameters: [standard : Bytes, sec : Bytes],
+  result: Bytes,
+  body: (calCat5 (calU "RFC") (calCut standard 3 (calLen standard)) 0x20 sec 0x)
+}
+
+definition{
+  name: calReqEntry,
+  parameters: [standard : Bytes, kind : Bytes, name : Bytes, sec : Bytes],
+  result: Bytes,
+  body: (calCat5 (calCat5 (calU " {\n  \"id\": \"") standard 0x2d kind 0x2d) (calCat5 name (calU "\",\n  \"kind\": \"must\",\n  \"ref\": \"") (calRefOf standard sec) (calU "\",\n  \"text\": \"The ") kind) (calCat5 0x20 name (calU ", read as section ") sec (calU " defines it\"\n }")) 0x 0x)
+}
+
+definition{
+  name: calEnumEntry,
+  parameters: [standard : Bytes, field : Bytes, name : Bytes, sec : Bytes],
+  result: Bytes,
+  body: (calCat5 (calCat5 (calU " {\n  \"id\": \"") standard (calU "-enum-") field 0x2d) (calCat5 name (calU "\",\n  \"kind\": \"must\",\n  \"ref\": \"") (calRefOf standard sec) (calU "\",\n  \"text\": \"The value ") name) (calCat5 (calU " of ") field (calU ", known as registered\"\n }") 0x 0x) 0x 0x)
+}
+
+definition{
+  name: calJoin,
+  parameters: [acc : Bytes, entry : Bytes],
+  result: Bytes,
+  body: (if ((calLen acc) =? 0) then entry else (calApp3 acc (calU ",\n") entry))
+}
+
+definition{
+  name: calFieldForFrom,
+  parameters: [recs : Bytes, i : Nat, sec : Bytes, found : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => found
+    | Nat.succ rest => (if ((calLen recs) <? (i + 1)) then found else (let l : Bytes := (calLineAt recs i); (let sub : Bytes := (calFieldOf l 0); (calFieldForFrom recs (calNextLine recs i) sec (if (((calSame sub (calU "properties")) || (calSame sub (calU "parameters"))) && (calSame (calFieldOf l 2) sec)) then (calFieldOf l 1) else found) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calInvGroupsFrom,
+  parameters: [recs : Bytes, i : Nat, standard : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((calLen recs) <? (i + 1)) then acc else (let l : Bytes := (calLineAt recs i); (let kind : Bytes := (calKindOf (calFieldOf l 0)); (calInvGroupsFrom recs (calNextLine recs i) standard (if ((calLen kind) =? 0) then acc else (calJoin acc (calReqEntry standard kind (calFieldOf l 1) (calFieldOf l 2)))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calInvEnumsFrom,
+  parameters: [recs : Bytes, i : Nat, standard : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((calLen recs) <? (i + 1)) then acc else (let l : Bytes := (calLineAt recs i); (let field : Bytes := (if ((calLen (calKindOf (calFieldOf l 0))) =? 0) then (calFieldForFrom recs 0 (calFieldOf l 2) 0x ((calLen recs) + 1)) else 0x); (calInvEnumsFrom recs (calNextLine recs i) standard (if ((calLen field) =? 0) then acc else (calJoin acc (calEnumEntry standard field (calFieldOf l 1) (calFieldOf l 2)))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: inventory,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (calU ".gen/ical-iana"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some iana => (match (Foundation.Tar::find archive (calU "app/specs/calendar/spec.json"))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some spec => (let pin : (Option Nat) := (Foundation.Json::memberAt spec (Foundation.Json::root spec) (calU "registry")); (let standard : Bytes := (Foundation.Json::textAt spec (Foundation.Json::memberAt spec pin (calU "standard"))); (let recs : Bytes := (calRecords iana 0 standard 0x false 0x 0x 0x 0x ((calLen iana) + 1)); (let fuel : Nat := ((calLen recs) + 1); (ctor Option.some [Bytes] (calCat5 (calU "written\n[\n") (calInvEnumsFrom recs 0 standard (calInvGroupsFrom recs 0 standard 0x fuel) fuel) (calU "\n]\n") 0x 0x)))))))),
+  axioms: [Quot.sound, propext]
 }
 
 definition{
