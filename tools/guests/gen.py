@@ -178,7 +178,7 @@ def pins(held):
     """{pin path: text} for every guest pinned in a site/<facet>/guest.mjs of its own."""
     files = {}
     for g in SPEC["guests"]:
-        if g["pin"].endswith("/guest.mjs"):
+        if g["pin"].endswith("/guest.mjs") and g["id"] in held:
             files.setdefault(g["pin"], []).append(g)
     out = {}
     for pin, gs in files.items():
