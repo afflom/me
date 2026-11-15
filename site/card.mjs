@@ -478,7 +478,8 @@ export default async function start({ app, reason, $ }) {
   const meaningOf = () => (meaning$ ??= import("./router/meaning.mjs").then(({ meaningReader }) => (meaning = meaningReader({ line, halted }))));
   let meaningRun = null;
   function meanItems() {
-    if (meaningRun || haltedNow) return meaningRun;
+    // Nothing held, nothing to read: a first visit fetches no part of the reader.
+    if (meaningRun || haltedNow || !items.some((item) => !item.sealed && !item.meaning)) return meaningRun;
     meaningRun = (async () => {
       const reader = await meaningOf();
       for (;;) {
