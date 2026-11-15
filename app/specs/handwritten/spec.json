@@ -12,7 +12,8 @@
         "python3",
         "-I",
         "tools/prompts/gen.py"
-      ]
+      ],
+      "lexlean": false
     },
     {
       "id": "coherence",
@@ -20,7 +21,8 @@
         "python3",
         "-I",
         "tools/coherence/gen.py"
-      ]
+      ],
+      "lexlean": false
     },
     {
       "id": "dest",
@@ -28,7 +30,8 @@
         "python3",
         "-I",
         "tools/dest/gen.py"
-      ]
+      ],
+      "lexlean": false
     },
     {
       "id": "holon",
@@ -36,7 +39,8 @@
         "python3",
         "-I",
         "tools/holon/gen.py"
-      ]
+      ],
+      "lexlean": false
     },
     {
       "id": "kappa",
@@ -44,7 +48,8 @@
         "python3",
         "-I",
         "tools/kappa/gen.py"
-      ]
+      ],
+      "lexlean": false
     },
     {
       "id": "oracle",
@@ -52,7 +57,8 @@
         "python3",
         "-I",
         "tools/oracle/gen.py"
-      ]
+      ],
+      "lexlean": false
     },
     {
       "id": "source",
@@ -60,7 +66,8 @@
         "python3",
         "-I",
         "tools/source/gen.py"
-      ]
+      ],
+      "lexlean": false
     },
     {
       "id": "surface",
@@ -68,7 +75,8 @@
         "python3",
         "-I",
         "tools/surface/gen.py"
-      ]
+      ],
+      "lexlean": false
     },
     {
       "id": "uorc",
@@ -76,7 +84,8 @@
         "python3",
         "-I",
         "tools/uorc/gen.py"
-      ]
+      ],
+      "lexlean": false
     },
     {
       "id": "facet-resonance",
@@ -85,7 +94,8 @@
         "-I",
         "tools/facet/gen.py",
         "app/specs/resonance/spec.json"
-      ]
+      ],
+      "lexlean": false
     },
     {
       "id": "facet-router",
@@ -94,7 +104,8 @@
         "-I",
         "tools/facet/gen.py",
         "app/specs/router/spec.json"
-      ]
+      ],
+      "lexlean": false
     },
     {
       "id": "realize",
@@ -102,7 +113,8 @@
         "python3",
         "-I",
         "tools/realize/gate.py"
-      ]
+      ],
+      "lexlean": false
     },
     {
       "id": "root",
@@ -111,7 +123,8 @@
         "-I",
         "tools/prism_root.py",
         "app/src"
-      ]
+      ],
+      "lexlean": false
     },
     {
       "id": "conformance",
@@ -128,7 +141,8 @@
       ],
       "env": {
         "CARGO_TARGET_DIR": "@root/target/handwritten-cargo"
-      }
+      },
+      "lexlean": false
     },
     {
       "id": "guests",
@@ -137,7 +151,8 @@
         "-I",
         "tools/guests/gen.py",
         "pins"
-      ]
+      ],
+      "lexlean": false
     }
   ],
   "built": [
@@ -148,7 +163,8 @@
         "site/vault/test/guests/*.wasm"
       ],
       "by": "tools/guests/build.sh in the locked SDK",
-      "checked": "GU-01 (tools/guests/gen.py check)"
+      "checked": "GU-01 (tools/guests/gen.py check)",
+      "lexlean": true
     },
     {
       "id": "drawn",
@@ -157,7 +173,8 @@
         "site/icons/*.png"
       ],
       "by": "bootstrap/og.py and bootstrap/icons.py, drawn again by every page build",
-      "checked": "bootstrap/page.mjs refuses an image not drawn for site/app.json"
+      "checked": "bootstrap/page.mjs refuses an image not drawn for site/app.json",
+      "lexlean": false
     },
     {
       "id": "cargo",
@@ -165,7 +182,8 @@
         "Cargo.lock"
       ],
       "by": "cargo, resolving Cargo.toml",
-      "checked": "every cargo command runs --locked"
+      "checked": "every cargo command runs --locked",
+      "lexlean": false
     },
     {
       "id": "npm",
@@ -173,7 +191,8 @@
         "package-lock.json"
       ],
       "by": "npm, resolving package.json",
-      "checked": "npm ci refuses a lock that disagrees"
+      "checked": "npm ci refuses a lock that disagrees",
+      "lexlean": false
     },
     {
       "id": "lexlean",
@@ -181,7 +200,8 @@
         "app/lexlean.lock"
       ],
       "by": "lexlean lock in the locked SDK",
-      "checked": "prismpm verify refuses a stale lock"
+      "checked": "prismpm verify refuses a stale lock",
+      "lexlean": false
     },
     {
       "id": "frame-sync",
@@ -189,7 +209,8 @@
         "frame.lock"
       ],
       "by": "bootstrap/frame-sync.mjs",
-      "checked": "bootstrap/frame-sync.mjs --check"
+      "checked": "bootstrap/frame-sync.mjs --check",
+      "lexlean": false
     },
     {
       "id": "template-update",
@@ -197,7 +218,8 @@
         "template.lock"
       ],
       "by": "the template-update workflow",
-      "checked": "prismpm template check"
+      "checked": "prismpm template check",
+      "lexlean": false
     }
   ],
   "upstream": {
@@ -338,6 +360,13 @@
     "about": "Directories a producer loads every file of, one per standard or source: a new file there is a plug-in of that producer, not a new part, and its lines still count toward the hand-written total.",
     "paths": [
       "tools/standards/extract/*.py"
+    ]
+  },
+  "lexlean": {
+    "about": "Alex 2026-11-15 10:04Z: everything is required to be in prism/LexLean. A file authored in LexLean is the Prism's own source and may grow; every other file is measured as distance from LexLean: hand-written code (ratcheted), model records outside LexLean, and files written by a producer that is not itself LexLean built by PrismPM.",
+    "paths": [
+      "app/src/**/*.lex.tex",
+      "app/language/**"
     ]
   }
 }

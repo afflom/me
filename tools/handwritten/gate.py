@@ -276,6 +276,8 @@ def measure(previous):
             out[p] = entry(p, "generated", gen[p], data)
         elif p in up:
             out[p] = entry(p, "upstream", up[p], data)
+        elif matches(p, SPEC["lexlean"]["paths"]):
+            out[p] = entry(p, "lexlean", None, data)
         elif any(p.startswith(m) for m in SPEC["model"]):
             out[p] = entry(p, "model", None, data)
         else:
@@ -326,7 +328,7 @@ def ratchet(now, base, ref):
     for p, e in sorted(now.items()):
         plugin = matches(p, SPEC.get("plugins", {}).get("paths", []))
         if e["is"] == "hand" and not plugin and (p not in base or base[p]["is"] != "hand"):
-            refusals.append(f"{p}: a new hand-written part (it was {base[p]['is'] if p in base else 'absent'} at {ref}); author it in the model or a producer instead")
+            refusals.append(f"{p}: a new hand-written part (it was {base[p]['is'] if p in base else 'absent'} at {ref}); author it in LexLean (app/src/**/*.lex.tex), built by PrismPM, instead")
         elif e["is"] == "hand" and e["lines"] is None and e.get("blob") != base[p].get("blob"):
             refusals.append(f"{p}: a hand-made binary changed; it must come from a producer")
     # The whole, as verdant counts it (maxHandwrittenGameNonCommentLines): a
@@ -337,7 +339,7 @@ def ratchet(now, base, ref):
     total_base = sum(v["lines"] for v in tb.values())
     if total_now > total_base:
         grew = ", ".join(f"{c} {tb.get(c, {'lines': 0})['lines']} -> {v['lines']}" for c, v in sorted(tn.items()) if v["lines"] > tb.get(c, {"lines": 0})["lines"])
-        refusals.append(f"hand-written lines grew from {total_base} to {total_now} since {ref} ({grew}); hand-written code may only shrink")
+        refusals.append(f"hand-written lines grew from {total_base} to {total_now} since {ref} ({grew}); hand-written code may only shrink; move it into LexLean")
     return refusals
 
 
@@ -390,6 +392,10 @@ def main():
     if opt("--report"):
         report(now, opt("--report"))
     t = totals(now)
+    lean_ids = {x["id"] for x in SPEC["producers"] + SPEC["built"] if x.get("lexlean")} | {"handwritten"}
+    outside_gen = sum(1 for e in now.values() if e["is"] == "generated" and e.get("from") not in lean_ids)
+    outside_model = sum(1 for e in now.values() if e["is"] == "model")
+    print(f"HW-01: distance from LexLean: {outside_model} model records and {outside_gen} files written by producers outside LexLean")
     print(f"HW-01: {sum(v['files'] for v in t.values())} hand-written files, {sum(v['lines'] for v in t.values())} non-comment lines"
           + (f", none grown since {ref}" if base is not None else f", no ledger at {ref} to ratchet against"))
 
