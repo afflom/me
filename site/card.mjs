@@ -1055,21 +1055,20 @@ export default async function start({ app, reason, $ }) {
     return true;
   }
 
+  // Notes are kept one after another: a field is free for the next line as soon as one is sent, a line not kept
+  // comes back to its field, and a question waits for what was sent before it.
+  let notesKept = Promise.resolve();
   function noteForm(place) {
     const field = element("input", { type: "text", placeholder: WORDS["note.placeholder"], autocomplete: "off" });
     field.setAttribute("aria-label", WORDS["note.placeholder"]);
     const keep = element("button", { type: "submit", textContent: WORDS.keep });
     const form = element("form", { className: "pr-row pr-note" }, field, keep);
-    form.addEventListener("submit", async (event) => {
+    form.addEventListener("submit", (event) => {
       event.preventDefault();
       const text = field.value.trim();
       if (!text || !vault) return;
-      keep.disabled = true;
-      try {
-        if (await keepNote(place, text)) field.value = "";
-      } finally {
-        keep.disabled = false;
-      }
+      field.value = "";
+      notesKept = notesKept.then(() => keepNote(place, text)).catch(() => false).then((ok) => { if (!ok && !field.value) field.value = text; });
     });
     return form;
   }
@@ -1496,7 +1495,7 @@ export default async function start({ app, reason, $ }) {
     try {
       // The person's words go through the R4 router; a question is answered in
       // sentences from what is held, under the Boundary, with what it drew on.
-      const { answer } = await import("./router/answer.mjs");
+      const [{ answer }] = await Promise.all([import("./router/answer.mjs"), notesKept]);
       // A question is answered; anything else the person says is offered to keep, in its place and time.
       const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: true, meaning: haltedNow ? null : meaningRead() });
       turn(prompt, said);

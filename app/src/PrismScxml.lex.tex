@@ -1,0 +1,1784 @@
+\begin{lexlean}{PrismScxml}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\title{Text application model}
+\begin{semanticmodule}
+structure{
+  name: SxRun,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: doc, type: Bytes},
+    {name: tab, type: Bytes},
+    {name: root, type: Nat},
+    {name: sid, type: Nat},
+    {name: parent, type: Nat},
+    {name: config, type: Bytes},
+    {name: hist, type: Bytes},
+    {name: internal, type: Bytes},
+    {name: toinvoke, type: Bytes},
+    {name: running, type: Bool},
+    {name: outcome, type: Bytes},
+    {name: posts, type: Bytes},
+    {name: cancels, type: Bytes},
+    {name: kids, type: Bytes},
+    {name: spawns, type: Bytes}
+  ]
+}
+
+structure{
+  name: SxEntry,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: enter, type: Bytes}, {name: defaults, type: Bytes}, {name: content, type: Bytes}]
+}
+
+structure{
+  name: SxSession,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: root, type: Nat},
+    {name: parent, type: Nat},
+    {name: invoker, type: Nat},
+    {name: iid, type: Bytes},
+    {name: config, type: Bytes},
+    {name: hist, type: Bytes},
+    {name: internal, type: Bytes},
+    {name: running, type: Bool},
+    {name: started, type: Bool},
+    {name: outcome, type: Bytes},
+    {name: cancelled, type: Bool},
+    {name: forward, type: Bool}
+  ]
+}
+
+structure{
+  name: SxWorld,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: doc, type: Bytes},
+    {name: tab, type: Bytes},
+    {name: sessions, type: Bytes},
+    {name: ext, type: Bytes},
+    {name: time, type: Nat},
+    {name: seq, type: Nat}
+  ]
+}
+
+definition{
+  name: sxAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => 0
+    | Option.some b => (prim to_nat b : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{name: sxLen, parameters: [s : Bytes], result: Nat, body: (prim length s : Nat)}
+
+definition{
+  name: sxSlice,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes)) | Option.none => 0x | Option.some b => b)
+}
+
+definition{
+  name: sxFrom,
+  parameters: [s : Bytes, start : Nat],
+  result: Bytes,
+  body: (sxSlice s start (prim subtract (sxLen s) start : Nat))
+}
+
+definition{
+  name: sxSame,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bool,
+  body: (prim equal (prim compare_bytes a b : Ordering) (prim compare_bytes 0x00 0x00 : Ordering) : Bool),
+  axioms: [propext]
+}
+
+definition{
+  name: sxStartsAt,
+  parameters: [s : Bytes, i : Nat, p : Bytes],
+  result: Bool,
+  body: (sxSame (sxSlice s i (sxLen p)) p),
+  axioms: [propext]
+}
+
+definition{
+  name: sxOctets,
+  parameters: [],
+  result: Bytes,
+  body: 0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff
+}
+
+definition{
+  name: sxByte,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (sxSlice (sxOctets) (prim remainder n 256 0 : Nat) 1)
+}
+
+definition{
+  name: sxU16,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (prim append (sxByte (prim quotient n 256 0 : Nat)) (sxByte n) : Bytes)
+}
+
+definition{
+  name: sxU32,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (prim append (sxU16 (prim quotient n 65536 0 : Nat)) (sxU16 n) : Bytes)
+}
+
+definition{
+  name: sxG16,
+  parameters: [s : Bytes, k : Nat],
+  result: Nat,
+  body: ((prim multiply (sxAt s k) 256 : Nat) + (sxAt s (k + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxG32,
+  parameters: [s : Bytes, k : Nat],
+  result: Nat,
+  body: ((prim multiply (sxG16 s k) 65536 : Nat) + (sxG16 s (k + 2))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxPut16,
+  parameters: [s : Bytes, k : Nat, n : Nat],
+  result: Bytes,
+  body: (prim append (sxSlice s 0 k) (prim append (sxU16 n) (sxFrom s (k + 2)) : Bytes) : Bytes)
+}
+
+definition{
+  name: sxDecFrom,
+  parameters: [n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let d : Bytes := (prim append (sxByte (48 + (prim remainder n 10 0 : Nat))) acc : Bytes); (if (n <? 10) then d else (sxDecFrom (prim quotient n 10 0 : Nat) d rest)))),
+  recursive_argument: fuel
+}
+
+definition{name: sxDec, parameters: [n : Nat], result: Bytes, body: (sxDecFrom n 0x 8)}
+
+definition{
+  name: sxIsWs,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 32) || ((b =? 10) || ((b =? 13) || (b =? 9))))
+}
+
+definition{
+  name: sxSkipWs,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (sxIsWs (sxAt s i)) then (sxSkipWs s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxFind,
+  parameters: [s : Bytes, i : Nat, p : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (sxLen s)
+    | Nat.succ rest => (if ((sxLen s) <? (i + 1)) then (sxLen s) else (if (sxStartsAt s i p) then i else (sxFind s (i + 1) p rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxFindByte,
+  parameters: [s : Bytes, i : Nat, b : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (sxLen s)
+    | Nat.succ rest => (if ((sxLen s) <? (i + 1)) then (sxLen s) else (if ((sxAt s i) =? b) then i else (sxFindByte s (i + 1) b rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxTagClose,
+  parameters: [s : Bytes, i : Nat, q : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (sxLen s)
+    | Nat.succ rest => (let b : Nat := (sxAt s i); (if ((sxLen s) <? (i + 1)) then (sxLen s) else (if (q =? 0) then (if (b =? 62) then i else (if ((b =? 34) || (b =? 39)) then (sxTagClose s (i + 1) b rest) else (sxTagClose s (i + 1) 0 rest))) else (if (b =? q) then (sxTagClose s (i + 1) 0 rest) else (sxTagClose s (i + 1) q rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxNameStop,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((sxIsWs b) || ((b =? 47) || ((b =? 62) || (b =? 61))))
+}
+
+definition{
+  name: sxNameEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((sxNameStop (sxAt s i)) || ((sxLen s) <? (i + 1))) then i else (sxNameEnd s (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxKindOf,
+  parameters: [n : Bytes],
+  result: Nat,
+  body: (if (sxSame n (prim utf8_encode "scxml" : Bytes)) then 1 else (if (sxSame n (prim utf8_encode "state" : Bytes)) then 2 else (if (sxSame n (prim utf8_encode "parallel" : Bytes)) then 3 else (if (sxSame n (prim utf8_encode "final" : Bytes)) then 4 else (if (sxSame n (prim utf8_encode "history" : Bytes)) then 5 else (if (sxSame n (prim utf8_encode "initial" : Bytes)) then 6 else (if (sxSame n (prim utf8_encode "transition" : Bytes)) then 7 else (if (sxSame n (prim utf8_encode "onentry" : Bytes)) then 8 else (if (sxSame n (prim utf8_encode "onexit" : Bytes)) then 9 else (if (sxSame n (prim utf8_encode "raise" : Bytes)) then 10 else (if (sxSame n (prim utf8_encode "send" : Bytes)) then 11 else (if (sxSame n (prim utf8_encode "invoke" : Bytes)) then 12 else (if (sxSame n (prim utf8_encode "content" : Bytes)) then 13 else 0))))))))))))),
+  axioms: [propext]
+}
+
+definition{
+  name: sxConfFlag,
+  parameters: [n : Bytes],
+  result: Nat,
+  body: (if (sxSame n (prim utf8_encode "conf:pass" : Bytes)) then 1 else (if (sxSame n (prim utf8_encode "conf:fail" : Bytes)) then 2 else 0)),
+  axioms: [propext]
+}
+
+definition{
+  name: sxRow,
+  parameters: [kind : Nat, parent : Nat, stop : Nat, ts : Nat, te : Nat, flag : Nat],
+  result: Bytes,
+  body: (prim append (sxByte kind) (prim append (sxU16 parent) (prim append (sxU16 stop) (prim append (sxU16 ts) (prim append (sxU16 te) (sxByte flag) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes)
+}
+
+definition{
+  name: sxCount,
+  parameters: [t : Bytes],
+  result: Nat,
+  body: (prim quotient (sxLen t) 10 0 : Nat)
+}
+
+definition{
+  name: sxTop,
+  parameters: [stack : Bytes],
+  result: Nat,
+  body: (sxG16 stack (prim subtract (sxLen stack) 2 : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxPop,
+  parameters: [stack : Bytes],
+  result: Bytes,
+  body: (sxSlice stack 0 (prim subtract (sxLen stack) 2 : Nat))
+}
+
+definition{
+  name: sxScan,
+  parameters: [s : Bytes, i : Nat, stack : Bytes, t : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => t
+    | Nat.succ rest => (if ((sxLen s) <? (i + 1)) then t else (if (sxStartsAt s i (prim utf8_encode "<!--" : Bytes)) then (sxScan s ((sxFind s i (prim utf8_encode "-->" : Bytes) (sxLen s)) + 3) stack t rest) else (if (sxStartsAt s i (prim utf8_encode "<![CDATA[" : Bytes)) then (sxScan s ((sxFind s i (prim utf8_encode "]]>" : Bytes) (sxLen s)) + 3) stack t rest) else (if (sxStartsAt s i (prim utf8_encode "<?" : Bytes)) then (sxScan s ((sxFind s i (prim utf8_encode "?>" : Bytes) (sxLen s)) + 2) stack t rest) else (if (sxStartsAt s i (prim utf8_encode "<!" : Bytes)) then (sxScan s ((sxFindByte s i 62 (sxLen s)) + 1) stack t rest) else (if (sxStartsAt s i (prim utf8_encode "</" : Bytes)) then (if ((sxLen stack) <? 2) then t else (sxScan s ((sxFindByte s i 62 (sxLen s)) + 1) (sxPop stack) (sxPut16 t ((prim multiply (sxTop stack) 10 : Nat) + 3) (sxCount t)) rest)) else (if ((sxAt s i) =? 60) then (let te : Nat := (sxTagClose s i 0 (sxLen s)); (let name : Bytes := (sxSlice s (i + 1) (prim subtract (sxNameEnd s (i + 1) (sxLen s)) (i + 1) : Nat)); (let flag : Nat := (sxConfFlag name); (let kind : Nat := (if (flag =? 0) then (sxKindOf name) else 4); (let parent : Nat := (if ((sxLen stack) <? 2) then 0 else ((sxTop stack) + 1)); (let me : Nat := (sxCount t); (if ((sxAt s (prim subtract te 1 : Nat)) =? 47) then (sxScan s (te + 1) stack (prim append t (sxRow kind parent (me + 1) i te flag) : Bytes) rest) else (sxScan s (te + 1) (prim append stack (sxU16 me) : Bytes) (prim append t (sxRow kind parent 0 i te flag) : Bytes) rest)))))))) else (sxScan s (sxFindByte s i 60 (sxLen s)) stack t rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxTable,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (sxScan s 0 0x 0x (sxLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxKind,
+  parameters: [t : Bytes, e : Nat],
+  result: Nat,
+  body: (sxAt t (prim multiply e 10 : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxParent,
+  parameters: [t : Bytes, e : Nat],
+  result: Nat,
+  body: (prim subtract (sxG16 t ((prim multiply e 10 : Nat) + 1)) 1 : Nat),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxHasParent,
+  parameters: [t : Bytes, e : Nat],
+  result: Bool,
+  body: (not ((sxG16 t ((prim multiply e 10 : Nat) + 1)) =? 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxEnd,
+  parameters: [t : Bytes, e : Nat],
+  result: Nat,
+  body: (sxG16 t ((prim multiply e 10 : Nat) + 3)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxTagStart,
+  parameters: [t : Bytes, e : Nat],
+  result: Nat,
+  body: (sxG16 t ((prim multiply e 10 : Nat) + 5)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxTagEnd,
+  parameters: [t : Bytes, e : Nat],
+  result: Nat,
+  body: (sxG16 t ((prim multiply e 10 : Nat) + 7)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxFlag,
+  parameters: [t : Bytes, e : Nat],
+  result: Nat,
+  body: (sxAt t ((prim multiply e 10 : Nat) + 9)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxDesc,
+  parameters: [t : Bytes, a : Nat, b : Nat],
+  result: Bool,
+  body: ((a <? b) && (b <? (sxEnd t a))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxDescOrSelf,
+  parameters: [t : Bytes, a : Nat, b : Nat],
+  result: Bool,
+  body: ((a =? b) || (sxDesc t a b)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxAttrFrom,
+  parameters: [s : Bytes, i : Nat, stop : Nat, name : Bytes, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (let a : Nat := (sxSkipWs s i (sxLen s)); (let b : Nat := (sxAt s a); (if ((stop <? (a + 1)) || ((b =? 47) || (b =? 62))) then (ctor Option.none [Bytes]) else (let ne : Nat := (sxNameEnd s a (sxLen s)); (let eq : Nat := (sxSkipWs s ne (sxLen s)); (if (not ((sxAt s eq) =? 61)) then (ctor Option.none [Bytes]) else (let vs : Nat := (sxSkipWs s (eq + 1) (sxLen s)); (let ve : Nat := (sxFindByte s (vs + 1) (sxAt s vs) (sxLen s)); (if (sxSame (sxSlice s a (prim subtract ne a : Nat)) name) then (ctor Option.some [Bytes] (sxSlice s (vs + 1) (prim subtract ve (vs + 1) : Nat))) else (sxAttrFrom s (ve + 1) stop name rest))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxAttr,
+  parameters: [s : Bytes, t : Bytes, e : Nat, name : Bytes],
+  result: (Option Bytes),
+  body: (sxAttrFrom s (sxNameEnd s ((sxTagStart t e) + 1) (sxLen s)) (sxTagEnd t e) name (sxLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxHas,
+  parameters: [s : Bytes, t : Bytes, e : Nat, name : Bytes],
+  result: Bool,
+  body: (match (sxAttr s t e name) | Option.none => false | Option.some v => true),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxAttrOr,
+  parameters: [s : Bytes, t : Bytes, e : Nat, name : Bytes],
+  result: Bytes,
+  body: (match (sxAttr s t e name) | Option.none => 0x | Option.some v => v),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxId,
+  parameters: [s : Bytes, t : Bytes, e : Nat],
+  result: Bytes,
+  body: (if ((sxFlag t e) =? 1) then (prim utf8_encode "pass" : Bytes) else (if ((sxFlag t e) =? 2) then (prim utf8_encode "fail" : Bytes) else (sxAttrOr s t e (prim utf8_encode "id" : Bytes)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxTarget,
+  parameters: [s : Bytes, t : Bytes, e : Nat],
+  result: (Option Bytes),
+  body: (if (sxHas s t e (prim utf8_encode "conf:targetpass" : Bytes)) then (ctor Option.some [Bytes] (prim utf8_encode "pass" : Bytes)) else (if (sxHas s t e (prim utf8_encode "conf:targetfail" : Bytes)) then (ctor Option.some [Bytes] (prim utf8_encode "fail" : Bytes)) else (sxAttr s t e (prim utf8_encode "target" : Bytes)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxSize,
+  parameters: [l : Bytes],
+  result: Nat,
+  body: (prim quotient (sxLen l) 2 0 : Nat)
+}
+
+definition{
+  name: sxNth,
+  parameters: [l : Bytes, k : Nat],
+  result: Nat,
+  body: (sxG16 l (prim multiply k 2 : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxMemFrom,
+  parameters: [l : Bytes, x : Nat, k : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((sxSize l) <? (k + 1)) then false else (if ((sxNth l k) =? x) then true else (sxMemFrom l x (k + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxMem,
+  parameters: [l : Bytes, x : Nat],
+  result: Bool,
+  body: (sxMemFrom l x 0 (sxSize l)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxAdd,
+  parameters: [l : Bytes, x : Nat],
+  result: Bytes,
+  body: (if (sxMem l x) then l else (prim append l (sxU16 x) : Bytes)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxInsFrom,
+  parameters: [l : Bytes, x : Nat, k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => l
+    | Nat.succ rest => (if ((sxSize l) <? (k + 1)) then (prim append l (sxU16 x) : Bytes) else (if ((sxNth l k) =? x) then l else (if (x <? (sxNth l k)) then (prim append (sxSlice l 0 (prim multiply k 2 : Nat)) (prim append (sxU16 x) (sxFrom l (prim multiply k 2 : Nat)) : Bytes) : Bytes) else (sxInsFrom l x (k + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxIns,
+  parameters: [l : Bytes, x : Nat],
+  result: Bytes,
+  body: (sxInsFrom l x 0 ((sxSize l) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxDelFrom,
+  parameters: [l : Bytes, x : Nat, k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => l
+    | Nat.succ rest => (if ((sxSize l) <? (k + 1)) then l else (if ((sxNth l k) =? x) then (prim append (sxSlice l 0 (prim multiply k 2 : Nat)) (sxFrom l ((prim multiply k 2 : Nat) + 2)) : Bytes) else (sxDelFrom l x (k + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxDel,
+  parameters: [l : Bytes, x : Nat],
+  result: Bytes,
+  body: (sxDelFrom l x 0 (sxSize l)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxSortFrom,
+  parameters: [l : Bytes, k : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxSize l) <? (k + 1)) then acc else (sxSortFrom l (k + 1) (sxIns acc (sxNth l k)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxSort,
+  parameters: [l : Bytes],
+  result: Bytes,
+  body: (sxSortFrom l 0 0x (sxSize l)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxMeetsFrom,
+  parameters: [a : Bytes, b : Bytes, k : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((sxSize a) <? (k + 1)) then false else (if (sxMem b (sxNth a k)) then true else (sxMeetsFrom a b (k + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxMeets,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bool,
+  body: (sxMeetsFrom a b 0 (sxSize a)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxMinusFrom,
+  parameters: [a : Bytes, b : Bytes, k : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxSize a) <? (k + 1)) then acc else (sxMinusFrom a b (k + 1) (if (sxMem b (sxNth a k)) then acc else (prim append acc (sxU16 (sxNth a k)) : Bytes)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxMinus,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bytes,
+  body: (sxMinusFrom a b 0 0x (sxSize a)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxUnionFrom,
+  parameters: [a : Bytes, b : Bytes, k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => a
+    | Nat.succ rest => (if ((sxSize b) <? (k + 1)) then a else (sxUnionFrom (sxAdd a (sxNth b k)) b (k + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxUnion,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bytes,
+  body: (sxUnionFrom a b 0 (sxSize b)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxReverseFrom,
+  parameters: [l : Bytes, k : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxSize l) <? (k + 1)) then acc else (sxReverseFrom l (k + 1) (prim append (sxU16 (sxNth l k)) acc : Bytes) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxReverse,
+  parameters: [l : Bytes],
+  result: Bytes,
+  body: (sxReverseFrom l 0 0x (sxSize l)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxIsStateKind,
+  parameters: [k : Nat],
+  result: Bool,
+  body: ((k =? 2) || ((k =? 3) || (k =? 4)))
+}
+
+definition{
+  name: sxChildrenFrom,
+  parameters: [t : Bytes, e : Nat, j : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxEnd t e) <? (j + 1)) then acc else (sxChildrenFrom t e (sxEnd t j) (prim append acc (sxU16 j) : Bytes) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxChildren,
+  parameters: [t : Bytes, e : Nat],
+  result: Bytes,
+  body: (sxChildrenFrom t e (e + 1) 0x (sxCount t)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxOfKindFrom,
+  parameters: [t : Bytes, l : Bytes, k : Nat, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxSize l) <? (i + 1)) then acc else (sxOfKindFrom t l k (i + 1) (if ((sxKind t (sxNth l i)) =? k) then (prim append acc (sxU16 (sxNth l i)) : Bytes) else acc) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxChildrenOf,
+  parameters: [t : Bytes, e : Nat, k : Nat],
+  result: Bytes,
+  body: (sxOfKindFrom t (sxChildren t e) k 0 0x (sxCount t)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxStatesFrom,
+  parameters: [t : Bytes, l : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxSize l) <? (i + 1)) then acc else (sxStatesFrom t l (i + 1) (if (sxIsStateKind (sxKind t (sxNth l i))) then (prim append acc (sxU16 (sxNth l i)) : Bytes) else acc) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxChildStates,
+  parameters: [t : Bytes, e : Nat],
+  result: Bytes,
+  body: (sxStatesFrom t (sxChildren t e) 0 0x (sxCount t)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxFirstOf,
+  parameters: [t : Bytes, e : Nat, k : Nat],
+  result: (Option Nat),
+  body: (let l : Bytes := (sxChildrenOf t e k); (if ((sxSize l) =? 0) then (ctor Option.none [Nat]) else (ctor Option.some [Nat] (sxNth l 0)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxIsAtomic,
+  parameters: [t : Bytes, e : Nat],
+  result: Bool,
+  body: (((sxKind t e) =? 4) || (((sxKind t e) =? 2) && ((sxSize (sxChildStates t e)) =? 0))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxIsCompound,
+  parameters: [t : Bytes, e : Nat],
+  result: Bool,
+  body: (((sxKind t e) =? 2) && (not ((sxSize (sxChildStates t e)) =? 0))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxByIdFrom,
+  parameters: [s : Bytes, t : Bytes, root : Nat, j : Nat, ident : Bytes, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (if ((sxEnd t root) <? (j + 1)) then (ctor Option.none [Nat]) else (if ((sxKind t j) =? 1) then (sxByIdFrom s t root (sxEnd t j) ident rest) else (if (((sxIsStateKind (sxKind t j)) || ((sxKind t j) =? 5)) && (sxSame (sxId s t j) ident)) then (ctor Option.some [Nat] j) else (sxByIdFrom s t root (j + 1) ident rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxById,
+  parameters: [s : Bytes, t : Bytes, root : Nat, ident : Bytes],
+  result: (Option Nat),
+  body: (sxByIdFrom s t root (root + 1) ident (sxCount t)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxRefsFrom,
+  parameters: [s : Bytes, t : Bytes, root : Nat, v : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let a : Nat := (sxSkipWs v i (sxLen v)); (if ((sxLen v) <? (a + 1)) then acc else (let b : Nat := (sxNameEnd v a (sxLen v)); (sxRefsFrom s t root v (b + 1) (match (sxById s t root (sxSlice v a (prim subtract b a : Nat)))
+      | Option.none => acc
+      | Option.some x => (prim append acc (sxU16 x) : Bytes)) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxRefs,
+  parameters: [s : Bytes, t : Bytes, root : Nat, v : Bytes],
+  result: Bytes,
+  body: (sxRefsFrom s t root v 0 0x (sxLen v)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxSetConfig,
+  parameters: [r : SxRun, v : Bytes],
+  result: SxRun,
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := v, hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns)})
+}
+
+definition{
+  name: sxSetHist,
+  parameters: [r : SxRun, v : Bytes],
+  result: SxRun,
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := v, internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns)})
+}
+
+definition{
+  name: sxSetInternal,
+  parameters: [r : SxRun, v : Bytes],
+  result: SxRun,
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := v, toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns)})
+}
+
+definition{
+  name: sxSetToinvoke,
+  parameters: [r : SxRun, v : Bytes],
+  result: SxRun,
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := v, running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns)})
+}
+
+definition{
+  name: sxSetRunning,
+  parameters: [r : SxRun, v : Bool],
+  result: SxRun,
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := v, outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns)})
+}
+
+definition{
+  name: sxSetOutcome,
+  parameters: [r : SxRun, v : Bytes],
+  result: SxRun,
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := v, posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns)})
+}
+
+definition{
+  name: sxSetPosts,
+  parameters: [r : SxRun, v : Bytes],
+  result: SxRun,
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := v, cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns)})
+}
+
+definition{
+  name: sxSetCancels,
+  parameters: [r : SxRun, v : Bytes],
+  result: SxRun,
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := v, kids := (project r kids), spawns := (project r spawns)})
+}
+
+definition{
+  name: sxSetKids,
+  parameters: [r : SxRun, v : Bytes],
+  result: SxRun,
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := v, spawns := (project r spawns)})
+}
+
+definition{
+  name: sxSetSpawns,
+  parameters: [r : SxRun, v : Bytes],
+  result: SxRun,
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := v})
+}
+
+definition{
+  name: sxTargets,
+  parameters: [r : SxRun, tr : Nat],
+  result: Bytes,
+  body: (match (sxTarget (project r doc) (project r tab) tr)
+    | Option.none => 0x
+    | Option.some v => (sxRefs (project r doc) (project r tab) (project r root) v)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxHistFrom,
+  parameters: [h : Bytes, i : Nat, x : Nat, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (if ((sxLen h) <? (i + 4)) then (ctor Option.none [Bytes]) else (let n : Nat := (sxG16 h (i + 2)); (if ((sxG16 h i) =? x) then (ctor Option.some [Bytes] (sxSlice h (i + 4) (prim multiply n 2 : Nat))) else (sxHistFrom h ((i + 4) + (prim multiply n 2 : Nat)) x rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxHistOf,
+  parameters: [r : SxRun, x : Nat],
+  result: (Option Bytes),
+  body: (sxHistFrom (project r hist) 0 x (sxLen (project r hist))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxHistDropFrom,
+  parameters: [h : Bytes, i : Nat, x : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxLen h) <? (i + 4)) then acc else (let w : Nat := (4 + (prim multiply (sxG16 h (i + 2)) 2 : Nat)); (sxHistDropFrom h (i + w) x (if ((sxG16 h i) =? x) then acc else (prim append acc (sxSlice h i w) : Bytes)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxRecordHist,
+  parameters: [r : SxRun, x : Nat, states : Bytes],
+  result: SxRun,
+  body: (sxSetHist r (prim append (sxHistDropFrom (project r hist) 0 x 0x (sxLen (project r hist))) (prim append (sxU16 x) (prim append (sxU16 (sxSize states)) states : Bytes) : Bytes) : Bytes)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxDefaultTransition,
+  parameters: [r : SxRun, h : Nat],
+  result: Nat,
+  body: (match (sxFirstOf (project r tab) h 7) | Option.none => h | Option.some tr => tr),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxEffFrom,
+  parameters: [r : SxRun, l : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxSize l) <? (i + 1)) then acc else (let x : Nat := (sxNth l i); (sxEffFrom r l (i + 1) (if ((sxKind (project r tab) x) =? 5) then (match (sxHistOf r x)
+      | Option.none => (sxUnion acc (sxTargets r (sxDefaultTransition r x)))
+      | Option.some v => (sxUnion acc v)) else (sxAdd acc x)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxEffective,
+  parameters: [r : SxRun, tr : Nat],
+  result: Bytes,
+  body: (sxEffFrom r (sxTargets r tr) 0 0x (sxSize (sxTargets r tr))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxAllDescFrom,
+  parameters: [t : Bytes, a : Nat, l : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((sxSize l) <? (i + 1)) then true else (if (sxDesc t a (sxNth l i)) then (sxAllDescFrom t a l (i + 1) rest) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxAllDesc,
+  parameters: [t : Bytes, a : Nat, l : Bytes],
+  result: Bool,
+  body: (sxAllDescFrom t a l 0 (sxSize l)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxLccaFrom,
+  parameters: [t : Bytes, a : Nat, l : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => a
+    | Nat.succ rest => (if ((sxKind t a) =? 1) then a else (if ((sxIsCompound t a) && (sxAllDesc t a l)) then a else (sxLccaFrom t (sxParent t a) l rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxDomain,
+  parameters: [r : SxRun, tr : Nat],
+  result: (Option Nat),
+  body: (let ts : Bytes := (sxEffective r tr); (let t : Bytes := (project r tab); (let src : Nat := (sxParent t tr); (if ((sxSize ts) =? 0) then (ctor Option.none [Nat]) else (if ((sxSame (sxAttrOr (project r doc) t tr (prim utf8_encode "type" : Bytes)) (prim utf8_encode "internal" : Bytes)) && ((sxIsCompound t src) && (sxAllDesc t src ts))) then (ctor Option.some [Nat] src) else (ctor Option.some [Nat] (sxLccaFrom t (sxParent t src) (prim append (sxU16 src) ts : Bytes) (sxCount t)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxUnderFrom,
+  parameters: [t : Bytes, d : Nat, l : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxSize l) <? (i + 1)) then acc else (sxUnderFrom t d l (i + 1) (if (sxDesc t d (sxNth l i)) then (sxIns acc (sxNth l i)) else acc) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxExitSetFrom,
+  parameters: [r : SxRun, ts : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxSize ts) <? (i + 1)) then acc else (sxExitSetFrom r ts (i + 1) (match (sxDomain r (sxNth ts i))
+      | Option.none => acc
+      | Option.some d => (sxUnderFrom (project r tab) d (project r config) 0 acc (sxSize (project r config)))) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxExitSet,
+  parameters: [r : SxRun, ts : Bytes],
+  result: Bytes,
+  body: (sxExitSetFrom r ts 0 0x (sxSize ts)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxTokenMatch,
+  parameters: [tok : Bytes, name : Bytes],
+  result: Bool,
+  body: (let n : Nat := (sxLen tok); (let d : Bytes := (if ((2 <? (n + 1)) && (sxSame (sxFrom tok (prim subtract n 2 : Nat)) (prim utf8_encode ".*" : Bytes))) then (sxSlice tok 0 (prim subtract n 2 : Nat)) else (if ((1 <? (n + 1)) && ((sxAt tok (prim subtract n 1 : Nat)) =? 46)) then (sxSlice tok 0 (prim subtract n 1 : Nat)) else tok)); (if (sxSame tok (prim utf8_encode "*" : Bytes)) then true else ((sxSame name d) || ((sxStartsAt name 0 d) && ((sxAt name (sxLen d)) =? 46)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxEventMatchFrom,
+  parameters: [v : Bytes, i : Nat, name : Bytes, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (let a : Nat := (sxSkipWs v i (sxLen v)); (if ((sxLen v) <? (a + 1)) then false else (let b : Nat := (sxNameEnd v a (sxLen v)); (if (sxTokenMatch (sxSlice v a (prim subtract b a : Nat)) name) then true else (sxEventMatchFrom v (b + 1) name rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxEnabledOne,
+  parameters: [r : SxRun, tr : Nat, has : Bool, name : Bytes],
+  result: Bool,
+  body: (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (if (sxHas s t tr (prim utf8_encode "cond" : Bytes)) then false else (match (sxAttr s t tr (prim utf8_encode "event" : Bytes))
+    | Option.none => (not has)
+    | Option.some v => (has && (sxEventMatchFrom v 0 name (sxLen v))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxPickFrom,
+  parameters: [r : SxRun, l : Bytes, i : Nat, has : Bool, name : Bytes, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (if ((sxSize l) <? (i + 1)) then (ctor Option.none [Nat]) else (if (sxEnabledOne r (sxNth l i) has name) then (ctor Option.some [Nat] (sxNth l i)) else (sxPickFrom r l (i + 1) has name rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxClimb,
+  parameters: [r : SxRun, st : Nat, has : Bool, name : Bytes, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (let t : Bytes := (project r tab); (if ((sxKind t st) =? 1) then (ctor Option.none [Nat]) else (match (sxPickFrom r (sxChildrenOf t st 7) 0 has name (sxCount t))
+      | Option.none => (sxClimb r (sxParent t st) has name rest)
+      | Option.some tr => (ctor Option.some [Nat] tr))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxSelectFrom,
+  parameters: [r : SxRun, i : Nat, has : Bool, name : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let c : Bytes := (project r config); (if ((sxSize c) <? (i + 1)) then acc else (sxSelectFrom r (i + 1) has name (if (sxIsAtomic (project r tab) (sxNth c i)) then (match (sxClimb r (sxNth c i) has name (sxCount (project r tab)))
+      | Option.none => acc
+      | Option.some tr => (sxAdd acc tr)) else acc) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxPreemptFrom,
+  parameters: [r : SxRun, t1 : Nat, f : Bytes, i : Nat, drop : Bytes, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.some [Bytes] drop)
+    | Nat.succ rest => (let t : Bytes := (project r tab); (if ((sxSize f) <? (i + 1)) then (ctor Option.some [Bytes] drop) else (let t2 : Nat := (sxNth f i); (if (sxMeets (sxExitSet r (sxU16 t1)) (sxExitSet r (sxU16 t2))) then (if (sxDesc t (sxParent t t2) (sxParent t t1)) then (sxPreemptFrom r t1 f (i + 1) (prim append drop (sxU16 t2) : Bytes) rest) else (ctor Option.none [Bytes])) else (sxPreemptFrom r t1 f (i + 1) drop rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxFilterFrom,
+  parameters: [r : SxRun, l : Bytes, i : Nat, f : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => f
+    | Nat.succ rest => (if ((sxSize l) <? (i + 1)) then f else (sxFilterFrom r l (i + 1) (match (sxPreemptFrom r (sxNth l i) f 0 0x (sxSize f))
+      | Option.none => f
+      | Option.some drop => (prim append (sxMinus f drop) (sxU16 (sxNth l i)) : Bytes)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxSelect,
+  parameters: [r : SxRun, has : Bool, name : Bytes],
+  result: Bytes,
+  body: (let l : Bytes := (sxSelectFrom r 0 has name 0x (sxSize (project r config))); (sxFilterFrom r l 0 0x (sxSize l))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxEventRow,
+  parameters: [name : Bytes],
+  result: Bytes,
+  body: (prim append (sxU16 (sxLen name)) name : Bytes)
+}
+
+definition{
+  name: sxRaise,
+  parameters: [r : SxRun, name : Bytes],
+  result: SxRun,
+  body: (sxSetInternal r (prim append (project r internal) (sxEventRow name) : Bytes))
+}
+
+definition{
+  name: sxHeadName,
+  parameters: [q : Bytes],
+  result: Bytes,
+  body: (sxSlice q 2 (sxG16 q 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxTail,
+  parameters: [q : Bytes],
+  result: Bytes,
+  body: (sxFrom q (2 + (sxG16 q 0))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxPost,
+  parameters: [r : SxRun, dest : Nat, delay : Nat, name : Bytes],
+  result: SxRun,
+  body: (sxSetPosts r (prim append (project r posts) (prim append (sxU16 dest) (prim append (sxU32 delay) (sxEventRow name) : Bytes) : Bytes) : Bytes))
+}
+
+definition{
+  name: sxKidFrom,
+  parameters: [k : Bytes, i : Nat, iid : Bytes, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (if ((sxLen k) <? (i + 4)) then (ctor Option.none [Nat]) else (let n : Nat := (sxG16 k (i + 2)); (if (sxSame (sxSlice k (i + 4) n) iid) then (ctor Option.some [Nat] (sxG16 k i)) else (sxKidFrom k ((i + 4) + n) iid rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxDigits,
+  parameters: [v : Bytes, i : Nat, acc : Nat, scale : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let b : Nat := (sxAt v i); (if ((b <? 48) || (57 <? b)) then acc else (sxDigits v (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract b 48 : Nat)) scale rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxDigitsEnd,
+  parameters: [v : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (sxAt v i); (if (((b <? 48) || (57 <? b)) || ((sxLen v) <? (i + 1))) then i else (sxDigitsEnd v (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxPow10,
+  parameters: [n : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match n
+      | Nat.zero => acc
+      | Nat.succ m => (sxPow10 m (prim multiply acc 10 : Nat) rest))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxDelay,
+  parameters: [v : Bytes],
+  result: (Option Nat),
+  body: (let ie : Nat := (sxDigitsEnd v 0 (sxLen v)); (let whole : Nat := (sxDigits v 0 0 1 (sxLen v)); (let fe : Nat := (if ((sxAt v ie) =? 46) then (sxDigitsEnd v (ie + 1) (sxLen v)) else ie); (let frac : Nat := (if ((sxAt v ie) =? 46) then (sxDigits v (ie + 1) 0 1 (sxLen v)) else 0); (let places : Nat := (if ((sxAt v ie) =? 46) then (prim subtract fe (ie + 1) : Nat) else 0); (let unit : Bytes := (sxFrom v fe); (if (fe =? 0) then (ctor Option.none [Nat]) else (if (sxSame unit (prim utf8_encode "ms" : Bytes)) then (ctor Option.some [Nat] whole) else (if (sxSame unit (prim utf8_encode "s" : Bytes)) then (ctor Option.some [Nat] ((prim multiply whole 1000 : Nat) + (prim quotient (prim multiply frac 1000 : Nat) (sxPow10 places 1 places) 0 : Nat))) else (ctor Option.none [Nat])))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxSend,
+  parameters: [r : SxRun, e : Nat],
+  result: (Option SxRun),
+  body: (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (let ty : Bytes := (sxAttrOr s t e (prim utf8_encode "type" : Bytes)); (let ev : Bytes := (sxAttrOr s t e (prim utf8_encode "event" : Bytes)); (if (not (((sxLen ty) =? 0) || (sxSame ty (prim utf8_encode "http://www.w3.org/TR/scxml/#SCXMLEventProcessor" : Bytes)))) then (ctor Option.none [SxRun]) else (match (if (sxHas s t e (prim utf8_encode "delay" : Bytes)) then (sxDelay (sxAttrOr s t e (prim utf8_encode "delay" : Bytes))) else (ctor Option.some [Nat] 0))
+    | Option.none => (ctor Option.none [SxRun])
+    | Option.some d => (match (sxAttr s t e (prim utf8_encode "target" : Bytes))
+      | Option.none => (ctor Option.some [SxRun] (sxPost r (project r sid) d ev))
+      | Option.some tg => (if (sxSame tg (prim utf8_encode "#_internal" : Bytes)) then (ctor Option.some [SxRun] (sxRaise r ev)) else (if (sxSame tg (prim utf8_encode "#_parent" : Bytes)) then (if ((project r parent) =? 0) then (ctor Option.some [SxRun] (sxRaise r (prim utf8_encode "error.communication" : Bytes))) else (ctor Option.some [SxRun] (sxPost r (prim subtract (project r parent) 1 : Nat) d ev))) else (if (sxStartsAt tg 0 (prim utf8_encode "#_" : Bytes)) then (match (sxKidFrom (project r kids) 0 (sxFrom tg 2) (sxLen (project r kids)))
+        | Option.none => (ctor Option.some [SxRun] (sxRaise r (prim utf8_encode "error.communication" : Bytes)))
+        | Option.some k => (ctor Option.some [SxRun] (sxPost r k d ev))) else (ctor Option.some [SxRun] (sxRaise r (prim utf8_encode "error.communication" : Bytes))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxExecFrom,
+  parameters: [r : SxRun, l : Bytes, i : Nat, fuel : Nat],
+  result: SxRun,
+  body: (match fuel
+    | Nat.zero => r
+    | Nat.succ rest => (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (if ((sxSize l) <? (i + 1)) then r else (let c : Nat := (sxNth l i); (if ((sxKind t c) =? 10) then (sxExecFrom (sxRaise r (sxAttrOr s t c (prim utf8_encode "event" : Bytes))) l (i + 1) rest) else (if ((sxKind t c) =? 11) then (match (sxSend r c)
+      | Option.none => (sxRaise r (prim utf8_encode "error.execution" : Bytes))
+      | Option.some r2 => (sxExecFrom r2 l (i + 1) rest)) else (sxExecFrom r l (i + 1) rest)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxExec,
+  parameters: [r : SxRun, block : Nat],
+  result: SxRun,
+  body: (sxExecFrom r (sxChildren (project r tab) block) 0 (sxCount (project r tab))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxExecAll,
+  parameters: [r : SxRun, l : Bytes, i : Nat, fuel : Nat],
+  result: SxRun,
+  body: (match fuel
+    | Nat.zero => r
+    | Nat.succ rest => (if ((sxSize l) <? (i + 1)) then r else (sxExecAll (sxExec r (sxNth l i)) l (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxDeepFrom,
+  parameters: [t : Bytes, x : Nat, c : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxSize c) <? (i + 1)) then acc else (sxDeepFrom t x c (i + 1) (if ((sxIsAtomic t (sxNth c i)) && (sxDesc t x (sxNth c i))) then (prim append acc (sxU16 (sxNth c i)) : Bytes) else acc) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxShallowFrom,
+  parameters: [t : Bytes, x : Nat, c : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxSize c) <? (i + 1)) then acc else (sxShallowFrom t x c (i + 1) (if ((sxParent t (sxNth c i)) =? x) then (prim append acc (sxU16 (sxNth c i)) : Bytes) else acc) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxSaveHistFrom,
+  parameters: [r : SxRun, x : Nat, hs : Bytes, i : Nat, fuel : Nat],
+  result: SxRun,
+  body: (match fuel
+    | Nat.zero => r
+    | Nat.succ rest => (let t : Bytes := (project r tab); (let c : Bytes := (project r config); (if ((sxSize hs) <? (i + 1)) then r else (let h : Nat := (sxNth hs i); (sxSaveHistFrom (sxRecordHist r h (if (sxSame (sxAttrOr (project r doc) t h (prim utf8_encode "type" : Bytes)) (prim utf8_encode "deep" : Bytes)) then (sxDeepFrom t x c 0 0x (sxSize c)) else (sxShallowFrom t x c 0 0x (sxSize c)))) x hs (i + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxSaveAllFrom,
+  parameters: [r : SxRun, ex : Bytes, i : Nat, fuel : Nat],
+  result: SxRun,
+  body: (match fuel
+    | Nat.zero => r
+    | Nat.succ rest => (if ((sxSize ex) <? (i + 1)) then r else (let x : Nat := (sxNth ex i); (sxSaveAllFrom (sxSaveHistFrom r x (sxChildrenOf (project r tab) x 5) 0 (sxCount (project r tab))) ex (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxLeaveFrom,
+  parameters: [r : SxRun, ex : Bytes, i : Nat, fuel : Nat],
+  result: SxRun,
+  body: (match fuel
+    | Nat.zero => r
+    | Nat.succ rest => (if ((sxSize ex) <? (i + 1)) then r else (let x : Nat := (sxNth ex i); (let t : Bytes := (project r tab); (let r2 : SxRun := (sxExecAll r (sxChildrenOf t x 9) 0 (sxCount t)); (let r3 : SxRun := (sxSetCancels r2 (prim append (project r2 cancels) (sxChildrenOf t x 12) : Bytes)); (sxLeaveFrom (sxSetConfig r3 (sxDel (project r3 config) x)) ex (i + 1) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxExitStates,
+  parameters: [r : SxRun, ts : Bytes],
+  result: SxRun,
+  body: (let ex : Bytes := (sxExitSet r ts); (let r1 : SxRun := (sxSetToinvoke r (sxMinus (project r toinvoke) ex)); (let r2 : SxRun := (sxSaveAllFrom r1 ex 0 (sxSize ex)); (sxLeaveFrom r2 (sxReverse ex) 0 (sxSize ex))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxItem,
+  parameters: [op : Nat, x : Nat, a : Nat],
+  result: Bytes,
+  body: (prim append (sxByte op) (prim append (sxU16 x) (sxU16 a) : Bytes) : Bytes)
+}
+
+definition{
+  name: sxItemsFrom,
+  parameters: [op : Nat, l : Bytes, a : Nat, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxSize l) <? (i + 1)) then acc else (sxItemsFrom op l a (i + 1) (prim append acc (sxItem op (sxNth l i) a) : Bytes) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxItems,
+  parameters: [op : Nat, l : Bytes, a : Nat],
+  result: Bytes,
+  body: (sxItemsFrom op l a 0 0x (sxSize l)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxDescAnc,
+  parameters: [l : Bytes, a : Nat],
+  result: Bytes,
+  body: (prim append (sxItems 1 l 0) (sxItems 2 l a) : Bytes),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxAncsFrom,
+  parameters: [t : Bytes, p : Nat, stop : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((p =? stop) || ((sxKind t p) =? 1)) then acc else (sxAncsFrom t (sxParent t p) stop (prim append acc (sxItem 3 p 0) : Bytes) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxAnyUnder,
+  parameters: [t : Bytes, c : Nat, l : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((sxSize l) <? (i + 1)) then false else (if (sxDescOrSelf t c (sxNth l i)) then true else (sxAnyUnder t c l (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxInitials,
+  parameters: [r : SxRun, x : Nat],
+  result: Bytes,
+  body: (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (match (sxAttr s t x (prim utf8_encode "initial" : Bytes))
+    | Option.some v => (sxRefs s t (project r root) v)
+    | Option.none => (match (sxFirstOf t x 6)
+      | Option.some ini => (sxTargets r (sxDefaultTransition r ini))
+      | Option.none => (sxSlice (sxChildStates t x) 0 2))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxPair,
+  parameters: [p : Nat, tr : Nat],
+  result: Bytes,
+  body: (prim append (sxU16 p) (sxU16 tr) : Bytes)
+}
+
+definition{
+  name: sxWork,
+  parameters: [r : SxRun, w : Bytes, e : SxEntry, fuel : Nat],
+  result: SxEntry,
+  body: (match fuel
+    | Nat.zero => e
+    | Nat.succ rest => (let t : Bytes := (project r tab); (if ((sxLen w) <? 5) then e else (let op : Nat := (sxAt w 0); (let x : Nat := (sxG16 w 1); (let a : Nat := (sxG16 w 3); (let more : Bytes := (sxFrom w 5); (if (op =? 1) then (if ((sxKind t x) =? 5) then (match (sxHistOf r x)
+      | Option.some v => (sxWork r (prim append (sxDescAnc v (sxParent t x)) more : Bytes) e rest)
+      | Option.none => (let tr : Nat := (sxDefaultTransition r x); (sxWork r (prim append (sxDescAnc (sxTargets r tr) (sxParent t x)) more : Bytes) (record SxEntry {enter := (project e enter), defaults := (project e defaults), content := (prim append (project e content) (sxPair (sxParent t x) tr) : Bytes)}) rest))) else (let e2 : SxEntry := (record SxEntry {enter := (sxIns (project e enter) x), defaults := (if (sxIsCompound t x) then (sxIns (project e defaults) x) else (project e defaults)), content := (project e content)}); (if (sxIsCompound t x) then (sxWork r (prim append (sxDescAnc (sxInitials r x) x) more : Bytes) e2 rest) else (if ((sxKind t x) =? 3) then (sxWork r (prim append (sxItems 4 (sxChildStates t x) 0) more : Bytes) e2 rest) else (sxWork r more e2 rest))))) else (if (op =? 2) then (sxWork r (prim append (sxAncsFrom t (sxParent t x) a 0x (sxCount t)) more : Bytes) e rest) else (if (op =? 3) then (let e3 : SxEntry := (record SxEntry {enter := (sxIns (project e enter) x), defaults := (project e defaults), content := (project e content)}); (if ((sxKind t x) =? 3) then (sxWork r (prim append (sxItems 4 (sxChildStates t x) 0) more : Bytes) e3 rest) else (sxWork r more e3 rest))) else (if (sxAnyUnder t x (project e enter) 0 (sxSize (project e enter))) then (sxWork r more e rest) else (sxWork r (prim append (sxItem 1 x 0) more : Bytes) e rest)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxSeedFrom,
+  parameters: [r : SxRun, ts : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxSize ts) <? (i + 1)) then acc else (let tr : Nat := (sxNth ts i); (sxSeedFrom r ts (i + 1) (prim append acc (prim append (sxItems 1 (sxTargets r tr) 0) (match (sxDomain r tr)
+      | Option.none => 0x
+      | Option.some d => (sxItems 2 (sxEffective r tr) d)) : Bytes) : Bytes) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxFuel,
+  parameters: [r : SxRun],
+  result: Nat,
+  body: (prim multiply (sxCount (project r tab)) 16 : Nat)
+}
+
+definition{
+  name: sxNoEntry,
+  parameters: [],
+  result: SxEntry,
+  body: (record SxEntry {enter := 0x, defaults := 0x, content := 0x})
+}
+
+definition{
+  name: sxFinalChildIn,
+  parameters: [r : SxRun, l : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((sxSize l) <? (i + 1)) then false else (if (((sxKind (project r tab) (sxNth l i)) =? 4) && (sxMem (project r config) (sxNth l i))) then true else (sxFinalChildIn r l (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxAllInFinal,
+  parameters: [r : SxRun, l : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (let t : Bytes := (project r tab); (if ((sxSize l) <? (i + 1)) then true else (let c : Nat := (sxNth l i); (if (if (sxIsCompound t c) then (sxFinalChildIn r (sxChildStates t c) 0 (sxCount t)) else (if ((sxKind t c) =? 3) then (sxAllInFinal r (sxChildStates t c) 0 rest) else false)) then (sxAllInFinal r l (i + 1) rest) else false))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxContentFor,
+  parameters: [c : Bytes, i : Nat, x : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (if ((sxLen c) <? (i + 4)) then (ctor Option.none [Nat]) else (if ((sxG16 c i) =? x) then (ctor Option.some [Nat] (sxG16 c (i + 2))) else (sxContentFor c (i + 4) x rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxDone,
+  parameters: [r : SxRun, x : Nat],
+  result: Bytes,
+  body: (prim append (prim utf8_encode "done.state." : Bytes) (sxId (project r doc) (project r tab) x) : Bytes),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxEnterOne,
+  parameters: [r : SxRun, e : SxEntry, x : Nat],
+  result: SxRun,
+  body: (let t : Bytes := (project r tab); (let r1 : SxRun := (sxSetToinvoke (sxSetConfig r (sxIns (project r config) x)) (sxIns (project r toinvoke) x)); (let r2 : SxRun := (sxExecAll r1 (sxChildrenOf t x 8) 0 (sxCount t)); (let r3 : SxRun := (if (sxMem (project e defaults) x) then (match (sxFirstOf t x 6)
+    | Option.none => r2
+    | Option.some ini => (sxExec r2 (sxDefaultTransition r2 ini))) else r2); (let r4 : SxRun := (match (sxContentFor (project e content) 0 x (sxLen (project e content)))
+    | Option.none => r3
+    | Option.some tr => (sxExec r3 tr)); (if ((sxKind t x) =? 4) then (let p : Nat := (sxParent t x); (if ((sxKind t p) =? 1) then (sxSetOutcome (sxSetRunning r4 false) (sxId (project r doc) t x)) else (let r5 : SxRun := (sxRaise r4 (sxDone r4 p)); (let g : Nat := (sxParent t p); (if (((sxKind t g) =? 3) && (sxAllInFinal r5 (sxChildStates t g) 0 (sxCount t))) then (sxRaise r5 (sxDone r5 g)) else r5))))) else r4)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxEnterFrom,
+  parameters: [r : SxRun, e : SxEntry, i : Nat, fuel : Nat],
+  result: SxRun,
+  body: (match fuel
+    | Nat.zero => r
+    | Nat.succ rest => (let l : Bytes := (project e enter); (if ((sxSize l) <? (i + 1)) then r else (sxEnterFrom (if (sxMem (project r config) (sxNth l i)) then r else (sxEnterOne r e (sxNth l i))) e (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxEnterStates,
+  parameters: [r : SxRun, ts : Bytes],
+  result: SxRun,
+  body: (let e : SxEntry := (sxWork r (sxSeedFrom r ts 0 0x (sxSize ts)) (sxNoEntry) (sxFuel r)); (sxEnterFrom r e 0 (sxSize (project e enter)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxMicrostep,
+  parameters: [r : SxRun, ts : Bytes],
+  result: SxRun,
+  body: (let r1 : SxRun := (sxExitStates r ts); (let r2 : SxRun := (sxExecAll r1 (sxSort ts) 0 (sxSize ts)); (sxEnterStates r2 ts))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxBegin,
+  parameters: [r : SxRun],
+  result: SxRun,
+  body: (let ini : Bytes := (sxInitials r (project r root)); (let e : SxEntry := (sxWork r (sxDescAnc ini (project r root)) (sxNoEntry) (sxFuel r)); (sxEnterFrom r e 0 (sxSize (project e enter))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxSettle,
+  parameters: [r : SxRun, fuel : Nat],
+  result: SxRun,
+  body: (match fuel
+    | Nat.zero => r
+    | Nat.succ rest => (if (not (project r running)) then r else (let ts : Bytes := (sxSelect r false 0x); (if ((sxSize ts) =? 0) then (if ((sxLen (project r internal)) =? 0) then r else (let q : Bytes := (project r internal); (let r1 : SxRun := (sxSetInternal r (sxTail q)); (let ts2 : Bytes := (sxSelect r1 true (sxHeadName q)); (sxSettle (if ((sxSize ts2) =? 0) then r1 else (sxMicrostep r1 ts2)) rest))))) else (sxSettle (sxMicrostep r ts) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxReceive,
+  parameters: [r : SxRun, name : Bytes],
+  result: SxRun,
+  body: (let ts : Bytes := (sxSelect r true name); (if ((sxSize ts) =? 0) then r else (sxMicrostep r ts))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxSpawnFrom,
+  parameters: [r : SxRun, l : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxSize l) <? (i + 1)) then acc else (sxSpawnFrom r l (i + 1) (prim append acc (sxChildrenOf (project r tab) (sxNth l i) 12) : Bytes) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxClose,
+  parameters: [r : SxRun],
+  result: SxRun,
+  body: (if (project r running) then (sxSetToinvoke (sxSetSpawns r (prim append (project r spawns) (sxSpawnFrom r (project r toinvoke) 0 0x (sxSize (project r toinvoke))) : Bytes)) 0x) else (let r1 : SxRun := (sxLeaveFrom r (sxReverse (project r config)) 0 (sxSize (project r config))); r1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxNoSession,
+  parameters: [],
+  result: SxSession,
+  body: (record SxSession {root := 0, parent := 0, invoker := 0, iid := 0x, config := 0x, hist := 0x, internal := 0x, running := false, started := true, outcome := 0x, cancelled := false, forward := false})
+}
+
+definition{name: sxBit, parameters: [b : Bool, v : Nat], result: Nat, body: (if b then v else 0)}
+
+definition{
+  name: sxHasBit,
+  parameters: [f : Nat, v : Nat],
+  result: Bool,
+  body: (not ((prim remainder (prim quotient f v 0 : Nat) 2 0 : Nat) =? 0))
+}
+
+definition{
+  name: sxSesEnc,
+  parameters: [x : SxSession],
+  result: Bytes,
+  body: (let body : Bytes := (prim append (sxU16 (project x root)) (prim append (sxU16 (project x parent)) (prim append (sxU16 (project x invoker)) (prim append (sxByte ((sxBit (project x running) 1) + ((sxBit (project x started) 2) + ((sxBit (project x cancelled) 4) + (sxBit (project x forward) 8))))) (prim append (sxEventRow (project x iid)) (prim append (sxEventRow (project x config)) (prim append (sxEventRow (project x hist)) (prim append (sxEventRow (project x internal)) (sxEventRow (project x outcome)) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes); (prim append (sxU16 (sxLen body)) body : Bytes))
+}
+
+definition{
+  name: sxFieldAt,
+  parameters: [b : Bytes, k : Nat],
+  result: Bytes,
+  body: (sxSlice b (k + 2) (sxG16 b k)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxNextField,
+  parameters: [b : Bytes, k : Nat],
+  result: Nat,
+  body: ((k + 2) + (sxG16 b k)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxSesDec,
+  parameters: [b : Bytes],
+  result: SxSession,
+  body: (let f : Nat := (sxAt b 6); (let k1 : Nat := 7; (let k2 : Nat := (sxNextField b k1); (let k3 : Nat := (sxNextField b k2); (let k4 : Nat := (sxNextField b k3); (let k5 : Nat := (sxNextField b k4); (record SxSession {root := (sxG16 b 0), parent := (sxG16 b 2), invoker := (sxG16 b 4), iid := (sxFieldAt b k1), config := (sxFieldAt b k2), hist := (sxFieldAt b k3), internal := (sxFieldAt b k4), running := (sxHasBit f 1), started := (sxHasBit f 2), outcome := (sxFieldAt b k5), cancelled := (sxHasBit f 4), forward := (sxHasBit f 8)}))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxSesOffset,
+  parameters: [l : Bytes, i : Nat, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match k
+      | Nat.zero => i
+      | Nat.succ j => (if ((sxLen l) <? (i + 2)) then (sxLen l) else (sxSesOffset l ((i + 2) + (sxG16 l i)) j rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxNthSession,
+  parameters: [l : Bytes, k : Nat],
+  result: SxSession,
+  body: (let i : Nat := (sxSesOffset l 0 k (k + 1)); (if ((sxLen l) <? (i + 2)) then (sxNoSession) else (sxSesDec (sxSlice l (i + 2) (sxG16 l i))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxPutSession,
+  parameters: [l : Bytes, k : Nat, v : SxSession],
+  result: Bytes,
+  body: (let i : Nat := (sxSesOffset l 0 k (k + 1)); (if ((sxLen l) <? (i + 2)) then l else (prim append (sxSlice l 0 i) (prim append (sxSesEnc v) (sxFrom l ((i + 2) + (sxG16 l i))) : Bytes) : Bytes))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxAppendSession,
+  parameters: [l : Bytes, v : SxSession],
+  result: Bytes,
+  body: (prim append l (sxSesEnc v) : Bytes)
+}
+
+definition{
+  name: sxCountFrom,
+  parameters: [l : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if ((sxLen l) <? (i + 2)) then n else (sxCountFrom l ((i + 2) + (sxG16 l i)) (n + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxSessions,
+  parameters: [l : Bytes],
+  result: Nat,
+  body: (sxCountFrom l 0 0 (sxLen l)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxKidRowsFrom,
+  parameters: [l : Bytes, k : Nat, me : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxSessions l) <? (k + 1)) then acc else (let x : SxSession := (sxNthSession l k); (sxKidRowsFrom l (k + 1) me (if (((project x parent) =? (me + 1)) && (project x running)) then (prim append acc (prim append (sxU16 k) (sxEventRow (project x iid)) : Bytes) : Bytes) else acc) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxKidRows,
+  parameters: [l : Bytes, k : Nat, me : Nat],
+  result: Bytes,
+  body: (sxKidRowsFrom l k me 0x (sxSessions l)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxRunOf,
+  parameters: [w : SxWorld, k : Nat],
+  result: SxRun,
+  body: (let x : SxSession := (sxNthSession (project w sessions) k); (record SxRun {doc := (project w doc), tab := (project w tab), root := (project x root), sid := k, parent := (project x parent), config := (project x config), hist := (project x hist), internal := (project x internal), toinvoke := 0x, running := (project x running), outcome := (project x outcome), posts := 0x, cancels := 0x, kids := (sxKidRows (project w sessions) 0 k), spawns := 0x})),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxExtAt,
+  parameters: [q : Bytes, i : Nat, time : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((sxLen q) <? (i + 12)) then (sxLen q) else (if (time <? (sxG32 q i)) then i else (sxExtAt q ((i + 12) + (sxG16 q (i + 10))) time rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxEnqueue,
+  parameters: [w : SxWorld, dest : Nat, delay : Nat, name : Bytes],
+  result: SxWorld,
+  body: (let when : Nat := ((project w time) + delay); (let q : Bytes := (project w ext); (let at : Nat := (sxExtAt q 0 when (sxLen q)); (record SxWorld {doc := (project w doc), tab := (project w tab), sessions := (project w sessions), ext := (prim append (sxSlice q 0 at) (prim append (sxU32 when) (prim append (sxU32 (project w seq)) (prim append (sxU16 dest) (prim append (sxEventRow name) (sxFrom q at) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes), time := (project w time), seq := ((project w seq) + 1)})))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxPostsFrom,
+  parameters: [w : SxWorld, p : Bytes, i : Nat, fuel : Nat],
+  result: SxWorld,
+  body: (match fuel
+    | Nat.zero => w
+    | Nat.succ rest => (if ((sxLen p) <? (i + 8)) then w else (let n : Nat := (sxG16 p (i + 6)); (sxPostsFrom (sxEnqueue w (sxG16 p i) (sxG32 p (i + 2)) (sxSlice p (i + 8) n)) p ((i + 8) + n) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxWithSessions,
+  parameters: [w : SxWorld, l : Bytes],
+  result: SxWorld,
+  body: (record SxWorld {doc := (project w doc), tab := (project w tab), sessions := l, ext := (project w ext), time := (project w time), seq := (project w seq)})
+}
+
+definition{
+  name: sxCancelFrom,
+  parameters: [l : Bytes, k : Nat, me : Nat, c : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => l
+    | Nat.succ rest => (if ((sxSessions l) <? (k + 1)) then l else (let x : SxSession := (sxNthSession l k); (sxCancelFrom (if (((project x parent) =? (me + 1)) && (sxMem c (project x invoker))) then (sxPutSession l k (record SxSession {root := (project x root), parent := (project x parent), invoker := (project x invoker), iid := (project x iid), config := (project x config), hist := (project x hist), internal := (project x internal), running := false, started := true, outcome := (project x outcome), cancelled := true, forward := (project x forward)})) else l) (k + 1) me c rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxCancelIn,
+  parameters: [l : Bytes, me : Nat, c : Bytes],
+  result: Bytes,
+  body: (sxCancelFrom l 0 me c (sxSessions l)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxChildRoot,
+  parameters: [t : Bytes, inv : Nat],
+  result: Nat,
+  body: (match (sxFirstOf t inv 13)
+    | Option.none => 0
+    | Option.some c => (match (sxFirstOf t c 1) | Option.none => 0 | Option.some x => x)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxSpawnAll,
+  parameters: [w : SxWorld, me : Nat, l : Bytes, i : Nat, fuel : Nat],
+  result: SxWorld,
+  body: (match fuel
+    | Nat.zero => w
+    | Nat.succ rest => (let s : Bytes := (project w doc); (let t : Bytes := (project w tab); (if ((sxSize l) <? (i + 1)) then w else (let inv : Nat := (sxNth l i); (let iid : Bytes := (if (sxHas s t inv (prim utf8_encode "id" : Bytes)) then (sxAttrOr s t inv (prim utf8_encode "id" : Bytes)) else (prim append (sxId s t (sxParent t inv)) (prim append (prim utf8_encode "." : Bytes) (sxDec inv) : Bytes) : Bytes)); (sxSpawnAll (sxWithSessions w (sxAppendSession (project w sessions) (record SxSession {root := (sxChildRoot t inv), parent := (me + 1), invoker := inv, iid := iid, config := 0x, hist := 0x, internal := 0x, running := (not ((sxChildRoot t inv) =? 0)), started := false, outcome := 0x, cancelled := false, forward := (sxSame (sxAttrOr s t inv (prim utf8_encode "autoforward" : Bytes)) (prim utf8_encode "true" : Bytes))}))) me l (i + 1) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxStore,
+  parameters: [w : SxWorld, r : SxRun],
+  result: SxWorld,
+  body: (let k : Nat := (project r sid); (let x : SxSession := (sxNthSession (project w sessions) k); (let r1 : SxRun := (if ((project r running) || (((project r parent) =? 0) || (project x cancelled))) then r else (sxPost r (prim subtract (project r parent) 1 : Nat) 0 (prim append (prim utf8_encode "done.invoke." : Bytes) (project x iid) : Bytes))); (let w1 : SxWorld := (sxWithSessions w (sxCancelIn (sxPutSession (project w sessions) k (record SxSession {root := (project x root), parent := (project x parent), invoker := (project x invoker), iid := (project x iid), config := (project r1 config), hist := (project r1 hist), internal := (project r1 internal), running := (project r1 running), started := true, outcome := (project r1 outcome), cancelled := (project x cancelled), forward := (project x forward)})) k (project r1 cancels))); (sxSpawnAll (sxPostsFrom w1 (project r1 posts) 0 (sxLen (project r1 posts))) k (project r1 spawns) 0 (sxSize (project r1 spawns))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxStep,
+  parameters: [w : SxWorld, r : SxRun],
+  result: SxWorld,
+  body: (sxStore w (sxClose (sxSettle r (sxFuel r)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxUnstarted,
+  parameters: [l : Bytes, k : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (if ((sxSessions l) <? (k + 1)) then (ctor Option.none [Nat]) else (let x : SxSession := (sxNthSession l k); (if ((not (project x started)) && (project x running)) then (ctor Option.some [Nat] k) else (sxUnstarted l (k + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxForward,
+  parameters: [w : SxWorld, l : Bytes, k : Nat, me : Nat, name : Bytes, fuel : Nat],
+  result: SxWorld,
+  body: (match fuel
+    | Nat.zero => w
+    | Nat.succ rest => (if ((sxSessions l) <? (k + 1)) then w else (let x : SxSession := (sxNthSession l k); (sxForward (if (((project x parent) =? (me + 1)) && ((project x running) && (project x forward))) then (sxEnqueue w k 0 name) else w) l (k + 1) me name rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxPopExt,
+  parameters: [w : SxWorld],
+  result: SxWorld,
+  body: (let q : Bytes := (project w ext); (record SxWorld {doc := (project w doc), tab := (project w tab), sessions := (project w sessions), ext := (sxFrom q (12 + (sxG16 q 10))), time := (if ((project w time) <? (sxG32 q 0)) then (sxG32 q 0) else (project w time)), seq := (project w seq)})),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxLoop,
+  parameters: [w : SxWorld, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (prim utf8_encode "unsettled" : Bytes)
+    | Nat.succ rest => (let top : SxSession := (sxNthSession (project w sessions) 0); (if (not (project top running)) then (project top outcome) else (match (sxUnstarted (project w sessions) 0 (sxSessions (project w sessions)))
+      | Option.some k => (sxLoop (sxStep w (sxBegin (sxRunOf w k))) rest)
+      | Option.none => (let q : Bytes := (project w ext); (if ((sxLen q) <? 12) then (prim utf8_encode "stalled" : Bytes) else (let dest : Nat := (sxG16 q 8); (let name : Bytes := (sxSlice q 12 (sxG16 q 10)); (let w1 : SxWorld := (sxPopExt w); (if (not (project (sxNthSession (project w1 sessions) dest) running)) then (sxLoop w1 rest) else (let w2 : SxWorld := (sxForward w1 (project w1 sessions) 0 dest name (sxSessions (project w1 sessions))); (sxLoop (sxStep w2 (sxReceive (sxRunOf w2 dest) name)) rest)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxFirstScxml,
+  parameters: [t : Bytes, j : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (if ((sxCount t) <? (j + 1)) then (ctor Option.none [Nat]) else (if ((sxKind t j) =? 1) then (ctor Option.some [Nat] j) else (sxFirstScxml t (j + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: prismScxmlRun,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let t : Bytes := (sxTable s); (match (sxFirstScxml t 0 (sxCount t))
+    | Option.none => (prim utf8_encode "invalid" : Bytes)
+    | Option.some root => (sxLoop (record SxWorld {doc := s, tab := t, sessions := (sxSesEnc (record SxSession {root := root, parent := 0, invoker := 0, iid := 0x, config := 0x, hist := 0x, internal := 0x, running := true, started := false, outcome := 0x, cancelled := false, forward := false})), ext := 0x, time := 0, seq := 0}) (prim multiply (sxCount t) 64 : Nat)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismScxmlDispatch,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (if (65535 <? (sxLen s)) then (prim utf8_encode "invalid" : Bytes) else (prismScxmlRun s)),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

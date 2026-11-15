@@ -1,6 +1,6 @@
 """ST-01: every part of the Prism fully implements the standards it answers to.
 
-    python3 -I tools/standards/gate.py [--check | --write] [--base REF] [--cache DIR] [--seed KEY]
+    python3 -I tools/standards/gate.py [--check | --write] [--base REF] [--seed KEY]
 
 The register, app/specs/standards/spec.json, names each standard a part of the
 Prism answers to, the part paths it governs, and where its own normative text
@@ -10,6 +10,12 @@ inventories is extracted mechanically, by a LexLean generator of generators/
 held by GN-01) or by tools/standards/extract/<extract>.py, into requirements: the standard's own MUST, SHALL, SHOULD and MAY sentences,
 its numbered rules, or its registry's elements. Nothing is written by hand.
 The requirements are kept in test/standards/requirements.json.
+
+Every pinned text and inventory source is kept in the repository at
+app/specs/standards/texts/<sha256>, so the gate (and the LexLean extractors that replace
+these Python ones) reads no network: --write fetches a pin that is not kept yet
+and keeps it, and --check refuses one that is missing. The bytes are public
+upstream text fixed by their hash; PV-01 skips exactly those files.
 
 A requirement is enforced when a suite that reaches a part the standard governs
 says so: a line of that suite carrying `enforces: <id>`, or the register's
@@ -71,24 +77,23 @@ def canonical(value):
     return json.dumps(value, indent=1, ensure_ascii=False, sort_keys=True) + "\n"
 
 
-def fetch(pin, cache, refusals, what):
-    path = cache / pin["sha256"] if cache else None
-    if path and path.exists():
-        data = path.read_bytes()
-    else:
-        try:
-            with urllib.request.urlopen(pin["url"], timeout=60) as response:
-                data = response.read()
-        except OSError as error:
-            refusals.append(f"{what}: {pin['url']} could not be read: {error}")
-            return None
+TEXTS = ROOT / "app/specs/standards/texts"
+
+
+def fetch(pin, write, refusals, what):
+    path = TEXTS / pin["sha256"]
+    try:
+        if not (path.exists() or write):
+            raise OSError(f"it is not kept at {path.relative_to(ROOT)}: run python3 -I tools/standards/gate.py --write")
+        data = path.read_bytes() if path.exists() else urllib.request.urlopen(pin["url"], timeout=60).read()
+    except OSError as error:
+        refusals.append(f"{what}: {pin['url']} could not be read: {error}")
+        return None
     digest = hashlib.sha256(data).hexdigest()
     if digest != pin["sha256"]:
         refusals.append(f"{what}: {pin['url']} is {digest}, not the pinned {pin['sha256']}")
         return None
-    if path:
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(data)
+    path.exists() or path.write_bytes(data)
     return data
 
 
@@ -133,7 +138,7 @@ def generated(standard, inv, refusals):
     return got
 
 
-def derive(spec, cache, refusals):
+def derive(spec, write, refusals):
     oracle = {s["key"]: s for s in load(ORACLE)["sources"]}
     out = {}
     for standard in spec["standards"]:
@@ -156,7 +161,7 @@ def derive(spec, cache, refusals):
                 refusals.append(f"{key}: no extractor tools/standards/extract/{inv['extract']}.py")
                 continue
             source = inv.get("source") or pin
-            data = fetch(source, cache, refusals, key)
+            data = fetch(source, write, refusals, key)
             if data is None:
                 continue
             try:
@@ -202,15 +207,9 @@ def enforcement(spec, requirements, parts, by_part, refusals):
             if r in texts:
                 parts_gate.ENTRIES.add(r)
     reach = parts_gate.suites_reaching(set(parts), texts)
-    reached = {}
-    for part, suites in reach.items():
-        for suite in suites:
-            reached.setdefault(suite, set()).add(part)
+    reached = {s: {p for p, ss in reach.items() if s in ss} for s in set().union(*reach.values())}
     owner = {r["id"]: key for key, reqs in requirements.items() for r in reqs}
-    governs = {}
-    for part, keys in by_part.items():
-        for key in keys:
-            governs.setdefault(key, set()).add(part)
+    governs = {k: {p for p, ks in by_part.items() if k in ks} for k in set().union(*by_part.values())}
     suites = set(t for t in tracked(*SUITES) if "/vendor/" not in t)
     enforced = {}
 
@@ -266,20 +265,17 @@ def base_json(ref, path):
 
 def main(argv):
     check, write = "--check" in argv, "--write" in argv
-    cache = pathlib.Path(argv[argv.index("--cache") + 1]) if "--cache" in argv else None
     base = argv[argv.index("--base") + 1] if "--base" in argv else None
     seed = argv[argv.index("--seed") + 1] if "--seed" in argv else None
     refusals = []
     spec = load(SPEC)
     debt = load(DEBT)
     keys = [s["key"] for s in spec["standards"]]
-    for dup in sorted({k for k in keys if keys.count(k) > 1}):
-        refusals.append(f"{dup} is registered twice")
+    refusals += [f"{dup} is registered twice" for dup in sorted({k for k in keys if keys.count(k) > 1})]
 
-    requirements = derive(spec, cache, refusals)
+    requirements = derive(spec, write, refusals)
     rendered = canonical(requirements)
     if write:
-        REQUIREMENTS.parent.mkdir(parents=True, exist_ok=True)
         REQUIREMENTS.write_text(rendered, encoding="utf-8")
     elif not REQUIREMENTS.exists() or REQUIREMENTS.read_text(encoding="utf-8") != rendered:
         refusals.append("test/standards/requirements.json is not what the pinned standards give: run python3 -I tools/standards/gate.py --write")
@@ -301,9 +297,7 @@ def main(argv):
     for p in sorted(set(ungoverned) | set(unassigned)):
         if p not in by_part:
             refusals.append(f"{p} is listed as ungoverned or unassigned but is no part of the Prism")
-    for p, why in ungoverned.items():
-        if not str(why).strip():
-            refusals.append(f"{p} is ungoverned with no reason")
+    refusals += [f"{p} is ungoverned with no reason" for p, why in ungoverned.items() if not str(why).strip()]
 
     if seed:
         if seed in debt:
@@ -317,12 +311,10 @@ def main(argv):
     for key, reqs in requirements.items():
         open_ids = {r["id"] for r in reqs if r["id"] not in enforced}
         listed = set(debt.get(key, []))
-        for rid in sorted(open_ids - listed):
-            refusals.append(f"{key}: {rid} is enforced by no suite and is not in the debt")
+        refusals += [f"{key}: {rid} is enforced by no suite and is not in the debt" for rid in sorted(open_ids - listed)]
         for rid in sorted(listed - open_ids):
             refusals.append(f"{key}: debt {rid} is {'enforced now' if rid in enforced else 'no requirement'}: take it out of the debt")
-    for key in sorted(set(debt) - set(requirements)):
-        refusals.append(f"debt names {key}, which is no measured standard")
+    refusals += [f"debt names {key}, which is no measured standard" for key in sorted(set(debt) - set(requirements))]
 
     if base:
         old_debt = base_json(base, DEBT) or {}
