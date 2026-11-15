@@ -12,29 +12,29 @@ const reads = (id) => assert.deepEqual(readLine(examples.get(id).raw), examples.
 // enforces: rfc6350-property-SOURCE
 test("property SOURCE", () => ["rfc6350-6.1.3-1", "rfc6350-6.1.3-2"].forEach(reads));
 // enforces: rfc6350-property-KIND
-test("property KIND", () => ["rfc6350-6.1.4-3", "rfc6350-6.1.4-9", "rfc6350-6.6.5-3", "rfc6350-6.6.5-20", "rfc6350-property-value-KIND:location"].forEach(reads));
+test("property KIND", () => ["rfc6350-6.1.4-3", "rfc6350-6.1.4-9", "rfc6350-6.6.5-3", "rfc6350-6.6.5-20", "rfc6350-property-value-KIND:location", "rfc6473-property-value-KIND:application", "rfc6869-property-value-KIND:device"].forEach(reads));
 // enforces: rfc6350-property-FN
-test("property FN", () => ["rfc6350-6.1.4-4", "rfc6350-6.1.4-10", "rfc6350-6.2.1-1", "rfc6350-6.6.5-4", "rfc6350-6.6.5-10", "rfc6350-6.6.5-15", "rfc6350-6.6.5-21", "rfc6350-5.9-1", "rfc6350-5.9-3", "rfc6350-5.9-5", "rfc6350-5.9-7", "rfc6350-5.9-9", "rfc6350-5.9-11"].forEach(reads));
+test("property FN", () => ["rfc6350-6.1.4-4", "rfc6350-6.1.4-10", "rfc6350-6.2.1-1", "rfc6350-6.6.5-4", "rfc6350-6.6.5-10", "rfc6350-6.6.5-15", "rfc6350-6.6.5-21", "rfc6350-5.9-1", "rfc6350-5.9-3", "rfc6350-5.9-5", "rfc6350-5.9-7", "rfc6350-5.9-9", "rfc6350-5.9-11", "rfc9554-4.4-2", "rfc9555-3.3.1-2"].forEach(reads));
 // enforces: rfc6350-property-N
-test("property N", () => ["rfc6350-6.2.2-1", "rfc6350-6.2.2-2", "rfc6350-5.4-1", "rfc6350-5.4-2", "rfc6350-5.4-8", "rfc6350-5.4-9", "rfc6350-5.4-14", "rfc6350-5.4-15", "rfc6350-5.4-16", "rfc6350-5.9-2", "rfc6350-5.9-4", "rfc6350-5.9-6", "rfc6350-5.9-8", "rfc6350-5.9-10", "rfc6350-5.9-12"].forEach(reads));
+test("property N", () => ["rfc6350-6.2.2-1", "rfc6350-6.2.2-2", "rfc6350-5.4-1", "rfc6350-5.4-2", "rfc6350-5.4-8", "rfc6350-5.4-9", "rfc6350-5.4-14", "rfc6350-5.4-15", "rfc6350-5.4-16", "rfc6350-5.9-2", "rfc6350-5.9-4", "rfc6350-5.9-6", "rfc6350-5.9-8", "rfc6350-5.9-10", "rfc6350-5.9-12", "rfc9554-2.2-1", "rfc9554-2.2-2", "rfc9554-4.4-1", "rfc9554-4.6-1", "rfc9554-4.6-2", "rfc9555-3.3.1-1", "rfc9555-3.3.1-3", "rfc9554-parameter-value-PHONETIC=ipa-ADR", "rfc9554-parameter-value-PHONETIC=piny-ADR", "rfc9554-parameter-value-PHONETIC=script-ADR"].forEach(reads));
 // enforces: rfc6350-property-NICKNAME
 test("property NICKNAME", () => ["rfc6350-6.2.3-1", "rfc6350-6.2.3-2", "rfc6350-6.2.3-3"].forEach(reads));
 // enforces: rfc6350-property-PHOTO
-test("property PHOTO", () => ["rfc6350-6.2.4-1", "rfc6350-5.4-17"].forEach(reads));
+test("property PHOTO", () => ["rfc6350-6.2.4-1", "rfc6350-6.2.4-2", "rfc6350-5.4-17", "rfc9554-4.7-1"].forEach(reads));
 // enforces: rfc6350-property-BDAY
-test("property BDAY", () => ["rfc6350-6.2.5-1", "rfc6350-6.2.5-2", "rfc6350-6.2.5-4", "rfc6350-parameter-value-CALSCALE=gregorian"].forEach(reads));
+test("property BDAY", () => ["rfc6350-6.2.5-1", "rfc6350-6.2.5-2", "rfc6350-6.2.5-4", "rfc6350-parameter-value-CALSCALE=gregorian-BDAY"].forEach(reads));
 // enforces: rfc6350-property-ANNIVERSARY
 test("property ANNIVERSARY", () => ["rfc6350-6.2.6-1"].forEach(reads));
 // enforces: rfc6350-property-GENDER
 test("property GENDER", () => ["rfc6350-6.2.7-1", "rfc6350-6.2.7-2", "rfc6350-6.2.7-3", "rfc6350-6.2.7-4", "rfc6350-6.2.7-5", "rfc6350-6.2.7-6"].forEach(reads));
 // enforces: rfc6350-property-ADR
-test("property ADR", () => ["rfc6350-6.3.1-1", "rfc6350-parameter-TZ"].forEach(reads));
+test("property ADR", () => ["rfc6350-6.3.1-1", "rfc8605-3.1-1", "rfc8605-3.1-2", "rfc9554-2.1-1", "rfc9554-4.5-1", "rfc9554-5.1-1", "rfc9554-5.2-1", "rfc9555-3.3.1-4", "rfc6350-parameter-TZ"].forEach(reads));
 // enforces: rfc6350-property-TEL
-test("property TEL", () => ["rfc6350-6.4.1-1", "rfc6350-6.4.1-2", "rfc6350-6.7.7-1", "rfc6350-parameter-value-TYPE=text", "rfc6350-parameter-value-TYPE=fax", "rfc6350-parameter-value-TYPE=cell", "rfc6350-parameter-value-TYPE=video", "rfc6350-parameter-value-TYPE=pager", "rfc6350-parameter-value-TYPE=textphone"].forEach(reads));
+test("property TEL", () => ["rfc6350-6.4.1-1", "rfc6350-6.4.1-2", "rfc6350-6.7.7-1", "rfc9555-3.2.1-3", "rfc7852-11.7-1", "rfc6350-parameter-value-TYPE=text-TEL", "rfc6350-parameter-value-TYPE=fax-TEL", "rfc6350-parameter-value-TYPE=cell-TEL", "rfc6350-parameter-value-TYPE=video-TEL", "rfc6350-parameter-value-TYPE=pager-TEL", "rfc6350-parameter-value-TYPE=textphone-TEL", "rfc7852-parameter-value-TYPE=main-number-TEL"].forEach(reads));
 // enforces: rfc6350-property-EMAIL
-test("property EMAIL", () => ["rfc6350-6.4.2-1", "rfc6350-6.4.2-2", "rfc6350-6.7.7-2"].forEach(reads));
+test("property EMAIL", () => ["rfc6350-6.4.2-1", "rfc6350-6.4.2-2", "rfc6350-6.7.7-2", "rfc9555-2.15.2-1"].forEach(reads));
 // enforces: rfc6350-property-IMPP
-test("property IMPP", () => ["rfc6350-6.4.3-1"].forEach(reads));
+test("property IMPP", () => ["rfc6350-6.4.3-1", "rfc9555-2.15.3-1"].forEach(reads));
 // enforces: rfc6350-property-LANG
 test("property LANG", () => ["rfc6350-6.4.4-1", "rfc6350-6.4.4-2", "rfc6350-6.4.4-3"].forEach(reads));
 // enforces: rfc6350-property-TZ
@@ -46,23 +46,23 @@ test("property TITLE", () => ["rfc6350-6.6.1-1", "rfc6350-5.4-3", "rfc6350-5.4-4
 // enforces: rfc6350-property-ROLE
 test("property ROLE", () => ["rfc6350-6.6.2-1", "rfc6350-5.1-1"].forEach(reads));
 // enforces: rfc6350-property-LOGO
-test("property LOGO", () => ["rfc6350-6.6.3-1"].forEach(reads));
+test("property LOGO", () => ["rfc6350-6.6.3-1", "rfc6350-6.6.3-2"].forEach(reads));
 // enforces: rfc6350-property-ORG
 test("property ORG", () => ["rfc6350-6.1.4-5", "rfc6350-6.1.4-11", "rfc6350-6.6.4-1"].forEach(reads));
 // enforces: rfc6350-property-MEMBER
 test("property MEMBER", () => ["rfc6350-6.6.5-5", "rfc6350-6.6.5-6", "rfc6350-6.6.5-22", "rfc6350-6.6.5-23", "rfc6350-6.6.5-24", "rfc6350-6.6.5-25"].forEach(reads));
 // enforces: rfc6350-property-RELATED
-test("property RELATED", () => ["rfc6350-6.6.6-1", "rfc6350-6.6.6-2", "rfc6350-6.6.6-3", "rfc6350-parameter-value-TYPE=acquaintance", "rfc6350-parameter-value-TYPE=met", "rfc6350-parameter-value-TYPE=colleague", "rfc6350-parameter-value-TYPE=co-resident", "rfc6350-parameter-value-TYPE=neighbor", "rfc6350-parameter-value-TYPE=child", "rfc6350-parameter-value-TYPE=parent", "rfc6350-parameter-value-TYPE=sibling", "rfc6350-parameter-value-TYPE=spouse", "rfc6350-parameter-value-TYPE=kin", "rfc6350-parameter-value-TYPE=muse", "rfc6350-parameter-value-TYPE=crush", "rfc6350-parameter-value-TYPE=date", "rfc6350-parameter-value-TYPE=sweetheart", "rfc6350-parameter-value-TYPE=me", "rfc6350-parameter-value-TYPE=agent", "rfc6350-parameter-value-TYPE=emergency"].forEach(reads));
+test("property RELATED", () => ["rfc6350-6.6.6-1", "rfc6350-6.6.6-2", "rfc6350-6.6.6-3", "rfc6350-parameter-value-TYPE=acquaintance-RELATED", "rfc6350-parameter-value-TYPE=met-RELATED", "rfc6350-parameter-value-TYPE=colleague-RELATED", "rfc6350-parameter-value-TYPE=co-resident-RELATED", "rfc6350-parameter-value-TYPE=neighbor-RELATED", "rfc6350-parameter-value-TYPE=child-RELATED", "rfc6350-parameter-value-TYPE=parent-RELATED", "rfc6350-parameter-value-TYPE=sibling-RELATED", "rfc6350-parameter-value-TYPE=spouse-RELATED", "rfc6350-parameter-value-TYPE=kin-RELATED", "rfc6350-parameter-value-TYPE=muse-RELATED", "rfc6350-parameter-value-TYPE=crush-RELATED", "rfc6350-parameter-value-TYPE=date-RELATED", "rfc6350-parameter-value-TYPE=sweetheart-RELATED", "rfc6350-parameter-value-TYPE=me-RELATED", "rfc6350-parameter-value-TYPE=agent-RELATED", "rfc6350-parameter-value-TYPE=emergency-RELATED"].forEach(reads));
 // enforces: rfc6350-property-CATEGORIES
 test("property CATEGORIES", () => ["rfc6350-6.7.1-1", "rfc6350-6.7.1-2"].forEach(reads));
 // enforces: rfc6350-property-NOTE
-test("property NOTE", () => ["rfc6350-6.7.2-1"].forEach(reads));
+test("property NOTE", () => ["rfc6350-6.7.2-1", "rfc9554-4.1-1", "rfc9554-4.2-1", "rfc9554-4.2-2", "rfc9554-4.3-1"].forEach(reads));
 // enforces: rfc6350-property-PRODID
 test("property PRODID", () => ["rfc6350-6.7.3-1"].forEach(reads));
 // enforces: rfc6350-property-REV
 test("property REV", () => ["rfc6350-6.7.4-1"].forEach(reads));
 // enforces: rfc6350-property-SOUND
-test("property SOUND", () => ["rfc6350-6.7.5-1"].forEach(reads));
+test("property SOUND", () => ["rfc6350-6.7.5-1", "rfc6350-6.7.5-2"].forEach(reads));
 // enforces: rfc6350-property-UID
 test("property UID", () => ["rfc6350-6.6.5-11", "rfc6350-6.6.5-16", "rfc6350-6.7.6-1"].forEach(reads));
 // enforces: rfc6350-property-CLIENTPIDMAP
@@ -72,41 +72,97 @@ test("property URL", () => ["rfc6350-6.7.8-1"].forEach(reads));
 // enforces: rfc6350-property-VERSION
 test("property VERSION", () => ["rfc6350-6.1.4-2", "rfc6350-6.1.4-8", "rfc6350-6.6.5-2", "rfc6350-6.6.5-9", "rfc6350-6.6.5-14", "rfc6350-6.6.5-19", "rfc6350-6.7.9-1"].forEach(reads));
 // enforces: rfc6350-property-KEY
-test("property KEY", () => ["rfc6350-6.8.1-1", "rfc6350-6.8.1-2"].forEach(reads));
+test("property KEY", () => ["rfc6350-6.8.1-1", "rfc6350-6.8.1-2", "rfc6350-6.8.1-3"].forEach(reads));
 // enforces: rfc6350-property-FBURL
 test("property FBURL", () => ["rfc6350-6.9.1-1", "rfc6350-6.9.1-2"].forEach(reads));
 // enforces: rfc6350-property-CALADRURI
 test("property CALADRURI", () => ["rfc6350-6.9.2-1", "rfc6350-6.9.2-2"].forEach(reads));
 // enforces: rfc6350-property-CALURI
 test("property CALURI", () => ["rfc6350-6.9.3-1", "rfc6350-6.9.3-2"].forEach(reads));
+// enforces: rfc6474-property-BIRTHPLACE
+test("property BIRTHPLACE", () => ["rfc6474-2.1-1", "rfc6474-2.1-2", "rfc6474-2.1-3"].forEach(reads));
+// enforces: rfc6474-property-DEATHPLACE
+test("property DEATHPLACE", () => ["rfc6474-2.2-1", "rfc6474-2.2-2", "rfc6474-2.2-3"].forEach(reads));
+// enforces: rfc6474-property-DEATHDATE
+test("property DEATHDATE", () => ["rfc6474-2.3-1", "rfc6474-2.3-2", "rfc6474-2.3-4"].forEach(reads));
+// enforces: rfc6715-property-EXPERTISE
+test("property EXPERTISE", () => ["rfc6715-2.1-1", "rfc6715-2.1-2", "rfc6715-3.2-1", "rfc6715-parameter-value-LEVEL=average-EXPERTISE"].forEach(reads));
+// enforces: rfc6715-property-HOBBY
+test("property HOBBY", () => ["rfc6715-2.2-1", "rfc6715-2.2-2", "rfc6715-3.2-2", "rfc6715-parameter-value-LEVEL=medium-HOBBY", "rfc6715-parameter-value-LEVEL=low-HOBBY"].forEach(reads));
+// enforces: rfc6715-property-INTEREST
+test("property INTEREST", () => ["rfc6715-2.3-1", "rfc6715-2.3-2", "rfc6715-3.2-3", "rfc6715-parameter-value-LEVEL=low-INTEREST"].forEach(reads));
+// enforces: rfc6715-property-ORG-DIRECTORY
+test("property ORG-DIRECTORY", () => ["rfc6715-2.4-1", "rfc6715-2.4-2"].forEach(reads));
+// enforces: rfc8605-property-CONTACT-URI
+test("property CONTACT-URI", () => ["rfc8605-2.1-1", "rfc8605-2.1-2"].forEach(reads));
+// enforces: rfc9554-property-CREATED
+test("property CREATED", () => ["rfc9554-3.1-1", "rfc9554-3.1-2"].forEach(reads));
+// enforces: rfc9554-property-GRAMGENDER
+test("property GRAMGENDER", () => ["rfc9554-3.2-1", "rfc9554-property-value-GRAMGENDER:animate", "rfc9554-property-value-GRAMGENDER:common", "rfc9554-property-value-GRAMGENDER:inanimate", "rfc9554-property-value-GRAMGENDER:masculine", "rfc9554-property-value-GRAMGENDER:neuter"].forEach(reads));
+// enforces: rfc9554-property-LANGUAGE
+test("property LANGUAGE", () => ["rfc9554-3.3-1"].forEach(reads));
+// enforces: rfc9554-property-PRONOUNS
+test("property PRONOUNS", () => ["rfc9554-3.4-1", "rfc9554-3.4-2"].forEach(reads));
+// enforces: rfc9554-property-SOCIALPROFILE
+test("property SOCIALPROFILE", () => ["rfc9554-3.5-1", "rfc9554-3.5-2", "rfc9554-3.5-3", "rfc9554-4.9-1", "rfc9554-4.10-1"].forEach(reads));
+// enforces: rfc9555-property-JSPROP
+test("property JSPROP", () => ["rfc9555-3.2.1-1", "rfc9555-3.2.1-2", "rfc9555-3.2.1-4", "rfc9555-3.3.2-1"].forEach(reads));
 // enforces: rfc6350-parameter-LANGUAGE
-test("parameter LANGUAGE", () => ["rfc6350-5.1-1", "rfc6350-5.4-1", "rfc6350-5.4-2", "rfc6350-5.4-3", "rfc6350-5.4-4", "rfc6350-5.4-5", "rfc6350-5.4-6", "rfc6350-5.4-7", "rfc6350-5.4-8", "rfc6350-5.4-10", "rfc6350-5.4-11", "rfc6350-5.4-12", "rfc6350-5.4-14", "rfc6350-5.4-15", "rfc6350-5.4-16"].forEach(reads));
+test("parameter LANGUAGE", () => ["rfc6350-5.1-1", "rfc6350-5.4-1", "rfc6350-5.4-2", "rfc6350-5.4-3", "rfc6350-5.4-4", "rfc6350-5.4-5", "rfc6350-5.4-6", "rfc6350-5.4-7", "rfc6350-5.4-8", "rfc6350-5.4-10", "rfc6350-5.4-11", "rfc6350-5.4-12", "rfc6350-5.4-14", "rfc6350-5.4-15", "rfc6350-5.4-16", "rfc9554-3.2-1", "rfc9554-3.4-1", "rfc9554-3.4-2", "rfc9554-4.6-1", "rfc9554-4.6-2", "rfc9554-property-value-GRAMGENDER:animate", "rfc9554-property-value-GRAMGENDER:common", "rfc9554-property-value-GRAMGENDER:inanimate", "rfc9554-property-value-GRAMGENDER:masculine", "rfc9554-property-value-GRAMGENDER:neuter"].forEach(reads));
 // enforces: rfc6350-parameter-VALUE
-test("parameter VALUE", () => ["rfc6350-6.2.5-4", "rfc6350-6.4.1-1", "rfc6350-6.4.1-2", "rfc6350-6.5.1-2", "rfc6350-6.6.6-3", "rfc6350-6.7.7-1", "rfc6350-parameter-value-TYPE=text", "rfc6350-parameter-value-TYPE=fax", "rfc6350-parameter-value-TYPE=cell", "rfc6350-parameter-value-TYPE=video", "rfc6350-parameter-value-TYPE=pager", "rfc6350-parameter-value-TYPE=textphone"].forEach(reads));
+test("parameter VALUE", () => ["rfc6350-6.2.5-4", "rfc6350-6.4.1-1", "rfc6350-6.4.1-2", "rfc6350-6.5.1-2", "rfc6350-6.6.6-3", "rfc6350-6.7.7-1", "rfc6474-2.1-2", "rfc6474-2.1-3", "rfc6474-2.2-2", "rfc6474-2.2-3", "rfc6474-2.3-4", "rfc9554-3.1-2", "rfc9554-3.5-3", "rfc7852-11.7-1", "rfc6350-parameter-value-TYPE=text-TEL", "rfc6350-parameter-value-TYPE=fax-TEL", "rfc6350-parameter-value-TYPE=cell-TEL", "rfc6350-parameter-value-TYPE=video-TEL", "rfc6350-parameter-value-TYPE=pager-TEL", "rfc6350-parameter-value-TYPE=textphone-TEL", "rfc7852-parameter-value-TYPE=main-number-TEL"].forEach(reads));
 // enforces: rfc6350-parameter-PREF
-test("parameter PREF", () => ["rfc6350-6.4.1-1", "rfc6350-6.4.2-2", "rfc6350-6.4.3-1", "rfc6350-6.4.4-1", "rfc6350-6.4.4-2", "rfc6350-6.9.1-1", "rfc6350-6.9.2-1", "rfc6350-6.9.3-1", "rfc6350-parameter-value-TYPE=text", "rfc6350-parameter-value-TYPE=fax", "rfc6350-parameter-value-TYPE=cell", "rfc6350-parameter-value-TYPE=video", "rfc6350-parameter-value-TYPE=pager", "rfc6350-parameter-value-TYPE=textphone"].forEach(reads));
+test("parameter PREF", () => ["rfc6350-6.4.1-1", "rfc6350-6.4.2-2", "rfc6350-6.4.3-1", "rfc6350-6.4.4-1", "rfc6350-6.4.4-2", "rfc6350-6.9.1-1", "rfc6350-6.9.2-1", "rfc6350-6.9.3-1", "rfc6715-2.4-2", "rfc8605-2.1-2", "rfc9554-3.4-1", "rfc9554-3.4-2", "rfc7852-11.7-1", "rfc6350-parameter-value-TYPE=text-TEL", "rfc6350-parameter-value-TYPE=fax-TEL", "rfc6350-parameter-value-TYPE=cell-TEL", "rfc6350-parameter-value-TYPE=video-TEL", "rfc6350-parameter-value-TYPE=pager-TEL", "rfc6350-parameter-value-TYPE=textphone-TEL", "rfc7852-parameter-value-TYPE=main-number-TEL"].forEach(reads));
 // enforces: rfc6350-parameter-ALTID
-test("parameter ALTID", () => ["rfc6350-5.4-1", "rfc6350-5.4-2", "rfc6350-5.4-3", "rfc6350-5.4-4", "rfc6350-5.4-5", "rfc6350-5.4-6", "rfc6350-5.4-7", "rfc6350-5.4-8", "rfc6350-5.4-10", "rfc6350-5.4-11", "rfc6350-5.4-12", "rfc6350-5.4-14", "rfc6350-5.4-15", "rfc6350-5.4-16", "rfc6350-5.4-17"].forEach(reads));
+test("parameter ALTID", () => ["rfc6350-5.4-1", "rfc6350-5.4-2", "rfc6350-5.4-3", "rfc6350-5.4-4", "rfc6350-5.4-5", "rfc6350-5.4-6", "rfc6350-5.4-7", "rfc6350-5.4-8", "rfc6350-5.4-10", "rfc6350-5.4-11", "rfc6350-5.4-12", "rfc6350-5.4-14", "rfc6350-5.4-15", "rfc6350-5.4-16", "rfc6350-5.4-17", "rfc9554-4.6-1", "rfc9554-4.6-2"].forEach(reads));
 // enforces: rfc6350-parameter-PID
 test("parameter PID", () => ["rfc6350-6.7.7-1", "rfc6350-6.7.7-2"].forEach(reads));
 // enforces: rfc6350-parameter-TYPE
-test("parameter TYPE", () => ["rfc6350-6.2.3-3", "rfc6350-6.4.1-1", "rfc6350-6.4.1-2", "rfc6350-6.4.2-1", "rfc6350-6.4.4-1", "rfc6350-6.4.4-2", "rfc6350-6.4.4-3", "rfc6350-6.6.6-1", "rfc6350-6.6.6-2", "rfc6350-6.6.6-3", "rfc6350-parameter-value-TYPE=text", "rfc6350-parameter-value-TYPE=fax", "rfc6350-parameter-value-TYPE=cell", "rfc6350-parameter-value-TYPE=video", "rfc6350-parameter-value-TYPE=pager", "rfc6350-parameter-value-TYPE=textphone", "rfc6350-parameter-value-TYPE=acquaintance", "rfc6350-parameter-value-TYPE=met", "rfc6350-parameter-value-TYPE=colleague", "rfc6350-parameter-value-TYPE=co-resident", "rfc6350-parameter-value-TYPE=neighbor", "rfc6350-parameter-value-TYPE=child", "rfc6350-parameter-value-TYPE=parent", "rfc6350-parameter-value-TYPE=sibling", "rfc6350-parameter-value-TYPE=spouse", "rfc6350-parameter-value-TYPE=kin", "rfc6350-parameter-value-TYPE=muse", "rfc6350-parameter-value-TYPE=crush", "rfc6350-parameter-value-TYPE=date", "rfc6350-parameter-value-TYPE=sweetheart", "rfc6350-parameter-value-TYPE=me", "rfc6350-parameter-value-TYPE=agent", "rfc6350-parameter-value-TYPE=emergency"].forEach(reads));
+test("parameter TYPE", () => ["rfc6350-6.2.3-3", "rfc6350-6.4.1-1", "rfc6350-6.4.1-2", "rfc6350-6.4.2-1", "rfc6350-6.4.4-1", "rfc6350-6.4.4-2", "rfc6350-6.4.4-3", "rfc6350-6.6.6-1", "rfc6350-6.6.6-2", "rfc6350-6.6.6-3", "rfc8605-3.1-1", "rfc8605-3.1-2", "rfc9554-5.1-1", "rfc9554-5.2-1", "rfc7852-11.7-1", "rfc6350-parameter-value-TYPE=text-TEL", "rfc6350-parameter-value-TYPE=fax-TEL", "rfc6350-parameter-value-TYPE=cell-TEL", "rfc6350-parameter-value-TYPE=video-TEL", "rfc6350-parameter-value-TYPE=pager-TEL", "rfc6350-parameter-value-TYPE=textphone-TEL", "rfc7852-parameter-value-TYPE=main-number-TEL", "rfc6350-parameter-value-TYPE=acquaintance-RELATED", "rfc6350-parameter-value-TYPE=met-RELATED", "rfc6350-parameter-value-TYPE=colleague-RELATED", "rfc6350-parameter-value-TYPE=co-resident-RELATED", "rfc6350-parameter-value-TYPE=neighbor-RELATED", "rfc6350-parameter-value-TYPE=child-RELATED", "rfc6350-parameter-value-TYPE=parent-RELATED", "rfc6350-parameter-value-TYPE=sibling-RELATED", "rfc6350-parameter-value-TYPE=spouse-RELATED", "rfc6350-parameter-value-TYPE=kin-RELATED", "rfc6350-parameter-value-TYPE=muse-RELATED", "rfc6350-parameter-value-TYPE=crush-RELATED", "rfc6350-parameter-value-TYPE=date-RELATED", "rfc6350-parameter-value-TYPE=sweetheart-RELATED", "rfc6350-parameter-value-TYPE=me-RELATED", "rfc6350-parameter-value-TYPE=agent-RELATED", "rfc6350-parameter-value-TYPE=emergency-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-MEDIATYPE
 test("parameter MEDIATYPE", () => ["rfc6350-6.8.1-2", "rfc6350-6.9.1-2", "rfc6350-6.9.3-2"].forEach(reads));
 // enforces: rfc6350-parameter-CALSCALE
-test("parameter CALSCALE", () => ["rfc6350-parameter-value-CALSCALE=gregorian"].forEach(reads));
+test("parameter CALSCALE", () => ["rfc6350-parameter-value-CALSCALE=gregorian-BDAY"].forEach(reads));
 // enforces: rfc6350-parameter-SORT-AS
 test("parameter SORT-AS", () => ["rfc6350-5.9-2", "rfc6350-5.9-4", "rfc6350-5.9-6", "rfc6350-5.9-8", "rfc6350-5.9-10", "rfc6350-5.9-12"].forEach(reads));
 // enforces: rfc6350-parameter-GEO
-test("parameter GEO", () => ["rfc6350-6.3.1-1", "rfc6350-parameter-TZ"].forEach(reads));
+test("parameter GEO", () => ["rfc6350-6.3.1-1", "rfc9554-2.1-1", "rfc6350-parameter-TZ"].forEach(reads));
 // enforces: rfc6350-parameter-TZ
 test("parameter TZ", () => ["rfc6350-parameter-TZ"].forEach(reads));
+// enforces: rfc6715-parameter-INDEX
+test("parameter INDEX", () => ["rfc6715-2.1-1", "rfc6715-2.1-2", "rfc6715-2.2-1", "rfc6715-2.2-2", "rfc6715-2.3-1", "rfc6715-2.3-2", "rfc6715-2.4-1", "rfc6715-parameter-value-LEVEL=average-EXPERTISE", "rfc6715-parameter-value-LEVEL=medium-HOBBY", "rfc6715-parameter-value-LEVEL=low-HOBBY", "rfc6715-parameter-value-LEVEL=low-INTEREST"].forEach(reads));
+// enforces: rfc6715-parameter-LEVEL
+test("parameter LEVEL", () => ["rfc6715-2.1-1", "rfc6715-2.1-2", "rfc6715-2.2-1", "rfc6715-2.2-2", "rfc6715-2.3-1", "rfc6715-2.3-2", "rfc6715-3.2-1", "rfc6715-3.2-2", "rfc6715-3.2-3", "rfc6715-parameter-value-LEVEL=average-EXPERTISE", "rfc6715-parameter-value-LEVEL=medium-HOBBY", "rfc6715-parameter-value-LEVEL=low-HOBBY", "rfc6715-parameter-value-LEVEL=low-INTEREST"].forEach(reads));
+// enforces: rfc8605-parameter-CC
+test("parameter CC", () => ["rfc8605-3.1-1", "rfc8605-3.1-2"].forEach(reads));
+// enforces: rfc9554-parameter-AUTHOR
+test("parameter AUTHOR", () => ["rfc9554-4.1-1"].forEach(reads));
+// enforces: rfc9554-parameter-AUTHOR-NAME
+test("parameter AUTHOR-NAME", () => ["rfc9554-4.2-1", "rfc9554-4.2-2"].forEach(reads));
+// enforces: rfc9554-parameter-CREATED
+test("parameter CREATED", () => ["rfc9554-4.3-1"].forEach(reads));
+// enforces: rfc9554-parameter-DERIVED
+test("parameter DERIVED", () => ["rfc9554-4.4-2", "rfc9555-3.3.1-2"].forEach(reads));
 // enforces: rfc6350-parameter-LABEL
-test("parameter LABEL", () => ["rfc6350-6.3.1-1", "rfc6350-parameter-TZ"].forEach(reads));
+test("parameter LABEL", () => ["rfc6350-6.3.1-1", "rfc9554-4.5-1", "rfc6350-parameter-TZ"].forEach(reads));
+// enforces: rfc9554-parameter-PHONETIC
+test("parameter PHONETIC", () => ["rfc9554-4.6-2", "rfc9554-parameter-value-PHONETIC=ipa-ADR", "rfc9554-parameter-value-PHONETIC=piny-ADR", "rfc9554-parameter-value-PHONETIC=script-ADR"].forEach(reads));
+// enforces: rfc9554-parameter-PROP-ID
+test("parameter PROP-ID", () => ["rfc9554-4.7-1"].forEach(reads));
+// enforces: rfc9554-parameter-SCRIPT
+test("parameter SCRIPT", () => ["rfc9554-4.6-2"].forEach(reads));
+// enforces: rfc9554-parameter-SERVICE-TYPE
+test("parameter SERVICE-TYPE", () => ["rfc9554-3.5-1", "rfc9554-3.5-3", "rfc9554-4.9-1"].forEach(reads));
+// enforces: rfc9554-parameter-USERNAME
+test("parameter USERNAME", () => ["rfc9554-4.10-1"].forEach(reads));
+// enforces: rfc9555-parameter-JSPTR
+test("parameter JSPTR", () => ["rfc9555-3.2.1-1", "rfc9555-3.2.1-2", "rfc9555-3.2.1-4", "rfc9555-3.3.2-1"].forEach(reads));
+// enforces: rfc9555-parameter-JSCOMPS
+test("parameter JSCOMPS", () => ["rfc9555-3.3.1-1", "rfc9555-3.3.1-3", "rfc9555-3.3.1-4"].forEach(reads));
 // enforces: rfc6350-value-type-text
-test("value-type text", () => ["rfc6350-6.1.1-1", "rfc6350-6.1.2-1", "rfc6350-6.1.4-1", "rfc6350-6.1.4-2", "rfc6350-6.1.4-3", "rfc6350-6.1.4-4", "rfc6350-6.1.4-5", "rfc6350-6.1.4-6", "rfc6350-6.1.4-7", "rfc6350-6.1.4-8", "rfc6350-6.1.4-9", "rfc6350-6.1.4-10", "rfc6350-6.1.4-11", "rfc6350-6.1.4-12", "rfc6350-6.2.1-1", "rfc6350-6.2.2-1", "rfc6350-6.2.2-2", "rfc6350-6.2.3-1", "rfc6350-6.2.3-2", "rfc6350-6.2.3-3", "rfc6350-6.2.5-4", "rfc6350-6.2.7-1", "rfc6350-6.2.7-2", "rfc6350-6.2.7-3", "rfc6350-6.2.7-4", "rfc6350-6.2.7-5", "rfc6350-6.2.7-6", "rfc6350-6.3.1-1", "rfc6350-6.4.2-1", "rfc6350-6.4.2-2", "rfc6350-6.5.1-1", "rfc6350-6.6.1-1", "rfc6350-6.6.2-1", "rfc6350-6.6.4-1", "rfc6350-6.6.5-1", "rfc6350-6.6.5-2", "rfc6350-6.6.5-3", "rfc6350-6.6.5-4", "rfc6350-6.6.5-7", "rfc6350-6.6.5-8", "rfc6350-6.6.5-9", "rfc6350-6.6.5-10", "rfc6350-6.6.5-12", "rfc6350-6.6.5-13", "rfc6350-6.6.5-14", "rfc6350-6.6.5-15", "rfc6350-6.6.5-17", "rfc6350-6.6.5-18", "rfc6350-6.6.5-19", "rfc6350-6.6.5-20", "rfc6350-6.6.5-21", "rfc6350-6.6.5-26", "rfc6350-6.6.6-3", "rfc6350-6.7.1-1", "rfc6350-6.7.1-2", "rfc6350-6.7.2-1", "rfc6350-6.7.3-1", "rfc6350-6.7.7-2", "rfc6350-6.7.7-3", "rfc6350-6.7.7-4", "rfc6350-6.7.9-1", "rfc6350-5.1-1", "rfc6350-5.4-1", "rfc6350-5.4-2", "rfc6350-5.4-3", "rfc6350-5.4-4", "rfc6350-5.4-5", "rfc6350-5.4-6", "rfc6350-5.4-7", "rfc6350-5.4-8", "rfc6350-5.4-9", "rfc6350-5.4-10", "rfc6350-5.4-11", "rfc6350-5.4-12", "rfc6350-5.4-13", "rfc6350-5.4-14", "rfc6350-5.4-15", "rfc6350-5.4-16", "rfc6350-5.9-1", "rfc6350-5.9-2", "rfc6350-5.9-3", "rfc6350-5.9-4", "rfc6350-5.9-5", "rfc6350-5.9-6", "rfc6350-5.9-7", "rfc6350-5.9-8", "rfc6350-5.9-9", "rfc6350-5.9-10", "rfc6350-5.9-11", "rfc6350-5.9-12", "rfc6350-parameter-TZ", "rfc6350-property-value-KIND:location"].forEach(reads));
+test("value-type text", () => ["rfc6350-6.1.1-1", "rfc6350-6.1.2-1", "rfc6350-6.1.4-1", "rfc6350-6.1.4-2", "rfc6350-6.1.4-3", "rfc6350-6.1.4-4", "rfc6350-6.1.4-5", "rfc6350-6.1.4-6", "rfc6350-6.1.4-7", "rfc6350-6.1.4-8", "rfc6350-6.1.4-9", "rfc6350-6.1.4-10", "rfc6350-6.1.4-11", "rfc6350-6.1.4-12", "rfc6350-6.2.1-1", "rfc6350-6.2.2-1", "rfc6350-6.2.2-2", "rfc6350-6.2.3-1", "rfc6350-6.2.3-2", "rfc6350-6.2.3-3", "rfc6350-6.2.5-4", "rfc6350-6.2.7-1", "rfc6350-6.2.7-2", "rfc6350-6.2.7-3", "rfc6350-6.2.7-4", "rfc6350-6.2.7-5", "rfc6350-6.2.7-6", "rfc6350-6.3.1-1", "rfc6350-6.4.2-1", "rfc6350-6.4.2-2", "rfc6350-6.5.1-1", "rfc6350-6.6.1-1", "rfc6350-6.6.2-1", "rfc6350-6.6.4-1", "rfc6350-6.6.5-1", "rfc6350-6.6.5-2", "rfc6350-6.6.5-3", "rfc6350-6.6.5-4", "rfc6350-6.6.5-7", "rfc6350-6.6.5-8", "rfc6350-6.6.5-9", "rfc6350-6.6.5-10", "rfc6350-6.6.5-12", "rfc6350-6.6.5-13", "rfc6350-6.6.5-14", "rfc6350-6.6.5-15", "rfc6350-6.6.5-17", "rfc6350-6.6.5-18", "rfc6350-6.6.5-19", "rfc6350-6.6.5-20", "rfc6350-6.6.5-21", "rfc6350-6.6.5-26", "rfc6350-6.6.6-3", "rfc6350-6.7.1-1", "rfc6350-6.7.1-2", "rfc6350-6.7.2-1", "rfc6350-6.7.3-1", "rfc6350-6.7.7-2", "rfc6350-6.7.7-3", "rfc6350-6.7.7-4", "rfc6350-6.7.9-1", "rfc6350-5.1-1", "rfc6350-5.4-1", "rfc6350-5.4-2", "rfc6350-5.4-3", "rfc6350-5.4-4", "rfc6350-5.4-5", "rfc6350-5.4-6", "rfc6350-5.4-7", "rfc6350-5.4-8", "rfc6350-5.4-9", "rfc6350-5.4-10", "rfc6350-5.4-11", "rfc6350-5.4-12", "rfc6350-5.4-13", "rfc6350-5.4-14", "rfc6350-5.4-15", "rfc6350-5.4-16", "rfc6350-5.9-1", "rfc6350-5.9-2", "rfc6350-5.9-3", "rfc6350-5.9-4", "rfc6350-5.9-5", "rfc6350-5.9-6", "rfc6350-5.9-7", "rfc6350-5.9-8", "rfc6350-5.9-9", "rfc6350-5.9-10", "rfc6350-5.9-11", "rfc6350-5.9-12", "rfc6474-2.1-1", "rfc6474-2.2-1", "rfc6474-2.3-4", "rfc6715-2.1-1", "rfc6715-2.1-2", "rfc6715-2.2-1", "rfc6715-2.2-2", "rfc6715-2.3-1", "rfc6715-2.3-2", "rfc6715-3.2-1", "rfc6715-3.2-2", "rfc6715-3.2-3", "rfc8605-3.1-1", "rfc8605-3.1-2", "rfc9554-2.1-1", "rfc9554-2.2-1", "rfc9554-2.2-2", "rfc9554-3.2-1", "rfc9554-3.4-1", "rfc9554-3.4-2", "rfc9554-3.5-3", "rfc9554-4.1-1", "rfc9554-4.2-1", "rfc9554-4.2-2", "rfc9554-4.3-1", "rfc9554-4.4-1", "rfc9554-4.4-2", "rfc9554-4.5-1", "rfc9554-4.6-1", "rfc9554-4.6-2", "rfc9554-5.1-1", "rfc9554-5.2-1", "rfc9555-2.15.1-1", "rfc9555-2.15.2-1", "rfc9555-3.2.1-1", "rfc9555-3.2.1-2", "rfc9555-3.2.1-3", "rfc9555-3.2.1-4", "rfc9555-3.3.1-1", "rfc9555-3.3.1-2", "rfc9555-3.3.1-3", "rfc9555-3.3.1-4", "rfc9555-3.3.2-1", "rfc6350-parameter-TZ", "rfc6350-property-value-KIND:location", "rfc6473-property-value-KIND:application", "rfc6869-property-value-KIND:device", "rfc9554-property-value-GRAMGENDER:animate", "rfc9554-property-value-GRAMGENDER:common", "rfc9554-property-value-GRAMGENDER:inanimate", "rfc9554-property-value-GRAMGENDER:masculine", "rfc9554-property-value-GRAMGENDER:neuter", "rfc6715-parameter-value-LEVEL=average-EXPERTISE", "rfc6715-parameter-value-LEVEL=medium-HOBBY", "rfc6715-parameter-value-LEVEL=low-HOBBY", "rfc6715-parameter-value-LEVEL=low-INTEREST", "rfc9554-parameter-value-PHONETIC=ipa-ADR", "rfc9554-parameter-value-PHONETIC=piny-ADR", "rfc9554-parameter-value-PHONETIC=script-ADR"].forEach(reads));
 // enforces: rfc6350-value-type-uri
-test("value-type uri", () => ["rfc6350-6.1.3-1", "rfc6350-6.1.3-2", "rfc6350-6.2.4-1", "rfc6350-6.4.1-1", "rfc6350-6.4.1-2", "rfc6350-6.4.3-1", "rfc6350-6.5.2-1", "rfc6350-6.6.3-1", "rfc6350-6.6.5-5", "rfc6350-6.6.5-6", "rfc6350-6.6.5-11", "rfc6350-6.6.5-16", "rfc6350-6.6.5-22", "rfc6350-6.6.5-23", "rfc6350-6.6.5-24", "rfc6350-6.6.5-25", "rfc6350-6.6.6-1", "rfc6350-6.6.6-2", "rfc6350-6.7.5-1", "rfc6350-6.7.6-1", "rfc6350-6.7.7-1", "rfc6350-6.7.8-1", "rfc6350-6.8.1-1", "rfc6350-6.8.1-2", "rfc6350-6.9.1-1", "rfc6350-6.9.1-2", "rfc6350-6.9.2-1", "rfc6350-6.9.2-2", "rfc6350-6.9.3-1", "rfc6350-6.9.3-2", "rfc6350-5.4-17", "rfc6350-parameter-value-TYPE=text", "rfc6350-parameter-value-TYPE=fax", "rfc6350-parameter-value-TYPE=cell", "rfc6350-parameter-value-TYPE=video", "rfc6350-parameter-value-TYPE=pager", "rfc6350-parameter-value-TYPE=textphone", "rfc6350-parameter-value-TYPE=acquaintance", "rfc6350-parameter-value-TYPE=met", "rfc6350-parameter-value-TYPE=colleague", "rfc6350-parameter-value-TYPE=co-resident", "rfc6350-parameter-value-TYPE=neighbor", "rfc6350-parameter-value-TYPE=child", "rfc6350-parameter-value-TYPE=parent", "rfc6350-parameter-value-TYPE=sibling", "rfc6350-parameter-value-TYPE=spouse", "rfc6350-parameter-value-TYPE=kin", "rfc6350-parameter-value-TYPE=muse", "rfc6350-parameter-value-TYPE=crush", "rfc6350-parameter-value-TYPE=date", "rfc6350-parameter-value-TYPE=sweetheart", "rfc6350-parameter-value-TYPE=me", "rfc6350-parameter-value-TYPE=agent", "rfc6350-parameter-value-TYPE=emergency"].forEach(reads));
+test("value-type uri", () => ["rfc6350-6.1.3-1", "rfc6350-6.1.3-2", "rfc6350-6.2.4-1", "rfc6350-6.2.4-2", "rfc6350-6.4.1-1", "rfc6350-6.4.1-2", "rfc6350-6.4.3-1", "rfc6350-6.5.2-1", "rfc6350-6.6.3-1", "rfc6350-6.6.3-2", "rfc6350-6.6.5-5", "rfc6350-6.6.5-6", "rfc6350-6.6.5-11", "rfc6350-6.6.5-16", "rfc6350-6.6.5-22", "rfc6350-6.6.5-23", "rfc6350-6.6.5-24", "rfc6350-6.6.5-25", "rfc6350-6.6.6-1", "rfc6350-6.6.6-2", "rfc6350-6.7.5-1", "rfc6350-6.7.5-2", "rfc6350-6.7.6-1", "rfc6350-6.7.7-1", "rfc6350-6.7.8-1", "rfc6350-6.8.1-1", "rfc6350-6.8.1-2", "rfc6350-6.8.1-3", "rfc6350-6.9.1-1", "rfc6350-6.9.1-2", "rfc6350-6.9.2-1", "rfc6350-6.9.2-2", "rfc6350-6.9.3-1", "rfc6350-6.9.3-2", "rfc6350-5.4-17", "rfc6474-2.1-2", "rfc6474-2.1-3", "rfc6474-2.2-2", "rfc6474-2.2-3", "rfc6715-2.4-1", "rfc6715-2.4-2", "rfc8605-2.1-1", "rfc8605-2.1-2", "rfc9554-3.5-1", "rfc9554-3.5-2", "rfc9554-4.7-1", "rfc9554-4.9-1", "rfc9554-4.10-1", "rfc9555-2.15.3-1", "rfc7852-11.7-1", "rfc6350-parameter-value-TYPE=text-TEL", "rfc6350-parameter-value-TYPE=fax-TEL", "rfc6350-parameter-value-TYPE=cell-TEL", "rfc6350-parameter-value-TYPE=video-TEL", "rfc6350-parameter-value-TYPE=pager-TEL", "rfc6350-parameter-value-TYPE=textphone-TEL", "rfc7852-parameter-value-TYPE=main-number-TEL", "rfc6350-parameter-value-TYPE=acquaintance-RELATED", "rfc6350-parameter-value-TYPE=met-RELATED", "rfc6350-parameter-value-TYPE=colleague-RELATED", "rfc6350-parameter-value-TYPE=co-resident-RELATED", "rfc6350-parameter-value-TYPE=neighbor-RELATED", "rfc6350-parameter-value-TYPE=child-RELATED", "rfc6350-parameter-value-TYPE=parent-RELATED", "rfc6350-parameter-value-TYPE=sibling-RELATED", "rfc6350-parameter-value-TYPE=spouse-RELATED", "rfc6350-parameter-value-TYPE=kin-RELATED", "rfc6350-parameter-value-TYPE=muse-RELATED", "rfc6350-parameter-value-TYPE=crush-RELATED", "rfc6350-parameter-value-TYPE=date-RELATED", "rfc6350-parameter-value-TYPE=sweetheart-RELATED", "rfc6350-parameter-value-TYPE=me-RELATED", "rfc6350-parameter-value-TYPE=agent-RELATED", "rfc6350-parameter-value-TYPE=emergency-RELATED"].forEach(reads));
 // enforces: rfc6350-property-value-BEGIN-VCARD
 test("property-value BEGIN:VCARD", () => ["rfc6350-6.1.1-1", "rfc6350-6.1.4-1", "rfc6350-6.1.4-7", "rfc6350-6.6.5-1", "rfc6350-6.6.5-8", "rfc6350-6.6.5-13", "rfc6350-6.6.5-18"].forEach(reads));
 // enforces: rfc6350-property-value-END-VCARD
@@ -119,67 +175,115 @@ test("property-value KIND:group", () => ["rfc6350-6.6.5-3", "rfc6350-6.6.5-20"].
 test("property-value KIND:org", () => ["rfc6350-6.1.4-9"].forEach(reads));
 // enforces: rfc6350-property-value-KIND-location
 test("property-value KIND:location", () => ["rfc6350-property-value-KIND:location"].forEach(reads));
+// enforces: rfc6473-property-value-KIND-application
+test("property-value KIND:application", () => ["rfc6473-property-value-KIND:application"].forEach(reads));
+// enforces: rfc6869-property-value-KIND-device
+test("property-value KIND:device", () => ["rfc6869-property-value-KIND:device"].forEach(reads));
 // enforces: rfc6350-property-value-VERSION-4.0
 test("property-value VERSION:4.0", () => ["rfc6350-6.1.4-2", "rfc6350-6.1.4-8", "rfc6350-6.6.5-2", "rfc6350-6.6.5-9", "rfc6350-6.6.5-14", "rfc6350-6.6.5-19", "rfc6350-6.7.9-1"].forEach(reads));
+// enforces: rfc9554-property-value-GRAMGENDER-animate
+test("property-value GRAMGENDER:animate", () => ["rfc9554-property-value-GRAMGENDER:animate"].forEach(reads));
+// enforces: rfc9554-property-value-GRAMGENDER-common
+test("property-value GRAMGENDER:common", () => ["rfc9554-property-value-GRAMGENDER:common"].forEach(reads));
+// enforces: rfc9554-property-value-GRAMGENDER-feminine
+test("property-value GRAMGENDER:feminine", () => ["rfc9554-3.2-1"].forEach(reads));
+// enforces: rfc9554-property-value-GRAMGENDER-inanimate
+test("property-value GRAMGENDER:inanimate", () => ["rfc9554-property-value-GRAMGENDER:inanimate"].forEach(reads));
+// enforces: rfc9554-property-value-GRAMGENDER-masculine
+test("property-value GRAMGENDER:masculine", () => ["rfc9554-property-value-GRAMGENDER:masculine"].forEach(reads));
+// enforces: rfc9554-property-value-GRAMGENDER-neuter
+test("property-value GRAMGENDER:neuter", () => ["rfc9554-property-value-GRAMGENDER:neuter"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-work-FN
-test("parameter-value TYPE=work", () => ["rfc6350-6.2.3-3", "rfc6350-6.4.2-1", "rfc6350-6.4.4-1", "rfc6350-6.4.4-2"].forEach(reads));
+test("parameter-value TYPE=work", () => ["rfc6350-6.2.3-3", "rfc6350-6.4.2-1", "rfc6350-6.4.4-1", "rfc6350-6.4.4-2", "rfc8605-3.1-1"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-home-FN
-test("parameter-value TYPE=home", () => ["rfc6350-6.4.1-1", "rfc6350-6.4.1-2", "rfc6350-6.4.4-3"].forEach(reads));
+test("parameter-value TYPE=home", () => ["rfc6350-6.4.1-1", "rfc6350-6.4.1-2", "rfc6350-6.4.4-3", "rfc8605-3.1-2"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-text-TEL
-test("parameter-value TYPE=text", () => ["rfc6350-parameter-value-TYPE=text"].forEach(reads));
+test("parameter-value TYPE=text", () => ["rfc6350-parameter-value-TYPE=text-TEL"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-voice-TEL
-test("parameter-value TYPE=voice", () => ["rfc6350-6.4.1-1"].forEach(reads));
+test("parameter-value TYPE=voice", () => ["rfc6350-6.4.1-1", "rfc7852-11.7-1"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-fax-TEL
-test("parameter-value TYPE=fax", () => ["rfc6350-parameter-value-TYPE=fax"].forEach(reads));
+test("parameter-value TYPE=fax", () => ["rfc6350-parameter-value-TYPE=fax-TEL"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-cell-TEL
-test("parameter-value TYPE=cell", () => ["rfc6350-parameter-value-TYPE=cell"].forEach(reads));
+test("parameter-value TYPE=cell", () => ["rfc6350-parameter-value-TYPE=cell-TEL"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-video-TEL
-test("parameter-value TYPE=video", () => ["rfc6350-parameter-value-TYPE=video"].forEach(reads));
+test("parameter-value TYPE=video", () => ["rfc6350-parameter-value-TYPE=video-TEL"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-pager-TEL
-test("parameter-value TYPE=pager", () => ["rfc6350-parameter-value-TYPE=pager"].forEach(reads));
+test("parameter-value TYPE=pager", () => ["rfc6350-parameter-value-TYPE=pager-TEL"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-textphone-TEL
-test("parameter-value TYPE=textphone", () => ["rfc6350-parameter-value-TYPE=textphone"].forEach(reads));
+test("parameter-value TYPE=textphone", () => ["rfc6350-parameter-value-TYPE=textphone-TEL"].forEach(reads));
+// enforces: rfc7852-parameter-value-TYPE-main-number-TEL
+test("parameter-value TYPE=main-number", () => ["rfc7852-parameter-value-TYPE=main-number-TEL"].forEach(reads));
 // enforces: rfc6350-parameter-value-CALSCALE-gregorian-BDAY
-test("parameter-value CALSCALE=gregorian", () => ["rfc6350-parameter-value-CALSCALE=gregorian"].forEach(reads));
+test("parameter-value CALSCALE=gregorian", () => ["rfc6350-parameter-value-CALSCALE=gregorian-BDAY"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-contact-RELATED
 test("parameter-value TYPE=contact", () => ["rfc6350-6.6.6-2"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-acquaintance-RELATED
-test("parameter-value TYPE=acquaintance", () => ["rfc6350-parameter-value-TYPE=acquaintance"].forEach(reads));
+test("parameter-value TYPE=acquaintance", () => ["rfc6350-parameter-value-TYPE=acquaintance-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-friend-RELATED
 test("parameter-value TYPE=friend", () => ["rfc6350-6.6.6-1"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-met-RELATED
-test("parameter-value TYPE=met", () => ["rfc6350-parameter-value-TYPE=met"].forEach(reads));
+test("parameter-value TYPE=met", () => ["rfc6350-parameter-value-TYPE=met-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-co-worker-RELATED
 test("parameter-value TYPE=co-worker", () => ["rfc6350-6.6.6-3"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-colleague-RELATED
-test("parameter-value TYPE=colleague", () => ["rfc6350-parameter-value-TYPE=colleague"].forEach(reads));
+test("parameter-value TYPE=colleague", () => ["rfc6350-parameter-value-TYPE=colleague-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-co-resident-RELATED
-test("parameter-value TYPE=co-resident", () => ["rfc6350-parameter-value-TYPE=co-resident"].forEach(reads));
+test("parameter-value TYPE=co-resident", () => ["rfc6350-parameter-value-TYPE=co-resident-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-neighbor-RELATED
-test("parameter-value TYPE=neighbor", () => ["rfc6350-parameter-value-TYPE=neighbor"].forEach(reads));
+test("parameter-value TYPE=neighbor", () => ["rfc6350-parameter-value-TYPE=neighbor-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-child-RELATED
-test("parameter-value TYPE=child", () => ["rfc6350-parameter-value-TYPE=child"].forEach(reads));
+test("parameter-value TYPE=child", () => ["rfc6350-parameter-value-TYPE=child-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-parent-RELATED
-test("parameter-value TYPE=parent", () => ["rfc6350-parameter-value-TYPE=parent"].forEach(reads));
+test("parameter-value TYPE=parent", () => ["rfc6350-parameter-value-TYPE=parent-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-sibling-RELATED
-test("parameter-value TYPE=sibling", () => ["rfc6350-parameter-value-TYPE=sibling"].forEach(reads));
+test("parameter-value TYPE=sibling", () => ["rfc6350-parameter-value-TYPE=sibling-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-spouse-RELATED
-test("parameter-value TYPE=spouse", () => ["rfc6350-parameter-value-TYPE=spouse"].forEach(reads));
+test("parameter-value TYPE=spouse", () => ["rfc6350-parameter-value-TYPE=spouse-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-kin-RELATED
-test("parameter-value TYPE=kin", () => ["rfc6350-parameter-value-TYPE=kin"].forEach(reads));
+test("parameter-value TYPE=kin", () => ["rfc6350-parameter-value-TYPE=kin-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-muse-RELATED
-test("parameter-value TYPE=muse", () => ["rfc6350-parameter-value-TYPE=muse"].forEach(reads));
+test("parameter-value TYPE=muse", () => ["rfc6350-parameter-value-TYPE=muse-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-crush-RELATED
-test("parameter-value TYPE=crush", () => ["rfc6350-parameter-value-TYPE=crush"].forEach(reads));
+test("parameter-value TYPE=crush", () => ["rfc6350-parameter-value-TYPE=crush-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-date-RELATED
-test("parameter-value TYPE=date", () => ["rfc6350-parameter-value-TYPE=date"].forEach(reads));
+test("parameter-value TYPE=date", () => ["rfc6350-parameter-value-TYPE=date-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-sweetheart-RELATED
-test("parameter-value TYPE=sweetheart", () => ["rfc6350-parameter-value-TYPE=sweetheart"].forEach(reads));
+test("parameter-value TYPE=sweetheart", () => ["rfc6350-parameter-value-TYPE=sweetheart-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-me-RELATED
-test("parameter-value TYPE=me", () => ["rfc6350-parameter-value-TYPE=me"].forEach(reads));
+test("parameter-value TYPE=me", () => ["rfc6350-parameter-value-TYPE=me-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-agent-RELATED
-test("parameter-value TYPE=agent", () => ["rfc6350-parameter-value-TYPE=agent"].forEach(reads));
+test("parameter-value TYPE=agent", () => ["rfc6350-parameter-value-TYPE=agent-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-emergency-RELATED
-test("parameter-value TYPE=emergency", () => ["rfc6350-parameter-value-TYPE=emergency"].forEach(reads));
+test("parameter-value TYPE=emergency", () => ["rfc6350-parameter-value-TYPE=emergency-RELATED"].forEach(reads));
 // enforces: rfc6350-parameter-value-TYPE-emergency-RELATED
-test("parameter-value TYPE=emergency", () => ["rfc6350-parameter-value-TYPE=emergency"].forEach(reads));
+test("parameter-value TYPE=emergency", () => ["rfc6350-parameter-value-TYPE=emergency-RELATED"].forEach(reads));
+// enforces: rfc6715-parameter-value-LEVEL-beginner-EXPERTISE
+test("parameter-value LEVEL=beginner", () => ["rfc6715-2.1-1", "rfc6715-3.2-1"].forEach(reads));
+// enforces: rfc6715-parameter-value-LEVEL-average-EXPERTISE
+test("parameter-value LEVEL=average", () => ["rfc6715-parameter-value-LEVEL=average-EXPERTISE"].forEach(reads));
+// enforces: rfc6715-parameter-value-LEVEL-expert-EXPERTISE
+test("parameter-value LEVEL=expert", () => ["rfc6715-2.1-2"].forEach(reads));
+// enforces: rfc6715-parameter-value-LEVEL-high-HOBBY
+test("parameter-value LEVEL=high", () => ["rfc6715-2.2-1", "rfc6715-2.2-2", "rfc6715-3.2-2"].forEach(reads));
+// enforces: rfc6715-parameter-value-LEVEL-medium-HOBBY
+test("parameter-value LEVEL=medium", () => ["rfc6715-parameter-value-LEVEL=medium-HOBBY"].forEach(reads));
+// enforces: rfc6715-parameter-value-LEVEL-low-HOBBY
+test("parameter-value LEVEL=low", () => ["rfc6715-parameter-value-LEVEL=low-HOBBY"].forEach(reads));
+// enforces: rfc6715-parameter-value-LEVEL-high-INTEREST
+test("parameter-value LEVEL=high", () => ["rfc6715-2.3-2"].forEach(reads));
+// enforces: rfc6715-parameter-value-LEVEL-medium-INTEREST
+test("parameter-value LEVEL=medium", () => ["rfc6715-2.3-1", "rfc6715-3.2-3"].forEach(reads));
+// enforces: rfc6715-parameter-value-LEVEL-low-INTEREST
+test("parameter-value LEVEL=low", () => ["rfc6715-parameter-value-LEVEL=low-INTEREST"].forEach(reads));
+// enforces: rfc9554-parameter-value-TYPE-billing-ADR
+test("parameter-value TYPE=billing", () => ["rfc9554-5.1-1"].forEach(reads));
+// enforces: rfc9554-parameter-value-TYPE-delivery-ADR
+test("parameter-value TYPE=delivery", () => ["rfc9554-5.2-1"].forEach(reads));
+// enforces: rfc9554-parameter-value-PHONETIC-ipa-ADR
+test("parameter-value PHONETIC=ipa", () => ["rfc9554-parameter-value-PHONETIC=ipa-ADR"].forEach(reads));
+// enforces: rfc9554-parameter-value-PHONETIC-jyut-ADR
+test("parameter-value PHONETIC=jyut", () => ["rfc9554-4.6-2"].forEach(reads));
+// enforces: rfc9554-parameter-value-PHONETIC-piny-ADR
+test("parameter-value PHONETIC=piny", () => ["rfc9554-parameter-value-PHONETIC=piny-ADR"].forEach(reads));
+// enforces: rfc9554-parameter-value-PHONETIC-script-ADR
+test("parameter-value PHONETIC=script", () => ["rfc9554-parameter-value-PHONETIC=script-ADR"].forEach(reads));

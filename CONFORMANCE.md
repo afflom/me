@@ -100,7 +100,7 @@ model does not sanction.
 | ID | Level | Statement |
 | --- | --- | --- |
 | `OR-01` | `build` | Every example of each specification the oracle pins by checksum, kept only where its addresses are at documentation domains, is read by the Prism as a reference reader written to that specification's own grammar reads it, beyond a debt list that only shrinks; the corpus is re-derived from the pinned sources on every run, and each pinned source is a cited authority whose evidence is this ID |
-| `VC-01` | `build` | vCard is read as RFC 6350 defines it: the page's property table is derived from the RFC's own ABNF, every RFC 6350 entry of IANA's vCard Elements registry is implemented and exercised by an example line the RFC gives (or one derived from the RFC's own example of a property it applies to), the Prism reads each example line as a reference reader written to RFC 6350 sections 3.3 and 3.4 reads it, and an entry neither met nor in a debt that only shrinks fails the build |
+| `VC-01` | `build` | vCard is read as RFC 6350 defines it: the page's property table is derived from the RFC's own ABNF, every entry of IANA's vCard Elements registry is implemented and exercised by an example line its RFC gives (or one derived from an RFC's own example of a property it applies to), RFC 6350 and each RFC extending it being pinned, the Prism reads each example line as a reference reader written to RFC 6350 sections 3.3 and 3.4 reads it, and an entry neither met nor in a debt that only shrinks fails the build |
 
 ## page
 
@@ -524,6 +524,14 @@ Never re-derived, vendored, or gated on.
 | `SRC-STSB` | https://huggingface.co/datasets/mteb/stsbenchmark-sts/resolve/96943a16ea6a35129e253c659081cb59daf81b30/test.jsonl.gz | `OR-01` |
 | `SRC-ICF` | https://icdcdn.who.int/static/releasefiles/2026-01/SimpleTabulation-ICF-en.zip | `WP-01` |
 | `SRC-IANA-VCARD` | https://www.iana.org/assignments/vcard-elements/vcard-elements.xml | `VC-01` |
+| `SRC-RFC6474` | https://www.rfc-editor.org/rfc/rfc6474.txt | `VC-01` |
+| `SRC-RFC6715` | https://www.rfc-editor.org/rfc/rfc6715.txt | `VC-01` |
+| `SRC-RFC8605` | https://www.rfc-editor.org/rfc/rfc8605.txt | `VC-01` |
+| `SRC-RFC9554` | https://www.rfc-editor.org/rfc/rfc9554.txt | `VC-01` |
+| `SRC-RFC9555` | https://www.rfc-editor.org/rfc/rfc9555.txt | `VC-01` |
+| `SRC-RFC6473` | https://www.rfc-editor.org/rfc/rfc6473.txt | `VC-01` |
+| `SRC-RFC6869` | https://www.rfc-editor.org/rfc/rfc6869.txt | `VC-01` |
+| `SRC-RFC7852` | https://www.rfc-editor.org/rfc/rfc7852.txt | `VC-01` |
 
 ## Claims that are not conformance IDs
 
