@@ -92,6 +92,13 @@ const person = (raw = "") => {
   return headerWords(named ? named[1] : from.replace(/[<>]/g, ""));
 };
 
+// The address a field names first (RFC 5322 3.4 addr-spec), without its comments: "pete@silly.test".
+const addressOf = (raw = "") => {
+  const plain = uncomment(raw);
+  const spec = /<\s*([^<>]+?)\s*>/.exec(plain)?.[1] ?? /[^\s,;:<>"]+@[^\s,;<>"]+/.exec(plain)?.[0] ?? "";
+  return spec.replace(/\s+/g, "").toLowerCase();
+};
+
 function calendarLine(text, name) {
   return new RegExp(`^${name}((?:;[^:]*)?):(.*)$`, "mi").exec(unfoldCalendar(text));
 }
@@ -152,7 +159,10 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     // Its place in its conversation (RFC 5322 3.6.4): what it is, what it answers, what it builds on.
     const ids = (field) => (h[field] ?? "").match(/<[^<>\s]+>/g) ?? [];
     const place = { ...(ids("message-id").length ? { id: ids("message-id")[0] } : {}), ...(ids("in-reply-to").length ? { replyTo: ids("in-reply-to") } : {}), ...(ids("references").length ? { refs: ids("references") } : {}) };
-    return { ...base, ...place, at: Number.isNaN(when) ? base.at : when, title: headerWords(h.subject ?? "").replace(/\s+/g, " ").trim(), who: person(h.from || h.to), text, body };
+    // Who it comes from: its sender's address, and the list it came through (RFC 2919 List-Id).
+    const list = /<([^<>\s]+)>/.exec(h["list-id"] ?? "")?.[1]?.toLowerCase();
+    const from = { ...(addressOf(h.from) ? { from: addressOf(h.from) } : {}), ...(list ? { list } : {}) };
+    return { ...base, ...place, ...from, at: Number.isNaN(when) ? base.at : when, title: headerWords(h.subject ?? "").replace(/\s+/g, " ").trim(), who: person(h.from || h.to), text, body };
   }
   if (base.media === "calendar") {
     // The event's own fields: the calendar's time zones come first and carry DTSTARTs of their own (1970).

@@ -1,0 +1,23 @@
+{
+  "key": "QR-11",
+  "name": "A measured rhythm is the one the arrivals keep",
+  "characteristic": "functional suitability",
+  "subcharacteristic": "functional correctness",
+  "says": "measured on the instances RFC 5545 lists for its recurrence examples, a rule with one period gives that period and its next instance exactly, and a claimed rhythm rarely misses the next instance; a season's end (every day in January) cannot be foreseen from the days before it",
+  "measures": [
+    {
+      "key": "rhythm-misread",
+      "says": "moments in the listings of single-period RFC 5545 rules and weekly rules by weekday, with three cycles held, where the measured rhythm is not the rule's own or its next is not the listed next",
+      "direction": "atMost",
+      "threshold": 0,
+      "gate": "test/time/rhythm.test.mjs"
+    },
+    {
+      "key": "rhythm-mispredicted",
+      "says": "share of claimed rhythms over every RFC 5545 listing whose next instance is further than a tenth of the period from the listed next",
+      "direction": "atMost",
+      "threshold": 0.03,
+      "gate": "test/time/rhythm.test.mjs"
+    }
+  ]
+}
