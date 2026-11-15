@@ -1,0 +1,111 @@
+\begin{lexlean}{GenIrp}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{GenWcag}
+\title{Implementation report assertions generator}
+\begin{semanticmodule}
+definition{
+  name: irpFind,
+  parameters: [s : Bytes, i : Nat, pattern : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (Foundation.Bytes::byteLength s)
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then (Foundation.Bytes::byteLength s) else (if (GenWcag::startsAt s i pattern) then i else (irpFind s (i + 1) pattern rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: irpAt,
+  parameters: [s : Bytes, i : Nat, pattern : String],
+  result: Nat,
+  body: (irpFind s i (GenWcag::u pattern) (Foundation.Bytes::byteLength s)),
+  axioms: [propext]
+}
+
+definition{
+  name: irpHas,
+  parameters: [s : Bytes, i : Nat, pattern : String],
+  result: Bool,
+  body: ((irpAt s i pattern) <? (Foundation.Bytes::byteLength s)),
+  axioms: [propext]
+}
+
+definition{
+  name: irpValue,
+  parameters: [s : Bytes, i : Nat, key : Bytes],
+  result: Bytes,
+  body: (let a : Nat := ((irpFind s i key (Foundation.Bytes::byteLength s)) + (Foundation.Bytes::byteLength key)); (Foundation.Json::span s a (irpFind s a 0x22 (Foundation.Bytes::byteLength s)))),
+  axioms: [propext]
+}
+
+definition{
+  name: irpIsSpace,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 32) || ((b =? 10) || ((b =? 13) || (b =? 9))))
+}
+
+definition{
+  name: irpTextFrom,
+  parameters: [s : Bytes, i : Nat, stop : Nat, gap : Bool, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (let b : Nat := (Foundation.Tar::byteOr s i); (if (irpIsSpace b) then (irpTextFrom s (i + 1) stop (0 <? (Foundation.Bytes::byteLength acc)) acc rest) else (let lead : Bytes := (if gap then 0x20 else 0x); (let esc : Bytes := (if ((b =? 34) || (b =? 92)) then 0x5c else 0x); (irpTextFrom s (i + 1) stop false (GenWcag::cat (cons acc (cons lead (cons esc (cons (Foundation.Json::span s i (i + 1)) (nil Bytes)))))) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: irpKind,
+  parameters: [s : Bytes, i : Nat, stop : Nat],
+  result: Bytes,
+  body: (let m : Nat := (irpFind s i 0x636f6e666f726d616e63653d226d616e6461746f727922 (Foundation.Bytes::byteLength s)); (if (m <? stop) then 0x2c20226b696e64223a20226d757374227d else 0x2c20226b696e64223a20226d6179227d)),
+  axioms: [propext]
+}
+
+definition{
+  name: irpHead,
+  parameters: [s : Bytes, a : Nat, c : Nat, e : Nat],
+  result: Bytes,
+  body: (GenWcag::cat (cons 0x20207b226964223a20227733632d7363786d6c2d312e302d (cons (irpValue s a 0x69643d22) (cons 0x222c2022726566223a2022 (cons (irpValue s a 0x737065636e756d3d22) (cons 0x222c202274657874223a2022 (cons (irpTextFrom s (c + 9) e false 0x (Foundation.Bytes::byteLength s)) (cons 0x22 (nil Bytes))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: irpEntriesFrom,
+  parameters: [s : Bytes, i : Nat, lead : Bool, acc : Bytes, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength s); (let a : Nat := (irpAt s i "<assert "); (if (n <? (a + 1)) then (ctor Option.some [Bytes] acc) else (let c : Nat := (irpAt s a "<![CDATA["); (let e : Nat := (irpAt s c "]]>"); (if (n <? (e + 1)) then (ctor Option.none [Bytes]) else (let close : Nat := (irpAt s e "</assert>"); (let entry : Bytes := (Foundation.Bytes::appendBytes (if lead then 0x else 0x2c0a) (irpHead s a c e)); (if (n <? (close + 1)) then (ctor Option.some [Bytes] (Foundation.Bytes::appendBytes acc entry)) else (irpEntriesFrom s (close + 9) false (GenWcag::cat (cons acc (cons entry (cons (irpKind s e close) (nil Bytes))))) rest))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: irpPiece,
+  parameters: [s : Bytes],
+  result: (Option Bytes),
+  body: (let opening : Bool := (GenWcag::startsAt s 0 (GenWcag::u "<?xml")); (let close : Nat := (irpAt s 0 "</assert>"); (let tail : Bool := (close <? (irpAt s 0 "<assert ")); (if ((irpAt s 0 "]]>") <? (irpAt s 0 "<![CDATA[")) then (ctor Option.none [Bytes]) else (let start : Bytes := (if opening then 0x5b0a else (if tail then (irpKind s 0 close) else 0x)); (match (irpEntriesFrom s (if tail then (close + 9) else 0) opening start (Foundation.Bytes::byteLength s))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some body => (ctor Option.some [Bytes] (if (irpHas s 0 "</assertions>") then (Foundation.Bytes::appendBytes body 0x0a5d0a) else body)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: irpGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (GenWcag::u "app/specs/standards/upstream/scxml-irp-manifest.xml"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some piece => (irpPiece piece)),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
