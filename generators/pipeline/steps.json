@@ -1,0 +1,40 @@
+{
+  "comment": "The steps of the pipeline program (generators/pipeline/), run in order by tools/generators/run.sh. A step reads repository files and the .gen/ outputs of this program's earlier steps only.",
+  "steps": [
+    {
+      "generator": "workflow",
+      "inputs": [
+        "app/specs/pipeline/workflows/pages.yml.json"
+      ],
+      "output": ".github/workflows/pages.yml"
+    },
+    {
+      "generator": "workflow",
+      "inputs": [
+        "app/specs/pipeline/workflows/build.yml.json"
+      ],
+      "output": ".github/workflows/build.yml"
+    },
+    {
+      "generator": "workflow",
+      "inputs": [
+        "app/specs/pipeline/workflows/deploy-watch.yml.json"
+      ],
+      "output": ".github/workflows/deploy-watch.yml"
+    },
+    {
+      "generator": "workflow",
+      "inputs": [
+        "app/specs/pipeline/workflows/try-page.yml.json"
+      ],
+      "output": ".github/workflows/try-page.yml"
+    },
+    {
+      "generator": "workflow",
+      "inputs": [
+        "app/specs/pipeline/workflows/merge-train.yml.json"
+      ],
+      "output": ".github/workflows/merge-train.yml"
+    }
+  ]
+}
