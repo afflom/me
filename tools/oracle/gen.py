@@ -1455,8 +1455,7 @@ def dialogue_examples(text, source):
             by.setdefault(e.tag.rsplit("}", 1)[-1], []).append(e)
         words = {w.get(XML_ID): w.text or "" for w in by.get("w", [])}
         # When a word is said: its start on the file's timeline, or its place among the words of a file with none.
-        clock = {t.get(XML_ID): float(t.get("interval") or 0) for t in by.get("when", [])}
-        said = {w.get(XML_ID): clock.get((w.get("start") or "").lstrip("#"), n) for n, w in enumerate(by.get("w", []))}
+        said = {w.get(XML_ID): {t.get(XML_ID): float(t.get("interval") or 0) for t in by.get("when", [])}.get((w.get("start") or "").lstrip("#"), n) for n, w in enumerate(by.get("w", []))}
         spans = {g.get(XML_ID): [w for span in g for w in ref(span.get("from"))] for g in by.get("spanGrp", [])}
         segments = {fs.get(XML_ID): spans.get(ref(f.get("fVal"))[0], []) for fs in by.get("fs", []) for f in fs if f.get("name") == "verbalComponent"}
         say = lambda tokens: " ".join(words.get(w, "") for w in tokens).strip()
@@ -1518,10 +1517,7 @@ for source in SPEC["sources"]:
     # It is opened only with --fetch; without, the committed record is carried forward.
     if source.get("held"):
         kept = [e for e in json.loads(OUT.read_text(encoding="utf-8"))["corpus"] if e["source"] == source["key"]] if "--fetch" not in args else []
-        rows = [] if kept else list(dialogue_examples(fetch(source), source))
-        if not kept and not rows:
-            refuse(f"{source['key']} gave no example")
-        corpus += kept or [{"id": f"{source['key']}-held", "source": source["key"], "kind": "held", "raw": "", "expect": read_held(rows)}]
+        corpus += kept or [{"id": f"{source['key']}-held", "source": source["key"], "kind": "held", "raw": "", "expect": read_held(list(dialogue_examples(fetch(source), source)))}]
         continue
     text = abnf.unpaginate(fetch(source), examples=True)
     # A verified erratum (the RFC Editor's errata) corrects the published text: what it says it says, once.

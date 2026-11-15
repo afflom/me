@@ -35,8 +35,6 @@ const threshold = Object.fromEntries(record.measures.map((m) => [m.key, m.thresh
 const { corpus } = read("corpus.json");
 const acts = corpus.filter((e) => e.kind === "act").map((e) => e.expect);
 const line = async (text) => judge(Object.fromEntries(FIELDS.map(([name], i) => [name, text.split(" ")[i + 1]])));
-const AS_ISO = { event: "fact" };
-const models = read("../../app/specs/models/spec.json");
 
 // Each act's meaning vector, from the compiled model on the built page.
 async function meanings(texts) {
@@ -52,7 +50,7 @@ async function meanings(texts) {
       const reader = meaningReader({ line: async (l) => decide(l.replace(/^model /, "")).outcome });
       const v = await reader.embed(texts);
       return v && v.map((x) => Array.from(x));
-    }, { base, spec: models, texts });
+    }, { base, spec: read("../../app/specs/models/spec.json"), texts });
     assert.ok(vectors, "the meaning model opened");
     return new Map(texts.map((t, i) => [t, vectors[i]]));
   } finally {
@@ -73,7 +71,7 @@ async function found(acts, keys) {
   for (const act of acts) {
     const mapped = await route({ source: "note", values: { text: act.text }, line, halted: () => "no", now: 0, learned });
     held[act.intent][1] += 1;
-    if ((AS_ISO[mapped.intent] ?? mapped.intent) === act.intent) held[act.intent][0] += 1;
+    if (({ event: "fact" }[mapped.intent] ?? mapped.intent) === act.intent) held[act.intent][0] += 1;
   }
   const percent = Object.entries(held).map(([intent, [hit, of]]) => [keys[intent], Math.floor((100 * hit) / of)]);
   console.log(`# QR-16 ${percent.map(([k, v]) => `${k} ${v}%`).join(", ")} over ${acts.length} acts`);
@@ -99,10 +97,7 @@ test("the router reads what each act asks as DialogBank's gold ISO 24617-2 annot
   }
   const text = readFileSync(process.env.DIALOGUE_HELD, "utf8");
   assert.equal(createHash("sha256").update(text).digest("hex"), kept.sha256, "the dialogues are the ones the corpus counts");
-  const gold = text.trim().split("\n").map((l) => JSON.parse(l));
-  await found(gold.filter((a) => a.intent), { question: "dialogue question-found", task: "dialogue task-found", fact: "dialogue fact-found" });
-  const debt = read("../../app/specs/oracle/spec.json").sources.find((s) => s.key === "dialogbank").unenforced.map((u) => u.what);
-  console.log(`# DialogBank, not enforced: ${debt.map((what) => (what in kept ? `${what} on ${kept[what]} acts` : what)).join(", ")}; ${gold.length - kept.intents} of ${gold.length} acts have no intent`);
+  await found(text.trim().split("\n").map((l) => JSON.parse(l)).filter((a) => a.intent), { question: "dialogue question-found", task: "dialogue task-found", fact: "dialogue fact-found" });
 });
 
 test("the intent head is fit on the training partition", { skip: !process.env.INTENT_FIT, timeout: 7200000 }, async () => {
