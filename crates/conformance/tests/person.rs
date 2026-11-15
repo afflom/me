@@ -19,7 +19,7 @@ fn read(path: &str) -> String {
 /// `WP-01`: The whole-person model is every entity of WHO's ICF release pinned by checksum, with its code, title and URI as WHO publishes it
 #[test]
 fn person_wp_01() {
-    let generator = read("tools/person/gen.py");
+    let generator = read("tools/person/gen.py") + &read("tools/standards/abnf.py");
     for needle in [
         "not the pinned",
         "def workbook",

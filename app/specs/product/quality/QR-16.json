@@ -3,7 +3,7 @@
   "name": "What a line asks of me",
   "characteristic": "functional suitability",
   "subcharacteristic": "functional correctness",
-  "says": "the router reads whether a line asks a question, sets a task or gives a fact as the AMI Meeting Corpus's annotators marked its dialogue act, under ISO 24617-2's general-purpose functions",
+  "says": "the router reads whether a line asks a question, sets a task or gives a fact as the AMI Meeting Corpus's annotators marked its dialogue act, and as DialogBank's gold annotation marks each act of its dialogues, under ISO 24617-2's general-purpose functions",
   "measures": [
     {
       "key": "question-found",
@@ -24,6 +24,27 @@
       "says": "percent of its Inform acts the router reads as a fact (an untimed event counted as one)",
       "direction": "atLeast",
       "threshold": 90,
+      "gate": "test/oracle/intent.test.mjs"
+    },
+    {
+      "key": "dialogue-question-found",
+      "says": "percent of the task dimension's information-seeking acts (DialogBank's readable English dialogues, held out of the repository and read at their pins) the router reads as a question",
+      "direction": "atLeast",
+      "threshold": 19,
+      "gate": "test/oracle/intent.test.mjs"
+    },
+    {
+      "key": "dialogue-task-found",
+      "says": "percent of its directive and commissive acts that open an action (instruct, request, suggest, offer, promise) the router reads as a task",
+      "direction": "atLeast",
+      "threshold": 11,
+      "gate": "test/oracle/intent.test.mjs"
+    },
+    {
+      "key": "dialogue-fact-found",
+      "says": "percent of its information-providing acts the router reads as a fact",
+      "direction": "atLeast",
+      "threshold": 95,
       "gate": "test/oracle/intent.test.mjs"
     }
   ]

@@ -12,15 +12,16 @@ in site/person/icf.mjs are marked as the Prism's (1.2.5).
 --check writes nothing and refuses a stale model; --cache DIR keeps fetches.
 """
 import csv
-import hashlib
 import io
 import json
 import pathlib
 import re
 import sys
-import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "standards"))
+import abnf  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SPEC = json.loads((ROOT / "app/specs/oracle/spec.json").read_text(encoding="utf-8"))
@@ -39,20 +40,7 @@ def refuse(why):
 
 
 def fetch(key, url, sha256):
-    path = cache / key if cache else None
-    if path and path.exists():
-        data = path.read_bytes()
-    else:
-        request = urllib.request.Request(url, headers={"User-Agent": "prism-person-gen"})
-        with urllib.request.urlopen(request, timeout=120) as response:
-            data = response.read()
-        if path:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(data)
-    digest = hashlib.sha256(data).hexdigest()
-    if digest != sha256:
-        refuse(f"{url} is {digest}, not the pinned {sha256}")
-    return data
+    return abnf.pinned_bytes(url, sha256, cache and cache / key, refuse, {"User-Agent": "prism-person-gen"}, 120)
 
 
 def tabulation(raw):

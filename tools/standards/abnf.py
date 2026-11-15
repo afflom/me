@@ -19,13 +19,41 @@ A grammar is the rules of one or more pinned texts; a rule defined twice must
 be defined the same way, an "=/" adds alternatives, and every rule referred to
 must be defined, bound or imported, or the grammar is refused.
 """
+import hashlib
 import re
+import time
+import urllib.request
 
 PAGE_FOOT = re.compile(r"\[Page \d+\]\s*$")
 
 
-def unpaginate(text):
-    """The RFC's text without its page breaks: footer, form feed, header and the padding around them."""
+def pinned_bytes(url, sha256, path, refuse, headers={}, timeout=60):
+    """The bytes at a URL, from the cache when kept there, refused unless their SHA-256 is the pinned one."""
+    if path and path.exists():
+        data = path.read_bytes()
+    else:
+        # A publisher that refuses or drops one request is asked again before the run fails.
+        for wait in (2, 8, 30, None):
+            try:
+                with urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=timeout) as response:
+                    data = response.read()
+                break
+            except OSError:
+                if wait is None:
+                    raise
+                time.sleep(wait)
+        if path:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+    digest = hashlib.sha256(data).hexdigest()
+    if digest != sha256:
+        refuse(f"{url} is {digest}, not the pinned {sha256}")
+    return data
+
+
+def unpaginate(text, examples=False):
+    """The RFC's text without its page breaks: footer, form feed, header and the padding around them.
+    examples: a break between two lines of one indented example joins them; elsewhere it is a paragraph break."""
     lines = text.replace("\r\n", "\n").split("\n")
     out = []
     i = 0
@@ -43,6 +71,8 @@ def unpaginate(text):
                 i += 1
             while i < len(lines) and not lines[i].strip():
                 i += 1
+            if examples and not (out and i < len(lines) and out[-1].startswith("   ") and lines[i].startswith("   ")):
+                out.append("")
             continue
         out.append(line)
         i += 1
