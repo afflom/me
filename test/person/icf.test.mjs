@@ -37,10 +37,7 @@ const TABULATION = "app/specs/oracle/icf/SimpleTabulation-ICF-en.txt";
 const PIECE = JSON.parse(readFileSync("generators/pipeline.json", "utf8")).pieceMaximum;
 const program = (generator, files) => {
   const stage = mkdtempSync(join(tmpdir(), "prism-icf-"));
-  for (const [path, bytes] of files) {
-    mkdirSync(join(stage, dirname(path)), { recursive: true });
-    writeFileSync(join(stage, path), bytes);
-  }
+  for (const [path, bytes] of files) mkdirSync(join(stage, dirname(path)), { recursive: true }), writeFileSync(join(stage, path), bytes);
   const tar = spawnSync("tar", ["--format=ustar", "--sort=name", "--mtime=@0", "--owner=0", "--group=0", "--numeric-owner", "-b", "1", "-cf", "-", "-C", stage, ...files.map(([p]) => p)]);
   writeFileSync(join(stage, "request"), Buffer.concat([Buffer.from(`${generator} out\n`), tar.stdout]));
   const run = spawnSync("generators/person/bin/prism-generators", ["run", join(stage, "request")]);
@@ -48,15 +45,9 @@ const program = (generator, files) => {
   const report = run.stdout.toString("utf8");
   return report.startsWith("written\n") ? { out: report.slice(8) } : { why: report };
 };
-const pieces = (bytes) => {
-  const out = [];
-  let start = 0;
-  while (start < bytes.length) {
-    let end = Math.min(start + PIECE, bytes.length);
-    if (end < bytes.length) end = bytes.lastIndexOf(10, end - 1) + 1;
-    out.push(bytes.subarray(start, end));
-    start = end;
-  }
+// Cut at line ends into pieces of at most PIECE bytes, as split -C does.
+const pieces = (bytes, out = []) => {
+  for (let start = 0, end; start < bytes.length; start = end) out.push(bytes.subarray(start, (end = start + PIECE >= bytes.length ? bytes.length : bytes.lastIndexOf(10, start + PIECE - 1) + 1)));
   return out;
 };
 const structure = (bytes) => {
