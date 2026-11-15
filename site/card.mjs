@@ -40,21 +40,10 @@ async function relayConsent() {
 // nothing; an item kept only as a hash says only that.
 const lenient = new TextDecoder("utf-8", { fatal: false });
 
-// RFC 5322 and RFC 5545 fold long lines; unfold before reading a field. A
-// message's fold keeps its white space (RFC 5322 2.2.3); a calendar's fold
-// removes the line break and the one space after it (RFC 5545 3.1).
-const unfold = (text) => text.replace(/\r?\n(?=[ \t])/g, "");
+// RFC 5545 folds long lines; a calendar's fold removes the line break and
+// the one space after it (RFC 5545 3.1). A message's fields are read by their
+// grammar (site/read/mail.mjs), folding included.
 const unfoldCalendar = (text) => text.replace(/\r?\n[ \t]/g, "");
-
-function headers(text) {
-  const head = unfold(text.split(/\r?\n\r?\n/, 1)[0]);
-  const out = {};
-  for (const line of head.split(/\r?\n/)) {
-    const at = line.indexOf(":");
-    if (at > 0) out[line.slice(0, at).trim().toLowerCase()] ??= line.slice(at + 1).trim();
-  }
-  return out;
-}
 
 // RFC 2047 encoded words, the common case of a subject or a sender's name.
 // White space between two adjacent encoded words, folding included, is not
@@ -71,33 +60,6 @@ export function headerWords(value = "") {
     }
   });
 }
-
-// RFC 5322 3.2.2: a comment is parenthesised (nested, with quoted pairs) outside a quoted string.
-function uncomment(value = "") {
-  let out = "", depth = 0, quoted = false;
-  for (let i = 0; i < value.length; i++) {
-    const c = value[i];
-    if (c === "\\" && (quoted || depth)) { if (!depth) out += c + (value[i + 1] ?? ""); i++; continue; }
-    if (!depth && c === '"') quoted = !quoted;
-    if (!quoted && c === "(") { depth++; continue; }
-    if (!quoted && depth && c === ")") { depth--; continue; }
-    if (!depth) out += c;
-  }
-  return out.replace(/\s+/g, " ").trim();
-}
-
-const person = (raw = "") => {
-  const from = uncomment(raw);
-  const named = /^\s*"?([^"<]+?)"?\s*<[^>]+>\s*$/.exec(from);
-  return headerWords(named ? named[1] : from.replace(/[<>]/g, ""));
-};
-
-// The address a field names first (RFC 5322 3.4 addr-spec), without its comments: "pete@silly.test".
-const addressOf = (raw = "") => {
-  const plain = uncomment(raw);
-  const spec = /<\s*([^<>]+?)\s*>/.exec(plain)?.[1] ?? /[^\s,;:<>"]+@[^\s,;<>"]+/.exec(plain)?.[0] ?? "";
-  return spec.replace(/\s+/g, "").toLowerCase();
-};
 
 function calendarLine(text, name) {
   return new RegExp(`^${name}((?:;[^:]*)?):(.*)$`, "mi").exec(unfoldCalendar(text));
@@ -156,8 +118,9 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
   if (outcome !== "restore") return { ...base, sealed: true, title: "", who: "", text: "", body: "" };
   let text = lenient.decode(bytes);
   if (base.media === "message") {
-    const h = headers(text);
-    const when = Date.parse(h.date ?? "");
+    // Its header, each field by its specification's grammar (site/read/mail.mjs).
+    const h = reader?.messageHeader ? reader.messageHeader(text) : { from: [], to: [], at: NaN, subject: "", fromWords: "", inReplyTo: [], references: [] };
+    const when = h.at;
     // A message the owner sent has no From: the other party is its To.
     const said = reader ? reader.messageBody(text) : text.split(/\r?\n\r?\n/).slice(1).join("\n\n").trim();
     // An invitation it carries (RFC 6047) reads as its event does, after what the sender wrote.
@@ -165,16 +128,17 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const carries = event ? readItem({ address: `${address}#event`, outcome, bytes: new TextEncoder().encode(event), meta: { about: { media: "calendar", domain: 5 } }, at }) : null;
     const body = [said, carries?.body].filter(Boolean).join("\n\n");
     // Its place in its conversation (RFC 5322 3.6.4): what it is, what it answers, what it builds on.
-    const ids = (field) => (h[field] ?? "").match(/<[^<>\s]+>/g) ?? [];
-    const place = { ...(ids("message-id").length ? { id: ids("message-id")[0] } : {}), ...(ids("in-reply-to").length ? { replyTo: ids("in-reply-to") } : {}), ...(ids("references").length ? { refs: ids("references") } : {}) };
+    const place = { ...(h.id ? { id: h.id } : {}), ...(h.inReplyTo.length ? { replyTo: h.inReplyTo } : {}), ...(h.references.length ? { refs: h.references } : {}) };
     // Who it comes from: its sender's address, and the list it came through (RFC 2919 List-Id).
-    const list = /<([^<>\s]+)>/.exec(h["list-id"] ?? "")?.[1]?.toLowerCase();
-    const from = { ...(addressOf(h.from) ? { from: addressOf(h.from) } : {}), ...(list ? { list } : {}) };
+    const sender = h.from[0]?.address.toLowerCase();
+    const from = { ...(sender ? { from: sender } : {}), ...(h.list ? { list: h.list } : {}) };
     // The schema.org objects it carries (a booking, an order), as its sender typed them.
     const markup = reader?.messageMarkup ? reader.messageMarkup(text) : [];
     // A message without a subject is headed by its first words, as a mail client lists it.
-    const title = headerWords(h.subject ?? "").replace(/\s+/g, " ").trim() || headline(said);
-    return { ...base, ...place, ...from, ...(markup.length ? { markup } : {}), at: Number.isNaN(when) ? base.at : when, title, who: person(h.from || h.to), text, body, ...(carries ? { carries } : {}) };
+    const title = headerWords(h.subject).replace(/\s+/g, " ").trim() || headline(said);
+    const first = h.from[0] ?? h.to[0];
+    const who = first ? (first.name ? headerWords(first.name) : first.address) : headerWords(h.fromWords);
+    return { ...base, ...place, ...from, ...(markup.length ? { markup } : {}), at: Number.isNaN(when) ? base.at : when, title, who, text, body, ...(carries ? { carries } : {}) };
   }
   if (base.media === "calendar") {
     // The event's own fields: the calendar's time zones come first and carry DTSTARTs of their own (1970).

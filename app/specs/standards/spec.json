@@ -19,7 +19,9 @@
     "site/router/parts.mjs",
     "site/coherence/people.mjs",
     "site/dest/dest.mjs",
-    "site/time/time.mjs"
+    "site/time/time.mjs",
+    "site/read/mail.mjs",
+    "site/read/grammar/mail.mjs"
    ],
    "realizedBy": [
     "ST-01"
@@ -39,7 +41,9 @@
     }
    ],
    "governs": [
-    "site/read/read.mjs"
+    "site/read/read.mjs",
+    "site/read/mail.mjs",
+    "site/read/grammar/mail.mjs"
    ],
    "realizedBy": [
     "ST-01"
@@ -59,7 +63,9 @@
     }
    ],
    "governs": [
-    "site/read/read.mjs"
+    "site/read/read.mjs",
+    "site/read/mail.mjs",
+    "site/read/grammar/mail.mjs"
    ],
    "realizedBy": [
     "ST-01"
@@ -119,7 +125,8 @@
     }
    ],
    "governs": [
-    "site/device/device.mjs"
+    "site/device/device.mjs",
+    "site/read/mail.mjs"
    ],
    "realizedBy": [
     "ST-01"
@@ -961,9 +968,20 @@
    "key": "rfc2183",
    "title": "RFC 2183 Content-Disposition header field",
    "issuer": "IETF",
-   "text": null,
-   "unpinned": "pinning with the bcp14 extractor",
-   "governs": [],
+   "text": {
+    "url": "https://www.rfc-editor.org/rfc/rfc2183.txt",
+    "sha256": "ae813297acfd928d2b8918eb2ee5ca8d73aa5874b568a4051e75f1392f9a7198"
+   },
+   "inventories": [
+    {
+     "extract": "bcp14"
+    }
+   ],
+   "governs": [
+    "site/read/mail.mjs",
+    "site/read/grammar/mail.mjs",
+    "site/read/read.mjs"
+   ],
    "realizedBy": [
     "ST-01"
    ]
@@ -972,9 +990,19 @@
    "key": "rfc2231",
    "title": "RFC 2231 MIME parameter value and encoded word extensions",
    "issuer": "IETF",
-   "text": null,
-   "unpinned": "pinning with the bcp14 extractor",
-   "governs": [],
+   "text": {
+    "url": "https://www.rfc-editor.org/rfc/rfc2231.txt",
+    "sha256": "e69cbc8c05097736c5296575e7a2e0cb2a2a09c522640eb40ecc4a9dca56076d"
+   },
+   "inventories": [
+    {
+     "extract": "bcp14"
+    }
+   ],
+   "governs": [
+    "site/read/mail.mjs",
+    "site/read/grammar/mail.mjs"
+   ],
    "realizedBy": [
     "ST-01"
    ]
@@ -1370,6 +1398,27 @@
     "app/src/PrismBrowser.lex.tex",
     "app/src/PrismBrowserProofs.lex.tex",
     "site/google/guest.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc5234",
+   "title": "RFC 5234 Augmented BNF for Syntax Specifications: ABNF",
+   "issuer": "IETF",
+   "text": {
+    "url": "https://www.rfc-editor.org/rfc/rfc5234.txt",
+    "sha256": "fc871020f53baa6b60fc6835c557b433f38d53c5cc41ab56d03622b084f53a12"
+   },
+   "inventories": [
+    {
+     "extract": "bcp14"
+    }
+   ],
+   "governs": [
+    "site/read/abnf.mjs",
+    "site/read/grammar/mail.mjs"
    ],
    "realizedBy": [
     "ST-01"
