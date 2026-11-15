@@ -9,9 +9,7 @@ definition{
   name: browserStandardCount,
   parameters: [rows : (List PrismBrowser::BrowserStandard)],
   result: Nat,
-  body: (match rows
-    | List.nil => 0
-    | List.cons row rest => ((browserStandardCount rest) + 1)),
+  body: (match rows | List.nil => 0 | List.cons row rest => ((browserStandardCount rest) + 1)),
   recursive_argument: rows
 }
 
@@ -19,9 +17,7 @@ definition{
   name: browserPinCount,
   parameters: [rows : (List PrismBrowser::BrowserPin)],
   result: Nat,
-  body: (match rows
-    | List.nil => 0
-    | List.cons row rest => ((browserPinCount rest) + 1)),
+  body: (match rows | List.nil => 0 | List.cons row rest => ((browserPinCount rest) + 1)),
   recursive_argument: rows
 }
 
@@ -29,9 +25,7 @@ definition{
   name: browserNameCount,
   parameters: [rows : (List String)],
   result: Nat,
-  body: (match rows
-    | List.nil => 0
-    | List.cons row rest => ((browserNameCount rest) + 1)),
+  body: (match rows | List.nil => 0 | List.cons row rest => ((browserNameCount rest) + 1)),
   recursive_argument: rows
 }
 
@@ -66,9 +60,7 @@ definition{
   name: browserCalled,
   parameters: [rows : (List Nat)],
   result: Bool,
-  body: (match rows
-    | List.nil => false
-    | List.cons row rest => true)
+  body: (match rows | List.nil => false | List.cons row rest => true)
 }
 
 definition{
@@ -115,9 +107,7 @@ definition{
   name: browserMemberCount,
   parameters: [rows : (List PrismBrowser::BrowserMember)],
   result: Nat,
-  body: (match rows
-    | List.nil => 0
-    | List.cons row rest => ((browserMemberCount rest) + 1)),
+  body: (match rows | List.nil => 0 | List.cons row rest => ((browserMemberCount rest) + 1)),
   recursive_argument: rows
 }
 
