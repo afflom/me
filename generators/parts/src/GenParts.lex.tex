@@ -1,0 +1,467 @@
+\begin{lexlean}{GenParts}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Check}
+\title{Parts reach}
+\begin{semanticmodule}
+definition{
+  name: ptB,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (Foundation.Tar::byteOr s i),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptWs,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 32) || ((b =? 9) || ((b =? 10) || ((b =? 11) || ((b =? 12) || ((b =? 13) || ((27 <? b) && (b <? 32))))))))
+}
+
+definition{
+  name: ptWord,
+  parameters: [b : Nat],
+  result: Bool,
+  body: (((47 <? b) && (b <? 58)) || (((64 <? b) && (b <? 91)) || (((96 <? b) && (b <? 123)) || ((b =? 95) || (127 <? b)))))
+}
+
+definition{
+  name: ptBack,
+  parameters: [s : Bytes, j : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => j
+    | Nat.succ rest => (if (j =? 0) then 0 else (if (ptWs (ptB s (prim subtract j 1 : Nat))) then (ptBack s (prim subtract j 1 : Nat) rest) else j))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptEnds,
+  parameters: [s : Bytes, j : Nat, w : Bytes],
+  result: Bool,
+  body: ((not (j <? (Foundation.Bytes::byteLength w))) && (Check::startsAt s (prim subtract j (Foundation.Bytes::byteLength w) : Nat) w)),
+  axioms: [propext]
+}
+
+definition{
+  name: ptBound,
+  parameters: [s : Bytes, k : Nat],
+  result: Bool,
+  body: ((k =? 0) || (not (ptWord (ptB s (prim subtract k 1 : Nat))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptNew,
+  parameters: [t : Bytes, j : Nat, word : Bytes],
+  result: Bool,
+  body: ((ptEnds t j word) && (let k : Nat := (prim subtract j (Foundation.Bytes::byteLength word) : Nat); (let j3 : Nat := (ptBack t k k); ((0 <? (prim subtract k j3 : Nat)) && (ptEnds t j3 (Check::u "new")))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptPrefix,
+  parameters: [t : Bytes, q : Nat],
+  result: Bool,
+  body: (let j : Nat := (ptBack t q q); (let w : Nat := (prim subtract q j : Nat); (((ptEnds t j (Check::u "from")) && (ptBound t (prim subtract j 4 : Nat))) || (((0 <? w) && ((ptEnds t j (Check::u "import")) && (ptBound t (prim subtract j 6 : Nat)))) || ((0 <? j) && (((ptB t (prim subtract j 1 : Nat)) =? 40) && (let j2 : Nat := (ptBack t (prim subtract j 1 : Nat) j); (((ptEnds t j2 (Check::u "import")) && (ptBound t (prim subtract j2 6 : Nat))) || ((ptNew t j2 (Check::u "Worker")) || (ptNew t j2 (Check::u "URL"))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptQuote,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 34) || ((b =? 39) || (b =? 96)))
+}
+
+definition{
+  name: ptCloseFrom,
+  parameters: [t : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (Foundation.Bytes::byteLength t)
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength t) <? (i + 1)) then (Foundation.Bytes::byteLength t) else (if (ptQuote (ptB t i)) then i else (ptCloseFrom t (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptShape,
+  parameters: [c : Bytes],
+  result: Bool,
+  body: (let n : Nat := (Foundation.Bytes::byteLength c); (let pre : Nat := (if (Check::startsAt c 0 (Check::u "./")) then 2 else (if (Check::startsAt c 0 (Check::u "../")) then 3 else 0)); (let suf : Nat := (if (ptEnds c n (Check::u ".mjs")) then 4 else (if (ptEnds c n (Check::u ".js")) then 3 else 0)); ((0 <? pre) && ((0 <? suf) && (not (n <? ((pre + 1) + suf)))))))),
+  axioms: [propext]
+}
+
+definition{
+  name: ptSegEnd,
+  parameters: [c : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (Foundation.Bytes::byteLength c)
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength c) <? (i + 1)) then (Foundation.Bytes::byteLength c) else (if ((ptB c i) =? 47) then i else (ptSegEnd c (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptDropLast,
+  parameters: [out : Bytes],
+  result: Bytes,
+  body: (let k : Nat := (Check::lastSlash out 0 0 (Foundation.Bytes::byteLength out)); (if (k =? 0) then 0x else (Foundation.Json::span out 0 (prim subtract k 1 : Nat)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptNorm,
+  parameters: [c : Bytes, i : Nat, out : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength c) <? (i + 1)) then out else (let e : Nat := (ptSegEnd c i (Foundation.Bytes::byteLength c)); (let seg : Bytes := (Foundation.Json::span c i e); (if (((Foundation.Bytes::byteLength seg) =? 0) || (Check::same seg (Check::u "."))) then (ptNorm c (e + 1) out rest) else (if (Check::same seg (Check::u "..")) then (if ((Foundation.Bytes::byteLength out) =? 0) then 0x else (ptNorm c (e + 1) (ptDropLast out) rest)) else (ptNorm c (e + 1) (if ((Foundation.Bytes::byteLength out) =? 0) then seg else (Check::cat (cons out (cons 0x2f (cons seg (nil Bytes)))))) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptDir,
+  parameters: [p : Bytes],
+  result: Bytes,
+  body: (let k : Nat := (Check::lastSlash p 0 0 (Foundation.Bytes::byteLength p)); (if (k =? 0) then 0x else (Foundation.Json::span p 0 (prim subtract k 1 : Nat)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptRel,
+  parameters: [src : Bytes, spec : Bytes],
+  result: Bytes,
+  body: (let c : Bytes := (Check::cat (cons (ptDir src) (cons 0x2f (cons spec (nil Bytes))))); (ptNorm c 0 0x ((Foundation.Bytes::byteLength c) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptAddTok,
+  parameters: [acc : Bytes, r : Bytes],
+  result: Bytes,
+  body: (if (Check::contains (Foundation.Bytes::appendBytes acc 0x20) (Check::cat (cons 0x20 (cons r (cons 0x20 (nil Bytes)))))) then acc else (Check::cat (cons acc (cons 0x20 (cons r (nil Bytes)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptKeep,
+  parameters: [acc : Bytes, known : Bytes, r : Bytes],
+  result: Bytes,
+  body: (if (((Foundation.Bytes::byteLength r) =? 0) || (not (Check::inLines known r))) then acc else (ptAddTok acc r)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptSpecs,
+  parameters: [t : Bytes, i : Nat, src : Bytes, known : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength t) <? (i + 1)) then acc else (if ((ptQuote (ptB t i)) && (ptPrefix t i)) then (let close : Nat := (ptCloseFrom t (i + 1) (Foundation.Bytes::byteLength t)); (if ((Foundation.Bytes::byteLength t) <? (close + 1)) then acc else (let c : Bytes := (Foundation.Json::span t (i + 1) close); (if (ptShape c) then (ptSpecs t (close + 1) src known (if (Check::contains c 0x0a) then acc else (ptKeep acc known (ptRel src c))) rest) else (ptSpecs t (i + 1) src known acc rest))))) else (ptSpecs t (i + 1) src known acc rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptNameEnd,
+  parameters: [t : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (ptB t i); (if ((Foundation.Bytes::byteLength t) <? (i + 1)) then i else (if (((47 <? b) && (b <? 58)) || (((64 <? b) && (b <? 91)) || (((96 <? b) && (b <? 123)) || ((b =? 95) || (b =? 46))))) then (ptNameEnd t (i + 1) rest) else i)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptRunEnd,
+  parameters: [t : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (ptB t i); (if ((Foundation.Bytes::byteLength t) <? (i + 1)) then i else (if (((47 <? b) && (b <? 58)) || (((64 <? b) && (b <? 91)) || (((96 <? b) && (b <? 123)) || (b =? 95)))) then (ptRunEnd t (i + 1) rest) else i)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptDotEnd,
+  parameters: [n : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (Foundation.Bytes::byteLength n)
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength n) <? (i + 1)) then (Foundation.Bytes::byteLength n) else (if ((ptB n i) =? 46) then i else (ptDotEnd n (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptDots,
+  parameters: [n : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let e : Nat := (ptDotEnd n i (Foundation.Bytes::byteLength n)); (let acc2 : Bytes := (Foundation.Bytes::appendBytes acc (Foundation.Json::span n i e)); (if ((Foundation.Bytes::byteLength n) <? (e + 1)) then acc2 else (ptDots n (e + 1) (Foundation.Bytes::appendBytes acc2 0x2f) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptLexPath,
+  parameters: [module : Bytes],
+  result: Bytes,
+  body: (Check::cat (cons (Check::u "app/src/") (cons (ptDots module 0 0x ((Foundation.Bytes::byteLength module) + 1)) (cons (Check::u ".lex.tex") (nil Bytes))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptLex,
+  parameters: [t : Bytes, i : Nat, known : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength t) <? (i + 1)) then acc else (if (((ptB t i) =? 92) && (Check::startsAt t i 0x5c696d706f72746d6f64756c657b)) then (let s : Nat := (i + 14); (let e : Nat := (ptNameEnd t s (Foundation.Bytes::byteLength t)); (if ((s <? e) && ((ptB t e) =? 125)) then (ptLex t (e + 1) known (ptKeep acc known (ptLexPath (Foundation.Json::span t s e))) rest) else (ptLex t (i + 1) known acc rest)))) else (ptLex t (i + 1) known acc rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptNthLine,
+  parameters: [t : Bytes, i : Nat, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (Foundation.Bytes::byteLength t)
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength t) <? (i + 1)) then (Foundation.Bytes::byteLength t) else (if ((ptB t i) =? 10) then (if (k =? 1) then i else (ptNthLine t (i + 1) (prim subtract k 1 : Nat) rest)) else (ptNthLine t (i + 1) k rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptTwin,
+  parameters: [h : Bytes, i : Nat, known : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength h) <? (i + 1)) then acc else (if (((ptB h i) =? 97) && (Check::startsAt h i (Check::u "app/src/"))) then (let s : Nat := (i + 8); (let e : Nat := (ptRunEnd h s (Foundation.Bytes::byteLength h)); (if ((s <? e) && (Check::startsAt h e (Check::u ".lex.tex"))) then (ptTwin h (e + 8) known (ptKeep acc known (Foundation.Json::span h i (e + 8))) rest) else (ptTwin h (i + 1) known acc rest)))) else (ptTwin h (i + 1) known acc rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptEdgeLine,
+  parameters: [name : Bytes, acc : Bytes],
+  result: Bytes,
+  body: (if ((Foundation.Bytes::byteLength acc) =? 0) then 0x else (Check::cat (cons name (cons acc (cons 0x0a (nil Bytes))))))
+}
+
+definition{
+  name: ptLexFile,
+  parameters: [name : Bytes],
+  result: Bool,
+  body: (ptEnds name (Foundation.Bytes::byteLength name) (Check::u ".lex.tex")),
+  axioms: [propext]
+}
+
+definition{
+  name: path,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes (Check::notGen archive) 0x0a),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: chromium,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let name : Bytes := (Check::notGen archive); (if (Check::contains (Check::file archive name) (Check::u "chromium")) then (Foundation.Bytes::appendBytes name 0x0a) else 0x)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: imports,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let name : Bytes := (Check::notGen archive); (let t : Bytes := (Check::file archive name); (let known : Bytes := (Foundation.Bytes::appendBytes (Check::file archive (Check::u ".gen/pt-parts")) (Check::file archive (Check::u ".gen/pt-helpers"))); (let acc : Bytes := (ptSpecs t 0 name known 0x ((Foundation.Bytes::byteLength t) + 1)); (ptEdgeLine name (if (ptLexFile name) then (ptLex t 0 known acc ((Foundation.Bytes::byteLength t) + 1)) else acc)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: twins,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let name : Bytes := (Check::notGen archive); (if (ptLexFile name) then 0x else (let t : Bytes := (Check::file archive name); (let h : Bytes := (Foundation.Json::span t 0 (ptNthLine t 0 6 ((Foundation.Bytes::byteLength t) + 1))); (ptEdgeLine name (ptTwin h 0 (Check::file archive (Check::u ".gen/pt-parts")) 0x ((Foundation.Bytes::byteLength h) + 1))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptGt,
+  parameters: [t : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (Foundation.Bytes::byteLength t)
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength t) <? (i + 1)) then (Foundation.Bytes::byteLength t) else (if ((ptB t i) =? 62) then i else (ptGt t (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptDq,
+  parameters: [t : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (Foundation.Bytes::byteLength t)
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength t) <? (i + 1)) then (Foundation.Bytes::byteLength t) else (if ((ptB t i) =? 34) then i else (ptDq t (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptSrcOk,
+  parameters: [t : Bytes, k : Nat],
+  result: Bool,
+  body: ((Check::startsAt t k 0x7372633d22) && ((not (ptWord (ptB t (prim subtract k 1 : Nat)))) && (let q : Nat := (ptDq t (k + 5) (Foundation.Bytes::byteLength t)); ((q <? (Foundation.Bytes::byteLength t)) && (let v : Bytes := (Foundation.Json::span t (k + 5) q); ((Check::startsAt v 0 (Check::u "./")) && ((not ((Foundation.Bytes::byteLength v) <? 7)) && (ptEnds v (Foundation.Bytes::byteLength v) (Check::u ".mjs"))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptSrcBack,
+  parameters: [t : Bytes, lo : Nat, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if (k <? lo) then 0 else (if (ptSrcOk t k) then (k + 1) else (if (k =? 0) then 0 else (ptSrcBack t lo (prim subtract k 1 : Nat) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptScripts,
+  parameters: [t : Bytes, page : Bytes, parts : Bytes, acc : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength t) <? (i + 1)) then acc else (if (((ptB t i) =? 60) && (Check::startsAt t i (Check::u "<script"))) then (let gt : Nat := (ptGt t (i + 7) (Foundation.Bytes::byteLength t)); (let k1 : Nat := (ptSrcBack t (i + 7) (prim subtract gt 5 : Nat) gt); (if ((k1 =? 0) || ((prim subtract gt 5 : Nat) <? (i + 7))) then (ptScripts t page parts acc (i + 1) rest) else (let k : Nat := (prim subtract k1 1 : Nat); (let q : Nat := (ptDq t (k + 5) (Foundation.Bytes::byteLength t)); (let r : Bytes := (ptRel page (Foundation.Json::span t (k + 5) q)); (ptScripts t page parts (if (Check::inLines parts r) then (Check::cat (cons acc (cons r (cons 0x0a (nil Bytes))))) else acc) (q + 1) rest))))))) else (ptScripts t page parts acc (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: entries,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let page : Bytes := (Check::notGen archive); (let t : Bytes := (Check::file archive page); (ptScripts t page (Check::file archive (Check::u ".gen/pt-parts")) 0x 0 ((Foundation.Bytes::byteLength t) + 1)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rootPart,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (Check::file archive (Check::u "app/specs/parts/spec.json")); (let k : (Option Nat) := (Check::key s (Foundation.Json::root s) "root"); (let r : Bytes := (ptLexPath (if (Check::isNull s k) then (Check::u "Prism") else (Check::str s k))); (if (Check::inLines (Check::file archive (Check::u ".gen/pt-parts")) r) then (Foundation.Bytes::appendBytes r 0x0a) else 0x)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptMention,
+  parameters: [parts : Bytes, i : Nat, t : Bytes, suite : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength parts) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf parts i (Foundation.Bytes::byteLength parts)); (let p : Bytes := (Foundation.Json::span parts i e); (ptMention parts (e + 1) t suite (if ((0 <? (Foundation.Bytes::byteLength p)) && (Check::contains t p)) then (Check::cat (cons acc (cons p (cons 0x20 (cons suite (cons 0x0a (nil Bytes))))))) else acc) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mentions,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let suite : Bytes := (Check::notGen archive); (let parts : Bytes := (Check::file archive (Check::u ".gen/pt-parts")); (ptMention parts 0 (Check::file archive suite) suite 0x ((Foundation.Bytes::byteLength parts) + 1)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptAnyTok,
+  parameters: [line : Bytes, s : Nat, r : Bytes, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength line) <? (s + 1)) then false else (let e : Nat := (Check::wordAfter line s (Foundation.Bytes::byteLength line)); ((Check::inLines r (Foundation.Json::span line s e)) || (ptAnyTok line (e + 1) r rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptPass,
+  parameters: [edges : Bytes, i : Nat, r : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => r
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength edges) <? (i + 1)) then r else (let e : Nat := (Check::lineEndOf edges i (Foundation.Bytes::byteLength edges)); (let line : Bytes := (Foundation.Json::span edges i e); (let a : Bytes := (Check::firstWord line); (ptPass edges (e + 1) (if ((not (Check::inLines r a)) && (ptAnyTok line ((Foundation.Bytes::byteLength a) + 1) r (Foundation.Bytes::byteLength line))) then (Check::cat (cons r (cons a (cons 0x0a (nil Bytes))))) else r) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptFix,
+  parameters: [edges : Bytes, r : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => r
+    | Nat.succ rest => (let r2 : Bytes := (ptPass edges 0 r ((Foundation.Bytes::byteLength edges) + 1)); (if ((Foundation.Bytes::byteLength r2) =? (Foundation.Bytes::byteLength r)) then r else (ptFix edges r2 rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptAnyLine,
+  parameters: [set : Bytes, i : Nat, r : Bytes, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength set) <? (i + 1)) then false else (let e : Nat := (Check::lineEndOf set i (Foundation.Bytes::byteLength set)); ((Check::inLines r (Foundation.Json::span set i e)) || (ptAnyLine set (e + 1) r rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptOut,
+  parameters: [
+    suites : Bytes,
+    i : Nat,
+    part : Bytes,
+    r : Bytes,
+    chrome : Bytes,
+    anyEntry : Bool,
+    named : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength suites) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf suites i (Foundation.Bytes::byteLength suites)); (let s : Bytes := (Foundation.Json::span suites i e); (let pair : Bytes := (Check::cat (cons part (cons 0x20 (cons s (nil Bytes))))); (ptOut suites (e + 1) part r chrome anyEntry named (if ((0 <? (Foundation.Bytes::byteLength s)) && ((Check::inLines r s) || ((anyEntry && (Check::inLines chrome s)) || (Check::inLines named pair)))) then (Check::cat (cons acc (cons pair (cons 0x0a (nil Bytes))))) else acc) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: reach,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let one : Bytes := (Check::file archive (Check::u ".gen/pt-parts")); (let part : Bytes := (Foundation.Json::span one 0 (Check::lineEndOf one 0 (Foundation.Bytes::byteLength one))); (let edges : Bytes := (Check::cat (cons (Check::file archive (Check::u ".gen/pt-imports")) (cons (Check::file archive (Check::u ".gen/pt-tests")) (cons (Check::file archive (Check::u ".gen/pt-twins")) (nil Bytes))))); (let r : Bytes := (ptFix edges (Foundation.Bytes::appendBytes part 0x0a) ((Foundation.Bytes::byteLength edges) + 1)); (let ents : Bytes := (Foundation.Bytes::appendBytes (Check::file archive (Check::u ".gen/pt-entries")) (Check::file archive (Check::u ".gen/pt-root"))); (let suites : Bytes := (Check::file archive (Check::u ".gen/pt-suites")); (ptOut suites 0 part r (Check::file archive (Check::u ".gen/pt-chromium")) (ptAnyLine ents 0 r ((Foundation.Bytes::byteLength ents) + 1)) (Check::file archive (Check::u ".gen/pt-mentions")) 0x ((Foundation.Bytes::byteLength suites) + 1)))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

@@ -11,7 +11,9 @@
 # and must fit the request bound. A step with "split" runs once per piece of that
 # file, cut at line ends; a step with "each" runs once per element of a JSON array;
 # a step with "glob" runs once per tracked file its patterns match (cut the same
-# way), with its "inputs" beside it; its output is the outputs joined in order. Outputs under .gen/ are
+# way; with "head": true only its first piece), with its "inputs" beside it;
+# a step with "lines" runs once per line of that file, beside its "inputs";
+# its output is the outputs joined in order. Outputs under .gen/ are
 # intermediate and never committed.
 set -eu
 cd "$(dirname "$0")/../.."
@@ -78,7 +80,8 @@ echo "$steps" | while read -r step; do
   : > "$work/out"
   split_path=$(echo "$step" | js .split)
   each_path=$(echo "$step" | js .each.file)
-  globs=$(echo "$step" | js .glob)
+  globs=$(echo "$step" | js .glob); head=$(echo "$step" | js .head)
+  lines_path=$(echo "$step" | js .lines)
   if [ -n "$globs" ]; then
     # One request per tracked file the globs match (per piece, when it is
     # larger than a piece), staged at its path beside the step's inputs; a
@@ -102,8 +105,19 @@ echo "$steps" | while read -r step; do
         rm -rf "$work/stage"; cp -r "$work/with" "$work/stage"; mkdir -p "$work/stage/$(dirname "$f")"
         cp "$p" "$work/stage/$f"
         run "$gen" "$out" "$work/stage" "$f" $ins
+        [ "$head" != true ] || break
       done
     done
+  elif [ -n "$lines_path" ]; then
+    # One request per line of a file, staged as that file holding only that
+    # line, beside the step's inputs.
+    ins=$(echo "$step" | js .inputs)
+    while IFS= read -r line; do
+      rm -rf "$work/stage"; mkdir -p "$work/stage/$(dirname "$lines_path")"
+      for i in $ins; do mkdir -p "$work/stage/$(dirname "$i")"; cp "$i" "$work/stage/$i"; done
+      printf '%s\n' "$line" > "$work/stage/$lines_path"
+      run "$gen" "$out" "$work/stage" "$lines_path" $ins
+    done < "$lines_path"
   elif [ -n "$each_path" ]; then
     # One request per element of a JSON array, each staged as the file itself.
     js "$(echo "$step" | js .each.array)" < "$each_path" > "$work/elements"

@@ -153,4 +153,14 @@ fn product_pt_01() {
         test.contains("tools/parts/gate.py"),
         "PT-01: the planted defects run the gate"
     );
+    // How a part is checked starts from the suites that reach it, which the
+    // LexLean program generators/parts writes and GN-01 holds.
+    assert!(
+        read("generators/pipeline.json").contains("\"output\": \"test/parts/reach.txt\""),
+        "PT-01: generators/parts writes test/parts/reach.txt"
+    );
+    assert!(
+        gate.contains("test/parts/reach.txt"),
+        "PT-01: tools/parts/gate.py reads the reach generators/parts writes"
+    );
 }

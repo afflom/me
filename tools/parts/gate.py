@@ -121,34 +121,14 @@ def what_of(path, text):
     return names
 
 
-def suites_reaching(parts, texts):
-    """For each part, the suites whose imports reach it."""
-    suites = [p for p in tracked("test/*.test.mjs", "site/*.test.mjs") if "/vendor/" not in p]
-    helpers = {p: (ROOT / p).read_text(encoding="utf-8") for p in tracked("test/*.mjs", "site/*.test.mjs") if "/vendor/" not in p}
+def suites_reaching(parts, texts=None):
+    """For each part, the suites whose imports reach it: test/parts/reach.txt,
+    which the LexLean program generators/parts writes and GN-01 holds."""
     reach = {p: set() for p in parts}
-    for suite in suites:
-        seen, stack = set(), [suite]
-        while stack:
-            cur = stack.pop()
-            if cur in seen:
-                continue
-            seen.add(cur)
-            text = texts.get(cur) or helpers.get(cur) or ""
-            for spec in SPEC_RE.findall(text):
-                r = relative(cur, spec)
-                if r and (r in texts or r in helpers):
-                    stack.append(r)
-            if cur in parts:
-                stack.extend(uses_of(cur, text, parts))
-            if cur == suite and "chromium" in text:
-                stack.extend(ENTRIES & parts)
-        for p in seen & parts:
-            reach[p].add(suite)
-        # A suite may load a part by its path rather than import it (a page script tag).
-        own = (ROOT / suite).read_text(encoding="utf-8")
-        for p in parts:
-            if p in own:
-                reach[p].add(suite)
+    for line in (ROOT / "test/parts/reach.txt").read_text(encoding="utf-8").splitlines():
+        part, suite = line.split(" ")
+        if part in reach:
+            reach[part].add(suite)
     return reach
 
 
@@ -296,7 +276,7 @@ def refusals(spec, product, coherence, parts, ledger=None):
             for q in uses[p]:
                 serves[p] |= serves[q]
 
-    reach = suites_reaching(set(parts), texts)
+    reach = suites_reaching(set(parts))
     conformance = {p: (ROOT / p).read_text(encoding="utf-8") for p in tracked("crates/conformance/tests/*.rs")}
     proofs = {p: {q for q, g in grounded.items() if g.get("proves") and p in uses[q]} for p in parts}
 
