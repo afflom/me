@@ -465,6 +465,12 @@ model does not sanction.
 | `RU-02` | `build` | The owner's words are mapped by the R4 router before they are kept: a jot that names a day and a clock lands once, at that time, in the places its intent and its time name, and nothing reaches the vault while the router refuses |
 | `RU-03` | `build` | Every item the owner can read is taken apart and labeled through PrismRouter: its parts are the values of its own schema, the readers learn the owner's people and topics in this browser first, and each item carries the kind of thing it is, who it is with and what it is about, or nothing while halted or sealed |
 
+## standards
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `ST-01` | `build` | Every part of the Prism answers to a registered standard or says why none applies, and every normative requirement of each standard whose text is pinned by checksum, extracted mechanically from that text, is enforced by a suite that reaches a part it governs, beyond a debt list that only shrinks; a standard whose text is not pinned says why |
+
 ## uorc
 
 | ID | Level | Statement |
