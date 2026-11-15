@@ -51,6 +51,12 @@ model does not sanction.
 | --- | --- | --- |
 | `FR-01` | `build` | With a working worker, the page loads and verifies the archive only in that worker before using its identities or guest |
 
+## generators
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `GN-01` | `build` | Every output generators/pipeline.json names is what its LexLean generator writes, each generator program is built from its sources as they stand, and every program carries generators/foundation byte for byte |
+
 ## google
 
 | ID | Level | Statement |
