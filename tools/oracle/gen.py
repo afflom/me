@@ -80,7 +80,7 @@ held to schema.org's own files: the release's whole graph and attic, the
 JSON-LD context, and every example of the release (the "schemaorg" source). --check refuses either if stale. --cache DIR reads
 and keeps the fetched sources there.
 
-usage: python3 -I tools/oracle/gen.py [--check] [--cache DIR]
+usage: python3 -I tools/oracle/gen.py [--check] [--cache DIR] [--fit-acts OUT]
 """
 import base64
 import csv as csvlib
@@ -1419,7 +1419,11 @@ def nite_spans(root, role):
         yield kind, first, last or first
 
 
-def act_examples(text, source):
+def act_examples(text, source, meetings=None, unnamed=False):
+    # meetings: the series whose acts are taken (the source's test partition
+    # unless given); unnamed: also speakers whose names the corpus has not
+    # marked, for acts that never enter the repository (a fit's training set).
+    meetings = meetings or source["meetings"]
     held = json.loads(text)
     types = ET.fromstring(held[source["types"]].encode("latin-1"))
     names = {t.get(NITE_ID): t.get("name") for t in types.iter() if t.get(NITE_ID)}
@@ -1431,13 +1435,13 @@ def act_examples(text, source):
     people = {t.get(NITE_ID) for t in person.iter()}
     for path in sorted(held):
         m = re.fullmatch(r"dialogueActs/((\w+)\.\w+)\.dialog-act\.xml", path)
-        if not m or m.group(2) not in source["meetings"]:
+        if not m or not any(m.group(2).startswith(series) for series in meetings):
             continue
         words_path, named_path = f"words/{m.group(1)}.words.xml", f"namedEntities/{m.group(1)}.ne.xml"
         if words_path not in held:
             refuse(f"{source['key']} has no words for {m.group(1)}")
         # Only a speaker whose names the corpus has marked can be read without one.
-        if named_path not in held:
+        if named_path not in held and not unnamed:
             continue
         order, at = [], {}
         for w in ET.fromstring(held[words_path].encode("latin-1")):
@@ -1445,7 +1449,7 @@ def act_examples(text, source):
                 at[w.get(NITE_ID)] = len(order)
                 order.append((w.text or "", w.get("punc") == "true"))
         named = set()
-        for kind, first, last in nite_spans(ET.fromstring(held[named_path].encode("latin-1")), "type"):
+        for kind, first, last in (nite_spans(ET.fromstring(held[named_path].encode("latin-1")), "type") if named_path in held else ()):
             if kind in people and first in at and last in at:
                 named.update(range(at[first], at[last] + 1))
         for kind, first, last in nite_spans(ET.fromstring(held[path].encode("latin-1")), "da-aspect"):
@@ -1470,6 +1474,15 @@ def read_similarity(raw):
     pair = json.loads(raw)
     return {"a": pair["a"], "b": pair["b"], "score": pair["score"]}
 
+
+# --fit-acts OUT: the training partition's acts of each act source, for a fit
+# (tools/oracle/fit-intent.mjs) to read; written outside the repository.
+if "--fit-acts" in args:
+    out = pathlib.Path(args[args.index("--fit-acts") + 1])
+    rows = [row for source in SPEC["sources"] if source["examples"] == "acts" for row in act_examples(fetch(source), source, source["train"], unnamed=True)]
+    out.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    print(f"oracle: {len(rows)} training acts to {out}")
+    sys.exit(0)
 
 corpus, texts = [], {}
 for source in SPEC["sources"]:
