@@ -1,0 +1,30 @@
+{
+  "key": "QR-16",
+  "name": "What a line asks of me",
+  "characteristic": "functional suitability",
+  "subcharacteristic": "functional correctness",
+  "says": "the router reads whether a line asks a question, sets a task or gives a fact as the AMI Meeting Corpus's annotators marked its dialogue act, under ISO 24617-2's general-purpose functions",
+  "measures": [
+    {
+      "key": "question-found",
+      "says": "percent of the AMI scenario test partition's Elicit acts (test/oracle/corpus.json) the router reads as a question",
+      "direction": "atLeast",
+      "threshold": 75,
+      "gate": "test/oracle/intent.test.mjs"
+    },
+    {
+      "key": "task-found",
+      "says": "percent of its Suggest and Offer acts the router reads as a task",
+      "direction": "atLeast",
+      "threshold": 6,
+      "gate": "test/oracle/intent.test.mjs"
+    },
+    {
+      "key": "fact-found",
+      "says": "percent of its Inform acts the router reads as a fact (an untimed event counted as one)",
+      "direction": "atLeast",
+      "threshold": 93,
+      "gate": "test/oracle/intent.test.mjs"
+    }
+  ]
+}
