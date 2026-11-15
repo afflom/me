@@ -1,0 +1,56 @@
+{
+  "comment": "The grammars the Prism reads its content by, each the specifications' own ABNF taken from their pinned text by tools/standards/grammar.py (tools/standards/abnf.py) and written to out as data for site/read/abnf.mjs. texts: each specification, pinned by SHA-256, and the sections whose rules it contributes (all, when none are named). lends: a text whose rules are taken only where the others refer to them (RFC 5234's core rules). bindings: a rule its specification states in prose, given here in ABNF with the reason, so a machine can match it; each must replace a prose rule. headers: the header fields the grammar defines, each by the literal its rule opens with (\"Date:\"), the current rule first and its obsolete form (RFC 5322 section 4) after. zones: RFC 5322 section 4.3's obsolete zone names, from its own sentences. witnesses: where to write, for each rule, the shortest field or message the grammar derives through it, so a suite can show the reader matches every rule.",
+  "grammars": [
+    {
+      "key": "mail",
+      "title": "Internet Message Format header fields (RFC 5322, RFC 6532's UTF-8, RFC 2919's List-Id, RFC 5234's core rules)",
+      "out": "site/read/grammar/mail.mjs",
+      "texts": [
+        {
+          "key": "rfc5234",
+          "url": "https://www.rfc-editor.org/rfc/rfc5234.txt",
+          "sha256": "fc871020f53baa6b60fc6835c557b433f38d53c5cc41ab56d03622b084f53a12",
+          "sections": [
+            "B.1"
+          ],
+          "lends": true
+        },
+        {
+          "key": "rfc5322",
+          "url": "https://www.rfc-editor.org/rfc/rfc5322.txt",
+          "sha256": "cb459acca15a2aa895863eaeff6f1d5b9c4ca15578ae3e3706f757787a385969"
+        },
+        {
+          "key": "rfc6532",
+          "url": "https://www.rfc-editor.org/rfc/rfc6532.txt",
+          "sha256": "154317842bdd99e2030117a808d2d74039932d1c1c3d4b014cc865069066c6cb",
+          "sections": [
+            "3"
+          ]
+        },
+        {
+          "key": "rfc2919",
+          "url": "https://www.rfc-editor.org/rfc/rfc2919.txt",
+          "sha256": "aa78f55f7182a3d67dabdf861d27cfe0d0d47e5fd3565d71f9ed4a9d95458bb8"
+        }
+      ],
+      "bindings": {
+        "utf8-2": [
+          "%x80-7FF",
+          "RFC 3629 section 4's two-octet sequences, as the code points they encode: the page reads decoded text, where a UTF-8 sequence is one character"
+        ],
+        "utf8-3": [
+          "%x800-D7FF / %xE000-FFFF",
+          "RFC 3629 section 4's three-octet sequences, as the code points they encode (surrogates are not characters)"
+        ],
+        "utf8-4": [
+          "%x10000-10FFFF",
+          "RFC 3629 section 4's four-octet sequences, as the code points they encode"
+        ]
+      },
+      "zones": "rfc5322",
+      "witnesses": "test/standards/mail.witnesses.json",
+      "headers": true
+    }
+  ]
+}
