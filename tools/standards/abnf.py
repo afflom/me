@@ -248,23 +248,164 @@ def refs(node, out=None):
     return out
 
 
+def prose_in(node):
+    if node[0] == "prose":
+        return True
+    if node[0] in ("alt", "seq"):
+        return any(prose_in(n) for n in node[1:])
+    return node[0] == "rep" and prose_in(node[3])
+
+
 def norm(node):
     return repr(node)
 
 
+def apply_errata(key, text, errata):
+    """The text with each verified erratum applied: what it says, wherever its words stand however they are spaced, replaced once by what it should say."""
+    for e in errata or []:
+        if e.get("status") != "Verified":
+            raise Bad(f"{key} erratum {e.get('id')} is not verified")
+        words = e["says"].split()
+        pattern = re.compile(r"\s+".join(re.escape(w) for w in words))
+        found = list(pattern.finditer(text))
+        if len(found) != e.get("occurs", 1):
+            raise Bad(f"{key} erratum {e['id']}: its text occurs {len(found)} times, not {e.get('occurs', 1)}")
+        for m in reversed(found):
+            indent = len(text[text.rfind("\n", 0, m.start()) + 1:m.start()])
+            should = e["should"].split("\n")
+            text = text[:m.start()] + ("\n" + " " * (indent + 3)).join(l.strip() for l in should) + text[m.end():]
+    return text
+
+
+CFWS = ["rep", 0, 1, ["ref", "cfws"]]
+
+
+def structured(node, lexical, defined):
+    """RFC 822 section 3.1.4: in a structured field, comments and white space may stand between any two of its elements,
+    and before each further one a repetition adds; a lexical rule (a token, a character class) is written whole."""
+    kind = node[0]
+    if kind == "seq":
+        kids = [structured(n, lexical, defined) for n in node[1:]]
+        out = ["seq", kids[0]]
+        for k in kids[1:]:
+            out += [CFWS, k]
+        return out
+    if kind == "alt":
+        return ["alt", *(structured(n, lexical, defined) for n in node[1:])]
+    if kind == "rep":
+        inner = structured(node[3], lexical, defined)
+        return ["rep", node[1], node[2], ["seq", CFWS, inner] if inner[0] == "seq" else inner]
+    return node
+
+
+def notation822(node, defined):
+    """RFC 822's own notation within ABNF: <"> is the double quote, and <name> a rule (RFC 2046's 0*69<bchars>)."""
+    kind = node[0]
+    if kind == "prose":
+        if node[1] == '"':
+            return ["lit", '"']
+        if node[1].lower() in defined:
+            return ["ref", node[1].lower()]
+        return node
+    if kind in ("seq", "alt"):
+        return [kind, *(notation822(n, defined) for n in node[1:])]
+    if kind == "rep":
+        return ["rep", node[1], node[2], notation822(node[3], defined)]
+    return node
+
+
+def rename(node, names):
+    if node[0] == "ref":
+        return ["ref", names.get(node[1], node[1])]
+    if node[0] in ("alt", "seq"):
+        return [node[0], *(rename(n, names) for n in node[1:])]
+    if node[0] == "rep":
+        return ["rep", node[1], node[2], rename(node[3], names)]
+    return node
+
+
+def chars(node, rules, seen=()):
+    """The characters a node matches, as sorted disjoint ranges, if it matches one character from a class."""
+    kind = node[0]
+    if kind == "ref":
+        if node[1] in seen or node[1] not in rules:
+            raise Bad(f"{node[1]} is not a character class")
+        return chars(rules[node[1]], rules, seen + (node[1],))
+    if kind == "range":
+        return [(node[1], node[2])]
+    if kind in ("lit", "cs") and len(node[1]) == 1:
+        c = ord(node[1])
+        out = [(c, c)]
+        if kind == "lit" and node[1].isalpha():
+            out.append((ord(node[1].swapcase()), ord(node[1].swapcase())))
+        return sorted(out)
+    if kind == "alt":
+        return merge([r for n in node[1:] for r in chars(n, rules, seen)])
+    raise Bad("not a character class")
+
+
+def merge(ranges):
+    out = []
+    for lo, hi in sorted(ranges):
+        if out and lo <= out[-1][1] + 1:
+            out[-1] = (out[-1][0], max(hi, out[-1][1]))
+        else:
+            out.append((lo, hi))
+    return out
+
+
+def difference(spec, rules):
+    """A prose class written as one class with others taken out ("CHAR except SPACE, CTLs, or tspecials"), as ABNF ranges."""
+    keep = chars(parse(spec["except"]), rules)
+    for minus in spec["minus"]:
+        for lo, hi in chars(parse(minus), rules):
+            keep = [r for a, b in keep for r in ((a, min(b, lo - 1)), (max(a, hi + 1), b)) if r[0] <= r[1]]
+    node = ["alt", *(["range", a, b] for a, b in keep)]
+    return ["rep", 1, None, node] if spec.get("many") else node
+
+
 def grammar(texts, bindings=None):
-    """The rules of the given texts, each (key, text, sections or None, notation).
+    """The rules of the given texts, each a dict: key, text, and optionally sections, rules (the only ones it gives),
+    lends (it gives only what the others leave undefined), replaces (rules it defines anew over an earlier text's),
+    lexical (its rules written whole, in RFC 822 notation: "all" or a list) and errata (verified, applied first).
 
     Returns {"rules": {name: node}, "from": {name: "key section"}}; bindings
     ({name: [elements, why]}) give a rule a machine-matchable definition where
-    its specification states it in prose, and must each be used."""
+    its specification states it in prose."""
     rules, origin = {}, {}
-    for key, text, sections in texts:
-        for name, op, elements, section in definitions(text, sections):
+    pending = []
+    renamed = {}
+    for t in texts:
+        key = t["key"]
+        text = apply_errata(key, unpaginate(t["text"]), t.get("errata"))
+        found = definitions(text, t.get("sections"))
+        if t.get("rules"):
+            missing = set(t["rules"]) - {d[0] for d in found}
+            if missing:
+                raise Bad(f"{key} does not define {sorted(missing)}")
+            found = [d for d in found if d[0] in t["rules"]]
+        names = {d[0] for d in found}
+        for name, op, elements, section in found:
             try:
                 node = parse(elements)
             except Bad as why:
                 raise Bad(f"{key} {section} {name}: {why}") from None
+            if op == ":=":
+                node = notation822(node, names)
+                lexical = t.get("lexical", [])
+                if lexical != "all" and name not in lexical:
+                    node = structured(node, lexical, names)
+            pending.append((t, name, op, node, section))
+    # A text's own rules first; then the ones lent where nothing else defines them; then what "=/" adds.
+    for stage in ("own", "lent", "adds"):
+        for t, name, op, node, section in pending:
+            key = t["key"]
+            if (stage == "adds") != (op == "=/") or (stage != "adds" and bool(t.get("lends")) != (stage == "lent")):
+                continue
+            if stage == "lent" and name in rules:
+                # A lent rule another text names otherwise keeps its own meaning for the text that lends it (RFC 5646's language is not RFC 2231's).
+                renamed.setdefault(key, {})[name] = f"{key}:{name}"
+                name = f"{key}:{name}"
             if op == "=/":
                 if name not in rules:
                     raise Bad(f"{key} {section} {name} adds to a rule not yet defined")
@@ -272,18 +413,29 @@ def grammar(texts, bindings=None):
                 rules[name] = ["alt", *(old[1:] if old[0] == "alt" else [old]), node]
                 origin[name] = f"{origin[name]}, {key} {section}"
                 continue
-            if name in rules:
-                if norm(rules[name]) != norm(node):
-                    raise Bad(f"{name} is defined twice, differently ({origin[name]} and {key} {section})")
-                continue
-            rules[name] = node
-            origin[name] = f"{key} {section}"
+            if name in rules and norm(rules[name]) != norm(node):
+                if name in t.get("replaces", []):
+                    rules[name] = node
+                    origin[name] = f"{key} {section} (anew, over {origin[name]})"
+                    continue
+                raise Bad(f"{name} is defined twice, differently ({origin[name]} and {key} {section})")
+            if name not in rules:
+                rules[name] = node
+                origin[name] = f"{key} {section}"
+    for key, names in renamed.items():
+        for name, node in list(rules.items()):
+            if origin[name].split(" ")[0] == key:
+                rules[name] = rename(node, names)
+    for t in texts:
+        for name in t.get("replaces", []):
+            if "anew" not in origin.get(name, ""):
+                raise Bad(f"{t['key']} replaces {name}, which no earlier text defines")
     for name, (elements, why) in (bindings or {}).items():
         if not why:
             raise Bad(f"binding {name} gives no reason")
-        if rules.get(name, ["prose"])[0] != "prose":
+        if name in rules and not prose_in(rules[name]):
             raise Bad(f"binding {name} replaces a rule its specification already states in ABNF")
-        rules[name] = parse(elements)
+        rules[name] = difference(elements, rules) if isinstance(elements, dict) else parse(elements)
         origin[name] = f"bound: {why}"
     missing = sorted({r for n in rules.values() for r in refs(n)} - set(rules))
     if missing:

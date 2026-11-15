@@ -71,3 +71,25 @@ for (const g of spec.grammars) {
     console.log(`${g.key}: the published examples go through ${used.size} of ${Object.keys(table.rules).length} rules; the witnesses through all of them`);
   });
 }
+
+// The MIME specifications' own example fields (RFC 2045, 2046, 2183, 2231, their
+// verified errata applied), each read as Python's email package reads it, or,
+// where that finds it defective, not read as a MIME field at all.
+test("each MIME example field reads as the reference reader reads it", async () => {
+  const { contentType, disposition, readField } = await import("../../site/read/mail.mjs");
+  const { examples } = JSON.parse(readFileSync("test/standards/mail.examples.json", "utf8"));
+  assert.ok(examples.length >= 30);
+  const missed = [];
+  for (const ex of examples) {
+    const field = readField(ex.text);
+    const own = field.name === "content-type" ? "content" : "disposition";
+    if (ex.expect.defective) {
+      if (field.rule === own) missed.push(`${ex.id}: the reference finds it defective, the grammar reads it as ${own}`);
+      continue;
+    }
+    const got = field.name === "content-type" ? contentType([field]) : disposition([field]);
+    const want = { type: ex.expect.type, params: ex.expect.params };
+    if (JSON.stringify({ type: got.type, params: got.params }) !== JSON.stringify(want) && !(JSON.stringify(Object.entries(got.params).sort()) === JSON.stringify(Object.entries(want.params).sort()) && got.type === want.type)) missed.push(`${ex.id}: ${JSON.stringify({ type: got.type, params: got.params })}, not ${JSON.stringify(want)}`);
+  }
+  assert.deepEqual(missed, []);
+});

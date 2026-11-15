@@ -26,12 +26,24 @@ export function headerLines(raw) {
   return out;
 }
 
-// One field, read by its rules in turn, else as an optional field; null if it is not a field at all.
+// One field, read by its rules in turn, else as an optional field; null if it
+// is not a field at all. A field read once is not read again: a message's
+// header is read for its words, its parts and what it carries.
+const known = new Map();
 export function readField(line) {
+  if (known.has(line)) return known.get(line);
+  const field = readOnce(line);
+  if (known.size >= 4096) known.delete(known.keys().next().value);
+  known.set(line, field);
+  return field;
+}
+function readOnce(line) {
   const name = /^([!-9;-~]+)[ \t]*:/.exec(line)?.[1];
   if (!name) return null;
+  // RFC 5322's rules end with the field's CRLF; RFC 2045's leave it to the header they stand in.
+  const bare = line.replace(/\r\n$/, "");
   for (const rule of [...(mail.fields[name.toLowerCase()] ?? []), "optional-field", "obs-optional"]) {
-    const tree = grammar.match(rule, line);
+    const tree = grammar.match(rule, line) ?? grammar.match(rule, bare);
     if (tree) return { name: name.toLowerCase(), rule, tree };
   }
   return { name: name.toLowerCase(), rule: null, tree: null, raw: line };
@@ -159,4 +171,122 @@ export function messageHeader(raw) {
     references: messageIds(one("references")),
     ...(list ? { list: bare(list).toLowerCase() } : {}),
   };
+}
+
+// A MIME entity (RFC 2045 3, RFC 2046 5.1.1): its header fields, read by
+// their grammar, and its body. The header ends at its empty line, or at the
+// first line that is neither a field nor a field's continuation, which begins
+// the body; a part that opens with an empty line has no header.
+export function entity(raw) {
+  const lines = String(raw).split(/(?<=\n)/);
+  let at = 0;
+  let i = 0;
+  for (; i < lines.length; i += 1) {
+    const line = lines[i];
+    if (/^\r?\n$/.test(line)) { at += line.length; i += 1; break; }
+    if (!(/^[!-9;-~]+[ \t]*:/.test(line) || (i > 0 && /^[ \t]/.test(line)))) break;
+    at += line.length;
+  }
+  const head = lines.slice(0, i).join("");
+  return { fields: fieldsOf(head), body: String(raw).slice(at) };
+}
+
+// A parameter's value as written: a token, or a quoted string's content.
+const valueOf = (node) => { const q = node && first(node, "quoted-string"); return q ? quotedText(q) : bare(node).trim(); };
+
+// RFC 2231 3 and 4: a value given in sections ("title*0", "title*1") is
+// joined in their order, and a section marked "*" is percent-encoded in the
+// charset its first section names.
+function joinSections(pieces, charsetOf) {
+  pieces.sort((a, b) => a.section - b.section);
+  const charset = pieces.find((p) => p.encoded && p.section === 0)?.charset || pieces[0].charset || "us-ascii";
+  let out = "";
+  for (const p of pieces) {
+    if (!p.encoded) { out += p.text; continue; }
+    const bytes = [];
+    for (let k = 0; k < p.text.length; k += 1) {
+      if (p.text[k] === "%" && /^[0-9A-Fa-f]{2}$/.test(p.text.slice(k + 1, k + 3))) { bytes.push(parseInt(p.text.slice(k + 1, k + 3), 16)); k += 2; }
+      else bytes.push(p.text.charCodeAt(k) & 0xff);
+    }
+    out += charsetOf(charset, Uint8Array.from(bytes));
+  }
+  return out;
+}
+
+const textIn = (charset, bytes) => { try { return new TextDecoder(charset, { fatal: false }).decode(bytes); } catch { return new TextDecoder("utf-8", { fatal: false }).decode(bytes); } };
+
+// A field's parameters (RFC 2045 5.1 parameter, RFC 2183 2's disposition
+// parameters, RFC 2231 7's sections and charsets), by lower-cased name.
+export function parameters(field) {
+  if (!field?.tree) return {};
+  const nodes = ["parameter", "filename-parm", "creation-date-parm", "modification-date-parm", "read-date-parm", "size-parm"].flatMap((rule) => all(field.tree, rule));
+  const byName = new Map();
+  for (const node of nodes) {
+    const extended = first(node, "extended-parameter");
+    let piece;
+    if (extended) {
+      const name = first(extended, "extended-initial-name") ?? first(extended, "extended-other-names");
+      const other = first(name, "other-sections");
+      const initial = first(extended, "extended-initial-value");
+      piece = {
+        name: bare(first(name, "attribute")).toLowerCase(),
+        section: other ? Number(bare(other).slice(1)) : 0,
+        encoded: true,
+        charset: initial ? bare(first(initial, "charset")) : "",
+        text: bare(first(extended, "extended-other-values")),
+      };
+    } else {
+      const regular = first(node, "regular-parameter-name");
+      const section = regular ? first(regular, "section") : null;
+      const value = first(node, "value") ?? first(node, "quoted-date-time") ?? node;
+      piece = {
+        name: (regular ? bare(first(regular, "attribute")) : bare(node).split("=")[0]).trim().toLowerCase(),
+        section: section ? Number(bare(section).slice(1)) : 0,
+        encoded: false,
+        text: value === node ? bare(node).split("=").slice(1).join("=").trim() : valueOf(value),
+      };
+    }
+    if (!byName.has(piece.name)) byName.set(piece.name, []);
+    byName.get(piece.name).push(piece);
+  }
+  return Object.fromEntries([...byName].map(([name, pieces]) => [name, joinSections(pieces, textIn)]));
+}
+
+// A Content-Type (RFC 2045 5.1): its type and subtype, lower-cased, and its
+// parameters; without one, text/plain in US-ASCII (5.2).
+export function contentType(fields) {
+  const field = fields.find((f) => f.name === "content-type" && f.rule === "content");
+  if (!field) return { type: "text/plain", params: { charset: "us-ascii" }, given: false };
+  return { type: `${bare(first(field.tree, "type")).trim()}/${bare(first(field.tree, "subtype")).trim()}`.toLowerCase(), params: parameters(field), given: true };
+}
+
+// A Content-Transfer-Encoding (RFC 2045 6.1): its mechanism, lower-cased; 7bit when none is given.
+export function transferEncoding(fields) {
+  const field = fields.find((f) => f.name === "content-transfer-encoding" && f.rule === "encoding");
+  return field ? bare(first(field.tree, "mechanism")).trim().toLowerCase() : "7bit";
+}
+
+// A Content-Disposition (RFC 2183 2): inline or attachment (or an extension), and its parameters.
+export function disposition(fields) {
+  const field = fields.find((f) => f.name === "content-disposition" && f.rule === "disposition");
+  return field ? { type: bare(first(field.tree, "disposition-type")).trim().toLowerCase(), params: parameters(field) } : { type: "", params: {} };
+}
+
+// The mailboxes a header names in the given fields, in order; a field no
+// rule of the grammar gives (Delivered-To, RFC 9228) is read as the addr-spec
+// its value is.
+export function mailboxesIn(raw, names) {
+  const fields = fieldsOf(raw);
+  const out = [];
+  for (const name of names) {
+    for (const field of fields.filter((f) => f.name === name)) {
+      const boxes = mailboxes(field);
+      if (boxes.length) out.push(...boxes);
+      else {
+        const spec = grammar.match("addr-spec", unstructured(field));
+        if (spec) out.push({ name: "", address: bare(spec).replace(/\s+/g, "") });
+      }
+    }
+  }
+  return out;
 }
