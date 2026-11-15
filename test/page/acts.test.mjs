@@ -58,6 +58,8 @@ test("every act completes: sent things are kept where they left from, items open
 
     // An event: the one reviewed is the one sent, and it is kept in Calendar.
     await page.click('.pr-go[data-place="calendar"]');
+    // The act waits behind its button by the title.
+    await page.click("#pr-new");
     await page.fill('#pr-act input[type="datetime-local"]', MEETING_AT);
     await page.fill('#pr-act input[type="text"]', MEETING);
     await review();
@@ -70,6 +72,8 @@ test("every act completes: sent things are kept where they left from, items open
 
     // A message: sent through the owner's mail app, kept in Conversations, and it opens to its body.
     await page.click('.pr-go[data-place="conversations"]');
+    // The act waits behind its button by the title.
+    await page.click("#pr-new");
     await page.fill('#pr-act input[type="email"]', TO);
     await page.fill("#pr-act textarea", bodyOf("rfc5322-1"));
     await review();

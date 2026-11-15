@@ -83,6 +83,8 @@ test("the Prism keeps at the model's floors, refuses while halted and drafts onl
     await page.click('.pr-go[data-place="boundary"]');
     await page.uncheck("#pr-halt");
     await page.click('.pr-go[data-place="conversations"]');
+    // The act waits behind its button by the title.
+    await page.click("#pr-new");
     await page.fill('#pr-act input[type="email"]', toOf("rfc5322-1"));
     await page.fill("#pr-act textarea", bodyOf("rfc5322-1"));
     await page.click('#pr-act button[type="submit"]');
