@@ -1,0 +1,40 @@
+{"id": "rfc9554-2.1-17a21ce6", "kind": "should", "ref": "RFC 9554 2.1", "text": "Implementations SHOULD write a combined value of these components in the street address component for backwards compatibility, but they SHOULD ignore the street component during reads if the ADR property value contains any of the new components."}
+{"id": "rfc9554-2.1-2cda4f6c", "kind": "must", "ref": "RFC 9554 2.1", "text": "The component values MUST be specified in their corresponding position."}
+{"id": "rfc9554-2.2-b57daf95", "kind": "should", "ref": "RFC 9554 2.2", "text": "For backwards compatibility, implementations SHOULD add such values to both the newly defined components and their backwards-compatible counterpart."}
+{"id": "rfc9554-2.2-93e05be9", "kind": "should", "ref": "RFC 9554 2.2", "text": "Reading N property values, implementations SHOULD ignore any value in the backwards-compatible component if an equal value is set in the new component accordingly."}
+{"id": "rfc9554-3.1-07cdd224", "kind": "may", "ref": "RFC 9554 3.1", "text": "The following are OPTIONAL ; but MUST NOT occur more than once. ;"}
+{"id": "rfc9554-3.1-e458f0e8", "kind": "may", "ref": "RFC 9554 3.1", "text": "The following are OPTIONAL ; and MAY occur more than once. ;"}
+{"id": "rfc9554-3.2-4ac4de7f", "kind": "must", "ref": "RFC 9554 3.2", "text": "Multiple occurrences of this property MUST be distinguished by the LANGUAGE parameter."}
+{"id": "rfc9554-3.2-07cdd224", "kind": "may", "ref": "RFC 9554 3.2", "text": "The following are OPTIONAL ; but MUST NOT occur more than once. ;"}
+{"id": "rfc9554-3.2-e458f0e8", "kind": "may", "ref": "RFC 9554 3.2", "text": "The following are OPTIONAL ; and MAY occur more than once. ;"}
+{"id": "rfc9554-3.3-0b22f4b5", "kind": "must", "ref": "RFC 9554 3.3", "text": "The LANGUAGE parameter MUST NOT be assigned to this property."}
+{"id": "rfc9554-3.4-c776eee6", "kind": "may", "ref": "RFC 9554 3.4", "text": "Multiple occurrences of this property MAY define pronouns for multiple languages, preferences, and contexts."}
+{"id": "rfc9554-3.4-08dd2971", "kind": "should", "ref": "RFC 9554 3.4", "text": "Multiple pronouns in the same language SHOULD use the PREF parameter; otherwise, the order of preference is implementation- specific."}
+{"id": "rfc9554-3.4-07cdd224", "kind": "may", "ref": "RFC 9554 3.4", "text": "The following are OPTIONAL ; but MUST NOT occur more than once. ;"}
+{"id": "rfc9554-3.4-e458f0e8", "kind": "may", "ref": "RFC 9554 3.4", "text": "The following are OPTIONAL ; and MAY occur more than once. ;"}
+{"id": "rfc9554-3.5-c4fc01a5", "kind": "must", "ref": "RFC 9554 3.5", "text": "The SERVICE-TYPE parameter MUST be assigned to this property if the value type is TEXT, and it MAY be assigned if the value type is URI."}
+{"id": "rfc9554-3.5-846ba1a8", "kind": "must", "ref": "RFC 9554 3.5", "text": "In either case, it MUST NOT be assigned more than once."}
+{"id": "rfc9554-3.5-33017661", "kind": "must", "ref": "RFC 9554 3.5", "text": "In addition to the typical use of this property with URI values, it also allows setting usernames for social media services as free-text TEXT values, in which case the service name MUST be provided as a parameter."}
+{"id": "rfc9554-3.5-59c448c8", "kind": "must", "ref": "RFC 9554 3.5", "text": "Names MUST be considered equal if they match case- insensitively."}
+{"id": "rfc9554-4.3-4baa3563", "kind": "may", "ref": "RFC 9554 4.3", "text": "This parameter MAY be set on any property to define the point in time when the property was created."}
+{"id": "rfc9554-4.3-ef65afcb", "kind": "must", "ref": "RFC 9554 4.3", "text": "The value MUST be a valid TIMESTAMP value as defined in Section 4.3.5 of [RFC6350]."}
+{"id": "rfc9554-4.3-b0e3f1ef", "kind": "should", "ref": "RFC 9554 4.3", "text": "Generally, updating a property value SHOULD NOT change the creation timestamp."}
+{"id": "rfc9554-4.4-248e7c55", "kind": "should", "ref": "RFC 9554 4.4", "text": "This property parameter SHOULD be specified on a property if the property value is derived from some other properties in the same vCard."}
+{"id": "rfc9554-4.4-c1240a7f", "kind": "must", "ref": "RFC 9554 4.4", "text": "When present with a value of \"true\", clients MUST NOT update the property."}
+{"id": "rfc9554-4.6-5bf73a3e", "kind": "must", "ref": "RFC 9554 4.6", "text": "The parameter value indicates the phonetic system and MUST be one of the values enumerated in the IANA \"vCard Parameter Values\" registry (Section 7.4)."}
+{"id": "rfc9554-4.6-69e103db", "kind": "must", "ref": "RFC 9554 4.6", "text": "The SCRIPT (Section 4.8) parameter MUST be set in addition to the PHONETIC parameter."}
+{"id": "rfc9554-4.6-bdd3e0f4", "kind": "must", "ref": "RFC 9554 4.6", "text": "The value type of the property on which the PHONETIC parameter is set MUST be of the same type as its related property."}
+{"id": "rfc9554-4.6-1a3b2976", "kind": "must", "ref": "RFC 9554 4.6", "text": "If a component value is set in the property on which the PHONETIC parameter is set, then a component value also MUST be set at that same position in the related property."}
+{"id": "rfc9554-4.6-45d9f5ac", "kind": "must", "ref": "RFC 9554 4.6", "text": "The ALTID (Section 5.4 of [RFC6350]) parameter MUST be set with equal values on both the related property and the property having the PHONETIC parameter set."}
+{"id": "rfc9554-4.6-4ccb8062", "kind": "may", "ref": "RFC 9554 4.6", "text": "If more than one same-named property has both the PHONETIC parameter set and an equal ALTID parameter value, then at most, one of these properties MAY not have the LANGUAGE parameter set, and all others MUST have the LANGUAGE parameter set."}
+{"id": "rfc9554-4.6-7d04e9d6", "kind": "must", "ref": "RFC 9554 4.6", "text": "The LANGUAGE parameters MUST NOT have equal values."}
+{"id": "rfc9554-4.6-dea0169e", "kind": "should", "ref": "RFC 9554 4.6", "text": "The LANGUAGE parameter value SHOULD NOT contain a script subtag in its Language-Tag value, and any such subtag MUST be ignored in favor of the SCRIPT (Section 4.8) parameter value."}
+{"id": "rfc9554-4.7-76534b84", "kind": "must", "ref": "RFC 9554 4.7", "text": "A valid PROP- ID value must be of 1 and a maximum of 255 octets in size, and it MUST only contain the ASCII alphanumeric characters (\"A-Za-z0-9\"), hyphen (-), and underscore (\"_\")."}
+{"id": "rfc9554-4.7-4418143c", "kind": "should", "ref": "RFC 9554 4.7", "text": "If an application makes use of PROP-ID, it SHOULD assign a unique identifier to each sibling property of the same name within their embedding component."}
+{"id": "rfc9554-4.7-d0b17872", "kind": "may", "ref": "RFC 9554 4.7", "text": "The same identifier MAY be used for properties of a different name, and it MAY also be assigned to a same-named property that is not a sibling."}
+{"id": "rfc9554-4.8-a216de8e", "kind": "must", "ref": "RFC 9554 4.8", "text": "The value MUST be a script subtag as defined in Section 2.2.3 of [RFC5646]."}
+{"id": "rfc9554-4.9-3f3efa7d", "kind": "may", "ref": "RFC 9554 4.9", "text": "This parameter MAY be specified on an Instant Messaging and Presence Protocol (IMPP) or a SOCIALPROFILE property to name the online service associated with that property value."}
+{"id": "rfc9554-4.9-ecf4af7a", "kind": "must", "ref": "RFC 9554 4.9", "text": "Its value is case-sensitive; its letter cases MUST be preserved."}
+{"id": "rfc9554-4.10-9a6fd5d6", "kind": "may", "ref": "RFC 9554 4.10", "text": "This parameter MAY be specified on an IMPP or a SOCIALPROFILE property to name the user with that property value."}
+{"id": "rfc9554-4.10-ecf4af7a", "kind": "must", "ref": "RFC 9554 4.10", "text": "Its value is case-sensitive; its letter cases MUST be preserved."}
+{"id": "rfc9554-4.10-0ef23e96", "kind": "must", "ref": "RFC 9554 4.10", "text": "The IMPP or SOCIALPROFILE value type MUST be URI."}
