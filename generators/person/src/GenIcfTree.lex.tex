@@ -1,0 +1,364 @@
+\begin{lexlean}{GenIcfTree}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\importmodule{GenIcf}
+\title{ICF structure generator}
+\begin{semanticmodule}
+definition{name: trNot, parameters: [b : Bool], result: Bool, body: (if b then false else true)}
+
+definition{
+  name: trSame,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bool,
+  body: (Foundation.Tar::sameBytes a b),
+  axioms: [propext]
+}
+
+definition{
+  name: trIs,
+  parameters: [a : Bytes, b : String],
+  result: Bool,
+  body: (Foundation.Tar::sameBytes a (GenIcf::icfText b)),
+  axioms: [propext]
+}
+
+definition{
+  name: trF,
+  parameters: [e : Bytes, k : Nat],
+  result: Bytes,
+  body: (GenIcf::icfRaw e k),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trLineEnd,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (GenIcf::icfStopAt s i (GenIcf::icfLen s) 10 (GenIcf::icfLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trRest,
+  parameters: [line : Bytes, k : Nat],
+  result: Bytes,
+  body: (GenIcf::icfSlice line (GenIcf::icfFieldStart line 0 k 16) (GenIcf::icfLen line)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trKey,
+  parameters: [line : Bytes],
+  result: Bytes,
+  body: (if ((GenIcf::icfLen (GenIcf::icfField line 0)) =? 0) then (GenIcf::icfAfter (GenIcf::icfField line 1) (GenIcf::icfText "http://id.who.int/icd/release/11/icf/")) else (GenIcf::icfAfter (GenIcf::icfField line 0) (GenIcf::icfText "http://id.who.int/icd/entity/"))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trParent,
+  parameters: [line : Bytes],
+  result: Bytes,
+  body: (GenIcf::icfAfter (GenIcf::icfField line 11) (GenIcf::icfText "http://id.who.int/icd/entity/")),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trLetter,
+  parameters: [kind : Bytes, code : Bytes, blk : Bytes, title : Bytes],
+  result: Bytes,
+  body: (if (trIs kind "category") then (GenIcf::icfSlice code 0 1) else (if (trIs kind "block") then (if ((GenIcf::icfLen blk) =? 0) then (GenIcf::icfText "q") else (let d : Nat := (GenIcf::icfStopAt blk 0 (GenIcf::icfLen blk) 45 (GenIcf::icfLen blk)); (GenIcf::icfSlice blk (d + 1) (d + 2)))) else (if (trIs title "ICF Category") then 0x else (GenIcf::icfText "q")))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trEntry,
+  parameters: [line : Bytes],
+  result: Bytes,
+  body: (let t : Bytes := (GenIcf::icfField line 4); (let n : Nat := (GenIcf::icfDashes t 0 (GenIcf::icfLen t)); (let title : Bytes := (GenIcf::icfSlice t (prim multiply n 2 : Nat) (GenIcf::icfLen t)); (let kind : Bytes := (GenIcf::icfField line 5); (let code : Bytes := (GenIcf::icfField line 2); (let blk : Bytes := (GenIcf::icfField line 3); (GenIcf::icfJoin (trKey line) (GenIcf::icfJoin 0x09 (GenIcf::icfJoin code (GenIcf::icfJoin 0x09 (GenIcf::icfJoin kind (GenIcf::icfJoin 0x09 (GenIcf::icfJoin (GenIcf::icfDigits n) (GenIcf::icfJoin 0x09 (GenIcf::icfJoin (GenIcf::icfField line 6) (GenIcf::icfJoin 0x09 (GenIcf::icfJoin (trLetter kind code blk title) (GenIcf::icfJoin 0x09 (GenIcf::icfJoin blk (GenIcf::icfJoin 0x09 title)))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trNat,
+  parameters: [b : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenIcf::icfLen b) <=? i) then acc else (trNat b (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract (Foundation.Tar::byteOr b i) 48 : Nat)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trSucc,
+  parameters: [b : Bytes],
+  result: Bytes,
+  body: (GenIcf::icfDigits ((trNat b 0 0 (GenIcf::icfLen b)) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trWhy,
+  parameters: [e : Bytes, why : String],
+  result: Bytes,
+  body: (GenIcf::icfJoin (trF e 0) (GenIcf::icfJoin (GenIcf::icfText ": ") (GenIcf::icfJoin (GenIcf::icfText why) 0x0a))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trComponent,
+  parameters: [letter : Bytes],
+  result: Bytes,
+  body: (if (trIs letter "b") then (GenIcf::icfText "Body functions") else (if (trIs letter "s") then (GenIcf::icfText "Body structures") else (if (trIs letter "d") then (GenIcf::icfText "Activities and participation") else (if (trIs letter "e") then (GenIcf::icfText "Environmental factors") else 0x)))),
+  axioms: [propext]
+}
+
+definition{
+  name: trRoot,
+  parameters: [c : Bytes],
+  result: Bytes,
+  body: (if ((trIs (trF c 2) "chapter") && ((trIs (trF c 3) "0") && ((trIs (trF c 4) "1") && ((trIs (trF c 7) "ICF Category") || (trIs (trF c 7) "ICF Qualifier"))))) then 0x else (trWhy c "a root is not one of the ICF chapters")),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trScale,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 98) || ((b =? 102) || ((b =? 99) || ((b =? 109) || ((b =? 112) || (b =? 115))))))
+}
+
+definition{
+  name: trBlock,
+  parameters: [c : Bytes, p : Bytes],
+  result: Bytes,
+  body: (let blk : Bytes := (trF c 6); (let letter : Bytes := (trF c 5); (let plet : Bytes := (trF p 5); (if (trNot (trSame (trF c 4) (if (trIs (trF p 2) "block") then (trSucc (trF p 4)) else (GenIcf::icfText "1")))) then (trWhy c "its depth in kind is not its parent block's plus one") else (if ((GenIcf::icfLen plet) =? 0) then (if ((GenIcf::icfStarts blk (GenIcf::icfText "BlockL1-")) && ((0 <? (GenIcf::icfLen (trComponent letter))) && (trSame (trF c 7) (trComponent letter)))) then 0x else (trWhy c "a component is not one of the four the ICF has")) else (if (trNot (trSame letter plet)) then (trWhy c "it is not in its parent's component") else (if (trIs plet "q") then (if ((GenIcf::icfLen blk) =? 0) then 0x else (trWhy c "a qualifier scale has a block id")) else (if (GenIcf::icfStarts blk (GenIcf::icfJoin (GenIcf::icfText "BlockL") (GenIcf::icfJoin (trF c 3) (GenIcf::icfText "-")))) then 0x else (trWhy c "its block id is not of its level"))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trCategory,
+  parameters: [c : Bytes, p : Bytes],
+  result: Bytes,
+  body: (let code : Bytes := (trF c 1); (let pcode : Bytes := (trF p 1); (let n : Nat := (GenIcf::icfLen code); (if ((GenIcf::icfLen (trF p 5)) =? 0) then (trWhy c "a category is directly under a root") else (if (trNot (trSame (trF c 5) (trF p 5))) then (trWhy c "its code is not in its parent's component") else (if (trIs (trF p 2) "category") then (if ((n =? ((GenIcf::icfLen pcode) + 1)) && ((GenIcf::icfStarts code pcode) && ((GenIcf::icfNumber (GenIcf::icfSlice code (prim subtract n 1 : Nat) n)) && (n <=? 6)))) then (if (trSame (trF c 4) (trSucc (trF p 4))) then 0x else (trWhy c "its depth in kind is not its parent category's plus one")) else (trWhy c "its code does not extend its parent's by one level")) else (if (if (trIs (trF c 5) "q") then ((n =? 3) && ((trScale (Foundation.Tar::byteOr code 1)) && (GenIcf::icfNumber (GenIcf::icfSlice code 2 3)))) else ((n =? 4) && ((GenIcf::icfNumber (GenIcf::icfSlice code 1 4)) && (trNot ((Foundation.Tar::byteOr code 1) =? 48))))) then (if (trIs (trF c 4) "1") then 0x else (trWhy c "its depth in kind is not one")) else (trWhy c "its code is not an ICF code of its level")))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trRel,
+  parameters: [c : Bytes, p : Bytes],
+  result: Bytes,
+  body: (if (trIs (trF c 2) "chapter") then (trWhy c "a chapter is under another entity") else (if (trNot (trSame (trF c 3) (trSucc (trF p 3)))) then (trWhy c "its title is not one level below its parent's") else (if (trIs (trF c 2) "block") then (trBlock c p) else (trCategory c p)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trCut,
+  parameters: [st : Bytes, i : Nat, pk : Bytes, best : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => best
+    | Nat.succ rest => (if ((GenIcf::icfLen st) <=? i) then best else (let e : Nat := (trLineEnd st i); (trCut st (e + 1) pk (if (trSame (trF (GenIcf::icfSlice st i e) 0) pk) then (e + 1) else best) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trTop,
+  parameters: [st : Bytes, i : Nat, last : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => last
+    | Nat.succ rest => (if ((GenIcf::icfLen st) <=? i) then last else (let e : Nat := (trLineEnd st i); (trTop st (e + 1) (GenIcf::icfSlice st i e) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trLess,
+  parameters: [a : Bytes, b : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((GenIcf::icfLen a) <=? i) then (i <? (GenIcf::icfLen b)) else (if ((GenIcf::icfLen b) <=? i) then false else (if ((Foundation.Tar::byteOr a i) <? (Foundation.Tar::byteOr b i)) then true else (if ((Foundation.Tar::byteOr b i) <? (Foundation.Tar::byteOr a i)) then false else (trLess a b (i + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trGroup,
+  parameters: [e : Bytes],
+  result: Bytes,
+  body: (if (trIs (trF e 5) "q") then (GenIcf::icfSlice (trF e 1) 0 2) else (GenIcf::icfSlice (trF e 1) 0 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trCodeLast,
+  parameters: [codes : Bytes, i : Nat, g : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((GenIcf::icfLen codes) <=? i) then 0x else (let e : Nat := (trLineEnd codes i); (let line : Bytes := (GenIcf::icfSlice codes i e); (if (trSame (trF line 0) g) then (trF line 2) else (trCodeLast codes (e + 1) g rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trCodeSet,
+  parameters: [
+    codes : Bytes,
+    i : Nat,
+    g : Bytes,
+    code : Bytes,
+    acc : Bytes,
+    found : Bool,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenIcf::icfLen codes) <=? i) then (if found then acc else (GenIcf::icfJoin acc (GenIcf::icfJoin g (GenIcf::icfJoin 0x09 (GenIcf::icfJoin code (GenIcf::icfJoin 0x09 (GenIcf::icfJoin code 0x0a))))))) else (let e : Nat := (trLineEnd codes i); (let line : Bytes := (GenIcf::icfSlice codes i e); (if (trSame (trF line 0) g) then (trCodeSet codes (e + 1) g code (GenIcf::icfJoin acc (GenIcf::icfJoin g (GenIcf::icfJoin 0x09 (GenIcf::icfJoin (trF line 1) (GenIcf::icfJoin 0x09 (GenIcf::icfJoin code 0x0a)))))) true rest) else (trCodeSet codes (e + 1) g code (GenIcf::icfJoin acc (GenIcf::icfJoin line 0x0a)) found rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trPrefix,
+  parameters: [s : Bytes, i : Nat, tag : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then acc else (let e : Nat := (trLineEnd s i); (trPrefix s (e + 1) tag (GenIcf::icfJoin acc (GenIcf::icfJoin tag (GenIcf::icfJoin (GenIcf::icfSlice s i e) 0x0a))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trLeafWhy,
+  parameters: [key : Bytes, flag : Bytes, next : Bytes],
+  result: Bytes,
+  body: (if (if (trIs flag "True") then (trNot (trSame next key)) else (trSame next key)) then 0x else (GenIcf::icfJoin key (GenIcf::icfText ": its leaf flag does not say whether an entity names it as parent\n"))),
+  axioms: [propext]
+}
+
+definition{
+  name: trOrderWhy,
+  parameters: [last : Bytes, code : Bytes],
+  result: Bytes,
+  body: (if (((GenIcf::icfLen last) =? 0) || (trLess last code 0 (GenIcf::icfLen code))) then 0x else (GenIcf::icfJoin code (GenIcf::icfJoin (GenIcf::icfText ": its code does not follow ") (GenIcf::icfJoin last (GenIcf::icfText " in the release's order\n"))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trMapFrom,
+  parameters: [
+    s : Bytes,
+    i : Nat,
+    st : Bytes,
+    out : Bytes,
+    why : Bytes,
+    prev : Bytes,
+    codes : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (GenIcf::icfJoin 0x21 why)
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then (if (0 <? (GenIcf::icfLen why)) then (GenIcf::icfJoin 0x21 why) else (GenIcf::icfJoin out (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfText "L\t") (GenIcf::icfJoin (trKey prev) (GenIcf::icfJoin 0x09 (GenIcf::icfJoin (GenIcf::icfField prev 9) 0x0a)))) (GenIcf::icfJoin (trPrefix codes 0 (GenIcf::icfText "C\t") 0x (GenIcf::icfLen codes)) (trPrefix st 0 (GenIcf::icfText "S\t") 0x (GenIcf::icfLen st)))))) else (let e : Nat := (trLineEnd s i); (let line : Bytes := (GenIcf::icfLineOf s i e); (if (((GenIcf::icfLen line) =? 0) || (GenIcf::icfIsHeader line)) then (trMapFrom s (e + 1) st out why prev codes rest) else (let c : Bytes := (trEntry line); (let pk : Bytes := (trParent line); (let leaf : Bytes := (if ((GenIcf::icfLen prev) =? 0) then 0x else (trLeafWhy (trKey prev) (GenIcf::icfField prev 9) pk)); (let cut : Nat := (if ((GenIcf::icfLen (GenIcf::icfField line 11)) =? 0) then 0 else (trCut st 0 pk 0 (GenIcf::icfLen st))); (let kept : Bytes := (GenIcf::icfSlice st 0 cut); (let rel : Bytes := (if (cut =? 0) then 0x else (trRel c (trTop kept 0 0x (GenIcf::icfLen kept)))); (let cat : Bool := (trIs (trF c 2) "category"); (let order : Bytes := (if cat then (trOrderWhy (trCodeLast codes 0 (trGroup c) (GenIcf::icfLen codes)) (trF c 1)) else 0x); (let codes2 : Bytes := (if cat then (trCodeSet codes 0 (trGroup c) (trF c 1) 0x false ((GenIcf::icfLen codes) + 1)) else codes); (trMapFrom s (e + 1) (GenIcf::icfJoin kept (GenIcf::icfJoin c 0x0a)) (if (cut =? 0) then (GenIcf::icfJoin out (GenIcf::icfJoin (GenIcf::icfText "N\t") (GenIcf::icfJoin pk (GenIcf::icfJoin 0x09 (GenIcf::icfJoin c 0x0a))))) else out) (GenIcf::icfJoin why (GenIcf::icfJoin leaf (GenIcf::icfJoin rel order))) line codes2 rest))))))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trReduceFrom,
+  parameters: [
+    s : Bytes,
+    i : Nat,
+    st : Bytes,
+    base : Bytes,
+    pending : Bytes,
+    why : Bytes,
+    roots : Bytes,
+    codes : Bytes,
+    last : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => why
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then (GenIcf::icfJoin why (GenIcf::icfJoin (if (((GenIcf::icfLen last) =? 0) || (trIs (trF last 1) "True")) then 0x else (GenIcf::icfJoin (trF last 0) (GenIcf::icfText ": the last entity is not a leaf\n"))) (if (trIs roots "ICF Category\nICF Qualifier\n") then 0x else (GenIcf::icfText "the release: its roots are not the ICF categories and then the ICF qualifiers\n")))) else (let e : Nat := (trLineEnd s i); (let line : Bytes := (GenIcf::icfSlice s i e); (let tag : Bytes := (trF line 0); (let st1 : Bytes := (if ((trIs tag "S") || ((GenIcf::icfLen pending) =? 0)) then st else (GenIcf::icfJoin base pending)); (let pending1 : Bytes := (if (trIs tag "S") then pending else 0x); (if (trIs tag "N") then (let pk : Bytes := (trF line 1); (let c : Bytes := (trRest line 2); (let leaf : Bytes := (if ((GenIcf::icfLen last) =? 0) then 0x else (trLeafWhy (trF last 0) (trF last 1) pk)); (let cut : Nat := (if ((GenIcf::icfLen pk) =? 0) then 0 else (trCut st1 0 pk 0 (GenIcf::icfLen st1))); (let kept : Bytes := (GenIcf::icfSlice st1 0 cut); (let rel : Bytes := (if ((GenIcf::icfLen pk) =? 0) then (trRoot c) else (if (cut =? 0) then (GenIcf::icfJoin (trF c 0) (GenIcf::icfJoin (GenIcf::icfText ": its parent ") (GenIcf::icfJoin pk (GenIcf::icfText " is not an entity above it\n")))) else (trRel c (trTop kept 0 0x (GenIcf::icfLen kept))))); (trReduceFrom s (e + 1) (GenIcf::icfJoin kept (GenIcf::icfJoin c 0x0a)) kept pending1 (GenIcf::icfJoin why (GenIcf::icfJoin leaf rel)) (if ((GenIcf::icfLen pk) =? 0) then (GenIcf::icfJoin roots (GenIcf::icfJoin (trF c 7) 0x0a)) else roots) codes 0x rest))))))) else (if (trIs tag "L") then (trReduceFrom s (e + 1) st1 base pending1 why roots codes (trRest line 1) rest) else (if (trIs tag "C") then (trReduceFrom s (e + 1) st1 base pending1 (GenIcf::icfJoin why (trOrderWhy (trCodeLast codes 0 (trF line 1) (GenIcf::icfLen codes)) (trF line 2))) roots (trCodeSet codes 0 (trF line 1) (trF line 3) 0x false ((GenIcf::icfLen codes) + 1)) last rest) else (if (trIs tag "S") then (trReduceFrom s (e + 1) st1 base (GenIcf::icfJoin pending (GenIcf::icfJoin (trRest line 1) 0x0a)) why roots codes last rest) else (trReduceFrom s (e + 1) st1 base pending1 (GenIcf::icfJoin why (GenIcf::icfText "the summary: a line of no known kind\n")) roots codes last rest)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trIdsFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then acc else (let e : Nat := (trLineEnd s i); (let line : Bytes := (GenIcf::icfLineOf s i e); (trIdsFrom s (e + 1) (if (((GenIcf::icfLen line) =? 0) || (GenIcf::icfIsHeader line)) then acc else (GenIcf::icfJoin acc (GenIcf::icfJoin (trKey line) 0x0a))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trHasLine,
+  parameters: [s : Bytes, i : Nat, k : Bytes, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then false else (let e : Nat := (trLineEnd s i); (if (trSame (GenIcf::icfSlice s i e) k) then true else (trHasLine s (e + 1) k rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trUniqueFrom,
+  parameters: [s : Bytes, i : Nat, why : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => why
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then why else (let e : Nat := (trLineEnd s i); (let k : Bytes := (GenIcf::icfSlice s i e); (trUniqueFrom s (e + 1) (if (((GenIcf::icfLen k) =? 0) || (trNot (trHasLine s (e + 1) k (GenIcf::icfLen s)))) then why else (GenIcf::icfJoin why (GenIcf::icfJoin k (GenIcf::icfText ": it is in the release twice\n")))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: summary,
+  parameters: [tabulation : Bytes],
+  result: Bytes,
+  body: (trMapFrom tabulation 0 0x 0x 0x 0x 0x (GenIcf::icfLen tabulation)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: check,
+  parameters: [summaries : Bytes],
+  result: Bytes,
+  body: (trReduceFrom summaries 0 0x 0x 0x 0x 0x 0x 0x (GenIcf::icfLen summaries)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ids,
+  parameters: [tabulation : Bytes],
+  result: Bytes,
+  body: (trIdsFrom tabulation 0 0x (GenIcf::icfLen tabulation)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: unique,
+  parameters: [keys : Bytes],
+  result: Bytes,
+  body: (trUniqueFrom keys 0 0x (GenIcf::icfLen keys)),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
