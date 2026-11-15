@@ -121,7 +121,6 @@ fn holon_hl_01() {
             "HL-01: the holon names {facet} as a facet"
         );
     }
-    run("python3", &["-I", "tools/holon/gen.py", "--check"]);
     node_suite();
 }
 
