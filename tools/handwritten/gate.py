@@ -171,7 +171,7 @@ def upstream_claims(files):
             elif isinstance(node, list):
                 for v in node:
                     walk(v)
-        walk(json.loads((ROOT / lock).read_text()))
+        walk(json.loads((ROOT / lock).read_text()) if (ROOT / lock).exists() else {})
     tlock = json.loads((ROOT / SPEC["upstream"]["template"]).read_text())
     flock = json.loads((ROOT / SPEC["upstream"]["frame"]).read_text())
     pins = [
