@@ -533,7 +533,7 @@ export default async function start({ app, reason, $ }) {
   const deviceOf = () => (deviceOpen ??= (async () => {
     const [{ openDevice }, { ingestInto }, host, read] = await Promise.all([import("./device/device.mjs"), import("./google/ingest.mjs"), import("./device/host.mjs"), import("./read/read.mjs")]);
     reader ??= read;
-    const source = openDevice({ decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), vcard: read.vcard, halted, lanes: host.lanes(), source: (rest) => line(`source ${rest}`), arrived: noteArrived });
+    const source = openDevice({ decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted, vcard: read.vcard, lanes: host.lanes(), source: (rest) => line(`source ${rest}`), arrived: noteArrived });
     return { source, ask: (more = {}) => host.plan({ decide: (rest) => line(`host ${rest}`), halted, ...more }) };
   })());
   async function reportDevice(t) {
