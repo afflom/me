@@ -539,7 +539,7 @@ _registry = None
 def REGISTRY():
     global _registry
     if _registry is None:
-        _registry = calendar_registry.build(cache)
+        _registry = calendar_registry.load()
     return _registry
 
 
@@ -1462,8 +1462,8 @@ for source in SPEC["sources"]:
         f"statement = {q('The examples ' + source['title'] + ' publishes, as its own grammar reads them')}",
         'realized_by = ["OR-01"]',
     ]
-# A pinned registry is cited too: what it registers is what the reader knows (tools/calendar/gen.py).
-for source in SPEC.get("registries", []):
+# A pinned registry is cited too: what it registers is what the reader knows (generators/calendar).
+for source in [json.loads((ROOT / "app/specs/calendar/spec.json").read_text(encoding="utf-8"))["registry"]]:
     rows += [
         "",
         "[[authority]]",

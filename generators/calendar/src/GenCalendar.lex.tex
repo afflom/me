@@ -1,0 +1,972 @@
+\begin{lexlean}{GenCalendar}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\title{Calendar registry generator}
+\begin{semanticmodule}
+definition{
+  name: calU,
+  parameters: [value : String],
+  result: Bytes,
+  body: (Foundation.Utf8::encode value)
+}
+
+definition{
+  name: calLen,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (Foundation.Bytes::byteLength s)
+}
+
+definition{
+  name: calAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (Foundation.Tar::byteOr s i),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calCut,
+  parameters: [s : Bytes, a : Nat, b : Nat],
+  result: Bytes,
+  body: (Foundation.Json::span s a b)
+}
+
+definition{
+  name: calApp,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes a b)
+}
+
+definition{
+  name: calApp3,
+  parameters: [a : Bytes, b : Bytes, c : Bytes],
+  result: Bytes,
+  body: (calApp a (calApp b c))
+}
+
+definition{
+  name: calSame,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bool,
+  body: (Foundation.Tar::sameBytes a b),
+  axioms: [propext]
+}
+
+definition{
+  name: calStartsAt,
+  parameters: [s : Bytes, i : Nat, p : Bytes],
+  result: Bool,
+  body: (calSame (calCut s i (i + (calLen p))) p),
+  axioms: [propext]
+}
+
+definition{
+  name: calIsSpace,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 32) || ((8 <? b) && (b <? 14)))
+}
+
+definition{name: calIsUpper, parameters: [b : Nat], result: Bool, body: ((64 <? b) && (b <? 91))}
+
+definition{name: calIsLower, parameters: [b : Nat], result: Bool, body: ((96 <? b) && (b <? 123))}
+
+definition{name: calIsDigit, parameters: [b : Nat], result: Bool, body: ((47 <? b) && (b <? 58))}
+
+definition{
+  name: calIsWord,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((calIsUpper b) || ((calIsLower b) || ((calIsDigit b) || (b =? 95))))
+}
+
+definition{
+  name: calBlankFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((calLen s) <? (i + 1)) then true else (if (calIsSpace (calAt s i)) then (calBlankFrom s (i + 1) rest) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calIsBlank,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: (calBlankFrom s 0 (calLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calFindFrom,
+  parameters: [s : Bytes, i : Nat, b : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (calLen s)
+    | Nat.succ rest => (if ((calLen s) <? (i + 1)) then (calLen s) else (if ((calAt s i) =? b) then i else (calFindFrom s (i + 1) b rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calFind,
+  parameters: [s : Bytes, i : Nat, b : Nat],
+  result: Nat,
+  body: (calFindFrom s i b (calLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calSeekFrom,
+  parameters: [s : Bytes, i : Nat, p : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (calLen s)
+    | Nat.succ rest => (if ((calLen s) <? (i + 1)) then (calLen s) else (if (calStartsAt s i p) then i else (calSeekFrom s (i + 1) p rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calSeek,
+  parameters: [s : Bytes, i : Nat, p : Bytes],
+  result: Nat,
+  body: (calSeekFrom s i p (calLen s)),
+  axioms: [propext]
+}
+
+definition{
+  name: calHolds,
+  parameters: [s : Bytes, p : Bytes],
+  result: Bool,
+  body: ((calSeek s 0 p) <? (calLen s)),
+  axioms: [propext]
+}
+
+definition{
+  name: calLastFrom,
+  parameters: [s : Bytes, i : Nat, p : Bytes, best : (Option Nat), fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => best
+    | Nat.succ rest => (if ((calLen s) <? (i + 1)) then best else (if (calStartsAt s i p) then (calLastFrom s (i + 1) p (ctor Option.some [Nat] i) rest) else (calLastFrom s (i + 1) p best rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calSkipSpaceFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((calLen s) <? (i + 1)) then i else (if (calIsSpace (calAt s i)) then (calSkipSpaceFrom s (i + 1) rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calSkipSpace,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (calSkipSpaceFrom s i (calLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calSkipInlineFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((calLen s) <? (i + 1)) then i else (let b : Nat := (calAt s i); (if ((calIsSpace b) && (not (b =? 10))) then (calSkipInlineFrom s (i + 1) rest) else i)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calIdentFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((calLen s) <? (i + 1)) then i else (let b : Nat := (calAt s i); (if ((calIsLower b) || (b =? 45)) then (calIdentFrom s (i + 1) rest) else i)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calUpperRunFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((calLen s) <? (i + 1)) then i else (let b : Nat := (calAt s i); (if ((calIsUpper b) || (b =? 45)) then (calUpperRunFrom s (i + 1) rest) else i)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calDigitsFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((calLen s) <? (i + 1)) then i else (if (calIsDigit (calAt s i)) then (calDigitsFrom s (i + 1) rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calTrimEndFrom,
+  parameters: [s : Bytes, e : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => e
+    | Nat.succ rest => (if (e =? 0) then 0 else (if (calIsSpace (calAt s (prim subtract e 1 : Nat))) then (calTrimEndFrom s (prim subtract e 1 : Nat) rest) else e))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calTrim,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let a : Nat := (calSkipSpace s 0); (let e : Nat := (calTrimEndFrom s (calLen s) (calLen s)); (if (e <? (a + 1)) then 0x else (calCut s a e)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calWordEndFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((calLen s) <? (i + 1)) then i else (if (calIsSpace (calAt s i)) then i else (calWordEndFrom s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calWordsFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, gap : Bool, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((calLen s) <? (i + 1)) then acc else (let b : Nat := (calAt s i); (if (calIsSpace b) then (calWordsFrom s (i + 1) acc (not ((calLen acc) =? 0)) rest) else (let e : Nat := (calWordEndFrom s i (calLen s)); (calWordsFrom s e (calApp3 acc (if gap then 0x20 else 0x) (calCut s i e)) false rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calWords,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (calWordsFrom s 0 0x false (calLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calIsFooter,
+  parameters: [line : Bytes],
+  result: Bool,
+  body: (let t : Bytes := (calTrim line); (let k : Nat := (calSeek t 0 (calU "[Page ")); (if ((calLen t) <? (k + 8)) then false else (let d : Nat := (calDigitsFrom t (k + 6) (calLen t)); ((not (d =? (k + 6))) && (((d + 1) =? (calLen t)) && ((calAt t d) =? 93))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calSectionDotsFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((calAt s i) =? 46) && (calIsDigit (calAt s (i + 1)))) then (calSectionDotsFrom s (calDigitsFrom s (i + 1) (calLen s)) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calSectionOf,
+  parameters: [line : Bytes],
+  result: Bytes,
+  body: (if (not (calStartsAt line 0 (calU "3."))) then 0x else (let d : Nat := (calDigitsFrom line 2 (calLen line)); (if (d =? 2) then 0x else (let e : Nat := (calSectionDotsFrom line d (calLen line)); (if (((calAt line e) =? 46) && ((calIsSpace (calAt line (e + 1))) && ((e + 2) <? (calLen line)))) then (calCut line 0 e) else 0x))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calIsHeading,
+  parameters: [line : Bytes],
+  result: Bool,
+  body: (let d : Nat := (calDigitsFrom line 0 (calLen line)); ((not (d =? 0)) && (((calAt line d) =? 46) && (calIsSpace (calAt line (d + 1)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calLabelName,
+  parameters: [k : Nat],
+  result: Bytes,
+  body: (if (k =? 1) then (calU "Parameter Name") else (if (k =? 2) then (calU "Value Name") else (if (k =? 3) then (calU "Component Name") else (if (k =? 4) then (calU "Property Name") else (if (k =? 5) then (calU "Purpose") else (if (k =? 6) then (calU "Value Type") else (if (k =? 7) then (calU "Property Parameters") else (if (k =? 8) then (calU "Conformance") else (if (k =? 9) then (calU "Description") else (if (k =? 10) then (calU "Format Definition") else (if (k =? 11) then (calU "Example") else (calU "Examples"))))))))))))
+}
+
+definition{
+  name: calLabelFrom,
+  parameters: [line : Bytes, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if (12 <? k) then 0 else (if (calStartsAt line 0 (calApp3 (calU "   ") (calLabelName k) (calU ":"))) then k else (calLabelFrom line (k + 1) rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calLabelOf,
+  parameters: [line : Bytes],
+  result: Nat,
+  body: (calLabelFrom line 1 13),
+  axioms: [propext]
+}
+
+definition{
+  name: calLabelRest,
+  parameters: [line : Bytes, k : Nat],
+  result: Bytes,
+  body: (let a : Nat := (calSkipSpace line ((calLen (calLabelName k)) + 4)); (calCut line a (calLen line))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calSpaced,
+  parameters: [acc : Bytes, text : Bytes],
+  result: Bytes,
+  body: (calApp3 acc 0x20 text)
+}
+
+definition{
+  name: calUnquoteFrom,
+  parameters: [s : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => s
+    | Nat.succ rest => (if ((calLen s) =? 0) then s else (if ((calAt s 0) =? 34) then (calUnquoteFrom (calCut s 1 (calLen s)) rest) else (if ((calAt s (prim subtract (calLen s) 1 : Nat)) =? 34) then (calUnquoteFrom (calCut s 0 (prim subtract (calLen s) 1 : Nat)) rest) else s)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calUnquote,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (calUnquoteFrom s (calLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calFirstWord,
+  parameters: [acc : Bytes],
+  result: Bytes,
+  body: (let w : Bytes := (calWords acc); (let e : Nat := (calFind w 0 32); (calUnquote (calCut w 0 e)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calManyFrom,
+  parameters: [g : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((calLen g) <? (i + 1)) then false else (if ((calStartsAt g i (calU "*(")) && (calStartsAt g (calSkipSpace g (i + 2)) (calU "\",\""))) then true else (calManyFrom g (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calBlankAfterFrom,
+  parameters: [g : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (calLen g)
+    | Nat.succ rest => (if ((calLen g) <? (i + 1)) then (calLen g) else (if (((calAt g i) =? 10) && (((calAt g (calSkipInlineFrom g (i + 1) (calLen g))) =? 10) && ((calSkipInlineFrom g (i + 1) (calLen g)) <? (calLen g)))) then i else (calBlankAfterFrom g (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calRuleBody,
+  parameters: [g : Bytes, a : Nat],
+  result: Bytes,
+  body: (calCut g a (calBlankAfterFrom g a (calLen g))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calOwnRuleFrom,
+  parameters: [g : Bytes, p : Nat, quoted : Bytes, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (if ((calLen g) <? (p + 1)) then (ctor Option.none [Bytes]) else (let next : Nat := ((calFind g p 10) + 1); (let q : Nat := (calSkipSpace g p); (if (calIsLower (calAt g q)) then (let r : Nat := (calSkipSpace g (calIdentFrom g q (calLen g))); (if ((calAt g r) =? 61) then (let v : Nat := (calSkipSpace g (r + 1)); (if (calStartsAt g v quoted) then (ctor Option.some [Bytes] (calRuleBody g (v + (calLen quoted)))) else (calOwnRuleFrom g next quoted rest))) else (calOwnRuleFrom g next quoted rest))) else (calOwnRuleFrom g next quoted rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calSubRuleFrom,
+  parameters: [g : Bytes, p : Nat, name : Bytes, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (if ((calLen g) <? (p + 1)) then (ctor Option.none [Bytes]) else (let next : Nat := ((calFind g p 10) + 1); (let q : Nat := (calSkipSpace g p); (if (calStartsAt g q name) then (let r : Nat := (calSkipSpace g (q + (calLen name))); (if ((calAt g r) =? 61) then (ctor Option.some [Bytes] (calRuleBody g (r + 1))) else (calSubRuleFrom g next name rest))) else (calSubRuleFrom g next name rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calAfterValue,
+  parameters: [own : Bytes],
+  result: Bytes,
+  body: (match (calLastFrom own 0 (calU "\":\"") (ctor Option.none [Nat]) (calLen own))
+    | Option.none => own
+    | Option.some k => (calCut own (k + 3) (calLen own))),
+  axioms: [propext]
+}
+
+definition{
+  name: calPartsOf,
+  parameters: [g : Bytes, name : Bytes],
+  result: Bool,
+  body: (match (calOwnRuleFrom g 0 (calApp3 0x22 name 0x22) ((calLen g) + 1))
+    | Option.none => false
+    | Option.some own => (let after : Bytes := (calAfterValue own); (if (calHolds after (calU "\";\"")) then true else (let q : Nat := (calSkipSpace after 0); (if (calIsLower (calAt after q)) then (match (calSubRuleFrom g 0 (calCut after q (calIdentFrom after q (calLen after))) ((calLen g) + 1))
+      | Option.none => false
+      | Option.some sub => (calHolds sub (calU "\";\""))) else false))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calDefaultOf,
+  parameters: [said : Bytes],
+  result: Bytes,
+  body: (let k : Nat := (calSeek said 0 (calU "default value type is ")); (if ((calLen said) <? (k + 1)) then (calU "-") else (let a : Nat := (k + 22); (let e : Nat := (calUpperRunFrom said a (calLen said)); (if (e =? a) then (calU "-") else (calCut said a e)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calMatchEndFrom,
+  parameters: [s : Bytes, i : Nat, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if (k <? (i + 3)) then 0 else (if ((calIsUpper (calAt s (prim subtract k 1 : Nat))) && (not (calIsWord (calAt s k)))) then k else (calMatchEndFrom s i (prim subtract k 1 : Nat) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calNamesFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((calLen s) <? (i + 1)) then acc else (if ((calIsUpper (calAt s i)) && ((i =? 0) || (not (calIsWord (calAt s (prim subtract i 1 : Nat)))))) then (let j : Nat := (calUpperRunFrom s i (calLen s)); (let k : Nat := (calMatchEndFrom s i j (calLen s)); (if (k =? 0) then (calNamesFrom s (i + 1) acc rest) else (calNamesFrom s k (calSpaced acc (calCut s i k)) rest)))) else (calNamesFrom s (i + 1) acc rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{name: calFlag, parameters: [b : Bool], result: Bytes, body: (if b then 0x31 else 0x30)}
+
+definition{
+  name: calCat5,
+  parameters: [a : Bytes, b : Bytes, c : Bytes, d : Bytes, e : Bytes],
+  result: Bytes,
+  body: (calApp a (calApp b (calApp c (calApp d e))))
+}
+
+definition{
+  name: calFlush,
+  parameters: [
+    sec : Bytes,
+    nP : Bytes,
+    nC : Bytes,
+    nPa : Bytes,
+    nV : Bytes,
+    vt : Bytes,
+    fd : Bytes
+  ],
+  result: Bytes,
+  body: (if ((calLen sec) =? 0) then 0x else (if (not ((calLen nP) =? 0)) then (let name : Bytes := (calFirstWord nP); (let said : Bytes := (calWords vt); (calApp (calCat5 (calU "D ") sec (calU " property ") name (calCat5 0x20 (calFlag (calManyFrom fd 0 (calLen fd))) 0x20 (calFlag (calPartsOf fd name)) (calApp 0x20 (calDefaultOf said)))) (calApp (calNamesFrom said 0 0x (calLen said)) 0x0a)))) else (if (not ((calLen nC) =? 0)) then (calCat5 (calU "D ") sec (calU " component ") (calFirstWord nC) 0x0a) else (if (not ((calLen nPa) =? 0)) then (calCat5 (calU "D ") sec (calU " parameter ") (calFirstWord nPa) 0x0a) else (if (not ((calLen nV) =? 0)) then (calCat5 (calU "D ") sec (calU " value ") (calFirstWord nV) 0x0a) else 0x))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calXmlFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((calLen s) <? (i + 1)) then acc else (if (not ((calAt s i) =? 60)) then (calXmlFrom s (i + 1) acc rest) else (if (calStartsAt s i (calU "<registry id=\"")) then (let a : Nat := (i + 14); (let e : Nat := (calFind s a 34); (calXmlFrom s e (calCat5 acc (calU "G ") (calCut s a e) 0x0a 0x) rest))) else (if ((calStartsAt s i (calU "<record")) && (((calAt s (i + 7)) =? 32) || ((calAt s (i + 7)) =? 62))) then (calXmlFrom s (i + 7) (calApp acc (calU "R\n")) rest) else (if (calStartsAt s i (calU "</record>")) then (calXmlFrom s (i + 9) (calApp acc (calU "E\n")) rest) else (if (calStartsAt s i (calU "<name>")) then (let a : Nat := (i + 6); (let e : Nat := (calFind s a 60); (calXmlFrom s e (calCat5 acc (calU "N ") (calTrim (calCut s a e)) 0x0a 0x) rest))) else (if (calStartsAt s i (calU "<type>")) then (let a : Nat := (i + 6); (let e : Nat := (calFind s a 60); (calXmlFrom s e (calCat5 acc (calU "T ") (calTrim (calCut s a e)) 0x0a 0x) rest))) else (if (calStartsAt s i (calU "<xref type=\"rfc\" data=\"")) then (let a : Nat := (i + 23); (let e : Nat := (calFind s a 34); (if (calStartsAt s (e + 1) (calU " section=\"")) then (let b : Nat := (e + 11); (let f : Nat := (calFind s b 34); (calXmlFrom s f (calCat5 acc (calU "X ") (calCut s a e) 0x20 (calApp (calCut s b f) 0x0a)) rest))) else (calXmlFrom s e (calCat5 acc (calU "X ") (calCut s a e) (calU " -") 0x0a) rest)))) else (calXmlFrom s (i + 1) acc rest)))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tokens,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (calU "upstream/icalendar.xml"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some piece => (ctor Option.some [Bytes] (calXmlFrom piece 0 0x (calLen piece)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calFieldFrom,
+  parameters: [s : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let e : Nat := (calFind s i 32); (if (n =? 0) then (calCut s i e) else (if ((calLen s) <? (e + 1)) then 0x else (calFieldFrom s (e + 1) (prim subtract n 1 : Nat) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calFieldOf,
+  parameters: [s : Bytes, n : Nat],
+  result: Bytes,
+  body: (calFieldFrom s 0 n ((calLen s) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calTailWords,
+  parameters: [s : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (n =? 0) then (calCut s i (calLen s)) else (let e : Nat := (calFind s i 32); (if ((calLen s) <? (e + 1)) then 0x else (calTailWords s (e + 1) (prim subtract n 1 : Nat) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calTailFrom,
+  parameters: [s : Bytes, n : Nat],
+  result: Bytes,
+  body: (calTailWords s 0 n ((calLen s) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calLess,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bool,
+  body: (prim equal (prim compare_bytes a b : Ordering) (prim compare_bytes 0x00 0x01 : Ordering) : Bool),
+  axioms: [propext]
+}
+
+definition{
+  name: calIsKind,
+  parameters: [sub : Bytes],
+  result: Bool,
+  body: ((calSame sub (calU "components")) || ((calSame sub (calU "properties")) || ((calSame sub (calU "parameters")) || (calSame sub (calU "value-data-types"))))),
+  axioms: [propext]
+}
+
+definition{
+  name: calOwnerSection,
+  parameters: [sec : Bytes],
+  result: Bytes,
+  body: (calCut sec 0 (calFind sec 0 59)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{name: calQuote, parameters: [s : Bytes], result: Bytes, body: (calApp3 0x22 s 0x22)}
+
+definition{
+  name: calBool,
+  parameters: [b : Bool],
+  result: Bytes,
+  body: (if b then (calU "true") else (calU "false"))
+}
+
+definition{
+  name: calLineAt,
+  parameters: [b : Bytes, i : Nat],
+  result: Bytes,
+  body: (calCut b i (calFind b i 10)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calNextLine,
+  parameters: [b : Bytes, i : Nat],
+  result: Nat,
+  body: ((calFind b i 10) + 1),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calLastStartFrom,
+  parameters: [b : Bytes, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if (k =? 0) then 0 else (if ((calAt b (prim subtract k 1 : Nat)) =? 10) then k else (calLastStartFrom b (prim subtract k 1 : Nat) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calLastStart,
+  parameters: [out : Bytes],
+  result: Nat,
+  body: (if ((calLen out) =? 0) then 0 else (calLastStartFrom out (prim subtract (calLen out) 1 : Nat) (calLen out))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calLastLine,
+  parameters: [out : Bytes],
+  result: Bytes,
+  body: (if ((calLen out) =? 0) then 0x else (calCut out (calLastStart out) (prim subtract (calLen out) 1 : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calDropLast,
+  parameters: [out : Bytes],
+  result: Bytes,
+  body: (calCut out 0 (calLastStart out)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calDropBlankTailFrom,
+  parameters: [out : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => out
+    | Nat.succ rest => (if ((calLen out) =? 0) then out else (if (calIsBlank (calLastLine out)) then (calDropBlankTailFrom (calDropLast out) rest) else out))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calDropBlankTail,
+  parameters: [out : Bytes],
+  result: Bytes,
+  body: (calDropBlankTailFrom out ((calLen out) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calDropFooterTail,
+  parameters: [out : Bytes],
+  result: Bytes,
+  body: (if (((calLen out) =? 0) || (not (calIsFooter (calLastLine out)))) then out else (calDropLast out)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calSkipBlankFrom,
+  parameters: [b : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((calLen b) <? (i + 1)) then i else (if (calIsBlank (calLineAt b i)) then (calSkipBlankFrom b (calNextLine b i) rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calUnpageFrom,
+  parameters: [b : Bytes, i : Nat, out : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => out
+    | Nat.succ rest => (if ((calLen b) <? i) then out else (let l : Bytes := (calLineAt b i); (if ((calAt l 0) =? 12) then (let o : Bytes := (calDropBlankTail (calDropFooterTail (calDropBlankTail out))); (let h : Nat := (calNextLine b i); (let j0 : Nat := (if (((calLen b) <? (h + 1)) || (not (calStartsAt (calLineAt b h) 0 (calU "RFC ")))) then h else (calNextLine b h)); (let j : Nat := (calSkipBlankFrom b j0 (calLen b)); (let joined : Bool := (((calLen o) =? 0) || ((calLen b) <? (j + 1))); (let keep : Bool := ((not joined) && ((calStartsAt (calLastLine o) 0 (calU "   ")) && (calStartsAt (calLineAt b j) 0 (calU "   ")))); (calUnpageFrom b j (if keep then o else (calApp o 0x0a)) rest))))))) else (calUnpageFrom b (calNextLine b i) (calApp3 out l 0x0a) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calUnpaginate,
+  parameters: [b : Bytes],
+  result: Bytes,
+  body: (calUnpageFrom b 0 0x ((calLen b) + 2)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calWalk,
+  parameters: [
+    b : Bytes,
+    i : Nat,
+    sec : Bytes,
+    label : Nat,
+    nP : Bytes,
+    nC : Bytes,
+    nPa : Bytes,
+    nV : Bytes,
+    vt : Bytes,
+    fd : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (calFlush sec nP nC nPa nV vt fd)
+    | Nat.succ rest => (if ((calLen b) <? (i + 1)) then (calFlush sec nP nC nPa nV vt fd) else (let l : Bytes := (calLineAt b i); (let n : Nat := (calNextLine b i); (let s3 : Bytes := (calSectionOf l); (if (not ((calLen s3) =? 0)) then (calApp (calFlush sec nP nC nPa nV vt fd) (calWalk b n s3 0 0x 0x 0x 0x 0x 0x rest)) else (if (calIsHeading l) then (calApp (calFlush sec nP nC nPa nV vt fd) (calWalk b n 0x 0 0x 0x 0x 0x 0x 0x rest)) else (let k : Nat := (calLabelOf l); (let text : Bytes := (if (k =? 0) then l else (calLabelRest l k)); (let now : Nat := (if (k =? 0) then label else k); (let keep : Bool := ((k =? 0) || (not ((calLen text) =? 0))); (calWalk b n sec now (if (now =? 4) then (calSpaced nP text) else nP) (if (now =? 3) then (calSpaced nC text) else nC) (if (now =? 1) then (calSpaced nPa text) else nPa) (if (now =? 2) then (calSpaced nV text) else nV) (if (now =? 6) then (calSpaced vt text) else vt) (if ((now =? 10) && keep) then (calApp3 fd 0x0a text) else fd) rest)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: definitions,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (calU "upstream/rfc5545.txt"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some piece => (let text : Bytes := (calUnpaginate piece); (ctor Option.some [Bytes] (calWalk text 0 0x 0 0x 0x 0x 0x 0x 0x ((calLen text) + 1))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calRecords,
+  parameters: [
+    b : Bytes,
+    i : Nat,
+    standard : Bytes,
+    sub : Bytes,
+    inside : Bool,
+    name : Bytes,
+    kind : Bytes,
+    sec : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((calLen b) <? (i + 1)) then acc else (let l : Bytes := (calLineAt b i); (let n : Nat := (calNextLine b i); (let tag : Bytes := (calFieldOf l 0); (let v : Bytes := (calTailFrom l 1); (if (calSame tag (calU "G")) then (calRecords b n standard v inside name kind sec acc rest) else (if (calSame tag (calU "R")) then (calRecords b n standard sub true 0x 0x 0x acc rest) else (if (calSame tag (calU "E")) then (calRecords b n standard sub false name kind sec (if (inside && ((calSame kind (calU "Current")) && (not ((calLen sec) =? 0)))) then (calApp acc (calCat5 sub 0x20 name 0x20 (calApp sec 0x0a))) else acc) rest) else (if (calSame tag (calU "N")) then (calRecords b n standard sub inside (if (inside && ((calLen name) =? 0)) then v else name) kind sec acc rest) else (if (calSame tag (calU "T")) then (calRecords b n standard sub inside name (if inside then v else kind) sec acc rest) else (if (calSame tag (calU "X")) then (calRecords b n standard sub inside name kind (if (inside && (((calLen sec) =? 0) && (calSame (calFieldOf v 0) standard))) then (calFieldOf v 1) else sec) acc rest) else (calRecords b n standard sub inside name kind sec acc rest))))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calInsertFrom,
+  parameters: [b : Bytes, i : Nat, x : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => b
+    | Nat.succ rest => (if ((calLen b) <? (i + 1)) then (calApp3 b x 0x0a) else (let l : Bytes := (calLineAt b i); (if (calSame l x) then b else (if (calLess x l) then (calCat5 (calCut b 0 i) x 0x0a (calCut b i (calLen b)) 0x) else (calInsertFrom b (calNextLine b i) x rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calSortFrom,
+  parameters: [b : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((calLen b) <? (i + 1)) then acc else (calSortFrom b (calNextLine b i) (calInsertFrom acc 0 (calLineAt b i) ((calLen acc) + 1)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calSorted,
+  parameters: [b : Bytes],
+  result: Bytes,
+  body: (calSortFrom b 0 0x ((calLen b) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calOfSubFrom,
+  parameters: [b : Bytes, i : Nat, sub : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((calLen b) <? (i + 1)) then 0x else (let l : Bytes := (calLineAt b i); (calApp (if (calSame (calFieldOf l 0) sub) then (calApp (calTailFrom l 1) 0x0a) else 0x) (calOfSubFrom b (calNextLine b i) sub rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calOfSub,
+  parameters: [b : Bytes, sub : Bytes],
+  result: Bytes,
+  body: (calOfSubFrom b 0 sub ((calLen b) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calValuesFrom,
+  parameters: [b : Bytes, i : Nat, sec : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((calLen b) <? (i + 1)) then 0x else (let l : Bytes := (calLineAt b i); (calApp (if ((not (calIsKind (calFieldOf l 0))) && (calSame (calOwnerSection (calFieldOf l 2)) sec)) then (calApp (calFieldOf l 1) 0x0a) else 0x) (calValuesFrom b (calNextLine b i) sec rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calDefFrom,
+  parameters: [b : Bytes, i : Nat, sec : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((calLen b) <? (i + 1)) then 0x else (let l : Bytes := (calLineAt b i); (if (calSame (calFieldOf l 1) sec) then l else (calDefFrom b (calNextLine b i) sec rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calDefOf,
+  parameters: [b : Bytes, sec : Bytes],
+  result: Bytes,
+  body: (calDefFrom b 0 sec ((calLen b) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calWithinFrom,
+  parameters: [b : Bytes, i : Nat, x : Bytes, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((calLen b) <? (i + 1)) then false else (if (calSame (calFieldOf (calLineAt b i) 0) x) then true else (calWithinFrom b (calNextLine b i) x rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calWithin,
+  parameters: [x : Bytes, b : Bytes],
+  result: Bool,
+  body: (calWithinFrom b 0 x ((calLen b) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calTypesFrom,
+  parameters: [ws : Bytes, i : Nat, vts : Bytes, seen : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => seen
+    | Nat.succ rest => (if ((calLen ws) <? (i + 1)) then seen else (let e : Nat := (calFind ws i 32); (let w : Bytes := (calCut ws i e); (calTypesFrom ws (e + 1) vts (if ((calWithin w vts) && (not (calWithin w seen))) then (calApp3 seen w 0x0a) else seen) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calListItemsFrom,
+  parameters: [b : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((calLen b) <? (i + 1)) then 0x else (let n : Nat := (calNextLine b i); (calApp3 (calApp (calU "    ") (calQuote (calLineAt b i))) (if ((calLen b) <? (n + 1)) then 0x else (calU ",\n")) (calListItemsFrom b n rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calJsonList,
+  parameters: [b : Bytes],
+  result: Bytes,
+  body: (if ((calLen b) =? 0) then (calU "[]") else (calApp3 (calU "[\n") (calListItemsFrom b 0 ((calLen b) + 1)) (calU "\n   ]"))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calEntryOf,
+  parameters: [group : Bytes, item : Bytes, recs : Bytes, defs : Bytes, vts : Bytes],
+  result: Bytes,
+  body: (let name : Bytes := (calFieldOf item 0); (let sec : Bytes := (calFieldOf item 1); (let d : Bytes := (calDefOf defs sec); (let regs : Bytes := (calSorted (calValuesFrom recs 0 sec ((calLen recs) + 1))); (let registered : Bytes := (if (((calSame group (calU "properties")) || (calSame group (calU "parameters"))) && (not ((calLen regs) =? 0))) then (calApp (calU ",\n   \"registered\": ") (calJsonList regs)) else 0x); (let props : Bytes := (if (calSame group (calU "properties")) then (let default : Bytes := (calFieldOf d 6); (let lead : Bytes := (if (calSame default (calU "-")) then 0x else (calApp default 0x0a)); (let types : Bytes := (calTypesFrom (calTailFrom d 7) 0 vts lead ((calLen d) + 1)); (calCat5 (calU ",\n   \"types\": ") (calJsonList types) (calU ",\n   \"many\": ") (calBool (calSame (calFieldOf d 4) (calU "1"))) (calApp (calU ",\n   \"parts\": ") (calBool (calSame (calFieldOf d 5) (calU "1")))))))) else 0x); (calCat5 (calU "  ") (calQuote name) (calU ": {\n   \"section\": ") (calQuote sec) (calApp3 props registered (calU "\n  }"))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calEntriesFrom,
+  parameters: [
+    group : Bytes,
+    b : Bytes,
+    i : Nat,
+    recs : Bytes,
+    defs : Bytes,
+    vts : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((calLen b) <? (i + 1)) then 0x else (let n : Nat := (calNextLine b i); (calApp3 (calEntryOf group (calLineAt b i) recs defs vts) (if ((calLen b) <? (n + 1)) then 0x else (calU ",\n")) (calEntriesFrom group b n recs defs vts rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calGroupOf,
+  parameters: [group : Bytes, sub : Bytes, recs : Bytes, defs : Bytes, vts : Bytes],
+  result: Bytes,
+  body: (let items : Bytes := (calSorted (calOfSub recs sub)); (if ((calLen items) =? 0) then (calU "{}") else (calApp3 (calU "{\n") (calEntriesFrom group items 0 recs defs vts ((calLen items) + 1)) (calU "\n }")))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calMismatchesFrom,
+  parameters: [b : Bytes, i : Nat, defs : Bytes, standard : Bytes, kind : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((calLen b) <? (i + 1)) then 0x else (let h : Bytes := (calLineAt b i); (let d : Bytes := (calDefOf defs (calFieldOf h 1)); (calApp (if (calSame (calFieldOf d 3) (calFieldOf h 0)) then 0x else (calCat5 standard (calU " section ") (calFieldOf h 1) (calCat5 (calU " does not define the ") kind 0x20 (calFieldOf h 0) (calU " that IANA registers there")) 0x0a)) (calMismatchesFrom b (calNextLine b i) defs standard kind rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calMismatchesOf,
+  parameters: [b : Bytes, defs : Bytes, standard : Bytes, kind : Bytes],
+  result: Bytes,
+  body: (calMismatchesFrom b 0 defs standard kind ((calLen b) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calNamesFromLines,
+  parameters: [b : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((calLen b) <? (i + 1)) then 0x else (calApp3 (calFieldOf (calLineAt b i) 0) 0x0a (calNamesFromLines b (calNextLine b i) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: registry,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (calU ".gen/ical-iana"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some iana => (match (Foundation.Tar::find archive (calU ".gen/ical-defs"))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some defs => (match (Foundation.Tar::find archive (calU "app/specs/calendar/spec.json"))
+        | Option.none => (ctor Option.none [Bytes])
+        | Option.some spec => (let pin : (Option Nat) := (Foundation.Json::memberAt spec (Foundation.Json::root spec) (calU "registry")); (let standard : Bytes := (Foundation.Json::textAt spec (Foundation.Json::memberAt spec pin (calU "standard"))); (let recs : Bytes := (calRecords iana 0 standard 0x false 0x 0x 0x 0x ((calLen iana) + 1)); (let vtl : Bytes := (calOfSub recs (calU "value-data-types")); (let vts : Bytes := (calNamesFromLines vtl 0 ((calLen vtl) + 1)); (let wrong : Bytes := (calApp (calMismatchesOf (calSorted (calOfSub recs (calU "properties"))) defs standard (calU "property")) (calMismatchesOf (calSorted (calOfSub recs (calU "parameters"))) defs standard (calU "parameter"))); (if (not ((calLen wrong) =? 0)) then (ctor Option.some [Bytes] (calApp (calU "refused: ") wrong)) else (ctor Option.some [Bytes] (calCat5 (calU "written\n// Generated by generators/calendar/src/GenCalendar.lex.tex from the IANA iCalendar Element Registries and RFC 5545\n// section 3, both pinned in app/specs/calendar/spec.json. Do not edit.\nexport const REGISTRY = {\n \"standard\": ") (calQuote standard) (calCat5 (calU ",\n \"source\": {\n  \"registry\": ") (calQuote (Foundation.Json::textAt spec (Foundation.Json::memberAt spec pin (calU "url")))) (calU ",\n  \"sha256\": ") (calQuote (Foundation.Json::textAt spec (Foundation.Json::memberAt spec pin (calU "sha256")))) (calU "\n },\n \"components\": ")) (calCat5 (calGroupOf (calU "components") (calU "components") recs defs vts) (calU ",\n \"properties\": ") (calGroupOf (calU "properties") (calU "properties") recs defs vts) (calU ",\n \"parameters\": ") (calGroupOf (calU "parameters") (calU "parameters") recs defs vts)) (calCat5 (calU ",\n \"values\": ") (calGroupOf (calU "values") (calU "value-data-types") recs defs vts) (calU "\n};\n") 0x 0x))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

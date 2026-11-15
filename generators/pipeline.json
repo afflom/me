@@ -36,6 +36,42 @@
         ".gen/arch-index"
       ],
       "output": "app/src/PrismSystem.lex.tex"
+    },
+    {
+      "program": "calendar",
+      "generator": "icalxml",
+      "split": "upstream/icalendar.xml",
+      "breakBefore": "<record[ >]|<registry ",
+      "pinned": {
+        "file": "app/specs/calendar/spec.json",
+        "entries": [
+          ".registry"
+        ]
+      },
+      "output": ".gen/ical-iana"
+    },
+    {
+      "program": "calendar",
+      "generator": "icalrfc",
+      "split": "upstream/rfc5545.txt",
+      "breakBefore": "^[0-9]+[.][0-9.]*[.]? ",
+      "pinned": {
+        "file": "app/specs/calendar/spec.json",
+        "entries": [
+          ".text"
+        ]
+      },
+      "output": ".gen/ical-defs"
+    },
+    {
+      "program": "calendar",
+      "generator": "icalregistry",
+      "inputs": [
+        ".gen/ical-iana",
+        ".gen/ical-defs",
+        "app/specs/calendar/spec.json"
+      ],
+      "output": "site/calendar/registry.mjs"
     }
   ]
 }
