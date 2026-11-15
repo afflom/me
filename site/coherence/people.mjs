@@ -96,7 +96,7 @@ export const isMe = (party, me) => Boolean(me && party && ((party.address && me.
 export const fromMe = (item, me) => item.media === "message" && partiesOf(item).some((p) => isMe(p, me));
 
 // Everyone else, most recent first: {key, name, items}. A kept card names its person.
-export function peopleOf(items, me = null) {
+export function peopleOf(items, me = null, now = Date.now()) {
   const byKey = new Map();
   const byName = new Map();
   for (const item of items) {
@@ -112,15 +112,20 @@ export function peopleOf(items, me = null) {
       if (party.card || (!one.card && one.name.includes("@") && !party.name.includes("@"))) one.name = party.name;
       one.card ||= Boolean(party.card);
       if (!one.items.includes(item)) one.items.push(item);
-      if (item.media !== "contactCard") one.latest = Math.max(one.latest, item.at);
+      // Last in touch is what has happened by now; a meeting ahead is when they are next met.
+      if (item.media !== "contactCard" && item.at <= now) one.latest = Math.max(one.latest, item.at);
+      if (item.media !== "contactCard" && item.at > now) one.next = Math.min(one.next ?? Infinity, item.at);
     }
   }
-  return [...new Set(byKey.values())].sort((a, b) => b.latest - a.latest || a.name.localeCompare(b.name));
+  // Those last in touch most recently first; then those only met ahead, soonest first.
+  return [...new Set(byKey.values())].sort((a, b) => b.latest - a.latest || (a.next ?? Infinity) - (b.next ?? Infinity) || a.name.localeCompare(b.name));
 }
 
 // What is open between the person and one of their people: the meetings
 // ahead, soonest first, then everything else, newest first.
 export function between(one, now = Date.now()) {
+  // Free/busy time says when they are busy, not something between you.
+  one = { ...one, items: one.items.filter((item) => item.component !== "VFREEBUSY") };
   const ahead = one.items.filter((item) => item.media === "calendar" && !item.undated && !item.cancelled && item.at + 3_600_000 > now).sort((a, b) => a.at - b.at);
   const rest = one.items.filter((item) => !ahead.includes(item) && item.media !== "contactCard").sort((a, b) => b.at - a.at);
   return [...ahead, ...rest];
