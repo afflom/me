@@ -192,95 +192,119 @@ definition{
   recursive_argument: rules
 }
 
+inductive{
+  name: EndsTask,
+  type_parameters: [],
+  parameters: [],
+  constructors: [
+    {name: EndsOne, fields: [Node]},
+    {name: EndsAlt, fields: [(List Node)]},
+    {name: EndsSeq, fields: [(List Node)]},
+    {name: EndsRep, fields: [Nat, Nat, Bool, Node, (List Nat), Nat, (List Nat), (List Nat)]}
+  ]
+}
+
+definition{
+  name: abnfEndsGo,
+  parameters: [
+    fuel : Nat,
+    rules : (List Node),
+    s : Bytes,
+    n : Nat,
+    task : EndsTask,
+    at : (List Nat)
+  ],
+  result: (List Nat),
+  body: (match fuel
+    | Nat.zero => (match task
+      | EndsTask.EndsRep low high bounded inner frontier k out seen => (abnfLongestFirst out)
+      | EndsTask.EndsOne node => (nil Nat)
+      | EndsTask.EndsAlt kids => (nil Nat)
+      | EndsTask.EndsSeq kids => (nil Nat))
+    | Nat.succ more => (match task
+      | EndsTask.EndsOne node => (match node
+        | Node.Ref i => (abnfEndsGo more rules s n constructor{
+          arguments: [(abnfRule rules i)],
+          constructor: EndsTask.EndsOne,
+          type_arguments: []
+        } at)
+        | Node.Lit want => (abnfLitEnds want s n false at)
+        | Node.Cs want => (abnfLitEnds want s n true at)
+        | Node.Range low high => (abnfRangeEnds low high s n at)
+        | Node.Alt kids => (abnfEndsGo more rules s n constructor{
+          arguments: [kids],
+          constructor: EndsTask.EndsAlt,
+          type_arguments: []
+        } at)
+        | Node.Seq kids => (abnfEndsGo more rules s n constructor{
+          arguments: [kids],
+          constructor: EndsTask.EndsSeq,
+          type_arguments: []
+        } at)
+        | Node.Rep low high bounded inner => (abnfEndsGo more rules s n constructor{
+          arguments: [low, high, bounded, inner, at, 0, (if (low =? 0) then at else (nil Nat)), at],
+          constructor: EndsTask.EndsRep,
+          type_arguments: []
+        } at)
+        | Node.Prose => (nil Nat))
+      | EndsTask.EndsAlt kids => (match kids
+        | List.nil => (nil Nat)
+        | List.cons kid rest => (abnfUnion (abnfEndsGo more rules s n constructor{
+          arguments: [kid],
+          constructor: EndsTask.EndsOne,
+          type_arguments: []
+        } at) (abnfEndsGo more rules s n constructor{
+          arguments: [rest],
+          constructor: EndsTask.EndsAlt,
+          type_arguments: []
+        } at)))
+      | EndsTask.EndsSeq kids => (match kids
+        | List.nil => at
+        | List.cons kid rest => (match at
+          | List.nil => (nil Nat)
+          | List.cons p others => (abnfEndsGo more rules s n constructor{
+            arguments: [rest],
+            constructor: EndsTask.EndsSeq,
+            type_arguments: []
+          } (abnfEndsGo more rules s n constructor{
+            arguments: [kid],
+            constructor: EndsTask.EndsOne,
+            type_arguments: []
+          } at))))
+      | EndsTask.EndsRep low high bounded inner frontier k out seen => (match frontier
+        | List.nil => (abnfLongestFirst out)
+        | List.cons p others => (if (bounded && (high <=? k)) then (abnfLongestFirst out) else (let next : (List Nat) := (abnfEndsGo more rules s n constructor{
+          arguments: [inner],
+          constructor: EndsTask.EndsOne,
+          type_arguments: []
+        } frontier); (abnfEndsGo more rules s n constructor{
+          arguments: [
+            low,
+            high,
+            bounded,
+            inner,
+            (if ((k + 1) <? low) then next else (abnfFresh next seen)),
+            (k + 1),
+            (if (low <=? (k + 1)) then (abnfUnion out next) else out),
+            (abnfUnion seen next)
+          ],
+          constructor: EndsTask.EndsRep,
+          type_arguments: []
+        } at)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
 definition{
   name: abnfEnds,
   parameters: [fuel : Nat, rules : (List Node), s : Bytes, n : Nat, node : Node, at : (List Nat)],
   result: (List Nat),
-  body: (match fuel
-    | Nat.zero => (nil Nat)
-    | Nat.succ more => (match node
-      | Node.Ref i => (abnfEnds more rules s n (abnfRule rules i) at)
-      | Node.Lit want => (abnfLitEnds want s n false at)
-      | Node.Cs want => (abnfLitEnds want s n true at)
-      | Node.Range low high => (abnfRangeEnds low high s n at)
-      | Node.Alt kids => (abnfEndsAlt more rules s n kids at)
-      | Node.Seq kids => (abnfEndsSeq more rules s n kids at)
-      | Node.Rep low high bounded inner => (abnfEndsRep more rules s n low high bounded inner at 0 (if (low =? 0) then at else (nil Nat)) at)
-      | Node.Prose => (nil Nat))),
-  axioms: [Quot.sound, propext],
-  mutual: AbnfEnds,
-  recursive_argument: fuel
-}
-
-definition{
-  name: abnfEndsAlt,
-  parameters: [
-    fuel : Nat,
-    rules : (List Node),
-    s : Bytes,
-    n : Nat,
-    kids : (List Node),
-    at : (List Nat)
-  ],
-  result: (List Nat),
-  body: (match fuel
-    | Nat.zero => (nil Nat)
-    | Nat.succ more => (match kids
-      | List.nil => (nil Nat)
-      | List.cons kid rest => (abnfUnion (abnfEnds more rules s n kid at) (abnfEndsAlt more rules s n rest at)))),
-  axioms: [Quot.sound, propext],
-  mutual: AbnfEnds,
-  recursive_argument: fuel
-}
-
-definition{
-  name: abnfEndsSeq,
-  parameters: [
-    fuel : Nat,
-    rules : (List Node),
-    s : Bytes,
-    n : Nat,
-    kids : (List Node),
-    at : (List Nat)
-  ],
-  result: (List Nat),
-  body: (match fuel
-    | Nat.zero => (nil Nat)
-    | Nat.succ more => (match kids
-      | List.nil => at
-      | List.cons kid rest => (match at
-        | List.nil => (nil Nat)
-        | List.cons p others => (abnfEndsSeq more rules s n rest (abnfEnds more rules s n kid at))))),
-  axioms: [Quot.sound, propext],
-  mutual: AbnfEnds,
-  recursive_argument: fuel
-}
-
-definition{
-  name: abnfEndsRep,
-  parameters: [
-    fuel : Nat,
-    rules : (List Node),
-    s : Bytes,
-    n : Nat,
-    low : Nat,
-    high : Nat,
-    bounded : Bool,
-    inner : Node,
-    frontier : (List Nat),
-    k : Nat,
-    out : (List Nat),
-    seen : (List Nat)
-  ],
-  result: (List Nat),
-  body: (match fuel
-    | Nat.zero => (abnfLongestFirst out)
-    | Nat.succ more => (match frontier
-      | List.nil => (abnfLongestFirst out)
-      | List.cons p others => (if (bounded && (high <=? k)) then (abnfLongestFirst out) else (let next : (List Nat) := (abnfEnds more rules s n inner frontier); (abnfEndsRep more rules s n low high bounded inner (if ((k + 1) <? low) then next else (abnfFresh next seen)) (k + 1) (if (low <=? (k + 1)) then (abnfUnion out next) else out) (abnfUnion seen next)))))),
-  axioms: [Quot.sound, propext],
-  mutual: AbnfEnds,
-  recursive_argument: fuel
+  body: (abnfEndsGo fuel rules s n constructor{
+    arguments: [node],
+    constructor: EndsTask.EndsOne,
+    type_arguments: []
+  } at),
+  axioms: [Quot.sound, propext]
 }
 
 definition{
@@ -289,6 +313,153 @@ definition{
   result: (List Span),
   body: (match a | List.nil => b | List.cons x rest => (cons x (abnfJoin rest b))),
   recursive_argument: a
+}
+
+inductive{
+  name: DeriveTask,
+  type_parameters: [],
+  parameters: [],
+  constructors: [
+    {name: DeriveOne, fields: [Node]},
+    {name: DeriveAlt, fields: [(List Node)]},
+    {name: DeriveSeq, fields: [(List Node)]},
+    {name: DeriveSeqTry, fields: [Node, (List Node), (List Nat)]},
+    {name: DeriveRep, fields: [Nat, Nat, Bool, Node, Nat]},
+    {name: DeriveRepTry, fields: [Nat, Nat, Bool, Node, (List Nat), Nat]}
+  ]
+}
+
+definition{
+  name: abnfDeriveGo,
+  parameters: [
+    fuel : Nat,
+    rules : (List Node),
+    s : Bytes,
+    n : Nat,
+    task : DeriveTask,
+    pos : Nat,
+    stop : Nat,
+    depth : Nat
+  ],
+  result: (Option (List Span)),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [(List Span)])
+    | Nat.succ more => (match task
+      | DeriveTask.DeriveOne node => (if (abnfHas stop (abnfEnds more rules s n node (cons pos (nil Nat)))) then (match node
+        | Node.Ref i => (match (abnfDeriveGo more rules s n constructor{
+            arguments: [(abnfRule rules i)],
+            constructor: DeriveTask.DeriveOne,
+            type_arguments: []
+          } pos stop (depth + 1))
+          | Option.none => (ctor Option.none [(List Span)])
+          | Option.some kids => (ctor Option.some [(List Span)] (cons (record Span {rule := i, start := pos, stop := stop, depth := depth}) kids)))
+        | Node.Lit want => (ctor Option.some [(List Span)] (nil Span))
+        | Node.Cs want => (ctor Option.some [(List Span)] (nil Span))
+        | Node.Range low high => (ctor Option.some [(List Span)] (nil Span))
+        | Node.Alt kids => (abnfDeriveGo more rules s n constructor{
+          arguments: [kids],
+          constructor: DeriveTask.DeriveAlt,
+          type_arguments: []
+        } pos stop depth)
+        | Node.Seq kids => (abnfDeriveGo more rules s n constructor{
+          arguments: [kids],
+          constructor: DeriveTask.DeriveSeq,
+          type_arguments: []
+        } pos stop depth)
+        | Node.Rep low high bounded inner => (abnfDeriveGo more rules s n constructor{
+          arguments: [low, high, bounded, inner, 0],
+          constructor: DeriveTask.DeriveRep,
+          type_arguments: []
+        } pos stop depth)
+        | Node.Prose => (ctor Option.none [(List Span)])) else (ctor Option.none [(List Span)]))
+      | DeriveTask.DeriveAlt kids => (match kids
+        | List.nil => (ctor Option.none [(List Span)])
+        | List.cons kid rest => (match (abnfDeriveGo more rules s n constructor{
+            arguments: [kid],
+            constructor: DeriveTask.DeriveOne,
+            type_arguments: []
+          } pos stop depth)
+          | Option.none => (abnfDeriveGo more rules s n constructor{
+            arguments: [rest],
+            constructor: DeriveTask.DeriveAlt,
+            type_arguments: []
+          } pos stop depth)
+          | Option.some found => (ctor Option.some [(List Span)] found)))
+      | DeriveTask.DeriveSeq kids => (match kids
+        | List.nil => (if (pos =? stop) then (ctor Option.some [(List Span)] (nil Span)) else (ctor Option.none [(List Span)]))
+        | List.cons kid rest => (abnfDeriveGo more rules s n constructor{
+          arguments: [kid, rest, (abnfEnds more rules s n kid (cons pos (nil Nat)))],
+          constructor: DeriveTask.DeriveSeqTry,
+          type_arguments: []
+        } pos stop depth))
+      | DeriveTask.DeriveSeqTry kid rest cands => (match cands
+        | List.nil => (ctor Option.none [(List Span)])
+        | List.cons e others => (if (stop <? e) then (abnfDeriveGo more rules s n constructor{
+          arguments: [kid, rest, others],
+          constructor: DeriveTask.DeriveSeqTry,
+          type_arguments: []
+        } pos stop depth) else (match (abnfDeriveGo more rules s n constructor{
+            arguments: [kid],
+            constructor: DeriveTask.DeriveOne,
+            type_arguments: []
+          } pos e depth)
+          | Option.none => (abnfDeriveGo more rules s n constructor{
+            arguments: [kid, rest, others],
+            constructor: DeriveTask.DeriveSeqTry,
+            type_arguments: []
+          } pos stop depth)
+          | Option.some head => (match (abnfDeriveGo more rules s n constructor{
+              arguments: [rest],
+              constructor: DeriveTask.DeriveSeq,
+              type_arguments: []
+            } e stop depth)
+            | Option.none => (abnfDeriveGo more rules s n constructor{
+              arguments: [kid, rest, others],
+              constructor: DeriveTask.DeriveSeqTry,
+              type_arguments: []
+            } pos stop depth)
+            | Option.some tail => (ctor Option.some [(List Span)] (abnfJoin head tail))))))
+      | DeriveTask.DeriveRep low high bounded inner k => (if ((pos =? stop) && (low <=? k)) then (ctor Option.some [(List Span)] (nil Span)) else (if (bounded && (high <=? k)) then (ctor Option.none [(List Span)]) else (abnfDeriveGo more rules s n constructor{
+        arguments: [
+          low,
+          high,
+          bounded,
+          inner,
+          (abnfEnds more rules s n inner (cons pos (nil Nat))),
+          k
+        ],
+        constructor: DeriveTask.DeriveRepTry,
+        type_arguments: []
+      } pos stop depth)))
+      | DeriveTask.DeriveRepTry low high bounded inner cands k => (match cands
+        | List.nil => (ctor Option.none [(List Span)])
+        | List.cons e others => (if ((stop <? e) || ((e =? pos) && (low <=? k))) then (abnfDeriveGo more rules s n constructor{
+          arguments: [low, high, bounded, inner, others, k],
+          constructor: DeriveTask.DeriveRepTry,
+          type_arguments: []
+        } pos stop depth) else (match (abnfDeriveGo more rules s n constructor{
+            arguments: [inner],
+            constructor: DeriveTask.DeriveOne,
+            type_arguments: []
+          } pos e depth)
+          | Option.none => (abnfDeriveGo more rules s n constructor{
+            arguments: [low, high, bounded, inner, others, k],
+            constructor: DeriveTask.DeriveRepTry,
+            type_arguments: []
+          } pos stop depth)
+          | Option.some head => (match (abnfDeriveGo more rules s n constructor{
+              arguments: [low, high, bounded, inner, (k + 1)],
+              constructor: DeriveTask.DeriveRep,
+              type_arguments: []
+            } e stop depth)
+            | Option.none => (abnfDeriveGo more rules s n constructor{
+              arguments: [low, high, bounded, inner, others, k],
+              constructor: DeriveTask.DeriveRepTry,
+              type_arguments: []
+            } pos stop depth)
+            | Option.some tail => (ctor Option.some [(List Span)] (abnfJoin head tail)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
 }
 
 definition{
@@ -304,156 +475,12 @@ definition{
     depth : Nat
   ],
   result: (Option (List Span)),
-  body: (match fuel
-    | Nat.zero => (ctor Option.none [(List Span)])
-    | Nat.succ more => (if (abnfHas stop (abnfEnds more rules s n node (cons pos (nil Nat)))) then (match node
-      | Node.Ref i => (match (abnfDerive more rules s n (abnfRule rules i) pos stop (depth + 1))
-        | Option.none => (ctor Option.none [(List Span)])
-        | Option.some kids => (ctor Option.some [(List Span)] (cons (record Span {rule := i, start := pos, stop := stop, depth := depth}) kids)))
-      | Node.Lit want => (ctor Option.some [(List Span)] (nil Span))
-      | Node.Cs want => (ctor Option.some [(List Span)] (nil Span))
-      | Node.Range low high => (ctor Option.some [(List Span)] (nil Span))
-      | Node.Alt kids => (abnfDeriveAlt more rules s n kids pos stop depth)
-      | Node.Seq kids => (abnfDeriveSeq more rules s n kids pos stop depth)
-      | Node.Rep low high bounded inner => (abnfDeriveRep more rules s n low high bounded inner pos stop 0 depth)
-      | Node.Prose => (ctor Option.none [(List Span)])) else (ctor Option.none [(List Span)]))),
-  axioms: [Quot.sound, propext],
-  mutual: AbnfDerive,
-  recursive_argument: fuel
-}
-
-definition{
-  name: abnfDeriveAlt,
-  parameters: [
-    fuel : Nat,
-    rules : (List Node),
-    s : Bytes,
-    n : Nat,
-    kids : (List Node),
-    pos : Nat,
-    stop : Nat,
-    depth : Nat
-  ],
-  result: (Option (List Span)),
-  body: (match fuel
-    | Nat.zero => (ctor Option.none [(List Span)])
-    | Nat.succ more => (match kids
-      | List.nil => (ctor Option.none [(List Span)])
-      | List.cons kid rest => (match (abnfDerive more rules s n kid pos stop depth)
-        | Option.none => (abnfDeriveAlt more rules s n rest pos stop depth)
-        | Option.some found => (ctor Option.some [(List Span)] found)))),
-  axioms: [Quot.sound, propext],
-  mutual: AbnfDerive,
-  recursive_argument: fuel
-}
-
-definition{
-  name: abnfDeriveSeq,
-  parameters: [
-    fuel : Nat,
-    rules : (List Node),
-    s : Bytes,
-    n : Nat,
-    kids : (List Node),
-    pos : Nat,
-    stop : Nat,
-    depth : Nat
-  ],
-  result: (Option (List Span)),
-  body: (match fuel
-    | Nat.zero => (ctor Option.none [(List Span)])
-    | Nat.succ more => (match kids
-      | List.nil => (if (pos =? stop) then (ctor Option.some [(List Span)] (nil Span)) else (ctor Option.none [(List Span)]))
-      | List.cons kid rest => (abnfDeriveSeqTry more rules s n kid rest (abnfEnds more rules s n kid (cons pos (nil Nat))) pos stop depth))),
-  axioms: [Quot.sound, propext],
-  mutual: AbnfDerive,
-  recursive_argument: fuel
-}
-
-definition{
-  name: abnfDeriveSeqTry,
-  parameters: [
-    fuel : Nat,
-    rules : (List Node),
-    s : Bytes,
-    n : Nat,
-    kid : Node,
-    rest : (List Node),
-    cands : (List Nat),
-    pos : Nat,
-    stop : Nat,
-    depth : Nat
-  ],
-  result: (Option (List Span)),
-  body: (match fuel
-    | Nat.zero => (ctor Option.none [(List Span)])
-    | Nat.succ more => (match cands
-      | List.nil => (ctor Option.none [(List Span)])
-      | List.cons e others => (if (stop <? e) then (abnfDeriveSeqTry more rules s n kid rest others pos stop depth) else (match (abnfDerive more rules s n kid pos e depth)
-        | Option.none => (abnfDeriveSeqTry more rules s n kid rest others pos stop depth)
-        | Option.some head => (match (abnfDeriveSeq more rules s n rest e stop depth)
-          | Option.none => (abnfDeriveSeqTry more rules s n kid rest others pos stop depth)
-          | Option.some tail => (ctor Option.some [(List Span)] (abnfJoin head tail))))))),
-  axioms: [Quot.sound, propext],
-  mutual: AbnfDerive,
-  recursive_argument: fuel
-}
-
-definition{
-  name: abnfDeriveRep,
-  parameters: [
-    fuel : Nat,
-    rules : (List Node),
-    s : Bytes,
-    n : Nat,
-    low : Nat,
-    high : Nat,
-    bounded : Bool,
-    inner : Node,
-    pos : Nat,
-    stop : Nat,
-    k : Nat,
-    depth : Nat
-  ],
-  result: (Option (List Span)),
-  body: (match fuel
-    | Nat.zero => (ctor Option.none [(List Span)])
-    | Nat.succ more => (if ((pos =? stop) && (low <=? k)) then (ctor Option.some [(List Span)] (nil Span)) else (if (bounded && (high <=? k)) then (ctor Option.none [(List Span)]) else (abnfDeriveRepTry more rules s n low high bounded inner (abnfEnds more rules s n inner (cons pos (nil Nat))) pos stop k depth)))),
-  axioms: [Quot.sound, propext],
-  mutual: AbnfDerive,
-  recursive_argument: fuel
-}
-
-definition{
-  name: abnfDeriveRepTry,
-  parameters: [
-    fuel : Nat,
-    rules : (List Node),
-    s : Bytes,
-    n : Nat,
-    low : Nat,
-    high : Nat,
-    bounded : Bool,
-    inner : Node,
-    cands : (List Nat),
-    pos : Nat,
-    stop : Nat,
-    k : Nat,
-    depth : Nat
-  ],
-  result: (Option (List Span)),
-  body: (match fuel
-    | Nat.zero => (ctor Option.none [(List Span)])
-    | Nat.succ more => (match cands
-      | List.nil => (ctor Option.none [(List Span)])
-      | List.cons e others => (if ((stop <? e) || ((e =? pos) && (low <=? k))) then (abnfDeriveRepTry more rules s n low high bounded inner others pos stop k depth) else (match (abnfDerive more rules s n inner pos e depth)
-        | Option.none => (abnfDeriveRepTry more rules s n low high bounded inner others pos stop k depth)
-        | Option.some head => (match (abnfDeriveRep more rules s n low high bounded inner e stop (k + 1) depth)
-          | Option.none => (abnfDeriveRepTry more rules s n low high bounded inner others pos stop k depth)
-          | Option.some tail => (ctor Option.some [(List Span)] (abnfJoin head tail))))))),
-  axioms: [Quot.sound, propext],
-  mutual: AbnfDerive,
-  recursive_argument: fuel
+  body: (abnfDeriveGo fuel rules s n constructor{
+    arguments: [node],
+    constructor: DeriveTask.DeriveOne,
+    type_arguments: []
+  } pos stop depth),
+  axioms: [Quot.sound, propext]
 }
 
 definition{
@@ -466,13 +493,6 @@ definition{
     type_arguments: []
   } 0 n 0),
   axioms: [Quot.sound, propext]
-}
-
-structure{
-  name: Decoded,
-  type_parameters: [],
-  parameters: [],
-  fields: [{name: node, type: Node}, {name: next, type: Nat}]
 }
 
 structure{
@@ -517,20 +537,29 @@ definition{
 }
 
 definition{
-  name: abnfDecode,
-  parameters: [fuel : Nat, b : Bytes, at : Nat],
-  result: Decoded,
+  name: abnfFirst,
+  parameters: [nodes : (List Node)],
+  result: Node,
+  body: (match nodes
+    | List.nil => constructor{arguments: [], constructor: Node.Prose, type_arguments: []}
+    | List.cons x rest => x)
+}
+
+definition{
+  name: abnfDecodeGo,
+  parameters: [fuel : Nat, many : Bool, count : Nat, b : Bytes, at : Nat],
+  result: DecodedList,
   body: (match fuel
-    | Nat.zero => (record Decoded {node := constructor{
+    | Nat.zero => (record DecodedList {nodes := (if many then (nil Node) else (cons constructor{
       arguments: [],
       constructor: Node.Prose,
       type_arguments: []
-    }, next := at})
-    | Nat.succ more => (let tag : Nat := (abnfByte b at); (if (tag =? 0) then (record Decoded {node := constructor{
+    } (nil Node))), next := at})
+    | Nat.succ more => (if many then (if (count =? 0) then (record DecodedList {nodes := (nil Node), next := at}) else (let head : DecodedList := (abnfDecodeGo more false 0 b at); (let rest : DecodedList := (abnfDecodeGo more true (prim subtract count 1 : Nat) b (project head next)); (record DecodedList {nodes := (cons (abnfFirst (project head nodes)) (project rest nodes)), next := (project rest next)})))) else (let tag : Nat := (abnfByte b at); (if (tag =? 0) then (record DecodedList {nodes := (cons constructor{
       arguments: [(abnfWord b (at + 1))],
       constructor: Node.Ref,
       type_arguments: []
-    }, next := (at + 3)}) else (if ((tag =? 1) || (tag =? 2)) then (let got : DecodedCodes := (abnfCodes (abnfWord b (at + 1)) b (at + 3)); (record Decoded {node := (if (tag =? 1) then constructor{
+    } (nil Node)), next := (at + 3)}) else (if ((tag =? 1) || (tag =? 2)) then (let got : DecodedCodes := (abnfCodes (abnfWord b (at + 1)) b (at + 3)); (record DecodedList {nodes := (cons (if (tag =? 1) then constructor{
       arguments: [(project got codes)],
       constructor: Node.Lit,
       type_arguments: []
@@ -538,11 +567,11 @@ definition{
       arguments: [(project got codes)],
       constructor: Node.Cs,
       type_arguments: []
-    }), next := (project got next)})) else (if (tag =? 3) then (record Decoded {node := constructor{
+    }) (nil Node)), next := (project got next)})) else (if (tag =? 3) then (record DecodedList {nodes := (cons constructor{
       arguments: [(abnfTriple b (at + 1)), (abnfTriple b (at + 4))],
       constructor: Node.Range,
       type_arguments: []
-    }, next := (at + 7)}) else (if ((tag =? 4) || (tag =? 5)) then (let got : DecodedList := (abnfDecodeList more (abnfWord b (at + 1)) b (at + 3)); (record Decoded {node := (if (tag =? 4) then constructor{
+    } (nil Node)), next := (at + 7)}) else (if ((tag =? 4) || (tag =? 5)) then (let got : DecodedList := (abnfDecodeGo more true (abnfWord b (at + 1)) b (at + 3)); (record DecodedList {nodes := (cons (if (tag =? 4) then constructor{
       arguments: [(project got nodes)],
       constructor: Node.Alt,
       type_arguments: []
@@ -550,34 +579,21 @@ definition{
       arguments: [(project got nodes)],
       constructor: Node.Seq,
       type_arguments: []
-    }), next := (project got next)})) else (if (tag =? 6) then (let inner : Decoded := (abnfDecode more b (at + 6)); (record Decoded {node := constructor{
+    }) (nil Node)), next := (project got next)})) else (if (tag =? 6) then (let inner : DecodedList := (abnfDecodeGo more false 0 b (at + 6)); (record DecodedList {nodes := (cons constructor{
       arguments: [
         (abnfWord b (at + 1)),
         (abnfWord b (at + 3)),
         ((abnfByte b (at + 5)) =? 1),
-        (project inner node)
+        (abnfFirst (project inner nodes))
       ],
       constructor: Node.Rep,
       type_arguments: []
-    }, next := (project inner next)})) else (record Decoded {node := constructor{
+    } (nil Node)), next := (project inner next)})) else (record DecodedList {nodes := (cons constructor{
       arguments: [],
       constructor: Node.Prose,
       type_arguments: []
-    }, next := (at + 1)})))))))),
+    } (nil Node)), next := (at + 1)}))))))))),
   axioms: [Quot.sound, propext],
-  mutual: AbnfDecode,
-  recursive_argument: fuel
-}
-
-definition{
-  name: abnfDecodeList,
-  parameters: [fuel : Nat, count : Nat, b : Bytes, at : Nat],
-  result: DecodedList,
-  body: (match fuel
-    | Nat.zero => (record DecodedList {nodes := (nil Node), next := at})
-    | Nat.succ more => (if (count =? 0) then (record DecodedList {nodes := (nil Node), next := at}) else (let head : Decoded := (abnfDecode more b at); (let rest : DecodedList := (abnfDecodeList more (prim subtract count 1 : Nat) b (project head next)); (record DecodedList {nodes := (cons (project head node) (project rest nodes)), next := (project rest next)}))))),
-  axioms: [Quot.sound, propext],
-  mutual: AbnfDecode,
   recursive_argument: fuel
 }
 
@@ -585,7 +601,7 @@ definition{
   name: abnfTable,
   parameters: [b : Bytes],
   result: (List Node),
-  body: (project (abnfDecodeList 100000 (abnfWord b 0) b 2) nodes),
+  body: (project (abnfDecodeGo 100000 true (abnfWord b 0) b 2) nodes),
   axioms: [Quot.sound, propext]
 }
 
