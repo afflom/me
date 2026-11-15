@@ -4,6 +4,7 @@
 \useglossary{prism.arch@1.0.0}
 \importmodule{Foundation.Bytes}
 \importmodule{GenIcf}
+\importmodule{GenIcfTree}
 \importmodule{Foundation.Tar}
 \importmodule{Foundation.View.Text.V1.Model}
 \importmodule{Foundation.View.Text.V3.Model}
@@ -67,7 +68,15 @@ definition{
   result: Bytes,
   body: (let n : Nat := (Foundation.Bytes::byteLength value); (let eol : Nat := (lineEnd value 0 n); (if (n <? (eol + 1)) then 0x696e76616c6964 else (let line : Bytes := (sliceOr value 0 eol); (let sp : Nat := (wordEnd line 0 eol eol); (let name : Bytes := (sliceOr line 0 sp); (let archive : Bytes := (sliceOr value (eol + 1) (prim subtract n (eol + 1) : Nat)); (if (Foundation.Tar::sameBytes name 0x696366) then (let why : Bytes := (GenIcf::refusals archive); (if (0 <? (Foundation.Bytes::byteLength why)) then (refused why) else (match (GenIcf::rows archive)
     | Option.none => (refused 0x6e65656473206170702f73706563732f6f7261636c652f6963662f53696d706c65546162756c6174696f6e2d4943462d656e2e747874)
-    | Option.some file => (written file)))) else 0x696e76616c6964)))))))),
+    | Option.some file => (written file)))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "icftree")) then (match (Foundation.Tar::find archive (GenIcf::icfText "app/specs/oracle/icf/SimpleTabulation-ICF-en.txt"))
+    | Option.none => (refused (GenIcf::icfText "needs app/specs/oracle/icf/SimpleTabulation-ICF-en.txt"))
+    | Option.some tabulation => (let out : Bytes := (GenIcfTree::summary tabulation); (if (GenIcf::icfStarts out 0x21) then (refused (GenIcf::icfAfter out 0x21)) else (written out)))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "icfids")) then (match (Foundation.Tar::find archive (GenIcf::icfText "app/specs/oracle/icf/SimpleTabulation-ICF-en.txt"))
+    | Option.none => (refused (GenIcf::icfText "needs app/specs/oracle/icf/SimpleTabulation-ICF-en.txt"))
+    | Option.some tabulation => (written (GenIcfTree::ids tabulation))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "icftreecheck")) then (match (Foundation.Tar::find archive (GenIcf::icfText ".gen/icf-tree"))
+    | Option.none => (refused (GenIcf::icfText "needs .gen/icf-tree"))
+    | Option.some summaries => (let why : Bytes := (GenIcfTree::check summaries); (if (0 <? (Foundation.Bytes::byteLength why)) then (refused why) else (written (GenIcf::icfText "the ICF's structure holds across every entity\n"))))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "icfunique")) then (match (Foundation.Tar::find archive (GenIcf::icfText ".gen/icf-ids"))
+    | Option.none => (refused (GenIcf::icfText "needs .gen/icf-ids"))
+    | Option.some keys => (let why : Bytes := (GenIcfTree::unique keys); (if (0 <? (Foundation.Bytes::byteLength why)) then (refused why) else (written (GenIcf::icfText "every entity of the ICF is in it once\n"))))) else 0x696e76616c6964)))))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}
