@@ -39,7 +39,8 @@ test("a declared route stays within its site's contract", () => {
 test("a site whose terms bar browser extensions is read from its download only", () => {
   const run = altered("linkedin-live", (_, site) => { site("linkedin").live = ["seen"]; site("linkedin").backoff = { on: [429], hours: 24, step: "Open LinkedIn" }; });
   assert.notEqual(run.status, 0);
-  assert.match(run.stderr, /linkedin terms bar the extension/);
+  // PrismSource itself refuses LinkedIn's seen route (REQ-007), so the contract is refused there first.
+  assert.match(run.stderr, /linkedin (terms bar the extension|contract allows seen live, which PrismSource refuses)/);
 });
 
 test("a contract never allows a route PrismSource refuses", () => {

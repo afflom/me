@@ -38,3 +38,9 @@ Feature: prism_source
     Given the model in app/src/PrismSource.lex.tex
     When the Lean kernel checks inv006Holds during prismpm verify
     Then no request meets breaksInv006
+
+  @PS-07 @build
+  Scenario: The app never answers read when service is linkedin and route is seen
+    Given the model in app/src/PrismSource.lex.tex
+    When the Lean kernel checks inv007Holds during prismpm verify
+    Then no request meets breaksInv007

@@ -142,6 +142,24 @@
       "then": "refuse",
       "says": "when service is linkedin and route is own then refuse",
       "why": "LinkedIn's own interface for a signed-in person is private, and automating it can restrict the owner's account"
+    },
+    {
+      "id": "REQ-007",
+      "when": [
+        {
+          "field": "service",
+          "op": "is",
+          "value": "linkedin"
+        },
+        {
+          "field": "route",
+          "op": "is",
+          "value": "seen"
+        }
+      ],
+      "then": "refuse",
+      "says": "when service is linkedin and route is seen then refuse",
+      "why": "LinkedIn's User Agreement 8.2 bars browser plugins and add-ons that copy its Services, so its contract (app/specs/source/contracts.json) gives it no live route: it is read from its own download only"
     }
   ],
   "otherwise": "read",
@@ -244,6 +262,25 @@
       "then": "read",
       "says": "never when service is linkedin and route is own then read",
       "why": "no private interface is automated with the owner's account"
+    },
+    {
+      "id": "INV-007",
+      "kind": "never",
+      "when": [
+        {
+          "field": "service",
+          "op": "is",
+          "value": "linkedin"
+        },
+        {
+          "field": "route",
+          "op": "is",
+          "value": "seen"
+        }
+      ],
+      "then": "read",
+      "says": "never when service is linkedin and route is seen then read",
+      "why": "no site whose terms bar the extension is read live (the owner's account is not put at risk)"
     }
   ],
   "examples": [
@@ -297,6 +334,10 @@
     },
     {
       "request": "gmail seen read yes",
+      "response": "refuse"
+    },
+    {
+      "request": "linkedin seen read no",
       "response": "refuse"
     }
   ],

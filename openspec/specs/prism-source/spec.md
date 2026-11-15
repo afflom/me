@@ -80,6 +80,18 @@ Verified: to be proved by Lean for every request (INV-006, theorem `inv006Holds`
 - **THEN** the answer SHALL NOT be `read`
 - **AND** the app answers `refuse`, decided by REQ-006
 
+### Requirement: Never read when service is linkedin and route is seen
+
+The app SHALL NOT answer `read` when service is linkedin and route is seen, because no site whose terms bar the extension is read live (the owner's account is not put at risk).
+
+Verified: to be proved by Lean for every request (INV-007, theorem `inv007Holds`).
+
+#### Scenario: INV-007 holds
+
+- **WHEN** the request is `linkedin seen read no` (an acceptance example)
+- **THEN** the answer SHALL NOT be `read`
+- **AND** the app answers `refuse`, decided by REQ-007
+
 ### Requirement: REQ-001 refuse when halted is yes
 
 The app SHALL answer `refuse` when halted is yes, because stop means stop (kill switch).
@@ -146,6 +158,17 @@ Verified: tested by the acceptance vectors (`rule6`).
 - **WHEN** the request is `linkedin own read no` (an acceptance example)
 - **THEN** the answer SHALL be `refuse`, decided by REQ-006
 
+### Requirement: REQ-007 refuse when service is linkedin and route is seen
+
+The app SHALL answer `refuse` when service is linkedin and route is seen and no earlier rule matches, because LinkedIn's User Agreement 8.2 bars browser plugins and add-ons that copy its Services, so its contract (app/specs/source/contracts.json) gives it no live route: it is read from its own download only.
+
+Verified: tested by the acceptance vectors (`rule7`).
+
+#### Scenario: REQ-007 decides
+
+- **WHEN** the request is `linkedin seen read no` (an acceptance example)
+- **THEN** the answer SHALL be `refuse`, decided by REQ-007
+
 ### Requirement: Otherwise read
 
 The app SHALL answer `read` when no rule matches, because a declared service is read by every route the browser offers it.
@@ -159,7 +182,7 @@ Verified: tested by the acceptance vectors.
 
 ### Requirement: The first matching rule decides
 
-The app SHALL try REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006 in that order, and the first rule that matches SHALL decide.
+The app SHALL try REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007 in that order, and the first rule that matches SHALL decide.
 
 Verified: tested by the acceptance vectors.
 
@@ -207,6 +230,7 @@ Verified: reading a request is tested, not proved.
 - `other seen read no` gives `refuse`
 - `gmail own write no` gives `refuse`
 - `gmail seen read yes` gives `refuse`
+- `linkedin seen read no` gives `refuse`
 
 ## What is proved and what is tested
 
