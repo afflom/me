@@ -531,6 +531,7 @@ Never re-derived, vendored, or gated on.
 | `SRC-RFC9555` | https://www.rfc-editor.org/rfc/rfc9555.txt | `VC-01` |
 | `SRC-RFC6473` | https://www.rfc-editor.org/rfc/rfc6473.txt | `VC-01` |
 | `SRC-RFC6869` | https://www.rfc-editor.org/rfc/rfc6869.txt | `VC-01` |
+| `SRC-RFC7852` | https://www.rfc-editor.org/rfc/rfc7852.txt | `VC-01` |
 
 ## Claims that are not conformance IDs
 

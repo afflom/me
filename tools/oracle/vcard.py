@@ -480,7 +480,7 @@ _ex = importlib.util.spec_from_file_location("iana_vcard", ROOT / "tools/standar
 iana_vcard = importlib.util.module_from_spec(_ex)
 _ex.loader.exec_module(iana_vcard)
 for entry in inventory:
-    entry["id"] = iana_vcard.ident(STANDARD, entry["kind"], entry["name"], entry.get("properties", [None])[0] if entry["kind"] == "parameter-value" else None)
+    entry["id"] = iana_vcard.ident(entry["standard"], entry["kind"], entry["name"], entry.get("properties", [None])[0] if entry["kind"] == "parameter-value" else None)
 
 
 def exercised(entry, ex):
