@@ -846,49 +846,133 @@
     }
    }
   },
-  "automerge.yml": {
-   "name": "automerge",
+  "merge-train.yml": {
+   "name": "merge train",
    "on": {
-    "pull_request_target": {
+    "workflow_run": {
+     "workflows": [
+      "pages",
+      "bootstrap"
+     ],
      "types": [
-      "opened",
-      "reopened",
-      "ready_for_review"
+      "completed"
      ]
-    }
+    },
+    "push": {
+     "branches": [
+      "main"
+     ]
+    },
+    "schedule": [
+     {
+      "cron": "*/20 * * * *"
+     }
+    ],
+    "workflow_dispatch": null
    },
    "permissions": {},
+   "concurrency": {
+    "group": "merge-train",
+    "cancel-in-progress": false
+   },
    "jobs": {
-    "enable": {
-     "name": "switch on auto-merge",
-     "if": "github.event.pull_request.head.repo.full_name == github.repository && !github.event.pull_request.draft && github.event.pull_request.user.login != 'dependabot[bot]'",
+    "test": {
+     "name": "test the train against main",
      "runs-on": "ubuntu-24.04",
-     "timeout-minutes": 5,
+     "timeout-minutes": 90,
      "permissions": {
+      "contents": "read",
+      "pull-requests": "read",
+      "checks": "read"
+     },
+     "outputs": {
+      "main": "${{ steps.train.outputs.main }}",
+      "accepted": "${{ steps.train.outputs.accepted }}"
+     },
+     "steps": [
+      {
+       "name": "Check out main",
+       "uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+       "with": {
+        "ref": "main",
+        "fetch-depth": 0,
+        "persist-credentials": false
+       }
+      },
+      {
+       "name": "Test each ready pull request on main and the train before it",
+       "id": "train",
+       "shell": "bash",
+       "env": {
+        "GH_TOKEN": "${{ github.token }}",
+        "REPO": "${{ github.repository }}"
+       },
+       "run": "set -euo pipefail\ngit config user.name \"merge train\"\ngit config user.email \"merge-train@train.invalid\"\nmain=$(git rev-parse HEAD)\necho \"main=$main\" >>\"$GITHUB_OUTPUT\"\nimage=$(sed -n 's/.*\"sdk_image\":\"\\([^\"]*\\)\".*/\\1/p' prismpm.lock)\n[[ $image =~ ^[a-z0-9.-]+(:[0-9]{1,5})?/[a-z0-9./_-]+@sha256:[0-9a-f]{64}$ ]]\nscratch=$(mktemp -d)\ntrap 'rm -rf \"$scratch\"' EXIT\nfast_gates() {\n  python3 -I tools/realize/gate.py --check &&\n    python3 -I tools/standards/gate.py --check --base \"$main\" &&\n    python3 -I tools/parts/gate.py &&\n    python3 -I tools/product/gate.py &&\n    python3 -I tools/guests/gen.py check &&\n    { [[ ! -f tools/handwritten/gate.py ]] || python3 -I tools/handwritten/gate.py; } &&\n    docker run --rm \\\n      --user \"$(id -u):$(id -g)\" \\\n      --volume \"$scratch:/tmp\" \\\n      --volume \"$PWD:$PWD\" \\\n      --workdir \"$PWD\" \\\n      --env HOME=/tmp/prismpm-home \\\n      --env PRISMPM_EPHEMERAL_HOME=1 \\\n      --env SDK_IMAGE=\"$image\" \\\n      \"$image\" bash -c 'set -euo pipefail; mkdir -p \"$HOME\"; just fmt-check model template-check lint test'\n}\nready=()\nwhile read -r number head draft fork; do\n  [[ $draft == false && $fork == false ]] || continue\n  ok=true\n  for name in \"page / gates\" \"acceptance / ubuntu-24.04\"; do\n    state=$(gh api \"repos/$REPO/commits/$head/check-runs\" -f check_name=\"$name\" -X GET --jq '[.check_runs[] | .conclusion][0] // \"pending\"')\n    [[ $state == success ]] || ok=false\n  done\n  if $ok; then ready+=(\"$number:$head\"); fi\ndone < <(gh api \"repos/$REPO/pulls?state=open&base=main&sort=created&direction=asc&per_page=50\" \\\n  --jq '.[] | \"\\(.number) \\(.head.sha) \\(.draft) \\(.head.repo.full_name != .base.repo.full_name)\"')\necho \"ready: ${ready[*]:-none}\"\naccepted=()\n: >\"$RUNNER_TEMP/refused\"\nfor entry in \"${ready[@]}\"; do\n  number=${entry%%:*}\n  head=${entry#*:}\n  before=$(git rev-parse HEAD)\n  git fetch -q origin \"$head\"\n  if ! git merge -q --no-ff --no-edit \"$head\" >/dev/null 2>&1; then\n    git merge --abort || true\n    printf '%s %s %s\\n' \"$number\" \"$head\" \"it conflicts with main ($main) and the pull requests the train takes before it\" >>\"$RUNNER_TEMP/refused\"\n    continue\n  fi\n  # The pull request's own code runs without the token.\n  if (unset GH_TOKEN; fast_gates) >\"$RUNNER_TEMP/gates-$number.log\" 2>&1; then\n    accepted+=(\"$number:$head\")\n    echo \"#$number $head: the fast gates pass on main and the train before it\"\n  else\n    tail -n 40 \"$RUNNER_TEMP/gates-$number.log\"\n    printf '%s %s %s\\n' \"$number\" \"$head\" \"the fast gates refuse it merged with main ($main) and the pull requests the train takes before it; see run $GITHUB_RUN_ID\" >>\"$RUNNER_TEMP/refused\"\n    git reset -q --hard \"$before\"\n  fi\ndone\necho \"accepted=${accepted[*]:-}\" >>\"$GITHUB_OUTPUT\"\ncp \"$RUNNER_TEMP/refused\" refused.txt\n",
+       "#": {
+        "": [
+         "Ready: open, from this repository, not a draft, and both required",
+         "checks passed on its head. The fast gates are the ones that take",
+         "seconds to minutes: the page job's model gates natively, then the",
+         "workspace's format, model, template, lint and test gates in the",
+         "locked SDK. The proof is not repeated: main's own run binds it."
+        ]
+       }
+      },
+      {
+       "name": "Keep what the train refused",
+       "uses": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+       "with": {
+        "name": "train-refused",
+        "path": "refused.txt",
+        "if-no-files-found": "ignore",
+        "retention-days": 7
+       }
+      }
+     ]
+    },
+    "merge": {
+     "name": "merge the accepted pull requests",
+     "needs": "test",
+     "runs-on": "ubuntu-24.04",
+     "timeout-minutes": 15,
+     "permissions": {
+      "actions": "read",
       "contents": "write",
       "pull-requests": "write"
      },
      "steps": [
       {
-       "name": "Switch on auto-merge (merge commit, as the repository merges)",
+       "name": "Switch GitHub's auto-merge off, merge the accepted in order, and say why the rest wait",
        "shell": "bash",
        "env": {
         "GH_TOKEN": "${{ github.token }}",
-        "PR": "${{ github.event.pull_request.node_id }}",
-        "NUMBER": "${{ github.event.pull_request.number }}"
+        "REPO": "${{ github.repository }}",
+        "MAIN": "${{ needs.test.outputs.main }}",
+        "ACCEPTED": "${{ needs.test.outputs.accepted }}",
+        "RUN": "${{ github.run_id }}"
        },
-       "run": "set -euo pipefail\nquery='mutation($pr: ID!) { enablePullRequestAutoMerge(input: {pullRequestId: $pr, mergeMethod: MERGE}) { pullRequest { autoMergeRequest { enabledAt } } } }'\nif out=$(gh api graphql -f query=\"$query\" -f pr=\"$PR\" 2>&1); then\n  echo \"auto-merge is on for #$NUMBER: it merges when its required checks pass\"\n  exit 0\nfi\n# GitHub refuses auto-merge only when the pull request could merge\n# right now (no check is pending) or main requires no check at all.\n# Neither is a failure of the pull request; say which, and stop.\nprintf '%s\\n' \"$out\" >&2\nif grep -qiE 'clean status|protected branch rules not configured|unstable status' <<<\"$out\"; then\n  echo \"::notice::#$NUMBER: GitHub has nothing to wait for, so auto-merge is not needed ($out)\"\n  exit 0\nfi\nexit 1\n"
+       "run": "set -euo pipefail\nquery='mutation($pr: ID!) { disablePullRequestAutoMerge(input: {pullRequestId: $pr}) { clientMutationId } }'\ngh api \"repos/$REPO/pulls?state=open&base=main&per_page=50\" --jq '.[] | select(.auto_merge != null) | .node_id' |\n  while read -r id; do gh api graphql -f query=\"$query\" -f pr=\"$id\" >/dev/null || true; done\n# Every open pull request learns once, from the pipeline, how it merges.\nnotice=\"Merge train notice\"\ngh api \"repos/$REPO/pulls?state=open&base=main&per_page=50\" --jq '.[].number' |\n  while read -r number; do\n    seen=$(gh api \"repos/$REPO/issues/$number/comments?per_page=100\" | jq --arg m \"$notice\" '[.[] | select(.body | startswith($m))] | length')\n    if [[ $seen == 0 ]]; then\n      gh api -X POST \"repos/$REPO/issues/$number/comments\" -f body=\"$(printf '%s\\n' \"$notice: the merge train merges this pull request once it is green on current main; don't enable auto-merge.\" '' '---' '_Generated by [Claude Code](https://claude.ai/code)_')\" >/dev/null || true\n    fi\n  done\nexpected=$MAIN\nfor entry in $ACCEPTED; do\n  number=${entry%%:*}\n  head=${entry#*:}\n  now=$(gh api \"repos/$REPO/commits/main\" --jq .sha)\n  if [[ $now != \"$expected\" ]]; then\n    echo \"::notice::main moved to $now outside the train; the next run tests #$number again\"\n    break\n  fi\n  if ! expected=$(gh api -X PUT \"repos/$REPO/pulls/$number/merge\" -f sha=\"$head\" -f merge_method=merge --jq .sha); then\n    printf '%s %s %s\\n' \"$number\" \"$head\" \"GitHub refused the merge (see run $RUN)\" >>refused-merge.txt\n    break\n  fi\n  echo \"merged #$number at $expected\"\ndone\nmkdir -p refused\ngh run download \"$RUN\" --repo \"$REPO\" --name train-refused --dir refused 2>/dev/null || true\ncat refused-merge.txt >>refused/refused.txt 2>/dev/null || true\ntouch refused/refused.txt\nwhile read -r number head why; do\n  [[ -n $number ]] || continue\n  marker=\"Merge train: $head\"\n  seen=$(gh api \"repos/$REPO/issues/$number/comments?per_page=100\" | jq --arg m \"$marker\" '[.[] | select(.body | startswith($m))] | length')\n  if [[ $seen == 0 ]]; then\n    gh api -X POST \"repos/$REPO/issues/$number/comments\" -f body=\"$(printf '%s\\n' \"$marker: not merged, because $why. Fix it on this branch (merge main first) and the train tests it again.\" '' '---' '_Generated by [Claude Code](https://claude.ai/code)_')\" >/dev/null\n  fi\ndone <refused/refused.txt\n",
+       "#": {
+        "": [
+         "GitHub's own auto-merge would merge behind the train's back."
+        ]
+       }
       }
      ]
     }
    },
    "#": {
     "name": [
-     "Every pull request from this repository merges itself once its required",
-     "checks pass: auto-merge is switched on when it opens, so no one has to ask",
-     "for the merge. A draft is left alone until it is marked ready. Nothing here",
-     "checks out or runs the pull request's code, so `pull_request_target` gives",
-     "it no more than the two API calls below."
+     "Two pull requests that each pass their gates against an older main can",
+     "still break main together: #105 and #110 were each green, and together",
+     "ST-01 refused main. So nothing merges on its own. The train merges a pull",
+     "request only after the fast gates passed on it merged with main as main is",
+     "now, together with every pull request the train takes before it.",
+     "",
+     "One run at a time. The test job has a read-only token and runs each ready",
+     "pull request's code. The merge job never runs that code: it merges the",
+     "accepted pull requests in order, and only while main is still where they",
+     "were tested."
     ]
    }
   }
