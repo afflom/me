@@ -264,6 +264,32 @@ export function reconcile(kept) {
   return out;
 }
 
+// A conversation (RFC 5322 3.6.4: messages that reply to or reference each other) is
+// listed once, as a mail client threads it: at its latest message, headed by the subject
+// it began with and how many messages it holds, from everyone in it, and opened it
+// reads every message in the order they answer each other. order is sequence()'s
+// (site/time/time.mjs); a message alone is listed as itself.
+const turnWhen = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
+export function conversations(list, order) {
+  const byRoot = new Map();
+  const out = [];
+  for (const item of list) {
+    const place = item.media === "message" ? order?.get(item.address) : null;
+    if (!place?.root || !(place.of > 1)) { out.push(item); continue; }
+    if (!byRoot.has(place.root)) { byRoot.set(place.root, []); out.push(place.root); }
+    byRoot.get(place.root).push(item);
+  }
+  return out.map((entry) => {
+    if (typeof entry !== "string") return entry;
+    const turns = byRoot.get(entry).sort((a, b) => (order.get(a.address).turn - order.get(b.address).turn) || a.at - b.at);
+    if (turns.length < 2) return turns[0];
+    const latest = turns.reduce((a, b) => (b.at > a.at ? b : a));
+    const who = [...new Set(turns.map((t) => t.who).filter(Boolean))].join(", ");
+    const body = turns.map((t) => `${[t.who, t.at ? turnWhen.format(new Date(t.at)) : ""].filter(Boolean).join(" · ")}\n${t.body ?? ""}`.trim()).join("\n\n");
+    return { ...latest, title: `${turns[0].title || latest.title} · ${turns.length}`, who, body, turns };
+  });
+}
+
 // The places an item is listed in. A message, an event, a to-do and a card are each
 // in the place of what they are (their own domain); a note the person kept, which is
 // no kind of thing by itself, is in each place the router mapped its words onto.
@@ -375,6 +401,8 @@ export default async function start({ app, reason, $ }) {
   // Everything kept, read once through the vault (each read is the root's
   // restore decision) and placed by its domain, newest first.
   let items = [];
+  // Each message's place in its conversation, for the place that lists conversations.
+  let threads = null;
   const readOnce = new Map();
   // Each load waits for the one before it, so no two read the same item at
   // once. A load reads at most `most` items it has not opened yet, newest
@@ -426,6 +454,7 @@ export default async function start({ app, reason, $ }) {
       await labelAll(items, { line, halted, me: meNow() }).catch((error) => { for (const item of items) item.labels = null; console.warn(`labels: ${error?.message ?? error}`); });
     }
     people = peopleOf ? { place: peoplePlace, all: peopleOf(items, meNow()), between } : null;
+    threads = items.length ? (await import("./time/time.mjs")).sequence(items) : null;
     if (!left) store.set(NEWEST_KEY, JSON.stringify(items.slice(0, 100).map((item) => item.address)));
     return left;
   }
@@ -791,6 +820,8 @@ export default async function start({ app, reason, $ }) {
     if (current.host === "home") { paintToday(list).catch((error) => say(error?.message ?? String(error), "bad")); return; }
     if (people && current.key === people.place) { paintPeople(list); return; }
     let shown = items.filter((item) => placesOf(item).some((d) => current.domains.includes(d)));
+    // The place of messages lists conversations.
+    if (current.domains[0] === 4 && threads) shown = conversations(shown, threads);
     if (current.show === "search") {
       const words = query.toLowerCase().split(/\s+/).filter(Boolean);
       shown = words.length ? items.filter((item) => words.every((w) => `${item.title} ${item.who} ${item.body ?? item.text}`.toLowerCase().includes(w))) : [];
