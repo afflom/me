@@ -54,9 +54,9 @@ These modules are hand-patched after generation, so do not regenerate them from
 - Models: every name carries the `models` prefix (`PrismModelsRequest`,
   `prismModelsJudge`, `prismModelsDispatch`) and the application record is removed. Its
   rules are single equalities, so it needs no De Morgan rewrite.
-- UORC: the Lean is written by the Prism's builder (`python3 -I tools/prompts/gen.py`, app/prompts/set.json), every name carrying the `prismUorc` prefix; `tools/uorc/gen.py` writes only its mirror, `site/uorc/table.mjs`.
-- Kappa: the decision is written by the Prism's builder (`python3 -I tools/prompts/gen.py`, app/prompts/set.json), every name carrying the `prismKappa` prefix; its examples are the spec's raw lines read into fields by the reader's Python twin. `tools/kappa/gen.py` writes the reader `PrismKappaLabel` (every name carrying the `kappaLabel` prefix), which reads the label's colon, axis, digit count and hex itself, so only the digest word comes from the browser, and answers admit and unverified with the axis; the root routes `kappa` to it. It also writes the mirror `site/kappa/table.mjs`.
-- Holon and Curate: the Lean is written by the Prism's builder (`python3 -I tools/prompts/gen.py`, app/prompts/set.json), every name carrying the `prismHolon` or `prismCurate` prefix. `tools/holon/gen.py` writes only both facets' mirror, `site/holon/table.mjs`.
+- UORC: the Lean is written by the Prism's builder (`python3 -I tools/prompts/gen.py`, app/prompts/set.json), every name carrying the `prismUorc` prefix; its Node suite walks the spec's tree against the guest, with no mirror.
+- Kappa: the decision is written by the Prism's builder (`python3 -I tools/prompts/gen.py`, app/prompts/set.json), every name carrying the `prismKappa` prefix; its examples are the spec's raw lines read into fields by the reader's Python twin. The LexLean generator `GenKappa` (generators/kappa) writes the reader `PrismKappaLabel` (every name carrying the `kappaLabel` prefix), which reads the label's colon, axis, digit count and hex itself, so only the digest word comes from the browser, and answers admit and unverified with the axis; the root routes `kappa` to it. It also writes `site/kappa/table.mjs`, the spec as the adapter reads it.
+- Holon and Curate: the Lean is written by the Prism's builder (`python3 -I tools/prompts/gen.py`, app/prompts/set.json), every name carrying the `prismHolon` or `prismCurate` prefix. The LexLean generator `GenHolon` (generators/facets) writes `site/holon/table.mjs` from both specs.
 - R4: rules 1 and 3 to 7 are rewritten the same way as Boundary and Learning,
   and every name carries the `r4` prefix (`PrismR4Request`, `prismR4Judge`,
   `prismR4Dispatch`), because the holo build puts every module into one crate.
@@ -70,15 +70,13 @@ default already refuses it, and INV-002 still holds.
 The modules carry no personal value. They speak of "the owner"; the owner's
 facts live only in the browser.
 - Resonance: the Lean is written by the Prism's builder (`python3 -I tools/prompts/gen.py`),
-  every name carrying the `prismResonance` prefix; the generic
-  `tools/facet/gen.py app/specs/resonance/spec.json` (the dest generator,
-  parameterized by the spec's `facet` record) writes only `site/resonance/table.mjs`.
-  It checks every request against every guarantee and example before writing, and
-  `--check` holds the table to the spec. Its standalone guest comes from
+  every name carrying the `prismResonance` prefix; the LexLean generator
+  `GenTable` (generators/facets, a step of generators/pipeline.json) writes
+  `site/resonance/table.mjs`, the spec as the page reads it, and GN-01 holds it there. Its standalone guest comes from
   `tools/guests/build.sh` (GU-01).
 - Router (the R4 router): the Lean is written by the Prism's builder, every name
-  carrying the `prismRouter` prefix; `tools/facet/gen.py app/specs/router/spec.json`
-  writes `site/router/table.mjs`.
+  carrying the `prismRouter` prefix; `GenTable` (generators/facets) writes
+  `site/router/table.mjs`.
   It decides, for one value of incoming content in its own schema and one Prism
   feature, whether that feature's compiled reader maps it (`map`), the schema's
   own typed value is taken (`direct`), or nothing happens (`skip`, `refuse`).
