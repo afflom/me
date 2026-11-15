@@ -72,6 +72,13 @@ jobs:
       - name: Check that every spec field, rule and setting changes an answer
         shell: bash
         run: python3 -I tools/realize/gate.py --check
+      # HW-01, the shrink-only ratchet: this tree and the base revision (the merge
+      # base with main, or main's parent) are measured alike, every producer run
+      # in a scratch copy and every file compared with its pinned upstream; no
+      # file may become hand-written, nor the hand-written total grow.
+      - name: Check that no hand-written part was added or grew
+        shell: bash
+        run: python3 -I tools/handwritten/gate.py --check
       # ST-01 before the slow proof too: every part answers to a registered
       # standard, and every requirement extracted from each standard's pinned
       # text is enforced by a suite or listed as debt; on a pull request the
