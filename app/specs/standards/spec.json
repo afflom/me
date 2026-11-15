@@ -200,11 +200,20 @@
    "inventories": [
     {
      "extract": "bcp14"
+    },
+    {
+     "extract": "iana-vcard",
+     "source": {
+      "url": "https://www.iana.org/assignments/vcard-elements/vcard-elements.xml",
+      "sha256": "76398e42b1fdc0a078037a48c17c99483637baf86e134fb58fbffd8c42abdab7"
+     }
     }
    ],
    "governs": [
     "site/source/exports.mjs",
-    "site/device/device.mjs"
+    "site/device/device.mjs",
+    "site/read/vcard.mjs",
+    "site/read/vcard.table.mjs"
    ],
    "realizedBy": [
     "ST-01"
@@ -395,7 +404,9 @@
    "issuer": "WHO",
    "text": null,
    "unpinned": "the ICF classification's machine-readable release needs pinning with an extractor of its codes",
-   "governs": ["site/person/icf.mjs"],
+   "governs": [
+    "site/person/icf.mjs"
+   ],
    "realizedBy": [
     "ST-01"
    ]
@@ -820,6 +831,19 @@
    "text": null,
    "unpinned": "pinning, if it is the source of the Boundary's sensitivity ranks",
    "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "semeval-2017-sts",
+   "title": "SemEval-2017 Task 1 Semantic Textual Similarity (STS Benchmark)",
+   "issuer": "SemEval (ACL SIGLEX)",
+   "text": null,
+   "unpinned": "its graded pairs are pinned as the stsb oracle and held by test/oracle/meaning.test.mjs (QR-15); an extractor that reads its annotation guidelines into requirements is pending",
+   "governs": [
+    "site/router/meaning.mjs"
+   ],
    "realizedBy": [
     "ST-01"
    ]

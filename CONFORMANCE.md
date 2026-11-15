@@ -106,6 +106,7 @@ model does not sanction.
 | ID | Level | Statement |
 | --- | --- | --- |
 | `OR-01` | `build` | Every example of each specification the oracle pins by checksum, kept only where its addresses are at documentation domains, is read by the Prism as a reference reader written to that specification's own grammar reads it, beyond a debt list that only shrinks; the corpus is re-derived from the pinned sources on every run, and each pinned source is a cited authority whose evidence is this ID |
+| `VC-01` | `build` | vCard is read as RFC 6350 defines it: the page's property table is derived from the RFC's own ABNF, every RFC 6350 entry of IANA's vCard Elements registry is implemented and exercised by an example line the RFC gives (or one derived from the RFC's own example of a property it applies to), the Prism reads each example line as a reference reader written to RFC 6350 sections 3.3 and 3.4 reads it, and an entry neither met nor in a debt that only shrinks fails the build |
 
 ## page
 
@@ -526,7 +527,9 @@ Never re-derived, vendored, or gated on.
 | `SRC-WPT-COMP-NAME-FROM-CONTENT` | https://raw.githubusercontent.com/web-platform-tests/wpt/cc8dcb79914d9bc3356ce6641d040022a52f20d8/accname/name/comp_name_from_content.html | `OR-01` |
 | `SRC-APG-FEED` | https://raw.githubusercontent.com/w3c/aria-practices/f14b2490a6728cda85fd7feafbd148b3c3eaf038/content/patterns/feed/examples/js/feedDisplay.js | `OR-01` |
 | `SRC-SCHEMAORG` | https://raw.githubusercontent.com/schemaorg/schemaorg/5f2d8cdec99b7329459ef6584e94b6a840f88471/data/releases/30.1/schemaorg-all-examples.txt | `OR-01` |
+| `SRC-STSB` | https://huggingface.co/datasets/mteb/stsbenchmark-sts/resolve/96943a16ea6a35129e253c659081cb59daf81b30/test.jsonl.gz | `OR-01` |
 | `SRC-ICF` | https://icdcdn.who.int/static/releasefiles/2026-01/SimpleTabulation-ICF-en.zip | `WP-01` |
+| `SRC-IANA-VCARD` | https://www.iana.org/assignments/vcard-elements/vcard-elements.xml | `VC-01` |
 
 ## Claims that are not conformance IDs
 

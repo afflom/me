@@ -25,6 +25,7 @@ export const FACETS = [
   {"key": "folder", "line": "folder", "in": ["content"], "out": ["item"], "drives": {"settings": ["device", "halt"]}},
   {"key": "host", "line": "host", "in": ["owner"], "out": ["content"], "drives": {"settings": ["device", "halt"]}},
   {"key": "source", "line": "source", "in": ["content"], "out": ["content"], "drives": {"settings": ["device", "halt"]}},
+  {"key": "model", "line": "model", "in": ["content"], "out": ["item"]},
   {"key": "kappa", "line": "kappa", "in": ["object"], "out": ["object"]},
   {"key": "uorc", "line": "uorc", "in": ["item", "kept"], "out": ["object"], "drives": {"settings": ["halt"]}},
   {"key": "holon", "line": "holon", "in": ["answer"], "out": ["verdict"]},
@@ -37,7 +38,6 @@ export const SEALED = [
   {"key": "route", "sealed": "the route plan takes the design model's binary envelope, which no browser source yet emits"},
   {"key": "google", "sealed": "mail"},
   {"key": "googlelink", "sealed": "calendar"},
-  {"key": "model", "sealed": "a compiled model's bytes are admitted when the router's meaning feature first loads one; no feature needs a model's bytes yet"},
 ];
 // Facet a feeds facet b where a's outputs meet b's inputs (computed here, so a new facet changes one line).
 export const FLOW = FACETS.map((a) => FACETS.map((b) => [...new Set(a.out.filter((p) => b.in.includes(p)))].sort()));

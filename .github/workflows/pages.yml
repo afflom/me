@@ -1,3 +1,5 @@
+# pages.yml is rendered from the pipeline model, app/specs/pipeline/spec.json, by
+# `cargo run -q --locked -p xtask -- pipeline --write`: change the model, not this file.
 # Publishes the repository's app page: `site/` with the holo that `just app`
 # builds and verifies through the locked SDK. Project content, not universal
 # policy: a repository may extend or replace it.
@@ -14,12 +16,13 @@
 name: pages
 
 on:
-  push:
-    branches: [main]
+  merge_group:
   # Every gate the deploy runs also runs on a pull request, so nothing merges
   # that main cannot publish. Only a main push or a manual run on main deploys.
   pull_request:
-  merge_group:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -45,12 +48,12 @@ jobs:
     outputs:
       current: ${{ steps.head.outputs.current }}
     permissions:
-      contents: read
       actions: read
-      pull-requests: read
+      attestations: write
+      contents: read
       deployments: read
       id-token: write
-      attestations: write
+      pull-requests: read
     steps:
       - name: Check out the exact event revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -81,9 +84,9 @@ jobs:
       # text is enforced by a suite or listed as debt; on a pull request the
       # debt may not grow past the base branch's.
       - name: Check that every part fully implements its standards
-        shell: bash
         env:
           BASE: ${{ github.base_ref }}
+        shell: bash
         run: |
           set -euo pipefail
           if [[ -n $BASE ]]; then
@@ -120,10 +123,10 @@ jobs:
       # specs alone reuses the proof (xtask proof.rs INPUT_PATHS says the same).
       - name: The proof of these exact proof inputs, kept by an earlier page build
         id: proof-cache
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684
         with:
-          path: .prism-proof
           key: prism-page-proof-${{ runner.os }}-${{ runner.arch }}-sdk-${{ steps.proof-inputs.outputs.sdk }}-lean-${{ steps.proof-inputs.outputs.lean }}-${{ hashFiles('app/**', '!app/specs/**', 'prismpm.lock', 'Justfile', 'rust-toolchain.toml') }}
+          path: .prism-proof
       # A cache a pull request saves is never visible to main, so main proved
       # every merge again (16 to 22 minutes). The merged pull request's own page
       # build keeps its proof as an artifact; main takes it as a candidate only.
@@ -131,12 +134,12 @@ jobs:
       # and any failure here just means: prove in full.
       - name: On main, the proof the merged pull request's page build kept
         if: steps.proof-cache.outputs.cache-hit != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
-        continue-on-error: true
-        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           SHA: ${{ github.sha }}
+        shell: bash
+        continue-on-error: true
         run: |
           set -euo pipefail
           head=$(gh api "repos/$REPO/commits/$SHA/pulls" --jq '[.[] | select(.merged_at != null)][0].head.sha // empty')
@@ -146,9 +149,9 @@ jobs:
           gh run download "$run" --repo "$REPO" --name prism-page-proof --dir .prism-proof
           echo "candidate proof from the merged pull request's run $run"
       - name: Build and verify the holo through the locked SDK
-        shell: bash
         env:
           PRISM_PROOF_EVENT: ${{ github.event_name }}:${{ github.ref }}
+        shell: bash
         run: |
           set -euo pipefail
           image=$(sed -n 's/.*"sdk_image":"\([^"]*\)".*/\1/p' prismpm.lock)
@@ -235,9 +238,9 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: prism-page-proof
-          path: .prism-proof
-          include-hidden-files: true
           if-no-files-found: ignore
+          include-hidden-files: true
+          path: .prism-proof
           retention-days: 7
       - name: Find the holo
         id: holo
@@ -260,10 +263,10 @@ jobs:
         # Only a build that is published is signed. A pull request's page links
         # its run instead, and is never deployed.
         if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
-        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8
         with:
-          subject-path: ${{ steps.holo.outputs.path }}
           show-summary: false
+          subject-path: ${{ steps.holo.outputs.path }}
       - name: Draw the social image and the icons for this app.json
         # page.mjs refuses an og.png or icon not drawn for this app.json. Drawing
         # them here, with Pillow pinned by hash, means a new app needs neither
@@ -277,11 +280,11 @@ jobs:
           "$RUNNER_TEMP/draw/bin/python" -I bootstrap/og.py
           "$RUNNER_TEMP/draw/bin/python" -I bootstrap/icons.py
       - name: Assemble the page
-        shell: bash
         env:
-          HOLO: ${{ steps.holo.outputs.path }}
-          FINGERPRINT: ${{ steps.holo.outputs.fingerprint }}
           ATTESTATION_URL: ${{ steps.attest.outputs.attestation-url || format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}
+          FINGERPRINT: ${{ steps.holo.outputs.fingerprint }}
+          HOLO: ${{ steps.holo.outputs.path }}
+        shell: bash
         run: |
           set -euo pipefail
           cp "$HOLO" site/app.holo
@@ -365,8 +368,8 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: screens
-          path: screens
           if-no-files-found: ignore
+          path: screens
       - name: Configure Pages
         if: steps.attest.outcome == 'success'
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b
@@ -381,33 +384,32 @@ jobs:
       - name: Is this commit newer than the live page
         id: head
         if: steps.attest.outcome == 'success'
-        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           SHA: ${{ github.sha }}
+        shell: bash
         run: |
           set -euo pipefail
           go=$(tools/pages/newer.sh)
           echo "current=${go#go=}" >>"$GITHUB_OUTPUT"
-
   deploy:
     name: publish the page
-    needs: build
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.build.outputs.current == 'true'
-    concurrency:
-      group: pages-publish
-      cancel-in-progress: false
+    needs: build
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
-      pages: write
-      id-token: write
       contents: read
       deployments: read
+      id-token: write
+      pages: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      group: pages-publish
+      cancel-in-progress: false
     steps:
       - name: Check out the exact event revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -418,15 +420,15 @@ jobs:
       # this one waited, and then this older page must not replace it.
       - name: Is this commit still newer than the live page
         id: newer
-        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           SHA: ${{ github.sha }}
+        shell: bash
         run: tools/pages/newer.sh >>"$GITHUB_OUTPUT"
       - name: Deploy
-        if: steps.newer.outputs.go == 'true'
         id: deployment
+        if: steps.newer.outputs.go == 'true'
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
       # The published page itself, in a real browser: it keeps, refuses while
       # halted and answers through the app, and its owner's walk (CO-01) holds:
@@ -459,3 +461,54 @@ jobs:
             sleep 30
           done
           exit 1
+  # A decision change is a spec change: a pull request whose decision guests
+  # are older than their modules gets them rebuilt here, in the locked SDK the
+  # proof uses, as the artifact `stale-guests` laid out at its repository
+  # paths. `gh run download <run> -n stale-guests` and a commit bring them in,
+  # so no one needs the SDK image locally. GU-01 (tools/guests/gen.py check)
+  # still fails until they are committed.
+  guests:
+    name: rebuild stale decision guests
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the exact event revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Rebuild each stale guest in the locked SDK
+        id: rebuild
+        shell: bash
+        run: |
+          set -euo pipefail
+          stale=$(python3 -I tools/guests/gen.py stale)
+          if [[ -z $stale ]]; then
+            echo "every decision guest is current"
+            exit 0
+          fi
+          echo "stale: $stale"
+          SDK=$(sed -n 's/.*"sdk_image":"\([^"]*\)".*/\1/p' prismpm.lock) tools/guests/build.sh $stale
+          python3 -I tools/guests/gen.py check
+          git status --porcelain --untracked-files=all | cut -c4- >"$RUNNER_TEMP/rebuilt"
+          tar -cf "$RUNNER_TEMP/stale-guests.tar" -T "$RUNNER_TEMP/rebuilt"
+          mkdir -p "$RUNNER_TEMP/stale-guests"
+          tar -xf "$RUNNER_TEMP/stale-guests.tar" -C "$RUNNER_TEMP/stale-guests"
+          echo "rebuilt=true" >>"$GITHUB_OUTPUT"
+          {
+            echo "## Stale decision guests rebuilt"
+            echo
+            echo "Bring them in with \`gh run download ${{ github.run_id }} -n stale-guests --dir .\` and commit:"
+            echo
+            sed 's/^/- /' "$RUNNER_TEMP/rebuilt"
+          } >>"$GITHUB_STEP_SUMMARY"
+      - name: Hand back the rebuilt guests
+        if: steps.rebuild.outputs.rebuilt == 'true'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: stale-guests
+          path: ${{ runner.temp }}/stale-guests
+          retention-days: 7

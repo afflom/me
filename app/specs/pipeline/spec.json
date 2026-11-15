@@ -1,0 +1,909 @@
+{
+ "comment": "The pipeline model: each workflow this repository owns, as data, rendered to .github/workflows/<name> by cargo run -q --locked -p xtask -- pipeline --write; xtask pipeline (also in xtask validate) fails on a rendered file that differs. In any mapping, \"#\" gives the comment lines above each key, and \"\" the comment above a list item. The template's own workflows (template.lock) are not here.",
+ "workflows": {
+  "pages.yml": {
+   "name": "pages",
+   "on": {
+    "push": {
+     "branches": [
+      "main"
+     ]
+    },
+    "pull_request": null,
+    "merge_group": null,
+    "workflow_dispatch": null,
+    "#": {
+     "pull_request": [
+      "Every gate the deploy runs also runs on a pull request, so nothing merges",
+      "that main cannot publish. Only a main push or a manual run on main deploys."
+     ]
+    }
+   },
+   "permissions": {
+    "contents": "read"
+   },
+   "concurrency": {
+    "group": "${{ github.event_name == 'pull_request' && format('pages-pr-{0}', github.event.pull_request.number) || format('pages-run-{0}', github.run_id) }}",
+    "cancel-in-progress": "${{ github.event_name == 'pull_request' }}"
+   },
+   "jobs": {
+    "build": {
+     "name": "page / gates",
+     "if": "github.repository != 'UOR-Foundation/template'",
+     "runs-on": "ubuntu-24.04",
+     "timeout-minutes": 45,
+     "outputs": {
+      "current": "${{ steps.head.outputs.current }}"
+     },
+     "permissions": {
+      "contents": "read",
+      "actions": "read",
+      "pull-requests": "read",
+      "deployments": "read",
+      "id-token": "write",
+      "attestations": "write"
+     },
+     "steps": [
+      {
+       "name": "Check out the exact event revision",
+       "uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+       "with": {
+        "fetch-depth": 0,
+        "persist-credentials": false
+       }
+      },
+      {
+       "name": "Check the brand and the frame against brand.lock and frame.lock",
+       "shell": "bash",
+       "run": "set -euo pipefail\nnode bootstrap/brand-sync.mjs --check\npython3 -I bootstrap/brand-fonts.py --check\nnode bootstrap/frame-sync.mjs --check\n"
+      },
+      {
+       "name": "Check that every spec field, rule and setting changes an answer",
+       "shell": "bash",
+       "run": "python3 -I tools/realize/gate.py --check",
+       "#": {
+        "": [
+         "RZ-01 before the slow proof: a spec field, rule or setting that changes",
+         "no answer fails here in a second, not after twenty minutes of proving."
+        ]
+       }
+      },
+      {
+       "name": "Check that no hand-written part was added or grew",
+       "shell": "bash",
+       "run": "python3 -I tools/handwritten/gate.py --full --check",
+       "#": {
+        "": [
+         "HW-01, the shrink-only ratchet: every producer runs in a scratch copy,",
+         "every file is compared with the pinned template and frame, and no file",
+         "may become hand-written, nor the hand-written total grow,",
+         "since the base revision (the merge base with main, or main's parent)."
+        ]
+       }
+      },
+      {
+       "name": "Check that every part fully implements its standards",
+       "shell": "bash",
+       "env": {
+        "BASE": "${{ github.base_ref }}"
+       },
+       "run": "set -euo pipefail\nif [[ -n $BASE ]]; then\n  python3 -I tools/standards/gate.py --check --base \"origin/$BASE\"\nelse\n  python3 -I tools/standards/gate.py --check\nfi\n",
+       "#": {
+        "": [
+         "ST-01 before the slow proof too: every part answers to a registered",
+         "standard, and every requirement extracted from each standard's pinned",
+         "text is enforced by a suite or listed as debt; on a pull request the",
+         "debt may not grow past the base branch's."
+        ]
+       }
+      },
+      {
+       "name": "Name the SDK image digest and the Lean toolchain the proof runs on",
+       "id": "proof-inputs",
+       "shell": "bash",
+       "run": "set -euo pipefail\nsdk=$(sed -n 's/.*\"sdk_image\":\"[^\"@]*@sha256:\\([0-9a-f]\\{64\\}\\)\".*/\\1/p' prismpm.lock)\nlean=$(sed -n 's/^leanprover\\/lean4:\\(v[0-9A-Za-z.-]*\\)$/\\1/p' app/lean-toolchain)\ntest -n \"$sdk\"\ntest -n \"$lean\"\nprintf 'sdk=%s\\nlean=%s\\n' \"$sdk\" \"$lean\" >>\"$GITHUB_OUTPUT\"\n",
+       "#": {
+        "": [
+         "The proof is the slow part (15 to 25 minutes). This job reuses one",
+         "exactly as bootstrap.yml and `just app` do: the cache key only finds a",
+         "candidate, and `xtask",
+         "proof-reuse` accepts it only if its attestation binds this checkout,",
+         "this image's Lean and Lake, the architecture and every input file. A",
+         "tag or a manual run proves in full. A reused proof leaves no holo, so",
+         "the holo is then built (six minutes, no proof) and must carry the very",
+         "build ID the reused attestation verified, or this job fails."
+        ]
+       }
+      },
+      {
+       "name": "The proof of these exact proof inputs, kept by an earlier page build",
+       "id": "proof-cache",
+       "uses": "actions/cache@5a3ec84eff668545956fd18022155c47e93e2684",
+       "with": {
+        "path": ".prism-proof",
+        "key": "prism-page-proof-${{ runner.os }}-${{ runner.arch }}-sdk-${{ steps.proof-inputs.outputs.sdk }}-lean-${{ steps.proof-inputs.outputs.lean }}-${{ hashFiles('app/**', '!app/specs/**', 'prismpm.lock', 'Justfile', 'rust-toolchain.toml') }}"
+       },
+       "#": {
+        "": [
+         "This job keeps its own proofs: bootstrap.yml proves inside `just vv`,",
+         "and a holo built here never carries the build ID of a proof made",
+         "there (seen on main: same inputs, different build). A page proof is",
+         "reused only by a later page build, under the same read-time check.",
+         "",
+         "app/specs is not a proof input: the proof reads the lexlean project",
+         "(app/src, app/language and app's own files), and a spec reaches it only",
+         "through the .lex.tex a generator writes into app/src. So a change to the",
+         "specs alone reuses the proof (xtask proof.rs INPUT_PATHS says the same)."
+        ]
+       }
+      },
+      {
+       "name": "On main, the proof the merged pull request's page build kept",
+       "if": "steps.proof-cache.outputs.cache-hit != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'",
+       "continue-on-error": true,
+       "shell": "bash",
+       "env": {
+        "GH_TOKEN": "${{ github.token }}",
+        "REPO": "${{ github.repository }}",
+        "SHA": "${{ github.sha }}"
+       },
+       "run": "set -euo pipefail\nhead=$(gh api \"repos/$REPO/commits/$SHA/pulls\" --jq '[.[] | select(.merged_at != null)][0].head.sha // empty')\ntest -n \"$head\"\nrun=$(gh api \"repos/$REPO/actions/workflows/pages.yml/runs?head_sha=$head&event=pull_request&status=success&per_page=1\" --jq '.workflow_runs[0].id // empty')\ntest -n \"$run\"\ngh run download \"$run\" --repo \"$REPO\" --name prism-page-proof --dir .prism-proof\necho \"candidate proof from the merged pull request's run $run\"\n",
+       "#": {
+        "": [
+         "A cache a pull request saves is never visible to main, so main proved",
+         "every merge again (16 to 22 minutes). The merged pull request's own page",
+         "build keeps its proof as an artifact; main takes it as a candidate only.",
+         "`xtask proof-reuse` still accepts it only if it binds main's checkout,",
+         "and any failure here just means: prove in full."
+        ]
+       }
+      },
+      {
+       "name": "Build and verify the holo through the locked SDK",
+       "shell": "bash",
+       "env": {
+        "PRISM_PROOF_EVENT": "${{ github.event_name }}:${{ github.ref }}"
+       },
+       "run": "set -euo pipefail\nimage=$(sed -n 's/.*\"sdk_image\":\"\\([^\"]*\\)\".*/\\1/p' prismpm.lock)\nif [[ ! $image =~ ^[a-z0-9.-]+(:[0-9]{1,5})?/[a-z0-9./_-]+@sha256:[0-9a-f]{64}$ ]]; then\n  printf '%s\\n' 'prismpm.lock does not select an immutable SDK image' >&2\n  exit 64\nfi\ndocker_config=$(mktemp -d)\n# The SDK's /tmp is a private directory on the runner's own disk, as\n# bootstrap.yml has it since template 1cb0d36: the patched SDK's build\n# outgrows a fixed 2 GiB tmpfs.\nscratch=$(mktemp -d)\nmkdir -p \"$scratch/prismpm-home/.docker\"\ntrap 'rm -rf \"$docker_config\" \"$scratch\"' EXIT\nprintf '{}\\n' >\"$docker_config/config.json\"\ndocker run --rm \\\n  --user \"$(id -u):$(id -g)\" \\\n  --group-add \"$(stat -c '%g' /var/run/docker.sock)\" \\\n  --volume \"$scratch:/tmp\" \\\n  --volume \"$PWD:$PWD\" \\\n  --volume /var/run/docker.sock:/var/run/docker.sock \\\n  --volume \"$docker_config:/tmp/prismpm-home/.docker:ro\" \\\n  --workdir \"$PWD\" \\\n  --env DOCKER_CONFIG=/tmp/prismpm-home/.docker \\\n  --env BUILDX_CONFIG=/tmp/prismpm-buildx \\\n  --env HOME=/tmp/prismpm-home \\\n  --env PRISMPM_EPHEMERAL_HOME=1 \\\n  --env PRISM_PROOF_EVENT \\\n  --env SDK_IMAGE=\"$image\" \\\n  \"$image\" bash -c '\n    set -euo pipefail\n    # The one way a holo is built when a proof is reused.\n    # PrismPM 0.4.0 refuses a provenance statement here: the lock\n    # sits at the root, not beside the app. `verify` writes the\n    # same holo without one (a487fb6a for #94 both ways), and the\n    # build-id check below is what binds it to the reused proof.\n    build_holo() { prismpm --project \"$1\" build --no-provenance; }\n    # A pull request proves in full, so main'\"'\"'s reused-proof build\n    # never runs on it. Rehearse that build alongside the proof, on\n    # a copy of this tree, so a change that breaks it fails here\n    # and not in main'\"'\"'s deploy (#94 blocked main this way).\n    rehearsal=\n    if [[ ${PRISM_PROOF_EVENT:-} == pull_request:* ]]; then\n      mkdir -p /tmp/rehearsal\n      tar --exclude=./.git --exclude=./app/.prism --exclude=./.prism-proof --exclude=./target -cf - . | tar -xf - -C /tmp/rehearsal\n      (cd /tmp/rehearsal && build_holo app) >/tmp/rehearsal.log 2>&1 &\n      rehearsal=$!\n    fi\n    just app\n    if [[ -n $rehearsal ]]; then\n      if wait \"$rehearsal\"; then\n        echo \"main'\"'\"'s reused-proof build works on this tree: $(tail -n 1 /tmp/rehearsal.log)\"\n      else\n        cat /tmp/rehearsal.log >&2\n        printf \"%s\\n\" \"main'\"'\"'s reused-proof build fails on this tree, so merging it would block the deploy\" >&2\n        exit 1\n      fi\n    fi\n    shopt -s nullglob\n    holos=(app/.prism/build/*/*.holo)\n    if [[ ${#holos[@]} -eq 0 ]]; then\n      proved=$(grep -o \"\\\"build_id\\\": *\\\"[0-9a-f]\\{64\\}\\\"\" .prism-proof/verified/manifest.json | grep -o \"[0-9a-f]\\{64\\}\")\n      test -n \"$proved\"\n      build_holo app\n      holos=(app/.prism/build/*/*.holo)\n      test ${#holos[@]} -eq 1\n      built=$(basename \"$(dirname \"${holos[0]}\")\")\n      if [[ $built != \"$proved\" ]]; then\n        # Not the build the reused proof verified: that proof says\n        # nothing about this holo, so prove this tree in full.\n        printf \"the holo built here (%s) is not the build the reused proof verified (%s): proving in full\\n\" \"$built\" \"$proved\" >&2\n        rm -rf app/.prism .prism-proof\n        PRISM_PROOF_EVENT= just app\n        holos=(app/.prism/build/*/*.holo)\n        test ${#holos[@]} -eq 1\n      else\n        echo \"the holo is build $built, the build the reused proof verified\"\n      fi\n    fi\n  '\n"
+      },
+      {
+       "name": "Keep the proof for main",
+       "if": "github.event_name == 'pull_request'",
+       "uses": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+       "with": {
+        "name": "prism-page-proof",
+        "path": ".prism-proof",
+        "include-hidden-files": true,
+        "if-no-files-found": "ignore",
+        "retention-days": 7
+       },
+       "#": {
+        "": [
+         "The proof this pull request ran on, for main to take when it merges."
+        ]
+       }
+      },
+      {
+       "name": "Find the holo",
+       "id": "holo",
+       "shell": "bash",
+       "run": "set -euo pipefail\nshopt -s nullglob\nholos=(app/.prism/build/*/*.holo)\nif [[ ${#holos[@]} -ne 1 ]]; then\n  printf 'expected one holo, found %d\\n' \"${#holos[@]}\" >&2\n  exit 64\nfi\nfingerprint=$(node -e 'process.stdout.write(JSON.parse(require(\"fs\").readFileSync(process.argv[1], \"utf8\")).archive_fingerprint)' \"$(dirname \"${holos[0]}\")/application/holo-identities.json\")\n{\n  echo \"path=${holos[0]}\"\n  echo \"fingerprint=$fingerprint\"\n} >>\"$GITHUB_OUTPUT\"\n"
+      },
+      {
+       "name": "Sign the holo's provenance as this repository's workflow",
+       "id": "attest",
+       "if": "github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')",
+       "uses": "actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8",
+       "with": {
+        "subject-path": "${{ steps.holo.outputs.path }}",
+        "show-summary": false
+       },
+       "#": {
+        "if": [
+         "Only a build that is published is signed. A pull request's page links",
+         "its run instead, and is never deployed."
+        ]
+       }
+      },
+      {
+       "name": "Draw the social image and the icons for this app.json",
+       "shell": "bash",
+       "run": "set -euo pipefail\npython3 -m venv \"$RUNNER_TEMP/draw\"\n\"$RUNNER_TEMP/draw/bin/pip\" install --quiet --no-deps --only-binary :all: --require-hashes -r bootstrap/draw-requirements.txt\n\"$RUNNER_TEMP/draw/bin/python\" -I bootstrap/og.py\n\"$RUNNER_TEMP/draw/bin/python\" -I bootstrap/icons.py\n",
+       "#": {
+        "shell": [
+         "page.mjs refuses an og.png or icon not drawn for this app.json. Drawing",
+         "them here, with Pillow pinned by hash, means a new app needs neither",
+         "Python nor Pillow on its author's machine; the committed images only",
+         "serve a local preview."
+        ]
+       }
+      },
+      {
+       "name": "Assemble the page",
+       "shell": "bash",
+       "env": {
+        "HOLO": "${{ steps.holo.outputs.path }}",
+        "FINGERPRINT": "${{ steps.holo.outputs.fingerprint }}",
+        "ATTESTATION_URL": "${{ steps.attest.outputs.attestation-url || format('{0}/{1}/actions/runs/{2}', github.server_url, github.repository, github.run_id) }}"
+       },
+       "run": "set -euo pipefail\ncp \"$HOLO\" site/app.holo\ncp -r try/vendor site/vendor\nrm -rf site/vendor/prism-code/fixtures\nrm -rf site/vault/test\n# The page says where this holo's provenance is: the signed statement\n# GitHub keeps for the build that made it.\nnode -e '\n  const { readFileSync, writeFileSync } = require(\"node:fs\");\n  const [id, url] = process.argv.slice(1);\n  const app = JSON.parse(readFileSync(\"site/app.json\", \"utf8\"));\n  app.attestations ??= {};\n  app.attestations.build = { id, url };\n  writeFileSync(\"site/app.json\", `${JSON.stringify(app, null, 2)}\\n`);\n' \"$FINGERPRINT\" \"$ATTESTATION_URL\"\nnode bootstrap/page.mjs site\n# Every pinned object set (R4's engine and weights, R4-01, and any\n# other `bootstrap/*-objects.mjs`), fetched from its pinned commit and\n# served as SHA-256-named pieces under the 16 MiB limit. A new set is\n# served, and checked below, without editing this workflow.\nfor objects in bootstrap/*-objects.mjs; do\n  node \"$objects\" site\ndone\nnode bootstrap/precache.mjs site\n"
+      },
+      {
+       "name": "No personal data in the assembled page (PV-01)",
+       "shell": "bash",
+       "run": "set -euo pipefail\ncargo run -q --locked -p xtask -- audit-pii site\n",
+       "#": {
+        "shell": [
+         "The same gate `just vv` runs over the tracked tree, here over every",
+         "file the page publishes. It names the file, line and kind of a",
+         "finding, never the value, because this log is public."
+        ]
+       }
+      },
+      {
+       "name": "Lighthouse at 100 on mobile, before anything is deployed",
+       "shell": "bash",
+       "run": "set -euo pipefail\nnpm install --no-audit --no-fund --global @lhci/cli@0.15.1\nlhci autorun --config=lighthouserc.json\n"
+      },
+      {
+       "name": "Every Material 3 window size class, both themes, before anything is deployed",
+       "shell": "bash",
+       "run": "set -euo pipefail\nnpm install --no-audit --no-fund --global playwright@1.56.1\nplaywright install --with-deps chromium\nnode bootstrap/screens.mjs site screens\n"
+      },
+      {
+       "name": "A first visit's weight, counted once the page has started (FR-03)",
+       "shell": "bash",
+       "run": "set -euo pipefail\nnode bootstrap/weight.mjs site\n"
+      },
+      {
+       "name": "Every browser acceptance under test/, from the pieces this page serves",
+       "shell": "bash",
+       "run": "set -euo pipefail\nexport NODE_PATH=\"$(npm root --global)\"\nshopt -s nullglob globstar\nrunners=(test/*/run.mjs)\nsuites=(test/**/*.test.mjs)\ntest ${#runners[@]} -gt 0\ntest ${#suites[@]} -gt 0\nfor runner in \"${runners[@]}\"; do\n  echo \"::group::$runner\"\n  node \"$runner\"\n  echo \"::endgroup::\"\ndone\n# Twice, on pull requests and before deploys alike: a check that does\n# not decide the same way every run (a race with the page) fails here,\n# on its pull request, instead of on main after the merge.\nfor pass in 1 2; do\n  echo \"::group::every *.test.mjs, pass $pass of 2\"\n  node --test \"${suites[@]}\"\n  echo \"::endgroup::\"\ndone\n",
+       "#": {
+        "": [
+         "Every browser acceptance under test/ runs here, on every pull request",
+         "and before every deploy: each `test/<suite>/run.mjs` (R4-01 and the",
+         "rest) and every `*.test.mjs` (PG-01 and the rest). A new suite is in CI",
+         "the moment it is committed; none runs only on someone's machine."
+        ]
+       }
+      },
+      {
+       "name": "Keep the screens",
+       "if": "always()",
+       "uses": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+       "with": {
+        "name": "screens",
+        "path": "screens",
+        "if-no-files-found": "ignore"
+       }
+      },
+      {
+       "name": "Configure Pages",
+       "if": "steps.attest.outcome == 'success'",
+       "uses": "actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b"
+      },
+      {
+       "name": "Upload the page",
+       "if": "steps.attest.outcome == 'success'",
+       "uses": "actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa",
+       "with": {
+        "path": "site"
+       }
+      },
+      {
+       "name": "Is this commit newer than the live page",
+       "id": "head",
+       "if": "steps.attest.outcome == 'success'",
+       "shell": "bash",
+       "env": {
+        "GH_TOKEN": "${{ github.token }}",
+        "REPO": "${{ github.repository }}",
+        "SHA": "${{ github.sha }}"
+       },
+       "run": "set -euo pipefail\ngo=$(tools/pages/newer.sh)\necho \"current=${go#go=}\" >>\"$GITHUB_OUTPUT\"\n",
+       "#": {
+        "": [
+         "Main's gates run beside each other. A run publishes when the live page",
+         "does not already hold its commit (tools/pages/newer.sh), and the",
+         "publish job asks again just before it deploys."
+        ]
+       }
+      }
+     ],
+     "#": {
+      "name": [
+       "The check a pull request must pass: the same name on every event."
+      ],
+      "if": [
+       "The template repository publishes its try page instead (try-page.yml)."
+      ]
+     }
+    },
+    "guests": {
+     "name": "rebuild stale decision guests",
+     "if": "github.event_name == 'pull_request'",
+     "runs-on": "ubuntu-24.04",
+     "timeout-minutes": 45,
+     "permissions": {
+      "contents": "read"
+     },
+     "steps": [
+      {
+       "name": "Check out the exact event revision",
+       "uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+       "with": {
+        "fetch-depth": 0,
+        "persist-credentials": false
+       }
+      },
+      {
+       "name": "Rebuild each stale guest in the locked SDK",
+       "id": "rebuild",
+       "shell": "bash",
+       "run": "set -euo pipefail\nstale=$(python3 -I tools/guests/gen.py stale)\nif [[ -z $stale ]]; then\n  echo \"every decision guest is current\"\n  exit 0\nfi\necho \"stale: $stale\"\nSDK=$(sed -n 's/.*\"sdk_image\":\"\\([^\"]*\\)\".*/\\1/p' prismpm.lock) tools/guests/build.sh $stale\npython3 -I tools/guests/gen.py check\ngit status --porcelain --untracked-files=all | cut -c4- >\"$RUNNER_TEMP/rebuilt\"\ntar -cf \"$RUNNER_TEMP/stale-guests.tar\" -T \"$RUNNER_TEMP/rebuilt\"\nmkdir -p \"$RUNNER_TEMP/stale-guests\"\ntar -xf \"$RUNNER_TEMP/stale-guests.tar\" -C \"$RUNNER_TEMP/stale-guests\"\necho \"rebuilt=true\" >>\"$GITHUB_OUTPUT\"\n{\n  echo \"## Stale decision guests rebuilt\"\n  echo\n  echo \"Bring them in with \\`gh run download ${{ github.run_id }} -n stale-guests --dir .\\` and commit:\"\n  echo\n  sed 's/^/- /' \"$RUNNER_TEMP/rebuilt\"\n} >>\"$GITHUB_STEP_SUMMARY\"\n"
+      },
+      {
+       "name": "Hand back the rebuilt guests",
+       "if": "steps.rebuild.outputs.rebuilt == 'true'",
+       "uses": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+       "with": {
+        "name": "stale-guests",
+        "path": "${{ runner.temp }}/stale-guests",
+        "retention-days": 7
+       }
+      }
+     ]
+    },
+    "deploy": {
+     "name": "publish the page",
+     "needs": "build",
+     "if": "github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && needs.build.outputs.current == 'true'",
+     "concurrency": {
+      "group": "pages-publish",
+      "cancel-in-progress": false
+     },
+     "runs-on": "ubuntu-24.04",
+     "timeout-minutes": 15,
+     "permissions": {
+      "pages": "write",
+      "id-token": "write",
+      "contents": "read",
+      "deployments": "read"
+     },
+     "environment": {
+      "name": "github-pages",
+      "url": "${{ steps.deployment.outputs.page_url }}"
+     },
+     "steps": [
+      {
+       "name": "Check out the exact event revision",
+       "uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+       "with": {
+        "fetch-depth": 0,
+        "persist-credentials": false
+       }
+      },
+      {
+       "name": "Is this commit still newer than the live page",
+       "id": "newer",
+       "shell": "bash",
+       "env": {
+        "GH_TOKEN": "${{ github.token }}",
+        "REPO": "${{ github.repository }}",
+        "SHA": "${{ github.sha }}"
+       },
+       "run": "tools/pages/newer.sh >>\"$GITHUB_OUTPUT\"",
+       "#": {
+        "": [
+         "Publishes run one at a time: a newer run may have published while",
+         "this one waited, and then this older page must not replace it."
+        ]
+       }
+      },
+      {
+       "name": "Deploy",
+       "if": "steps.newer.outputs.go == 'true'",
+       "id": "deployment",
+       "uses": "actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e"
+      },
+      {
+       "name": "The published page works (PG-01, live)",
+       "if": "steps.newer.outputs.go == 'true'",
+       "env": {
+        "PAGE_URL": "${{ steps.deployment.outputs.page_url }}"
+       },
+       "run": "set -euo pipefail\nnpm install --no-audit --no-fund --global playwright@1.56.1\nplaywright install --with-deps chromium\nfor attempt in 1 2 3 4; do\n  NODE_PATH=\"$(npm root --global)\" node --test test/page/card.test.mjs test/page/person.test.mjs test/page/returning.test.mjs && exit 0\n  sleep 30\ndone\nexit 1\n",
+       "#": {
+        "": [
+         "The published page itself, in a real browser: it keeps, refuses while",
+         "halted and answers through the app, and its owner's walk (CO-01) holds:",
+         "content in, every place lists it, Today and Ask answer from it. Pages can take",
+         "a minute to serve the new bytes, so the check gets four tries."
+        ]
+       }
+      },
+      {
+       "name": "The published page keeps every working journey and keeps the system view off the screen (PD-01, PD-02, live)",
+       "if": "steps.newer.outputs.go == 'true'",
+       "env": {
+        "PAGE_URL": "${{ steps.deployment.outputs.page_url }}"
+       },
+       "run": "set -euo pipefail\nfor attempt in 1 2; do\n  NODE_PATH=\"$(npm root --global)\" node --test test/product/screen.test.mjs test/product/journeys.test.mjs && exit 0\n  sleep 30\ndone\nexit 1\n",
+       "#": {
+        "": [
+         "The product holds on the page the person opens: every journey recorded",
+         "as working still works, fresh and returning, and no system word shows",
+         "beyond the listed debt. Its scoreboard goes to this job's summary."
+        ]
+       }
+      }
+     ]
+    },
+    "#": {
+     "guests": [
+      "A decision change is a spec change: a pull request whose decision guests",
+      "are older than their modules gets them rebuilt here, in the locked SDK the",
+      "proof uses, as the artifact `stale-guests` laid out at its repository",
+      "paths. `gh run download <run> -n stale-guests` and a commit bring them in,",
+      "so no one needs the SDK image locally. GU-01 (tools/guests/gen.py check)",
+      "still fails until they are committed."
+     ]
+    }
+   },
+   "#": {
+    "name": [
+     "Publishes the repository's app page: `site/` with the holo that `just app`",
+     "builds and verifies through the locked SDK. Project content, not universal",
+     "policy: a repository may extend or replace it.",
+     "",
+     "It runs on every push to main, beside `bootstrap`, not after it: `just app`",
+     "is the proof-bearing build (the Lean kernel checks every theorem before the",
+     "holo exists), so the page goes live as soon as that passes, while the rest of",
+     "the gate runs on both architectures. The SDK step and the signing step are",
+     "the ones `build.yml` runs, copied here: the gate pins every `uses:` to a",
+     "commit and so forbids calling a workflow by path. When `build.yml` changes",
+     "either step, copy it again. The page then carries the same holo that",
+     "`prism-code build --remote github` would hand a device, with the signed",
+     "provenance of the run that made it beside it."
+    ],
+    "concurrency": [
+     "A newer push to a pull request cancels its older run. Main's gates run as",
+     "soon as each merge lands, beside each other (a queued merge waited 12 to 27",
+     "minutes for the one before it); only the publish job is one at a time, never",
+     "cancelled, and it publishes only main's head, so an older run that finishes",
+     "later never puts an older page back."
+    ]
+   }
+  },
+  "build.yml": {
+   "name": "build",
+   "on": {
+    "push": {
+     "branches": [
+      "prism/build/**"
+     ]
+    },
+    "workflow_dispatch": null,
+    "workflow_call": {
+     "outputs": {
+      "artifact": {
+       "description": "The name of the artifact that holds the holo and its provenance.",
+       "value": "${{ jobs.build.outputs.artifact }}"
+      },
+      "holo": {
+       "description": "The holo's file name inside the artifact.",
+       "value": "${{ jobs.build.outputs.holo }}"
+      },
+      "fingerprint": {
+       "description": "The archive fingerprint `prismpm verify` recorded for the holo.",
+       "value": "${{ jobs.build.outputs.fingerprint }}"
+      },
+      "attestation-url": {
+       "description": "Where GitHub shows the signed provenance of the holo.",
+       "value": "${{ jobs.build.outputs.attestation-url }}"
+      }
+     }
+    }
+   },
+   "permissions": {
+    "contents": "read"
+   },
+   "concurrency": {
+    "group": "build-${{ github.sha }}",
+    "cancel-in-progress": false
+   },
+   "jobs": {
+    "build": {
+     "name": "build and verify the holo, sign its provenance",
+     "runs-on": "ubuntu-24.04",
+     "timeout-minutes": 45,
+     "permissions": {
+      "contents": "read",
+      "id-token": "write",
+      "attestations": "write"
+     },
+     "outputs": {
+      "artifact": "${{ steps.collect.outputs.artifact }}",
+      "holo": "${{ steps.collect.outputs.holo }}",
+      "fingerprint": "${{ steps.collect.outputs.fingerprint }}",
+      "attestation-url": "${{ steps.attest.outputs.attestation-url }}"
+     },
+     "steps": [
+      {
+       "name": "Check out the exact event revision",
+       "uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+       "with": {
+        "fetch-depth": 0,
+        "persist-credentials": false
+       }
+      },
+      {
+       "name": "Find the app",
+       "id": "app",
+       "shell": "bash",
+       "run": "set -euo pipefail\nif [[ -f app/lexlean.toml ]]; then\n  project=app\n  command='just app'\nelif [[ -f prism/prism.toml ]]; then\n  project=prism\n  command='cd prism && lexlean lock && lexlean fmt --all && lexlean lock && prismpm verify'\nelif [[ -f prism.toml ]]; then\n  project=.\n  command='lexlean lock && lexlean fmt --all && lexlean lock && prismpm verify'\nelse\n  printf '%s\\n' 'no app here: neither app/lexlean.toml, prism/prism.toml nor prism.toml' >&2\n  exit 64\nfi\n{\n  echo \"project=$project\"\n  echo \"command=$command\"\n} >>\"$GITHUB_OUTPUT\"\n",
+       "#": {
+        "run": [
+         "A template instance keeps its app in app/ and builds it with `just app`.",
+         "An app the guided journey wrote (`prism-code mcp`) lives in prism/, or at",
+         "the root when the repository is the app, and is built as the journey",
+         "builds it in the image. Either way `prismpm verify` is the build."
+        ]
+       }
+      },
+      {
+       "name": "Build and verify the holo through the locked SDK",
+       "shell": "bash",
+       "env": {
+        "COMMAND": "${{ steps.app.outputs.command }}"
+       },
+       "run": "set -euo pipefail\nimage=$(sed -n 's/.*\"sdk_image\":\"\\([^\"]*\\)\".*/\\1/p' prismpm.lock)\nif [[ ! $image =~ ^[a-z0-9.-]+(:[0-9]{1,5})?/[a-z0-9./_-]+@sha256:[0-9a-f]{64}$ ]]; then\n  printf '%s\\n' 'prismpm.lock does not select an immutable SDK image' >&2\n  exit 64\nfi\ndocker_config=$(mktemp -d)\n# The SDK's /tmp is a private directory on the runner's own disk, as\n# bootstrap.yml has it since template 1cb0d36: the patched SDK's build\n# outgrows a fixed 2 GiB tmpfs.\nscratch=$(mktemp -d)\nmkdir -p \"$scratch/prismpm-home/.docker\"\ntrap 'rm -rf \"$docker_config\" \"$scratch\"' EXIT\nprintf '{}\\n' >\"$docker_config/config.json\"\ndocker run --rm \\\n  --user \"$(id -u):$(id -g)\" \\\n  --group-add \"$(stat -c '%g' /var/run/docker.sock)\" \\\n  --volume \"$scratch:/tmp\" \\\n  --volume \"$PWD:$PWD\" \\\n  --volume /var/run/docker.sock:/var/run/docker.sock \\\n  --volume \"$docker_config:/tmp/prismpm-home/.docker:ro\" \\\n  --workdir \"$PWD\" \\\n  --env DOCKER_CONFIG=/tmp/prismpm-home/.docker \\\n  --env BUILDX_CONFIG=/tmp/prismpm-buildx \\\n  --env HOME=/tmp/prismpm-home \\\n  --env PRISMPM_EPHEMERAL_HOME=1 \\\n  \"$image\" sh -c \"$COMMAND\"\n"
+      },
+      {
+       "name": "Collect the holo, its build directory and what this run knows about them",
+       "id": "collect",
+       "shell": "bash",
+       "env": {
+        "PROJECT": "${{ steps.app.outputs.project }}",
+        "REPOSITORY": "${{ github.repository }}",
+        "SHA": "${{ github.sha }}",
+        "RUN_ID": "${{ github.run_id }}",
+        "RUN_URL": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+        "WORKFLOW_REF": "${{ github.workflow_ref }}",
+        "EVENT": "${{ github.event_name }}",
+        "REF": "${{ github.ref }}"
+       },
+       "run": "set -euo pipefail\nshopt -s nullglob\nholos=(\"$PROJECT\"/.prism/build/*/*.holo)\nif [[ ${#holos[@]} -ne 1 ]]; then\n  printf 'expected one holo, found %d\\n' \"${#holos[@]}\" >&2\n  exit 64\nfi\nholo=${holos[0]}\nbuild_dir=$(dirname \"$holo\")\nbuild_id=$(basename \"$build_dir\")\nname=$(basename \"$holo\")\nout=\"$RUNNER_TEMP/prism-build\"\nmkdir -p \"$out/build\"\ncp -r \"$build_dir\"/. \"$out/build/\"\nfingerprint=$(node -e 'process.stdout.write(JSON.parse(require(\"fs\").readFileSync(process.argv[1], \"utf8\")).archive_fingerprint)' \"$build_dir/application/holo-identities.json\")\nsha256=$(sha256sum \"$holo\" | cut -d' ' -f1)\nnode -e '\n  const [out, data] = process.argv.slice(1);\n  const record = JSON.parse(data);\n  require(\"fs\").writeFileSync(`${out}/build.json`, `${JSON.stringify(record, null, 2)}\\n`);\n' \"$out\" \"$(jq -cn \\\n  --arg repository \"$REPOSITORY\" --arg sha \"$SHA\" --arg run_id \"$RUN_ID\" --arg run_url \"$RUN_URL\" \\\n  --arg workflow_ref \"$WORKFLOW_REF\" --arg event \"$EVENT\" --arg ref \"$REF\" \\\n  --arg project \"$PROJECT\" --arg build \"$build_id\" --arg holo \"$name\" --arg fingerprint \"$fingerprint\" --arg sha256 \"$sha256\" \\\n  '{schema: \"prism/remote-build/1\", repository: $repository, sha: $sha, run_id: ($run_id | tonumber), run_url: $run_url, workflow_ref: $workflow_ref, event: $event, ref: $ref, project: $project, build: $build, holo: $holo, fingerprint: $fingerprint, holo_sha256: $sha256}')\"\n{\n  echo \"artifact=prism-build-$SHA\"\n  echo \"holo=$name\"\n  echo \"fingerprint=$fingerprint\"\n  echo \"path=$out\"\n  echo \"holo-path=$out/build/$name\"\n} >>\"$GITHUB_OUTPUT\"\n"
+      },
+      {
+       "name": "Sign the holo's provenance as this repository's workflow",
+       "id": "attest",
+       "uses": "actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8",
+       "with": {
+        "subject-path": "${{ steps.collect.outputs.holo-path }}",
+        "show-summary": false
+       }
+      },
+      {
+       "name": "Keep the provenance beside the holo",
+       "shell": "bash",
+       "env": {
+        "BUNDLE": "${{ steps.attest.outputs.bundle-path }}",
+        "OUT": "${{ steps.collect.outputs.path }}"
+       },
+       "run": "set -euo pipefail\ncp \"$BUNDLE\" \"$OUT/provenance.sigstore.json\"\n"
+      },
+      {
+       "name": "Upload the holo, its build directory and its provenance",
+       "uses": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+       "with": {
+        "name": "${{ steps.collect.outputs.artifact }}",
+        "path": "${{ steps.collect.outputs.path }}",
+        "if-no-files-found": "error"
+       }
+      },
+      {
+       "name": "Say what was built",
+       "shell": "bash",
+       "env": {
+        "HOLO": "${{ steps.collect.outputs.holo }}",
+        "FINGERPRINT": "${{ steps.collect.outputs.fingerprint }}",
+        "ARTIFACT": "${{ steps.collect.outputs.artifact }}",
+        "ATTESTATION_URL": "${{ steps.attest.outputs.attestation-url }}",
+        "SHA": "${{ github.sha }}"
+       },
+       "run": "set -euo pipefail\n{\n  echo \"## $HOLO\"\n  echo\n  echo \"| | |\"\n  echo \"| --- | --- |\"\n  echo \"| commit | \\`$SHA\\` |\"\n  echo \"| fingerprint | \\`$FINGERPRINT\\` |\"\n  echo \"| artifact | \\`$ARTIFACT\\` (the holo, its build directory, \\`build.json\\`, \\`provenance.sigstore.json\\`) |\"\n  echo \"| provenance | $ATTESTATION_URL |\"\n  echo\n  echo 'Verified on this runner by `prismpm verify`: every theorem through the Lean kernel, the guest built from the model, every acceptance vector replayed. Check it again on your own device:'\n  echo\n  echo '```'\n  echo \"npx prism-code@latest build --remote github --ref $SHA\"\n  echo '```'\n} >>\"$GITHUB_STEP_SUMMARY\"\n"
+      }
+     ]
+    }
+   },
+   "#": {
+    "name": [
+     "Builds and verifies the repository's app on a GitHub runner, and hands the",
+     "holo back as a signed artifact, so no machine of the author's needs Docker,",
+     "the SDK image or a toolchain. Project content, not universal policy: a",
+     "repository may extend or replace it.",
+     "",
+     "Three ways in, one job:",
+     "  - `prism-code build --remote github` pushes one commit to a ref under",
+     "    prism/build/ and waits for this run; the run's head SHA is that commit",
+     "    and nothing else, whatever the author's branch does meanwhile.",
+     "  - `pages.yml` calls it on every push to main, then publishes the page from",
+     "    the artifact it leaves. The SDK step lives here and nowhere else in the",
+     "    project's workflows; `bootstrap.yml`, universal policy, keeps its own.",
+     "  - Run workflow, from the Actions tab or GitHub Mobile.",
+     "",
+     "What the artifact `prism-build-<sha>` holds: the holo, the build directory",
+     "beside it (`manifest.json`, `application/`), `build.json` naming the commit,",
+     "the repository, the run and the holo's fingerprint, and",
+     "`provenance.sigstore.json`, this run's signed provenance from",
+     "actions/attest-build-provenance. The signer is this repository's workflow",
+     "through GitHub's OIDC issuer, and the statement's subject is the holo's",
+     "SHA-256, so a holo from another commit, another repository or another",
+     "workflow is refused by whoever checks the bundle. The device that downloads",
+     "the artifact verifies the holo again itself: the build is not trusted, it",
+     "is checked."
+    ]
+   }
+  },
+  "deploy-watch.yml": {
+   "name": "deploy watch",
+   "on": {
+    "workflow_run": {
+     "workflows": [
+      "pages"
+     ],
+     "types": [
+      "completed"
+     ]
+    },
+    "schedule": [
+     {
+      "cron": "7,27,47 * * * *"
+     }
+    ],
+    "workflow_dispatch": null
+   },
+   "permissions": {},
+   "concurrency": {
+    "group": "deploy-watch",
+    "cancel-in-progress": false
+   },
+   "jobs": {
+    "watch": {
+     "name": "the live page follows main",
+     "if": "github.repository != 'UOR-Foundation/template'",
+     "runs-on": "ubuntu-24.04",
+     "timeout-minutes": 5,
+     "permissions": {
+      "actions": "write",
+      "contents": "read",
+      "issues": "write",
+      "pull-requests": "write"
+     },
+     "steps": [
+      {
+       "name": "Compare main's head with what is deployed, and act",
+       "shell": "bash",
+       "env": {
+        "GH_TOKEN": "${{ github.token }}",
+        "REPO": "${{ github.repository }}",
+        "OWNER": "${{ github.repository_owner }}",
+        "SERVER": "${{ github.server_url }}"
+       },
+       "run": "set -euo pipefail\nlabel=deploy-blocked\ntitle='The live page is behind main: its deploy is blocked'\nhead=$(gh api \"repos/$REPO/commits/main\" --jq .sha)\ncommitted=$(gh api \"repos/$REPO/commits/$head\" --jq .commit.committer.date)\nage=$(( $(date +%s) - $(date -d \"$committed\" +%s) ))\nrun=$(gh api \"repos/$REPO/actions/workflows/pages.yml/runs?branch=main&head_sha=$head&per_page=20\" \\\n  --jq '[.workflow_runs[] | select(.event == \"push\" or .event == \"workflow_dispatch\")] | sort_by(.created_at) | last // empty')\nissue=$(gh api \"repos/$REPO/issues?state=open&labels=$label&per_page=1\" --jq '.[0].number // empty')\nsay() { printf '%s\\n' \"$*\" | tee -a \"$GITHUB_STEP_SUMMARY\"; }\n\nif [[ -z $run ]]; then\n  # A push from a workflow token starts no workflow; give the push\n  # trigger five minutes, then start the deploy and the gate here.\n  if (( age < 300 )); then\n    say \"main is at $head, committed ${age}s ago; its deploy has not started yet\"\n    exit 0\n  fi\n  say \"main is at $head and nothing deployed it: starting pages and bootstrap on main\"\n  gh api -X POST \"repos/$REPO/actions/workflows/pages.yml/dispatches\" -f ref=main\n  if [[ -z $(gh api \"repos/$REPO/actions/workflows/bootstrap.yml/runs?branch=main&head_sha=$head&per_page=1\" --jq '.workflow_runs[0].id // empty') ]]; then\n    gh api -X POST \"repos/$REPO/actions/workflows/bootstrap.yml/dispatches\" -f ref=main\n  fi\n  exit 0\nfi\n\nid=$(jq -r .id <<<\"$run\")\nstatus=$(jq -r .status <<<\"$run\")\nconclusion=$(jq -r '.conclusion // \"\"' <<<\"$run\")\nattempt=$(jq -r .run_attempt <<<\"$run\")\nurl=$(jq -r .html_url <<<\"$run\")\n\nif [[ $status != completed ]]; then\n  say \"main is at $head; its deploy is $status: $url\"\n  exit 0\nfi\n\nif [[ $conclusion == success ]]; then\n  say \"main is live at $head: $url\"\n  # Every pull request merged since the last live page is told, once, on\n  # its own page that it is live: the publish job opened the published\n  # page in a fresh Chromium (PG-01, PD-01, PD-02 live), so nobody\n  # checks by hand.\n  # Main's runs go side by side and only the head's publishes, so the\n  # last few runs before this one may not have published: tell from the\n  # oldest of them (already-told PRs are skipped below).\n  before=$(gh api \"repos/$REPO/actions/workflows/pages.yml/runs?branch=main&status=success&per_page=6\" \\\n    --jq \"[.workflow_runs[] | select(.head_sha != \\\"$head\\\") | .head_sha] | last // empty\" 2>/dev/null || true)\n  commits=$head\n  if [[ -n $before ]]; then\n    commits=\"$before $(gh api \"repos/$REPO/compare/$before...$head\" --jq '[.commits[].sha] | join(\" \")' 2>/dev/null || echo \"$head\")\"\n  fi\n  done_prs=\" \"\n  for commit in $commits; do\n    for pr in $(gh api \"repos/$REPO/commits/$commit/pulls\" --jq '[.[] | select(.merged_at != null) | .number] | join(\" \")' 2>/dev/null || true); do\n      [[ $done_prs == *\" $pr \"* ]] && continue\n      done_prs+=\"$pr \"\n      seen=$(gh api \"repos/$REPO/issues/$pr/comments?per_page=100\" --jq '[.[] | select(.body | startswith(\"Live:\"))] | length')\n      [[ $seen == 0 ]] || continue\n      gh api -X POST \"repos/$REPO/issues/$pr/comments\" -f body=\"$(printf '%s\\n' \\\n        \"Live: this change is on the published page, as main \\`$head\\`.\" \\\n        \"\" \\\n        \"The publish job opened the published page in a fresh Chromium and its live checks passed (PG-01, PD-01, PD-02): $url\")\" >/dev/null\n      say \"told #$pr it is live\"\n    done\n  done\n  if [[ -n $issue ]]; then\n    gh api -X POST \"repos/$REPO/issues/$issue/comments\" -f body=\"Live again at $head: $url\" >/dev/null\n    gh api -X PATCH \"repos/$REPO/issues/$issue\" -f state=closed -f state_reason=completed >/dev/null\n  fi\n  exit 0\nfi\n\n# Which job and step refused, in the run's own words.\nfailed=$(gh api \"repos/$REPO/actions/runs/$id/attempts/$attempt/jobs\" \\\n  --jq '[.jobs[] | select(.conclusion == \"failure\" or .conclusion == \"cancelled\" or .conclusion == \"timed_out\")] | first // empty')\njob=$(jq -r '.name // \"unknown job\"' <<<\"${failed:-{\\}}\")\nstep=$(jq -r '[.steps[]? | select(.conclusion == \"failure\" or .conclusion == \"cancelled\")] | first | .name // \"unknown step\"' <<<\"${failed:-{\\}}\")\njob_url=$(jq -r \".html_url // \\\"$url\\\"\" <<<\"${failed:-{\\}}\")\n\nif [[ $job == 'publish the page' && $attempt -lt 2 ]]; then\n  say \"main's publish failed at \\\"$step\\\" on attempt $attempt; running the failed jobs once more: $url\"\n  gh api -X POST \"repos/$REPO/actions/runs/$id/rerun-failed-jobs\"\n  exit 0\nfi\n\n# The checks that refused, by name, from the job's own log.\njob_id=$(jq -r '.id // empty' <<<\"${failed:-{\\}}\")\ntests=\"\"\nif [[ -n $job_id ]]; then\n  tests=$(gh api \"repos/$REPO/actions/jobs/$job_id/logs\" 2>/dev/null \\\n    | sed -nE 's/^[0-9TZ:.-]+ +not ok [0-9]+ - (.*)$/- \\1/p' | sort -u | head -n 10 || true)\nfi\n# The pull requests whose merge made main's head: the thread that merged\n# one hears about it on its own pull request, not only in the issue.\nprs=$(gh api \"repos/$REPO/commits/$head/pulls\" --jq '[.[] | select(.merged_at != null) | .number] | join(\" \")' 2>/dev/null || true)\n\nlive=$(gh api \"repos/$REPO/actions/workflows/pages.yml/runs?branch=main&status=success&per_page=1\" \\\n  --jq '.workflow_runs[0] | \"\\(.head_sha) (\\(.updated_at))\"' 2>/dev/null || echo unknown)\nbody=$(printf '%s\\n' \\\n  \"main's deploy is blocked, so the live page is not main.\" \\\n  \"\" \\\n  \"| | |\" \\\n  \"| --- | --- |\" \\\n  \"| main | \\`$head\\` |\" \\\n  \"| refused by | **$job** / **$step** |\" \\\n  \"| run | $job_url |\" \\\n  \"| live page is | \\`$live\\` |\" \\\n  \"| merged by | ${prs:+#${prs// / #}} |\" \\\n  \"\" \\\n  \"${tests:+Checks that refused:}\" \\\n  \"${tests}\" \\\n  \"\" \\\n  \"Every gate that refused here also runs on pull requests, so the fix lands as a pull request; this issue closes itself when main is live again.\")\nsay \"$body\"\ngh label create \"$label\" --repo \"$REPO\" --color d93f0b --description 'The live page is behind main' --force >/dev/null\nif [[ -n $issue ]]; then\n  last=$(gh api \"repos/$REPO/issues/$issue/comments?per_page=100\" --jq 'last | .body // \"\"')\n  [[ $last == \"$body\" ]] || gh api -X POST \"repos/$REPO/issues/$issue/comments\" -f body=\"$body\" >/dev/null\nelse\n  gh api -X POST \"repos/$REPO/issues\" -f title=\"$title\" -f body=\"$body\" -f \"labels[]=$label\" -f \"assignees[]=$OWNER\" >/dev/null\nfi\n# Once per pull request and commit: the PR whose merge was refused is told\n# on its own page. The same merge result already passed there, so a refusal\n# now means a check that does not decide the same way twice.\nfor pr in $prs; do\n  seen=$(gh api \"repos/$REPO/issues/$pr/comments?per_page=100\" --jq \"[.[] | select(.body | contains(\\\"$head\\\"))] | length\")\n  [[ $seen == 0 ]] || continue\n  gh api -X POST \"repos/$REPO/issues/$pr/comments\" -f body=\"$(printf '%s\\n' \\\n    \"Merging this pull request made main \\`$head\\`, and main's deploy refused it, so the live page is not this change.\" \\\n    \"\" \\\n    \"Refused by **$job** / **$step**: $job_url\" \\\n    \"${tests:+}\" \\\n    \"${tests}\" \\\n    \"\" \\\n    \"These are the same gates this pull request passed. If its checks ran on the same merge result, the refusal comes from a check that does not decide the same way every run: make that check deterministic in a new pull request.\")\" >/dev/null\ndone\n"
+      }
+     ]
+    }
+   },
+   "#": {
+    "name": [
+     "Keeps the live page on main's newest commit, or says loudly that it is not.",
+     "",
+     "After every pages run, every 20 minutes, and on demand, it looks at main's",
+     "head and the page's runs for it:",
+     "  - no deploy was ever started for it (a merge that triggered nothing):",
+     "    start one;",
+     "  - the publish step failed on its first attempt (Pages or the live check",
+     "    can be transient): run the failed jobs once more;",
+     "  - a gate refused it: open, or update, one issue that names the commit, the",
+     "    failing step and the run, assigned to the owner, so the stall is seen;",
+     "  - it is live: close that issue.",
+     "It never re-runs a gate that refused, and never deploys anything but main."
+    ]
+   }
+  },
+  "try-page.yml": {
+   "name": "Try Prism page and the canonical frame",
+   "on": {
+    "push": {
+     "branches": [
+      "main"
+     ]
+    },
+    "pull_request": null,
+    "workflow_dispatch": null
+   },
+   "permissions": {
+    "contents": "read"
+   },
+   "concurrency": {
+    "group": "try-page-${{ github.ref }}",
+    "cancel-in-progress": true
+   },
+   "jobs": {
+    "verify": {
+     "name": "headless browser acceptance",
+     "runs-on": "ubuntu-24.04",
+     "timeout-minutes": 20,
+     "steps": [
+      {
+       "name": "Check out the exact event revision",
+       "uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+       "with": {
+        "fetch-depth": 0,
+        "persist-credentials": false
+       }
+      },
+      {
+       "name": "Install Node 22",
+       "uses": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+       "with": {
+        "node-version": 22
+       }
+      },
+      {
+       "name": "Install the test runner",
+       "run": "npm install"
+      },
+      {
+       "name": "Install Chromium",
+       "run": "npx playwright install --with-deps chromium"
+      },
+      {
+       "name": "Verify, answer add 20 22 and replay 22/22",
+       "run": "npm run test:try"
+      },
+      {
+       "name": "Draw the browser fixture's icons and social image from its actual metadata",
+       "run": "python3 -m venv \"$RUNNER_TEMP/frame-draw\"\n\"$RUNNER_TEMP/frame-draw/bin/pip\" install --quiet --no-deps --only-binary :all: --require-hashes -r bootstrap/draw-requirements.txt\n\"$RUNNER_TEMP/frame-draw/bin/python\" -I bootstrap/icons.py\n\"$RUNNER_TEMP/frame-draw/bin/python\" -I bootstrap/og.py\n"
+      },
+      {
+       "name": "The frame verifies in a real module worker, refuses bad archives and works offline",
+       "run": "node --test site/worker-browser.test.mjs"
+      },
+      {
+       "name": "The vault keeps and restores the owner's content in OPFS and in IndexedDB",
+       "run": "node --test site/vault/test/vault-browser.test.mjs"
+      },
+      {
+       "name": "Prism accounts - every signature check refuses, and the passkey flow signs in",
+       "run": "npm run test:identity"
+      },
+      {
+       "name": "Build the canonical frame every Prism app loads",
+       "run": "node frame/publish.mjs \"$RUNNER_TEMP/frame\" \"$GITHUB_SHA\""
+      },
+      {
+       "name": "Build the sign-in page for id.uor.foundation, pinned by hash",
+       "run": "node identity/publish.mjs \"$RUNNER_TEMP/identity\" \"$GITHUB_SHA\""
+      }
+     ]
+    },
+    "deploy": {
+     "name": "publish the try page and the canonical frame",
+     "if": "github.repository == 'UOR-Foundation/template' && github.event_name == 'push' && github.ref == 'refs/heads/main'",
+     "needs": "verify",
+     "runs-on": "ubuntu-24.04",
+     "permissions": {
+      "pages": "write",
+      "id-token": "write"
+     },
+     "environment": {
+      "name": "github-pages",
+      "url": "${{ steps.deployment.outputs.page_url }}"
+     },
+     "steps": [
+      {
+       "name": "Check out the exact event revision",
+       "uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+       "with": {
+        "fetch-depth": 0,
+        "persist-credentials": false
+       }
+      },
+      {
+       "name": "Install Node 22",
+       "uses": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+       "with": {
+        "node-version": 22
+       }
+      },
+      {
+       "name": "Install the frame's minifier, the exact version package-lock.json pins",
+       "run": "npm ci --ignore-scripts --no-audit --no-fund",
+       "#": {
+        "": [
+         "Every Prism app loads the frame from here at run time, so publishing",
+         "main's frame is how a frame change reaches every app: no app rebuilds."
+        ]
+       }
+      },
+      {
+       "name": "Assemble the try page and the canonical frame",
+       "run": "set -euo pipefail\nmkdir -p \"$RUNNER_TEMP/site\"\ncp -r try/. \"$RUNNER_TEMP/site/\"\nnode frame/publish.mjs \"$RUNNER_TEMP/site/frame\" \"$GITHUB_SHA\"\n"
+      },
+      {
+       "name": "Configure Pages",
+       "uses": "actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b"
+      },
+      {
+       "name": "Upload the try page and the frame",
+       "uses": "actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa",
+       "with": {
+        "path": "${{ runner.temp }}/site"
+       }
+      },
+      {
+       "name": "Deploy",
+       "id": "deployment",
+       "uses": "actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e"
+      }
+     ],
+     "#": {
+      "if": [
+       "Repositories made from this template have no Pages site for this page."
+      ]
+     }
+    }
+   }
+  },
+  "automerge.yml": {
+   "name": "automerge",
+   "on": {
+    "pull_request_target": {
+     "types": [
+      "opened",
+      "reopened",
+      "ready_for_review"
+     ]
+    }
+   },
+   "permissions": {},
+   "jobs": {
+    "enable": {
+     "name": "switch on auto-merge",
+     "if": "github.event.pull_request.head.repo.full_name == github.repository && !github.event.pull_request.draft && github.event.pull_request.user.login != 'dependabot[bot]'",
+     "runs-on": "ubuntu-24.04",
+     "timeout-minutes": 5,
+     "permissions": {
+      "contents": "write",
+      "pull-requests": "write"
+     },
+     "steps": [
+      {
+       "name": "Switch on auto-merge (merge commit, as the repository merges)",
+       "shell": "bash",
+       "env": {
+        "GH_TOKEN": "${{ github.token }}",
+        "PR": "${{ github.event.pull_request.node_id }}",
+        "NUMBER": "${{ github.event.pull_request.number }}"
+       },
+       "run": "set -euo pipefail\nquery='mutation($pr: ID!) { enablePullRequestAutoMerge(input: {pullRequestId: $pr, mergeMethod: MERGE}) { pullRequest { autoMergeRequest { enabledAt } } } }'\nif out=$(gh api graphql -f query=\"$query\" -f pr=\"$PR\" 2>&1); then\n  echo \"auto-merge is on for #$NUMBER: it merges when its required checks pass\"\n  exit 0\nfi\n# GitHub refuses auto-merge only when the pull request could merge\n# right now (no check is pending) or main requires no check at all.\n# Neither is a failure of the pull request; say which, and stop.\nprintf '%s\\n' \"$out\" >&2\nif grep -qiE 'clean status|protected branch rules not configured|unstable status' <<<\"$out\"; then\n  echo \"::notice::#$NUMBER: GitHub has nothing to wait for, so auto-merge is not needed ($out)\"\n  exit 0\nfi\nexit 1\n"
+      }
+     ]
+    }
+   },
+   "#": {
+    "name": [
+     "Every pull request from this repository merges itself once its required",
+     "checks pass: auto-merge is switched on when it opens, so no one has to ask",
+     "for the merge. A draft is left alone until it is marked ready. Nothing here",
+     "checks out or runs the pull request's code, so `pull_request_target` gives",
+     "it no more than the two API calls below."
+    ]
+   }
+  }
+ }
+}

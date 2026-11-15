@@ -4,6 +4,7 @@
 // the kept items that meet it. Nothing here decides whether anything is shown:
 // the Boundary does, on the page.
 import { VOCABULARY, INTENTS, MEDIA } from "./coherence.mjs";
+import { nearness } from "../router/meaning.mjs";
 
 const DAY = 86_400_000;
 // Lower case with accents folded, so "Joel" finds "Joël".
@@ -61,19 +62,23 @@ export const mentions = (item, terms) => {
 
 // The kept items an Ask is after, best first: those in its window, those it
 // shares words with, and those in the domains its words name.
-export function drawOn(items, prompt, { now = Date.now(), most = 5 } = {}) {
+// With the meaning reader's vectors (the asked words' and each item's, site/router/meaning.mjs),
+// an item whose meaning is near the ask's (at least `near`) meets it as a shared word does.
+export function drawOn(items, prompt, { now = Date.now(), most = 5, vector = null, near = 1 } = {}) {
   const asked = [...new Set(termsOf(prompt))];
   const span = windowOf(prompt, now);
   const named = new Set();
   const text = lower(prompt);
   for (let d = 0; d < VOCABULARY.length; d += 1) if (uses(d, text)) named.add(d);
-  if (!asked.length && !span && !named.size) return [];
+  if (!asked.length && !span && !named.size && !vector) return [];
   const scored = [];
   for (const item of items) {
     if (item.sealed) continue;
     const have = termsOf(`${item.title} ${item.who} ${(item.body ?? item.text ?? "").slice(0, 4000)}`);
     let score = 0;
     for (const term of asked) if (meets(have, term)) score += 2;
+    const close = vector && item.meaning ? nearness(vector, item.meaning) : 0;
+    if (close >= near) score += 2 + close;
     const inSpan = span && item.at >= span.from && item.at < span.to;
     if (span && !inSpan && !score) continue;
     // In a span, what happens in it (an event, a timed note) comes before what only arrived in it.
