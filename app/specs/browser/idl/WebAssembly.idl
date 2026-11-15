@@ -1,0 +1,22 @@
+// Source: WebAssembly JavaScript Interface (https://www.w3.org/TR/wasm-js-api-2/)
+[Exposed=*]
+namespace WebAssembly {
+    boolean validate([AllowResizable] AllowSharedBufferSource bytes, optional WebAssemblyCompileOptions options = {});
+    Promise<Module> compile([AllowResizable] AllowSharedBufferSource bytes, optional WebAssemblyCompileOptions options = {});
+
+    Promise<WebAssemblyInstantiatedSource> instantiate(
+        [AllowResizable] AllowSharedBufferSource bytes, optional object importObject, optional WebAssemblyCompileOptions options = {});
+
+    Promise<Instance> instantiate(
+        Module moduleObject, optional object importObject);
+
+    readonly attribute Tag JSTag;
+};
+
+// Source: WebAssembly Web API (https://www.w3.org/TR/wasm-web-api-2/)
+[Exposed=(Window,Worker)]
+partial namespace WebAssembly {
+  Promise<Module> compileStreaming(Promise<Response> source, optional WebAssemblyCompileOptions options = {});
+  Promise<WebAssemblyInstantiatedSource> instantiateStreaming(
+      Promise<Response> source, optional object importObject, optional WebAssemblyCompileOptions options = {});
+};
