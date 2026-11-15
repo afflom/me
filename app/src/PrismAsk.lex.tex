@@ -1,0 +1,322 @@
+\begin{lexlean}{PrismAsk}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: prismAskHaltedNo, parameters: [], result: Nat, body: 0}
+
+definition{name: prismAskHaltedYes, parameters: [], result: Nat, body: 1}
+
+definition{name: prismAskClockNot, parameters: [], result: Nat, body: 0}
+
+definition{name: prismAskClockAsked, parameters: [], result: Nat, body: 1}
+
+definition{name: prismAskBoxKeeps, parameters: [], result: Nat, body: 0}
+
+definition{name: prismAskBoxAsks, parameters: [], result: Nat, body: 1}
+
+definition{name: prismAskIntentQuestion, parameters: [], result: Nat, body: 0}
+
+definition{name: prismAskIntentTask, parameters: [], result: Nat, body: 1}
+
+definition{name: prismAskIntentEvent, parameters: [], result: Nat, body: 2}
+
+definition{name: prismAskIntentFact, parameters: [], result: Nat, body: 3}
+
+definition{name: prismAskTimedNo, parameters: [], result: Nat, body: 0}
+
+definition{name: prismAskTimedYes, parameters: [], result: Nat, body: 1}
+
+definition{name: prismAskHeldSome, parameters: [], result: Nat, body: 0}
+
+definition{name: prismAskHeldNone, parameters: [], result: Nat, body: 1}
+
+definition{name: prismAskAnswerPaused, parameters: [], result: Nat, body: 0}
+
+definition{name: prismAskAnswerClock, parameters: [], result: Nat, body: 1}
+
+definition{name: prismAskAnswerEmpty, parameters: [], result: Nat, body: 2}
+
+definition{name: prismAskAnswerAnswer, parameters: [], result: Nat, body: 3}
+
+definition{name: prismAskAnswerKeep, parameters: [], result: Nat, body: 4}
+
+definition{name: prismAskAnswerLook, parameters: [], result: Nat, body: 5}
+
+structure{
+  name: PrismAskRequest,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: halted, type: Nat},
+    {name: clock, type: Nat},
+    {name: box, type: Nat},
+    {name: intent, type: Nat},
+    {name: timed, type: Nat},
+    {name: held, type: Nat}
+  ]
+}
+
+definition{
+  name: prismAskByteAt,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some b => (ctor Option.some [Nat] (prim to_nat b : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismAskDigitsValue,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.some [Nat] acc)
+    | Nat.succ rest => (match (prismAskByteAt s i)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (prismAskDigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: prismAskParseDigits,
+  parameters: [s : Bytes],
+  result: (Option Nat),
+  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (prismAskByteAt s 0)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (prismAskDigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismAskParseNumber,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (prismAskParseDigits value),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismAskParseHalted,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (prismAskHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (prismAskHaltedYes)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismAskParseClock,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f74 : Bool) then (ctor Option.some [Nat] (prismAskClockNot)) else (if (prim equal value 0x61736b6564 : Bool) then (ctor Option.some [Nat] (prismAskClockAsked)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismAskParseBox,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6b65657073 : Bool) then (ctor Option.some [Nat] (prismAskBoxKeeps)) else (if (prim equal value 0x61736b73 : Bool) then (ctor Option.some [Nat] (prismAskBoxAsks)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismAskParseIntent,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x7175657374696f6e : Bool) then (ctor Option.some [Nat] (prismAskIntentQuestion)) else (if (prim equal value 0x7461736b : Bool) then (ctor Option.some [Nat] (prismAskIntentTask)) else (if (prim equal value 0x6576656e74 : Bool) then (ctor Option.some [Nat] (prismAskIntentEvent)) else (if (prim equal value 0x66616374 : Bool) then (ctor Option.some [Nat] (prismAskIntentFact)) else (ctor Option.none [Nat])))))
+}
+
+definition{
+  name: prismAskParseTimed,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (prismAskTimedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (prismAskTimedYes)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismAskParseHeld,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x736f6d65 : Bool) then (ctor Option.some [Nat] (prismAskHeldSome)) else (if (prim equal value 0x6e6f6e65 : Bool) then (ctor Option.some [Nat] (prismAskHeldNone)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismAskSliceOf,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: prismAskFieldEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match (prismAskByteAt s i)
+      | Option.none => i
+      | Option.some d => (if (d =? 32) then i else (prismAskFieldEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: prismAskDecodeField6,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat],
+  result: (Option PrismAskRequest),
+  body: (let e : Nat := (prismAskFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismAskParseHeld (prismAskSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismAskRequest])
+    | Option.some v6 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [PrismAskRequest] (record PrismAskRequest {halted := v1, clock := v2, box := v3, intent := v4, timed := v5, held := v6})) else (ctor Option.none [PrismAskRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismAskDecodeField5,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat],
+  result: (Option PrismAskRequest),
+  body: (let e : Nat := (prismAskFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismAskParseTimed (prismAskSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismAskRequest])
+    | Option.some v5 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismAskDecodeField6 s (e + 1) v1 v2 v3 v4 v5) else (ctor Option.none [PrismAskRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismAskDecodeField4,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
+  result: (Option PrismAskRequest),
+  body: (let e : Nat := (prismAskFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismAskParseIntent (prismAskSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismAskRequest])
+    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismAskDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [PrismAskRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismAskDecodeField3,
+  parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
+  result: (Option PrismAskRequest),
+  body: (let e : Nat := (prismAskFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismAskParseBox (prismAskSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismAskRequest])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismAskDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [PrismAskRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismAskDecodeField2,
+  parameters: [s : Bytes, start : Nat, v1 : Nat],
+  result: (Option PrismAskRequest),
+  body: (let e : Nat := (prismAskFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismAskParseClock (prismAskSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismAskRequest])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismAskDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [PrismAskRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismAskDecodeField1,
+  parameters: [s : Bytes, start : Nat],
+  result: (Option PrismAskRequest),
+  body: (let e : Nat := (prismAskFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismAskParseHalted (prismAskSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismAskRequest])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismAskDecodeField2 s (e + 1) v1) else (ctor Option.none [PrismAskRequest])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismAskRule1,
+  parameters: [request : PrismAskRequest],
+  result: Bool,
+  body: ((project request halted) =? (prismAskHaltedYes))
+}
+
+definition{
+  name: prismAskRule2,
+  parameters: [request : PrismAskRequest],
+  result: Bool,
+  body: ((project request clock) =? (prismAskClockAsked))
+}
+
+definition{
+  name: prismAskRule3,
+  parameters: [request : PrismAskRequest],
+  result: Bool,
+  body: (((project request box) =? (prismAskBoxAsks)) && ((project request held) =? (prismAskHeldNone)))
+}
+
+definition{
+  name: prismAskRule4,
+  parameters: [request : PrismAskRequest],
+  result: Bool,
+  body: ((project request box) =? (prismAskBoxAsks))
+}
+
+definition{
+  name: prismAskRule5,
+  parameters: [request : PrismAskRequest],
+  result: Bool,
+  body: (((project request intent) =? (prismAskIntentQuestion)) && ((project request held) =? (prismAskHeldNone)))
+}
+
+definition{
+  name: prismAskRule6,
+  parameters: [request : PrismAskRequest],
+  result: Bool,
+  body: ((project request intent) =? (prismAskIntentQuestion))
+}
+
+definition{
+  name: prismAskRule7,
+  parameters: [request : PrismAskRequest],
+  result: Bool,
+  body: ((project request timed) =? (prismAskTimedYes))
+}
+
+definition{
+  name: prismAskRule8,
+  parameters: [request : PrismAskRequest],
+  result: Bool,
+  body: ((project request held) =? (prismAskHeldNone))
+}
+
+definition{
+  name: prismAskRule3Misses,
+  parameters: [request : PrismAskRequest],
+  result: Bool,
+  body: ((((project request box) <? (prismAskBoxAsks)) || ((prismAskBoxAsks) <? (project request box))) || (((project request held) <? (prismAskHeldNone)) || ((prismAskHeldNone) <? (project request held))))
+}
+
+definition{
+  name: prismAskRule5Misses,
+  parameters: [request : PrismAskRequest],
+  result: Bool,
+  body: ((((project request intent) <? (prismAskIntentQuestion)) || ((prismAskIntentQuestion) <? (project request intent))) || (((project request held) <? (prismAskHeldNone)) || ((prismAskHeldNone) <? (project request held))))
+}
+
+definition{
+  name: prismAskJudge,
+  parameters: [request : PrismAskRequest],
+  result: Nat,
+  body: (if (prismAskRule1 request) then (prismAskAnswerPaused) else (if (prismAskRule2 request) then (prismAskAnswerClock) else (if (prismAskRule3Misses request) then (if (prismAskRule4 request) then (prismAskAnswerAnswer) else (if (prismAskRule5Misses request) then (if (prismAskRule6 request) then (prismAskAnswerAnswer) else (if (prismAskRule7 request) then (prismAskAnswerKeep) else (if (prismAskRule8 request) then (prismAskAnswerKeep) else (prismAskAnswerLook)))) else (prismAskAnswerEmpty))) else (prismAskAnswerEmpty))))
+}
+
+definition{
+  name: prismAskEncodeAnswer,
+  parameters: [code : Nat],
+  result: Bytes,
+  body: (if (code =? (prismAskAnswerPaused)) then 0x706175736564 else (if (code =? (prismAskAnswerClock)) then 0x636c6f636b else (if (code =? (prismAskAnswerEmpty)) then 0x656d707479 else (if (code =? (prismAskAnswerAnswer)) then 0x616e73776572 else (if (code =? (prismAskAnswerKeep)) then 0x6b656570 else (if (code =? (prismAskAnswerLook)) then 0x6c6f6f6b else 0x696e76616c6964))))))
+}
+
+definition{
+  name: prismAskDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (160 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (prismAskDecodeField1 value 0)
+    | Option.none => 0x696e76616c6964
+    | Option.some request => (prismAskEncodeAnswer (prismAskJudge request)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

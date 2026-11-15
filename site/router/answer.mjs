@@ -76,18 +76,19 @@ export async function answer(prompt, options) {
   if (!text) return none;
   const mapped = await route({ source: "note", values: { text }, line, halted, now, learned: meaning ? { meaning } : {} });
   if (mapped.refused) return { ...none, mapped };
-  // What time it is is the Prism's own clock, not anything held.
-  if (asksNow(text, termsOf(text))) return { sentences: [end(fill(S.frames.now, { when: full.format(new Date(now)) }))], sources: [], offers: [], mapped };
-  // What is not a question is offered to keep: one that lands in time says where,
-  // anything else is also answered from what is held, as words looked for.
-  if (keep && mapped.intent !== "question") {
-    if (mapped.start != null) return { sentences: [keptSentence(text, mapped)], sources: [], offers: [{ kind: "keep" }], mapped };
-    const asked = await answer(prompt, { ...options, keep: false });
-    return { ...asked, offers: [...asked.offers.filter((o) => o.kind !== S.offers.empty), { kind: "keep" }] };
-  }
-  // A question over an empty Prism says so and leads to connecting.
   const held = items.filter((item) => !item.sealed);
-  if (!held.length) return { sentences: [`${S.frames.empty}.`], sources: [], offers: [{ kind: S.offers.empty }], mapped };
+  // What to do with the words is the Prism Ask decision's (app/specs/ask/spec.json,
+  // PrismAsk in LexLean), asked of the root guest: the page only carries it out.
+  const request = [halted(), asksNow(text, termsOf(text)) ? "asked" : "not", keep ? "keeps" : "asks", mapped.intent ?? "fact", mapped.start != null ? "yes" : "no", held.length ? "some" : "none"];
+  const decided = (await line(`ask ${request.join(" ")}`)).trim();
+  if (decided === "clock") return { sentences: [end(fill(S.frames.now, { when: full.format(new Date(now)) }))], sources: [], offers: [], mapped };
+  if (decided === "keep") return { sentences: [keptSentence(text, mapped)], sources: [], offers: [{ kind: "keep" }], mapped };
+  if (decided === "look") {
+    const asked = await answer(prompt, { ...options, keep: false });
+    return { ...asked, offers: [...asked.offers, { kind: "keep" }] };
+  }
+  if (decided === "empty") return { sentences: [`${S.frames.empty}.`], sources: [], offers: [{ kind: S.offers.empty }], mapped };
+  if (decided !== "answer") return { ...none, mapped };
   // The kind of thing it names (mail, calendar, notes), the words it is after,
   // and whether it only greets or asks how things stand.
   const words = text.toLowerCase().match(/[\p{L}]+/gu) ?? [];

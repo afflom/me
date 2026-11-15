@@ -32,6 +32,7 @@ export const FACETS = [
   {"key": "curate", "line": "curate", "in": ["verdict", "object"], "out": ["tuning"]},
   {"key": "resonance", "line": "resonance", "in": ["owner", "kept", "tuning"], "out": ["answer"], "drives": {"places": ["today", "conversations", "people", "calendar", "tasks", "places", "money", "things", "me", "health", "work", "library", "timeline", "presence"], "settings": ["halt"]}},
   {"key": "router", "line": "router", "in": ["owner", "content"], "out": ["item"], "drives": {"acts": ["note"], "settings": ["models", "halt"]}},
+  {"key": "ask", "line": "ask", "in": ["owner", "item"], "out": ["answer"], "drives": {"settings": ["halt"]}},
 ];
 export const SEALED = [
   {"key": "r4", "sealed": "R4 no longer speaks on the page; it routes incoming content onto the Prism's features through the router facet"},

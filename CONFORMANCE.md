@@ -125,6 +125,18 @@ model does not sanction.
 | `PM-03` | `build` | Learning confirms or rejects a belief only on the owner's signal, holds a confirmed or rejected belief against every other signal, and never raises a weight above 15 or lowers it below 1 |
 | `PM-04` | `build` | Chronology never names an Allen relation that the two intervals' endpoints contradict, and never calls two well-formed intervals malformed |
 
+## prism_ask
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PA-01` | `build` | The app always answers paused when halted is yes |
+| `PA-02` | `build` | The app never answers keep when intent is question |
+| `PA-03` | `build` | The app never answers keep when box is asks |
+| `PA-04` | `build` | The app never answers look when box is asks |
+| `PA-05` | `build` | The app never answers answer when held is none |
+| `PA-06` | `build` | The app never answers look when held is none |
+| `PA-07` | `build` | The app always answers keep when halted is no and clock is not and box is keeps and timed is yes and intent is task |
+
 ## prism_boundary
 
 | ID | Level | Statement |
