@@ -1,0 +1,13 @@
+{
+  "comment": "The steps of the snapshot program (generators/snapshot/), run in order by tools/generators/run.sh. jsonpatchoracle applies every case of the json-patch-tests suite (app/specs/oracle/json-patch-tests, pinned in its lock.json) as RFC 6902 says and refuses when any result differs from the case.",
+  "steps": [
+    {
+      "generator": "jsonpatchoracle",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/spec_tests.json",
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": ".gen/jsonpatch-oracle"
+    }
+  ]
+}
