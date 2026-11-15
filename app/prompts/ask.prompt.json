@@ -1,0 +1,373 @@
+{
+  "schema": "prism/prompt/1",
+  "goal": "Decides what the Prism does with words the owner says to it: tell the time, answer from what is held, offer to keep them where they land in time, or look for them in what is held and offer to keep the",
+  "pattern": "decisionTable",
+  "repository": "afflom/me",
+  "app": {
+    "name": "prism-ask",
+    "title": "Prism Ask",
+    "purpose": "Decides what the Prism does with words the owner says to it: tell the time, answer from what is held, offer to keep them where they land in time, or look for them in what is held and offer to keep them, and nothing while the Prism is paused.",
+    "fields": [
+      {
+        "name": "halted",
+        "kind": "choice",
+        "values": [
+          "no",
+          "yes"
+        ],
+        "means": "whether the owner pressed Pause"
+      },
+      {
+        "name": "clock",
+        "kind": "choice",
+        "values": [
+          "not",
+          "asked"
+        ],
+        "means": "whether the words ask the Prism's own clock (the router spec's sentence.now words and phrases)"
+      },
+      {
+        "name": "box",
+        "kind": "choice",
+        "values": [
+          "keeps",
+          "asks"
+        ],
+        "means": "whether the box the words were said in keeps what is not a question (the Ask) or only asks"
+      },
+      {
+        "name": "intent",
+        "kind": "choice",
+        "values": [
+          "question",
+          "task",
+          "event",
+          "fact"
+        ],
+        "means": "the router's intent reader's answer for the words"
+      },
+      {
+        "name": "timed",
+        "kind": "choice",
+        "values": [
+          "no",
+          "yes"
+        ],
+        "means": "whether the router's time reader found when the words land"
+      },
+      {
+        "name": "held",
+        "kind": "choice",
+        "values": [
+          "some",
+          "none"
+        ],
+        "means": "whether the owner holds anything unsealed to answer from"
+      }
+    ],
+    "outcomes": [
+      "paused",
+      "clock",
+      "empty",
+      "answer",
+      "keep",
+      "look"
+    ],
+    "meanings": {
+      "paused": "say nothing from what is held: the Prism is paused",
+      "clock": "tell the time and date from the Prism's own clock",
+      "empty": "say nothing has arrived yet and offer to connect",
+      "answer": "answer from what is held, naming what it drew on",
+      "keep": "offer to keep the words, saying when they land if they do",
+      "look": "answer from what is held as words looked for, and offer to keep them"
+    },
+    "rules": [
+      {
+        "id": "REQ-001",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "yes"
+          }
+        ],
+        "then": "paused",
+        "says": "when halted is yes then paused",
+        "why": "nothing held is said while the Prism is paused"
+      },
+      {
+        "id": "REQ-002",
+        "when": [
+          {
+            "field": "clock",
+            "op": "is",
+            "value": "asked"
+          }
+        ],
+        "then": "clock",
+        "says": "when clock is asked then clock",
+        "why": "what time it is is the Prism's own clock, not anything held"
+      },
+      {
+        "id": "REQ-003",
+        "when": [
+          {
+            "field": "box",
+            "op": "is",
+            "value": "asks"
+          },
+          {
+            "field": "held",
+            "op": "is",
+            "value": "none"
+          }
+        ],
+        "then": "empty",
+        "says": "when box is asks and held is none then empty",
+        "why": "a box that only asks, over nothing held, leads to connecting"
+      },
+      {
+        "id": "REQ-004",
+        "when": [
+          {
+            "field": "box",
+            "op": "is",
+            "value": "asks"
+          }
+        ],
+        "then": "answer",
+        "says": "when box is asks then answer",
+        "why": "a box that only asks answers every prompt as a question"
+      },
+      {
+        "id": "REQ-005",
+        "when": [
+          {
+            "field": "intent",
+            "op": "is",
+            "value": "question"
+          },
+          {
+            "field": "held",
+            "op": "is",
+            "value": "none"
+          }
+        ],
+        "then": "empty",
+        "says": "when intent is question and held is none then empty",
+        "why": "a question over nothing held leads to connecting"
+      },
+      {
+        "id": "REQ-006",
+        "when": [
+          {
+            "field": "intent",
+            "op": "is",
+            "value": "question"
+          }
+        ],
+        "then": "answer",
+        "says": "when intent is question then answer",
+        "why": "a question is answered from what is held"
+      },
+      {
+        "id": "REQ-007",
+        "when": [
+          {
+            "field": "timed",
+            "op": "is",
+            "value": "yes"
+          }
+        ],
+        "then": "keep",
+        "says": "when timed is yes then keep",
+        "why": "words that land in time are something to keep, at that time"
+      },
+      {
+        "id": "REQ-008",
+        "when": [
+          {
+            "field": "held",
+            "op": "is",
+            "value": "none"
+          }
+        ],
+        "then": "keep",
+        "says": "when held is none then keep",
+        "why": "with nothing held, what is not a question can only be kept"
+      }
+    ],
+    "otherwise": "look",
+    "otherwiseWhy": "words that are neither a question nor in time are looked for in what is held, and offered to keep",
+    "properties": [
+      {
+        "id": "INV-001",
+        "kind": "always",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "yes"
+          }
+        ],
+        "then": "paused",
+        "says": "always when halted is yes then paused",
+        "why": "nothing held is said while the Prism is paused"
+      },
+      {
+        "id": "INV-002",
+        "kind": "never",
+        "when": [
+          {
+            "field": "intent",
+            "op": "is",
+            "value": "question"
+          }
+        ],
+        "then": "keep",
+        "says": "never when intent is question then keep",
+        "why": "a question is never taken for something to keep"
+      },
+      {
+        "id": "INV-003",
+        "kind": "never",
+        "when": [
+          {
+            "field": "box",
+            "op": "is",
+            "value": "asks"
+          }
+        ],
+        "then": "keep",
+        "says": "never when box is asks then keep",
+        "why": "a box that only asks never keeps"
+      },
+      {
+        "id": "INV-004",
+        "kind": "never",
+        "when": [
+          {
+            "field": "box",
+            "op": "is",
+            "value": "asks"
+          }
+        ],
+        "then": "look",
+        "says": "never when box is asks then look",
+        "why": "a box that only asks never offers to keep"
+      },
+      {
+        "id": "INV-005",
+        "kind": "never",
+        "when": [
+          {
+            "field": "held",
+            "op": "is",
+            "value": "none"
+          }
+        ],
+        "then": "answer",
+        "says": "never when held is none then answer",
+        "why": "nothing is answered from what is not held"
+      },
+      {
+        "id": "INV-006",
+        "kind": "never",
+        "when": [
+          {
+            "field": "held",
+            "op": "is",
+            "value": "none"
+          }
+        ],
+        "then": "look",
+        "says": "never when held is none then look",
+        "why": "nothing is looked for in what is not held"
+      },
+      {
+        "id": "INV-007",
+        "kind": "always",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "no"
+          },
+          {
+            "field": "clock",
+            "op": "is",
+            "value": "not"
+          },
+          {
+            "field": "box",
+            "op": "is",
+            "value": "keeps"
+          },
+          {
+            "field": "timed",
+            "op": "is",
+            "value": "yes"
+          },
+          {
+            "field": "intent",
+            "op": "is",
+            "value": "task"
+          }
+        ],
+        "then": "keep",
+        "says": "always when halted is no and clock is not and box is keeps and timed is yes and intent is task then keep",
+        "why": "a task that lands in time is offered to keep"
+      }
+    ],
+    "examples": [
+      {
+        "request": "no not keeps question no some",
+        "response": "answer"
+      },
+      {
+        "request": "no not keeps question no none",
+        "response": "empty"
+      },
+      {
+        "request": "no not keeps task yes some",
+        "response": "keep"
+      },
+      {
+        "request": "no not keeps event yes none",
+        "response": "keep"
+      },
+      {
+        "request": "no not keeps fact no some",
+        "response": "look"
+      },
+      {
+        "request": "no not keeps fact no none",
+        "response": "keep"
+      },
+      {
+        "request": "no not keeps task no some",
+        "response": "look"
+      },
+      {
+        "request": "no asked keeps question no some",
+        "response": "clock"
+      },
+      {
+        "request": "yes not keeps question no some",
+        "response": "paused"
+      },
+      {
+        "request": "no not asks fact no some",
+        "response": "answer"
+      },
+      {
+        "request": "no not asks task yes none",
+        "response": "empty"
+      },
+      {
+        "request": "yes asked asks event yes none",
+        "response": "paused"
+      }
+    ]
+  }
+}

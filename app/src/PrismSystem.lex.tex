@@ -19,84 +19,84 @@ definition{
   name: concernSystemHold,
   parameters: [],
   result: Foundation.Arch::Concern,
-  body: (record Foundation.Arch::Concern {index := 76, name := "Hold on their own information", text := "Whether what reaches the person is understood, with nothing slipping: the attribute of the person the Prism's main process changes."})
+  body: (record Foundation.Arch::Concern {index := 80, name := "Hold on their own information", text := "Whether what reaches the person is understood, with nothing slipping: the attribute of the person the Prism's main process changes."})
 }
 
 definition{
   name: componentSystemHeld,
   parameters: [],
   result: Foundation.Arch::Component,
-  body: (record Foundation.Arch::Component {index := 42, kind := (ctor Foundation.Arch::ComponentKind.database), name := "Held content", text := "Content-addressed objects held only in the person's browser, from which the person's view and outgoing acts are made."})
+  body: (record Foundation.Arch::Component {index := 44, kind := (ctor Foundation.Arch::ComponentKind.database), name := "Held content", text := "Content-addressed objects held only in the person's browser, from which the person's view and outgoing acts are made."})
 }
 
 definition{
   name: componentSystemPerson,
   parameters: [],
   result: Foundation.Arch::Component,
-  body: (record Foundation.Arch::Component {index := 43, kind := (ctor Foundation.Arch::ComponentKind.externalSystem), name := "Person", text := "The person, the twin's physical counterpart, outside the browser and also a part of the Prism."})
+  body: (record Foundation.Arch::Component {index := 45, kind := (ctor Foundation.Arch::ComponentKind.externalSystem), name := "Person", text := "The person, the twin's physical counterpart, outside the browser and also a part of the Prism."})
 }
 
 definition{
   name: componentSystemPrism,
   parameters: [],
   result: Foundation.Arch::Component,
-  body: (record Foundation.Arch::Component {index := 44, kind := (ctor Foundation.Arch::ComponentKind.service), name := "Prism", text := "The whole Prism: a digital twin of one person that is also their personal agent, run only in that person's own browser; one model, proved in Lean, compiled into one content-addressed holo."})
+  body: (record Foundation.Arch::Component {index := 46, kind := (ctor Foundation.Arch::ComponentKind.service), name := "Prism", text := "The whole Prism: a digital twin of one person that is also their personal agent, run only in that person's own browser; one model, proved in Lean, compiled into one content-addressed holo."})
 }
 
 definition{
   name: componentSystemStreams,
   parameters: [],
   result: Foundation.Arch::Component,
-  body: (record Foundation.Arch::Component {index := 45, kind := (ctor Foundation.Arch::ComponentKind.externalSystem), name := "Person's streams", text := "The services where the person's life arrives: mail and calendar first, device files, then the person's other services, read only as the person's own browser shows them."})
+  body: (record Foundation.Arch::Component {index := 47, kind := (ctor Foundation.Arch::ComponentKind.externalSystem), name := "Person's streams", text := "The services where the person's life arrives: mail and calendar first, device files, then the person's other services, read only as the person's own browser shows them."})
 }
 
 definition{
   name: edgeSystemBrowserToPrism,
   parameters: [],
   result: Foundation.Arch::Edge,
-  body: (record Foundation.Arch::Edge {index := 97, fromIndex := 0, toIndex := 44, kind := (ctor Foundation.Arch::EdgeKind.controlFlow)})
+  body: (record Foundation.Arch::Edge {index := 102, fromIndex := 0, toIndex := 46, kind := (ctor Foundation.Arch::EdgeKind.controlFlow)})
 }
 
 definition{
   name: edgeSystemPersonToPrism,
   parameters: [],
   result: Foundation.Arch::Edge,
-  body: (record Foundation.Arch::Edge {index := 98, fromIndex := 43, toIndex := 44, kind := (ctor Foundation.Arch::EdgeKind.controlFlow)})
+  body: (record Foundation.Arch::Edge {index := 103, fromIndex := 45, toIndex := 46, kind := (ctor Foundation.Arch::EdgeKind.controlFlow)})
 }
 
 definition{
   name: edgeSystemPrismToHeld,
   parameters: [],
   result: Foundation.Arch::Edge,
-  body: (record Foundation.Arch::Edge {index := 99, fromIndex := 44, toIndex := 42, kind := (ctor Foundation.Arch::EdgeKind.dataFlow)})
+  body: (record Foundation.Arch::Edge {index := 104, fromIndex := 46, toIndex := 44, kind := (ctor Foundation.Arch::EdgeKind.dataFlow)})
 }
 
 definition{
   name: edgeSystemPrismToPerson,
   parameters: [],
   result: Foundation.Arch::Edge,
-  body: (record Foundation.Arch::Edge {index := 100, fromIndex := 44, toIndex := 43, kind := (ctor Foundation.Arch::EdgeKind.dataFlow)})
+  body: (record Foundation.Arch::Edge {index := 105, fromIndex := 46, toIndex := 45, kind := (ctor Foundation.Arch::EdgeKind.dataFlow)})
 }
 
 definition{
   name: edgeSystemStreamsToPrism,
   parameters: [],
   result: Foundation.Arch::Edge,
-  body: (record Foundation.Arch::Edge {index := 101, fromIndex := 45, toIndex := 44, kind := (ctor Foundation.Arch::EdgeKind.dataFlow)})
+  body: (record Foundation.Arch::Edge {index := 106, fromIndex := 47, toIndex := 46, kind := (ctor Foundation.Arch::EdgeKind.dataFlow)})
 }
 
 definition{
   name: viewpointSystem,
   parameters: [],
   result: Foundation.Arch::Viewpoint,
-  body: (record Foundation.Arch::Viewpoint {index := 76, stakeholderIndex := 2, concernIndex := 76, modelKindIndex := 0})
+  body: (record Foundation.Arch::Viewpoint {index := 80, stakeholderIndex := 2, concernIndex := 80, modelKindIndex := 0})
 }
 
 definition{
   name: viewSystem,
   parameters: [],
   result: Foundation.Arch::View,
-  body: (record Foundation.Arch::View {index := 76, viewpointIndex := 76, modelKindIndex := 0})
+  body: (record Foundation.Arch::View {index := 80, viewpointIndex := 80, modelKindIndex := 0})
 }
 
 definition{
@@ -636,6 +636,20 @@ definition{
   parameters: [],
   result: Foundation.Arch::OpmZoom,
   body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartVoice", subprocess := "Design::processPrismR4Decide", order := 2})
+}
+
+definition{
+  name: opmSystemPartsDecideAsk,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismAskDecide"})
+}
+
+definition{
+  name: opmSystemZoomVoiceAsk,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartVoice", subprocess := "Design::processPrismAskDecide", order := 3})
 }
 
 definition{
