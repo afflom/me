@@ -48,6 +48,7 @@ jobs:
       contents: read
       actions: read
       pull-requests: read
+      deployments: read
       id-token: write
       attestations: write
     steps:
@@ -352,9 +353,10 @@ jobs:
         uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa
         with:
           path: site
-      # Main's gates run beside each other, so this run publishes only if its
-      # commit is still main's head; a newer merge's run publishes that one.
-      - name: Is this commit still main's head
+      # Main's gates run beside each other. A run publishes when the live page
+      # does not already hold its commit (tools/pages/newer.sh), and the
+      # publish job asks again just before it deploys.
+      - name: Is this commit newer than the live page
         id: head
         if: steps.attest.outcome == 'success'
         shell: bash
@@ -364,13 +366,8 @@ jobs:
           SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          head=$(gh api "repos/$REPO/commits/main" --jq .sha)
-          if [[ $head == "$SHA" ]]; then
-            echo "current=true" >>"$GITHUB_OUTPUT"
-          else
-            echo "current=false" >>"$GITHUB_OUTPUT"
-            echo "::notice::main moved on to $head; that merge's run publishes it, not this one"
-          fi
+          go=$(tools/pages/newer.sh)
+          echo "current=${go#go=}" >>"$GITHUB_OUTPUT"
 
   deploy:
     name: publish the page
@@ -384,23 +381,37 @@ jobs:
     permissions:
       pages: write
       id-token: write
+      contents: read
+      deployments: read
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Check out the exact event revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      # Publishes run one at a time: a newer run may have published while
+      # this one waited, and then this older page must not replace it.
+      - name: Is this commit still newer than the live page
+        id: newer
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.sha }}
+        run: tools/pages/newer.sh >>"$GITHUB_OUTPUT"
       - name: Deploy
+        if: steps.newer.outputs.go == 'true'
         id: deployment
         uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e
       # The published page itself, in a real browser: it keeps, refuses while
       # halted and answers through the app, and its owner's walk (CO-01) holds:
       # content in, every place lists it, Today and Ask answer from it. Pages can take
       # a minute to serve the new bytes, so the check gets four tries.
-      - name: Check out the exact event revision
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
       - name: The published page works (PG-01, live)
+        if: steps.newer.outputs.go == 'true'
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
@@ -416,6 +427,7 @@ jobs:
       # as working still works, fresh and returning, and no system word shows
       # beyond the listed debt. Its scoreboard goes to this job's summary.
       - name: The published page keeps every working journey and keeps the system view off the screen (PD-01, PD-02, live)
+        if: steps.newer.outputs.go == 'true'
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
