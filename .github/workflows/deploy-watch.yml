@@ -142,7 +142,7 @@ jobs:
           tests=""
           if [[ -n $job_id ]]; then
             log=$RUNNER_TEMP/job.log
-            if ! gh api "repos/$REPO/actions/jobs/$job_id/logs" >"$log" 2>"$log.err"; then
+            if ! curl -fsSL -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/$REPO/actions/jobs/$job_id/logs" -o "$log" 2>"$log.err"; then
               tests="- the job's log could not be read: $(tr '\n' ' ' <"$log.err" | head -c 300)"
             else
             tests=$(awk '
