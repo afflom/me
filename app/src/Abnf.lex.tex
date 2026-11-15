@@ -8,7 +8,12 @@ structure{
   name: AbnfInput,
   type_parameters: [],
   parameters: [],
-  fields: [{name: table, type: Bytes}, {name: text, type: Bytes}, {name: octets, type: Bytes}, {name: pairs, type: Bytes}]
+  fields: [
+    {name: table, type: Bytes},
+    {name: text, type: Bytes},
+    {name: octets, type: Bytes},
+    {name: pairs, type: Bytes}
+  ]
 }
 
 definition{
@@ -330,7 +335,12 @@ definition{
   recursive_argument: fuel
 }
 
-definition{name: abnfDecimal, parameters: [g : AbnfInput, v : Nat], result: Bytes, body: (abnfDecimalFrom g 20 v)}
+definition{
+  name: abnfDecimal,
+  parameters: [g : AbnfInput, v : Nat],
+  result: Bytes,
+  body: (abnfDecimalFrom g 20 v)
+}
 
 definition{
   name: abnfSpan,
