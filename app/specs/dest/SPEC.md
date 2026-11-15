@@ -9,8 +9,8 @@ acts in. One request decides where one item may go next.
 (`python3 -I tools/prompts/gen.py`) writes `app/src/PrismDest.lex.tex` and
 `app/src/PrismDestProofs.lex.tex`; `python3 -I tools/dest/gen.py` writes the
 JavaScript mirror `site/dest/table.mjs`; then `lexlean fmt && lexlean lock`
-in `app/`. `python3 -I tools/dest/standalone.py DIR` writes a scratch project
-that builds the standalone guest `site/dest/guest/dest.wasm`.
+in `app/`. `tools/guests/build.sh` rebuilds the standalone guest
+`site/dest/guest/dest.wasm` whenever its modules change (GU-01).
 
 ## Request
 

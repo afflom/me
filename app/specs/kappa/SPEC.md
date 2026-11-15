@@ -28,8 +28,8 @@ with the reader below and writes `app/src/PrismKappa.lex.tex`,
 `python3 -I tools/kappa/gen.py` writes the reader
 `app/src/PrismKappaLabel.lex.tex`, which the Prism root routes `kappa` to, and
 the JavaScript mirror `site/kappa/table.mjs`; then `lexlean fmt && lexlean
-lock` in `app/`. `python3 -I tools/kappa/standalone.py DIR` writes a scratch
-project that builds the standalone guest `site/kappa/guest/kappa.wasm`.
+lock` in `app/`. `tools/guests/build.sh` rebuilds the standalone guest
+`site/kappa/guest/kappa.wasm` whenever its modules change (GU-01).
 
 ## Request
 

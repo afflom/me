@@ -1,15 +1,15 @@
 // A standalone build of PrismHolon and of PrismCurate (app/src) so that
 // site/holon/holon.test.mjs can run every request without the holo. The page
 // decides through the Prism root's holon and curate facets instead. Built by
-// tools/holon/standalone.py (HolonApp and CurateApp route straight to prismHolonDispatch and prismCurateDispatch;
-// the pinned bytes predate the builder's PrismHolon and PrismCurate, which answer every request the same); it
+// tools/guests/build.sh from the modules the Prism compiles (HolonApp and CurateApp route straight to
+// prismHolonDispatch and prismCurateDispatch; app/specs/guests, GU-01); it
 // exports holo_alloc(len) and holo_run(ptr, len) -> (outPtr << 32 | outLen),
 // that is dispatch(bytes) -> bytes. Bytes whose SHA-256 is not the pinned
 // fingerprint are refused before they compile.
 
 export const GUESTS = {
-  holon: { path: 'guest/holon.wasm', sha256: '25a52c1ba9c4081793123ba1f06fcb4e4f215d240a2ce91bfcfa7aecc5dedeae' },
-  curate: { path: 'guest/curate.wasm', sha256: '027acd162a7615fb524a0746c7c8ddaee3dd000d877e23987e01b0762b70d201' },
+  holon: { path: 'guest/holon.wasm', sha256: 'fade24dea47dfebfe3a77599dcf019681cba60c678f58d113eb87383e0f5bb13' },
+  curate: { path: 'guest/curate.wasm', sha256: '179460b7245420f86606498bcf1c3c8cda13db42b1410c28d926a90da3040699' },
 };
 
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');

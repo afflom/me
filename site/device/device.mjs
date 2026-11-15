@@ -18,11 +18,11 @@
 
 // The standalone build of app/src/PrismFolder.lex.tex the Node suite runs
 // (device.test.mjs); the page asks the same module through the Prism root.
-export const GUEST = { path: 'guest/folder.wasm', sha256: '6fdaec9f0b96478c68d82695ff91a2e927f1430395ca59661633c795934188c0' };
+export const GUEST = { path: 'guest/folder.wasm', sha256: 'b8b3429d5838113b9da2bb6cbb6f0437e8076b2c54ff614e952967000a7211ec' };
 // And of app/src/PrismHost.lex.tex, for the same suite.
 // And of app/src/PrismSource.lex.tex.
-export const SOURCE_GUEST = { path: 'guest/source.wasm', sha256: '86ba238e418c0e959ec51efe653adcd617fbca4b2dde824901ed2074f9bfc080' };
-export const HOST_GUEST = { path: 'guest/host.wasm', sha256: '72f4852426d91c15d6322cc33a08f0fe2f54f2be85b7f68ef031d8e5f4db783b' };
+export const SOURCE_GUEST = { path: 'guest/source.wasm', sha256: 'eee53a3e962b2c5b32160d8297e949dca9e0332e05ca6d4e75786bc07ac3fd59' };
+export const HOST_GUEST = { path: 'guest/host.wasm', sha256: '7c641243d6cfb2037d52e8a2a74086cd108634374f2827cb9f8b411faf11a601' };
 
 export const LIMIT = 32 * 1024 * 1024; // one read at a time, at most
 const DEPTH = 6;

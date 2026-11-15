@@ -75,7 +75,7 @@ facts live only in the browser.
   parameterized by the spec's `facet` record) writes only `site/resonance/table.mjs`.
   It checks every request against every guarantee and example before writing, and
   `--check` holds the table to the spec. Its standalone guest comes from
-  `tools/facet/standalone.py`.
+  `tools/guests/build.sh` (GU-01).
 - Router (the R4 router): the Lean is written by the Prism's builder, every name
   carrying the `prismRouter` prefix; `tools/facet/gen.py app/specs/router/spec.json`
   writes `site/router/table.mjs`.

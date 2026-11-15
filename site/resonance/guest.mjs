@@ -1,13 +1,13 @@
 // A standalone build of PrismResonance (app/src/PrismResonance.lex.tex) so that
 // site/resonance/resonance.test.mjs can run every request without the holo. The page
 // decides through the Prism root's resonance facet instead. Built by
-// tools/facet/standalone.py (ResonanceApp routes straight to prismResonanceDispatch; the pinned
-// bytes predate the builder's PrismResonance, which answers every request the same); it
+// tools/guests/build.sh from the modules the Prism compiles (ResonanceApp routes straight to
+// prismResonanceDispatch; app/specs/guests, GU-01); it
 // exports holo_alloc(len) and holo_run(ptr, len) -> (outPtr << 32 | outLen),
 // that is dispatch(bytes) -> bytes. Bytes whose SHA-256 is not the pinned
 // fingerprint are refused before they compile.
 
-export const GUEST = { path: 'guest/resonance.wasm', sha256: '15ad957e3ee4b634d04d5193094154f00b7f639db7feaa8a3ccde5212a005ed5' };
+export const GUEST = { path: 'guest/resonance.wasm', sha256: '414b65defa7673ff811e6cf3e5a4da67e51152ace0535f95feebd342a1a2cd64' };
 
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
 const encoder = new TextEncoder();
