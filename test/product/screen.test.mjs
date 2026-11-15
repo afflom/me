@@ -41,7 +41,7 @@ test("no word or control of the system view is on the screen beyond the listed d
         const seen = await visible(page);
         // With the day arrived, each place's first row is opened too: what an item reads like is on the screen.
         if (pass === "with the day") {
-          const row = page.locator("#stage [role=button][aria-expanded]").first();
+          const row = page.locator("#stage [aria-expanded]").first();
           if (await row.count() && await row.isVisible()) { await row.click(); await page.waitForTimeout(250); seen.push(...await visible(page)); }
         }
         for (const term of leaks(seen, words)) shown.set(term, (shown.get(term) ?? new Set()).add(place.key));
