@@ -1,0 +1,718 @@
+\begin{lexlean}{PrismSystem}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Architecture}
+\importmodule{Compliance}
+\importmodule{Design}
+\importmodule{Foundation.Arch}
+\title{design view}
+\begin{semanticmodule}
+definition{
+  name: stakeholderPerson,
+  parameters: [],
+  result: Foundation.Arch::Stakeholder,
+  body: (record Foundation.Arch::Stakeholder {index := 2, name := "Person", text := "The one person the Prism is a digital twin of: its stakeholder, its beneficiary and its only agent, who acts by their own gestures and is a part of the Prism (ISO/IEC 30173 physical counterpart; IEEE P7006 the agent's person)."})
+}
+
+definition{
+  name: concernSystemHold,
+  parameters: [],
+  result: Foundation.Arch::Concern,
+  body: (record Foundation.Arch::Concern {index := 76, name := "Hold on their own information", text := "Whether what reaches the person is understood, with nothing slipping: the attribute of the person the Prism's main process changes."})
+}
+
+definition{
+  name: componentSystemHeld,
+  parameters: [],
+  result: Foundation.Arch::Component,
+  body: (record Foundation.Arch::Component {index := 42, kind := (ctor Foundation.Arch::ComponentKind.database), name := "Held content", text := "Content-addressed objects held only in the person's browser, from which the person's view and outgoing acts are made."})
+}
+
+definition{
+  name: componentSystemPerson,
+  parameters: [],
+  result: Foundation.Arch::Component,
+  body: (record Foundation.Arch::Component {index := 43, kind := (ctor Foundation.Arch::ComponentKind.externalSystem), name := "Person", text := "The person, the twin's physical counterpart, outside the browser and also a part of the Prism."})
+}
+
+definition{
+  name: componentSystemPrism,
+  parameters: [],
+  result: Foundation.Arch::Component,
+  body: (record Foundation.Arch::Component {index := 44, kind := (ctor Foundation.Arch::ComponentKind.service), name := "Prism", text := "The whole Prism: a digital twin of one person that is also their personal agent, run only in that person's own browser; one model, proved in Lean, compiled into one content-addressed holo."})
+}
+
+definition{
+  name: componentSystemStreams,
+  parameters: [],
+  result: Foundation.Arch::Component,
+  body: (record Foundation.Arch::Component {index := 45, kind := (ctor Foundation.Arch::ComponentKind.externalSystem), name := "Person's streams", text := "The services where the person's life arrives: mail and calendar first, device files, then the person's other services, read only as the person's own browser shows them."})
+}
+
+definition{
+  name: edgeSystemBrowserToPrism,
+  parameters: [],
+  result: Foundation.Arch::Edge,
+  body: (record Foundation.Arch::Edge {index := 97, fromIndex := 0, toIndex := 44, kind := (ctor Foundation.Arch::EdgeKind.controlFlow)})
+}
+
+definition{
+  name: edgeSystemPersonToPrism,
+  parameters: [],
+  result: Foundation.Arch::Edge,
+  body: (record Foundation.Arch::Edge {index := 98, fromIndex := 43, toIndex := 44, kind := (ctor Foundation.Arch::EdgeKind.controlFlow)})
+}
+
+definition{
+  name: edgeSystemPrismToHeld,
+  parameters: [],
+  result: Foundation.Arch::Edge,
+  body: (record Foundation.Arch::Edge {index := 99, fromIndex := 44, toIndex := 42, kind := (ctor Foundation.Arch::EdgeKind.dataFlow)})
+}
+
+definition{
+  name: edgeSystemPrismToPerson,
+  parameters: [],
+  result: Foundation.Arch::Edge,
+  body: (record Foundation.Arch::Edge {index := 100, fromIndex := 44, toIndex := 43, kind := (ctor Foundation.Arch::EdgeKind.dataFlow)})
+}
+
+definition{
+  name: edgeSystemStreamsToPrism,
+  parameters: [],
+  result: Foundation.Arch::Edge,
+  body: (record Foundation.Arch::Edge {index := 101, fromIndex := 45, toIndex := 44, kind := (ctor Foundation.Arch::EdgeKind.dataFlow)})
+}
+
+definition{
+  name: viewpointSystem,
+  parameters: [],
+  result: Foundation.Arch::Viewpoint,
+  body: (record Foundation.Arch::Viewpoint {index := 76, stakeholderIndex := 2, concernIndex := 76, modelKindIndex := 0})
+}
+
+definition{
+  name: viewSystem,
+  parameters: [],
+  result: Foundation.Arch::View,
+  body: (record Foundation.Arch::View {index := 76, viewpointIndex := 76, modelKindIndex := 0})
+}
+
+definition{
+  name: processSystemMain,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "PrismSystem::componentSystemPrism"})
+}
+
+definition{
+  name: stateSystemScattered,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "PrismSystem::componentSystemPerson"})
+}
+
+definition{
+  name: stateSystemUnderstood,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "PrismSystem::componentSystemPerson"})
+}
+
+definition{
+  name: designViewSystem,
+  parameters: [],
+  result: Foundation.Arch::DesignView,
+  body: (record Foundation.Arch::DesignView {title := "Prism: a digital twin of one person that is also their personal agent, differentiating and routing what reaches them", viewpoint := "PrismSystem::viewpointSystem", diagram := (ctor Foundation.Arch::DesignDiagram.opmObjectProcess)})
+}
+
+definition{
+  name: designViewSystemParts,
+  parameters: [],
+  result: Foundation.Arch::DesignView,
+  body: (record Foundation.Arch::DesignView {title := "Zooming into differentiating and routing: the parts of the Prism", viewpoint := "PrismSystem::viewpointSystem", diagram := (ctor Foundation.Arch::DesignDiagram.opmObjectProcess)})
+}
+
+definition{
+  name: opmSystemHeld,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystem", kind := (ctor Foundation.Arch::OpmThingKind.object), subject := "PrismSystem::componentSystemHeld"})
+}
+
+definition{
+  name: opmSystemPerson,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystem", kind := (ctor Foundation.Arch::OpmThingKind.object), subject := "PrismSystem::componentSystemPerson"})
+}
+
+definition{
+  name: opmSystemPrism,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystem", kind := (ctor Foundation.Arch::OpmThingKind.object), subject := "PrismSystem::componentSystemPrism"})
+}
+
+definition{
+  name: opmSystemStreams,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystem", kind := (ctor Foundation.Arch::OpmThingKind.object), subject := "PrismSystem::componentSystemStreams"})
+}
+
+definition{
+  name: opmSystemBrowser,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystem", kind := (ctor Foundation.Arch::OpmThingKind.object), subject := "Architecture::componentBrowser"})
+}
+
+definition{
+  name: opmSystemMain,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystem", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "PrismSystem::processSystemMain"})
+}
+
+definition{
+  name: opmSystemPersonScattered,
+  parameters: [],
+  result: Foundation.Arch::OpmState,
+  body: (record Foundation.Arch::OpmState {view := "PrismSystem::designViewSystem", thing := "PrismSystem::componentSystemPerson", state := "PrismSystem::stateSystemScattered"})
+}
+
+definition{
+  name: opmSystemPersonUnderstood,
+  parameters: [],
+  result: Foundation.Arch::OpmState,
+  body: (record Foundation.Arch::OpmState {view := "PrismSystem::designViewSystem", thing := "PrismSystem::componentSystemPerson", state := "PrismSystem::stateSystemUnderstood"})
+}
+
+definition{
+  name: opmSystemPersonAgent,
+  parameters: [],
+  result: Foundation.Arch::OpmLink,
+  body: (record Foundation.Arch::OpmLink {view := "PrismSystem::designViewSystem", kind := (ctor Foundation.Arch::OpmLinkKind.agent), source := "PrismSystem::componentSystemPerson", target := "PrismSystem::processSystemMain"})
+}
+
+definition{
+  name: opmSystemPersonEffect,
+  parameters: [],
+  result: Foundation.Arch::OpmLink,
+  body: (record Foundation.Arch::OpmLink {view := "PrismSystem::designViewSystem", kind := (ctor Foundation.Arch::OpmLinkKind.effect), source := "PrismSystem::componentSystemPerson", target := "PrismSystem::processSystemMain"})
+}
+
+definition{
+  name: opmSystemPrismExhibits,
+  parameters: [],
+  result: Foundation.Arch::OpmLink,
+  body: (record Foundation.Arch::OpmLink {view := "PrismSystem::designViewSystem", kind := (ctor Foundation.Arch::OpmLinkKind.exhibition), source := "PrismSystem::componentSystemPrism", target := "PrismSystem::processSystemMain"})
+}
+
+definition{
+  name: opmSystemBrowserInstrument,
+  parameters: [],
+  result: Foundation.Arch::OpmLink,
+  body: (record Foundation.Arch::OpmLink {view := "PrismSystem::designViewSystem", kind := (ctor Foundation.Arch::OpmLinkKind.instrument), source := "Architecture::componentBrowser", target := "PrismSystem::processSystemMain"})
+}
+
+definition{
+  name: opmSystemStreamsConsumed,
+  parameters: [],
+  result: Foundation.Arch::OpmLink,
+  body: (record Foundation.Arch::OpmLink {view := "PrismSystem::designViewSystem", kind := (ctor Foundation.Arch::OpmLinkKind.consumption), source := "PrismSystem::componentSystemStreams", target := "PrismSystem::processSystemMain"})
+}
+
+definition{
+  name: opmSystemHeldResult,
+  parameters: [],
+  result: Foundation.Arch::OpmLink,
+  body: (record Foundation.Arch::OpmLink {view := "PrismSystem::designViewSystem", kind := (ctor Foundation.Arch::OpmLinkKind.result), source := "PrismSystem::processSystemMain", target := "PrismSystem::componentSystemHeld"})
+}
+
+definition{
+  name: opmSystemPartsMain,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "PrismSystem::processSystemMain"})
+}
+
+definition{
+  name: processSystemPartMe,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "PrismSystem::componentSystemPrism"})
+}
+
+definition{
+  name: opmSystemPartsPartMe,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "PrismSystem::processSystemPartMe"})
+}
+
+definition{
+  name: opmSystemZoomMe,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemMain", subprocess := "PrismSystem::processSystemPartMe", order := 0})
+}
+
+definition{
+  name: processSystemPartStreams,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "PrismSystem::componentSystemPrism"})
+}
+
+definition{
+  name: opmSystemPartsPartStreams,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "PrismSystem::processSystemPartStreams"})
+}
+
+definition{
+  name: opmSystemZoomStreams,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemMain", subprocess := "PrismSystem::processSystemPartStreams", order := 1})
+}
+
+definition{
+  name: opmSystemPartsDecideSource,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismSourceDecide"})
+}
+
+definition{
+  name: opmSystemZoomStreamsSource,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartStreams", subprocess := "Design::processPrismSourceDecide", order := 0})
+}
+
+definition{
+  name: opmSystemPartsDecideGoogle,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismGoogleDecide"})
+}
+
+definition{
+  name: opmSystemZoomStreamsGoogle,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartStreams", subprocess := "Design::processPrismGoogleDecide", order := 1})
+}
+
+definition{
+  name: opmSystemPartsDecideGoogleLink,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismGoogleLinkDecide"})
+}
+
+definition{
+  name: opmSystemZoomStreamsGoogleLink,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartStreams", subprocess := "Design::processPrismGoogleLinkDecide", order := 2})
+}
+
+definition{
+  name: opmSystemPartsDecideFolder,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismFolderDecide"})
+}
+
+definition{
+  name: opmSystemZoomStreamsFolder,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartStreams", subprocess := "Design::processPrismFolderDecide", order := 3})
+}
+
+definition{
+  name: opmSystemPartsDecideHost,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismHostDecide"})
+}
+
+definition{
+  name: opmSystemZoomStreamsHost,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartStreams", subprocess := "Design::processPrismHostDecide", order := 4})
+}
+
+definition{
+  name: processSystemPartUnderstanding,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "PrismSystem::componentSystemPrism"})
+}
+
+definition{
+  name: opmSystemPartsPartUnderstanding,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "PrismSystem::processSystemPartUnderstanding"})
+}
+
+definition{
+  name: opmSystemZoomUnderstanding,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemMain", subprocess := "PrismSystem::processSystemPartUnderstanding", order := 2})
+}
+
+definition{
+  name: opmSystemPartsDecideChronology,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismChronologyDecide"})
+}
+
+definition{
+  name: opmSystemZoomUnderstandingChronology,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartUnderstanding", subprocess := "Design::processPrismChronologyDecide", order := 0})
+}
+
+definition{
+  name: processSystemPartBoundary,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "PrismSystem::componentSystemPrism"})
+}
+
+definition{
+  name: opmSystemPartsPartBoundary,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "PrismSystem::processSystemPartBoundary"})
+}
+
+definition{
+  name: opmSystemZoomBoundary,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemMain", subprocess := "PrismSystem::processSystemPartBoundary", order := 3})
+}
+
+definition{
+  name: opmSystemPartsDecideBoundary,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismBoundaryDecide"})
+}
+
+definition{
+  name: opmSystemZoomBoundaryBoundary,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartBoundary", subprocess := "Design::processPrismBoundaryDecide", order := 0})
+}
+
+definition{
+  name: processSystemPartMemory,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "PrismSystem::componentSystemPrism"})
+}
+
+definition{
+  name: opmSystemPartsPartMemory,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "PrismSystem::processSystemPartMemory"})
+}
+
+definition{
+  name: opmSystemZoomMemory,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemMain", subprocess := "PrismSystem::processSystemPartMemory", order := 4})
+}
+
+definition{
+  name: opmSystemPartsDecideVaultStore,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismVaultStoreDecide"})
+}
+
+definition{
+  name: opmSystemZoomMemoryVaultStore,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartMemory", subprocess := "Design::processPrismVaultStoreDecide", order := 0})
+}
+
+definition{
+  name: opmSystemPartsDecideVaultRestore,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismVaultRestoreDecide"})
+}
+
+definition{
+  name: opmSystemZoomMemoryVaultRestore,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartMemory", subprocess := "Design::processPrismVaultRestoreDecide", order := 1})
+}
+
+definition{
+  name: opmSystemPartsDecideUorc,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismUorcDecide"})
+}
+
+definition{
+  name: opmSystemZoomMemoryUorc,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartMemory", subprocess := "Design::processPrismUorcDecide", order := 2})
+}
+
+definition{
+  name: opmSystemPartsDecideKappa,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismKappaDecide"})
+}
+
+definition{
+  name: opmSystemZoomMemoryKappa,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartMemory", subprocess := "Design::processPrismKappaDecide", order := 3})
+}
+
+definition{
+  name: processSystemPartAttention,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "PrismSystem::componentSystemPrism"})
+}
+
+definition{
+  name: opmSystemPartsPartAttention,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "PrismSystem::processSystemPartAttention"})
+}
+
+definition{
+  name: opmSystemZoomAttention,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemMain", subprocess := "PrismSystem::processSystemPartAttention", order := 5})
+}
+
+definition{
+  name: opmSystemPartsDecideResonance,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismResonanceDecide"})
+}
+
+definition{
+  name: opmSystemZoomAttentionResonance,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartAttention", subprocess := "Design::processPrismResonanceDecide", order := 0})
+}
+
+definition{
+  name: opmSystemPartsDecideLearning,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismLearningDecide"})
+}
+
+definition{
+  name: opmSystemZoomAttentionLearning,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartAttention", subprocess := "Design::processPrismLearningDecide", order := 1})
+}
+
+definition{
+  name: opmSystemPartsDecideHolon,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismHolonDecide"})
+}
+
+definition{
+  name: opmSystemZoomAttentionHolon,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartAttention", subprocess := "Design::processPrismHolonDecide", order := 2})
+}
+
+definition{
+  name: opmSystemPartsDecideCurate,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismCurateDecide"})
+}
+
+definition{
+  name: opmSystemZoomAttentionCurate,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartAttention", subprocess := "Design::processPrismCurateDecide", order := 3})
+}
+
+definition{
+  name: processSystemPartVoice,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "PrismSystem::componentSystemPrism"})
+}
+
+definition{
+  name: opmSystemPartsPartVoice,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "PrismSystem::processSystemPartVoice"})
+}
+
+definition{
+  name: opmSystemZoomVoice,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemMain", subprocess := "PrismSystem::processSystemPartVoice", order := 6})
+}
+
+definition{
+  name: opmSystemPartsDecideModels,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismModelsDecide"})
+}
+
+definition{
+  name: opmSystemZoomVoiceModels,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartVoice", subprocess := "Design::processPrismModelsDecide", order := 0})
+}
+
+definition{
+  name: opmSystemPartsDecideRouter,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismRouterDecide"})
+}
+
+definition{
+  name: opmSystemZoomVoiceRouter,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartVoice", subprocess := "Design::processPrismRouterDecide", order := 1})
+}
+
+definition{
+  name: opmSystemPartsDecideR4,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismR4Decide"})
+}
+
+definition{
+  name: opmSystemZoomVoiceR4,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartVoice", subprocess := "Design::processPrismR4Decide", order := 2})
+}
+
+definition{
+  name: processSystemPartDestinations,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "PrismSystem::componentSystemPrism"})
+}
+
+definition{
+  name: opmSystemPartsPartDestinations,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "PrismSystem::processSystemPartDestinations"})
+}
+
+definition{
+  name: opmSystemZoomDestinations,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemMain", subprocess := "PrismSystem::processSystemPartDestinations", order := 7})
+}
+
+definition{
+  name: opmSystemPartsDecideDest,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismDestDecide"})
+}
+
+definition{
+  name: opmSystemZoomDestinationsDest,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemPartDestinations", subprocess := "Design::processPrismDestDecide", order := 0})
+}
+
+definition{
+  name: processSystemPartSynchronisation,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "PrismSystem::componentSystemPrism"})
+}
+
+definition{
+  name: opmSystemPartsPartSynchronisation,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "PrismSystem::designViewSystemParts", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "PrismSystem::processSystemPartSynchronisation"})
+}
+
+definition{
+  name: opmSystemZoomSynchronisation,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "PrismSystem::designViewSystemParts", process := "PrismSystem::processSystemMain", subprocess := "PrismSystem::processSystemPartSynchronisation", order := 8})
+}
+
+definition{
+  name: systemPartsOwed,
+  parameters: [],
+  result: (List String),
+  body: (cons "Me: The declared identity is a product requirement (requires.identity in app/specs/product) that no decision yet decides." (cons "Synchronisation: ISO/IEC 30188 asks a twin to keep its state in step with its counterpart; no decision yet holds the twin's state of the person, or how it is kept current from the streams and the person's gestures and corrected by the person." (nil String)))
+}
+
+definition{
+  name: systemStandards,
+  parameters: [],
+  result: (List Compliance::Obligation),
+  body: (cons (record Compliance::Obligation {index := 0, standard := "ISO/IEC 30173:2023 Digital twin, concepts and terminology", subject := "Prism: iso-iec-30173", text := "The Prism is a digital twin and the person its physical counterpart; the twin's terms are the standard's.", evidence := (cons "PrismSystem::designViewSystem" (cons "PrismSystem::designViewSystemParts" (nil String)))}) (cons (record Compliance::Obligation {index := 1, standard := "ISO/IEC 30188:2024 Digital twin, reference architecture", subject := "Prism: iso-iec-30188", text := "The twin's reference architecture, and the synchronisation between twin and person (the Synchronisation part).", evidence := (cons "PrismSystem::designViewSystem" (cons "PrismSystem::designViewSystemParts" (nil String)))}) (cons (record Compliance::Obligation {index := 2, standard := "IEEE P7006 Personal Data Artificial Intelligence Agent", subject := "Prism: ieee-p7006", text := "The Prism is the person's agent: it serves only its person, acts within their terms and is accountable to them.", evidence := (cons "PrismSystem::designViewSystem" (cons "PrismSystem::designViewSystemParts" (nil String)))}) (cons (record Compliance::Obligation {index := 3, standard := "ISO/IEC 25012:2008 Data quality model", subject := "Prism: iso-iec-25012", text := "Each held item's quality: currentness, accuracy, completeness, consistency, credibility and understandability.", evidence := (cons "PrismSystem::designViewSystem" (cons "PrismSystem::designViewSystemParts" (nil String)))}) (cons (record Compliance::Obligation {index := 4, standard := "ISO 9241-110:2020 Interaction principles", subject := "Prism: iso-9241-110", text := "Relevance judged against the person's tasks and context, conformity with their expectations, controllability and engagement.", evidence := (cons "PrismSystem::designViewSystem" (cons "PrismSystem::designViewSystemParts" (nil String)))}) (cons (record Compliance::Obligation {index := 5, standard := "ISO 9241-112:2017 Principles for the presentation of information", subject := "Prism: iso-9241-112", text := "What is shown is detectable, free of distraction, discriminable, interpretable, concise and consistent.", evidence := (cons "PrismSystem::designViewSystem" (cons "PrismSystem::designViewSystemParts" (nil String)))}) (cons (record Compliance::Obligation {index := 6, standard := "ISO 9241-11:2018 Usability: definitions and concepts", subject := "Prism: iso-9241-11", text := "The person's goals, tasks and context of use, against which each part's usability is measured.", evidence := (cons "PrismSystem::designViewSystem" (cons "PrismSystem::designViewSystemParts" (nil String)))}) (cons (record Compliance::Obligation {index := 7, standard := "ISO/IEC/IEEE 42010:2022 Architecture description", subject := "Prism: iso-iec-ieee-42010", text := "The system's stakeholder, concern, viewpoint and view, at the top of the architecture description.", evidence := (cons "PrismSystem::designViewSystem" (cons "PrismSystem::designViewSystemParts" (nil String)))}) (cons (record Compliance::Obligation {index := 8, standard := "ISO/PAS 19450:2015 Object-Process Methodology", subject := "Prism: iso-19450", text := "The system diagram: main process, beneficiary and its attribute's states, agent, instruments, inputs, results, and its zoom into the parts.", evidence := (cons "PrismSystem::designViewSystem" (cons "PrismSystem::designViewSystemParts" (nil String)))}) (nil Compliance::Obligation))))))))))
+}
+
+theorem{
+  name: systemStandardsEvidenced,
+  parameters: [],
+  statement: ((Compliance::obligationsEvidenced 0 (systemStandards)) = true),
+  proof: decide{}
+}
+\end{semanticmodule}
+\end{lexlean}

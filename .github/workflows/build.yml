@@ -1,3 +1,5 @@
+# build.yml is rendered from the pipeline model, app/specs/pipeline/spec.json, by
+# `cargo run -q --locked -p xtask -- pipeline --write`: change the model, not this file.
 # Builds and verifies the repository's app on a GitHub runner, and hands the
 # holo back as a signed artifact, so no machine of the author's needs Docker,
 # the SDK image or a toolchain. Project content, not universal policy: a
@@ -26,22 +28,23 @@ name: build
 
 on:
   push:
-    branches: ['prism/build/**']
-  workflow_dispatch:
+    branches:
+      - prism/build/**
   workflow_call:
     outputs:
       artifact:
         description: The name of the artifact that holds the holo and its provenance.
         value: ${{ jobs.build.outputs.artifact }}
-      holo:
-        description: The holo's file name inside the artifact.
-        value: ${{ jobs.build.outputs.holo }}
-      fingerprint:
-        description: The archive fingerprint `prismpm verify` recorded for the holo.
-        value: ${{ jobs.build.outputs.fingerprint }}
       attestation-url:
         description: Where GitHub shows the signed provenance of the holo.
         value: ${{ jobs.build.outputs.attestation-url }}
+      fingerprint:
+        description: The archive fingerprint `prismpm verify` recorded for the holo.
+        value: ${{ jobs.build.outputs.fingerprint }}
+      holo:
+        description: The holo's file name inside the artifact.
+        value: ${{ jobs.build.outputs.holo }}
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -55,15 +58,15 @@ jobs:
     name: build and verify the holo, sign its provenance
     runs-on: ubuntu-24.04
     timeout-minutes: 45
-    permissions:
-      contents: read
-      id-token: write
-      attestations: write
     outputs:
       artifact: ${{ steps.collect.outputs.artifact }}
-      holo: ${{ steps.collect.outputs.holo }}
-      fingerprint: ${{ steps.collect.outputs.fingerprint }}
       attestation-url: ${{ steps.attest.outputs.attestation-url }}
+      fingerprint: ${{ steps.collect.outputs.fingerprint }}
+      holo: ${{ steps.collect.outputs.holo }}
+    permissions:
+      attestations: write
+      contents: read
+      id-token: write
     steps:
       - name: Check out the exact event revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -97,9 +100,9 @@ jobs:
             echo "command=$command"
           } >>"$GITHUB_OUTPUT"
       - name: Build and verify the holo through the locked SDK
-        shell: bash
         env:
           COMMAND: ${{ steps.app.outputs.command }}
+        shell: bash
         run: |
           set -euo pipefail
           image=$(sed -n 's/.*"sdk_image":"\([^"]*\)".*/\1/p' prismpm.lock)
@@ -130,16 +133,16 @@ jobs:
             "$image" sh -c "$COMMAND"
       - name: Collect the holo, its build directory and what this run knows about them
         id: collect
-        shell: bash
         env:
+          EVENT: ${{ github.event_name }}
           PROJECT: ${{ steps.app.outputs.project }}
+          REF: ${{ github.ref }}
           REPOSITORY: ${{ github.repository }}
-          SHA: ${{ github.sha }}
           RUN_ID: ${{ github.run_id }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          SHA: ${{ github.sha }}
           WORKFLOW_REF: ${{ github.workflow_ref }}
-          EVENT: ${{ github.event_name }}
-          REF: ${{ github.ref }}
+        shell: bash
         run: |
           set -euo pipefail
           shopt -s nullglob
@@ -175,15 +178,15 @@ jobs:
           } >>"$GITHUB_OUTPUT"
       - name: Sign the holo's provenance as this repository's workflow
         id: attest
-        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8
         with:
-          subject-path: ${{ steps.collect.outputs.holo-path }}
           show-summary: false
+          subject-path: ${{ steps.collect.outputs.holo-path }}
       - name: Keep the provenance beside the holo
-        shell: bash
         env:
           BUNDLE: ${{ steps.attest.outputs.bundle-path }}
           OUT: ${{ steps.collect.outputs.path }}
+        shell: bash
         run: |
           set -euo pipefail
           cp "$BUNDLE" "$OUT/provenance.sigstore.json"
@@ -191,16 +194,16 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: ${{ steps.collect.outputs.artifact }}
-          path: ${{ steps.collect.outputs.path }}
           if-no-files-found: error
+          path: ${{ steps.collect.outputs.path }}
       - name: Say what was built
-        shell: bash
         env:
-          HOLO: ${{ steps.collect.outputs.holo }}
-          FINGERPRINT: ${{ steps.collect.outputs.fingerprint }}
           ARTIFACT: ${{ steps.collect.outputs.artifact }}
           ATTESTATION_URL: ${{ steps.attest.outputs.attestation-url }}
+          FINGERPRINT: ${{ steps.collect.outputs.fingerprint }}
+          HOLO: ${{ steps.collect.outputs.holo }}
           SHA: ${{ github.sha }}
+        shell: bash
         run: |
           set -euo pipefail
           {
