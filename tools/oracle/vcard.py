@@ -26,9 +26,10 @@ table entry) and what exercises it (example ids); a row with neither is
 refused unless app/specs/oracle/vcard.json lists it in `debt` with a reason.
 
 Writes site/read/vcard.table.mjs and test/oracle/vcard.json; --check refuses
-either if stale. --cache DIR reads and keeps the fetched sources there.
+either if stale. Every source is read from
+app/specs/standards/texts/<sha256>, never from the network; --fetch keeps a pin that is not kept yet.
 
-usage: python3 -I tools/oracle/vcard.py [--check] [--cache DIR]
+usage: python3 -I tools/oracle/vcard.py [--check] [--fetch]
 """
 import hashlib
 import json
@@ -44,7 +45,7 @@ ORACLE = json.loads((ROOT / "app/specs/oracle/spec.json").read_text(encoding="ut
 TABLE = ROOT / "site/read/vcard.table.mjs"
 OUT = ROOT / "test/oracle/vcard.json"
 args = sys.argv[1:]
-cache = pathlib.Path(args[args.index("--cache") + 1]) if "--cache" in args else None
+TEXTS = ROOT / "app/specs/standards/texts"
 STANDARD = SPEC["standard"]
 
 
@@ -52,19 +53,15 @@ def refuse(why):
     sys.exit(f"vcard: {why}")
 
 
-def fetch(source):
-    path = cache / f"{source['key']}.txt" if cache else None
-    if path and path.exists():
-        data = path.read_bytes()
-    else:
-        with urllib.request.urlopen(source["url"], timeout=60) as response:
-            data = response.read()
-        if path:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(data)
-    digest = hashlib.sha256(data).hexdigest()
-    if digest != source["sha256"]:
-        refuse(f"{source['key']} at {source['url']} is {digest}, not the pinned {source['sha256']}")
+def fetch(source, headers={}):
+    url, sha256 = source["url"], source["sha256"]
+    path = TEXTS / sha256
+    if not path.exists() and "--fetch" not in args:
+        refuse(f"{url} is not kept at {path.relative_to(ROOT)}: run this with --fetch")
+    data = path.read_bytes() if path.exists() else urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=120).read()
+    if hashlib.sha256(data).hexdigest() != sha256:
+        refuse(f"{url} is {hashlib.sha256(data).hexdigest()}, not the pinned {sha256}")
+    path.exists() or path.write_bytes(data)
     return data.decode("utf-8")
 
 

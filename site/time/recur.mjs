@@ -17,7 +17,7 @@ const WEEKDAYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 const FREQS = ["SECONDLY", "MINUTELY", "HOURLY", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"];
 
 const unfold = (text) => text.replace(/\r?\n[ \t]/g, "");
-const lines = (text, name) => [...unfold(text).matchAll(new RegExp(`^${name}((?:;[^:\\r\\n]*)?):([^\\r\\n]*)$`, "gim"))].map(([, params, value]) => [params, value.trim()]);
+export const lines = (text, name) => [...unfold(text).matchAll(new RegExp(`^${name}((?:;[^:\\r\\n]*)?):([^\\r\\n]*)$`, "gim"))].map(([, params, value]) => [params, value.trim()]);
 
 // One formatter per zone: making one is the slow part of reading a zone's wall-time.
 const clocks = new Map();
@@ -41,7 +41,7 @@ export function utcOf(wall, zone) {
 }
 
 // A DATE or DATE-TIME as wall-time (ms, read as if UTC) and the zone it is in.
-function timeOf(params, value) {
+export function timeOf(params, value) {
   const m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/.exec(value);
   if (!m) return null;
   const [, y, mo, d, h = "0", mi = "0", s = "0", z] = m;

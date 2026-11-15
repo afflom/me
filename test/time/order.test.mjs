@@ -14,6 +14,8 @@ import { readFileSync } from "node:fs";
 import { readItem, useReader } from "../../site/card.mjs";
 import * as reader from "../../site/read/read.mjs";
 import { relativeOf, sequence } from "../../site/time/time.mjs";
+import { whenOf } from "../../site/router/answer.mjs";
+import { READERS } from "../../site/router/features.mjs";
 
 useReader(reader);
 const { corpus } = JSON.parse(readFileSync(new URL("../oracle/corpus.json", import.meta.url), "utf8"));
@@ -152,4 +154,18 @@ test("a reply says how long after the message it answers it came", async () => {
   const six = replies.map((e) => order.get(e.id).after).sort((a, b) => a - b)[0];
   assert.equal(spanOf(six, "en"), new Intl.NumberFormat("en", { style: "unit", unit: "minute", unitDisplay: "long" }).format(Math.trunc(six / 60_000)));
   assert.equal(spanOf(Number.NaN), "");
+});
+
+// The Prism reads back its own dates: every dated event of the examples, said by its own sentence
+// (site/router/answer.mjs whenOf, "Tue, Jul 1 at 8:00 PM") a week before it, is read by the router's
+// time reader (site/router/features.mjs) as the same day and minute, its month and day outranking its weekday.
+test("each example's time, said by the Prism, reads back to the same day and minute", () => {
+  const dated = corpus.filter((e) => e.kind === "calendar").map(read).filter((item) => !item.undated && Number.isFinite(item.at));
+  assert.ok(dated.some((item) => item.allDay) && dated.some((item) => !item.allDay), "the examples hold all-day and timed items");
+  for (const item of dated) {
+    const said = whenOf(item.at, item.allDay);
+    const back = READERS.time(said, { now: item.at - 7 * 86_400_000 });
+    const at = item.allDay ? new Date(item.at).setHours(0, 0, 0, 0) : item.at;
+    assert.equal(Math.floor(back?.start / 60_000), Math.floor(at / 60_000), `${item.address}: "${said}" reads as ${back && new Date(back.start).toISOString()}`);
+  }
 });
