@@ -102,3 +102,25 @@ fn product_pd_03() {
         "PD-03: the planted defects run the gate"
     );
 }
+
+/// `PT-01`: Every part of the Prism, each module of its page and of its model, answers what it is, why it is there, who acts in it, where it runs, when it acts and how it is checked, each answer derived from the record and grounded in a stratum of app/specs/parts/spec.json after verdant's W5H certificate; why traces each part through the features, facets and journeys it serves to the stakeholder concerns they answer, and the gate refuses an ungrounded part, an unanswered question, a concern no journey answers or a working journey no part serves, beyond a debt that only shrinks
+#[test]
+fn product_pt_01() {
+    let gate = read("tools/parts/gate.py");
+    for needle in [
+        "is grounded in no stratum",
+        "does not answer",
+        "is answered by no journey, always entry or stratum",
+        "works, but no feature or facet names a part that serves it",
+    ] {
+        assert!(
+            gate.contains(needle),
+            "PT-01: tools/parts/gate.py must contain `{needle}`"
+        );
+    }
+    let test = read("test/parts/gate.test.mjs");
+    assert!(
+        test.contains("tools/parts/gate.py"),
+        "PT-01: the planted defects run the gate"
+    );
+}
