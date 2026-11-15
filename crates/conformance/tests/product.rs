@@ -123,7 +123,10 @@ fn product_pd_03() {
             .unwrap_or(false)
     })
     .count();
-    assert!(cases > 30, "PD-03: the planted defects are generators/product/cases");
+    assert!(
+        cases > 30,
+        "PD-03: the planted defects are generators/product/cases"
+    );
     assert!(
         read("tools/generators/run.sh").contains("generators/*/cases/*.request"),
         "PD-03: GN-01 replays every program's cases"
