@@ -28,7 +28,9 @@ export function abnf({ rules }) {
   const index = new Map(names.map((n, i) => [n, i]));
   return {
     match(rule, text) {
-      const answer = index.has(rule) ? ask(`${index.get(rule)} ${text}`) : "none";
+      // A text beyond what the guest can hold (it traps) is not read, like one beyond its request limit ("invalid").
+      let answer = "none";
+      try { if (index.has(rule)) answer = ask(`${index.get(rule)} ${text}`); } catch { return null; }
       if (answer === "none" || answer === "invalid") return null;
       const cps = Array.from(text);
       const at = new Map([[0, 0]]);

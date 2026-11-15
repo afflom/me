@@ -6,7 +6,7 @@
 
 export const GUESTS = {
   vcard: { path: 'guest/vcard.wasm', sha256: '48780c76070326bab5ebd1853dc497e1ed5940aae4fec6be0cea6a0967f28bdc' },
-  mail: { path: 'guest/grammar-mail.wasm', sha256: '50186fe035ca5d837e874a42af22e32fcfd4b0dea58ffc151e3f54d22f895467' },
+  mail: { path: 'guest/grammar-mail.wasm', sha256: '317d4741a3c93eb749fd97dd774be3050df68978394ae16b2272a81e240ed408' },
 };
 
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
