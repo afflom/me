@@ -3,6 +3,7 @@
 \useglossary{lexlean.std.nat@1.2.0}
 \useglossary{prism.arch@1.0.0}
 \importmodule{Foundation.Bytes}
+\importmodule{GenBrowser}
 \importmodule{GenSystem}
 \importmodule{Foundation.Tar}
 \importmodule{Foundation.View.Text.V1.Model}
@@ -75,13 +76,19 @@ definition{
   name: dispatch,
   parameters: [value : Bytes],
   result: Bytes,
-  body: (let n : Nat := (Foundation.Bytes::byteLength value); (let eol : Nat := (lineEnd value 0 n); (if (n <? (eol + 1)) then 0x696e76616c6964 else (let line : Bytes := (sliceOr value 0 eol); (let sp : Nat := (wordEnd line 0 eol eol); (let name : Bytes := (sliceOr line 0 sp); (let target : Bytes := (sliceOr line (sp + 1) (prim subtract eol (sp + 1) : Nat)); (let archive : Bytes := (sliceOr value (eol + 1) (prim subtract n (eol + 1) : Nat)); (if (Foundation.Tar::sameBytes name 0x636174) then (catFile archive target) else (if (Foundation.Tar::sameBytes name 0x61726368696e646578) then (match (GenSystem::archIndex archive)
+  body: (let n : Nat := (Foundation.Bytes::byteLength value); (let eol : Nat := (lineEnd value 0 n); (if (n <? (eol + 1)) then 0x696e76616c6964 else (let line : Bytes := (sliceOr value 0 eol); (let sp : Nat := (wordEnd line 0 eol eol); (let name : Bytes := (sliceOr line 0 sp); (let target : Bytes := (sliceOr line (sp + 1) (prim subtract eol (sp + 1) : Nat)); (let archive : Bytes := (sliceOr value (eol + 1) (prim subtract n (eol + 1) : Nat)); (if (Foundation.Tar::sameBytes name 0x636174) then (catFile archive target) else (if (Foundation.Tar::sameBytes name 0x62726f77736572696e646578) then (match (GenBrowser::brIndex archive)
+    | Option.none => (refused 0x6e65656473206170702f7372632f507269736d42726f777365722e6c65782e746578)
+    | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x62726f7773657269646c) then (match (GenBrowser::brCheckIdl archive target)
+    | Option.none => (refused 0x6e65656473202e67656e2f62726f777365722d696e64657820616e64207468652070696e6e65642049444c2066696c652074686520746172676574206e616d6573)
+    | Option.some reasons => (if ((Foundation.Bytes::byteLength reasons) =? 0) then (written 0x) else (refused reasons))) else (if (Foundation.Tar::sameBytes name 0x62726f7773657261646170746572) then (match (GenBrowser::brCheckAdapter archive target)
+    | Option.none => (refused 0x6e65656473202e67656e2f62726f777365722d696e64657820616e642074686520616461707465722074686520746172676574206e616d6573)
+    | Option.some reasons => (if ((Foundation.Bytes::byteLength reasons) =? 0) then (written 0x) else (refused reasons))) else (if (Foundation.Tar::sameBytes name 0x61726368696e646578) then (match (GenSystem::archIndex archive)
     | Option.none => (refused 0x6e65656473206170702f7372632f4172636869746563747572652e6c65782e746578)
     | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x73797374656d636865636b) then (match (GenSystem::check archive)
     | Option.none => (refused 0x6e65656473206170702f73706563732f73797374656d2f737065632e6a736f6e2c206170702f70726f6d7074732f7365742e6a736f6e20616e64206170702f73706563732f7374616e64617264732f737065632e6a736f6e)
     | Option.some reasons => (if ((Foundation.Bytes::byteLength reasons) =? 0) then (written 0x) else (refused reasons))) else (if (Foundation.Tar::sameBytes name 0x73797374656d) then (match (GenSystem::generate archive)
     | Option.none => (refused 0x6e65656473206170702f73706563732f73797374656d2f737065632e6a736f6e20616e64202e67656e2f617263682d696e646578)
-    | Option.some file => (written file)) else 0x696e76616c6964)))))))))))),
+    | Option.some file => (written file)) else 0x696e76616c6964))))))))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}
