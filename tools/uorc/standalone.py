@@ -4,7 +4,9 @@
 
 DIR gets app/'s toolchain files, Foundation, PrismUorc(+Proofs) and a
 UorcApp module whose application record routes every request straight to
-PrismUorc::uorcDispatch. In the locked SDK image, with no network:
+PrismUorc::prismUorcDispatch (the Prism's builder writes PrismUorc, app/prompts/set.json,
+and names its definitions after its module). In the locked SDK image, with
+no network:
 
     lexlean fmt && lexlean lock && lexlean verify && prismpm build
 
@@ -60,7 +62,7 @@ definition{{
   name: dispatch,
   parameters: [value : Bytes],
   result: Bytes,
-  body: (PrismUorc::uorcDispatch value),
+  body: (PrismUorc::prismUorcDispatch value),
   axioms: [Quot.sound, propext]
 }}
 

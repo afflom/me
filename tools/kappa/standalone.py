@@ -1,10 +1,11 @@
-"""Writes a scratch LexLean project that builds PrismKappa as its own guest.
+"""Writes a scratch LexLean project that builds the kappa facet as its own guest.
 
-    python3 -I tools/dest/standalone.py DIR
+    python3 -I tools/kappa/standalone.py DIR
 
-DIR gets app/'s toolchain files, Foundation, PrismKappa(+Proofs) and a
-KappaApp module whose application record routes every request straight to
-PrismKappa::kappaDispatch. In the locked SDK image, with no network:
+DIR gets app/'s toolchain files, Foundation, the builder's PrismKappa(+Proofs),
+the reader PrismKappaLabel and a KappaApp module whose application record
+routes every request straight to PrismKappaLabel::kappaLabelDispatch. In the
+locked SDK image, with no network:
 
     lexlean fmt && lexlean lock && lexlean verify && prismpm build
 
@@ -18,7 +19,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 APP = ROOT / "app"
-SPEC = json.loads((APP / "specs/dest/spec.json").read_text())
+SPEC = json.loads((APP / "specs/kappa/spec.json").read_text())
 REQ_MAX, RESP_MAX, ALLOC = 146, 32, 292
 
 out = pathlib.Path(sys.argv[1])
@@ -29,13 +30,13 @@ for name in ("lakefile.toml", "lean-toolchain", "lake-manifest.json", "prismpm.t
     shutil.copy(APP / name, out / name)
 shutil.copytree(APP / "language", out / "language")
 shutil.copytree(APP / "src/Foundation", out / "src/Foundation")
-for name in ("PrismKappa.lex.tex", "PrismKappaProofs.lex.tex"):
+for name in ("PrismKappa.lex.tex", "PrismKappaProofs.lex.tex", "PrismKappaLabel.lex.tex"):
     shutil.copy(APP / "src" / name, out / "src" / name)
 
 toml = (APP / "lexlean.toml").read_text()
 start = toml.index("entrypoints = [")
 end = toml.index("]\n", start) + 2
-entries = sorted(["src/KappaApp.lex.tex", "src/PrismKappa.lex.tex", "src/PrismKappaProofs.lex.tex"])
+entries = sorted(["src/KappaApp.lex.tex", "src/PrismKappa.lex.tex", "src/PrismKappaLabel.lex.tex", "src/PrismKappaProofs.lex.tex"])
 toml = toml[:start] + "entrypoints = [" + ", ".join(f'"{e}"' for e in entries) + "]\n" + toml[end:]
 (out / "lexlean.toml").write_text(toml)
 
@@ -53,14 +54,14 @@ for r, a in reversed(vectors):
 \useglossary{{prism.arch@1.0.0}}
 \importmodule{{Foundation.Bytes}}
 \importmodule{{Foundation.View.Text.V1.Model}}
-\importmodule{{PrismKappa}}
+\importmodule{{PrismKappaLabel}}
 \title{{Text application model}}
 \begin{{semanticmodule}}
 definition{{
   name: dispatch,
   parameters: [value : Bytes],
   result: Bytes,
-  body: (PrismKappa::kappaDispatch value),
+  body: (PrismKappaLabel::kappaLabelDispatch value),
   axioms: [Quot.sound, propext]
 }}
 

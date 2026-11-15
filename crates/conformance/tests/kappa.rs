@@ -1,9 +1,10 @@
 //! The `kappa` suite: one test per scenario in `features/suites/kappa.feature`.
 //!
 //! The Lean kernel proves the guarantees when `just vv` runs `prismpm verify`
-//! on `app/`. These tests hold the claims fixed (eight guarantees, each on
-//! exactly `[Quot.sound, propext]`), keep the generated files equal to their
-//! spec, run the compiled guest over every label shape in Node
+//! on `app/`. These tests hold the claims fixed (eight guarantees, which the
+//! builder states as seventeen properties of PrismKappa, each on exactly
+//! `[Quot.sound, propext]`), keep the reader PrismKappaLabel and the mirror
+//! equal to their spec, run the compiled guest over every label shape in Node
 //! (`site/kappa/kappa.test.mjs`), and check that the browser admits only on
 //! the guest's answer and computes digests only with its host.
 
@@ -43,51 +44,58 @@ fn node_suite() {
 /// `KP-01`: The Prism admits an object under a kappa label only when the proved Prism Kappa decision says admit
 #[test]
 fn kappa_kp_01() {
+    // The decision is the builder's (app/prompts/set.json): the eight guarantees
+    // are its seventeen properties, one per answer a guarantee never gives.
     let text = read("app/src/PrismKappaProofs.lex.tex");
-    for i in 1..=8 {
-        let name = format!("kappaInv{i:03}Holds");
+    for i in 1..=17 {
+        let name = format!("inv{i:03}Holds");
         let start = text
             .find(&format!("  name: {name},\n"))
             .unwrap_or_else(|| panic!("{name} is missing"));
         let body = &text[start..start + text[start..].find("\n}\n").expect("closed")];
         assert!(
-            body.contains("parameters: [request : PrismKappa::KappaRequest],")
-                && body.contains(&format!(
-                    "statement: ((kappaBreaksInv{i:03} request) = false),"
-                ))
+            body.contains("parameters: [request : PrismKappa::PrismKappaRequest],")
+                && body.contains(&format!("statement: ((breaksInv{i:03} request) = false),"))
                 && body.contains("axioms: [Quot.sound, propext]"),
             "{name} changed its statement or its axioms:\n{body}"
         );
         let breaks = &text[text
-            .find(&format!("  name: kappaBreaksInv{i:03},\n"))
-            .unwrap_or_else(|| panic!("kappaBreaksInv{i:03} is missing"))..];
+            .find(&format!("  name: breaksInv{i:03},\n"))
+            .unwrap_or_else(|| panic!("breaksInv{i:03} is missing"))..];
         assert!(
             breaks[..breaks.find("\n}\n").expect("closed")]
-                .contains("(PrismKappa::kappaJudge request)"),
-            "kappaBreaksInv{i:03} must be about PrismKappa::kappaJudge"
+                .contains("(PrismKappa::prismKappaJudge request)"),
+            "breaksInv{i:03} must be about PrismKappa::prismKappaJudge"
         );
     }
     assert!(
-        !text.contains("kappaInv009Holds"),
-        "more guarantees than the scenario names"
+        !text.contains("  name: inv018Holds,\n"),
+        "more properties than the eight guarantees state"
     );
     assert!(
         !text.contains("Classical.choice"),
         "PrismKappaProofs uses Classical.choice"
     );
-    let facet = read("app/src/PrismKappa.lex.tex");
+    let reader = read("app/src/PrismKappaLabel.lex.tex");
     assert!(
-        facet.contains("(kappaEncodeAnswer (kappaJudge request) (project request axis))"),
+        reader.contains(
+            "(kappaLabelEncodeAnswer (PrismKappa::prismKappaJudge request) (project request axis))"
+        ),
         "KP-01: the answer is decided by the judge the guarantees are about"
     );
     assert!(
-        facet.contains("(kappaReadLabel (kappaSliceOf s 0 e) d)"),
-        "KP-01: the model reads the label itself"
+        reader.contains("(kappaLabelReadLabel (kappaLabelSliceOf s 0 e) d)"),
+        "KP-01: the reader reads the label itself"
     );
-    assert!(
-        !facet.contains("name: application,"),
-        "KP-01: PrismKappa is a library of the Prism, not a second application root"
-    );
+    for module in [
+        "app/src/PrismKappa.lex.tex",
+        "app/src/PrismKappaLabel.lex.tex",
+    ] {
+        assert!(
+            !read(module).contains("name: application,"),
+            "KP-01: {module} is a library of the Prism, not a second application root"
+        );
+    }
     let spec = read("app/specs/kappa/spec.json");
     for (wire, discriminant, digest) in [
         ("sha256", 0, 32),
@@ -107,12 +115,13 @@ fn kappa_kp_01() {
     let toml = read("app/lexlean.toml");
     assert!(
         toml.contains("\"src/PrismKappa.lex.tex\"")
-            && toml.contains("\"src/PrismKappaProofs.lex.tex\""),
-        "PrismKappa and its proofs are lexlean entrypoints"
+            && toml.contains("\"src/PrismKappaProofs.lex.tex\"")
+            && toml.contains("\"src/PrismKappaLabel.lex.tex\""),
+        "PrismKappa, its proofs and its reader are lexlean entrypoints"
     );
     assert!(
-        read("app/src/Prism.lex.tex").contains("(PrismKappa::kappaDispatch rest)"),
-        "KP-01: the Prism root routes kappa to PrismKappa"
+        read("app/src/Prism.lex.tex").contains("(PrismKappaLabel::kappaLabelDispatch rest)"),
+        "KP-01: the Prism root routes kappa to the reader in front of PrismKappa"
     );
     run("python3", &["-I", "tools/kappa/gen.py", "--check"]);
     node_suite();

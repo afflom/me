@@ -26,7 +26,9 @@ the kappa facet.
 
 ## Guarantees
 
-Proved over `curateJudge` with exactly `[Quot.sound, propext]`:
+Proved over `prismCurateJudge` (written by the Prism's builder, `tools/prompts/gen.py`)
+with exactly `[Quot.sound, propext]`, as twenty properties: a guarantee that
+names several answers it never gives is one property per answer.
 
 1. Halted always refuses.
 2. A parameter off its spec always refuses.

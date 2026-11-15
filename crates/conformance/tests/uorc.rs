@@ -1,7 +1,8 @@
 //! The `uorc` suite: one test per scenario in `features/suites/uorc.feature`.
 //!
 //! The Lean kernel proves the guarantees when `just vv` runs `prismpm verify`
-//! on `app/`. These tests hold the claims fixed (fourteen guarantees, each on
+//! on `app/`. These tests hold the claims fixed (fourteen guarantees, written by the
+//! Prism's builder, each on
 //! exactly `[Quot.sound, propext]`), run the compiled guest over every request
 //! in Node (`site/uorc/uorc.test.mjs`), and hold the lock and the vault's use of
 //! the objects in place. `test/uorc/objects.test.mjs` runs the pinned client,
@@ -41,22 +42,20 @@ fn run(program: &str, args: &[&str]) {
 fn uorc_uo_01() {
     let text = read("app/src/PrismUorcProofs.lex.tex");
     for i in 1..=14 {
-        let name = format!("uorcInv{i:03}Holds");
+        let name = format!("inv{i:03}Holds");
         let start = text
             .find(&format!("  name: {name},\n"))
             .unwrap_or_else(|| panic!("{name} is missing"));
         let body = &text[start..start + text[start..].find("\n}\n").expect("closed")];
         assert!(
-            body.contains("parameters: [request : PrismUorc::UorcRequest],")
-                && body.contains(&format!(
-                    "statement: ((uorcBreaksInv{i:03} request) = false),"
-                ))
+            body.contains("parameters: [request : PrismUorc::PrismUorcRequest],")
+                && body.contains(&format!("statement: ((breaksInv{i:03} request) = false),"))
                 && body.contains("axioms: [Quot.sound, propext]"),
             "{name} changed its statement or its axioms:\n{body}"
         );
     }
     assert!(
-        !text.contains("uorcInv015Holds"),
+        !text.contains("  name: inv015Holds,\n"),
         "more guarantees than the scenario names"
     );
     assert!(
@@ -65,11 +64,11 @@ fn uorc_uo_01() {
     );
     let facet = read("app/src/PrismUorc.lex.tex");
     assert!(
-        facet.contains("(uorcEncodeAnswer (uorcJudge request))"),
+        facet.contains("(prismUorcEncodeAnswer (prismUorcJudge request))"),
         "UO-01: the answer is decided by the judge the guarantees are about"
     );
     assert!(
-        read("app/src/Prism.lex.tex").contains("(PrismUorc::uorcDispatch rest)"),
+        read("app/src/Prism.lex.tex").contains("(PrismUorc::prismUorcDispatch rest)"),
         "UO-01: the Prism root routes uorc to PrismUorc"
     );
     let toml = read("app/lexlean.toml");

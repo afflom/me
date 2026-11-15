@@ -4,7 +4,9 @@
 
 DIR gets app/'s toolchain files, Foundation, PrismDest(+Proofs) and a
 DestApp module whose application record routes every request straight to
-PrismDest::destDispatch. In the locked SDK image, with no network:
+PrismDest::prismDestDispatch (the Prism's builder writes PrismDest, app/prompts/set.json,
+and names its definitions after its module). In the locked SDK image, with
+no network:
 
     lexlean fmt && lexlean lock && lexlean verify && prismpm build
 
@@ -60,7 +62,7 @@ definition{{
   name: dispatch,
   parameters: [value : Bytes],
   result: Bytes,
-  body: (PrismDest::destDispatch value),
+  body: (PrismDest::prismDestDispatch value),
   axioms: [Quot.sound, propext]
 }}
 

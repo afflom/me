@@ -1,7 +1,8 @@
 //! The `dest` suite: one test per scenario in `features/suites/dest.feature`.
 //!
 //! The Lean kernel proves the guarantees when `just vv` runs `prismpm verify`
-//! on `app/`. These tests hold the claims fixed (eleven guarantees, each on
+//! on `app/`. These tests hold the claims fixed (eleven guarantees, which the
+//! builder states as thirteen properties, each on
 //! exactly `[Quot.sound, propext]`), run the compiled guest over every request
 //! in Node (`site/dest/dest.test.mjs`), and check that the page hands an item
 //! out only after the guest answered deliver.
@@ -39,23 +40,21 @@ fn node_suite() {
 #[test]
 fn dest_ds_01() {
     let text = read("app/src/PrismDestProofs.lex.tex");
-    for i in 1..=11 {
-        let name = format!("destInv{i:03}Holds");
+    for i in 1..=13 {
+        let name = format!("inv{i:03}Holds");
         let start = text
             .find(&format!("  name: {name},\n"))
             .unwrap_or_else(|| panic!("{name} is missing"));
         let body = &text[start..start + text[start..].find("\n}\n").expect("closed")];
         assert!(
-            body.contains("parameters: [request : PrismDest::DestRequest],")
-                && body.contains(&format!(
-                    "statement: ((destBreaksInv{i:03} request) = false),"
-                ))
+            body.contains("parameters: [request : PrismDest::PrismDestRequest],")
+                && body.contains(&format!("statement: ((breaksInv{i:03} request) = false),"))
                 && body.contains("axioms: [Quot.sound, propext]"),
             "{name} changed its statement or its axioms:\n{body}"
         );
     }
     assert!(
-        !text.contains("destInv012Holds"),
+        !text.contains("  name: inv014Holds,\n"),
         "more guarantees than the scenario names"
     );
     assert!(
@@ -70,7 +69,7 @@ fn dest_ds_01() {
     );
     let root_module = read("app/src/Prism.lex.tex");
     assert!(
-        root_module.contains("(PrismDest::destDispatch rest)"),
+        root_module.contains("(PrismDest::prismDestDispatch rest)"),
         "DS-01: the Prism root routes dest to PrismDest"
     );
     node_suite();

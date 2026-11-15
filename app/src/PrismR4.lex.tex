@@ -332,21 +332,21 @@ definition{
   name: prismR4StepCompiled,
   parameters: [request : PrismR4Request],
   result: Nat,
-  body: (if (prismR4Rule1Misses request) then (if (prismR4Rule2 request) then (prismR4AnswerRefuse) else (if (prismR4Rule3Misses request) then (if (prismR4Rule4Misses request) then (if (prismR4Rule8 request) then (prismR4AnswerRefuse) else (if (prismR4Rule9 request) then (prismR4AnswerRefuse) else (if (prismR4Rule10 request) then (prismR4AnswerAsk) else (if (prismR4Rule11 request) then (prismR4AnswerReceipt) else (prismR4AnswerAnswer))))) else (prismR4AnswerRefuse)) else (prismR4AnswerRefuse))) else (prismR4AnswerRefuse))
+  body: (if (prismR4Rule1Misses request) then (if (prismR4Rule2 request) then (prismR4AnswerRefuse) else (if ((project request weights) =? (prismR4WeightsNone)) then (if ((project request route) =? (prismR4RouteNone)) then (if (prismR4Rule8 request) then (prismR4AnswerRefuse) else (if (prismR4Rule9 request) then (prismR4AnswerRefuse) else (if (prismR4Rule10 request) then (prismR4AnswerAsk) else (if (prismR4Rule11 request) then (prismR4AnswerReceipt) else (prismR4AnswerAnswer))))) else (prismR4AnswerRefuse)) else (prismR4AnswerRefuse))) else (prismR4AnswerRefuse))
 }
 
 definition{
   name: prismR4StepInprism,
   parameters: [request : PrismR4Request],
   result: Nat,
-  body: (if (prismR4Rule1Misses request) then (if (prismR4Rule2 request) then (prismR4AnswerRefuse) else (if (prismR4Rule5Misses request) then (if (prismR4Rule6Misses request) then (if (prismR4Rule8 request) then (prismR4AnswerRefuse) else (if (prismR4Rule9 request) then (prismR4AnswerRefuse) else (if (prismR4Rule10 request) then (prismR4AnswerAsk) else (if (prismR4Rule11 request) then (prismR4AnswerReceipt) else (prismR4AnswerAnswer))))) else (prismR4AnswerRefuse)) else (prismR4AnswerRefuse))) else (prismR4AnswerRefuse))
+  body: (if (prismR4Rule1Misses request) then (if (prismR4Rule2 request) then (prismR4AnswerRefuse) else (if ((project request weights) =? (prismR4WeightsMatch)) then (if ((project request route) =? (prismR4RouteNone)) then (if (prismR4Rule8 request) then (prismR4AnswerRefuse) else (if (prismR4Rule9 request) then (prismR4AnswerRefuse) else (if (prismR4Rule10 request) then (prismR4AnswerAsk) else (if (prismR4Rule11 request) then (prismR4AnswerReceipt) else (prismR4AnswerAnswer))))) else (prismR4AnswerRefuse)) else (prismR4AnswerRefuse))) else (prismR4AnswerRefuse))
 }
 
 definition{
   name: prismR4StepRouted,
   parameters: [request : PrismR4Request],
   result: Nat,
-  body: (if (prismR4Rule1Misses request) then (if (prismR4Rule2 request) then (prismR4AnswerRefuse) else (if (prismR4Rule7Misses request) then (if (prismR4Rule8 request) then (prismR4AnswerRefuse) else (if (prismR4Rule9 request) then (prismR4AnswerRefuse) else (if (prismR4Rule10 request) then (prismR4AnswerAsk) else (if (prismR4Rule11 request) then (prismR4AnswerReceipt) else (prismR4AnswerAnswer))))) else (prismR4AnswerRefuse))) else (prismR4AnswerRefuse))
+  body: (if (prismR4Rule1Misses request) then (if (prismR4Rule2 request) then (prismR4AnswerRefuse) else (if ((project request route) =? (prismR4RouteGranted)) then (if (prismR4Rule8 request) then (prismR4AnswerRefuse) else (if (prismR4Rule9 request) then (prismR4AnswerRefuse) else (if (prismR4Rule10 request) then (prismR4AnswerAsk) else (if (prismR4Rule11 request) then (prismR4AnswerReceipt) else (prismR4AnswerAnswer))))) else (prismR4AnswerRefuse))) else (prismR4AnswerRefuse))
 }
 
 definition{

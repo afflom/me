@@ -368,42 +368,42 @@ definition{
   name: prismGoogleLinkStepProvision,
   parameters: [request : PrismGoogleLinkRequest],
   result: Nat,
-  body: (if (prismGoogleLinkRule1 request) then (prismGoogleLinkAnswerRevoked) else (if (prismGoogleLinkRule3 request) then (prismGoogleLinkAnswerUnprovisioned) else (if (prismGoogleLinkRule6Misses request) then (prismGoogleLinkAnswerRefuse) else (prismGoogleLinkAnswerRegistered))))
+  body: (if (prismGoogleLinkRule1 request) then (prismGoogleLinkAnswerRevoked) else (if (prismGoogleLinkRule3 request) then (prismGoogleLinkAnswerUnprovisioned) else (if ((((project request actor) <? (prismGoogleLinkActorOperator)) || ((prismGoogleLinkActorOperator) <? (project request actor))) || (((project request stage) <? (prismGoogleLinkStageUnprovisioned)) || ((prismGoogleLinkStageUnprovisioned) <? (project request stage)))) then (prismGoogleLinkAnswerRefuse) else (prismGoogleLinkAnswerRegistered))))
 }
 
 definition{
   name: prismGoogleLinkStepConsent,
   parameters: [request : PrismGoogleLinkRequest],
   result: Nat,
-  body: (if (prismGoogleLinkRule1 request) then (prismGoogleLinkAnswerRevoked) else (if (prismGoogleLinkRule3 request) then (prismGoogleLinkAnswerUnprovisioned) else (if (prismGoogleLinkRule7Misses request) then (if (prismGoogleLinkRule8Misses request) then (prismGoogleLinkAnswerRefuse) else (prismGoogleLinkAnswerGranted)) else (prismGoogleLinkAnswerGranted))))
+  body: (if (prismGoogleLinkRule1 request) then (prismGoogleLinkAnswerRevoked) else (if (prismGoogleLinkRule3 request) then (prismGoogleLinkAnswerUnprovisioned) else (if ((((project request actor) <? (prismGoogleLinkActorOwner)) || ((prismGoogleLinkActorOwner) <? (project request actor))) || (((project request stage) <? (prismGoogleLinkStageRegistered)) || ((prismGoogleLinkStageRegistered) <? (project request stage)))) then (if ((((project request actor) <? (prismGoogleLinkActorOwner)) || ((prismGoogleLinkActorOwner) <? (project request actor))) || (((project request stage) <? (prismGoogleLinkStageRevoked)) || ((prismGoogleLinkStageRevoked) <? (project request stage)))) then (prismGoogleLinkAnswerRefuse) else (prismGoogleLinkAnswerGranted)) else (prismGoogleLinkAnswerGranted))))
 }
 
 definition{
   name: prismGoogleLinkStepRenew,
   parameters: [request : PrismGoogleLinkRequest],
   result: Nat,
-  body: (if (prismGoogleLinkRule1 request) then (prismGoogleLinkAnswerRevoked) else (if (prismGoogleLinkRule3 request) then (prismGoogleLinkAnswerUnprovisioned) else (if (prismGoogleLinkRule9Misses request) then (if (prismGoogleLinkRule10Misses request) then (prismGoogleLinkAnswerRefuse) else (prismGoogleLinkAnswerSyncing)) else (prismGoogleLinkAnswerGranted))))
+  body: (if (prismGoogleLinkRule1 request) then (prismGoogleLinkAnswerRevoked) else (if (prismGoogleLinkRule3 request) then (prismGoogleLinkAnswerUnprovisioned) else (if ((((project request actor) <? (prismGoogleLinkActorPrism)) || ((prismGoogleLinkActorPrism) <? (project request actor))) || (((project request stage) <? (prismGoogleLinkStageGranted)) || ((prismGoogleLinkStageGranted) <? (project request stage)))) then (if ((((project request actor) <? (prismGoogleLinkActorPrism)) || ((prismGoogleLinkActorPrism) <? (project request actor))) || (((project request stage) <? (prismGoogleLinkStageSyncing)) || ((prismGoogleLinkStageSyncing) <? (project request stage)))) then (prismGoogleLinkAnswerRefuse) else (prismGoogleLinkAnswerSyncing)) else (prismGoogleLinkAnswerGranted))))
 }
 
 definition{
   name: prismGoogleLinkStepSync,
   parameters: [request : PrismGoogleLinkRequest],
   result: Nat,
-  body: (if (prismGoogleLinkRule1 request) then (prismGoogleLinkAnswerRevoked) else (if (prismGoogleLinkRule3 request) then (prismGoogleLinkAnswerUnprovisioned) else (if (prismGoogleLinkRule11Misses request) then (if (prismGoogleLinkRule12Misses request) then (prismGoogleLinkAnswerRefuse) else (prismGoogleLinkAnswerSyncing)) else (prismGoogleLinkAnswerSyncing))))
+  body: (if (prismGoogleLinkRule1 request) then (prismGoogleLinkAnswerRevoked) else (if (prismGoogleLinkRule3 request) then (prismGoogleLinkAnswerUnprovisioned) else (if ((((project request actor) <? (prismGoogleLinkActorPrism)) || ((prismGoogleLinkActorPrism) <? (project request actor))) || (((project request stage) <? (prismGoogleLinkStageGranted)) || ((prismGoogleLinkStageGranted) <? (project request stage)))) then (if ((((project request actor) <? (prismGoogleLinkActorPrism)) || ((prismGoogleLinkActorPrism) <? (project request actor))) || (((project request stage) <? (prismGoogleLinkStageSyncing)) || ((prismGoogleLinkStageSyncing) <? (project request stage)))) then (prismGoogleLinkAnswerRefuse) else (prismGoogleLinkAnswerSyncing)) else (prismGoogleLinkAnswerSyncing))))
 }
 
 definition{
   name: prismGoogleLinkStepForget,
   parameters: [request : PrismGoogleLinkRequest],
   result: Nat,
-  body: (if (prismGoogleLinkRule1 request) then (prismGoogleLinkAnswerRevoked) else (if (prismGoogleLinkRule3 request) then (prismGoogleLinkAnswerUnprovisioned) else (if (prismGoogleLinkRule4Misses request) then (if (prismGoogleLinkRule5Misses request) then (prismGoogleLinkAnswerRefuse) else (prismGoogleLinkAnswerRevoked)) else (prismGoogleLinkAnswerRevoked))))
+  body: (if (prismGoogleLinkRule1 request) then (prismGoogleLinkAnswerRevoked) else (if (prismGoogleLinkRule3 request) then (prismGoogleLinkAnswerUnprovisioned) else (if ((project request actor) =? (prismGoogleLinkActorOwner)) then (prismGoogleLinkAnswerRevoked) else (if ((project request actor) =? (prismGoogleLinkActorPrism)) then (prismGoogleLinkAnswerRevoked) else (prismGoogleLinkAnswerRefuse)))))
 }
 
 definition{
   name: prismGoogleLinkStepHalt,
   parameters: [request : PrismGoogleLinkRequest],
   result: Nat,
-  body: (if (prismGoogleLinkRule1 request) then (prismGoogleLinkAnswerRevoked) else (if (prismGoogleLinkRule2 request) then (prismGoogleLinkAnswerRevoked) else (if (prismGoogleLinkRule3 request) then (prismGoogleLinkAnswerUnprovisioned) else (prismGoogleLinkAnswerRefuse))))
+  body: (if (prismGoogleLinkRule1 request) then (prismGoogleLinkAnswerRevoked) else (prismGoogleLinkAnswerRevoked))
 }
 
 definition{

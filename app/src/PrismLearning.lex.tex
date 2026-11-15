@@ -278,35 +278,35 @@ definition{
   name: prismLearningStepSupport,
   parameters: [request : PrismLearningRequest],
   result: Nat,
-  body: (if (prismLearningRule3 request) then (prismLearningAnswerHold) else (if (prismLearningRule4 request) then (prismLearningAnswerHold) else (if (prismLearningRule5Misses request) then (if (prismLearningRule6Misses request) then (if (prismLearningRule7 request) then (prismLearningAnswerRaise) else (if (prismLearningRule9 request) then (prismLearningAnswerHold) else (prismLearningAnswerHold))) else (prismLearningAnswerHold)) else (prismLearningAnswerConsolidate))))
+  body: (if (prismLearningRule3 request) then (prismLearningAnswerHold) else (if (prismLearningRule4 request) then (prismLearningAnswerHold) else (if ((((project request state) <? (prismLearningStateInferred)) || ((prismLearningStateInferred) <? (project request state))) || ((project request weight) <? 10)) then (if (15 <=? (project request weight)) then (prismLearningAnswerHold) else (prismLearningAnswerRaise)) else (prismLearningAnswerConsolidate))))
 }
 
 definition{
   name: prismLearningStepContradict,
   parameters: [request : PrismLearningRequest],
   result: Nat,
-  body: (if (prismLearningRule3 request) then (prismLearningAnswerHold) else (if (prismLearningRule4 request) then (prismLearningAnswerHold) else (if (prismLearningRule8Misses request) then (if (prismLearningRule9 request) then (prismLearningAnswerHold) else (if (prismLearningRule10 request) then (prismLearningAnswerLower) else (prismLearningAnswerHold))) else (prismLearningAnswerDemote))))
+  body: (if (prismLearningRule3 request) then (prismLearningAnswerHold) else (if (prismLearningRule4 request) then (prismLearningAnswerHold) else (if ((((project request state) <? (prismLearningStateConsolidated)) || ((prismLearningStateConsolidated) <? (project request state))) || (6 <? (project request weight))) then (if (prismLearningRule9 request) then (prismLearningAnswerHold) else (prismLearningAnswerLower)) else (prismLearningAnswerDemote))))
 }
 
 definition{
   name: prismLearningStepDecay,
   parameters: [request : PrismLearningRequest],
   result: Nat,
-  body: (if (prismLearningRule3 request) then (prismLearningAnswerHold) else (if (prismLearningRule4 request) then (prismLearningAnswerHold) else (if (prismLearningRule9 request) then (prismLearningAnswerHold) else (if (prismLearningRule11 request) then (prismLearningAnswerLower) else (prismLearningAnswerHold)))))
+  body: (if (prismLearningRule3 request) then (prismLearningAnswerHold) else (if (prismLearningRule4 request) then (prismLearningAnswerHold) else (if (prismLearningRule9 request) then (prismLearningAnswerHold) else (prismLearningAnswerLower))))
 }
 
 definition{
   name: prismLearningStepOwnerconfirm,
   parameters: [request : PrismLearningRequest],
   result: Nat,
-  body: (if (prismLearningRule1Misses request) then (if (prismLearningRule3 request) then (prismLearningAnswerHold) else (if (prismLearningRule4 request) then (prismLearningAnswerHold) else (if (prismLearningRule9 request) then (prismLearningAnswerHold) else (prismLearningAnswerHold)))) else (prismLearningAnswerConfirm))
+  body: (if ((project request state) =? (prismLearningStateConfirmed)) then (if (prismLearningRule3 request) then (prismLearningAnswerHold) else (if (prismLearningRule4 request) then (prismLearningAnswerHold) else (if (prismLearningRule9 request) then (prismLearningAnswerHold) else (prismLearningAnswerHold)))) else (prismLearningAnswerConfirm))
 }
 
 definition{
   name: prismLearningStepOwnerreject,
   parameters: [request : PrismLearningRequest],
   result: Nat,
-  body: (if (prismLearningRule2Misses request) then (if (prismLearningRule3 request) then (prismLearningAnswerHold) else (if (prismLearningRule4 request) then (prismLearningAnswerHold) else (if (prismLearningRule9 request) then (prismLearningAnswerHold) else (prismLearningAnswerHold)))) else (prismLearningAnswerReject))
+  body: (if ((project request state) =? (prismLearningStateRejected)) then (if (prismLearningRule3 request) then (prismLearningAnswerHold) else (if (prismLearningRule4 request) then (prismLearningAnswerHold) else (if (prismLearningRule9 request) then (prismLearningAnswerHold) else (prismLearningAnswerHold)))) else (prismLearningAnswerReject))
 }
 
 definition{

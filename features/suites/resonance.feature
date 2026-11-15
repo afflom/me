@@ -15,8 +15,8 @@ Feature: resonance
     Given the PrismResonance guest built from app/src/PrismResonance.lex.tex, refused unless its SHA-256 is the pinned one
     When every one of its 1920 requests is decided
     Then each answer is the generated decision table's answer and keeps all ten guarantees
-    And the Prism root routes "resonance <request>" to PrismResonance::resonanceDispatch
-    And Lean proves the ten guarantees with exactly the axioms Quot.sound and propext
+    And the Prism root routes "resonance <request>" to PrismResonance::prismResonanceDispatch
+    And Lean proves the ten guarantees, as sixteen properties, with exactly the axioms Quot.sound and propext
 
   @RS-02 @build
   Scenario: The page answers the owner's gestures and learns from them only through the root guest: each answer's learning signal goes to PrismLearning, only the owner confirms or rejects, and what was learned is kept as a sealed snapshot in this browser that restores with zero drift or not at all

@@ -7,6 +7,10 @@ all generated, never hand-edited:
   site/<prefix>/table.mjs         the same tree in JavaScript, for the page and
                                   the Node suite's cross-check against the guest
 
+A facet named in app/prompts/set.json is built by the Prism's builder
+(tools/prompts/gen.py), which writes its two Lean modules with their full
+model; this then writes only its table.
+
 Before writing, every request is judged by the tree and checked against every
 guarantee and every example, so a spec that breaks its own guarantees never
 reaches Lean. The judge is a tree whose every test is `field =? value`, at most
@@ -23,6 +27,8 @@ ROOT = pathlib.Path(__file__).resolve().parents[2]
 ARGS = [a for a in sys.argv[1:] if not a.startswith("--")]
 CHECK = "--check" in sys.argv
 SPEC = json.loads((ROOT / ARGS[0]).read_text())
+# The facet's name is its spec's directory; the builder owns the Lean of every facet its set lists.
+BUILT = f"{pathlib.Path(ARGS[0]).parent.name}.prompt.json" in json.loads((ROOT / "app/prompts/set.json").read_text())["prompts"]
 P = SPEC["facet"]["prefix"]
 MOD = SPEC["facet"]["module"]
 REQ = SPEC["facet"]["request"]
@@ -286,7 +292,9 @@ def main():
     if d > 11:
         sys.exit(f"tree depth {d} > 11: Lean's split gives up at 13")
     n = audit()
-    outs = {f"app/src/{MOD}.lex.tex": module(), f"app/src/{MOD}Proofs.lex.tex": proofs(), f"site/{P}/table.mjs": table()}
+    outs = {f"site/{P}/table.mjs": table()}
+    if not BUILT:
+        outs |= {f"app/src/{MOD}.lex.tex": module(), f"app/src/{MOD}Proofs.lex.tex": proofs()}
     if CHECK:
         squash = lambda t: "".join(t.split())
         stale = [p for p, t in outs.items() if not (ROOT / p).exists() or squash((ROOT / p).read_text()) != squash(t)]

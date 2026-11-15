@@ -6,60 +6,60 @@
 \importmodule{Foundation.View.Text.V1.Model}
 \title{Text application model}
 \begin{semanticmodule}
-definition{name: curateHaltedNo, parameters: [], result: Nat, body: 0}
+definition{name: prismCurateHaltedNo, parameters: [], result: Nat, body: 0}
 
-definition{name: curateHaltedYes, parameters: [], result: Nat, body: 1}
+definition{name: prismCurateHaltedYes, parameters: [], result: Nat, body: 1}
 
-definition{name: curateTunableYes, parameters: [], result: Nat, body: 0}
+definition{name: prismCurateTunableYes, parameters: [], result: Nat, body: 0}
 
-definition{name: curateTunableNo, parameters: [], result: Nat, body: 1}
+definition{name: prismCurateTunableNo, parameters: [], result: Nat, body: 1}
 
-definition{name: curateLabelAdmit, parameters: [], result: Nat, body: 0}
+definition{name: prismCurateLabelAdmit, parameters: [], result: Nat, body: 0}
 
-definition{name: curateLabelOther, parameters: [], result: Nat, body: 1}
+definition{name: prismCurateLabelOther, parameters: [], result: Nat, body: 1}
 
-definition{name: curateDefectZero, parameters: [], result: Nat, body: 0}
+definition{name: prismCurateDefectZero, parameters: [], result: Nat, body: 0}
 
-definition{name: curateDefectSome, parameters: [], result: Nat, body: 1}
+definition{name: prismCurateDefectSome, parameters: [], result: Nat, body: 1}
 
-definition{name: curateEvidenceOwner, parameters: [], result: Nat, body: 0}
+definition{name: prismCurateEvidenceOwner, parameters: [], result: Nat, body: 0}
 
-definition{name: curateEvidenceSelf, parameters: [], result: Nat, body: 1}
+definition{name: prismCurateEvidenceSelf, parameters: [], result: Nat, body: 1}
 
-definition{name: curateFloorKept, parameters: [], result: Nat, body: 0}
+definition{name: prismCurateFloorKept, parameters: [], result: Nat, body: 0}
 
-definition{name: curateFloorRegressed, parameters: [], result: Nat, body: 1}
+definition{name: prismCurateFloorRegressed, parameters: [], result: Nat, body: 1}
 
-definition{name: curateMoveExplore, parameters: [], result: Nat, body: 0}
+definition{name: prismCurateMoveExplore, parameters: [], result: Nat, body: 0}
 
-definition{name: curateMoveReconcile, parameters: [], result: Nat, body: 1}
+definition{name: prismCurateMoveReconcile, parameters: [], result: Nat, body: 1}
 
-definition{name: curateEasedYes, parameters: [], result: Nat, body: 0}
+definition{name: prismCurateEasedYes, parameters: [], result: Nat, body: 0}
 
-definition{name: curateEasedNo, parameters: [], result: Nat, body: 1}
+definition{name: prismCurateEasedNo, parameters: [], result: Nat, body: 1}
 
-definition{name: curateDominanceDominates, parameters: [], result: Nat, body: 0}
+definition{name: prismCurateDominanceDominates, parameters: [], result: Nat, body: 0}
 
-definition{name: curateDominanceEqual, parameters: [], result: Nat, body: 1}
+definition{name: prismCurateDominanceEqual, parameters: [], result: Nat, body: 1}
 
-definition{name: curateDominanceDominated, parameters: [], result: Nat, body: 2}
+definition{name: prismCurateDominanceDominated, parameters: [], result: Nat, body: 2}
 
-definition{name: curateDominanceIncomparable, parameters: [], result: Nat, body: 3}
+definition{name: prismCurateDominanceIncomparable, parameters: [], result: Nat, body: 3}
 
-definition{name: curateClaimNew, parameters: [], result: Nat, body: 0}
+definition{name: prismCurateClaimNew, parameters: [], result: Nat, body: 0}
 
-definition{name: curateClaimKnown, parameters: [], result: Nat, body: 1}
+definition{name: prismCurateClaimKnown, parameters: [], result: Nat, body: 1}
 
-definition{name: curateAnswerAdopt, parameters: [], result: Nat, body: 0}
+definition{name: prismCurateAnswerAdopt, parameters: [], result: Nat, body: 0}
 
-definition{name: curateAnswerRecall, parameters: [], result: Nat, body: 1}
+definition{name: prismCurateAnswerRecall, parameters: [], result: Nat, body: 1}
 
-definition{name: curateAnswerKeep, parameters: [], result: Nat, body: 2}
+definition{name: prismCurateAnswerKeep, parameters: [], result: Nat, body: 2}
 
-definition{name: curateAnswerRefuse, parameters: [], result: Nat, body: 3}
+definition{name: prismCurateAnswerRefuse, parameters: [], result: Nat, body: 3}
 
 structure{
-  name: CurateRequest,
+  name: PrismCurateRequest,
   type_parameters: [],
   parameters: [],
   fields: [
@@ -77,7 +77,7 @@ structure{
 }
 
 definition{
-  name: curateByteAt,
+  name: prismCurateByteAt,
   parameters: [s : Bytes, i : Nat],
   result: (Option Nat),
   body: (match (prim index s i : (Option UInt8))
@@ -87,7 +87,108 @@ definition{
 }
 
 definition{
-  name: curateSliceOf,
+  name: prismCurateDigitsValue,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.some [Nat] acc)
+    | Nat.succ rest => (match (prismCurateByteAt s i)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (prismCurateDigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: prismCurateParseDigits,
+  parameters: [s : Bytes],
+  result: (Option Nat),
+  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (prismCurateByteAt s 0)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (prismCurateDigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismCurateParseNumber,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (prismCurateParseDigits value),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismCurateParseHalted,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (prismCurateHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (prismCurateHaltedYes)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismCurateParseTunable,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (prismCurateTunableYes)) else (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (prismCurateTunableNo)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismCurateParseLabel,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x61646d6974 : Bool) then (ctor Option.some [Nat] (prismCurateLabelAdmit)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (prismCurateLabelOther)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismCurateParseDefect,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x7a65726f : Bool) then (ctor Option.some [Nat] (prismCurateDefectZero)) else (if (prim equal value 0x736f6d65 : Bool) then (ctor Option.some [Nat] (prismCurateDefectSome)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismCurateParseEvidence,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6f776e6572 : Bool) then (ctor Option.some [Nat] (prismCurateEvidenceOwner)) else (if (prim equal value 0x73656c66 : Bool) then (ctor Option.some [Nat] (prismCurateEvidenceSelf)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismCurateParseFloor,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6b657074 : Bool) then (ctor Option.some [Nat] (prismCurateFloorKept)) else (if (prim equal value 0x726567726573736564 : Bool) then (ctor Option.some [Nat] (prismCurateFloorRegressed)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismCurateParseMove,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6578706c6f7265 : Bool) then (ctor Option.some [Nat] (prismCurateMoveExplore)) else (if (prim equal value 0x7265636f6e63696c65 : Bool) then (ctor Option.some [Nat] (prismCurateMoveReconcile)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismCurateParseEased,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (prismCurateEasedYes)) else (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (prismCurateEasedNo)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismCurateParseDominance,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x646f6d696e61746573 : Bool) then (ctor Option.some [Nat] (prismCurateDominanceDominates)) else (if (prim equal value 0x657175616c : Bool) then (ctor Option.some [Nat] (prismCurateDominanceEqual)) else (if (prim equal value 0x646f6d696e61746564 : Bool) then (ctor Option.some [Nat] (prismCurateDominanceDominated)) else (if (prim equal value 0x696e636f6d70617261626c65 : Bool) then (ctor Option.some [Nat] (prismCurateDominanceIncomparable)) else (ctor Option.none [Nat])))))
+}
+
+definition{
+  name: prismCurateParseClaim,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6577 : Bool) then (ctor Option.some [Nat] (prismCurateClaimNew)) else (if (prim equal value 0x6b6e6f776e : Bool) then (ctor Option.some [Nat] (prismCurateClaimKnown)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismCurateSliceOf,
   parameters: [s : Bytes, start : Nat, count : Nat],
   result: Bytes,
   body: (match (prim slice s start count : (Option Bytes))
@@ -96,90 +197,20 @@ definition{
 }
 
 definition{
-  name: curateFieldEnd,
+  name: prismCurateFieldEnd,
   parameters: [s : Bytes, i : Nat, fuel : Nat],
   result: Nat,
   body: (match fuel
     | Nat.zero => i
-    | Nat.succ rest => (match (curateByteAt s i)
+    | Nat.succ rest => (match (prismCurateByteAt s i)
       | Option.none => i
-      | Option.some d => (if (d =? 32) then i else (curateFieldEnd s (i + 1) rest)))),
+      | Option.some d => (if (d =? 32) then i else (prismCurateFieldEnd s (i + 1) rest)))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
-  name: curateParseHalted,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (curateHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (curateHaltedYes)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: curateParseTunable,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (curateTunableYes)) else (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (curateTunableNo)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: curateParseLabel,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x61646d6974 : Bool) then (ctor Option.some [Nat] (curateLabelAdmit)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (curateLabelOther)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: curateParseDefect,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x7a65726f : Bool) then (ctor Option.some [Nat] (curateDefectZero)) else (if (prim equal value 0x736f6d65 : Bool) then (ctor Option.some [Nat] (curateDefectSome)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: curateParseEvidence,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x6f776e6572 : Bool) then (ctor Option.some [Nat] (curateEvidenceOwner)) else (if (prim equal value 0x73656c66 : Bool) then (ctor Option.some [Nat] (curateEvidenceSelf)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: curateParseFloor,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x6b657074 : Bool) then (ctor Option.some [Nat] (curateFloorKept)) else (if (prim equal value 0x726567726573736564 : Bool) then (ctor Option.some [Nat] (curateFloorRegressed)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: curateParseMove,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x6578706c6f7265 : Bool) then (ctor Option.some [Nat] (curateMoveExplore)) else (if (prim equal value 0x7265636f6e63696c65 : Bool) then (ctor Option.some [Nat] (curateMoveReconcile)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: curateParseEased,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (curateEasedYes)) else (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (curateEasedNo)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: curateParseDominance,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x646f6d696e61746573 : Bool) then (ctor Option.some [Nat] (curateDominanceDominates)) else (if (prim equal value 0x657175616c : Bool) then (ctor Option.some [Nat] (curateDominanceEqual)) else (if (prim equal value 0x646f6d696e61746564 : Bool) then (ctor Option.some [Nat] (curateDominanceDominated)) else (if (prim equal value 0x696e636f6d70617261626c65 : Bool) then (ctor Option.some [Nat] (curateDominanceIncomparable)) else (ctor Option.none [Nat])))))
-}
-
-definition{
-  name: curateParseClaim,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x6e6577 : Bool) then (ctor Option.some [Nat] (curateClaimNew)) else (if (prim equal value 0x6b6e6f776e : Bool) then (ctor Option.some [Nat] (curateClaimKnown)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: curateDecodeField10,
+  name: prismCurateDecodeField10,
   parameters: [
     s : Bytes,
     start : Nat,
@@ -193,15 +224,15 @@ definition{
     v8 : Nat,
     v9 : Nat
   ],
-  result: (Option CurateRequest),
-  body: (let e : Nat := (curateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (curateParseClaim (curateSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [CurateRequest])
-    | Option.some v10 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [CurateRequest] (record CurateRequest {halted := v1, tunable := v2, label := v3, defect := v4, evidence := v5, floor := v6, move := v7, eased := v8, dominance := v9, claim := v10})) else (ctor Option.none [CurateRequest])))),
+  result: (Option PrismCurateRequest),
+  body: (let e : Nat := (prismCurateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismCurateParseClaim (prismCurateSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismCurateRequest])
+    | Option.some v10 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [PrismCurateRequest] (record PrismCurateRequest {halted := v1, tunable := v2, label := v3, defect := v4, evidence := v5, floor := v6, move := v7, eased := v8, dominance := v9, claim := v10})) else (ctor Option.none [PrismCurateRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: curateDecodeField9,
+  name: prismCurateDecodeField9,
   parameters: [
     s : Bytes,
     start : Nat,
@@ -214,15 +245,15 @@ definition{
     v7 : Nat,
     v8 : Nat
   ],
-  result: (Option CurateRequest),
-  body: (let e : Nat := (curateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (curateParseDominance (curateSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [CurateRequest])
-    | Option.some v9 => (if (e <? (Foundation.Bytes::byteLength s)) then (curateDecodeField10 s (e + 1) v1 v2 v3 v4 v5 v6 v7 v8 v9) else (ctor Option.none [CurateRequest])))),
+  result: (Option PrismCurateRequest),
+  body: (let e : Nat := (prismCurateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismCurateParseDominance (prismCurateSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismCurateRequest])
+    | Option.some v9 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismCurateDecodeField10 s (e + 1) v1 v2 v3 v4 v5 v6 v7 v8 v9) else (ctor Option.none [PrismCurateRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: curateDecodeField8,
+  name: prismCurateDecodeField8,
   parameters: [
     s : Bytes,
     start : Nat,
@@ -234,104 +265,216 @@ definition{
     v6 : Nat,
     v7 : Nat
   ],
-  result: (Option CurateRequest),
-  body: (let e : Nat := (curateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (curateParseEased (curateSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [CurateRequest])
-    | Option.some v8 => (if (e <? (Foundation.Bytes::byteLength s)) then (curateDecodeField9 s (e + 1) v1 v2 v3 v4 v5 v6 v7 v8) else (ctor Option.none [CurateRequest])))),
+  result: (Option PrismCurateRequest),
+  body: (let e : Nat := (prismCurateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismCurateParseEased (prismCurateSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismCurateRequest])
+    | Option.some v8 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismCurateDecodeField9 s (e + 1) v1 v2 v3 v4 v5 v6 v7 v8) else (ctor Option.none [PrismCurateRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: curateDecodeField7,
+  name: prismCurateDecodeField7,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat, v6 : Nat],
-  result: (Option CurateRequest),
-  body: (let e : Nat := (curateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (curateParseMove (curateSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [CurateRequest])
-    | Option.some v7 => (if (e <? (Foundation.Bytes::byteLength s)) then (curateDecodeField8 s (e + 1) v1 v2 v3 v4 v5 v6 v7) else (ctor Option.none [CurateRequest])))),
+  result: (Option PrismCurateRequest),
+  body: (let e : Nat := (prismCurateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismCurateParseMove (prismCurateSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismCurateRequest])
+    | Option.some v7 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismCurateDecodeField8 s (e + 1) v1 v2 v3 v4 v5 v6 v7) else (ctor Option.none [PrismCurateRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: curateDecodeField6,
+  name: prismCurateDecodeField6,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat],
-  result: (Option CurateRequest),
-  body: (let e : Nat := (curateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (curateParseFloor (curateSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [CurateRequest])
-    | Option.some v6 => (if (e <? (Foundation.Bytes::byteLength s)) then (curateDecodeField7 s (e + 1) v1 v2 v3 v4 v5 v6) else (ctor Option.none [CurateRequest])))),
+  result: (Option PrismCurateRequest),
+  body: (let e : Nat := (prismCurateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismCurateParseFloor (prismCurateSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismCurateRequest])
+    | Option.some v6 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismCurateDecodeField7 s (e + 1) v1 v2 v3 v4 v5 v6) else (ctor Option.none [PrismCurateRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: curateDecodeField5,
+  name: prismCurateDecodeField5,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat],
-  result: (Option CurateRequest),
-  body: (let e : Nat := (curateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (curateParseEvidence (curateSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [CurateRequest])
-    | Option.some v5 => (if (e <? (Foundation.Bytes::byteLength s)) then (curateDecodeField6 s (e + 1) v1 v2 v3 v4 v5) else (ctor Option.none [CurateRequest])))),
+  result: (Option PrismCurateRequest),
+  body: (let e : Nat := (prismCurateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismCurateParseEvidence (prismCurateSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismCurateRequest])
+    | Option.some v5 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismCurateDecodeField6 s (e + 1) v1 v2 v3 v4 v5) else (ctor Option.none [PrismCurateRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: curateDecodeField4,
+  name: prismCurateDecodeField4,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
-  result: (Option CurateRequest),
-  body: (let e : Nat := (curateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (curateParseDefect (curateSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [CurateRequest])
-    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (curateDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [CurateRequest])))),
+  result: (Option PrismCurateRequest),
+  body: (let e : Nat := (prismCurateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismCurateParseDefect (prismCurateSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismCurateRequest])
+    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismCurateDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [PrismCurateRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: curateDecodeField3,
+  name: prismCurateDecodeField3,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
-  result: (Option CurateRequest),
-  body: (let e : Nat := (curateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (curateParseLabel (curateSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [CurateRequest])
-    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (curateDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [CurateRequest])))),
+  result: (Option PrismCurateRequest),
+  body: (let e : Nat := (prismCurateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismCurateParseLabel (prismCurateSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismCurateRequest])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismCurateDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [PrismCurateRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: curateDecodeField2,
+  name: prismCurateDecodeField2,
   parameters: [s : Bytes, start : Nat, v1 : Nat],
-  result: (Option CurateRequest),
-  body: (let e : Nat := (curateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (curateParseTunable (curateSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [CurateRequest])
-    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (curateDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [CurateRequest])))),
+  result: (Option PrismCurateRequest),
+  body: (let e : Nat := (prismCurateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismCurateParseTunable (prismCurateSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismCurateRequest])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismCurateDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [PrismCurateRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: curateDecodeField1,
+  name: prismCurateDecodeField1,
   parameters: [s : Bytes, start : Nat],
-  result: (Option CurateRequest),
-  body: (let e : Nat := (curateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (curateParseHalted (curateSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [CurateRequest])
-    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (curateDecodeField2 s (e + 1) v1) else (ctor Option.none [CurateRequest])))),
+  result: (Option PrismCurateRequest),
+  body: (let e : Nat := (prismCurateFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismCurateParseHalted (prismCurateSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismCurateRequest])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismCurateDecodeField2 s (e + 1) v1) else (ctor Option.none [PrismCurateRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: curateJudge,
-  parameters: [request : CurateRequest],
-  result: Nat,
-  body: (if ((project request halted) =? (curateHaltedYes)) then (curateAnswerRefuse) else (if ((project request tunable) =? (curateTunableNo)) then (curateAnswerRefuse) else (if ((project request label) =? (curateLabelOther)) then (curateAnswerRefuse) else (if ((project request defect) =? (curateDefectSome)) then (curateAnswerKeep) else (if ((project request evidence) =? (curateEvidenceSelf)) then (curateAnswerKeep) else (if ((project request floor) =? (curateFloorRegressed)) then (curateAnswerKeep) else (if ((project request move) =? (curateMoveReconcile)) then (if ((project request eased) =? (curateEasedNo)) then (curateAnswerKeep) else (if ((project request claim) =? (curateClaimKnown)) then (curateAnswerRecall) else (curateAnswerAdopt))) else (if ((project request dominance) =? (curateDominanceDominates)) then (if ((project request claim) =? (curateClaimKnown)) then (curateAnswerRecall) else (curateAnswerAdopt)) else (curateAnswerKeep)))))))))
+  name: prismCurateRule1,
+  parameters: [request : PrismCurateRequest],
+  result: Bool,
+  body: ((project request halted) =? (prismCurateHaltedYes))
 }
 
 definition{
-  name: curateEncodeAnswer,
+  name: prismCurateRule2,
+  parameters: [request : PrismCurateRequest],
+  result: Bool,
+  body: ((project request tunable) =? (prismCurateTunableNo))
+}
+
+definition{
+  name: prismCurateRule3,
+  parameters: [request : PrismCurateRequest],
+  result: Bool,
+  body: ((project request label) =? (prismCurateLabelOther))
+}
+
+definition{
+  name: prismCurateRule4,
+  parameters: [request : PrismCurateRequest],
+  result: Bool,
+  body: ((project request defect) =? (prismCurateDefectSome))
+}
+
+definition{
+  name: prismCurateRule5,
+  parameters: [request : PrismCurateRequest],
+  result: Bool,
+  body: ((project request evidence) =? (prismCurateEvidenceSelf))
+}
+
+definition{
+  name: prismCurateRule6,
+  parameters: [request : PrismCurateRequest],
+  result: Bool,
+  body: ((project request floor) =? (prismCurateFloorRegressed))
+}
+
+definition{
+  name: prismCurateRule7,
+  parameters: [request : PrismCurateRequest],
+  result: Bool,
+  body: (((project request move) =? (prismCurateMoveReconcile)) && ((project request eased) =? (prismCurateEasedNo)))
+}
+
+definition{
+  name: prismCurateRule8,
+  parameters: [request : PrismCurateRequest],
+  result: Bool,
+  body: (((project request move) =? (prismCurateMoveReconcile)) && ((project request claim) =? (prismCurateClaimKnown)))
+}
+
+definition{
+  name: prismCurateRule9,
+  parameters: [request : PrismCurateRequest],
+  result: Bool,
+  body: ((project request move) =? (prismCurateMoveReconcile))
+}
+
+definition{
+  name: prismCurateRule10,
+  parameters: [request : PrismCurateRequest],
+  result: Bool,
+  body: (((project request dominance) =? (prismCurateDominanceDominates)) && ((project request claim) =? (prismCurateClaimKnown)))
+}
+
+definition{
+  name: prismCurateRule11,
+  parameters: [request : PrismCurateRequest],
+  result: Bool,
+  body: ((project request dominance) =? (prismCurateDominanceDominates))
+}
+
+definition{
+  name: prismCurateRule7Misses,
+  parameters: [request : PrismCurateRequest],
+  result: Bool,
+  body: ((((project request move) <? (prismCurateMoveReconcile)) || ((prismCurateMoveReconcile) <? (project request move))) || (((project request eased) <? (prismCurateEasedNo)) || ((prismCurateEasedNo) <? (project request eased))))
+}
+
+definition{
+  name: prismCurateRule8Misses,
+  parameters: [request : PrismCurateRequest],
+  result: Bool,
+  body: ((((project request move) <? (prismCurateMoveReconcile)) || ((prismCurateMoveReconcile) <? (project request move))) || (((project request claim) <? (prismCurateClaimKnown)) || ((prismCurateClaimKnown) <? (project request claim))))
+}
+
+definition{
+  name: prismCurateRule10Misses,
+  parameters: [request : PrismCurateRequest],
+  result: Bool,
+  body: ((((project request dominance) <? (prismCurateDominanceDominates)) || ((prismCurateDominanceDominates) <? (project request dominance))) || (((project request claim) <? (prismCurateClaimKnown)) || ((prismCurateClaimKnown) <? (project request claim))))
+}
+
+definition{
+  name: prismCurateStepExplore,
+  parameters: [request : PrismCurateRequest],
+  result: Nat,
+  body: (if (prismCurateRule1 request) then (prismCurateAnswerRefuse) else (if (prismCurateRule2 request) then (prismCurateAnswerRefuse) else (if (prismCurateRule3 request) then (prismCurateAnswerRefuse) else (if (prismCurateRule4 request) then (prismCurateAnswerKeep) else (if (prismCurateRule5 request) then (prismCurateAnswerKeep) else (if (prismCurateRule6 request) then (prismCurateAnswerKeep) else (if (prismCurateRule10Misses request) then (if (prismCurateRule11 request) then (prismCurateAnswerAdopt) else (prismCurateAnswerKeep)) else (prismCurateAnswerRecall))))))))
+}
+
+definition{
+  name: prismCurateStepReconcile,
+  parameters: [request : PrismCurateRequest],
+  result: Nat,
+  body: (if (prismCurateRule1 request) then (prismCurateAnswerRefuse) else (if (prismCurateRule2 request) then (prismCurateAnswerRefuse) else (if (prismCurateRule3 request) then (prismCurateAnswerRefuse) else (if (prismCurateRule4 request) then (prismCurateAnswerKeep) else (if (prismCurateRule5 request) then (prismCurateAnswerKeep) else (if (prismCurateRule6 request) then (prismCurateAnswerKeep) else (if ((project request eased) =? (prismCurateEasedNo)) then (prismCurateAnswerKeep) else (if ((project request claim) =? (prismCurateClaimKnown)) then (prismCurateAnswerRecall) else (prismCurateAnswerAdopt)))))))))
+}
+
+definition{
+  name: prismCurateJudge,
+  parameters: [request : PrismCurateRequest],
+  result: Nat,
+  body: (if ((project request move) =? (prismCurateMoveExplore)) then (prismCurateStepExplore request) else (if ((project request move) =? (prismCurateMoveReconcile)) then (prismCurateStepReconcile request) else (if (prismCurateRule1 request) then (prismCurateAnswerRefuse) else (if (prismCurateRule2 request) then (prismCurateAnswerRefuse) else (if (prismCurateRule3 request) then (prismCurateAnswerRefuse) else (if (prismCurateRule4 request) then (prismCurateAnswerKeep) else (if (prismCurateRule5 request) then (prismCurateAnswerKeep) else (if (prismCurateRule6 request) then (prismCurateAnswerKeep) else (if (prismCurateRule10Misses request) then (if (prismCurateRule11 request) then (prismCurateAnswerAdopt) else (prismCurateAnswerKeep)) else (prismCurateAnswerRecall))))))))))
+}
+
+definition{
+  name: prismCurateEncodeAnswer,
   parameters: [code : Nat],
   result: Bytes,
-  body: (if (code =? (curateAnswerAdopt)) then 0x61646f7074 else (if (code =? (curateAnswerRecall)) then 0x726563616c6c else (if (code =? (curateAnswerKeep)) then 0x6b656570 else (if (code =? (curateAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964))))
+  body: (if (code =? (prismCurateAnswerAdopt)) then 0x61646f7074 else (if (code =? (prismCurateAnswerRecall)) then 0x726563616c6c else (if (code =? (prismCurateAnswerKeep)) then 0x6b656570 else (if (code =? (prismCurateAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964))))
 }
 
 definition{
-  name: curateDispatch,
+  name: prismCurateDispatch,
   parameters: [value : Bytes],
   result: Bytes,
-  body: (if (67 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (curateDecodeField1 value 0)
+  body: (if (256 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (prismCurateDecodeField1 value 0)
     | Option.none => 0x696e76616c6964
-    | Option.some request => (curateEncodeAnswer (curateJudge request)))),
+    | Option.some request => (prismCurateEncodeAnswer (prismCurateJudge request)))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

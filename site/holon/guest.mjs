@@ -1,7 +1,8 @@
 // A standalone build of PrismHolon and of PrismCurate (app/src) so that
 // site/holon/holon.test.mjs can run every request without the holo. The page
 // decides through the Prism root's holon and curate facets instead. Built by
-// tools/holon/standalone.py (HolonApp and CurateApp route straight to holonDispatch and curateDispatch); it
+// tools/holon/standalone.py (HolonApp and CurateApp route straight to prismHolonDispatch and prismCurateDispatch;
+// the pinned bytes predate the builder's PrismHolon and PrismCurate, which answer every request the same); it
 // exports holo_alloc(len) and holo_run(ptr, len) -> (outPtr << 32 | outLen),
 // that is dispatch(bytes) -> bytes. Bytes whose SHA-256 is not the pinned
 // fingerprint are refused before they compile.

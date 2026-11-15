@@ -1,8 +1,9 @@
 //! The `router` suite: one test per scenario in `features/suites/router.feature`.
 //!
 //! The Lean kernel proves the guarantees when `just vv` runs `prismpm verify`
-//! on `app/`. These tests hold the claims fixed (thirteen guarantees, each on
-//! exactly `[Quot.sound, propext]`), check the spec still writes the module
+//! on `app/`. These tests hold the claims fixed (thirteen guarantees, which the
+//! builder states as fifteen properties, each on
+//! exactly `[Quot.sound, propext]`), check the spec still writes the table
 //! (`tools/facet/gen.py --check`), run the router and its compiled readers in
 //! Node (`site/router/router.test.mjs`), and check that the page keeps the
 //! owner's words only after the router has mapped them.
@@ -40,23 +41,21 @@ fn run(program: &str, args: &[&str]) {
 #[test]
 fn router_ru_01() {
     let text = read("app/src/PrismRouterProofs.lex.tex");
-    for i in 1..=13 {
-        let name = format!("routerInv{i:03}Holds");
+    for i in 1..=15 {
+        let name = format!("inv{i:03}Holds");
         let start = text
             .find(&format!("  name: {name},\n"))
             .unwrap_or_else(|| panic!("{name} is missing"));
         let body = &text[start..start + text[start..].find("\n}\n").expect("closed")];
         assert!(
-            body.contains("parameters: [request : PrismRouter::RouterRequest],")
-                && body.contains(&format!(
-                    "statement: ((routerBreaksInv{i:03} request) = false),"
-                ))
+            body.contains("parameters: [request : PrismRouter::PrismRouterRequest],")
+                && body.contains(&format!("statement: ((breaksInv{i:03} request) = false),"))
                 && body.contains("axioms: [Quot.sound, propext]"),
             "{name} changed its statement or its axioms:\n{body}"
         );
     }
     assert!(
-        !text.contains("routerInv014Holds"),
+        !text.contains("  name: inv016Holds,\n"),
         "more guarantees than the scenario names"
     );
     assert!(
@@ -70,7 +69,7 @@ fn router_ru_01() {
         "PrismRouter and its proofs are lexlean entrypoints"
     );
     assert!(
-        read("app/src/Prism.lex.tex").contains("(PrismRouter::routerDispatch rest)"),
+        read("app/src/Prism.lex.tex").contains("(PrismRouter::prismRouterDispatch rest)"),
         "RU-01: the Prism root routes router to PrismRouter"
     );
     run(

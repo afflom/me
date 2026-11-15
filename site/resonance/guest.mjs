@@ -1,7 +1,8 @@
 // A standalone build of PrismResonance (app/src/PrismResonance.lex.tex) so that
 // site/resonance/resonance.test.mjs can run every request without the holo. The page
 // decides through the Prism root's resonance facet instead. Built by
-// tools/facet/standalone.py (ResonanceApp routes straight to resonanceDispatch); it
+// tools/facet/standalone.py (ResonanceApp routes straight to prismResonanceDispatch; the pinned
+// bytes predate the builder's PrismResonance, which answers every request the same); it
 // exports holo_alloc(len) and holo_run(ptr, len) -> (outPtr << 32 | outLen),
 // that is dispatch(bytes) -> bytes. Bytes whose SHA-256 is not the pinned
 // fingerprint are refused before they compile.

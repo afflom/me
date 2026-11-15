@@ -2,8 +2,9 @@
 
 The Prism answers the owner as afflom/verdant-resonance answers its player,
 without its garden. `spec.json` is the single source:
+the Prism's builder (`python3 -I tools/prompts/gen.py`) writes
+`app/src/PrismResonance.lex.tex` and `app/src/PrismResonanceProofs.lex.tex`;
 `python3 -I tools/facet/gen.py app/specs/resonance/spec.json` writes
-`app/src/PrismResonance.lex.tex`, `app/src/PrismResonanceProofs.lex.tex` and
 `site/resonance/table.mjs`, after judging all 1920 requests against every
 guarantee and example.
 
@@ -22,8 +23,10 @@ thing's PrismLearning state; attention and halted are the owner's switches.
 
 ## Guarantees
 
-Each is a theorem `resonanceInvNNNHolds` in `PrismResonanceProofs`, proved by
-`linear_arithmetic` with exactly `[Quot.sound, propext]`; the reasons are the
+Each is a theorem `invNNNHolds` in `PrismResonanceProofs` about
+`prismResonanceJudge` (written by the Prism's builder), proved by
+`linear_arithmetic` with exactly `[Quot.sound, propext]`, as sixteen
+properties (one per answer a guarantee never gives); the reasons are the
 `why` of each guarantee in `spec.json`.
 
 ## Verdant, without the garden

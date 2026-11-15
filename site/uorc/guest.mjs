@@ -1,7 +1,8 @@
 // A standalone build of PrismUorc (app/src/PrismUorc.lex.tex) so that
 // site/uorc/uorc.test.mjs can run every request without the holo. The page
 // decides through the Prism root's uorc facet instead. Built by
-// tools/uorc/standalone.py (UorcApp routes straight to uorcDispatch); it
+// tools/uorc/standalone.py (UorcApp routes straight to prismUorcDispatch; the pinned
+// bytes predate the builder's PrismUorc, which answers every request the same); it
 // exports holo_alloc(len) and holo_run(ptr, len) -> (outPtr << 32 | outLen),
 // that is dispatch(bytes) -> bytes. Bytes whose SHA-256 is not the pinned
 // fingerprint are refused before they compile.

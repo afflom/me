@@ -23,11 +23,14 @@ fn read(path: &str) -> String {
     std::fs::read_to_string(root().join(path)).unwrap_or_else(|e| panic!("{path}: {e}"))
 }
 
-/// The keys of the JSON object that follows `"key": {` in `text`.
+/// The keys of the JSON object that follows `"key": {` in `text` (none for `{}`).
 fn object_keys(text: &str, key: &str) -> Vec<String> {
     let start = text
         .find(&format!("\"{key}\": {{"))
         .unwrap_or_else(|| panic!("set.json has no {key}"));
+    if text[start..].starts_with(&format!("\"{key}\": {{}}")) {
+        return Vec::new();
+    }
     let body = &text[start..start + text[start..].find("\n  }").expect("closed")];
     body.lines()
         .skip(1)
@@ -49,17 +52,8 @@ fn array_items(text: &str, key: &str) -> Vec<String> {
         .collect()
 }
 
-/// The decisions awaiting the builder on main when this gate was set: the list may only shrink.
-const AWAITING_AT_MOST: [&str; 8] = [
-    "chronology",
-    "curate",
-    "dest",
-    "holon",
-    "kappa",
-    "resonance",
-    "router",
-    "uorc",
-];
+/// The decisions still awaiting the builder: the list may only shrink, and it is empty.
+const AWAITING_AT_MOST: [&str; 0] = [];
 
 /// `BS-01`: every decision spec is built with its full model by the builder, or awaiting the builder with a reason; the awaiting list only shrinks; every generated file is current
 #[test]

@@ -1,7 +1,8 @@
 // A standalone build of PrismDest (app/src/PrismDest.lex.tex) so that
 // site/dest/dest.test.mjs can run every request without the holo. The page
 // decides through the Prism root's dest facet instead. Built by
-// tools/dest/standalone.py (DestApp routes straight to destDispatch); it
+// tools/dest/standalone.py (DestApp routes straight to prismDestDispatch; the pinned
+// bytes predate the builder's PrismDest, which answers every request the same); it
 // exports holo_alloc(len) and holo_run(ptr, len) -> (outPtr << 32 | outLen),
 // that is dispatch(bytes) -> bytes. Bytes whose SHA-256 is not the pinned
 // fingerprint are refused before they compile.

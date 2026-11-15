@@ -8,6 +8,10 @@ Outputs, all generated, never hand-edited:
   site/uorc/table.mjs              the same tree in JavaScript, for the page's
                                    preview and the Node suite's cross-check
 
+While uorc is in app/prompts/set.json the Prism's builder
+(tools/prompts/gen.py) writes its two Lean modules with their full model, and
+this writes only the table.
+
 The judge is a tree whose every test is `field =? value`, at most 11 deep,
 so `linear_arithmetic` (simp; split; omega) closes each guarantee with exactly
 [Quot.sound, propext]: no compound or negated test reaches omega (no
@@ -250,8 +254,10 @@ def main():
     d = tree_depth(SPEC["tree"])
     if d > 11:
         sys.exit(f"tree depth {d} > 11: Lean's split gives up at 13")
-    (ROOT / "app/src/PrismUorc.lex.tex").write_text(module())
-    (ROOT / "app/src/PrismUorcProofs.lex.tex").write_text(proofs())
+    # The builder owns the Lean of every facet its set lists.
+    if "uorc.prompt.json" not in json.loads((ROOT / "app/prompts/set.json").read_text())["prompts"]:
+        (ROOT / "app/src/PrismUorc.lex.tex").write_text(module())
+        (ROOT / "app/src/PrismUorcProofs.lex.tex").write_text(proofs())
     (ROOT / "site/uorc").mkdir(exist_ok=True)
     (ROOT / "site/uorc/table.mjs").write_text(table())
     print(f"uorc: {len(FIELDS)} fields, {len(ANSWERS)} answers, {len(SPEC['guarantees'])} guarantees, depth {d}, max line {MAXLEN}")

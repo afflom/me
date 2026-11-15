@@ -20,17 +20,22 @@ kappa-registry itself is a server (OCI, Git, S3, Nix, AT Protocol and
 kappa-distribution on one port). The Prism runs only in the owner's browser,
 so it takes the registry's content address, not its server.
 
-`spec.json` is the single source. `python3 -I tools/kappa/gen.py` writes
-`app/src/PrismKappa.lex.tex`, `app/src/PrismKappaProofs.lex.tex` and the
-JavaScript mirror `site/kappa/table.mjs`; then `lexlean fmt && lexlean lock`
-in `app/`. `python3 -I tools/kappa/standalone.py DIR` writes a scratch
+`spec.json` is the single source. The decision, the five fields to an
+answer, is the Prism's builder's (`app/prompts/set.json`):
+`python3 -I tools/prompts/gen.py` reads each example line into its fields
+with the reader below and writes `app/src/PrismKappa.lex.tex`,
+`app/src/PrismKappaProofs.lex.tex` and the decision's full model. Then
+`python3 -I tools/kappa/gen.py` writes the reader
+`app/src/PrismKappaLabel.lex.tex`, which the Prism root routes `kappa` to, and
+the JavaScript mirror `site/kappa/table.mjs`; then `lexlean fmt && lexlean
+lock` in `app/`. `python3 -I tools/kappa/standalone.py DIR` writes a scratch
 project that builds the standalone guest `site/kappa/guest/kappa.wasm`.
 
 ## Request
 
 `kappa <label> <digest>`
 
-The model reads four fields from the label itself, on its bytes, as
+The reader reads four fields from the label itself, on its bytes, as
 `Kappa::parse` does (`crates/kappa-types/src/v1/kappa.rs`):
 
 | Field | Values | Read as |
@@ -51,7 +56,8 @@ for a malformed line or one longer than 146 bytes.
 
 ## Guarantees
 
-Proved over `kappaJudge` with exactly `[Quot.sound, propext]`:
+Proved over the builder's `prismKappaJudge` with exactly `[Quot.sound, propext]`,
+as seventeen properties, one per answer a guarantee never gives:
 
 1. A label without its colon always answers `nocolon` (`NoColon`).
 2. A label on any axis but the six always answers `unknownaxis` (`UnknownAxis`).

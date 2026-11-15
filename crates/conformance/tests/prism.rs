@@ -80,24 +80,24 @@ fn prism_pm_01() {
     for (facet, module, dispatch) in [
         ("Boundary", "PrismBoundary", "prismBoundaryDispatch"),
         ("Learn", "PrismLearning", "prismLearningDispatch"),
-        ("When", "PrismChronology", "chronologyDispatch"),
+        ("When", "PrismChronology", "prismChronologyDispatch"),
         ("Store", "PrismVaultStore", "prismVaultStoreDispatch"),
         ("Restore", "PrismVaultRestore", "prismVaultRestoreDispatch"),
         ("R4", "PrismR4", "prismR4Dispatch"),
         ("Route", "PrismRoute", "routeDispatch"),
         ("Google", "PrismGoogle", "prismGoogleDispatch"),
         ("Googlelink", "PrismGoogleLink", "prismGoogleLinkDispatch"),
-        ("Dest", "PrismDest", "destDispatch"),
+        ("Dest", "PrismDest", "prismDestDispatch"),
         ("Folder", "PrismFolder", "prismFolderDispatch"),
         ("Host", "PrismHost", "prismHostDispatch"),
         ("Source", "PrismSource", "prismSourceDispatch"),
         ("Model", "PrismModels", "prismModelsDispatch"),
-        ("Kappa", "PrismKappa", "kappaDispatch"),
-        ("Uorc", "PrismUorc", "uorcDispatch"),
-        ("Holon", "PrismHolon", "holonDispatch"),
-        ("Curate", "PrismCurate", "curateDispatch"),
-        ("Resonance", "PrismResonance", "resonanceDispatch"),
-        ("Router", "PrismRouter", "routerDispatch"),
+        ("Kappa", "PrismKappaLabel", "kappaLabelDispatch"),
+        ("Uorc", "PrismUorc", "prismUorcDispatch"),
+        ("Holon", "PrismHolon", "prismHolonDispatch"),
+        ("Curate", "PrismCurate", "prismCurateDispatch"),
+        ("Resonance", "PrismResonance", "prismResonanceDispatch"),
+        ("Router", "PrismRouter", "prismRouterDispatch"),
     ] {
         let theorem = declaration(&proofs, &format!("routes{facet}"));
         assert!(
@@ -141,5 +141,5 @@ fn prism_pm_03() {
 /// `PM-04`: Chronology never names an Allen relation that the two intervals' endpoints contradict, and never calls two well-formed intervals malformed
 #[test]
 fn prism_pm_04() {
-    guarantees("PM-04", "PrismChronology", "Chronology", 8);
+    guarantees("PM-04", "PrismChronology", "PrismChronology", 8);
 }

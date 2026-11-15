@@ -14,8 +14,8 @@ Feature: dest
     Given the PrismDest guest built from app/src/PrismDest.lex.tex, refused unless its SHA-256 is the pinned one
     When every one of its 2560 requests is decided
     Then each answer is the generated decision table's answer and keeps all eleven guarantees
-    And the Prism root routes "dest <request>" to PrismDest::destDispatch
-    And Lean proves the eleven guarantees with exactly the axioms Quot.sound and propext
+    And the Prism root routes "dest <request>" to PrismDest::prismDestDispatch
+    And Lean proves the eleven guarantees, as thirteen properties, with exactly the axioms Quot.sound and propext
 
   @DS-02 @build
   Scenario: The page hands an item to the owner's calendar, mail or another platform only after the Boundary and PrismDest answer deliver for the owner's press, through an app the owner already uses, with no host called and no setup

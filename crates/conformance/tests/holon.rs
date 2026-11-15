@@ -1,8 +1,9 @@
 //! The `holon` suite: one test per scenario in `features/suites/holon.feature`.
 //!
 //! The Lean kernel proves the guarantees when `just vv` runs `prismpm verify`
-//! on `app/`. These tests hold the claims fixed (nine holon and thirteen
-//! curate guarantees, each on exactly `[Quot.sound, propext]`), keep the
+//! on `app/`. These tests hold the claims fixed (nine holon guarantees, which
+//! the builder states as twelve properties, and thirteen
+//! curate guarantees, which it states as twenty, each on exactly `[Quot.sound, propext]`), keep the
 //! generated files equal to their specs, and run the compiled guests and the
 //! observer in Node (`site/holon/holon.test.mjs`).
 
@@ -39,33 +40,43 @@ fn node_suite() {
     run("node", &["site/holon/holon.test.mjs"]);
 }
 
-fn guarantees(prefix: &str, module: &str, request: &str, count: usize) {
+/// The theorems of a proofs module: `count` of them, each `breaks = false`
+/// over every request, about the facet's judge, on exactly Quot.sound and
+/// propext. `theorems` prefixes the theorem names (empty for the builder's
+/// `invNNNHolds` / `breaksInvNNN`); `prefix` prefixes the facet's definitions.
+fn guarantees(theorems: &str, prefix: &str, module: &str, request: &str, count: usize) {
+    let inv = |i: usize| match theorems {
+        "" => format!("inv{i:03}Holds"),
+        t => format!("{t}Inv{i:03}Holds"),
+    };
+    let breaks = |i: usize| match theorems {
+        "" => format!("breaksInv{i:03}"),
+        t => format!("{t}BreaksInv{i:03}"),
+    };
     let text = read(&format!("app/src/{module}Proofs.lex.tex"));
     for i in 1..=count {
-        let name = format!("{prefix}Inv{i:03}Holds");
+        let (name, broken) = (inv(i), breaks(i));
         let start = text
             .find(&format!("  name: {name},\n"))
             .unwrap_or_else(|| panic!("{name} is missing"));
         let body = &text[start..start + text[start..].find("\n}\n").expect("closed")];
         assert!(
             body.contains(&format!("parameters: [request : {module}::{request}],"))
-                && body.contains(&format!(
-                    "statement: (({prefix}BreaksInv{i:03} request) = false),"
-                ))
+                && body.contains(&format!("statement: (({broken} request) = false),"))
                 && body.contains("axioms: [Quot.sound, propext]"),
             "{name} changed its statement or its axioms:\n{body}"
         );
         let breaks = &text[text
-            .find(&format!("  name: {prefix}BreaksInv{i:03},\n"))
-            .unwrap_or_else(|| panic!("{prefix}BreaksInv{i:03} is missing"))..];
+            .find(&format!("  name: {broken},\n"))
+            .unwrap_or_else(|| panic!("{broken} is missing"))..];
         assert!(
             breaks[..breaks.find("\n}\n").expect("closed")]
                 .contains(&format!("({module}::{prefix}Judge request)")),
-            "{prefix}BreaksInv{i:03} must be about {module}::{prefix}Judge"
+            "{broken} must be about {module}::{prefix}Judge"
         );
     }
     assert!(
-        !text.contains(&format!("{prefix}Inv{:03}Holds", count + 1)),
+        !text.contains(&format!("  name: {},\n", inv(count + 1))),
         "more {prefix} guarantees than the scenario names"
     );
     assert!(
@@ -96,7 +107,8 @@ fn guarantees(prefix: &str, module: &str, request: &str, count: usize) {
 /// `HL-01`: The observer decides per facet only as the proved PrismHolon answers
 #[test]
 fn holon_hl_01() {
-    guarantees("holon", "PrismHolon", "HolonRequest", 9);
+    // The builder states the nine guarantees as twelve properties, one per answer a guarantee never gives.
+    guarantees("", "prismHolon", "PrismHolon", "PrismHolonRequest", 12);
     let spec = read("app/specs/holon/spec.json");
     for facet in [
         "\"id\": \"resonance\"",
@@ -116,7 +128,8 @@ fn holon_hl_01() {
 /// `HL-02`: A candidate replaces what runs only as the proved PrismCurate answers
 #[test]
 fn holon_hl_02() {
-    guarantees("curate", "PrismCurate", "CurateRequest", 13);
+    // The builder states the thirteen guarantees as twenty properties, one per answer a guarantee never gives.
+    guarantees("", "prismCurate", "PrismCurate", "PrismCurateRequest", 20);
     let spec = read("app/specs/curate/spec.json");
     assert!(
         [

@@ -6,50 +6,50 @@
 \importmodule{Foundation.View.Text.V1.Model}
 \title{Text application model}
 \begin{semanticmodule}
-definition{name: uorcActKeep, parameters: [], result: Nat, body: 0}
+definition{name: prismUorcActKeep, parameters: [], result: Nat, body: 0}
 
-definition{name: uorcActOpen, parameters: [], result: Nat, body: 1}
+definition{name: prismUorcActOpen, parameters: [], result: Nat, body: 1}
 
-definition{name: uorcHaltedNo, parameters: [], result: Nat, body: 0}
+definition{name: prismUorcHaltedNo, parameters: [], result: Nat, body: 0}
 
-definition{name: uorcHaltedYes, parameters: [], result: Nat, body: 1}
+definition{name: prismUorcHaltedYes, parameters: [], result: Nat, body: 1}
 
-definition{name: uorcSealOk, parameters: [], result: Nat, body: 0}
+definition{name: prismUorcSealOk, parameters: [], result: Nat, body: 0}
 
-definition{name: uorcSealBroken, parameters: [], result: Nat, body: 1}
+definition{name: prismUorcSealBroken, parameters: [], result: Nat, body: 1}
 
-definition{name: uorcFormatKnown, parameters: [], result: Nat, body: 0}
+definition{name: prismUorcFormatKnown, parameters: [], result: Nat, body: 0}
 
-definition{name: uorcFormatOther, parameters: [], result: Nat, body: 1}
+definition{name: prismUorcFormatOther, parameters: [], result: Nat, body: 1}
 
-definition{name: uorcScopeSelf, parameters: [], result: Nat, body: 0}
+definition{name: prismUorcScopeSelf, parameters: [], result: Nat, body: 0}
 
-definition{name: uorcScopeStandard, parameters: [], result: Nat, body: 1}
+definition{name: prismUorcScopeStandard, parameters: [], result: Nat, body: 1}
 
-definition{name: uorcScopeOther, parameters: [], result: Nat, body: 2}
+definition{name: prismUorcScopeOther, parameters: [], result: Nat, body: 2}
 
-definition{name: uorcObjectsOne, parameters: [], result: Nat, body: 0}
+definition{name: prismUorcObjectsOne, parameters: [], result: Nat, body: 0}
 
-definition{name: uorcObjectsMany, parameters: [], result: Nat, body: 1}
+definition{name: prismUorcObjectsMany, parameters: [], result: Nat, body: 1}
 
-definition{name: uorcRestoreSame, parameters: [], result: Nat, body: 0}
+definition{name: prismUorcRestoreSame, parameters: [], result: Nat, body: 0}
 
-definition{name: uorcRestoreDiffers, parameters: [], result: Nat, body: 1}
+definition{name: prismUorcRestoreDiffers, parameters: [], result: Nat, body: 1}
 
-definition{name: uorcRestoreFailed, parameters: [], result: Nat, body: 2}
+definition{name: prismUorcRestoreFailed, parameters: [], result: Nat, body: 2}
 
-definition{name: uorcKappaAdmit, parameters: [], result: Nat, body: 0}
+definition{name: prismUorcKappaAdmit, parameters: [], result: Nat, body: 0}
 
-definition{name: uorcKappaOther, parameters: [], result: Nat, body: 1}
+definition{name: prismUorcKappaOther, parameters: [], result: Nat, body: 1}
 
-definition{name: uorcAnswerKeep, parameters: [], result: Nat, body: 0}
+definition{name: prismUorcAnswerKeep, parameters: [], result: Nat, body: 0}
 
-definition{name: uorcAnswerOpen, parameters: [], result: Nat, body: 1}
+definition{name: prismUorcAnswerOpen, parameters: [], result: Nat, body: 1}
 
-definition{name: uorcAnswerRefuse, parameters: [], result: Nat, body: 2}
+definition{name: prismUorcAnswerRefuse, parameters: [], result: Nat, body: 2}
 
 structure{
-  name: UorcRequest,
+  name: PrismUorcRequest,
   type_parameters: [],
   parameters: [],
   fields: [
@@ -65,7 +65,7 @@ structure{
 }
 
 definition{
-  name: uorcByteAt,
+  name: prismUorcByteAt,
   parameters: [s : Bytes, i : Nat],
   result: (Option Nat),
   body: (match (prim index s i : (Option UInt8))
@@ -75,7 +75,94 @@ definition{
 }
 
 definition{
-  name: uorcSliceOf,
+  name: prismUorcDigitsValue,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.some [Nat] acc)
+    | Nat.succ rest => (match (prismUorcByteAt s i)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some d => (if ((d <? 48) || (57 <? d)) then (ctor Option.none [Nat]) else (prismUorcDigitsValue s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: prismUorcParseDigits,
+  parameters: [s : Bytes],
+  result: (Option Nat),
+  body: (if ((Foundation.Bytes::byteLength s) =? 0) then (ctor Option.none [Nat]) else (if (18 <? (Foundation.Bytes::byteLength s)) then (ctor Option.none [Nat]) else (match (prismUorcByteAt s 0)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some lead => (if ((lead =? 48) && (1 <? (Foundation.Bytes::byteLength s))) then (ctor Option.none [Nat]) else (prismUorcDigitsValue s 0 0 (Foundation.Bytes::byteLength s)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismUorcParseNumber,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (prismUorcParseDigits value),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismUorcParseAct,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6b656570 : Bool) then (ctor Option.some [Nat] (prismUorcActKeep)) else (if (prim equal value 0x6f70656e : Bool) then (ctor Option.some [Nat] (prismUorcActOpen)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismUorcParseHalted,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (prismUorcHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (prismUorcHaltedYes)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismUorcParseSeal,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6f6b : Bool) then (ctor Option.some [Nat] (prismUorcSealOk)) else (if (prim equal value 0x62726f6b656e : Bool) then (ctor Option.some [Nat] (prismUorcSealBroken)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismUorcParseFormat,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6b6e6f776e : Bool) then (ctor Option.some [Nat] (prismUorcFormatKnown)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (prismUorcFormatOther)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismUorcParseScope,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x73656c66 : Bool) then (ctor Option.some [Nat] (prismUorcScopeSelf)) else (if (prim equal value 0x7374616e64617264 : Bool) then (ctor Option.some [Nat] (prismUorcScopeStandard)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (prismUorcScopeOther)) else (ctor Option.none [Nat]))))
+}
+
+definition{
+  name: prismUorcParseObjects,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x6f6e65 : Bool) then (ctor Option.some [Nat] (prismUorcObjectsOne)) else (if (prim equal value 0x6d616e79 : Bool) then (ctor Option.some [Nat] (prismUorcObjectsMany)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismUorcParseRestore,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x73616d65 : Bool) then (ctor Option.some [Nat] (prismUorcRestoreSame)) else (if (prim equal value 0x64696666657273 : Bool) then (ctor Option.some [Nat] (prismUorcRestoreDiffers)) else (if (prim equal value 0x6661696c6564 : Bool) then (ctor Option.some [Nat] (prismUorcRestoreFailed)) else (ctor Option.none [Nat]))))
+}
+
+definition{
+  name: prismUorcParseKappa,
+  parameters: [value : Bytes],
+  result: (Option Nat),
+  body: (if (prim equal value 0x61646d6974 : Bool) then (ctor Option.some [Nat] (prismUorcKappaAdmit)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (prismUorcKappaOther)) else (ctor Option.none [Nat])))
+}
+
+definition{
+  name: prismUorcSliceOf,
   parameters: [s : Bytes, start : Nat, count : Nat],
   result: Bytes,
   body: (match (prim slice s start count : (Option Bytes))
@@ -84,76 +171,20 @@ definition{
 }
 
 definition{
-  name: uorcFieldEnd,
+  name: prismUorcFieldEnd,
   parameters: [s : Bytes, i : Nat, fuel : Nat],
   result: Nat,
   body: (match fuel
     | Nat.zero => i
-    | Nat.succ rest => (match (uorcByteAt s i)
+    | Nat.succ rest => (match (prismUorcByteAt s i)
       | Option.none => i
-      | Option.some d => (if (d =? 32) then i else (uorcFieldEnd s (i + 1) rest)))),
+      | Option.some d => (if (d =? 32) then i else (prismUorcFieldEnd s (i + 1) rest)))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
-  name: uorcParseAct,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x6b656570 : Bool) then (ctor Option.some [Nat] (uorcActKeep)) else (if (prim equal value 0x6f70656e : Bool) then (ctor Option.some [Nat] (uorcActOpen)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: uorcParseHalted,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x6e6f : Bool) then (ctor Option.some [Nat] (uorcHaltedNo)) else (if (prim equal value 0x796573 : Bool) then (ctor Option.some [Nat] (uorcHaltedYes)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: uorcParseSeal,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x6f6b : Bool) then (ctor Option.some [Nat] (uorcSealOk)) else (if (prim equal value 0x62726f6b656e : Bool) then (ctor Option.some [Nat] (uorcSealBroken)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: uorcParseFormat,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x6b6e6f776e : Bool) then (ctor Option.some [Nat] (uorcFormatKnown)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (uorcFormatOther)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: uorcParseScope,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x73656c66 : Bool) then (ctor Option.some [Nat] (uorcScopeSelf)) else (if (prim equal value 0x7374616e64617264 : Bool) then (ctor Option.some [Nat] (uorcScopeStandard)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (uorcScopeOther)) else (ctor Option.none [Nat]))))
-}
-
-definition{
-  name: uorcParseObjects,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x6f6e65 : Bool) then (ctor Option.some [Nat] (uorcObjectsOne)) else (if (prim equal value 0x6d616e79 : Bool) then (ctor Option.some [Nat] (uorcObjectsMany)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: uorcParseRestore,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x73616d65 : Bool) then (ctor Option.some [Nat] (uorcRestoreSame)) else (if (prim equal value 0x64696666657273 : Bool) then (ctor Option.some [Nat] (uorcRestoreDiffers)) else (if (prim equal value 0x6661696c6564 : Bool) then (ctor Option.some [Nat] (uorcRestoreFailed)) else (ctor Option.none [Nat]))))
-}
-
-definition{
-  name: uorcParseKappa,
-  parameters: [value : Bytes],
-  result: (Option Nat),
-  body: (if (prim equal value 0x61646d6974 : Bool) then (ctor Option.some [Nat] (uorcKappaAdmit)) else (if (prim equal value 0x6f74686572 : Bool) then (ctor Option.some [Nat] (uorcKappaOther)) else (ctor Option.none [Nat])))
-}
-
-definition{
-  name: uorcDecodeField8,
+  name: prismUorcDecodeField8,
   parameters: [
     s : Bytes,
     start : Nat,
@@ -165,104 +196,167 @@ definition{
     v6 : Nat,
     v7 : Nat
   ],
-  result: (Option UorcRequest),
-  body: (let e : Nat := (uorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (uorcParseKappa (uorcSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [UorcRequest])
-    | Option.some v8 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [UorcRequest] (record UorcRequest {act := v1, halted := v2, seal := v3, format := v4, scope := v5, objects := v6, restore := v7, kappa := v8})) else (ctor Option.none [UorcRequest])))),
+  result: (Option PrismUorcRequest),
+  body: (let e : Nat := (prismUorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismUorcParseKappa (prismUorcSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismUorcRequest])
+    | Option.some v8 => (if (e =? (Foundation.Bytes::byteLength s)) then (ctor Option.some [PrismUorcRequest] (record PrismUorcRequest {act := v1, halted := v2, seal := v3, format := v4, scope := v5, objects := v6, restore := v7, kappa := v8})) else (ctor Option.none [PrismUorcRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: uorcDecodeField7,
+  name: prismUorcDecodeField7,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat, v6 : Nat],
-  result: (Option UorcRequest),
-  body: (let e : Nat := (uorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (uorcParseRestore (uorcSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [UorcRequest])
-    | Option.some v7 => (if (e <? (Foundation.Bytes::byteLength s)) then (uorcDecodeField8 s (e + 1) v1 v2 v3 v4 v5 v6 v7) else (ctor Option.none [UorcRequest])))),
+  result: (Option PrismUorcRequest),
+  body: (let e : Nat := (prismUorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismUorcParseRestore (prismUorcSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismUorcRequest])
+    | Option.some v7 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismUorcDecodeField8 s (e + 1) v1 v2 v3 v4 v5 v6 v7) else (ctor Option.none [PrismUorcRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: uorcDecodeField6,
+  name: prismUorcDecodeField6,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat, v5 : Nat],
-  result: (Option UorcRequest),
-  body: (let e : Nat := (uorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (uorcParseObjects (uorcSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [UorcRequest])
-    | Option.some v6 => (if (e <? (Foundation.Bytes::byteLength s)) then (uorcDecodeField7 s (e + 1) v1 v2 v3 v4 v5 v6) else (ctor Option.none [UorcRequest])))),
+  result: (Option PrismUorcRequest),
+  body: (let e : Nat := (prismUorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismUorcParseObjects (prismUorcSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismUorcRequest])
+    | Option.some v6 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismUorcDecodeField7 s (e + 1) v1 v2 v3 v4 v5 v6) else (ctor Option.none [PrismUorcRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: uorcDecodeField5,
+  name: prismUorcDecodeField5,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat, v4 : Nat],
-  result: (Option UorcRequest),
-  body: (let e : Nat := (uorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (uorcParseScope (uorcSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [UorcRequest])
-    | Option.some v5 => (if (e <? (Foundation.Bytes::byteLength s)) then (uorcDecodeField6 s (e + 1) v1 v2 v3 v4 v5) else (ctor Option.none [UorcRequest])))),
+  result: (Option PrismUorcRequest),
+  body: (let e : Nat := (prismUorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismUorcParseScope (prismUorcSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismUorcRequest])
+    | Option.some v5 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismUorcDecodeField6 s (e + 1) v1 v2 v3 v4 v5) else (ctor Option.none [PrismUorcRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: uorcDecodeField4,
+  name: prismUorcDecodeField4,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat, v3 : Nat],
-  result: (Option UorcRequest),
-  body: (let e : Nat := (uorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (uorcParseFormat (uorcSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [UorcRequest])
-    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (uorcDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [UorcRequest])))),
+  result: (Option PrismUorcRequest),
+  body: (let e : Nat := (prismUorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismUorcParseFormat (prismUorcSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismUorcRequest])
+    | Option.some v4 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismUorcDecodeField5 s (e + 1) v1 v2 v3 v4) else (ctor Option.none [PrismUorcRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: uorcDecodeField3,
+  name: prismUorcDecodeField3,
   parameters: [s : Bytes, start : Nat, v1 : Nat, v2 : Nat],
-  result: (Option UorcRequest),
-  body: (let e : Nat := (uorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (uorcParseSeal (uorcSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [UorcRequest])
-    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (uorcDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [UorcRequest])))),
+  result: (Option PrismUorcRequest),
+  body: (let e : Nat := (prismUorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismUorcParseSeal (prismUorcSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismUorcRequest])
+    | Option.some v3 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismUorcDecodeField4 s (e + 1) v1 v2 v3) else (ctor Option.none [PrismUorcRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: uorcDecodeField2,
+  name: prismUorcDecodeField2,
   parameters: [s : Bytes, start : Nat, v1 : Nat],
-  result: (Option UorcRequest),
-  body: (let e : Nat := (uorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (uorcParseHalted (uorcSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [UorcRequest])
-    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (uorcDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [UorcRequest])))),
+  result: (Option PrismUorcRequest),
+  body: (let e : Nat := (prismUorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismUorcParseHalted (prismUorcSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismUorcRequest])
+    | Option.some v2 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismUorcDecodeField3 s (e + 1) v1 v2) else (ctor Option.none [PrismUorcRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: uorcDecodeField1,
+  name: prismUorcDecodeField1,
   parameters: [s : Bytes, start : Nat],
-  result: (Option UorcRequest),
-  body: (let e : Nat := (uorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (uorcParseAct (uorcSliceOf s start (prim subtract e start : Nat)))
-    | Option.none => (ctor Option.none [UorcRequest])
-    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (uorcDecodeField2 s (e + 1) v1) else (ctor Option.none [UorcRequest])))),
+  result: (Option PrismUorcRequest),
+  body: (let e : Nat := (prismUorcFieldEnd s start (Foundation.Bytes::byteLength s)); (match (prismUorcParseAct (prismUorcSliceOf s start (prim subtract e start : Nat)))
+    | Option.none => (ctor Option.none [PrismUorcRequest])
+    | Option.some v1 => (if (e <? (Foundation.Bytes::byteLength s)) then (prismUorcDecodeField2 s (e + 1) v1) else (ctor Option.none [PrismUorcRequest])))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
-  name: uorcJudge,
-  parameters: [request : UorcRequest],
-  result: Nat,
-  body: (if ((project request halted) =? (uorcHaltedYes)) then (uorcAnswerRefuse) else (if ((project request seal) =? (uorcSealBroken)) then (uorcAnswerRefuse) else (if ((project request format) =? (uorcFormatOther)) then (uorcAnswerRefuse) else (if ((project request scope) =? (uorcScopeOther)) then (uorcAnswerRefuse) else (if ((project request objects) =? (uorcObjectsMany)) then (uorcAnswerRefuse) else (if ((project request restore) =? (uorcRestoreDiffers)) then (uorcAnswerRefuse) else (if ((project request restore) =? (uorcRestoreFailed)) then (uorcAnswerRefuse) else (if ((project request kappa) =? (uorcKappaOther)) then (uorcAnswerRefuse) else (if ((project request act) =? (uorcActKeep)) then (uorcAnswerKeep) else (uorcAnswerOpen))))))))))
+  name: prismUorcRule1,
+  parameters: [request : PrismUorcRequest],
+  result: Bool,
+  body: ((project request halted) =? (prismUorcHaltedYes))
 }
 
 definition{
-  name: uorcEncodeAnswer,
+  name: prismUorcRule2,
+  parameters: [request : PrismUorcRequest],
+  result: Bool,
+  body: ((project request seal) =? (prismUorcSealBroken))
+}
+
+definition{
+  name: prismUorcRule3,
+  parameters: [request : PrismUorcRequest],
+  result: Bool,
+  body: ((project request format) =? (prismUorcFormatOther))
+}
+
+definition{
+  name: prismUorcRule4,
+  parameters: [request : PrismUorcRequest],
+  result: Bool,
+  body: ((project request scope) =? (prismUorcScopeOther))
+}
+
+definition{
+  name: prismUorcRule5,
+  parameters: [request : PrismUorcRequest],
+  result: Bool,
+  body: ((project request objects) =? (prismUorcObjectsMany))
+}
+
+definition{
+  name: prismUorcRule6,
+  parameters: [request : PrismUorcRequest],
+  result: Bool,
+  body: ((project request restore) =? (prismUorcRestoreDiffers))
+}
+
+definition{
+  name: prismUorcRule7,
+  parameters: [request : PrismUorcRequest],
+  result: Bool,
+  body: ((project request restore) =? (prismUorcRestoreFailed))
+}
+
+definition{
+  name: prismUorcRule8,
+  parameters: [request : PrismUorcRequest],
+  result: Bool,
+  body: ((project request kappa) =? (prismUorcKappaOther))
+}
+
+definition{
+  name: prismUorcRule9,
+  parameters: [request : PrismUorcRequest],
+  result: Bool,
+  body: ((project request act) =? (prismUorcActKeep))
+}
+
+definition{
+  name: prismUorcJudge,
+  parameters: [request : PrismUorcRequest],
+  result: Nat,
+  body: (if (prismUorcRule1 request) then (prismUorcAnswerRefuse) else (if (prismUorcRule2 request) then (prismUorcAnswerRefuse) else (if (prismUorcRule3 request) then (prismUorcAnswerRefuse) else (if (prismUorcRule4 request) then (prismUorcAnswerRefuse) else (if (prismUorcRule5 request) then (prismUorcAnswerRefuse) else (if (prismUorcRule6 request) then (prismUorcAnswerRefuse) else (if (prismUorcRule7 request) then (prismUorcAnswerRefuse) else (if (prismUorcRule8 request) then (prismUorcAnswerRefuse) else (if (prismUorcRule9 request) then (prismUorcAnswerKeep) else (prismUorcAnswerOpen))))))))))
+}
+
+definition{
+  name: prismUorcEncodeAnswer,
   parameters: [code : Nat],
   result: Bytes,
-  body: (if (code =? (uorcAnswerKeep)) then 0x6b656570 else (if (code =? (uorcAnswerOpen)) then 0x6f70656e else (if (code =? (uorcAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964)))
+  body: (if (code =? (prismUorcAnswerKeep)) then 0x6b656570 else (if (code =? (prismUorcAnswerOpen)) then 0x6f70656e else (if (code =? (prismUorcAnswerRefuse)) then 0x726566757365 else 0x696e76616c6964)))
 }
 
 definition{
-  name: uorcDispatch,
+  name: prismUorcDispatch,
   parameters: [value : Bytes],
   result: Bytes,
-  body: (if (49 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (uorcDecodeField1 value 0)
+  body: (if (208 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (prismUorcDecodeField1 value 0)
     | Option.none => 0x696e76616c6964
-    | Option.some request => (uorcEncodeAnswer (uorcJudge request)))),
+    | Option.some request => (prismUorcEncodeAnswer (prismUorcJudge request)))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

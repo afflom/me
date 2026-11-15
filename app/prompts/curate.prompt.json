@@ -1,0 +1,677 @@
+{
+  "schema": "prism/prompt/1",
+  "goal": "Decides whether one candidate set of a facet's tunable parameters, a deterministic Rule-30 hypothesis or the observer's reconciliation toward the owner, replaces the parameters the facet runs now: ado",
+  "pattern": "decisionTable",
+  "repository": "afflom/me",
+  "app": {
+    "name": "prism-curate",
+    "title": "Prism Curate",
+    "purpose": "Decides whether one candidate set of a facet's tunable parameters, a deterministic Rule-30 hypothesis or the observer's reconciliation toward the owner, replaces the parameters the facet runs now: adopt it under a new kappa-named claim, recall it under a claim already made, keep what runs, or refuse. A candidate is adopted only with zero humane defects, on the owner's own gestures, without falling below the facet's floor, and only when it Pareto-dominates what runs (a hypothesis) or eases the owner's dismissals (a reconciliation).",
+    "fields": [
+      {
+        "name": "halted",
+        "kind": "choice",
+        "values": [
+          "no",
+          "yes"
+        ],
+        "means": "whether the owner pressed the kill switch"
+      },
+      {
+        "name": "tunable",
+        "kind": "choice",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "means": "whether every parameter the candidate sets is one the facet's spec marks tunable, on its step and within its bounds"
+      },
+      {
+        "name": "label",
+        "kind": "choice",
+        "values": [
+          "admit",
+          "other"
+        ],
+        "means": "the kappa facet's answer on the candidate's claim label (admit), or any other answer"
+      },
+      {
+        "name": "defect",
+        "kind": "choice",
+        "values": [
+          "zero",
+          "some"
+        ],
+        "means": "the candidate's humane defects on replay of the window: answers that break a guarantee of the facet's spec"
+      },
+      {
+        "name": "evidence",
+        "kind": "choice",
+        "values": [
+          "owner",
+          "self"
+        ],
+        "means": "whether the window the candidate was replayed on holds at least the minimum of the owner's own gestures"
+      },
+      {
+        "name": "floor",
+        "kind": "choice",
+        "values": [
+          "kept",
+          "regressed"
+        ],
+        "means": "whether the facet's floor Pareto-dominates the candidate (regressed) or not (kept)"
+      },
+      {
+        "name": "move",
+        "kind": "choice",
+        "values": [
+          "explore",
+          "reconcile"
+        ],
+        "means": "whether the candidate is a Rule-30 hypothesis (explore) or the observer's reconciliation (reconcile): the one step of one tunable that most lowers the owner's dismissals on replay"
+      },
+      {
+        "name": "eased",
+        "kind": "choice",
+        "values": [
+          "yes",
+          "no"
+        ],
+        "means": "whether the candidate, on replay, brings forward fewer items the owner dismissed than what runs"
+      },
+      {
+        "name": "dominance",
+        "kind": "choice",
+        "values": [
+          "dominates",
+          "equal",
+          "dominated",
+          "incomparable"
+        ],
+        "means": "the candidate against what runs, on the facet's objectives (each minimized): no worse on all and better on one, the same on all, no better on all and worse on one, or neither"
+      },
+      {
+        "name": "claim",
+        "kind": "choice",
+        "values": [
+          "new",
+          "known"
+        ],
+        "means": "whether the candidate's claim label is already in the facet's ledger"
+      }
+    ],
+    "outcomes": [
+      "adopt",
+      "recall",
+      "keep",
+      "refuse"
+    ],
+    "meanings": {
+      "adopt": "the candidate runs, under a new kappa-named claim",
+      "recall": "the candidate runs, under a claim already made",
+      "keep": "what runs now stays",
+      "refuse": "the candidate is never weighed"
+    },
+    "rules": [
+      {
+        "id": "REQ-001",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "yes"
+          }
+        ],
+        "then": "refuse",
+        "says": "when halted is yes then refuse",
+        "why": "Prism Curate: the decision tree's path to refuse"
+      },
+      {
+        "id": "REQ-002",
+        "when": [
+          {
+            "field": "tunable",
+            "op": "is",
+            "value": "no"
+          }
+        ],
+        "then": "refuse",
+        "says": "when tunable is no then refuse",
+        "why": "Prism Curate: the decision tree's path to refuse"
+      },
+      {
+        "id": "REQ-003",
+        "when": [
+          {
+            "field": "label",
+            "op": "is",
+            "value": "other"
+          }
+        ],
+        "then": "refuse",
+        "says": "when label is other then refuse",
+        "why": "Prism Curate: the decision tree's path to refuse"
+      },
+      {
+        "id": "REQ-004",
+        "when": [
+          {
+            "field": "defect",
+            "op": "is",
+            "value": "some"
+          }
+        ],
+        "then": "keep",
+        "says": "when defect is some then keep",
+        "why": "Prism Curate: the decision tree's path to keep"
+      },
+      {
+        "id": "REQ-005",
+        "when": [
+          {
+            "field": "evidence",
+            "op": "is",
+            "value": "self"
+          }
+        ],
+        "then": "keep",
+        "says": "when evidence is self then keep",
+        "why": "Prism Curate: the decision tree's path to keep"
+      },
+      {
+        "id": "REQ-006",
+        "when": [
+          {
+            "field": "floor",
+            "op": "is",
+            "value": "regressed"
+          }
+        ],
+        "then": "keep",
+        "says": "when floor is regressed then keep",
+        "why": "Prism Curate: the decision tree's path to keep"
+      },
+      {
+        "id": "REQ-007",
+        "when": [
+          {
+            "field": "move",
+            "op": "is",
+            "value": "reconcile"
+          },
+          {
+            "field": "eased",
+            "op": "is",
+            "value": "no"
+          }
+        ],
+        "then": "keep",
+        "says": "when move is reconcile and eased is no then keep",
+        "why": "Prism Curate: the decision tree's path to keep"
+      },
+      {
+        "id": "REQ-008",
+        "when": [
+          {
+            "field": "move",
+            "op": "is",
+            "value": "reconcile"
+          },
+          {
+            "field": "claim",
+            "op": "is",
+            "value": "known"
+          }
+        ],
+        "then": "recall",
+        "says": "when move is reconcile and claim is known then recall",
+        "why": "Prism Curate: the decision tree's path to recall"
+      },
+      {
+        "id": "REQ-009",
+        "when": [
+          {
+            "field": "move",
+            "op": "is",
+            "value": "reconcile"
+          }
+        ],
+        "then": "adopt",
+        "says": "when move is reconcile then adopt",
+        "why": "Prism Curate: the decision tree's path to adopt"
+      },
+      {
+        "id": "REQ-010",
+        "when": [
+          {
+            "field": "dominance",
+            "op": "is",
+            "value": "dominates"
+          },
+          {
+            "field": "claim",
+            "op": "is",
+            "value": "known"
+          }
+        ],
+        "then": "recall",
+        "says": "when dominance is dominates and claim is known then recall",
+        "why": "Prism Curate: the decision tree's path to recall"
+      },
+      {
+        "id": "REQ-011",
+        "when": [
+          {
+            "field": "dominance",
+            "op": "is",
+            "value": "dominates"
+          }
+        ],
+        "then": "adopt",
+        "says": "when dominance is dominates then adopt",
+        "why": "Prism Curate: the decision tree's path to adopt"
+      }
+    ],
+    "otherwise": "keep",
+    "otherwiseWhy": "Prism Curate: the decision tree's path that meets no test",
+    "properties": [
+      {
+        "id": "INV-001",
+        "kind": "always",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "yes"
+          }
+        ],
+        "then": "refuse",
+        "says": "always when halted is yes then refuse",
+        "why": "the kill switch stops curation: nothing is adopted while halted"
+      },
+      {
+        "id": "INV-002",
+        "kind": "always",
+        "when": [
+          {
+            "field": "tunable",
+            "op": "is",
+            "value": "no"
+          }
+        ],
+        "then": "refuse",
+        "says": "always when tunable is no then refuse",
+        "why": "a parameter the spec does not mark tunable, or a value off its step or bounds, is never set"
+      },
+      {
+        "id": "INV-003",
+        "kind": "always",
+        "when": [
+          {
+            "field": "label",
+            "op": "is",
+            "value": "other"
+          }
+        ],
+        "then": "refuse",
+        "says": "always when label is other then refuse",
+        "why": "every adoption is named by a kappa label the kappa facet admitted"
+      },
+      {
+        "id": "INV-004",
+        "kind": "never",
+        "when": [
+          {
+            "field": "defect",
+            "op": "is",
+            "value": "some"
+          }
+        ],
+        "then": "adopt",
+        "says": "never when defect is some then adopt",
+        "why": "the humane gate: a candidate with any defect is never adopted (defect = 0)"
+      },
+      {
+        "id": "INV-005",
+        "kind": "never",
+        "when": [
+          {
+            "field": "defect",
+            "op": "is",
+            "value": "some"
+          }
+        ],
+        "then": "recall",
+        "says": "never when defect is some then recall",
+        "why": "the humane gate: a candidate with any defect is never adopted (defect = 0)"
+      },
+      {
+        "id": "INV-006",
+        "kind": "never",
+        "when": [
+          {
+            "field": "evidence",
+            "op": "is",
+            "value": "self"
+          }
+        ],
+        "then": "adopt",
+        "says": "never when evidence is self then adopt",
+        "why": "self-reference alone is bounded: no candidate is adopted without the owner's gestures"
+      },
+      {
+        "id": "INV-007",
+        "kind": "never",
+        "when": [
+          {
+            "field": "evidence",
+            "op": "is",
+            "value": "self"
+          }
+        ],
+        "then": "recall",
+        "says": "never when evidence is self then recall",
+        "why": "self-reference alone is bounded: no candidate is adopted without the owner's gestures"
+      },
+      {
+        "id": "INV-008",
+        "kind": "never",
+        "when": [
+          {
+            "field": "floor",
+            "op": "is",
+            "value": "regressed"
+          }
+        ],
+        "then": "adopt",
+        "says": "never when floor is regressed then adopt",
+        "why": "the floor never regresses: no candidate the floor dominates is adopted"
+      },
+      {
+        "id": "INV-009",
+        "kind": "never",
+        "when": [
+          {
+            "field": "floor",
+            "op": "is",
+            "value": "regressed"
+          }
+        ],
+        "then": "recall",
+        "says": "never when floor is regressed then recall",
+        "why": "the floor never regresses: no candidate the floor dominates is adopted"
+      },
+      {
+        "id": "INV-010",
+        "kind": "never",
+        "when": [
+          {
+            "field": "move",
+            "op": "is",
+            "value": "explore"
+          },
+          {
+            "field": "dominance",
+            "op": "is",
+            "value": "equal"
+          }
+        ],
+        "then": "adopt",
+        "says": "never when move is explore and dominance is equal then adopt",
+        "why": "a hypothesis that changes nothing measurable is not adopted (strict dominance)"
+      },
+      {
+        "id": "INV-011",
+        "kind": "never",
+        "when": [
+          {
+            "field": "move",
+            "op": "is",
+            "value": "explore"
+          },
+          {
+            "field": "dominance",
+            "op": "is",
+            "value": "equal"
+          }
+        ],
+        "then": "recall",
+        "says": "never when move is explore and dominance is equal then recall",
+        "why": "a hypothesis that changes nothing measurable is not adopted (strict dominance)"
+      },
+      {
+        "id": "INV-012",
+        "kind": "never",
+        "when": [
+          {
+            "field": "move",
+            "op": "is",
+            "value": "explore"
+          },
+          {
+            "field": "dominance",
+            "op": "is",
+            "value": "dominated"
+          }
+        ],
+        "then": "adopt",
+        "says": "never when move is explore and dominance is dominated then adopt",
+        "why": "a hypothesis worse than what runs is never adopted"
+      },
+      {
+        "id": "INV-013",
+        "kind": "never",
+        "when": [
+          {
+            "field": "move",
+            "op": "is",
+            "value": "explore"
+          },
+          {
+            "field": "dominance",
+            "op": "is",
+            "value": "dominated"
+          }
+        ],
+        "then": "recall",
+        "says": "never when move is explore and dominance is dominated then recall",
+        "why": "a hypothesis worse than what runs is never adopted"
+      },
+      {
+        "id": "INV-014",
+        "kind": "never",
+        "when": [
+          {
+            "field": "move",
+            "op": "is",
+            "value": "explore"
+          },
+          {
+            "field": "dominance",
+            "op": "is",
+            "value": "incomparable"
+          }
+        ],
+        "then": "adopt",
+        "says": "never when move is explore and dominance is incomparable then adopt",
+        "why": "a hypothesis that trades one objective for another is not adopted: improvement is strict Pareto dominance"
+      },
+      {
+        "id": "INV-015",
+        "kind": "never",
+        "when": [
+          {
+            "field": "move",
+            "op": "is",
+            "value": "explore"
+          },
+          {
+            "field": "dominance",
+            "op": "is",
+            "value": "incomparable"
+          }
+        ],
+        "then": "recall",
+        "says": "never when move is explore and dominance is incomparable then recall",
+        "why": "a hypothesis that trades one objective for another is not adopted: improvement is strict Pareto dominance"
+      },
+      {
+        "id": "INV-016",
+        "kind": "never",
+        "when": [
+          {
+            "field": "move",
+            "op": "is",
+            "value": "reconcile"
+          },
+          {
+            "field": "eased",
+            "op": "is",
+            "value": "no"
+          }
+        ],
+        "then": "adopt",
+        "says": "never when move is reconcile and eased is no then adopt",
+        "why": "a reconciliation is adopted only when it eases the owner's dismissals"
+      },
+      {
+        "id": "INV-017",
+        "kind": "never",
+        "when": [
+          {
+            "field": "move",
+            "op": "is",
+            "value": "reconcile"
+          },
+          {
+            "field": "eased",
+            "op": "is",
+            "value": "no"
+          }
+        ],
+        "then": "recall",
+        "says": "never when move is reconcile and eased is no then recall",
+        "why": "a reconciliation is adopted only when it eases the owner's dismissals"
+      },
+      {
+        "id": "INV-018",
+        "kind": "never",
+        "when": [
+          {
+            "field": "claim",
+            "op": "is",
+            "value": "known"
+          }
+        ],
+        "then": "adopt",
+        "says": "never when claim is known then adopt",
+        "why": "a claim is minted once: a known claim is recalled, never minted again"
+      },
+      {
+        "id": "INV-019",
+        "kind": "never",
+        "when": [
+          {
+            "field": "claim",
+            "op": "is",
+            "value": "new"
+          }
+        ],
+        "then": "recall",
+        "says": "never when claim is new then recall",
+        "why": "only a claim in the ledger can be recalled"
+      },
+      {
+        "id": "INV-020",
+        "kind": "never",
+        "when": [
+          {
+            "field": "halted",
+            "op": "is",
+            "value": "no"
+          },
+          {
+            "field": "tunable",
+            "op": "is",
+            "value": "yes"
+          },
+          {
+            "field": "label",
+            "op": "is",
+            "value": "admit"
+          }
+        ],
+        "then": "refuse",
+        "says": "never when halted is no and tunable is yes and label is admit then refuse",
+        "why": "a well-formed, kappa-named candidate is weighed, never refused"
+      }
+    ],
+    "examples": [
+      {
+        "request": "no yes admit zero owner kept explore yes dominates new",
+        "response": "adopt"
+      },
+      {
+        "request": "no yes admit zero owner kept explore yes dominates known",
+        "response": "recall"
+      },
+      {
+        "request": "no yes admit zero owner kept explore yes equal new",
+        "response": "keep"
+      },
+      {
+        "request": "no yes admit zero owner kept explore yes dominated new",
+        "response": "keep"
+      },
+      {
+        "request": "no yes admit zero owner kept explore yes incomparable new",
+        "response": "keep"
+      },
+      {
+        "request": "no yes admit zero owner kept reconcile yes incomparable new",
+        "response": "adopt"
+      },
+      {
+        "request": "no yes admit zero owner kept reconcile yes dominated known",
+        "response": "recall"
+      },
+      {
+        "request": "no yes admit zero owner kept reconcile no dominates new",
+        "response": "keep"
+      },
+      {
+        "request": "no yes admit zero owner regressed reconcile yes dominates new",
+        "response": "keep"
+      },
+      {
+        "request": "no yes admit zero self kept explore yes dominates new",
+        "response": "keep"
+      },
+      {
+        "request": "no yes admit some owner kept explore yes dominates new",
+        "response": "keep"
+      },
+      {
+        "request": "no yes other zero owner kept explore yes dominates new",
+        "response": "refuse"
+      },
+      {
+        "request": "no no admit zero owner kept explore yes dominates new",
+        "response": "refuse"
+      },
+      {
+        "request": "yes yes admit zero owner kept explore yes dominates new",
+        "response": "refuse"
+      },
+      {
+        "request": "no yes admit zero owner kept explore dominates",
+        "response": "invalid"
+      },
+      {
+        "request": "no yes admit zero owner kept explore yes Dominates new",
+        "response": "invalid"
+      }
+    ]
+  }
+}

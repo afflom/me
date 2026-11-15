@@ -6,8 +6,11 @@
   app/specs/curate/spec.json -> keyword "curate": whether one candidate replaces what a facet runs
 
 Outputs, all generated, never hand-edited:
-  app/src/PrismHolon.lex.tex, app/src/PrismHolonProofs.lex.tex
-  app/src/PrismCurate.lex.tex, app/src/PrismCurateProofs.lex.tex
+  app/src/PrismHolon.lex.tex, app/src/PrismHolonProofs.lex.tex,
+  app/src/PrismCurate.lex.tex, app/src/PrismCurateProofs.lex.tex, each only
+                         while its facet is not in app/prompts/set.json: the
+                         Prism's builder (tools/prompts/gen.py) writes a listed
+                         facet's Lean with its full model
   site/holon/table.mjs   both trees in JavaScript, the holon's facets (directive,
                          objective, KPI and floor of each) and the curator's
                          Rule-30 register, objectives and claim form
@@ -244,6 +247,8 @@ def load(name):
 
 HOLON = Facet(load("holon"), "holon", "PrismHolon", "HolonRequest")
 CURATE = Facet(load("curate"), "curate", "PrismCurate", "CurateRequest")
+# The builder owns the Lean of every facet its set lists.
+BUILT = {p.removesuffix(".prompt.json") for p in json.loads((ROOT / "app/prompts/set.json").read_text())["prompts"]}
 
 
 def facets():
@@ -291,6 +296,8 @@ export const CLAIM = {json.dumps(c['claim'])};
 def outputs():
     out = {}
     for f in (HOLON, CURATE):
+        if f.P in BUILT:
+            continue
         d = f.depth()
         if d > 11:
             sys.exit(f"{f.P}: tree depth {d} > 11: Lean's split gives up at 13")
