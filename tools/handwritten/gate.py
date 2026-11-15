@@ -58,9 +58,13 @@ SPEC = json.loads(pathlib.Path(opt("--spec") or ROOT / SPEC_PATH).read_text())
 TOLERANT = "--tolerant" in ARGS
 
 
+NOTE = "HW-01 keeps no ledger: it measures this tree and its base alike, so there is nothing to commit for it."
+
+
 def fail(lines):
     for line in lines:
         print(f"HW-01: {line}", file=sys.stderr)
+    print(NOTE, file=sys.stderr)
     sys.exit(1)
 
 
@@ -434,5 +438,6 @@ def main():
     print(f"HW-01: distance from LexLean: {outside_model} model records and {outside_gen} files written by producers outside LexLean")
     print(f"HW-01: {sum(v['files'] for v in t.values())} hand-written files, {sum(v['lines'] for v in t.values())} non-comment lines"
           + (f", none added or grown since {ref}" if ref else ", no base to ratchet against"))
+    print(NOTE)
 
 main()
