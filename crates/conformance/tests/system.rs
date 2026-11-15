@@ -1,8 +1,9 @@
 //! The `system` suite: the Prism is modeled as one system, not only as its decisions.
 //!
 //! app/specs/system/spec.json is the Prism's OPM system diagram (ISO 19450) at the
-//! top of its architecture description (ISO/IEC/IEEE 42010); tools/system/gen.py
-//! writes it into app/src/PrismSystem.lex.tex, which `prismpm check` holds to the
+//! top of its architecture description (ISO/IEC/IEEE 42010); the LexLean generators
+//! systemcheck and system (generators/src/GenSystem.lex.tex) refuse an incomplete
+//! model and write app/src/PrismSystem.lex.tex, which `prismpm check` holds to the
 //! system model.
 //! `SY-01` fails when a component the diagram names is missing, a decision is no
 //! part's, the owed parts grow, or a standard is not registered.
@@ -21,11 +22,11 @@ fn root() -> PathBuf {
 /// `SY-01`: the Prism is modeled as one system and every component its system diagram names is present
 #[test]
 fn system_sy_01() {
-    let out = Command::new("python3")
-        .args(["-I", "tools/system/gen.py", "--check"])
+    let out = Command::new("sh")
+        .args(["tools/generators/run.sh", "--check"])
         .current_dir(root())
         .output()
-        .expect("python3 runs");
+        .expect("sh runs");
     assert!(
         out.status.success(),
         "the system model is incomplete:\n{}\n{}",
