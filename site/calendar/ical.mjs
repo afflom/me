@@ -139,9 +139,14 @@ export function valueOf(line, zones = new Map()) {
 // The object's own time zones (3.6.5): each TZID's observances, each onset in UTC with the offset it brings.
 export function zonesOf(text) {
   const zones = new Map();
+  const outside = text.replace(/BEGIN:VTIMEZONE\r?\n[\s\S]*?END:VTIMEZONE/g, "");
+  const horizon = Math.max(Date.UTC(1971, 0, 1), ...[...outside.matchAll(/\b(\d{4})(\d{2})(\d{2})(?:T|\b)/g)].map(([, y, m, d]) => Date.UTC(+y, m - 1, +d))) + 366 * 86_400_000;
   for (const [block] of text.matchAll(/BEGIN:VTIMEZONE\r?\n[\s\S]*?END:VTIMEZONE/g)) {
     const id = /^TZID[^:\r\n]*:(.*)$/m.exec(block.replace(/\r?\n[ \t]/g, ""))?.[1]?.trim();
     if (!id) continue;
+    // A calendar sends the same zone with each of its objects: its onsets are worked out once.
+    const seen = expanded.get(block);
+    if (seen && seen.horizon >= horizon) { zones.set(id, seen.onsets); continue; }
     const onsets = [];
     for (const [obs] of block.matchAll(/BEGIN:(?:STANDARD|DAYLIGHT)\r?\n[\s\S]*?END:(?:STANDARD|DAYLIGHT)/g)) {
       const props = [...contentLines(obs)].filter((l) => l.name);
@@ -155,12 +160,18 @@ export function zonesOf(text) {
       const rules = props.filter((l) => l.name === "RRULE").map((l) => l.value.replace(/UNTIL=(\d{8}T\d{6}Z?)/, (_, u) => { const w = new Date(wallOf(u)); return `UNTIL=${w.getUTCFullYear()}${pad(w.getUTCMonth() + 1)}${pad(w.getUTCDate())}T${pad(w.getUTCHours())}${pad(w.getUTCMinutes())}${pad(w.getUTCSeconds())}Z`; }));
       const rdates = props.filter((l) => l.name === "RDATE").flatMap((l) => l.value.split(",")).map((v) => v.replace(/Z$/, "")).filter((v) => /^\d{8}T\d{6}$/.test(v));
       const ical = [`DTSTART:${start}Z`, ...rules.map((r) => `RRULE:${r}`), ...(rdates.length ? [`RDATE:${rdates.map((v) => `${v}Z`).join(",")}`] : [])].join("\r\n");
-      for (const wall of instances(ical, { limit: 2000 })) onsets.push({ at: wall - from * 1000, offset: to });
+      // Onsets through the latest time the object names, and a year more: those are the ones its times fall in.
+      let walls = [];
+      for (let limit = 16; ; limit *= 2) { walls = instances(ical, { limit }); if (walls.length < limit || walls[walls.length - 1] > horizon) break; }
+      for (const wall of walls) onsets.push({ at: wall - from * 1000, offset: to });
     }
     zones.set(id, onsets.sort((a, b) => a.at - b.at));
+    if (expanded.size >= 64) expanded.delete(expanded.keys().next().value);
+    expanded.set(block, { horizon, onsets: zones.get(id) });
   }
   return zones;
 }
+const expanded = new Map();
 
 // A local time in a zone, as UTC: by the object's own observances where it has them, else the browser's tz data.
 function zoneAt(wall, zone, zones) {
