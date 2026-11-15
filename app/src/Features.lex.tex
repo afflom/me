@@ -19,6 +19,7 @@
 \importmodule{PrismUorc}
 \importmodule{PrismCurate}
 \importmodule{PrismDest}
+\importmodule{PrismChronology}
 \importmodule{Architecture}
 \importmodule{Foundation.Arch}
 \title{feature}
@@ -1218,6 +1219,62 @@ definition{
   parameters: [],
   result: String,
   body: "PrismDestProofs::inv013Holds"
+}
+
+definition{
+  name: acceptPrismChronologyINV001,
+  parameters: [],
+  result: String,
+  body: "PrismChronologyProofs::inv001Holds"
+}
+
+definition{
+  name: acceptPrismChronologyINV002,
+  parameters: [],
+  result: String,
+  body: "PrismChronologyProofs::inv002Holds"
+}
+
+definition{
+  name: acceptPrismChronologyINV003,
+  parameters: [],
+  result: String,
+  body: "PrismChronologyProofs::inv003Holds"
+}
+
+definition{
+  name: acceptPrismChronologyINV004,
+  parameters: [],
+  result: String,
+  body: "PrismChronologyProofs::inv004Holds"
+}
+
+definition{
+  name: acceptPrismChronologyINV005,
+  parameters: [],
+  result: String,
+  body: "PrismChronologyProofs::inv005Holds"
+}
+
+definition{
+  name: acceptPrismChronologyINV006,
+  parameters: [],
+  result: String,
+  body: "PrismChronologyProofs::inv006Holds"
+}
+
+definition{
+  name: acceptPrismChronologyINV007,
+  parameters: [],
+  result: String,
+  body: "PrismChronologyProofs::inv007Holds"
+}
+
+definition{
+  name: acceptPrismChronologyINV008,
+  parameters: [],
+  result: String,
+  body: "PrismChronologyProofs::inv008Holds"
 }
 
 definition{
@@ -3783,6 +3840,174 @@ definition{
 }
 
 definition{
+  name: featurePrismChronologyRule1,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when aend <= astart then malformed", calls := (cons "PrismChronology::prismChronologyRule1" (cons "PrismChronology::prismChronologyJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyRule2,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when bend <= bstart then malformed", calls := (cons "PrismChronology::prismChronologyRule2" (cons "PrismChronology::prismChronologyJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyRule3,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when aend < bstart then before", calls := (cons "PrismChronology::prismChronologyRule3" (cons "PrismChronology::prismChronologyJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyRule4,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when aend = bstart then meets", calls := (cons "PrismChronology::prismChronologyRule4" (cons "PrismChronology::prismChronologyJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyRule5,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when bend < astart then after", calls := (cons "PrismChronology::prismChronologyRule5" (cons "PrismChronology::prismChronologyJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyRule6,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when bend = astart then metby", calls := (cons "PrismChronology::prismChronologyRule6" (cons "PrismChronology::prismChronologyJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyRule7,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when astart = bstart and aend = bend then equals", calls := (cons "PrismChronology::prismChronologyRule7" (cons "PrismChronology::prismChronologyJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyRule8,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when astart = bstart and aend < bend then starts", calls := (cons "PrismChronology::prismChronologyRule8" (cons "PrismChronology::prismChronologyJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyRule9,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when astart = bstart then startedby", calls := (cons "PrismChronology::prismChronologyRule9" (cons "PrismChronology::prismChronologyJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyRule10,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when aend = bend and astart > bstart then finishes", calls := (cons "PrismChronology::prismChronologyRule10" (cons "PrismChronology::prismChronologyJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyRule11,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when aend = bend then finishedby", calls := (cons "PrismChronology::prismChronologyRule11" (cons "PrismChronology::prismChronologyJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyRule12,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when astart > bstart and aend < bend then during", calls := (cons "PrismChronology::prismChronologyRule12" (cons "PrismChronology::prismChronologyJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyRule13,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when astart < bstart and aend > bend then contains", calls := (cons "PrismChronology::prismChronologyRule13" (cons "PrismChronology::prismChronologyJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyRule14,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when astart < bstart then overlaps", calls := (cons "PrismChronology::prismChronologyRule14" (cons "PrismChronology::prismChronologyJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyOtherwise,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "When no rule matches, the answer is overlappedby.", calls := (cons "PrismChronology::prismChronologyJudge" (nil String)), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyRefuseMalformed,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "A request that is not astart, aend, bstart, bend in order, separated by single spaces, or is over 112 bytes, is answered invalid.", calls := (cons "PrismChronology::prismChronologyDispatch" (cons "PrismChronology::prismChronologyDecodeField1" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyINV001,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when astart < aend and bstart < bend then malformed", calls := (cons "PrismChronology::prismChronologyJudge" (nil String)), acceptance := (cons "Features::acceptPrismChronologyINV001" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyINV002,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when aend >= bstart then before", calls := (cons "PrismChronology::prismChronologyJudge" (nil String)), acceptance := (cons "Features::acceptPrismChronologyINV002" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyINV003,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when bend >= astart then after", calls := (cons "PrismChronology::prismChronologyJudge" (nil String)), acceptance := (cons "Features::acceptPrismChronologyINV003" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyINV004,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when astart != bstart then equals", calls := (cons "PrismChronology::prismChronologyJudge" (nil String)), acceptance := (cons "Features::acceptPrismChronologyINV004" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyINV005,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when aend != bend then equals", calls := (cons "PrismChronology::prismChronologyJudge" (nil String)), acceptance := (cons "Features::acceptPrismChronologyINV005" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyINV006,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when aend != bstart then meets", calls := (cons "PrismChronology::prismChronologyJudge" (nil String)), acceptance := (cons "Features::acceptPrismChronologyINV006" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyINV007,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when astart <= bstart then during", calls := (cons "PrismChronology::prismChronologyJudge" (nil String)), acceptance := (cons "Features::acceptPrismChronologyINV007" (nil String))})
+}
+
+definition{
+  name: featurePrismChronologyINV008,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when aend < bstart then overlaps", calls := (cons "PrismChronology::prismChronologyJudge" (nil String)), acceptance := (cons "Features::acceptPrismChronologyINV008" (nil String))})
+}
+
+definition{
   name: journeyPrismBoundaryUser,
   parameters: [],
   result: Foundation.Arch::Journey,
@@ -4018,6 +4243,20 @@ definition{
   parameters: [],
   result: Foundation.Arch::Journey,
   body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderVerifier", steps := (cons "Features::featurePrismDestRefuseMalformed" (cons "Features::featurePrismDestINV001" (cons "Features::featurePrismDestINV002" (cons "Features::featurePrismDestINV003" (cons "Features::featurePrismDestINV004" (cons "Features::featurePrismDestINV005" (cons "Features::featurePrismDestINV006" (cons "Features::featurePrismDestINV007" (cons "Features::featurePrismDestINV008" (cons "Features::featurePrismDestINV009" (cons "Features::featurePrismDestINV010" (cons "Features::featurePrismDestINV011" (cons "Features::featurePrismDestINV012" (cons "Features::featurePrismDestINV013" (nil String)))))))))))))))})
+}
+
+definition{
+  name: journeyPrismChronologyUser,
+  parameters: [],
+  result: Foundation.Arch::Journey,
+  body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderUser", steps := (cons "Features::featurePrismChronologyRule1" (cons "Features::featurePrismChronologyRule2" (cons "Features::featurePrismChronologyRule3" (cons "Features::featurePrismChronologyRule4" (cons "Features::featurePrismChronologyRule5" (cons "Features::featurePrismChronologyRule6" (cons "Features::featurePrismChronologyRule7" (cons "Features::featurePrismChronologyRule8" (cons "Features::featurePrismChronologyRule9" (cons "Features::featurePrismChronologyRule10" (cons "Features::featurePrismChronologyRule11" (cons "Features::featurePrismChronologyRule12" (cons "Features::featurePrismChronologyRule13" (cons "Features::featurePrismChronologyRule14" (cons "Features::featurePrismChronologyOtherwise" (nil String))))))))))))))))})
+}
+
+definition{
+  name: journeyPrismChronologyVerifier,
+  parameters: [],
+  result: Foundation.Arch::Journey,
+  body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderVerifier", steps := (cons "Features::featurePrismChronologyRefuseMalformed" (cons "Features::featurePrismChronologyINV001" (cons "Features::featurePrismChronologyINV002" (cons "Features::featurePrismChronologyINV003" (cons "Features::featurePrismChronologyINV004" (cons "Features::featurePrismChronologyINV005" (cons "Features::featurePrismChronologyINV006" (cons "Features::featurePrismChronologyINV007" (cons "Features::featurePrismChronologyINV008" (nil String))))))))))})
 }
 \end{semanticmodule}
 \end{lexlean}

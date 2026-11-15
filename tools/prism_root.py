@@ -24,7 +24,7 @@ import sys
 FACETS = [
     ("boundary", "PrismBoundary", "prismBoundaryDispatch"),
     ("learn", "PrismLearning", "prismLearningDispatch"),
-    ("when", "PrismChronology", "chronologyDispatch"),
+    ("when", "PrismChronology", "prismChronologyDispatch"),
     ("store", "PrismVaultStore", "prismVaultStoreDispatch"),
     ("restore", "PrismVaultRestore", "prismVaultRestoreDispatch"),
     ("r4", "PrismR4", "prismR4Dispatch"),

@@ -80,7 +80,7 @@ fn prism_pm_01() {
     for (facet, module, dispatch) in [
         ("Boundary", "PrismBoundary", "prismBoundaryDispatch"),
         ("Learn", "PrismLearning", "prismLearningDispatch"),
-        ("When", "PrismChronology", "chronologyDispatch"),
+        ("When", "PrismChronology", "prismChronologyDispatch"),
         ("Store", "PrismVaultStore", "prismVaultStoreDispatch"),
         ("Restore", "PrismVaultRestore", "prismVaultRestoreDispatch"),
         ("R4", "PrismR4", "prismR4Dispatch"),
@@ -141,5 +141,5 @@ fn prism_pm_03() {
 /// `PM-04`: Chronology never names an Allen relation that the two intervals' endpoints contradict, and never calls two well-formed intervals malformed
 #[test]
 fn prism_pm_04() {
-    guarantees("PM-04", "PrismChronology", "Chronology", 8);
+    guarantees("PM-04", "PrismChronology", "PrismChronology", 8);
 }

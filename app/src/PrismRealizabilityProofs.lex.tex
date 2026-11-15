@@ -251,7 +251,7 @@ theorem{
 theorem{
   name: realizabilityChronologyAstartMatters,
   parameters: [],
-  statement: ((((PrismChronology::chronologyJudge (record PrismChronology::ChronologyRequest {astart := 0, aend := 60, bstart := 120, bend := 180})) =? (PrismChronology::chronologyAnswerBefore)) && ((PrismChronology::chronologyJudge (record PrismChronology::ChronologyRequest {astart := 10079, aend := 60, bstart := 120, bend := 180})) =? (PrismChronology::chronologyAnswerMalformed))) = true),
+  statement: ((((PrismChronology::prismChronologyJudge (record PrismChronology::PrismChronologyRequest {astart := 0, aend := 60, bstart := 120, bend := 180})) =? (PrismChronology::prismChronologyAnswerBefore)) && ((PrismChronology::prismChronologyJudge (record PrismChronology::PrismChronologyRequest {astart := 10079, aend := 60, bstart := 120, bend := 180})) =? (PrismChronology::prismChronologyAnswerMalformed))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -259,7 +259,7 @@ theorem{
 theorem{
   name: realizabilityChronologyAendMatters,
   parameters: [],
-  statement: ((((PrismChronology::chronologyJudge (record PrismChronology::ChronologyRequest {astart := 0, aend := 60, bstart := 120, bend := 180})) =? (PrismChronology::chronologyAnswerBefore)) && ((PrismChronology::chronologyJudge (record PrismChronology::ChronologyRequest {astart := 0, aend := 0, bstart := 120, bend := 180})) =? (PrismChronology::chronologyAnswerMalformed))) = true),
+  statement: ((((PrismChronology::prismChronologyJudge (record PrismChronology::PrismChronologyRequest {astart := 0, aend := 60, bstart := 120, bend := 180})) =? (PrismChronology::prismChronologyAnswerBefore)) && ((PrismChronology::prismChronologyJudge (record PrismChronology::PrismChronologyRequest {astart := 0, aend := 0, bstart := 120, bend := 180})) =? (PrismChronology::prismChronologyAnswerMalformed))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -267,7 +267,7 @@ theorem{
 theorem{
   name: realizabilityChronologyBstartMatters,
   parameters: [],
-  statement: ((((PrismChronology::chronologyJudge (record PrismChronology::ChronologyRequest {astart := 0, aend := 60, bstart := 120, bend := 180})) =? (PrismChronology::chronologyAnswerBefore)) && ((PrismChronology::chronologyJudge (record PrismChronology::ChronologyRequest {astart := 0, aend := 60, bstart := 0, bend := 180})) =? (PrismChronology::chronologyAnswerStarts))) = true),
+  statement: ((((PrismChronology::prismChronologyJudge (record PrismChronology::PrismChronologyRequest {astart := 0, aend := 60, bstart := 120, bend := 180})) =? (PrismChronology::prismChronologyAnswerBefore)) && ((PrismChronology::prismChronologyJudge (record PrismChronology::PrismChronologyRequest {astart := 0, aend := 60, bstart := 0, bend := 180})) =? (PrismChronology::prismChronologyAnswerStarts))) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -275,7 +275,7 @@ theorem{
 theorem{
   name: realizabilityChronologyBendMatters,
   parameters: [],
-  statement: ((((PrismChronology::chronologyJudge (record PrismChronology::ChronologyRequest {astart := 0, aend := 60, bstart := 120, bend := 180})) =? (PrismChronology::chronologyAnswerBefore)) && ((PrismChronology::chronologyJudge (record PrismChronology::ChronologyRequest {astart := 0, aend := 60, bstart := 120, bend := 0})) =? (PrismChronology::chronologyAnswerMalformed))) = true),
+  statement: ((((PrismChronology::prismChronologyJudge (record PrismChronology::PrismChronologyRequest {astart := 0, aend := 60, bstart := 120, bend := 180})) =? (PrismChronology::prismChronologyAnswerBefore)) && ((PrismChronology::prismChronologyJudge (record PrismChronology::PrismChronologyRequest {astart := 0, aend := 60, bstart := 120, bend := 0})) =? (PrismChronology::prismChronologyAnswerMalformed))) = true),
   proof: reflexivity{},
   axioms: []
 }

@@ -106,6 +106,47 @@ export function factorField(spec) {
   return field ? { state: field } : null;
 }
 
+/**
+ * How two numbers can stand: below, equal, above. A comparison of two fields is
+ * the set of standings it allows, read on the pair in name order.
+ */
+const STANDS = { '<': ['lt'], '<=': ['lt', 'eq'], '=': ['eq'], '!=': ['lt', 'gt'], '>': ['gt'], '>=': ['eq', 'gt'] };
+const FLIP = { lt: 'gt', eq: 'eq', gt: 'lt' };
+function standing(c) {
+  if (typeof c.value !== 'object' || !STANDS[c.op]) return null;
+  const [x, y] = [c.field, c.value.field];
+  return x < y ? { x, y, allows: STANDS[c.op] } : { x: y, y: x, allows: STANDS[c.op].map((s) => FLIP[s]) };
+}
+
+/** A rule inside the branch where pair x, y stands `at`: null when it cannot fire there, else without the comparisons that hold. */
+function within(r, x, y, at) {
+  const when = [];
+  for (const c of r.when) {
+    const s = standing(c);
+    if (!s || s.x !== x || s.y !== y) when.push(c);
+    else if (!s.allows.includes(at)) return null;
+  }
+  return { ...r, when, whole: r.whole ?? r };
+}
+
+const STANDINGS = [['eq', 1], ['lt', 2], ['gt', 2]];
+
+/**
+ * The pair of number fields that factors a too-deep table no choice field can:
+ * the one whose deepest standing (one test to equal, two to below or above) is
+ * shallowest, if that is shallower than the chain itself.
+ */
+function bestPair(rules) {
+  let best = null;
+  const pairs = new Map();
+  for (const r of rules) for (const c of r.when) { const s = standing(c); if (s) pairs.set(`${s.x} ${s.y}`, s); }
+  for (const { x, y } of pairs.values()) {
+    const depth = Math.max(...STANDINGS.map(([at, cost]) => cost + truncate(rules.map((r) => within(r, x, y, at)).filter(Boolean)).tests.length));
+    if (!best || depth < best.depth) best = { x, y, depth };
+  }
+  return best && best.depth < truncate(rules).tests.length ? best : null;
+}
+
 /** A condition that holds, as an atom (the rule's own name is used when it is unchanged). */
 function holdCondition(n, c) {
   const field = n.fields[c.field];
@@ -174,14 +215,28 @@ export function machineDeclarations(spec, machine, n = names(spec)) {
     const body = steps.reduceRight((tail, s) => `(if (${stateOf} =? (${n.fields[field].choices[s.value]})) then (${s.name} request) else ${tail})`, chain(rest));
     return { body, steps, rest };
   };
+  // One branch per standing of a pair of number fields: equal, below, above.
+  const byPair = (rules, fixed, prefix, { x, y }, budget) => {
+    const [X, Y] = [`(project request ${n.fields[x].id})`, `(project request ${n.fields[y].id})`];
+    const step = Object.fromEntries(STANDINGS.map(([at, cost]) => {
+      const name = claim(`step${prefix}${pascal(x)}${pascal(at)}${pascal(y)}`);
+      stepDecls.push({ ...judge, name, body: build(rules.map((r) => within(r, x, y, at)).filter(Boolean), fixed, `${prefix}${pascal(x)}${pascal(at)}${pascal(y)}`, budget - cost) });
+      return [at, name];
+    }));
+    return `(if (${X} =? ${Y}) then (${step.eq} request) else (if (${X} <? ${Y}) then (${step.lt} request) else (${step.gt} request)))`;
+  };
   const build = (rules, fixed, prefix, budget) => {
     if (truncate(rules).tests.length <= Math.min(budget, MAX_CHAIN)) return chain(rules);
     const field = bestField(spec, rules, fixed);
-    return field ? factor(rules, fixed, prefix, field, budget).body : chain(rules);
+    if (field) return factor(rules, fixed, prefix, field, budget).body;
+    const pair = bestPair(rules);
+    return pair ? byPair(rules, fixed, prefix, pair, budget) : chain(rules);
   };
   const owner = machine?.state ?? factorField(spec)?.state;
   if (!owner) {
-    return { decls: [...decls.slice(0, at), ...missDecls, { ...judge, body: chain(spec.rules) }, ...decls.slice(at + 1)], steps: [], stepNames: [], misses: [...misses.values()], rest: spec.rules.map((r) => r.id), n };
+    // No choice field factors it: a table still too deep is factored by how its number fields stand.
+    const body = build(spec.rules, new Set(), '', MAX_DEPTH);
+    return { decls: [...decls.slice(0, at), ...missDecls, ...stepDecls, { ...judge, body }, ...decls.slice(at + 1)], steps: [], stepNames: stepDecls.map((d) => d.name), misses: [...misses.values()], rest: spec.rules.map((r) => r.id), n };
   }
   const { body, steps, rest } = factor(spec.rules, new Set(), '', owner, MAX_DEPTH);
   return {

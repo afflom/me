@@ -125,6 +125,19 @@ model does not sanction.
 | `PB-06` | `build` | The app never answers allow when destination is outbound and approval is none |
 | `PB-07` | `build` | The app never answers allow when identifier is yes and destination is not browser |
 
+## prism_chronology
+
+| ID | Level | Statement |
+| --- | --- | --- |
+| `PCH-01` | `build` | The app never answers malformed when astart is below aend and bstart is below bend |
+| `PCH-02` | `build` | The app never answers before when aend is at least bstart |
+| `PCH-03` | `build` | The app never answers after when bend is at least astart |
+| `PCH-04` | `build` | The app never answers equals when astart differs from bstart |
+| `PCH-05` | `build` | The app never answers equals when aend differs from bend |
+| `PCH-06` | `build` | The app never answers meets when aend differs from bstart |
+| `PCH-07` | `build` | The app never answers during when astart is at most bstart |
+| `PCH-08` | `build` | The app never answers overlaps when aend is below bstart |
+
 ## prism_curate
 
 | ID | Level | Statement |

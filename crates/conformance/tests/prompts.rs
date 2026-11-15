@@ -50,7 +50,7 @@ fn array_items(text: &str, key: &str) -> Vec<String> {
 }
 
 /// The decisions still awaiting the builder: the list may only shrink.
-const AWAITING_AT_MOST: [&str; 2] = ["chronology", "kappa"];
+const AWAITING_AT_MOST: [&str; 1] = ["kappa"];
 
 /// `BS-01`: every decision spec is built with its full model by the builder, or awaiting the builder with a reason; the awaiting list only shrinks; every generated file is current
 #[test]
