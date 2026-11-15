@@ -3,10 +3,10 @@
 // Prism matches text against them in LexLean: app/src/Abnf.lex.tex walks the
 // rules as the byte table tools/standards/grammar.py writes into
 // app/src/PrismGrammarMail.lex.tex, built as the grammar-mail guest and
-// pinned in ./guest.mjs (GU-01). The guest is fetched, checked against its pin
-// and compiled once, when this module loads; each match then runs it
-// synchronously, so a reader stays synchronous. Chromium instantiates a module
-// this small on the main thread (its limit is 8 MB).
+// pinned in ./guest.mjs (GU-01), whose loader checks and compiles it once, when
+// this module loads; each match then runs it synchronously, so a reader stays
+// synchronous. Chromium instantiates a module this small on the main thread
+// (its limit is 8 MB).
 // A rule may match a text in more than one way (ABNF is a context-free
 // grammar, not a parsing order), so each rule is recognized as every place it
 // can end, then the one derivation that matches the whole text is taken,
@@ -15,26 +15,12 @@
 // "rule,start,end,depth" in UTF-8 octets, in order; that is the tree here.
 //   const g = abnf(table); const tree = g.match("orig-date", "Date: ...\r\n");
 //   tree = { rule, start, end, text, kids: [trees of named rules] }
-import { GUEST } from "./guest.mjs";
+import { GUEST, openGuestSync } from "./guest.mjs";
 
 const encoder = new TextEncoder();
-const decoder = new TextDecoder("utf-8", { fatal: true });
-const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, "0")).join("");
 const url = new URL(GUEST.path, import.meta.url);
 const bytes = url.protocol === "file:" ? await (await import("node:fs/promises")).readFile(url) : new Uint8Array(await (await fetch(url)).arrayBuffer());
-const got = hex(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)));
-if (got !== GUEST.sha256) throw Object.assign(new Error(`guest refused: fingerprint ${got} is not ${GUEST.sha256}`), { code: "read.guest" });
-const module = await WebAssembly.compile(bytes);
-
-// A fresh instance per request: the guest's allocator never frees, and no state carries over.
-function ask(line) {
-  const { exports: x } = new WebAssembly.Instance(module, {});
-  const input = encoder.encode(line);
-  const ptr = x.holo_alloc(input.length);
-  new Uint8Array(x.memory.buffer, ptr, input.length).set(input);
-  const packed = BigInt.asUintN(64, BigInt(x.holo_run(ptr, input.length)));
-  return decoder.decode(new Uint8Array(x.memory.buffer, Number(packed >> 32n), Number(packed & 0xffffffffn)));
-}
+const ask = await openGuestSync(bytes, GUEST.sha256);
 
 export function abnf({ rules }) {
   const names = Object.keys(rules).sort();
