@@ -9,7 +9,7 @@ import { PROVIDERS } from "./table.mjs";
 import { route } from "./router.mjs";
 import { withoutTime } from "./features.mjs";
 import { drawOn, windowOf, termsOf, wordsOf, mentions } from "../coherence/sense.mjs";
-import { relativeOf, sequence } from "../time/time.mjs";
+import { relativeOf, sequence, spanOf } from "../time/time.mjs";
 
 const S = PROVIDERS.sentence;
 const RANK = ["public", "internal", "confidential", "restricted"];
@@ -47,7 +47,7 @@ export function sentenceOf(item, me = null, { now = null, order = null } = {}) {
     // What the message asks or tells, in the sender's first words, when they say more than its subject.
     const lead = item.labels?.lead ?? "";
     const says = lead && lead.toLowerCase() !== parts.what.toLowerCase() ? fill(S.frames.lead, { lead }) : "";
-    const turn = place?.of > 1 ? fill(S.frames.turn, place) : "";
+    const turn = (place?.of > 1 ? fill(S.frames.turn, place) : "") + (Number.isFinite(place?.after) ? fill(S.frames.after, { after: spanOf(place.after) }) : "");
     return fill(S.frames.message, { ...parts, who: mine ? (me.name ?? parts.who) : parts.who }) + turn + says;
   }
   if (item.media === "contactCard") return fill(S.frames.contact, parts);

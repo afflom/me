@@ -5,7 +5,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { describe, looksEncoded } from '../../site/source/shape.mjs';
+import { describe, looksEncoded, seenGaps } from '../../site/source/shape.mjs';
+import { seenMessage } from '../../site/source/exports.mjs';
 import { readItem, useReader } from '../../site/card.mjs';
 import * as reader from '../../site/read/read.mjs';
 
@@ -72,4 +73,23 @@ test('what the Prism reads of every example no longer looks encoded', () => {
   // And it knows the encoded forms the specifications show.
   for (const c of corpus.filter((x) => x.kind === 'headerText')) assert.ok(looksEncoded(JSON.parse(c.raw).encoded).encodedWord, c.id);
   assert.ok(looksEncoded(corpus.find((c) => c.id === 'rfc6047-1').raw).quotedPrintable === /=\r?\n/.test(corpus.find((c) => c.id === 'rfc6047-1').raw));
+});
+
+test('a tab read by its rules says which items lacked who or when, and the shape carries the rules, not the words', async () => {
+  // RFC 5322's own example messages, as a service's tab would show them; one shown without who, one without when.
+  const shown = items.filter((i) => i.media === 'message' && i.who && i.body).slice(0, 3).map((i, n) => ({ at: n === 2 ? null : '2026-11-14T10:00:00Z', who: n === 1 ? '' : i.who, where: i.title, words: i.body.trim() }));
+  assert.equal(shown.length, 3);
+  const held = await Promise.all(shown.map((s) => seenMessage('discord', JSON.stringify(s), Date.UTC(2026, 10, 14))));
+  const mail = held.map((text) => ({ media: 'message', text }));
+  assert.deepEqual(seenGaps(mail), { discord: { items: 3, noWho: 1, noAt: 1 } });
+  // Mail that did not come from a tab has no gaps to count.
+  assert.deepEqual(seenGaps(items), {});
+  const rules = { items: { select: '[role="article"]', words: '[id^="message-content-"]' } };
+  const shape = describe(mail, { discord: { seen: rules, open: true, read: 3 }, gmail: { open: true } });
+  assert.deepEqual(shape.tabs, { discord: { rules, open: true, read: 3, items: 3, noWho: 1, noAt: 1 } });
+  assert.equal(shape.message.fields['x-prism-seen'], 3);
+  // A word of the shape's own structure (its keys, the rules) is that structure, not the content.
+  const structure = new Set(JSON.stringify([describe([], { discord: { seen: rules } }), shape.message.fields, shape.message.shapes]).split(/\W+/));
+  const text = JSON.stringify(shape);
+  for (const s of shown) for (const word of `${s.who} ${s.where} ${s.words}`.split(/\W+/)) if (word.length >= 5 && !structure.has(word)) assert.ok(!text.includes(word), `the word ${word} is in the shape`);
 });

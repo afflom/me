@@ -47,7 +47,12 @@ export function sequence(items) {
       left.delete(next);
     }
     const root = ordered[0].id;
-    ordered.forEach((item, i) => out.set(item.id, { turn: i + 1, of: ordered.length, root }));
+    // A reply's own time: how long after the message it answers it came (its In-Reply-To, as held).
+    const after = (item) => {
+      const parent = (item.replyTo ?? []).map((id) => byId.get(id)).filter(Boolean).at(-1);
+      return parent && Number.isFinite(item.at) && Number.isFinite(parent.at) && item.at >= parent.at ? item.at - parent.at : undefined;
+    };
+    ordered.forEach((item, i) => out.set(item.id, { turn: i + 1, of: ordered.length, root, ...(after(item) !== undefined ? { after: after(item) } : {}) }));
   }
   for (const item of messages) out.set(item.address, out.get(item.id));
   for (const id of byId.keys()) out.delete(id);
@@ -66,6 +71,14 @@ export function sequence(items) {
     }
   }
   return out;
+}
+
+// A span of time in the largest of wall-time's periods it fills: "6 minutes", "3 days".
+export function spanOf(ms, locale = undefined) {
+  if (!Number.isFinite(ms) || ms < 0) return "";
+  let [unit, size] = PERIODS[0];
+  for (const [u, s] of PERIODS) if (ms >= s) [unit, size] = [u, s];
+  return new Intl.NumberFormat(locale, { style: "unit", unit, unitDisplay: "long" }).format(Math.trunc(ms / size));
 }
 
 // Wall-time's own periods, shortest first, each with how many of the one before it make it.

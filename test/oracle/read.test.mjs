@@ -17,6 +17,7 @@ import * as reader from "../../site/read/read.mjs";
 import { csv } from "../../site/source/exports.mjs";
 import { detect } from "../../site/google/ingest.mjs";
 import { toneOf } from "../../site/dest/dest.mjs";
+import { instances } from "../../site/time/recur.mjs";
 
 useReader(reader);
 const { corpus } = JSON.parse(readFileSync("test/oracle/corpus.json", "utf8"));
@@ -41,6 +42,14 @@ function misses(example) {
   // An urgency or scarcity line, as its researchers labelled it, is coercive and never leaves (Ahimsa).
   // Accessible names and a page's items need the page rendered: test/oracle/name.test.mjs grades them in the browser.
   if (example.kind === "accname" || example.kind === "feed") return out;
+  // A recurrence makes the instances its specification lists (RFC 5545 3.8.5.3): all of them when the
+  // listing is whole, else the ones listed, first.
+  if (example.kind === "recurrence") {
+    const want = example.expect.instances;
+    const got = instances(JSON.parse(example.raw).ical, { limit: want.length + (example.expect.whole ? 1 : 0) });
+    same("instances", JSON.stringify(want), JSON.stringify(example.expect.whole ? got : got.slice(0, want.length)));
+    return out;
+  }
   if (example.kind === "coercive") { same("coercive", true, toneOf(JSON.parse(example.raw).text) === "coercive"); return out; }
   const item = readItem({ address: example.id, outcome: "restore", bytes: encoder.encode(example.raw), meta: { about: { media: MEDIA[example.kind], domain: 4, at: 0 } } });
   const e = example.expect;
@@ -74,7 +83,7 @@ test("the corpus is what the pinned specifications give, read by the reference r
 
 test("the corpus is the specifications' own examples, with something to compare", () => {
   assert.ok(corpus.length >= 50, `only ${corpus.length} examples`);
-  for (const kind of ["message", "calendar", "contact", "headerText", "base64", "csv", "oneTimeCode", "coercive"]) assert.ok(corpus.some((c) => c.kind === kind && Object.keys(c.expect).length), `no ${kind} example with a reading`);
+  for (const kind of ["message", "calendar", "contact", "headerText", "base64", "csv", "oneTimeCode", "coercive", "recurrence"]) assert.ok(corpus.some((c) => c.kind === kind && Object.keys(c.expect).length), `no ${kind} example with a reading`);
 });
 
 test("the Prism reads every example as its specification does, beyond the listed debt", () => {

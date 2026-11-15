@@ -330,7 +330,8 @@ def lean(out, settings):
     parts = []
     w = parts.append
     w("\\begin{lexlean}{%s}\n\\useglossary{lexlean.std.bool@1.2.0}\n\\useglossary{lexlean.std.nat@1.2.0}\n\\useglossary{prism.arch@1.0.0}\n\\title{Text application model}\n\\begin{semanticmodule}\n" % MOD)
-    w("structure{\n  name: RealizabilityElement,\n  type_parameters: [],\n  parameters: [],\n  fields: [\n    {name: have, type: Nat},\n    {name: need, type: Nat}\n  ]\n}\n\n")
+    # lexlean fmt's canonical form keeps a short field list on one line (LLL1003).
+    w("structure{\n  name: RealizabilityElement,\n  type_parameters: [],\n  parameters: [],\n  fields: [{name: have, type: Nat}, {name: need, type: Nat}]\n}\n\n")
     fields = ",\n".join(["    {name: facet, type: Nat}", "    {name: digest, type: Nat}"] + [f"    {{name: {e}, type: RealizabilityElement}}" for e in ELEMENTS])
     w("structure{\n  name: RealizabilityDescriptor,\n  type_parameters: [],\n  parameters: [],\n  fields: [\n%s\n  ]\n}\n\n" % fields)
     w("definition{name: realizabilityElementCount, parameters: [], result: Nat, body: %d}\n\n" % len(ELEMENTS))

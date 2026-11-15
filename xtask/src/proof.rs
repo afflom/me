@@ -20,8 +20,16 @@ const EVIDENCE: [&str; 3] = [
     "lexlean-attestation.json",
     "application-acceptance.json",
 ];
-/// Every checked-in byte the proof reads, as bootstrap.yml's cache key names it.
-const INPUT_PATHS: [&str; 4] = ["app", "prismpm.lock", "Justfile", "rust-toolchain.toml"];
+/// Every checked-in byte the proof reads. `app/specs` is not one: the proof
+/// reads the lexlean project, and a spec reaches it only through the `.lex.tex`
+/// a generator writes into `app/src` (pages.yml's cache key says the same).
+const INPUT_PATHS: [&str; 5] = [
+    "app",
+    ":(exclude)app/specs",
+    "prismpm.lock",
+    "Justfile",
+    "rust-toolchain.toml",
+];
 
 /// A kept proof, as read back from `.prism-proof`.
 struct Kept {

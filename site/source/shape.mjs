@@ -21,7 +21,7 @@ function headersOf(raw) {
 }
 
 // Only header names a standard or a common mailer defines; any other is "x-other".
-const KNOWN = /^(from|to|cc|bcc|reply-to|sender|subject|date|message-id|in-reply-to|references|mime-version|content-type|content-transfer-encoding|content-disposition|content-id|delivered-to|received|return-path|list-id|list-unsubscribe|dkim-signature|arc-.*|authentication-results|x-gm-.*|x-google-.*|x-received|x-prism-service|precedence|auto-submitted|importance|thread-topic|thread-index)$/;
+const KNOWN = /^(from|to|cc|bcc|reply-to|sender|subject|date|message-id|in-reply-to|references|mime-version|content-type|content-transfer-encoding|content-disposition|content-id|delivered-to|received|return-path|list-id|list-unsubscribe|dkim-signature|arc-.*|authentication-results|x-gm-.*|x-google-.*|x-received|x-prism-service|x-prism-seen|precedence|auto-submitted|importance|thread-topic|thread-index)$/;
 const kind = (value = '') => {
   const [type, ...rest] = value.split(';');
   const charset = /charset="?([\w.-]+)"?/i.exec(rest.join(';'))?.[1]?.toLowerCase();
@@ -55,7 +55,30 @@ export function looksEncoded(text = '') {
   };
 }
 
-export function describe(items) {
+// What each service's open tab gave, from the items it showed: how many, and
+// how many without who said it or when (X-Prism-Seen), counted by service.
+export function seenGaps(items) {
+  const out = {};
+  for (const item of items) {
+    if (item.media !== 'message') continue;
+    const { headers } = headersOf(item.text);
+    const flags = headers['x-prism-seen'];
+    if (!flags) continue;
+    const service = /^[a-z][a-z0-9-]*$/.test(headers['x-prism-service'] ?? '') ? headers['x-prism-service'] : 'other';
+    const g = (out[service] ??= { items: 0, noWho: 0, noAt: 0 });
+    g.items += 1;
+    if (/who=no/.test(flags)) g.noWho += 1;
+    if (/at=no/.test(flags)) g.noAt += 1;
+  }
+  return out;
+}
+
+// The shape of what arrived, and, for each service read from its open tab,
+// the rules it was read by (the declaration's own selectors, data with no
+// content) and what the extension reports of the tab (open, items read), so a
+// reading that missed can be fixed as a change to the declaration.
+//   tabs: { key: { seen: declared seen, open, read } }
+export function describe(items, tabs = {}) {
   const out = { items: items.length, sealed: 0, media: {}, message: { fields: {}, shapes: {}, size: {}, readable: { body: {}, stillEncoded: {} } }, calendar: { properties: {}, repeat: {}, size: {}, readable: { stillEncoded: {} } }, contactCard: { properties: {} }, other: { size: {} } };
   for (const item of items) {
     if (item.sealed) { out.sealed += 1; continue; }
@@ -81,5 +104,8 @@ export function describe(items) {
       for (const m of unfold(text).matchAll(/^([A-Z][A-Z0-9-]*)(?:;[^:\r\n]*)?:/gm)) count(out.contactCard.properties, m[1]);
     } else count(out.other.size, bucket(text.length));
   }
+  const gaps = seenGaps(items);
+  out.tabs = {};
+  for (const [key, tab] of Object.entries(tabs)) if (tab?.seen) out.tabs[key] = { rules: tab.seen, open: !!tab.open, read: Number(tab.read) || 0, ...(gaps[key] ?? { items: 0, noWho: 0, noAt: 0 }) };
   return out;
 }

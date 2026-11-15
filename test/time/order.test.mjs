@@ -128,4 +128,25 @@ test("the chat answers from now: the time, how long ago, and a message's turn", 
   const order = sequence(thread).get(reply.id);
   assert.ok(sentence.includes(`(${relativeOf(item.at, now)})`), `${sentence}: says how far it is from now`);
   assert.ok(sentence.includes(`, ${order.turn} of ${order.of} in its conversation`), `${sentence}: says its turn`);
+  const { spanOf } = await import("../../site/time/time.mjs");
+  assert.ok(sentence.includes(`, ${spanOf(order.after)} after the message it answers`), `${sentence}: says how long after what it answers`);
+});
+
+// A reply's own time is how long after the message it answers it came: the
+// reference reading's Date of each, by its In-Reply-To (RFC 5322 3.6.4).
+test("a reply says how long after the message it answers it came", async () => {
+  const { spanOf } = await import("../../site/time/time.mjs");
+  const order = sequence(messages.map(read));
+  const byId = new Map(messages.map((e) => [e.expect.id, e]));
+  const replies = messages.filter((e) => e.expect.replyTo?.some((id) => byId.has(id)));
+  assert.ok(replies.length >= 2, "the Appendix A exchange holds replies");
+  for (const e of replies) {
+    const parent = byId.get(e.expect.replyTo.filter((id) => byId.has(id)).at(-1));
+    assert.equal(order.get(e.id).after, e.expect.at - parent.expect.at, `${e.id} came ${e.expect.at - parent.expect.at} ms after ${parent.id}`);
+  }
+  for (const e of messages.filter((m) => !replies.includes(m))) assert.equal(order.get(e.id)?.after, undefined, `${e.id} answers nothing held`);
+  // In the largest period the span fills.
+  const six = replies.map((e) => order.get(e.id).after).sort((a, b) => a - b)[0];
+  assert.equal(spanOf(six, "en"), new Intl.NumberFormat("en", { style: "unit", unit: "minute", unitDisplay: "long" }).format(Math.trunc(six / 60_000)));
+  assert.equal(spanOf(Number.NaN), "");
 });
