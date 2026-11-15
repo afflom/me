@@ -177,6 +177,17 @@ definition{
 }
 
 definition{
+  name: abnfKeepFrom,
+  parameters: [g : AbnfInput, left : Nat, l : Bytes, i : Nat, least : Nat, out : Bytes],
+  result: Bytes,
+  body: (match left
+    | Nat.zero => out
+    | Nat.succ more => (let x : Nat := (abnfAt l i); (abnfKeepFrom g more l (i + 1) least (if (x <? least) then out else (prim append out (abnfPair g x) : Bytes))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: left
+}
+
+definition{
   name: abnfDownFrom,
   parameters: [g : AbnfInput, left : Nat, lo : Nat, l : Bytes, out : Bytes],
   result: Bytes,
@@ -286,7 +297,7 @@ definition{
     | Nat.zero => (if (mode =? 3) then (abnfLongestFirst g out n) else (abnfEmpty))
     | Nat.succ more => (let len : Nat := (prim length at : Nat); (if (mode =? 0) then (let tag : Nat := (abnfByte (project g table) o); (if (tag =? 0) then (abnfEndsGo g more n 0 (abnfRuleAt (project g table) (abnfWord (project g table) (o + 4))) 0 0 0 false 0 (abnfEmpty) (abnfEmpty) at) else (if (tag =? 1) then (abnfLitEndsFrom g (prim quotient len 2 0 : Nat) o n false at 0 (abnfEmpty)) else (if (tag =? 2) then (abnfLitEndsFrom g (prim quotient len 2 0 : Nat) o n true at 0 (abnfEmpty)) else (if (tag =? 3) then (abnfRangeEndsFrom g (prim quotient len 2 0 : Nat) (abnfTriple (project g table) (o + 4)) (abnfTriple (project g table) (o + 7)) n at 0 (abnfEmpty)) else (if (tag =? 4) then (abnfEndsGo g more n 1 (o + 6) (abnfWord (project g table) (o + 4)) 0 0 false 0 (abnfEmpty) (abnfEmpty) at) else (if (tag =? 5) then (abnfEndsGo g more n 2 (o + 6) (abnfWord (project g table) (o + 4)) 0 0 false 0 (abnfEmpty) (abnfEmpty) at) else (if (tag =? 6) then (let lo : Nat := (abnfWord (project g table) (o + 4)); (abnfEndsGo g more n 3 (o + 9) 0 lo (abnfWord (project g table) (o + 6)) ((abnfByte (project g table) (o + 8)) =? 1) 0 (if (lo =? 0) then at else (abnfEmpty)) at at)) else (abnfEmpty))))))))) else (if (mode =? 1) then (if (count =? 0) then (abnfEmpty) else (abnfUnion g (abnfEndsGo g more n 0 o 0 0 0 false 0 (abnfEmpty) (abnfEmpty) at) (abnfEndsGo g more n 1 (abnfNext (project g table) o) (prim subtract count 1 : Nat) 0 0 false 0 (abnfEmpty) (abnfEmpty) at))) else (if (mode =? 2) then (if (count =? 0) then at else (if ((prim quotient len 2 0 : Nat) =? 0) then (abnfEmpty) else (abnfEndsGo g more n 2 (abnfNext (project g table) o) (prim subtract count 1 : Nat) 0 0 false 0 (abnfEmpty) (abnfEmpty) (abnfEndsGo g more n 0 o 0 0 0 false 0 (abnfEmpty) (abnfEmpty) at)))) else (if ((prim quotient len 2 0 : Nat) =? 0) then (abnfLongestFirst g out n) else (if (bounded && (high <=? k)) then (abnfLongestFirst g out n) else (let next : Bytes := (abnfEndsGo g more n 0 o 0 0 0 false 0 (abnfEmpty) (abnfEmpty) at); (let had : Nat := (prim multiply (abnfSize seen) 2 : Nat); (let grown : Bytes := (abnfUnion g seen next); (let fresh : Bytes := (if ((k + 1) <? low) then next else (match (prim slice grown had (prim subtract (prim length grown : Nat) had : Nat) : (Option Bytes))
       | Option.none => (abnfEmpty)
-      | Option.some b => b)); (abnfEndsGo g more n 3 o 0 low high bounded (k + 1) (if (low <=? (k + 1)) then (abnfUnion g out next) else out) grown fresh)))))))))))),
+      | Option.some b => b)); (abnfEndsGo g more n 3 o 0 low high bounded (k + 1) (if (low <=? (k + 1)) then (prim append out next : Bytes) else out) (abnfKeepFrom g (abnfSize grown) grown 0 (abnfExtremeFrom (abnfSize fresh) fresh 0 false (abnfAt fresh 0)) (abnfEmpty)) fresh)))))))))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
