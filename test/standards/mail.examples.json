@@ -116,47 +116,6 @@
   {
    "id": "rfc2046-11",
    "from": "rfc2046",
-   "text": "Content-Type: Message/Partial; number=2; total=3;\r\n id=\"oc=jpbe0M2Yt4s@thumper.bellcore.com\"\r\n",
-   "expect": {
-    "defective": false,
-    "type": "message/partial",
-    "params": {
-     "number": "2",
-     "total": "3",
-     "id": "oc=jpbe0M2Yt4s@thumper.bellcore.com"
-    }
-   }
-  },
-  {
-   "id": "rfc2046-12",
-   "from": "rfc2046",
-   "text": "Content-Type: Message/Partial;\r\n id=\"oc=jpbe0M2Yt4s@thumper.bellcore.com\";\r\n number=2\r\n",
-   "expect": {
-    "defective": false,
-    "type": "message/partial",
-    "params": {
-     "id": "oc=jpbe0M2Yt4s@thumper.bellcore.com",
-     "number": "2"
-    }
-   }
-  },
-  {
-   "id": "rfc2046-13",
-   "from": "rfc2046",
-   "text": "Content-Type: Message/Partial; number=3; total=3;\r\n id=\"oc=jpbe0M2Yt4s@thumper.bellcore.com\"\r\n",
-   "expect": {
-    "defective": false,
-    "type": "message/partial",
-    "params": {
-     "number": "3",
-     "total": "3",
-     "id": "oc=jpbe0M2Yt4s@thumper.bellcore.com"
-    }
-   }
-  },
-  {
-   "id": "rfc2046-14",
-   "from": "rfc2046",
    "text": "Content-Type: multipart/alternative; boundary=42\r\n",
    "expect": {
     "defective": false,
@@ -167,7 +126,7 @@
    }
   },
   {
-   "id": "rfc2046-15",
+   "id": "rfc2046-12",
    "from": "rfc2046",
    "text": "Content-Type: message/external-body; name=\"BodyFormats.ps\";\r\n site=\"thumper.bellcore.com\"; mode=\"image\";\r\n access-type=ANON-FTP; directory=\"pub\";\r\n expiration=\"Fri, 14 Jun 1991 19:13:14 -0400 (EDT)\"\r\n",
    "expect": {
@@ -184,7 +143,7 @@
    }
   },
   {
-   "id": "rfc2046-16",
+   "id": "rfc2046-13",
    "from": "rfc2046",
    "text": "Content-Type: message/external-body; access-type=local-file;\r\n name=\"/u/nsb/writing/rfcs/RFC-MIME.ps\";\r\n site=\"thumper.bellcore.com\";\r\n expiration=\"Fri, 14 Jun 1991 19:13:14 -0400 (EDT)\"\r\n",
    "expect": {
@@ -199,15 +158,7 @@
    }
   },
   {
-   "id": "rfc2046-17",
-   "from": "rfc2046",
-   "text": "Content-Type: message/external-body;\r\n access-type=mail-server\r\n server=\"listserv@bogus.bitnet\";\r\n expiration=\"Fri, 14 Jun 1991 19:13:14 -0400 (EDT)\"\r\n",
-   "expect": {
-    "defective": true
-   }
-  },
-  {
-   "id": "rfc2183-18",
+   "id": "rfc2183-14",
    "from": "rfc2183",
    "text": "Content-Type: image/jpeg\r\n",
    "expect": {
@@ -217,7 +168,7 @@
    }
   },
   {
-   "id": "rfc2183-19",
+   "id": "rfc2183-15",
    "from": "rfc2183",
    "text": "Content-Disposition: inline\r\n",
    "expect": {
@@ -227,7 +178,7 @@
    }
   },
   {
-   "id": "rfc2183-20",
+   "id": "rfc2183-16",
    "from": "rfc2183",
    "text": "Content-Type: image/jpeg\r\n",
    "expect": {
@@ -237,7 +188,7 @@
    }
   },
   {
-   "id": "rfc2183-21",
+   "id": "rfc2183-17",
    "from": "rfc2183",
    "text": "Content-Disposition: attachment; filename=genome.jpeg;\r\n modification-date=\"Wed, 12 Feb 1997 16:29:51 -0500\"\r\n",
    "expect": {
@@ -250,7 +201,7 @@
    }
   },
   {
-   "id": "rfc2183-22",
+   "id": "rfc2183-18",
    "from": "rfc2183",
    "text": "Content-Type: multipart/mixed; boundary=outer\r\n",
    "expect": {
@@ -259,6 +210,48 @@
     "params": {
      "boundary": "outer"
     }
+   }
+  },
+  {
+   "id": "rfc2183-19",
+   "from": "rfc2183",
+   "text": "Content-Type: text/plain\r\n",
+   "expect": {
+    "defective": false,
+    "type": "text/plain",
+    "params": {}
+   }
+  },
+  {
+   "id": "rfc2183-20",
+   "from": "rfc2183",
+   "text": "Content-Disposition: inline\r\n",
+   "expect": {
+    "defective": false,
+    "type": "inline",
+    "params": {}
+   }
+  },
+  {
+   "id": "rfc2183-21",
+   "from": "rfc2183",
+   "text": "Content-Type: multipart/mixed; boundary=inner\r\n",
+   "expect": {
+    "defective": false,
+    "type": "multipart/mixed",
+    "params": {
+     "boundary": "inner"
+    }
+   }
+  },
+  {
+   "id": "rfc2183-22",
+   "from": "rfc2183",
+   "text": "Content-Disposition: attachment\r\n",
+   "expect": {
+    "defective": false,
+    "type": "attachment",
+    "params": {}
    }
   },
   {
@@ -284,13 +277,11 @@
   {
    "id": "rfc2183-25",
    "from": "rfc2183",
-   "text": "Content-Type: multipart/mixed; boundary=inner\r\n",
+   "text": "Content-Type: image/jpeg\r\n",
    "expect": {
     "defective": false,
-    "type": "multipart/mixed",
-    "params": {
-     "boundary": "inner"
-    }
+    "type": "image/jpeg",
+    "params": {}
    }
   },
   {
@@ -304,47 +295,7 @@
    }
   },
   {
-   "id": "rfc2183-27",
-   "from": "rfc2183",
-   "text": "Content-Type: text/plain\r\n",
-   "expect": {
-    "defective": false,
-    "type": "text/plain",
-    "params": {}
-   }
-  },
-  {
-   "id": "rfc2183-28",
-   "from": "rfc2183",
-   "text": "Content-Disposition: inline\r\n",
-   "expect": {
-    "defective": false,
-    "type": "inline",
-    "params": {}
-   }
-  },
-  {
-   "id": "rfc2183-29",
-   "from": "rfc2183",
-   "text": "Content-Type: image/jpeg\r\n",
-   "expect": {
-    "defective": false,
-    "type": "image/jpeg",
-    "params": {}
-   }
-  },
-  {
-   "id": "rfc2183-30",
-   "from": "rfc2183",
-   "text": "Content-Disposition: attachment\r\n",
-   "expect": {
-    "defective": false,
-    "type": "attachment",
-    "params": {}
-   }
-  },
-  {
-   "id": "rfc2231-31",
+   "id": "rfc2231-27",
    "from": "rfc2231",
    "text": "Content-Type: message/external-body; access-type=URL;\r\n URL*0=\"ftp://\";\r\n URL*1=\"cs.utk.edu/pub/moore/bulk-mailer/bulk-mailer.tar\"\r\n",
    "expect": {
@@ -357,7 +308,7 @@
    }
   },
   {
-   "id": "rfc2231-32",
+   "id": "rfc2231-28",
    "from": "rfc2231",
    "text": "Content-Type: message/external-body; access-type=URL;\r\n URL=\"ftp://cs.utk.edu/pub/moore/bulk-mailer/bulk-mailer.tar\"\r\n",
    "expect": {
@@ -370,7 +321,7 @@
    }
   },
   {
-   "id": "rfc2231-33",
+   "id": "rfc2231-29",
    "from": "rfc2231",
    "text": "Content-Type: application/x-stuff;\r\n title*=us-ascii'en-us'This%20is%20%2A%2A%2Afun%2A%2A%2A\r\n",
    "expect": {
@@ -382,7 +333,7 @@
    }
   },
   {
-   "id": "rfc2231-34",
+   "id": "rfc2231-30",
    "from": "rfc2231",
    "text": "Content-Type: application/x-stuff;\r\n title*0*=us-ascii'en'This%20is%20even%20more%20;\r\n title*1*=%2A%2A%2Afun%2A%2A%2A%20;\r\n title*2=\"isn't it!\"\r\n",
    "expect": {

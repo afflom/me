@@ -22,6 +22,8 @@ import abnf  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SPEC = json.loads((ROOT / "app/specs/grammar/spec.json").read_text(encoding="utf-8"))
+RESERVED = json.loads((ROOT / "app/specs/oracle/spec.json").read_text(encoding="utf-8"))["reserved"]
+ADDRESS = re.compile(r"[A-Za-z0-9._%+!$&*=^`{|}~'-]+@([A-Za-z0-9.-]+)")
 args = sys.argv[1:]
 cache = pathlib.Path(args[args.index("--cache") + 1]) if "--cache" in args else None
 
@@ -144,6 +146,9 @@ for g in SPEC["grammars"]:
                     else:
                         break
                 field = "\r\n".join(block) + "\r\n"
+                # Only an example whose every address is at a domain reserved for documentation (RFC 2606, RFC 6761) enters the repository.
+                if not all(any(d.lower() == r or d.lower().endswith("." + r) for r in RESERVED) for d in ADDRESS.findall(field)):
+                    continue
                 header = email.message_from_string(field + "\r\n", policy=email.policy.default)[m.group(2)]
                 expect = {"defective": bool(header.defects)}
                 if not header.defects:
