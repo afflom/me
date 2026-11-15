@@ -1,15 +1,16 @@
 // WP-01: the whole-person model is the whole ICF, as WHO publishes it.
 // tools/person/gen.py re-derives site/person/icf.mjs from the release pinned in
 // app/specs/oracle/spec.json (both of its forms, field by field) and refuses a
-// stale model; each check it makes refuses the defect it is for, planted in the
-// pinned release itself; and the page's module keeps every entity's code, title
-// and URI, as the licence requires.
+// stale model; the LexLean program generators/person refuses the structure's
+// defects; each check refuses the defect it is for, planted in the pinned
+// release itself; and the page's module keeps every entity's code, title and
+// URI, as the licence requires.
 // usage: node --test test/person/icf.test.mjs
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import test from "node:test";
 import * as icf from "../../site/person/icf.mjs";
 
@@ -29,20 +30,78 @@ test("the model is the pinned release, re-derived from both of its forms", () =>
   assert.equal(run.status, 0, run.stderr || run.stdout);
 });
 
+// The classification's structure is refused by the LexLean program
+// generators/person, as tools/generators/run.sh runs it: GenIcf on each piece
+// of the tabulation, then GenIcfTree's summaries and keys over all pieces.
+const TABULATION = "app/specs/oracle/icf/SimpleTabulation-ICF-en.txt";
+const PIECE = JSON.parse(readFileSync("generators/pipeline.json", "utf8")).pieceMaximum;
+const program = (generator, files) => {
+  const stage = mkdtempSync(join(tmpdir(), "prism-icf-"));
+  for (const [path, bytes] of files) {
+    mkdirSync(join(stage, dirname(path)), { recursive: true });
+    writeFileSync(join(stage, path), bytes);
+  }
+  const tar = spawnSync("tar", ["--format=ustar", "--sort=name", "--mtime=@0", "--owner=0", "--group=0", "--numeric-owner", "-b", "1", "-cf", "-", "-C", stage, ...files.map(([p]) => p)]);
+  writeFileSync(join(stage, "request"), Buffer.concat([Buffer.from(`${generator} out\n`), tar.stdout]));
+  const run = spawnSync("generators/person/bin/prism-generators", ["run", join(stage, "request")]);
+  rmSync(stage, { recursive: true, force: true });
+  const report = run.stdout.toString("utf8");
+  return report.startsWith("written\n") ? { out: report.slice(8) } : { why: report };
+};
+const pieces = (bytes) => {
+  const out = [];
+  let start = 0;
+  while (start < bytes.length) {
+    let end = Math.min(start + PIECE, bytes.length);
+    if (end < bytes.length) end = bytes.lastIndexOf(10, end - 1) + 1;
+    out.push(bytes.subarray(start, end));
+    start = end;
+  }
+  return out;
+};
+const structure = (bytes) => {
+  const why = [];
+  let tree = "", keys = "";
+  for (const piece of pieces(bytes)) {
+    for (const [name, add] of [["icf", null], ["icftree", (o) => (tree += o)], ["icfids", (o) => (keys += o)]]) {
+      const r = program(name, [[TABULATION, piece]]);
+      if (r.why) why.push(r.why); else if (add) add(r.out);
+    }
+  }
+  if (!why.length) {
+    for (const [name, path, text] of [["icftreecheck", ".gen/icf-tree", tree], ["icfunique", ".gen/icf-ids", keys]]) {
+      const r = program(name, [[path, Buffer.from(text)]]);
+      if (r.why) why.push(r.why);
+    }
+  }
+  return why.join("");
+};
+const tabulation = readFileSync(TABULATION);
+const planted = (old, now) => {
+  const text = tabulation.toString("latin1");
+  assert.equal(text.split(old).length, 2, `${old} is in the tabulation once`);
+  return Buffer.from(text.replace(old, now), "latin1");
+};
+
+test("the release's structure holds, as the LexLean program checks it", () => {
+  assert.equal(structure(tabulation), "");
+});
+
 // Each check, shown to refuse its own defect in the real release.
 const PLANTED = [
-  ["the two forms differ", ["workbook", "Self-employment", "Self employment"], /the tabulation's Title is .* the workbook's/],
-  ["a code outside its component", ["both", "d8500", "s8500"], /s8500 is under Activities and participation, not Body structures/],
-  ["a code that skips a level", ["both", "b1102", "b11020"], /b11020 does not extend its parent b110 by one level/],
-  ["a code used twice", ["both", "b1102", "b1100"], /is a category with code 'b1100', empty or seen before/],
-  ["a title out of its level", ["both", "- - - - - Quality of consciousness", "- - - - Quality of consciousness"], /does not carry its 5 levels/],
+  ["the two forms differ", () => gen("--plant", "workbook", "Self-employment", "Self employment").stderr, /the tabulation's Title is .* the workbook's/],
+  ["a code outside its component", () => structure(planted("\td8500\t", "\ts8500\t")), /: its code is not in its parent's component/],
+  ["a code that skips a level", () => structure(planted("\tb1102\t", "\tb11020\t")), /: its code does not extend its parent's by one level/],
+  ["a code out of order or used twice", () => structure(planted("\tb1102\t", "\tb1100\t")), /b1100: its code does not follow b1101 in the release's order/],
+  ["a title out of its level", () => structure(planted("- - - - - Quality of consciousness", "- - - - Quality of consciousness")), /: its title is not one level below its parent's/],
+  ["a kind the ICF has not", () => structure(planted("\tBlockL2-b11\t\"- - Mental functions\"\tblock", "\tBlockL2-b11\t\"- - Mental functions\"\tblocks")), /: its kind is not chapter, block or category/],
 ];
 // QR-13 planted-unrefused: none of these may pass.
-test("refuses every planted defect, each with its own diagnostic", () => {
+test("refuses every planted defect, each with its own diagnostic", { timeout: 600000 }, () => {
   const unrefused = [];
-  for (const [what, plant, diagnostic] of PLANTED) {
-    const run = gen("--plant", ...plant);
-    if (run.status === 0 || !diagnostic.test(run.stderr)) unrefused.push(`${what}: ${run.stderr.trim()}`);
+  for (const [what, run, diagnostic] of PLANTED) {
+    const why = run();
+    if (!diagnostic.test(why)) unrefused.push(`${what}: ${why.trim().slice(0, 300)}`);
   }
   assert.deepEqual(unrefused, []);
   holds("planted-unrefused", unrefused.length);

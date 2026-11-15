@@ -32,8 +32,27 @@ fn person_wp_01() {
             "WP-01: gen.py must contain `{needle}`"
         );
     }
+    let steps = read("generators/person/steps.json");
+    for generator in [
+        "\"icftree\"",
+        "\"icftreecheck\"",
+        "\"icfids\"",
+        "\"icfunique\"",
+    ] {
+        assert!(
+            steps.contains(generator),
+            "WP-01: generators/person runs {generator} over the tabulation"
+        );
+    }
     let test = read("test/person/icf.test.mjs");
-    for needle in ["\"--check\"", "\"--plant\"", "PLANTED", "terms 1.2.3"] {
+    for needle in [
+        "\"--check\"",
+        "\"--plant\"",
+        "PLANTED",
+        "terms 1.2.3",
+        "icftreecheck",
+        "icfunique",
+    ] {
         assert!(
             test.contains(needle),
             "WP-01: icf.test.mjs must contain `{needle}`"
