@@ -1448,23 +1448,31 @@ def dialogue_examples(text, source):
         for e in root.iter() if root is not None else ():
             by.setdefault(e.tag.rsplit("}", 1)[-1], []).append(e)
         words = {w.get(XML_ID): w.text or "" for w in by.get("w", [])}
+        # When a word is said: its start on the file's timeline, or its place among the words of a file with none.
+        clock = {t.get(XML_ID): float(t.get("interval") or 0) for t in by.get("when", [])}
+        said = {w.get(XML_ID): clock.get((w.get("start") or "").lstrip("#"), n) for n, w in enumerate(by.get("w", []))}
         spans = {g.get(XML_ID): [w for span in g for w in ref(span.get("from"))] for g in by.get("spanGrp", [])}
-        segments = {fs.get(XML_ID): ref(f.get("fVal"))[0] for fs in by.get("fs", []) for f in fs if f.get("name") == "verbalComponent"}
+        segments = {fs.get(XML_ID): spans.get(ref(f.get("fVal"))[0], []) for fs in by.get("fs", []) for f in fs if f.get("name") == "verbalComponent"}
+        say = lambda tokens: " ".join(words.get(w, "") for w in tokens).strip()
+        rows = []
         for act in by.get("dialogueAct", []):
-            function, tokens = act.get("communicativeFunction"), spans.get(segments.get(ref(act.get("target"))[0]), [])
+            function, tokens = act.get("communicativeFunction"), segments.get(ref(act.get("target"))[0], [])
             if not function or not tokens or not all(w in words for w in tokens):
                 continue
-            row = {"dialogue": name.rsplit(".", 1)[0], "id": act.get(XML_ID), "sender": ref(act.get("sender"))[0], "dimension": act.get("dimension"), "function": function, "text": " ".join(words[w] for w in tokens).strip(), "dependsOn": ref(act.get("functionalDependence")), "feedbackOn": ref(act.get("feedbackDependence"))}
+            # Feedback depends on an act, or on a stretch of the dialogue marked as a segment of its own: then its words.
+            about = ref(act.get("feedbackDependence"))
+            row = {"dialogue": name.rsplit(".", 1)[0], "id": act.get(XML_ID), "at": said[tokens[0]], "sender": ref(act.get("sender"))[0], "dimension": act.get("dimension"), "function": function, "text": say(tokens), "dependsOn": ref(act.get("functionalDependence")), "feedbackOn": [t for t in about if t not in segments], "feedbackText": [say(segments[t]) for t in about if t in segments]}
             if row["dimension"] == "task" and function in source["acts"]:
                 row["intent"] = source["acts"][function]
-            yield json.dumps(row, ensure_ascii=False)
+            rows.append(row)
+        yield from (json.dumps(row, ensure_ascii=False) for row in sorted(rows, key=lambda r: r["at"]))
 
 
 def read_held(rows):
     """What a source held out of the repository gave: how much, and its SHA-256."""
     acts = [json.loads(r) for r in rows]
     count = lambda key: sum(bool(a.get(key)) for a in acts)
-    return {"acts": len(acts), "dialogues": len({a["dialogue"] for a in acts}), "intents": count("intent"), "functionalDependence": count("dependsOn"), "feedbackDependence": count("feedbackOn"), "sha256": hashlib.sha256(("\n".join(rows) + "\n").encode("utf-8")).hexdigest()}
+    return {"acts": len(acts), "dialogues": len({a["dialogue"] for a in acts}), "intents": count("intent"), "functionalDependence": count("dependsOn"), "feedbackDependence": sum(bool(a["feedbackOn"] or a["feedbackText"]) for a in acts), "sha256": hashlib.sha256(("\n".join(rows) + "\n").encode("utf-8")).hexdigest()}
 
 
 def read_act(raw):

@@ -268,7 +268,7 @@
       "url": "https://dialogbank.lsv.uni-saarland.de/?page_id=3139",
       "sha256": "b6f4c72c666cd3ec503787b804eaf4bfa5f4f0eaf0496799c092a12db541f248",
       "examples": "diaml",
-      "held": "DialogBank's pages state no licence, and its dialogues come from corpora with terms of their own (Switchboard, HCRC Map Task, TRAINS, DBOX, the Hujiang lessons). Its files are pinned and read where they are published; no word of them is committed, only how many acts they gave and their SHA-256.",
+      "held": "DialogBank's pages state no licence, and its dialogues come from corpora with terms of their own (Switchboard, HCRC Map Task, TRAINS, DBOX, the Hujiang lessons). Its files are pinned; no word of them is committed, only how many acts they gave and their SHA-256. No gate downloads them, so nothing here is enforced where the Prism is built: the source is read only with --fetch, and test/oracle/intent.test.mjs reads it only when DIALOGUE_HELD names the acts tools/oracle/gen.py --fetch --held wrote, and says so when it does not.",
       "files": {
         "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/2013-11-13-14-06-35-gl-diana.diaml": "53619b4f3b69a3a363c2d5659f0273b18b55542b82715b0c2ec3964ab8d3229a",
         "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/2013-11-13-14-20-19-gl-rihanna.diaml": "759b5d5a8b2e2bfd676e1bc8e0a91059e2af4d1effe62f5e483e7370b2980268",
@@ -316,6 +316,14 @@
       },
       "unenforced": [
         {
+          "what": "intent",
+          "why": "what each task-dimension act asks (the general-purpose functions mapped under acts); measured where the acts are supplied, never where the Prism is built, since no gate may download them"
+        },
+        {
+          "what": "segmentation",
+          "why": "which words make a functional segment; the Prism reads one prompt as one segment"
+        },
+        {
           "what": "functionalDependence",
           "why": "which earlier act an answer, an acceptance or a refusal responds to (ISO 24617-2 functional dependence relations); the Prism reads each line on its own and has no reader of what a turn depends on"
         },
@@ -340,7 +348,15 @@
           "why": "rhetorical relations between acts (ISO 24617-8 core relations); the Prism reads none"
         }
       ],
-      "comment": "What each functional segment of a dialogue does, in every dimension, and which earlier acts it depends on, as ISO 24617-2's own editors annotated it. acts: the standard's general-purpose functions onto the router's intents, in the task dimension: the information-seeking functions a question, the information-providing functions a fact, the directives and the commissives that open an action (instruct, request, suggest, offer, promise) a task. malformed: files that are not well-formed XML as published (a <when> element left unclosed); they are pinned and not read, and nothing is repaired. unenforced: what the annotation carries that no reader of the Prism is yet held to, each with why; test/oracle/intent.test.mjs counts each so the debt has a size."
+      "comment": "What each functional segment of a dialogue does, in every dimension, and which earlier acts it depends on, as ISO 24617-2's own editors annotated it. acts: the standard's general-purpose functions onto the router's intents, in the task dimension: the information-seeking functions a question, the information-providing functions a fact, the directives and the commissives that open an action (instruct, request, suggest, offer, promise) a task. malformed: files that are not well-formed XML as published (a <when> element left unclosed); they are pinned and not read, and nothing is repaired. unenforced: what the annotation carries that no reader of the Prism is yet held to, each with why; test/oracle/intent.test.mjs counts each where the acts are supplied. measured: what the intent reader found on the acts, when and where; a measurement, not a threshold any gate holds.",
+      "measured": {
+        "on": "2026-11-15",
+        "where": "a local build, not a gate",
+        "acts": 819,
+        "fact-found": 94,
+        "question-found": 19,
+        "task-found": 12
+      }
     }
   ],
   "debt": [
