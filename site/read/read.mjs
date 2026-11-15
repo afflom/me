@@ -5,7 +5,7 @@
 // conferencing boilerplate, and a repeating event is shown at its next time.
 // Loaded only once something is kept, so a first visit carries none of it.
 import { nextInstance } from "../time/recur.mjs";
-import { spanOf } from "../calendar/ical.mjs";
+import { componentsOf, spanIn, spanOf, tree, zonesOf } from "../calendar/ical.mjs";
 import { contentType, disposition, entity, transferEncoding } from "./mail.mjs";
 export { messageHeader } from "./mail.mjs";
 export { readCard } from "./vcard.mjs";
@@ -128,7 +128,10 @@ export function messageEvent(raw) {
 
 // RFC 5545 text: escapes undone, markup and conferencing boilerplate dropped.
 export function eventText(value = "") {
-  const text = value.replace(/\\n/gi, "\n").replace(/\\([,;\\])/g, "$1");
+  return notesOf(value.replace(/\\n/gi, "\n").replace(/\\([,;\\])/g, "$1"));
+}
+// A TEXT value already read (3.3.11), as notes: markup and conferencing boilerplate dropped.
+function notesOf(text = "") {
   const plain = /<[a-z][^>]*>/i.test(text) ? textOfHtml(text) : text;
   const cut = plain.search(/-::~:~::~:|Join (with )?Google Meet|Join Zoom Meeting|Microsoft Teams meeting|Join on your computer/i);
   return tidy(cut >= 0 ? plain.slice(0, cut) : plain);
@@ -149,4 +152,53 @@ const msOf = (m) => (!m ? NaN : m.at !== undefined ? m.at : m.date ? new Date(`$
 export function calendarSpan(text) {
   const span = spanOf(text);
   return span ? { start: msOf(span.start), end: msOf(span.end) } : null;
+}
+
+// A calendar object as the person holds it, each of its events, to-dos and journal entries read
+// by the standard (site/calendar/ical.mjs): its method (RFC 5546), and each component's identity,
+// revision and instance, its times, what it says, where it is and who it is with. An object of
+// free/busy time only (3.6.4) is that one component.
+const msOfValue = (v) => (!v || typeof v !== "object" || v.invalid !== undefined ? NaN : msOf(v.utc !== undefined ? { at: v.utc } : v));
+const oneLine = (v) => (typeof v === "string" ? v.replace(/\s*\n\s*/g, " ").trim() : "");
+// A line whose parameters 3.1 does not allow still names what it is about: RFC 5546's own
+// example writes RECURRENCE-ID;THISANDFUTURE for RANGE=THISANDFUTURE, and the instance it
+// revises is still its value, after the line's first ":" outside a quoted parameter.
+function unreadValue(c, name) {
+  const line = c.props.find((p) => p.invalid !== undefined && new RegExp(`^${name}[;:]`, "i").test(p.invalid))?.invalid;
+  return line ? /^[^:"]*(?:"[^"]*"[^:"]*)*:(.*)$/.exec(line)?.[1].trim() ?? "" : "";
+}
+export function calendarEvents(text) {
+  const root = tree(text);
+  const zones = zonesOf(text);
+  const calendar = root.children.find((c) => c.name === "VCALENDAR") ?? root;
+  const method = oneLine(calendar.props.find((p) => p.name === "METHOD")?.value).toUpperCase();
+  const busy = calendar.children.find((c) => c.name === "VFREEBUSY");
+  const own = componentsOf(root);
+  return { method, events: (own.length ? own : [busy ?? calendar]).map((c) => {
+    const all = (name) => c.props.filter((p) => p.name === name);
+    const one = (name) => all(name)[0]?.value;
+    const span = spanIn(c, zones);
+    const start = span ? msOf(span.start) : NaN;
+    const due = msOfValue(one("DUE"));
+    const made = ["DTSTAMP", "CREATED", "LAST-MODIFIED"].map((name) => msOfValue(one(name))).find((t) => !Number.isNaN(t)) ?? NaN;
+    const first = Number.isNaN(start) ? due : start;
+    const sequence = Number.isInteger(one("SEQUENCE")) ? one("SEQUENCE") : 0;
+    return {
+      component: c === calendar ? "VEVENT" : c.name,
+      text: c.text,
+      uid: oneLine(one("UID")),
+      sequence,
+      recurrence: all("RECURRENCE-ID")[0]?.raw ?? unreadValue(c, "RECURRENCE-ID"),
+      start: nextTime(c.text, first),
+      first,
+      end: span ? msOf(span.end) : NaN,
+      allDay: Boolean(one("DTSTART")?.date),
+      made,
+      title: oneLine(one("SUMMARY")),
+      location: oneLine(one("LOCATION")),
+      notes: notesOf(typeof one("DESCRIPTION") === "string" ? one("DESCRIPTION") : ""),
+      comments: all("COMMENT").map((p) => notesOf(typeof p.value === "string" ? p.value : "")),
+      people: c.props.filter((p) => p.name === "ORGANIZER" || p.name === "ATTENDEE").map((p) => p.params.CN?.[0] ?? String(p.value?.invalid ?? p.value ?? "").replace(/^mailto:/i, "")).filter(Boolean),
+    };
+  }) };
 }

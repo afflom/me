@@ -40,9 +40,9 @@ async function relayConsent() {
 // nothing; an item kept only as a hash says only that.
 const lenient = new TextDecoder("utf-8", { fatal: false });
 
-// RFC 5545 folds long lines; a calendar's fold removes the line break and
-// the one space after it (RFC 5545 3.1). A message's fields are read by their
-// grammar (site/read/mail.mjs), folding included.
+// A contact card's fields when its reader (site/read/vcard.mjs) has not loaded: a fold removes the
+// line break and the one space after it (RFC 6350 3.2). A calendar is read only by its standard's
+// reader (site/read/read.mjs calendarEvents), and a message's fields by their grammar (site/read/mail.mjs).
 const unfoldCalendar = (text) => text.replace(/\r?\n[ \t]/g, "");
 
 // RFC 2047 encoded words, the common case of a subject or a sender's name.
@@ -69,32 +69,6 @@ function calendarField(text, name) {
   const match = calendarLine(text, name);
   return match ? match[2].trim().replace(/\\([,;\\])/g, "$1").replace(/\\n/gi, " ") : "";
 }
-
-// A local time in a named zone (RFC 5545 3.2.19 TZID), through the browser's own zone data.
-function zoned(y, mo, d, h, mi, s, zone) {
-  try {
-    const parts = new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
-    const wall = Date.UTC(y, mo, d, h, mi, s);
-    const offset = (at) => {
-      const p = Object.fromEntries(parts.formatToParts(at).map(({ type, value }) => [type, +value]));
-      return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - at;
-    };
-    const first = wall - offset(wall);
-    return wall - offset(first);
-  } catch {
-    return new Date(y, mo, d, h, mi, s).getTime();
-  }
-}
-
-function icsTime(value, params = "") {
-  const m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/.exec(value);
-  if (!m) return NaN;
-  const [, y, mo, d, h = "0", mi = "0", s = "0", z] = m;
-  if (z) return Date.UTC(+y, mo - 1, +d, +h, +mi, +s);
-  const zone = /;TZID=("?)([^";:]+)\1/i.exec(params)?.[2];
-  return zone && h !== undefined && m[4] ? zoned(+y, mo - 1, +d, +h, +mi, +s, zone.replace(/^\//, "")) : new Date(+y, mo - 1, +d, +h, +mi, +s).getTime();
-}
-const icsField = (text, name) => { const line = calendarLine(text, name); return line ? icsTime(line[2].trim(), line[1]) : NaN; };
 
 // The first words of a text, as a heading: its first line, cut at a word near 80 characters.
 function headline(text = "") {
@@ -140,54 +114,30 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const who = first ? (first.name ? headerWords(first.name) : first.address) : headerWords(h.fromWords);
     return { ...base, ...place, ...from, ...(markup.length ? { markup } : {}), at: Number.isNaN(when) ? base.at : when, title, who, text, body, ...(carries ? { carries } : {}) };
   }
-  if (base.media === "calendar") {
-    // The event's own fields: the calendar's time zones come first and carry DTSTARTs of their own (1970).
-    const whole = text;
-    // A component ends at the next END of any of the three: RFC 6047's own example closes a VTODO with END:VEVENT.
-    const components = [...whole.matchAll(/BEGIN:(?:VEVENT|VTODO|VJOURNAL)[\s\S]*?END:(?:VEVENT|VTODO|VJOURNAL)/g)].map(([component]) => component);
-    text = components[0] ?? whole;
-    // Its time is its own: when it starts, else when it is due (a VTODO), else when the
-    // object was made (DTSTAMP, CREATED, LAST-MODIFIED), never when it arrived here.
-    const timed = icsField(text, "DTSTART");
-    const due = icsField(text, "DUE");
-    const made = ["DTSTAMP", "CREATED", "LAST-MODIFIED"].map((name) => icsField(text, name)).find((t) => !Number.isNaN(t)) ?? NaN;
-    // Read by the standard's own reader when it is loaded: zones by their observances, an end by DTEND, DUE or DURATION.
-    const read = reader?.calendarSpan ? reader.calendarSpan(whole) : null;
-    const first = read && Number.isFinite(read.start) ? read.start : Number.isNaN(timed) ? due : timed;
-    // What it is to the event it names (RFC 5546): its method, identity, revision and instance.
-    const method = calendarField(whole, "METHOD").toUpperCase();
-    const uid = calendarField(text, "UID");
-    const sequence = Number(calendarField(text, "SEQUENCE")) || 0;
-    const recurrence = calendarField(text, "RECURRENCE-ID");
-    // A repeating event is shown at its next time, not at the first one years ago.
-    const start = reader && components[0] ? reader.nextTime(components[0], first) : first;
-    // A to-do or a journal entry (RFC 5545 3.6.2, 3.6.3) is something to do or a note, not a meeting.
-    const component = /^BEGIN:(VEVENT|VTODO|VJOURNAL)/.exec(text)?.[1] ?? (/^BEGIN:VFREEBUSY/m.test(whole) ? "VFREEBUSY" : "VEVENT");
-    const allDay = /^\d{8}$/.test(calendarField(text, "DTSTART"));
-    // Opened, an event reads as the person would say it: when, where, who, and its notes.
-    const end = (read && Number.isFinite(read.end) ? read.end : icsField(text, "DTEND")) - first + start;
-    const span = Number.isNaN(start) ? "" : [new Date(start), allDay || Number.isNaN(end) ? null : new Date(end)]
-      .filter(Boolean).map((d, i) => d.toLocaleString(undefined, i === 0 ? (allDay ? { dateStyle: "full" } : { dateStyle: "full", timeStyle: "short" }) : (allDay ? { dateStyle: "full" } : { timeStyle: "short" }))).join(" – ");
-    const people = [...unfoldCalendar(text).matchAll(/^(?:ORGANIZER|ATTENDEE)([^:\r\n]*):(.*)$/gim)]
-      .map(([, params, value]) => /CN="?([^";:]+)"?/i.exec(params)?.[1] ?? value.replace(/^mailto:/i, "")).filter(Boolean);
-    const notes = reader ? reader.eventText(/^DESCRIPTION(?:;[^:]*)?:(.*)$/mi.exec(unfoldCalendar(text))?.[1] ?? "") : calendarField(text, "DESCRIPTION");
-    // Comments to the calendar user (RFC 5545 §3.8.1.4), such as a reply's reason, read after the notes.
-    const comments = [...unfoldCalendar(text).matchAll(/^COMMENT(?:;[^:\r\n]*)?:(.*)$/gim)].map(([, value]) => (reader ? reader.eventText(value) : value.trim()));
-    // The object's further events (an iMIP PUBLISH of several, an instance's own revision)
-    // are events of their own, each read with the calendar's zones and method.
-    const more = components.length > 1 && !meta.single ? components.slice(1).map((own, i) => {
-      const alone = components.reduce((rest, other) => (other === own ? rest : rest.replace(other, "")), whole);
-      return readItem({ address: `${address}#${i + 1}`, outcome, bytes: new TextEncoder().encode(alone), meta: { ...meta, single: true }, at: base.at });
-    }) : [];
-    // Without a summary it is headed by its notes, as a calendar shows it.
-    const title = calendarField(text, "SUMMARY") || headline([notes, ...comments].join("\n"));
-    const location = calendarField(text, "LOCATION");
-    const body = [title, span, location, [...new Set(people)].slice(0, 12).join(", "), notes, ...comments].filter(Boolean).join("\n");
-    const at = Number.isNaN(start) ? (Number.isNaN(made) ? base.at : made) : start;
-    // Where it is, else who it is with.
-    const who = location || people.find(Boolean) || "";
-    return { ...base, ...(component === "VEVENT" ? {} : { component, ...(component === "VFREEBUSY" ? {} : { domain: 9 }) }), at, ...(Number.isNaN(end) ? {} : { end }), allDay, title, who, ...(location ? { where: location } : {}), text: whole, body,
-      ...(Number.isNaN(start) ? { undated: true } : {}), ...(method ? { method } : {}), ...(uid ? { uid, sequence } : {}), ...(recurrence ? { recurrence } : {}), ...(more.length ? { more } : {}) };
+  if (base.media === "calendar" && reader?.calendarEvents) {
+    // Each event, to-do and journal entry it holds, read by the standard (site/read/read.mjs calendarEvents):
+    // its own time is when it starts (a repeating one at its next time), else when it is due, else when the
+    // object was made, never when it arrived here. The first is this item; the rest are events of their own.
+    const { method, events } = reader.calendarEvents(text);
+    const item = (ev, own, address) => {
+      const { start, allDay } = ev;
+      const end = ev.end - ev.first + start;
+      // Opened, an event reads as the person would say it: when, where, who, and its notes.
+      const span = Number.isNaN(start) ? "" : [new Date(start), allDay || Number.isNaN(end) ? null : new Date(end)]
+        .filter(Boolean).map((d, i) => d.toLocaleString(undefined, i === 0 ? (allDay ? { dateStyle: "full" } : { dateStyle: "full", timeStyle: "short" }) : (allDay ? { dateStyle: "full" } : { timeStyle: "short" }))).join(" – ");
+      // Without a summary it is headed by its notes, as a calendar shows it.
+      const title = ev.title || headline([ev.notes, ...ev.comments].join("\n"));
+      const location = ev.location;
+      const body = [title, span, location, [...new Set(ev.people)].slice(0, 12).join(", "), ev.notes, ...ev.comments].filter(Boolean).join("\n");
+      const at = Number.isNaN(start) ? (Number.isNaN(ev.made) ? base.at : ev.made) : start;
+      // A to-do or a journal entry (RFC 5545 3.6.2, 3.6.3) is something to do or a note, not a meeting.
+      const component = ev.component;
+      return { ...base, address, ...(component === "VEVENT" ? {} : { component, ...(component === "VFREEBUSY" ? {} : { domain: 9 }) }), at, ...(Number.isNaN(end) ? {} : { end }), allDay, title, who: location || ev.people.find(Boolean) || "", ...(location ? { where: location } : {}), text: own, body,
+        ...(Number.isNaN(start) ? { undated: true } : {}), ...(method ? { method } : {}), ...(ev.uid ? { uid: ev.uid, sequence: ev.sequence } : {}), ...(ev.recurrence ? { recurrence: ev.recurrence } : {}) };
+    };
+    const [first, ...rest] = events;
+    const more = rest.map((ev, i) => item(ev, ev.text, `${address}#${i + 1}`));
+    return { ...item(first, text, address), ...(more.length ? { more } : {}) };
   }
   if (base.media === "contactCard") {
     // Every property it holds, read as RFC 6350 defines it (site/read/vcard.mjs).

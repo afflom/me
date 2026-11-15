@@ -120,7 +120,7 @@ export function* contentLines(text) {
     if (!m) { yield { invalid: line }; continue; }
     const params = {};
     for (const [, name, values] of m[2].matchAll(new RegExp(`;([A-Za-z0-9-]+)=((?:"[^"]*"|[^";:,]*)(?:,(?:"[^"]*"|[^";:,]*))*)`, "g"))) params[name.toUpperCase()] = quoted(values);
-    yield { name: m[1].toUpperCase(), params, value: m[3] };
+    yield { name: m[1].toUpperCase(), params, value: m[3], raw: line };
   }
 }
 
@@ -190,17 +190,28 @@ function zoneAt(wall, zone, zones) {
 }
 export const instantOf = (value, zones = new Map()) => (value?.utc ?? value?.at ?? NaN);
 
+// Each component also keeps its own unfolded content lines, BEGIN to END, as `text`, and each property its
+// unparsed value as `raw`; neither is enumerable, so the reading itself is only names, parameters and values.
+const hidden = (object, name, value) => Object.defineProperty(object, name, { value, enumerable: false });
 export function tree(text) {
   const zones = zonesOf(text);
   const root = { name: null, props: [], children: [] };
   const stack = [root];
+  const lines = new Map([[root, []]]);
   for (const line of contentLines(text)) {
+    for (const open of stack) lines.get(open).push(line.raw ?? line.invalid);
     if (line.invalid !== undefined) { stack.at(-1).props.push(line); continue; }
-    if (line.name === "BEGIN") { const child = { name: line.value.toUpperCase(), props: [], children: [] }; stack.at(-1).children.push(child); stack.push(child); continue; }
-    if (line.name === "END") { if (stack.length > 1) stack.pop(); continue; }
-    stack.at(-1).props.push({ name: line.name, params: line.params, value: valueOf(line, zones) });
+    if (line.name === "BEGIN") { const child = { name: line.value.toUpperCase(), props: [], children: [] }; stack.at(-1).children.push(child); stack.push(child); lines.set(child, [line.raw]); continue; }
+    if (line.name === "END") { if (stack.length > 1) { const done = stack.pop(); hidden(done, "text", lines.get(done).join("\r\n")); } continue; }
+    stack.at(-1).props.push(hidden({ name: line.name, params: line.params, value: valueOf(line, zones) }, "raw", line.value));
   }
+  for (const open of stack) if (open.text === undefined) hidden(open, "text", lines.get(open).join("\r\n"));
   return root;
+}
+
+// The object's events, to-dos and journal entries (3.6.1, 3.6.2, 3.6.3), in their order, wherever they are nested.
+export function componentsOf(node) {
+  return node.children.flatMap((c) => (["VEVENT", "VTODO", "VJOURNAL"].includes(c.name) ? [c] : componentsOf(c)));
 }
 
 // A DATE or DATE-TIME as a span gives it: an instant where it has one, else its date, else its floating local time.
@@ -219,13 +230,8 @@ function later(start, by, zones) {
   return { local: isoLocal(wall + seconds * 1000) };
 }
 
-// When the first event, to-do or journal entry starts and ends (3.6.1, 3.6.2, 3.8.2.2, 3.8.2.3, 3.8.2.5).
-export function spanOf(text) {
-  const root = tree(text);
-  const zones = zonesOf(text);
-  const first = (node) => { for (const c of node.children) { if (["VEVENT", "VTODO", "VJOURNAL"].includes(c.name)) return c; const f = first(c); if (f) return f; } return null; };
-  const c = first(root);
-  if (!c) return null;
+// When a component starts and ends (3.6.1, 3.6.2, 3.8.2.2, 3.8.2.3, 3.8.2.5), its zones being the object's.
+export function spanIn(c, zones = new Map()) {
   const prop = (name) => c.props.find((p) => p.name === name)?.value;
   const start = prop("DTSTART");
   if (!start || typeof start !== "object" || start.invalid !== undefined) return null;
@@ -236,6 +242,12 @@ export function spanOf(text) {
   // Neither: a DATE start lasts its day; a DATE-TIME start is an instant (3.6.1).
   if (start.date && c.name === "VEVENT") { const d = new Date(`${start.date}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + 1); return { start: momentOf(start), end: { date: d.toISOString().slice(0, 10) } }; }
   return { start: momentOf(start), end: momentOf(start) };
+}
+
+// When the first event, to-do or journal entry starts and ends.
+export function spanOf(text) {
+  const [c] = componentsOf(tree(text));
+  return c ? spanIn(c, zonesOf(text)) : null;
 }
 
 // Whether a value is one the standard registers for a parameter or property (its IANA value registry).

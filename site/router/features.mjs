@@ -13,6 +13,12 @@ const has = (text, phrase) => {
   if (!pattern) patterns.set(phrase, (pattern = new RegExp(`(?<![\\p{L}\\p{N}])${phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\p{L}\\p{N}])`, "u")));
   return pattern.test(text);
 };
+// The months by name, long and short, as the browser's CLDR data writes them in English (the
+// language of the weekdays above); a date is read as a month and its day, either way round.
+const MONTHS = new Map([..."x".repeat(12)].flatMap((_, m) => ["long", "short"].map((month) => [lower(new Intl.DateTimeFormat("en", { month, timeZone: "UTC" }).format(Date.UTC(2000, m, 15))).replace(/\.$/, ""), m])));
+const MONTH_NAMES = [...MONTHS.keys()].sort((a, b) => b.length - a.length).join("|");
+const MONTH_DAY = new RegExp(`(?<![\\p{L}\\p{N}])(?<month>${MONTH_NAMES})\\.?\\s+(?<day>\\d{1,2})(?:st|nd|rd|th)?(?:,?\\s+(?<year>\\d{4}))?(?![\\p{L}\\p{N}:])`, "u");
+const DAY_MONTH = new RegExp(`(?<![\\p{L}\\p{N}:])(?<day>\\d{1,2})(?:st|nd|rd|th)?\\s+(?:of\\s+)?(?<month>${MONTH_NAMES})\\.?(?:,?\\s+(?<year>\\d{4}))?(?![\\p{L}\\p{N}])`, "u");
 const startOfDay = (at) => { const d = new Date(at); d.setHours(0, 0, 0, 0); return d.getTime(); };
 
 // When: the day the words name (a relative day or a weekday), and the clock
@@ -36,6 +42,22 @@ function readTime(text, now) {
     spans.push([match.index, match.index + word.length]);
     break;
   }
+  // A date the words name ("Jul 1", "July 1st, 1997", "1 July"), by the month names of the
+  // browser's own CLDR data, outranks a weekday said with it: "Tue, Jul 1" is July 1.
+  let dated = false;
+  const date = MONTH_DAY.exec(t) ?? DAY_MONTH.exec(t);
+  if (date) {
+    const g = date.groups;
+    const month = MONTHS.get(g.month.replace(/\.$/, ""));
+    const year = g.year ? Number(g.year) : new Date(base).getFullYear();
+    let at = new Date(year, month, Number(g.day)).getTime();
+    if (!g.year && at < base) at = new Date(year + 1, month, Number(g.day)).getTime();
+    if (new Date(at).getDate() === Number(g.day)) {
+      day = Math.round((at - base) / DAY);
+      dated = true;
+      spans.splice(0, spans.length, [date.index, date.index + date[0].length]);
+    }
+  }
   let minutes = null;
   const clock = /(?<![\p{L}\p{N}:])(?:(at|by|@)\s*)?(\d{1,2})(?::([0-5]\d))?\s*(a\.?m\.?|p\.?m\.?)?(?![\p{L}\p{N}:])/giu;
   for (const match of t.matchAll(clock)) {
@@ -58,12 +80,12 @@ function readTime(text, now) {
   if (day === null && minutes === null) return null;
   if (day === null) day = base + minutes * 60_000 > now ? 0 : 1;
   // A weekday named on that same day means today while its clock is ahead, else next week.
-  if (day === 0 && minutes !== null && base + minutes * 60_000 <= now && !wordsOf(t).some((w) => w in p.days)) day = 7;
-  const date = new Date(base + day * DAY + 12 * 3_600_000); // noon of that day, across a clock change
-  date.setHours(0, 0, 0, 0);
-  if (minutes === null) return { start: date.getTime(), allDay: Boolean(p.allDayWithoutClock), spans };
-  date.setMinutes(minutes);
-  return { start: date.getTime(), allDay: false, spans };
+  if (!dated && day === 0 && minutes !== null && base + minutes * 60_000 <= now && !wordsOf(t).some((w) => w in p.days)) day = 7;
+  const when = new Date(base + day * DAY + 12 * 3_600_000); // noon of that day, across a clock change
+  when.setHours(0, 0, 0, 0);
+  if (minutes === null) return { start: when.getTime(), allDay: Boolean(p.allDayWithoutClock), spans };
+  when.setMinutes(minutes);
+  return { start: when.getTime(), allDay: false, spans };
 }
 
 // What it asks of the owner: a question, a task, an event, or a fact.
