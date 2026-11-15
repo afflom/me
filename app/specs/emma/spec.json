@@ -1,0 +1,301 @@
+{
+ "name": "emma",
+ "comment": "The Prism's reader of what its person says to it (app/src/PrismEmma.lex.tex), held to W3C EMMA 1.0. Every prompt or gesture is one EMMA document; the request 'check' and a line end, then a document, answers 'malformed' when it is not well-formed namespace-aware XML, else 'conforms' or 'violates' with the Implementation Report Plan assertions it breaks, then ';' and the assertions whose features it shows. 'sources' pins the Recommendation, its schema and the Implementation Report Plan (the Working Group's inventory of testable assertions, ST-01's requirements for w3c-emma-1.0). The plan publishes no test documents, so the acceptance vectors are the Recommendation's own: 'documents' lists every <pre> block of the Recommendation that opens an emma:emma element, by its ordinal among all <pre> blocks, with markup removed and entities read, pinned by SHA-256; 'examples' carries those exact bytes. PrismPM compiles a guest's vectors within a fixed time, so they are held in two sets over the one guest: sections 2 to 4.1 here, sections 4.2 to Appendix C in app/specs/emma-annotations/spec.json. Four documents are not well-formed as W3C publishes them (14, 27, 65, 77), two elide lattice arcs with '...' and so break 603, 604 and 609 as written (17, 18), and one elides the interpretation (1, assertion 910). Each answer was also reached by a conforming XML parser reading the same bytes, outside the guest. The reader takes XML 1.0 without a DTD: elements, attributes, comments, CDATA and processing instructions, namespace declarations in scope, unique attributes; entity references are carried as written.",
+ "sources": {
+  "recommendation": {
+   "url": "https://www.w3.org/TR/2009/REC-emma-20090210/",
+   "sha256": "1d53ab2af1fb23d2be28e5916715ee6208819b8b623e28749584abda7aa51129"
+  },
+  "schema": {
+   "url": "https://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd",
+   "sha256": "0117aefd45c0e0e6481efb8c6e448e1889176d1781dad33ad2716bc99596a5f5"
+  },
+  "irp": {
+   "url": "https://www.w3.org/2002/mmi/2007/emma-irp/",
+   "sha256": "ce9766f3c28a4eed8cf036426824f8ce8d06bf31fac0ad487814ad17368ed0ce"
+  }
+ },
+ "documents": [
+  {
+   "example": 0,
+   "sha256": "76d19f36a08918a518361023f6a87ccbcdaafec1bb427904b76a9fe817a0d96d",
+   "answer": "conforms; 100 200 300 910 1201 1900 2100 2101 2300 2310"
+  },
+  {
+   "example": 1,
+   "sha256": "0f7ec7de1416b10998edb0faeeaa823b3c158733153d81df64d190910b3cde27",
+   "answer": "violates 910; 100"
+  },
+  {
+   "example": 3,
+   "sha256": "310e840929bc19f9b98136603f68b1bacdeea99d17b7137f51efa87a20564f4b",
+   "answer": "conforms; 100 200 910 2300 2310"
+  },
+  {
+   "example": 4,
+   "sha256": "e8efaebe04a2e0c2d2c744b009c9d5e7c1c8779134966ea991566678e3294094",
+   "answer": "conforms; 100 200 300 910 2300 2310"
+  },
+  {
+   "example": 5,
+   "sha256": "a1d6d6b21d66bd49707151f41965c4d1b98f29b48f446e1448465d88d8fc2e43",
+   "answer": "conforms; 100 200 300 910 1201 2300 2310"
+  },
+  {
+   "example": 6,
+   "sha256": "278c0c3b3652139c094f4fc5a791e1e816cf71b7f141bbde135c25aead1bb856",
+   "answer": "conforms; 100 200 300 910 1201 2300 2310"
+  },
+  {
+   "example": 7,
+   "sha256": "f6fe2232d6f5208eaec224e83b40822d301c1fdf22620782fc63980d0a5add69",
+   "answer": "conforms; 100 200 400 910 2100 2101 2300 2310"
+  },
+  {
+   "example": 8,
+   "sha256": "b7571cd15a999d904d5408ae0c0ee89d68c54f4ee2e53ec45ed7bc398704f18a",
+   "answer": "conforms; 100 200 400 402 910 2300 2310"
+  },
+  {
+   "example": 9,
+   "sha256": "9f045d68caa4d1cf699d430262f96897252bcf1467a789a3d1b47a784828e3b0",
+   "answer": "conforms; 100 200 400 402 910 2300 2310"
+  },
+  {
+   "example": 10,
+   "sha256": "b8ef1f46c92149356db3b83aaefa871f8395d1ca530ae51796c7212539a37c22",
+   "answer": "conforms; 100 200 500 910 2300 2310"
+  },
+  {
+   "example": 11,
+   "sha256": "2b04ce5989286687efe68d42ffe0d92b4e55eee1d837a13b19617dc41b5f9303",
+   "answer": "conforms; 100 200 400 500 910 2300 2310"
+  },
+  {
+   "example": 13,
+   "sha256": "298a5699fc4c815ee18e692a5da16cf892ca0e05481188c6f91891d862ac7ad4",
+   "answer": "conforms; 100 200 600 910 2300 2310"
+  },
+  {
+   "example": 14,
+   "sha256": "fda15005ac274cf4ca68f7268a03b38a43d4d8beea48ef4ca3295499923aa21f",
+   "answer": "malformed"
+  },
+  {
+   "example": 15,
+   "sha256": "533f95c8f8d5ca345233b3f82a4f7d175407e793abdb1251712f4b75493a2d78",
+   "answer": "conforms; 100 200 600 910 2300 2310"
+  },
+  {
+   "example": 16,
+   "sha256": "08923b25c60be6ab4fca300018f2c84321f48a04360abf388c997150805a8dd4",
+   "answer": "conforms; 100 200 600 910 2300 2310"
+  },
+  {
+   "example": 17,
+   "sha256": "f64828a09b42591fe0f84f174e19b917c0b9daed9869ebc26754eda776216baa",
+   "answer": "violates 603 604; 100 200 600 910 2100 2101 2300 2310 2500"
+  },
+  {
+   "example": 18,
+   "sha256": "26dbc5c1a26fef3b7ce2a619cdbfab84a16f32ddbc75d032ace15dd31c5471df",
+   "answer": "violates 603 604 609; 100 200 600 910 2100 2101 2300 2310 2500"
+  },
+  {
+   "example": 19,
+   "sha256": "a8b637c0d63a78e9b17b6d34bf45e7ded86c535ef8584101c247c59d62aef222",
+   "answer": "conforms; 100 200 600 910 2100 2101 2201 2202 2203 2300 2310"
+  },
+  {
+   "example": 20,
+   "sha256": "c9f9251132e364f2de4032bf64423c33b88e235a64d509e18a665dd88080aeb3",
+   "answer": "conforms; 100 200 700 910 2300 2310"
+  },
+  {
+   "example": 21,
+   "sha256": "66e24844fc0c555a6464a909996d192b02c8facdf4082183d9942f363feece8d",
+   "answer": "conforms; 100 200 700 910 2300 2310"
+  },
+  {
+   "example": 22,
+   "sha256": "84ec71f15214337febeacac137ea10d051b57eefd066dc8ab502e226d684ef33",
+   "answer": "conforms; 100 200 800 910 2300 2310"
+  },
+  {
+   "example": 23,
+   "sha256": "8665da5c812ae062a352a30d3ffb59774c07d9b56eb4b24188dac9fbf04cb28c",
+   "answer": "conforms; 100 200 910 2300 2310"
+  },
+  {
+   "example": 24,
+   "sha256": "aabadbce6250c619216ef04ae64af338ce62ce6c5808ebcb15ae5ab9ed0a708c",
+   "answer": "conforms; 100 200 910 2300 2310"
+  },
+  {
+   "example": 25,
+   "sha256": "cf8f61b2df27d0310d0fdb294bd3eb8225f4f39fbf7c327725b1ee161ae621fd",
+   "answer": "conforms; 100 200 910 2300 2310"
+  },
+  {
+   "example": 26,
+   "sha256": "5ab01756a844d597a7f25f24fe461c9ee559a847c2a99877435a66760e150966",
+   "answer": "conforms; 100 200 901 910 911 2300 2310"
+  },
+  {
+   "example": 27,
+   "sha256": "b97ec9278600574a685d29ea922b2f54b6794487735836ba338bf5642adaf3b4",
+   "answer": "malformed"
+  },
+  {
+   "example": 28,
+   "sha256": "bcc9b9525ce48115a0bf13f6617e6d5f72c09f354fb2701775e4b10df9a245d1",
+   "answer": "conforms; 100 200 300 901 910 911 2300 2310"
+  },
+  {
+   "example": 29,
+   "sha256": "e7a7095aa04762dba0a12038ad3dddefde2708b1aaf1a90007136776e6c58576",
+   "answer": "conforms; 100 200 300 901 910 911 2300 2310"
+  },
+  {
+   "example": 30,
+   "sha256": "5f32f5d6ccd2277865fafd8b859afd41f0f187936aa3be511ecfce2deacf2e60",
+   "answer": "conforms; 100 200 300 910 1000 2300 2310"
+  },
+  {
+   "example": 31,
+   "sha256": "aba439f07a68bcf6977e73aa08e0d6f093ee59f26a52abb88e95a6b8dddd8737",
+   "answer": "conforms; 100 200 300 910 1100 1900 2100 2101 2300 2310"
+  },
+  {
+   "example": 32,
+   "sha256": "67293824076d1a18bc4620033285c4384e5e68f73e5c3dcc293a83e9d962702a",
+   "answer": "conforms; 100 200 910 1800 2100 2101 2300 2310 2700 2701 2710 2711 2713 2714 2716 2717 2718"
+  }
+ ],
+ "examples": [
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:one-of id=\"r1\" emma:start=\"1087995961542\" emma:end=\"1087995963542\"\r\n     emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <emma:interpretation id=\"int1\" emma:confidence=\"0.75\"\r\n    emma:tokens=\"flights from boston to denver\">\r\n      <origin>Boston</origin>\r\n      <destination>Denver</destination>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"int2\" emma:confidence=\"0.68\"\r\n    emma:tokens=\"flights from austin to denver\">\r\n      <origin>Austin</origin>\r\n      <destination>Denver</destination>\r\n    </emma:interpretation>\r\n  </emma:one-of>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 300 910 1201 1900 2100 2101 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\" xmlns:emma=\"http://www.w3.org/2003/04/emma\">\r\n    ....\r\n</emma:emma>\r\n",
+   "violates 910; 100"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\" xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:interpretation id=\"r1\" emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    ...\r\n  </emma:interpretation>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 910 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:one-of id=\"r1\" emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <emma:interpretation id=\"int1\">\r\n      <origin>Boston</origin>\r\n      <destination>Denver</destination>\r\n      <date>03112003</date>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"int2\">\r\n      <origin>Austin</origin>\r\n      <destination>Denver</destination>\r\n      <date>03112003</date>\r\n    </emma:interpretation>\r\n  </emma:one-of>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 300 910 2300 2310"
+  ],
+  [
+   "check\n\r\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:one-of disjunction-type=\"recognition\"\r\n      start=\"12457990\" end=\"12457995\"\r\n      emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n     <emma:one-of disjunction-type=\"understanding\"\r\n         emma:tokens=\"boston\">\r\n       <emma:interpretation>\r\n          <assert><city>boston</city></assert>\r\n       </emma:interpretation>\r\n       <emma:interpretation>\r\n          <flight><dest><city>boston</city></dest></flight>\r\n       </emma:interpretation>\r\n     </emma:one-of>\r\n     <emma:one-of disjunction-type=\"understanding\"\r\n         emma:tokens=\"austin\">\r\n       <emma:interpretation>\r\n          <assert><city>austin</city></assert>\r\n       </emma:interpretation>\r\n       <emma:interpretation>\r\n          <flight><dest><city>austin</city></dest></flight>\r\n       </emma:interpretation>\r\n     </emma:one-of>\r\n  </emma:one-of>\r\n</emma:emma>\r\n\r\n",
+   "conforms; 100 200 300 910 1201 2300 2310"
+  ],
+  [
+   "check\n\r\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:one-of  start=\"12457990\" end=\"12457995\"\r\n         emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n     <emma:interpretation emma:tokens=\"boston\">\r\n        <assert><city>boston</city></assert>\r\n     </emma:interpretation>\r\n     <emma:interpretation >\r\n        <flight><dest><city>boston</city></dest></flight>\r\n     </emma:interpretation>\r\n     <emma:interpretation emma:tokens=\"austin\">\r\n        <assert><city>austin</city></assert>\r\n     </emma:interpretation>\r\n     <emma:interpretation emma:tokens=\"austin\">\r\n        <flight><dest><city>austin</city></dest></flight>\r\n     </emma:interpretation>\r\n  </emma:one-of>\r\n</emma:emma>\r\n\r\n",
+   "conforms; 100 200 300 910 1201 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:group id=\"grp\"\r\n      emma:start=\"1087995961542\"\r\n      emma:end=\"1087995964542\">\r\n    <emma:interpretation id=\"int1\"\r\n      emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n      <action>move</action>\r\n      <object>ambulance</object>\r\n      <destination>here</destination>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"int2\"\r\n      emma:medium=\"tactile\" emma:mode=\"ink\">\r\n      <x>0.253</x>\r\n      <y>0.124</y>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"int3\"\r\n      emma:medium=\"tactile\" emma:mode=\"ink\">\r\n      <x>0.866</x>\r\n      <y>0.724</y>\r\n    </emma:interpretation>\r\n  </emma:group>\r\n</emma:emma>\r\n\r\n",
+   "conforms; 100 200 400 910 2100 2101 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\"\r\n    xmlns:ex=\"http://www.example.com/ns/group\">\r\n  <emma:group id=\"grp\">\r\n    <emma:group-info>\r\n      <ex:mode>temporal</ex:mode>\r\n      <ex:duration>2s</ex:duration>\r\n    </emma:group-info>\r\n\r\n    <emma:interpretation id=\"int1\"\r\n      emma:medium=\"tactile\" emma:mode=\"ink\">\r\n      <x>0.253</x>\r\n      <y>0.124</y>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"int2\"\r\n      emma:medium=\"tactile\" emma:mode=\"ink\">\r\n      <x>0.866</x>\r\n      <y>0.724</y>\r\n    </emma:interpretation>\r\n  </emma:group>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 400 402 910 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\"\r\n    xmlns:ex=\"http://www.example.com/ns/group\">\r\n  <emma:group id=\"grp\">\r\n    <emma:group-info ref=\"http://www.example.com/criterion42\"/>\r\n    <emma:interpretation id=\"int1\"\r\n      emma:medium=\"tactile\" emma:mode=\"ink\">\r\n      <x>0.253</x>\r\n      <y>0.124</y>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"int2\"\r\n      emma:medium=\"tactile\" emma:mode=\"ink\">\r\n      <x>0.866</x>\r\n      <y>0.724</y>\r\n    </emma:interpretation>\r\n  </emma:group>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 400 402 910 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:sequence id=\"seq1\">\r\n    <emma:interpretation id=\"int1\"\r\n        emma:medium=\"tactile\" emma:mode=\"ink\">\r\n      <x>0.253</x>\r\n      <y>0.124</y>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"int2\"\r\n        emma:medium=\"tactile\" emma:mode=\"ink\">\r\n      <x>0.866</x>\r\n      <y>0.724</y>\r\n    </emma:interpretation>\r\n  </emma:sequence>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 500 910 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:group id=\"grp\">\r\n     <emma:interpretation id=\"int1\" emma:medium=\"acoustic\"\r\n         emma:mode=\"voice\">\r\n       <action>move</action>\r\n       <object>this-battleship</object>\r\n       <destination>here</destination>\r\n     </emma:interpretation>\r\n\r\n     <emma:sequence id=\"seq1\">\r\n       <emma:interpretation id=\"int2\" emma:medium=\"tactile\"\r\n           emma:mode=\"ink\">\r\n         <x>0.253</x>\r\n         <y>0.124</y>\r\n       </emma:interpretation>\r\n\r\n     <emma:interpretation id=\"int3\" emma:medium=\"tactile\"\r\n         emma:mode=\"ink\">\r\n       <x>0.866</x>\r\n       <y>0.724</y>\r\n     </emma:interpretation>\r\n   </emma:sequence>\r\n </emma:group>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 400 500 910 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:interpretation id=\"interp1\"\r\n    emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <emma:lattice initial=\"1\" final=\"8\">\r\n      <emma:arc from=\"1\" to=\"2\">flights</emma:arc>\r\n\r\n      <emma:arc from=\"2\" to=\"3\">to</emma:arc>\r\n      <emma:arc from=\"3\" to=\"4\">boston</emma:arc>\r\n      <emma:arc from=\"3\" to=\"4\">austin</emma:arc>\r\n      <emma:arc from=\"4\" to=\"5\">from</emma:arc>\r\n\r\n      <emma:arc from=\"5\" to=\"6\">portland</emma:arc>\r\n      <emma:arc from=\"5\" to=\"6\">oakland</emma:arc>\r\n      <emma:arc from=\"6\" to=\"7\">today</emma:arc>\r\n      <emma:arc from=\"7\" to=\"8\">please</emma:arc>\r\n\r\n      <emma:arc from=\"6\" to=\"8\">tomorrow</emma:arc>\r\n    </emma:lattice>\r\n  </emma:interpretation>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 600 910 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:one-of id=\"nbest1\" emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <emma:interpretation id=\"interp1\">\r\n      <text>flights to boston from portland today please</text>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretationid=\"interp2\">\r\n      <text>flights to boston from portland tomorrow</text>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"interp3\">\r\n      <text>flights to austin from portland today please</text>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"interp4\">\r\n      <text>flights to austin from portland tomorrow</text>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"interp5\">\r\n      <text>flights to boston from oakland today please</text>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"interp6\">\r\n      <text>flights to boston from oakland tomorrow</text>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"interp7\">\r\n      <text>flights to austin from oakland today please</text>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"interp8\">\r\n      <text>flights to austin from oakland tomorrow</text>\r\n    </emma:interpretation>\r\n  </emma:one-of>\r\n</emma:emma>\r\n",
+   "malformed"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:interpretation id=\"interp1\"\r\n    emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <emma:lattice initial=\"1\" final=\"3\">\r\n      <emma:arc from=\"1\" to=\"2\">\r\n        <circle radius=\"100\"/>\r\n      </emma:arc>\r\n      <emma:arc from=\"2\" to=\"3\">\r\n        <line length=\"628\"/>\r\n      </emma:arc>\r\n      <emma:arc from=\"1\" to=\"2\">\r\n        <circle radius=\"200\"/>\r\n      </emma:arc>\r\n      <emma:arc from=\"2\" to=\"3\">\r\n        <line length=\"1256\"/>\r\n      </emma:arc>\r\n    </emma:lattice>\r\n  </emma:interpretation>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 600 910 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:interpretation id=\"interp1\"\r\n    emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <emma:lattice initial=\"1\" final=\"3\">\r\n      <emma:arc from=\"1\" to=\"2\">\r\n        <source city=\"boston\"/>\r\n      </emma:arc>\r\n      <emma:arc from=\"2\" to=\"3\">\r\n        <destination city=\"newark\"/>\r\n      </emma:arc>\r\n      <emma:arc from=\"1\" to=\"2\">\r\n        <source city=\"austin\"/>\r\n      </emma:arc>\r\n      <emma:arc from=\"2\" to=\"3\">\r\n        <destination city=\"new york\"/>\r\n      </emma:arc>\r\n    </emma:lattice>\r\n  </emma:interpretation>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 600 910 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:interpretation id=\"interp1\"\r\n    emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <emma:lattice initial=\"1\" final=\"8\">\r\n      <emma:arc\r\n       from=\"1\"\r\n       to=\"2\"\r\n       emma:start=\"1087995961542\"\r\n       emma:end=\"1087995962042\"\r\n       emma:cost=\"30\">\r\n         flights\r\n      </emma:arc>\r\n\r\n      <emma:arc\r\n       from=\"2\"\r\n       to=\"3\"\r\n       emma:start=\"1087995962042\"\r\n       emma:end=\"1087995962542\"\r\n       emma:cost=\"20\">\r\n         to\r\n      </emma:arc>\r\n\r\n      <emma:arc\r\n       from=\"3\"\r\n       to=\"4\"\r\n       emma:start=\"1087995962542\"\r\n       emma:end=\"1087995963042\"\r\n       emma:cost=\"50\">\r\n         boston\r\n      </emma:arc>\r\n\r\n      <emma:arc\r\n       from=\"3\"\r\n       to=\"4\"\r\n       emma:start=\"1087995963042\"\r\n       emma:end=\"1087995963742\"\r\n       emma:cost=\"60\">\r\n         austin\r\n      </emma:arc>\r\n      ...\r\n    </emma:lattice>\r\n  </emma:interpretation>\r\n</emma:emma>\r\n",
+   "violates 603 604; 100 200 600 910 2100 2101 2300 2310 2500"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:interpretation id=\"interp1\" \r\n    emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <emma:lattice initial=\"1\" final=\"8\">\r\n      <emma:arc\r\n       from=\"1\"\r\n       to=\"2\"\r\n       emma:start=\"1087995961542\"\r\n       emma:end=\"1087995962042\"\r\n       emma:cost=\"30\">\r\n         flights\r\n      </emma:arc>\r\n      <emma:arc\r\n       from=\"2\"\r\n       to=\"3\"\r\n       emma:start=\"1087995962042\"\r\n       emma:end=\"1087995962542\"\r\n       emma:cost=\"20\">\r\n         to\r\n      </emma:arc>\r\n\r\n      <emma:arc\r\n       from=\"3\"\r\n       to=\"4\"\r\n       emma:start=\"1087995962542\"\r\n       emma:end=\"1087995963042\"\r\n       emma:cost=\"50\">\r\n         boston\r\n      </emma:arc>\r\n      <emma:arc\r\n       from=\"3\"\r\n       to=\"4\"\r\n       emma:start=\"1087995963042\"\r\n       emma:end=\"1087995963742\"\r\n       emma:cost=\"60\">\r\n         austin\r\n      </emma:arc>\r\n        ...\r\n      <emma:node node-number=\"8\" emma:cost=\"100\"/>\r\n    </emma:lattice>\r\n  </emma:interpretation>\r\n</emma:emma>\r\n",
+   "violates 603 604 609; 100 200 600 910 2100 2101 2300 2310 2500"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n\r\n  <emma:interpretation id=\"interp1\"\r\n          emma:start=\"1087995961542\" emma:end=\"1087995963042\"\r\n          emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <emma:lattice emma:time-ref-uri=\"#interp1\"\r\n        emma:time-ref-anchor-point=\"start\"\r\n        initial=\"1\" final=\"4\">\r\n      <emma:arc\r\n       from=\"1\"\r\n       to=\"2\"\r\n       emma:offset-to-start=\"0\">\r\n         flights\r\n      </emma:arc>\r\n      <emma:arc\r\n       from=\"2\"\r\n       to=\"3\"\r\n       emma:offset-to-start=\"500\">\r\n         to\r\n      </emma:arc>\r\n\r\n      <emma:arc\r\n       from=\"3\"\r\n       to=\"4\"\r\n       emma:offset-to-start=\"1000\">\r\n         boston\r\n      </emma:arc>\r\n    </emma:lattice>\r\n  </emma:interpretation>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 600 910 2100 2101 2201 2202 2203 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:interpretation id=\"r1\" \r\n     emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <emma:literal>boston</emma:literal>\r\n  </emma:interpretation>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 700 910 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:interpretation id=\"r1\" \r\n     emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <emma:literal>flights to san francisco</emma:literal>\r\n  </emma:interpretation>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 700 910 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:model id=\"model1\" ref=\"http://example.com/models/city.xml\"/>\r\n  <emma:interpretation id=\"int1\" emma:model-ref=\"model1\"\r\n    emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <city> London </city>\r\n    <country> UK </country>\r\n  </emma:interpretation>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 800 910 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:interpretation id=\"raw\"\r\n    emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <answer>From Boston to Denver tomorrow</answer>\r\n  </emma:interpretation>\r\n\r\n</emma:emma>\r\n",
+   "conforms; 100 200 910 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:interpretation id=\"better\"\r\n    emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <origin>Boston</origin>\r\n    <destination>Denver</destination>\r\n    <date>tomorrow</date>\r\n  </emma:interpretation>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 910 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:interpretation id=\"best\"\r\n    emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <origin>Boston</origin>\r\n    <destination>Denver</destination>\r\n    <date>20030315</date>\r\n  </emma:interpretation>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 910 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:derivation>\r\n    <emma:interpretation id=\"raw\"\r\n      emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n      <answer>From Boston to Denver tomorrow</answer>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"better\">\r\n      <emma:derived-from resource=\"#raw\" composite=\"false\"/>\r\n      <origin>Boston</origin>\r\n      <destination>Denver</destination>\r\n      <date>tomorrow</date>\r\n    </emma:interpretation>\r\n  </emma:derivation>\r\n\r\n  <emma:interpretation id=\"best\">\r\n    <emma:derived-from resource=\"#better\" composite=\"false\"/>\r\n    <origin>Boston</origin>\r\n    <destination>Denver</destination>\r\n    <date>20030315</date>\r\n  </emma:interpretation>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 901 910 911 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:derivation>\r\n    <emma:interpretation id=\"voice1\"\r\n        emma:start=\"1087995961500\"\r\n        emma:end=\"1087995962542\"\r\n        emma:process=\"http://example.com/myasr.xml\"\r\n        emma:source=\"http://example.com/microphone/NC-61\"\r\n        emma:signal=\"http://example.com/signals/sg23.wav\"\r\n        emma:confidence=\"0.6\"\r\n        emma:medium=\"acoustic\"\r\n        emma:mode=\"voice\"\r\n        emma:function=\"dialog\"\r\n        emma:verbal=\"true\"\r\n        emma:lang=\"en-US\"\r\n        emma:tokens=\"destination\">\r\n      <rawinput>destination</rawinput>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"ink1\"\r\n        emma:start=\"1087995961600\"\r\n        emma:end=\"1087995964000\"\r\n        emma:process=\"http://example.com/mygesturereco.xml\"\r\n        emma:source=\"http://example.com/pen/wacom123\"\r\n        emma:signal=\"http://example.com/signals/ink5.inkml\"\r\n        emma:confidence=\"0.5\"\r\n        emma:medium=\"tactile\"\r\n        emma:mode=\"ink\"\r\n        emma:function=\"dialog\"\r\n        emma:verbal=\"false\">\r\n      <rawinput>Boston</rawinput>\r\n    </emma:interpretation>\r\n  </emma:derivation>\r\n\r\n  <emma:interpretation id=\"multimodal1\"\r\n      \r\n      \r\n      emma:confidence=\"0.3\"\r\n      emma:start=\"1087995961500\"\r\n      emma:end=\"1087995964000\"\r\n      emma:medium=\"acoustic tactile\"\r\n      emma:mode=\"voice ink\"\r\n      emma:function=\"dialog\"\r\n      emma:verbal=\"true\"\r\n      emma:lang=\"en-US\"\r\n      emma:tokens=\"destination\">\r\n    <emma:derived-from resource=\"#voice1\" composite=\"true\"\r\n    <emma:derived-from resource=\"#ink1\" composite=\"true\"\r\n    <destination>Boston</destination>\r\n  </emma:interpretation>\r\n</emma:emma>\r\n",
+   "malformed"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:derivation>\r\n    <emma:one-of id=\"nbest1\"\r\n      emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n      <emma:interpretation id=\"int1\">\r\n       <res>from boston to denver on march eleven two thousand three</res>\r\n      </emma:interpretation>\r\n\r\n      <emma:interpretation id=\"int2\">\r\n       <res>from austin to denver on march eleven two thousand three</res>\r\n      </emma:interpretation>\r\n  </emma:one-of>\r\n</emma:derivation>\r\n\r\n<emma:one-of id=\"nbest2\">\r\n  <emma:derived-from resource=\"#nbest1\" composite=\"false\"/>\r\n  <emma:interpretation id=\"int1b\">\r\n    <origin>Boston</origin>\r\n    <destination>Denver</destination>\r\n    <date>03112003</date>\r\n  </emma:interpretation>\r\n\r\n  <emma:interpretation id=\"int2b\">\r\n    <origin>Austin</origin>\r\n    <destination>Denver</destination>\r\n    <date>03112003</date>\r\n  </emma:interpretation>\r\n</emma:one-of>\r\n  \r\n</emma:emma>\r\n",
+   "conforms; 100 200 300 901 910 911 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:one-of id=\"nbest2\">\r\n    <emma:interpretation id=\"int1b\">\r\n     <emma:derived-from resource=\"#int1\" composite=\"false\"/>\r\n      <origin>Boston</origin>\r\n      <destination>Denver</destination>\r\n      <date>03112003</date>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"int2b\">\r\n     <emma:derived-from resource=\"#int2\" composite=\"false\"/>\r\n      <origin>Austin</origin>\r\n      <destination>Denver</destination>\r\n      <date>03112003</date>\r\n    </emma:interpretation>\r\n  </emma:one-of>\r\n  <emma:derivation>\r\n    <emma:one-of id=\"nbest1\"\r\n      emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n      <emma:interpretation id=\"int1\">\r\n       <res>from boston to denver on march eleven two thousand three</res>\r\n      </emma:interpretation>\r\n\r\n      <emma:interpretation id=\"int2\">\r\n       <res>from austin to denver on march eleven two thousand three</res>\r\n      </emma:interpretation>\r\n    </emma:one-of>\r\n  </emma:derivation>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 300 901 910 911 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:grammar id=\"gram1\" ref=\"someURI\"/>\r\n  <emma:grammar id=\"gram2\" ref=\"anotherURI\"/>\r\n  <emma:one-of id=\"r1\"\r\n    emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <emma:interpretation id=\"int1\" emma:grammar-ref=\"gram1\">\r\n      <origin>Boston</origin>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"int2\" emma:grammar-ref=\"gram1\">\r\n        <origin>Austin</origin>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"int3\" emma:grammar-ref=\"gram2\">\r\n        <command>help</command>\r\n    </emma:interpretation>\r\n  </emma:one-of>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 300 910 1000 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\">\r\n  <emma:info>\r\n    <caller_id>\r\n      <phone_number>2121234567</phone_number>\r\n      <state>NY</state>\r\n    </caller_id>\r\n\r\n    <customer_type>residential</customer_type>\r\n    <service_name>acme_travel_service</service_name>\r\n  </emma:info>\r\n\r\n  <emma:one-of id=\"r1\" emma:start=\"1087995961542\"\r\n      emma:end=\"1087995963542\"\r\n      emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <emma:interpretation id=\"int1\" emma:confidence=\"0.75\">\r\n      <origin>Boston</origin>\r\n      <destination>Denver</destination>\r\n      <date>03112003</date>\r\n    </emma:interpretation>\r\n\r\n    <emma:interpretation id=\"int2\" emma:confidence=\"0.68\">\r\n      <origin>Austin</origin>\r\n      <destination>Denver</destination>\r\n      <date>03112003</date>\r\n    </emma:interpretation>\r\n  </emma:one-of>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 300 910 1100 1900 2100 2101 2300 2310"
+  ],
+  [
+   "check\n\r\n<emma:emma version=\"1.0\"\r\n    xmlns:emma=\"http://www.w3.org/2003/04/emma\"\r\n    xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"\r\n    xsi:schemaLocation=\"http://www.w3.org/2003/04/emma\r\n     http://www.w3.org/TR/2009/REC-emma-20090210/emma.xsd\"\r\n    xmlns=\"http://www.example.com/example\"\r\n    xmlns:ex=\"http://www.example.com/emma/port\">\r\n  <emma:endpoint-info id=\"audio-channel-1\">\r\n    <emma:endpoint id=\"endpoint1\"\r\n        emma:endpoint-role=\"sink\"\r\n        emma:endpoint-address=\"135.61.71.103\"\r\n        emma:port-num=\"50204\"\r\n        emma:port-type=\"rtp\"\r\n        emma:endpoint-pair-ref=\"endpoint2\"\r\n        emma:media-type=\"audio/dsr-202212; rate:8000; maxptime:40\"\r\n        emma:service-name=\"travel\"\r\n        emma:mode=\"voice\">\r\n      <ex:app-protocol>SIP</ex:app-protocol>\r\n    </emma:endpoint>\r\n\r\n    <emma:endpoint id=\"endpoint2\"\r\n        emma:endpoint-role=\"source\"\r\n        emma:endpoint-address=\"136.62.72.104\"\r\n        emma:port-num=\"50204\"\r\n        emma:port-type=\"rtp\"\r\n        emma:endpoint-pair-ref=\"endpoint1\"\r\n        emma:media-type=\"audio/dsr-202212; rate:8000; maxptime:40\"\r\n        emma:service-name=\"travel\"\r\n        emma:mode=\"voice\">\r\n      <ex:app-protocol>SIP</ex:app-protocol>\r\n    </emma:endpoint>\r\n  </emma:endpoint-info>\r\n\r\n  <emma:interpretation id=\"int1\"\r\n      emma:start=\"1087995961542\" emma:end=\"1087995963542\"\r\n      emma:endpoint-info-ref=\"audio-channel-1\"\r\n      emma:medium=\"acoustic\" emma:mode=\"voice\">\r\n    <destination>Chicago</destination>\r\n  </emma:interpretation>\r\n</emma:emma>\r\n",
+   "conforms; 100 200 910 1800 2100 2101 2300 2310 2700 2701 2710 2711 2713 2714 2716 2717 2718"
+  ]
+ ]
+}

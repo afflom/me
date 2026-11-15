@@ -1,0 +1,115 @@
+\begin{lexlean}{GenEmma}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{GenWcag}
+\importmodule{GenIrp}
+\title{Implementation report table generator}
+\begin{semanticmodule}
+definition{
+  name: emmaInsetEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (GenIrp::irpIsSpace (Foundation.Tar::byteOr s i)) then (emmaInsetEnd s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emmaLineFrom,
+  parameters: [s : Bytes, j : Nat, z : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (z <? (j + 1)) then acc else (if ((Foundation.Tar::byteOr s j) =? 60) then (let k : Nat := (GenIrp::irpFind s j 0x3e (prim subtract z j : Nat)); (emmaLineFrom s (if (k <? z) then (k + 1) else z) z (Foundation.Bytes::appendBytes acc (if (GenWcag::startsAt s j (GenWcag::u "<td")) then 0x7c else (if (GenWcag::startsAt s j (GenWcag::u "</tr")) then 0x0a else 0x))) rest)) else (let k : Nat := (GenIrp::irpFind s j 0x3c (prim subtract z j : Nat)); (let stop : Nat := (if (k <? z) then k else z); (emmaLineFrom s stop z (Foundation.Bytes::appendBytes acc (Foundation.Json::span s j stop)) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emmaLineFact,
+  parameters: [s : Bytes, i : Nat, e : Nat],
+  result: Bytes,
+  body: (let a : Nat := (emmaInsetEnd s i (prim subtract e i : Nat)); (let z : Nat := (if ((0 <? e) && ((Foundation.Tar::byteOr s (prim subtract e 1 : Nat)) =? 13)) then (prim subtract e 1 : Nat) else e); (if (z <? (a + 1)) then 0x else (Foundation.Bytes::appendBytes (emmaLineFrom s a z 0x ((prim subtract z a : Nat) + 1)) 0x20)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emmaFactsFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength s); (if (n <? (i + 1)) then acc else (let e : Nat := (GenWcag::wcagLineEndAt s i n); (emmaFactsFrom s (e + 1) (Foundation.Bytes::appendBytes acc (emmaLineFact s i e)) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emmaFacts,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (GenWcag::u "app/specs/standards/texts/ce9766f3c28a4eed8cf036426824f8ce8d06bf31fac0ad487814ad17368ed0ce"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some piece => (ctor Option.some [Bytes] (emmaFactsFrom piece 0 0x (Foundation.Bytes::byteLength piece)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emmaDigitsEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr s i); (if ((47 <? b) && (b <? 58)) then (emmaDigitsEnd s (i + 1) rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emmaBar,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (GenIrp::irpFind s i 0x7c (Foundation.Bytes::byteLength s)),
+  axioms: [propext]
+}
+
+definition{
+  name: emmaEntry,
+  parameters: [s : Bytes, a : Nat, z : Nat, feature : Nat],
+  result: (Option Bytes),
+  body: (let n : Nat := (Foundation.Bytes::byteLength s); (let stop : Nat := (GenIrp::irpFind s feature 0x0a n); (let section : Nat := (emmaBar s (feature + 1)); (let required : Nat := (emmaBar s (section + 1)); (let sub : Nat := (emmaBar s (required + 1)); (let meaning : Nat := (emmaBar s (sub + 1)); (let results : Nat := (emmaBar s (meaning + 1)); (let r : Nat := (GenIrp::irpFind s section 0x5b n); (let q : Nat := (GenIrp::irpFind s r 0x5d n); (if ((stop <? (results + 1)) || (required <? (q + 1))) then (ctor Option.none [Bytes]) else (ctor Option.some [Bytes] (GenWcag::cat (cons 0x20207b226964223a20227733632d656d6d612d312e302d (cons (Foundation.Json::span s a z) (cons 0x222c2022726566223a2022 (cons (Foundation.Json::span s (r + 1) q) (cons 0x222c202274657874223a2022 (cons (GenIrp::irpTextFrom s (meaning + 1) results false 0x n) (cons (if ((Foundation.Tar::byteOr s (emmaInsetEnd s (required + 1) n)) =? 89) then 0x222c20226b696e64223a20226d757374227d else 0x222c20226b696e64223a20226d6179227d) (nil Bytes)))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emmaRowsFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength s); (let nl : Nat := (GenIrp::irpFind s i 0x0a n); (if (n <? (nl + 1)) then (ctor Option.some [Bytes] acc) else (let a : Nat := (emmaInsetEnd s (nl + 1) n); (let digits : Nat := (emmaInsetEnd s (a + 1) n); (let z : Nat := (emmaDigitsEnd s digits n); (let feature : Nat := (emmaInsetEnd s z n); (if (not ((((Foundation.Tar::byteOr s a) =? 124) && (digits <? z)) && ((Foundation.Tar::byteOr s feature) =? 124))) then (emmaRowsFrom s (nl + 1) acc rest) else (match (emmaEntry s digits z feature)
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some entry => (emmaRowsFrom s (nl + 1) (GenWcag::cat (cons acc (cons (if ((Foundation.Bytes::byteLength acc) =? 0) then 0x5b0a else 0x2c0a) (cons entry (nil Bytes))))) rest))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emmaGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (GenWcag::u ".gen/emma-irp-facts"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some facts => (match (emmaRowsFrom facts 0 0x (Foundation.Bytes::byteLength facts))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some rows => (if ((Foundation.Bytes::byteLength rows) =? 0) then (ctor Option.none [Bytes]) else (ctor Option.some [Bytes] (Foundation.Bytes::appendBytes rows 0x0a5d0a))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

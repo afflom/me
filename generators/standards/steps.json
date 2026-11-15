@@ -29,6 +29,18 @@
       "generator": "irp",
       "split": "app/specs/standards/upstream/scxml-irp-manifest.xml",
       "output": "test/standards/generated/w3c-scxml-1.0.json"
+    },
+    {
+      "generator": "emmafacts",
+      "split": "app/specs/standards/texts/ce9766f3c28a4eed8cf036426824f8ce8d06bf31fac0ad487814ad17368ed0ce",
+      "output": ".gen/emma-irp-facts"
+    },
+    {
+      "generator": "emma",
+      "inputs": [
+        ".gen/emma-irp-facts"
+      ],
+      "output": "test/standards/generated/w3c-emma-1.0.json"
     }
   ]
 }
