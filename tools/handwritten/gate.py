@@ -75,8 +75,9 @@ def git(*args, cwd=ROOT, check=True):
 
 
 def tracked():
-    """Every file in the tree that git would commit: tracked or new, not ignored."""
-    out = git("ls-files", "-z", "--cached", "--others", "--exclude-standard").stdout.decode()
+    """Every file git tracks (in its index): what a build leaves behind untracked
+    (.lighthouseci/, screens) is no part of the Prism. Add a new file to git to measure it."""
+    out = git("ls-files", "-z", "--cached").stdout.decode()
     return sorted({p for p in out.split("\0") if p and (ROOT / p).is_file()})
 
 

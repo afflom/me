@@ -48,6 +48,7 @@ test("the committed tree passes (HW-01)", () => {
 test("refuses a new hand-written part", () => {
   const dir = scratch();
   writeFileSync(join(dir, "site/glue.mjs"), "export const glue = 1;\n");
+  assert.equal(run("git", ["add", "site/glue.mjs"], dir).status, 0);
   // even with the ledger written for it, the base never had it
   assert.equal(run("python3", ["-I", "tools/handwritten/gate.py", "--root", dir, "--base", "HEAD"], ".").status, 1);
   const r = gate(dir);
