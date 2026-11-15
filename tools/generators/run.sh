@@ -9,7 +9,8 @@
 # A request is "<generator> <output>\n" and a ustar archive of the step's inputs,
 # and must fit the request bound. A step with "split" runs once per piece of that
 # file, cut at line ends; a step with "each" runs once per element of a JSON array;
-# either way its output is the outputs joined in order. Outputs under .gen/ are
+# a step with "glob" runs once per tracked file its patterns match (cut the same
+# way), with its "inputs" beside it; its output is the outputs joined in order. Outputs under .gen/ are
 # intermediate and never committed.
 set -eu
 cd "$(dirname "$0")/../.."
@@ -67,7 +68,28 @@ echo "$steps" | while read -r step; do
   : > "$work/out"
   split_path=$(echo "$step" | js .split)
   each_path=$(echo "$step" | js .each.file)
-  if [ -n "$each_path" ]; then
+  globs=$(echo "$step" | js .glob)
+  if [ -n "$globs" ]; then
+    # One request per tracked file the globs match (per piece, when it is
+    # larger than a piece), staged at its path beside the step's inputs; a
+    # piece leaves room in the request for those inputs and their headers.
+    ins=$(echo "$step" | js .inputs)
+    rm -rf "$work/with"; mkdir -p "$work/with"
+    room=$piece
+    for i in $ins; do
+      mkdir -p "$work/with/$(dirname "$i")"; cp "$i" "$work/with/$i"
+      room=$((room - $(wc -c < "$i") - 1024))
+    done
+    for f in $(set -f; git ls-files -- $globs); do
+      rm -rf "$work/pieces"; mkdir -p "$work/pieces"
+      split -C "$room" -d -a 4 "$f" "$work/pieces/p."
+      for p in "$work/pieces"/p.*; do
+        rm -rf "$work/stage"; cp -r "$work/with" "$work/stage"; mkdir -p "$work/stage/$(dirname "$f")"
+        cp "$p" "$work/stage/$f"
+        run "$gen" "$out" "$work/stage" "$f" $ins
+      done
+    done
+  elif [ -n "$each_path" ]; then
     # One request per element of a JSON array, each staged as the file itself.
     js "$(echo "$step" | js .each.array)" < "$each_path" > "$work/elements"
     while read -r element; do

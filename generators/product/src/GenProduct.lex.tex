@@ -1,0 +1,586 @@
+\begin{lexlean}{GenProduct}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Check}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\title{Product gate}
+\begin{semanticmodule}
+definition{
+  name: views,
+  parameters: [],
+  result: Bytes,
+  body: (Check::u "person\nsystem\n")
+}
+
+definition{
+  name: statuses,
+  parameters: [],
+  result: Bytes,
+  body: (Check::u "works\nnot yet\n")
+}
+
+definition{
+  name: measureKinds,
+  parameters: [],
+  result: Bytes,
+  body: (Check::u "effectiveness\nefficiency\nsatisfaction\n")
+}
+
+definition{
+  name: directions,
+  parameters: [],
+  result: Bytes,
+  body: (Check::u "atLeast\natMost\n")
+}
+
+definition{
+  name: pdAt,
+  parameters: [v : Nat],
+  result: (Option Nat),
+  body: (ctor Option.some [Nat] v)
+}
+
+definition{
+  name: when,
+  parameters: [c : Bool, reason : Bytes],
+  result: Bytes,
+  body: (if c then reason else 0x)
+}
+
+definition{
+  name: say,
+  parameters: [a : Bytes, b : String, c : Bytes, d : Bytes],
+  result: Bytes,
+  body: (Check::line (cons a (cons (Check::u b) (cons c (cons d (nil Bytes))))))
+}
+
+definition{
+  name: says,
+  parameters: [a : Bytes, b : String, c : Bytes, d : String],
+  result: Bytes,
+  body: (say a b c (Check::u d))
+}
+
+definition{
+  name: isWord,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((((47 <? b) && (b <? 58)) || (((64 <? b) && (b <? 91)) || ((96 <? b) && (b <? 123)))) || (b =? 95))
+}
+
+definition{
+  name: wordRun,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (isWord (Foundation.Tar::byteOr s i)) then (wordRun s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: walkNamesFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then 0x else (let e : Nat := (Check::lineEndOf s i (Foundation.Bytes::byteLength s)); (let n : Nat := (wordRun s (i + 8) (Foundation.Bytes::byteLength s)); (Foundation.Bytes::appendBytes (when ((Check::startsAt s i (Check::u "  async ")) && (((i + 8) <? n) && ((Foundation.Tar::byteOr s n) =? 40))) (Check::line (cons (Foundation.Json::span s (i + 8) n) (nil Bytes)))) (walkNamesFrom s (e + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: markerFrom,
+  parameters: [s : Bytes, marker : Bytes, i : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + (Foundation.Bytes::byteLength marker))) then (ctor Option.none [Nat]) else (if (Check::startsAt s i marker) then (ctor Option.some [Nat] (i + (Foundation.Bytes::byteLength marker))) else (markerFrom s marker (i + 1) rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: walks,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (Check::u "test/product/journeys.mjs"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some source => (match (markerFrom source (Check::u "export const walks = {") 0 ((Foundation.Bytes::byteLength source) + 1))
+      | Option.none => (ctor Option.some [Bytes] 0x)
+      | Option.some b => (let body : Bytes := (Foundation.Json::span source b (Foundation.Bytes::byteLength source)); (ctor Option.some [Bytes] (walkNamesFrom body 0 ((Foundation.Bytes::byteLength body) + 1)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: journeyField,
+  parameters: [s : Bytes, j : (Option Nat), k : Bytes, field : String],
+  result: Bytes,
+  body: (when (not (Check::filled s (Check::key s j field))) (say (Check::u "journey ") "" k (Check::cat (cons (Check::u " has no ") (cons (Check::u field) (nil Bytes)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: journeyReasons,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let path : Bytes := (Check::subject archive "app/specs/product/journeys/"); (let s : Bytes := (Check::file archive path); (let walkSet : Bytes := (Check::file archive (Check::u ".gen/pd-walks")); (let j : (Option Nat) := (Foundation.Json::root s); (let k : Bytes := (Check::plain s (Check::key s j "key")); (let who : Bytes := (Check::cat (cons (Check::u "journey ") (cons k (nil Bytes)))); (let m : (Option Nat) := (Check::key s j "measure"); (let st : (Option Nat) := (Check::key s j "status"); (let w : (Option Nat) := (Check::key s j "walk"); (Check::cat (cons (when (not (Check::same k (Check::stem path))) (says path ": names key " (Check::repr s (Check::key s j "key")) "; a part's key is its file name")) (cons (journeyField s j k "name") (cons (journeyField s j k "goal") (cons (journeyField s j k "done") (cons (journeyField s j k "walk") (cons (when (not ((Check::oneOf s (Check::key s m "kind") (measureKinds)) && ((Check::filled s (Check::key s m "says")) && (Check::filled s (Check::key s m "target"))))) (says who " has no usability measure (effectiveness, efficiency or satisfaction, what it counts and its target)" 0x "")) (cons (when (not (Check::oneOf s st (statuses))) (says who " has status " (Check::repr s st) ", not works or not yet")) (cons (when ((Check::nonempty s w) && (not (Check::inLines walkSet (Check::plain s w)))) (says who " names walk '" (Check::plain s w) "', which test/product/journeys.mjs does not define")) (nil Bytes))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: journeyFact,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (Check::file archive (Check::subject archive "app/specs/product/journeys/")); (let j : (Option Nat) := (Foundation.Json::root s); (Check::line (cons (Check::plain s (Check::key s j "key")) (cons (Check::u " ") (cons (Check::str s (Check::key s j "walk")) (nil Bytes))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: orphansFrom,
+  parameters: [ws : Bytes, named : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength ws) <? (i + 1)) then 0x else (let e : Nat := (Check::lineEndOf ws i (Foundation.Bytes::byteLength ws)); (let w : Bytes := (Foundation.Json::span ws i e); (Foundation.Bytes::appendBytes (when ((0 <? (Foundation.Bytes::byteLength w)) && (not (Check::inLines named w))) (says (Check::u "walk '") "" w "' in test/product/journeys.mjs belongs to no journey: restore its journey in app/specs/product/journeys/, or remove the walk")) (orphansFrom ws named (e + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: orphans,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let ws : Bytes := (Check::file archive (Check::u ".gen/pd-walks")); (orphansFrom ws (Check::restWords (Check::file archive (Check::u ".gen/pd-journeys"))) 0 ((Foundation.Bytes::byteLength ws) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: journeyKeys,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (Check::firstWords (Check::file archive (Check::u ".gen/pd-journeys"))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: stemOf,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (Check::line (cons (Check::stem (Check::notGen archive)) (nil Bytes))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: unknownFrom,
+  parameters: [s : Bytes, i : Nat, who : Bytes, known : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (Check::elemDone s i) then 0x else (let j : Bytes := (Check::plain s (pdAt i)); (Foundation.Bytes::appendBytes (when (not (Check::inLines known j)) (says who " serves " j ", which is not a journey")) (unknownFrom s (Check::elemNext s i) who known rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: facetReasons,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let path : Bytes := (Check::subject archive "app/specs/product/facets/"); (let s : Bytes := (Check::file archive path); (let k : Bytes := (Check::stem path); (let e : (Option Nat) := (Foundation.Json::root s); (let v : (Option Nat) := (Check::key s e "view"); (let sv : (Option Nat) := (Check::key s e "serves"); (let who : Bytes := (Check::cat (cons (Check::u "facet '") (cons k (cons (Check::u "'") (nil Bytes))))); (if (not (Check::inLines (Check::file archive (Check::u ".gen/pd-coherence")) k)) then (says (Check::u "the product record has facet '") "" k "', which the coherence registry does not") else (Check::cat (cons (when (not ((Check::isText s v) && (Check::same (Check::str s v) (Check::u "system")))) (says who " is a back-end part, so its viewpoint is system, not " (Check::repr s v) "")) (cons (when (not (Check::nonempty s sv)) (says who " serves no journey" 0x "")) (cons (unknownFrom s (Check::elemStart s sv) who (journeyKeys archive) (Foundation.Bytes::byteLength s)) (nil Bytes))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: missingFrom,
+  parameters: [ks : Bytes, placed : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength ks) <? (i + 1)) then 0x else (let e : Nat := (Check::lineEndOf ks i (Foundation.Bytes::byteLength ks)); (let k : Bytes := (Foundation.Json::span ks i e); (Foundation.Bytes::appendBytes (when ((0 <? (Foundation.Bytes::byteLength k)) && (not (Check::inLines placed k))) (says (Check::u "facet '") "" k "' is in the Prism but not in the product record: name its viewpoint and the journeys it serves")) (missingFrom ks placed (e + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: facetsMissing,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let ks : Bytes := (Check::file archive (Check::u ".gen/pd-coherence")); (missingFrom ks (Check::file archive (Check::u ".gen/pd-facets")) 0 ((Foundation.Bytes::byteLength ks) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: afterKind,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (if (Check::startsAt s i (Check::u "function* ")) then (i + 10) else (if (Check::startsAt s i (Check::u "function ")) then (i + 9) else (if (Check::startsAt s i (Check::u "const ")) then (i + 6) else (if (Check::startsAt s i (Check::u "let ")) then (i + 4) else (if (Check::startsAt s i (Check::u "class ")) then (i + 6) else 0))))),
+  axioms: [propext]
+}
+
+definition{
+  name: exportAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Bytes,
+  body: (if (Check::startsAt s i (Check::u "export ")) then (let a : Nat := (if (Check::startsAt s (i + 7) (Check::u "async ")) then (i + 13) else (i + 7)); (let n : Nat := (afterKind s a); (if (n =? 0) then 0x else (Foundation.Json::span s n (wordRun s n (Foundation.Bytes::byteLength s)))))) else 0x),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: exportsFrom,
+  parameters: [s : Bytes, path : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then 0x else (let e : Nat := (Check::lineEndOf s i (Foundation.Bytes::byteLength s)); (let name : Bytes := (exportAt s i); (Foundation.Bytes::appendBytes (when (0 <? (Foundation.Bytes::byteLength name)) (Check::line (cons path (cons 0x23 (cons name (nil Bytes)))))) (exportsFrom s path (e + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: index,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let path : Bytes := (Check::notGen archive); (let s : Bytes := (Check::file archive path); (when (Check::inLines (Check::file archive (Check::u ".gen/pd-refs")) path) (Foundation.Bytes::appendBytes (Check::line (cons path (nil Bytes))) (exportsFrom s path 0 ((Foundation.Bytes::byteLength s) + 1)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hashAt,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then i else (if ((Foundation.Tar::byteOr s i) =? 35) then i else (hashAt s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: refsFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (Check::elemDone s i) then 0x else (let c : Bytes := (Check::plain s (pdAt i)); (Foundation.Bytes::appendBytes (Check::line (cons (Foundation.Json::span c 0 (hashAt c 0 (Foundation.Bytes::byteLength c))) (nil Bytes))) (refsFrom s (Check::elemNext s i) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: refs,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (Check::file archive (Check::subject archive "app/specs/product/features/")); (let f : (Option Nat) := (Foundation.Json::root s); (Foundation.Bytes::appendBytes (refsFrom s (Check::elemStart s (Check::key s f "calls")) (Foundation.Bytes::byteLength s)) (refsFrom s (Check::elemStart s (Check::key s f "acceptance")) (Foundation.Bytes::byteLength s))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: callsFrom,
+  parameters: [s : Bytes, i : Nat, who : Bytes, idx : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (Check::elemDone s i) then 0x else (let call : Bytes := (Check::plain s (pdAt i)); (let h : Nat := (hashAt call 0 (Foundation.Bytes::byteLength call)); (let path : Bytes := (Foundation.Json::span call 0 h); (let name : Bytes := (Foundation.Json::span call (h + 1) (Foundation.Bytes::byteLength call)); (let exported : Bool := ((0 <? (Foundation.Bytes::byteLength name)) && (Check::inLines idx (Check::cat (cons path (cons 0x23 (cons name (nil Bytes))))))); (Foundation.Bytes::appendBytes (if (not (Check::inLines idx path)) then (says who " is realized by " path ", which does not exist") else (when (not exported) (say who " is realized by " call (Check::cat (cons (Check::u ", which ") (cons path (cons (Check::u " does not export") (nil Bytes)))))))) (callsFrom s (Check::elemNext s i) who idx rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: listedFrom,
+  parameters: [s : Bytes, i : Nat, who : Bytes, set : Bytes, before : String, after : String, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (Check::elemDone s i) then 0x else (let x : Bytes := (Check::plain s (pdAt i)); (Foundation.Bytes::appendBytes (when (not (Check::inLines set x)) (says who before x after)) (listedFrom s (Check::elemNext s i) who set before after rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: featureReasons,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (Check::file archive (Check::subject archive "app/specs/product/features/")); (let f : (Option Nat) := (Foundation.Json::root s); (let who : Bytes := (Check::cat (cons (Check::u "feature ") (cons (Check::plain s (Check::key s f "key")) (nil Bytes)))); (let js : (Option Nat) := (Check::key s f "journeys"); (let cs : (Option Nat) := (Check::key s f "calls"); (let ac : (Option Nat) := (Check::key s f "acceptance"); (let qs : (Option Nat) := (Check::key s f "quality"); (let idx : Bytes := (Check::file archive (Check::u ".gen/pd-index")); (let n : Nat := (Foundation.Bytes::byteLength s); (Check::cat (cons (when (not (Check::filled s (Check::key s f "statement"))) (says who " has no statement" 0x "")) (cons (when (not (Check::nonempty s js)) (says who " serves no journey" 0x "")) (cons (listedFrom s (Check::elemStart s js) who (journeyKeys archive) " serves " ", which is not a journey" n) (cons (when (not (Check::nonempty s cs)) (says who " names no call that realizes it" 0x "")) (cons (callsFrom s (Check::elemStart s cs) who idx n) (cons (when (not (Check::nonempty s ac)) (says who " names no suite that accepts it" 0x "")) (cons (listedFrom s (Check::elemStart s ac) who idx " is accepted by " ", which does not exist" n) (cons (when (not (Check::nonempty s qs)) (says who " is held by no quality requirement" 0x "")) (cons (listedFrom s (Check::elemStart s qs) who (Check::file archive (Check::u ".gen/pd-quality")) " is held by " ", which is not a quality requirement" n) (nil Bytes)))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: featureHeld,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (Check::file archive (Check::subject archive "app/specs/product/features/")); (Check::texts s (Check::key s (Foundation.Json::root s) "quality"))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: measureLines,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (Check::elemDone s i) then 0x else (let g : (Option Nat) := (Check::key s (pdAt i) "gate"); (Foundation.Bytes::appendBytes (when (Check::isText s g) (Check::line (cons (Check::str s g) (cons (Check::u " ") (cons (Check::plain s (Check::key s (pdAt i) "key")) (nil Bytes)))))) (measureLines s (Check::elemNext s i) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: measures,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (Check::file archive (Check::subject archive "app/specs/product/quality/")); (measureLines s (Check::elemStart s (Check::key s (Foundation.Json::root s) "measures")) (Foundation.Bytes::byteLength s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: hitsFrom,
+  parameters: [ms : Bytes, path : Bytes, piece : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength ms) <? (i + 1)) then 0x else (let e : Nat := (Check::lineEndOf ms i (Foundation.Bytes::byteLength ms)); (let m : Bytes := (Foundation.Json::span ms i e); (Foundation.Bytes::appendBytes (when ((0 <? (Foundation.Bytes::byteLength m)) && (Check::same (Check::firstWord m) path)) (Foundation.Bytes::appendBytes (Check::line (cons path (nil Bytes))) (when (Check::contains piece (Check::cat (cons 0x22 (cons (Check::restWord m) (cons 0x22 (nil Bytes)))))) (Check::line (cons m (nil Bytes)))))) (hitsFrom ms path piece (e + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: hits,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let path : Bytes := (Check::notGen archive); (let ms : Bytes := (Check::file archive (Check::u ".gen/pd-measures")); (hitsFrom ms path (Check::file archive path) 0 ((Foundation.Bytes::byteLength ms) + 1)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: isNumber,
+  parameters: [s : Bytes, v : (Option Nat)],
+  result: Bool,
+  body: (let b : Nat := (Check::lead s v); ((b =? 45) || ((47 <? b) && (b <? 58)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: measureReasons,
+  parameters: [s : Bytes, i : Nat, k : Bytes, hit : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (Check::elemDone s i) then 0x else (let m : (Option Nat) := (pdAt i); (let mk : Bytes := (Check::plain s (Check::key s m "key")); (let who : Bytes := (Check::cat (cons (Check::u "quality measure ") (cons k (cons 0x2f (cons mk (nil Bytes)))))); (let d : (Option Nat) := (Check::key s m "direction"); (let g : (Option Nat) := (Check::key s m "gate"); (Check::cat (cons (when (not (Check::filled s (Check::key s m "says"))) (says who " does not say what it counts" 0x "")) (cons (when (not (Check::oneOf s d (directions))) (says who " has direction " (Check::repr s d) ", not atLeast or atMost")) (cons (when (not (isNumber s (Check::key s m "threshold"))) (says who " has no threshold" 0x "")) (cons (if ((not (Check::isText s g)) || (not (Check::inLines hit (Check::str s g)))) then (says who " is held by gate " (Check::repr s g) ", which does not exist") else (when (not (Check::inLines hit (Check::cat (cons (Check::str s g) (cons (Check::u " ") (cons mk (nil Bytes))))))) (says who " is held by " (Check::str s g) ", which never computes it"))) (cons (measureReasons s (Check::elemNext s i) k hit rest) (nil Bytes)))))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: qualityReasons,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (Check::file archive (Check::subject archive "app/specs/product/quality/")); (let p : Bytes := (Check::file archive (Check::u "app/specs/product/spec.json")); (let model : (Option Nat) := (Check::key p (Foundation.Json::root p) "qualityModel"); (let r : (Option Nat) := (Foundation.Json::root s); (let k : Bytes := (Check::plain s (Check::key s r "key")); (let who : Bytes := (Check::cat (cons (Check::u "quality requirement ") (cons k (nil Bytes)))); (let c : (Option Nat) := (Check::key s r "characteristic"); (let sub : (Option Nat) := (Check::key s r "subcharacteristic"); (let ms : (Option Nat) := (Check::key s r "measures"); (let known : Bool := ((Check::isText s c) && (not (Check::same (Check::str s c) (Check::u "comment")))); (let cm : (Option Nat) := (Check::keyBytes p model (Check::str s c)); (Check::cat (cons (when (not (Check::filled s (Check::key s r "name"))) (says who " has no name" 0x "")) (cons (when (not (Check::filled s (Check::key s r "says"))) (says who " has no says" 0x "")) (cons (if ((not known) || (Check::isNull p cm)) then (says who " names characteristic " (Check::repr s c) ", which ISO/IEC 25010 does not have") else (when (not (Check::oneOf s sub (Check::texts p cm))) (say who " names subcharacteristic " (Check::repr s sub) (Check::cat (cons (Check::u ", which is not one of ") (cons (Check::str s c) (nil Bytes))))))) (cons (when (not (Check::inLines (Check::file archive (Check::u ".gen/pd-held")) k)) (says who " holds no feature" 0x "")) (cons (when (not (Check::nonempty s ms)) (says who " has no measure" 0x "")) (cons (measureReasons s (Check::elemStart s ms) k (Check::file archive (Check::u ".gen/pd-hits")) (Foundation.Bytes::byteLength s)) (nil Bytes))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ownAt,
+  parameters: [sf : Bytes, sr : (Option Nat), kind : Bytes, k : Bytes],
+  result: (Option Nat),
+  body: (match (Check::withField sf (Check::keyBytes sf sr kind) "key" k)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some e => (Check::key sf (pdAt e) "viewpoint")),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: givenAt,
+  parameters: [pf : Bytes, pv : (Option Nat), kind : Bytes, k : Bytes],
+  result: (Option Nat),
+  body: (Check::keyBytes pf (Check::keyBytes pf pv kind) k),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: viewOf,
+  parameters: [pf : Bytes, pv : (Option Nat), sf : Bytes, sr : (Option Nat), kind : String, k : Bytes],
+  result: Bytes,
+  body: (match (ownAt sf sr (Check::u kind) k)
+    | Option.none => (Check::str pf (givenAt pf pv (Check::u kind) k))
+    | Option.some o => (Check::str sf (ctor Option.some [Nat] o))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: placedFrom,
+  parameters: [pf : Bytes, pv : (Option Nat), sf : Bytes, sr : (Option Nat), kind : Bytes, sg : Bytes, ks : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength ks) <? (i + 1)) then 0x else (let e : Nat := (Check::lineEndOf ks i (Foundation.Bytes::byteLength ks)); (let k : Bytes := (Foundation.Json::span ks i e); (let g : (Option Nat) := (givenAt pf pv kind k); (let what : Bytes := (Check::cat (cons (Check::u "surface ") (cons sg (cons (Check::u " '") (cons k (cons (Check::u "'") (nil Bytes))))))); (Foundation.Bytes::appendBytes (match (ownAt sf sr kind k)
+      | Option.some o => (Foundation.Bytes::appendBytes (when (not (Check::oneOf sf (pdAt o) (views))) (says what " has viewpoint " (Check::repr sf (pdAt o)) ", not person or system")) (when (not (Check::isNull pf g)) (says what " carries its viewpoint in the surface model; remove the copy from the product record" 0x "")))
+      | Option.none => (when (not (Check::oneOf pf g (views))) (says what " has no viewpoint in the product record (person or system)" 0x ""))) (placedFrom pf pv sf sr kind sg ks (e + 1) rest)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: extraFrom,
+  parameters: [sg : Bytes, have : Bytes, ks : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength ks) <? (i + 1)) then 0x else (let e : Nat := (Check::lineEndOf ks i (Foundation.Bytes::byteLength ks)); (let k : Bytes := (Foundation.Json::span ks i e); (Foundation.Bytes::appendBytes (when (not (Check::inLines have k)) (say (Check::u "the product record places surface ") "" sg (Check::cat (cons (Check::u " '") (cons k (cons (Check::u "', which the surface does not have") (nil Bytes))))))) (extraFrom sg have ks (e + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: haveKeys,
+  parameters: [sf : Bytes, sr : (Option Nat), kind : String],
+  result: Bytes,
+  body: (if (Check::same (Check::u kind) (Check::u "words")) then (Check::keys sf (Check::key sf sr "words")) else (if (Check::same (Check::u kind) (Check::u "lexicons")) then (Check::u "labels\nroles\n") else (Check::fieldOf sf (Check::key sf sr kind) "key"))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: placement,
+  parameters: [pf : Bytes, pv : (Option Nat), sf : Bytes, sr : (Option Nat), kind : String, sg : String],
+  result: Bytes,
+  body: (let have : Bytes := (haveKeys sf sr kind); (let given : Bytes := (Check::keys pf (Check::key pf pv kind)); (Foundation.Bytes::appendBytes (placedFrom pf pv sf sr (Check::u kind) (Check::u sg) have 0 ((Foundation.Bytes::byteLength have) + 1)) (extraFrom (Check::u sg) have given 0 ((Foundation.Bytes::byteLength given) + 1))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: crossPlaces,
+  parameters: [pf : Bytes, pv : (Option Nat), sf : Bytes, sr : (Option Nat), i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (Check::elemDone sf i) then 0x else (let k : Bytes := (Check::str sf (Check::key sf (pdAt i) "key")); (let a : Bytes := (Check::str sf (Check::key sf (pdAt i) "act")); (Foundation.Bytes::appendBytes (when ((Check::same (viewOf pf pv sf sr "places" k) (Check::u "person")) && (Check::same (viewOf pf pv sf sr "acts" a) (Check::u "system"))) (say (Check::u "person place '") "" k (Check::cat (cons (Check::u "' offers act '") (cons a (cons (Check::u "', which is in the system view") (nil Bytes))))))) (crossPlaces pf pv sf sr (Check::elemNext sf i) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: crossFeeders,
+  parameters: [pf : Bytes, pv : (Option Nat), sf : Bytes, sr : (Option Nat), i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (Check::elemDone sf i) then 0x else (let k : Bytes := (Check::str sf (Check::key sf (pdAt i) "key")); (let st : Bytes := (Check::str sf (Check::key sf (pdAt i) "setting")); (Foundation.Bytes::appendBytes (when ((Check::same (viewOf pf pv sf sr "feeders" k) (Check::u "person")) && ((not (Check::same st (Check::u "none"))) && (Check::same (viewOf pf pv sf sr "settings" st) (Check::u "system")))) (say (Check::u "person feeder '") "" k (Check::cat (cons (Check::u "' is driven by setting '") (cons st (cons (Check::u "', which is in the system view") (nil Bytes))))))) (crossFeeders pf pv sf sr (Check::elemNext sf i) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: inGroup,
+  parameters: [sf : Bytes, i : Nat, group : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (Check::elemDone sf i) then 0x else (let g : (Option Nat) := (Check::key sf (pdAt i) "group"); (Foundation.Bytes::appendBytes (when ((Check::isText sf g) && (Check::same (Check::str sf g) group)) (Check::line (cons (Check::str sf (Check::key sf (pdAt i) "key")) (nil Bytes)))) (inGroup sf (Check::elemNext sf i) group rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: shownBy,
+  parameters: [pf : Bytes, sf : Bytes, settings : (Option Nat), i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (Check::elemDone pf i) then 0x else (let st : (Option Nat) := (Check::key pf (pdAt i) "setting"); (let sc : (Option Nat) := (Check::key pf (pdAt i) "section"); (Check::cat (cons (when (not (Check::isNull pf st)) (Check::line (cons (Check::plain pf st) (nil Bytes)))) (cons (when (not (Check::isNull pf sc)) (inGroup sf (Check::elemStart sf settings) (Check::plain pf sc) (Foundation.Bytes::byteLength sf))) (cons (shownBy pf sf settings (Check::elemNext pf i) rest) (nil Bytes))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: requiredField,
+  parameters: [pf : Bytes, r : (Option Nat), who : Bytes, field : String],
+  result: Bytes,
+  body: (when (not (Check::filled pf (Check::key pf r field))) (says who " has no " (Check::u field) "")),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: requiredFrom,
+  parameters: [pf : Bytes, settingKeys : Bytes, groupKeys : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (Check::elemDone pf i) then 0x else (let r : (Option Nat) := (pdAt i); (let who : Bytes := (Check::cat (cons (Check::u "required setting ") (cons (Check::repr pf (Check::key pf r "key")) (nil Bytes)))); (let st : (Option Nat) := (Check::key pf r "status"); (let set : (Option Nat) := (Check::key pf r "setting"); (let sc : (Option Nat) := (Check::key pf r "section"); (Check::cat (cons (requiredField pf r who "key") (cons (requiredField pf r who "name") (cons (requiredField pf r who "why") (cons (when (not (Check::oneOf pf st (statuses))) (says who " has status " (Check::repr pf st) ", not works or not yet")) (cons (when ((not (Check::isNull pf set)) && (not (Check::oneOf pf set settingKeys))) (says who " is shown by setting " (Check::repr pf set) ", which the surface does not have")) (cons (when ((not (Check::isNull pf sc)) && (not (Check::oneOf pf sc groupKeys))) (says who " is shown by section " (Check::repr pf sc) ", which the surface does not have")) (cons (when ((Check::isNull pf set) && ((Check::isNull pf sc) && ((Check::isText pf st) && (Check::same (Check::str pf st) (Check::u "works"))))) (says who " works but names no surface setting or section that shows it" 0x "")) (cons (requiredFrom pf settingKeys groupKeys (Check::elemNext pf i) rest) (nil Bytes))))))))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: settingFrom,
+  parameters: [pf : Bytes, pv : (Option Nat), sf : Bytes, sr : (Option Nat), shown : Bytes, unrequired : Bytes, ks : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength ks) <? (i + 1)) then 0x else (let e : Nat := (Check::lineEndOf ks i (Foundation.Bytes::byteLength ks)); (let k : Bytes := (Foundation.Json::span ks i e); (let person : Bool := (Check::same (viewOf pf pv sf sr "settings" k) (Check::u "person")); (Check::cat (cons (when (person && ((not (Check::inLines shown k)) && (not (Check::inLines unrequired k)))) (says (Check::u "setting '") "" k "' is in the person's view but the Prism does not require it of the person: move it to the system view, or name the required setting it shows")) (cons (when ((Check::inLines unrequired k) && ((not person) || (Check::inLines shown k))) (says (Check::u "setting '") "" k "' is listed as unrequired but no longer is: remove it from 'unrequired'")) (cons (settingFrom pf pv sf sr shown unrequired ks (e + 1) rest) (nil Bytes)))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: systemNames,
+  parameters: [pf : Bytes, pv : (Option Nat), sf : Bytes, sr : (Option Nat), kind : String, field : String, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (Check::elemDone sf i) then 0x else (let t : Bytes := (Check::str sf (Check::key sf (pdAt i) field)); (Foundation.Bytes::appendBytes (when ((Check::same (viewOf pf pv sf sr kind (Check::str sf (Check::key sf (pdAt i) "key"))) (Check::u "system")) && (0 <? (Foundation.Bytes::byteLength t))) (Check::line (cons t (nil Bytes)))) (systemNames pf pv sf sr kind field (Check::elemNext sf i) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: systemFeeders,
+  parameters: [pf : Bytes, pv : (Option Nat), sf : Bytes, sr : (Option Nat), i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (Check::elemDone sf i) then 0x else (let t : Bytes := (Check::str sf (Check::keyBytes sf (Check::key sf sr "words") (Check::str sf (Check::key sf (pdAt i) "word")))); (Foundation.Bytes::appendBytes (when ((Check::same (viewOf pf pv sf sr "feeders" (Check::str sf (Check::key sf (pdAt i) "key"))) (Check::u "system")) && (0 <? (Foundation.Bytes::byteLength t))) (Check::line (cons t (nil Bytes)))) (systemFeeders pf pv sf sr (Check::elemNext sf i) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: systemWords,
+  parameters: [pf : Bytes, pv : (Option Nat), sf : Bytes, sr : (Option Nat), i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (Check::memberDone sf i) then 0x else (let k : Bytes := (Check::str sf (pdAt i)); (Foundation.Bytes::appendBytes (when (Check::same (viewOf pf pv sf sr "words" k) (Check::u "system")) (Check::line (cons (Check::str sf (pdAt (Check::memberValue sf i))) (nil Bytes)))) (systemWords pf pv sf sr (Check::memberNext sf i) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: lexicon,
+  parameters: [pf : Bytes, pv : (Option Nat), sf : Bytes, sr : (Option Nat), name : String],
+  result: Bytes,
+  body: (when (Check::same (viewOf pf pv sf sr "lexicons" (Check::u name)) (Check::u "system")) (Check::texts sf (Check::key sf sr name))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: debtFrom,
+  parameters: [pf : Bytes, system : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (Check::elemDone pf i) then 0x else (let d : Bytes := (Check::plain pf (pdAt i)); (Foundation.Bytes::appendBytes (when (not (Check::inLines system d)) (says (Check::u "debt '") "" d "' is not a word of the system view")) (debtFrom pf system (Check::elemNext pf i) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfaceReasons,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let pf : Bytes := (Check::file archive (Check::u "app/specs/product/spec.json")); (let sf : Bytes := (Check::file archive (Check::u "app/specs/surface/spec.json")); (let pr : (Option Nat) := (Foundation.Json::root pf); (let sr : (Option Nat) := (Foundation.Json::root sf); (let pv : (Option Nat) := (Check::key pf pr "surface"); (let req : (Option Nat) := (Check::key pf pr "requires"); (let reqs : (Option Nat) := (Check::key pf req "settings"); (let settings : (Option Nat) := (Check::key sf sr "settings"); (let settingKeys : Bytes := (Check::fieldOf sf settings "key"); (let np : Nat := (Foundation.Bytes::byteLength pf); (let ns : Nat := (Foundation.Bytes::byteLength sf); (let system : Bytes := (Check::cat (cons (Check::texts pf (Check::key pf (Check::key pf pr "machinery") "terms")) (cons (systemNames pf pv sf sr "places" "name" (Check::elemStart sf (Check::key sf sr "places")) ns) (cons (systemNames pf pv sf sr "acts" "word" (Check::elemStart sf (Check::key sf sr "acts")) ns) (cons (systemNames pf pv sf sr "groups" "name" (Check::elemStart sf (Check::key sf sr "groups")) ns) (cons (systemNames pf pv sf sr "settings" "name" (Check::elemStart sf settings) ns) (cons (systemFeeders pf pv sf sr (Check::elemStart sf (Check::key sf sr "feeders")) ns) (cons (systemWords pf pv sf sr (Check::memberStart sf (Check::key sf sr "words")) ns) (cons (lexicon pf pv sf sr "labels") (cons (lexicon pf pv sf sr "roles") (nil Bytes))))))))))); (Check::cat (cons (placement pf pv sf sr "places" "place") (cons (placement pf pv sf sr "acts" "act") (cons (placement pf pv sf sr "groups" "group") (cons (placement pf pv sf sr "settings" "setting") (cons (placement pf pv sf sr "feeders" "feeder") (cons (placement pf pv sf sr "words" "word") (cons (placement pf pv sf sr "lexicons" "lexicon") (cons (crossPlaces pf pv sf sr (Check::elemStart sf (Check::key sf sr "places")) ns) (cons (crossFeeders pf pv sf sr (Check::elemStart sf (Check::key sf sr "feeders")) ns) (cons (requiredFrom pf settingKeys (Check::fieldOf sf (Check::key sf sr "groups") "key") (Check::elemStart pf reqs) np) (cons (settingFrom pf pv sf sr (shownBy pf sf settings (Check::elemStart pf reqs) np) (Check::texts pf (Check::key pf req "unrequired")) settingKeys 0 ((Foundation.Bytes::byteLength settingKeys) + 1)) (cons (debtFrom pf system (Check::elemStart pf (Check::key pf pr "debt")) np) (nil Bytes)))))))))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

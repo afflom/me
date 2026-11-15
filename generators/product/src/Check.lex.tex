@@ -1,0 +1,480 @@
+\begin{lexlean}{Check}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\title{Record checks}
+\begin{semanticmodule}
+definition{
+  name: u,
+  parameters: [value : String],
+  result: Bytes,
+  body: (Foundation.Utf8::encode value)
+}
+
+definition{
+  name: cat,
+  parameters: [parts : (List Bytes)],
+  result: Bytes,
+  body: (match parts
+    | List.nil => 0x
+    | List.cons head rest => (Foundation.Bytes::appendBytes head (cat rest))),
+  recursive_argument: parts
+}
+
+definition{
+  name: line,
+  parameters: [parts : (List Bytes)],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes (cat parts) 0x0a)
+}
+
+definition{
+  name: len,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (Foundation.Bytes::byteLength s)
+}
+
+definition{
+  name: same,
+  parameters: [left : Bytes, right : Bytes],
+  result: Bool,
+  body: (Foundation.Tar::sameBytes left right),
+  axioms: [propext]
+}
+
+definition{
+  name: startsAt,
+  parameters: [s : Bytes, i : Nat, pattern : Bytes],
+  result: Bool,
+  body: (Foundation.Tar::sameBytes (Foundation.Json::span s i (i + (Foundation.Bytes::byteLength pattern))) pattern),
+  axioms: [propext]
+}
+
+definition{
+  name: findFromOf,
+  parameters: [s : Bytes, pattern : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + (Foundation.Bytes::byteLength pattern))) then false else (if (((Foundation.Tar::byteOr s i) =? (Foundation.Tar::byteOr pattern 0)) && (startsAt s i pattern)) then true else (findFromOf s pattern (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: contains,
+  parameters: [s : Bytes, pattern : Bytes],
+  result: Bool,
+  body: (findFromOf s pattern 0 ((Foundation.Bytes::byteLength s) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: inLines,
+  parameters: [set : Bytes, x : Bytes],
+  result: Bool,
+  body: (contains (Foundation.Bytes::appendBytes 0x0a set) (cat (cons 0x0a (cons x (cons 0x0a (nil Bytes)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: lineEndOf,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then i else (if ((Foundation.Tar::byteOr s i) =? 10) then i else (lineEndOf s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: wordAfter,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then i else (if ((Foundation.Tar::byteOr s i) =? 32) then i else (wordAfter s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: firstWord,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (Foundation.Json::span s 0 (wordAfter s 0 (Foundation.Bytes::byteLength s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: restWord,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let e : Nat := (wordAfter s 0 (Foundation.Bytes::byteLength s)); (Foundation.Json::span s (e + 1) (Foundation.Bytes::byteLength s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: file,
+  parameters: [archive : Bytes, path : Bytes],
+  result: Bytes,
+  body: (match (Foundation.Tar::find archive path)
+    | Option.none => 0x
+    | Option.some b => b),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: lastSlash,
+  parameters: [s : Bytes, i : Nat, found : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => found
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then found else (if ((Foundation.Tar::byteOr s i) =? 47) then (lastSlash s (i + 1) (i + 1) rest) else (lastSlash s (i + 1) found rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: firstDot,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then i else (if ((Foundation.Tar::byteOr s i) =? 46) then i else (firstDot s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stem,
+  parameters: [path : Bytes],
+  result: Bytes,
+  body: (let b : Nat := (lastSlash path 0 0 (Foundation.Bytes::byteLength path)); (Foundation.Json::span path b (firstDot path b (Foundation.Bytes::byteLength path)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: key,
+  parameters: [s : Bytes, at : (Option Nat), name : String],
+  result: (Option Nat),
+  body: (Foundation.Json::memberAt s at (u name)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: keyBytes,
+  parameters: [s : Bytes, at : (Option Nat), name : Bytes],
+  result: (Option Nat),
+  body: (Foundation.Json::memberAt s at name),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: str,
+  parameters: [s : Bytes, at : (Option Nat)],
+  result: Bytes,
+  body: (Foundation.Json::textAt s at),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: lead,
+  parameters: [s : Bytes, at : (Option Nat)],
+  result: Nat,
+  body: (match at
+    | Option.none => 0
+    | Option.some v => (Foundation.Tar::byteOr s v)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: isText,
+  parameters: [s : Bytes, at : (Option Nat)],
+  result: Bool,
+  body: ((lead s at) =? 34),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: isNull,
+  parameters: [s : Bytes, at : (Option Nat)],
+  result: Bool,
+  body: (match at
+    | Option.none => true
+    | Option.some v => (startsAt s v (u "null"))),
+  axioms: [propext]
+}
+
+definition{
+  name: raw,
+  parameters: [s : Bytes, at : (Option Nat)],
+  result: Bytes,
+  body: (match at
+    | Option.none => 0x
+    | Option.some v => (Foundation.Json::span s v (Foundation.Json::valueEnd s v))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: blankFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then true else (if (Foundation.Json::isSpace (Foundation.Tar::byteOr s i)) then (blankFrom s (i + 1) rest) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: filled,
+  parameters: [s : Bytes, at : (Option Nat)],
+  result: Bool,
+  body: (match at
+    | Option.none => false
+    | Option.some v => (if ((Foundation.Tar::byteOr s v) =? 34) then (not (blankFrom (str s at) 0 (Foundation.Bytes::byteLength (str s at)))) else true)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nonempty,
+  parameters: [s : Bytes, at : (Option Nat)],
+  result: Bool,
+  body: (match at
+    | Option.none => false
+    | Option.some v => (let b : Nat := (Foundation.Tar::byteOr s v); (let falsy : Bool := ((startsAt s v (u "null")) || ((startsAt s v (u "false")) || ((startsAt s v (u "0")) && (not (startsAt s v (u "0.")))))); (if (b =? 91) then (0 <? (Foundation.Json::count s v)) else (if (b =? 123) then (not ((Foundation.Json::at s (Foundation.Json::space s (v + 1))) =? 125)) else (if (b =? 34) then (0 <? (Foundation.Bytes::byteLength (str s at))) else (not falsy))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: quote,
+  parameters: [t : Bytes],
+  result: Bytes,
+  body: (if ((contains t 0x27) && (not (contains t 0x22))) then (cat (cons 0x22 (cons t (cons 0x22 (nil Bytes))))) else (cat (cons 0x27 (cons t (cons 0x27 (nil Bytes)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: repr,
+  parameters: [s : Bytes, at : (Option Nat)],
+  result: Bytes,
+  body: (match at
+    | Option.none => (u "None")
+    | Option.some v => (if ((Foundation.Tar::byteOr s v) =? 34) then (quote (str s at)) else (if (startsAt s v (u "null")) then (u "None") else (if (startsAt s v (u "true")) then (u "True") else (if (startsAt s v (u "false")) then (u "False") else (raw s at)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: plain,
+  parameters: [s : Bytes, at : (Option Nat)],
+  result: Bytes,
+  body: (if (isText s at) then (str s at) else (repr s at)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: oneOf,
+  parameters: [s : Bytes, at : (Option Nat), set : Bytes],
+  result: Bool,
+  body: ((isText s at) && (inLines set (str s at))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: wordsFrom,
+  parameters: [set : Bytes, i : Nat, rest : Bool, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ more => (if ((Foundation.Bytes::byteLength set) <? (i + 1)) then 0x else (let e : Nat := (lineEndOf set i (Foundation.Bytes::byteLength set)); (let l : Bytes := (Foundation.Json::span set i e); (Foundation.Bytes::appendBytes (if (e =? i) then 0x else (line (cons (if rest then (restWord l) else (firstWord l)) (nil Bytes)))) (wordsFrom set (e + 1) rest more)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: firstWords,
+  parameters: [set : Bytes],
+  result: Bytes,
+  body: (wordsFrom set 0 false ((Foundation.Bytes::byteLength set) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: restWords,
+  parameters: [set : Bytes],
+  result: Bytes,
+  body: (wordsFrom set 0 true ((Foundation.Bytes::byteLength set) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: entryFrom,
+  parameters: [archive : Bytes, prefix : Bytes, skip : Bool, header : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((Foundation.Tar::byteOr archive header) =? 0) then 0x else (let name : Bytes := (Foundation.Tar::entryName archive header); (if (if skip then (not (startsAt name 0 prefix)) else (startsAt name 0 prefix)) then name else (entryFrom archive prefix skip ((header + 512) + (Foundation.Tar::padded (Foundation.Tar::entrySize archive header))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: subject,
+  parameters: [archive : Bytes, prefix : String],
+  result: Bytes,
+  body: (entryFrom archive (u prefix) false 0 (prim quotient (Foundation.Bytes::byteLength archive) 512 0 : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: notGen,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (entryFrom archive (u ".gen/") true 0 (prim quotient (Foundation.Bytes::byteLength archive) 512 0 : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: elemStart,
+  parameters: [s : Bytes, at : (Option Nat)],
+  result: Nat,
+  body: (match at
+    | Option.none => (Foundation.Bytes::byteLength s)
+    | Option.some v => (if ((Foundation.Json::at s v) =? 91) then (Foundation.Json::space s (v + 1)) else (Foundation.Bytes::byteLength s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: elemDone,
+  parameters: [s : Bytes, i : Nat],
+  result: Bool,
+  body: (((Foundation.Bytes::byteLength s) <? (i + 1)) || ((Foundation.Json::at s i) =? 93)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: elemNext,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let n : Nat := (Foundation.Json::space s (Foundation.Json::valueEnd s i)); (if ((Foundation.Json::at s n) =? 44) then (Foundation.Json::space s (n + 1)) else (Foundation.Bytes::byteLength s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: memberStart,
+  parameters: [s : Bytes, at : (Option Nat)],
+  result: Nat,
+  body: (match at
+    | Option.none => (Foundation.Bytes::byteLength s)
+    | Option.some v => (if ((Foundation.Json::at s v) =? 123) then (Foundation.Json::space s (v + 1)) else (Foundation.Bytes::byteLength s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: memberDone,
+  parameters: [s : Bytes, i : Nat],
+  result: Bool,
+  body: (((Foundation.Bytes::byteLength s) <? (i + 1)) || (not ((Foundation.Json::at s i) =? 34))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: memberValue,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (Foundation.Json::space s ((Foundation.Json::space s ((Foundation.Json::stringEnd s (i + 1)) + 1)) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: memberNext,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let n : Nat := (Foundation.Json::space s (Foundation.Json::valueEnd s (memberValue s i))); (if ((Foundation.Json::at s n) =? 44) then (Foundation.Json::space s (n + 1)) else (Foundation.Bytes::byteLength s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: textsFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (elemDone s i) then 0x else (Foundation.Bytes::appendBytes (line (cons (str s (ctor Option.some [Nat] i)) (nil Bytes))) (textsFrom s (elemNext s i) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: texts,
+  parameters: [s : Bytes, at : (Option Nat)],
+  result: Bytes,
+  body: (textsFrom s (elemStart s at) (Foundation.Bytes::byteLength s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: fieldFrom,
+  parameters: [s : Bytes, i : Nat, name : String, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (elemDone s i) then 0x else (Foundation.Bytes::appendBytes (line (cons (str s (key s (ctor Option.some [Nat] i) name)) (nil Bytes))) (fieldFrom s (elemNext s i) name rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: fieldOf,
+  parameters: [s : Bytes, at : (Option Nat), name : String],
+  result: Bytes,
+  body: (fieldFrom s (elemStart s at) name (Foundation.Bytes::byteLength s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: keysFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (memberDone s i) then 0x else (Foundation.Bytes::appendBytes (line (cons (str s (ctor Option.some [Nat] i)) (nil Bytes))) (keysFrom s (memberNext s i) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: keys,
+  parameters: [s : Bytes, at : (Option Nat)],
+  result: Bytes,
+  body: (keysFrom s (memberStart s at) (Foundation.Bytes::byteLength s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: withFieldFrom,
+  parameters: [s : Bytes, i : Nat, name : String, value : Bytes, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (if (elemDone s i) then (ctor Option.none [Nat]) else (if (same (str s (key s (ctor Option.some [Nat] i) name)) value) then (ctor Option.some [Nat] i) else (withFieldFrom s (elemNext s i) name value rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: withField,
+  parameters: [s : Bytes, at : (Option Nat), name : String, value : Bytes],
+  result: (Option Nat),
+  body: (withFieldFrom s (elemStart s at) name value (Foundation.Bytes::byteLength s)),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
