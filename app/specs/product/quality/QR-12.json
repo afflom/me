@@ -3,7 +3,7 @@
   "name": "Each thing once, in the place of what it is",
   "characteristic": "functional suitability",
   "subcharacteristic": "functional appropriateness",
-  "says": "a message is in Messages, an event on the Calendar, a to-do or journal entry in Notes, each once and headed by its own words, and an invitation a message carries is on the Calendar as its event",
+  "says": "a message is in Messages, an event on the Calendar, a to-do or journal entry in Notes, each once and headed by its own words, and an invitation a message carries is on the Calendar as its event, and a conversation is one row",
   "measures": [
     {
       "key": "message-twice",
@@ -29,6 +29,13 @@
     {
       "key": "invitation-missed",
       "says": "oracle messages carrying an RFC 6047 invitation whose event is not on the calendar",
+      "direction": "atMost",
+      "threshold": 0,
+      "gate": "test/oracle/places.test.mjs"
+    },
+    {
+      "key": "conversation-split",
+      "says": "oracle messages of one conversation (RFC 5322 In-Reply-To, References) listed in Messages as rows of their own instead of as that conversation's one row",
       "direction": "atMost",
       "threshold": 0,
       "gate": "test/oracle/places.test.mjs"

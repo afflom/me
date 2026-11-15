@@ -55,7 +55,7 @@ export function sentenceOf(item, me = null, { now = null, order = null, rhythm =
     return fill(S.frames.message, { ...parts, who: mine ? (me.name ?? parts.who) : parts.who }) + turn + says + beat;
   }
   if (item.media === "contactCard") return fill(S.frames.contact, parts);
-  if (item.media === "calendar" || item.start != null) return fill(S.frames.event, parts) + (item.where ? fill(S.frames.place, { who: item.where }) : "") + (place && !place.latest ? S.frames.earlier : "");
+  if (item.media === "calendar" || item.start != null) return fill(S.frames.event, parts) + (item.where ? fill(S.frames.place, { who: item.where }) : "") + (place && !place.current ? S.frames.earlier : "");
   return fill(S.frames.note, parts);
 }
 
