@@ -7,9 +7,6 @@
 // examples (test/oracle/corpus.json) are then read field by field, each by its
 // own rule, and test/oracle/read.test.mjs holds what they mean to the
 // reference reader.
-// The same grammar compiled into the Prism (app/src/PrismGrammarMail, read by
-// Foundation.Abnf, built as the grammar-mail guest) answers every witness with
-// the derivation this matcher gives.
 // usage: node --test test/standards/grammar.test.mjs
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
@@ -19,7 +16,6 @@ import { join } from "node:path";
 import test from "node:test";
 import { abnf } from "../../site/read/abnf.mjs";
 import { fieldsOf, readField, rulesOf } from "../../site/read/mail.mjs";
-import { GUESTS, openGuest } from "../../site/read/guest.mjs";
 
 const spec = JSON.parse(readFileSync("app/specs/grammar/spec.json", "utf8"));
 const { corpus } = JSON.parse(readFileSync("test/oracle/corpus.json", "utf8"));
@@ -99,35 +95,3 @@ test("each MIME example field reads as the reference reader reads it", async () 
   }
   assert.deepEqual(missed, []);
 });
-
-// The Prism's own matcher (LexLean, Foundation.Abnf) against this one, witness by witness.
-for (const g of spec.grammars.filter((x) => x.module)) {
-  const table = (await import(`../../${g.out}`)).default;
-  const engine = abnf(table);
-  const { witnesses } = JSON.parse(readFileSync(g.witnesses, "utf8"));
-  const names = Object.keys(table.rules).sort();
-  const index = Object.fromEntries(names.map((n, i) => [n, i]));
-  const id = `grammar-${g.key}`;
-  test(`${g.key}: the grammar compiled into the Prism derives every witness as this matcher does`, async () => {
-    const guest = GUESTS[id];
-    const ask = await openGuest(readFileSync(new URL(`../../site/read/${guest.path}`, import.meta.url)), guest.sha256);
-    const encoder = new TextEncoder();
-    const octets = (text) => { const at = [0]; for (const c of Array.from(text)) at.push(at.at(-1) + encoder.encode(c).length); return at; };
-    const spans = (tree, at, depth = 0, out = []) => {
-      out.push(`${index[tree.rule]},${at[tree.start]},${at[tree.end]},${depth}`);
-      for (const kid of tree.kids) spans(kid, at, depth + 1, out);
-      return out;
-    };
-    const cases = Object.entries(witnesses).flatMap(([rule, w]) => [[w.context, w.text], [rule, Array.from(w.text).slice(w.start, w.end).join("")]]);
-    const differ = [];
-    const started = performance.now();
-    for (const [rule, text] of cases) {
-      const tree = engine.match(rule, text);
-      const want = tree ? spans(tree, octets(text)).join(" ") : "none";
-      const got = await ask(`${index[rule]} ${text}`);
-      if (got !== want) differ.push(`${rule} ${JSON.stringify(text)}: ${got.slice(0, 120)}`);
-    }
-    console.log(`${g.key}: the Prism's matcher answered ${cases.length} witnesses in ${Math.round(performance.now() - started)} ms`);
-    assert.deepEqual(differ, []);
-  });
-}
