@@ -572,6 +572,74 @@
         "site/device/probe.mjs"
       ],
       "output": ".gen/browser/adapter/site/device/probe.mjs"
+    },
+    {
+      "program": "pipeline",
+      "generator": "workflow",
+      "inputs": [
+        "app/specs/pipeline/workflows/pages.yml.json"
+      ],
+      "output": ".github/workflows/pages.yml"
+    },
+    {
+      "program": "pipeline",
+      "generator": "workflow",
+      "inputs": [
+        "app/specs/pipeline/workflows/build.yml.json"
+      ],
+      "output": ".github/workflows/build.yml"
+    },
+    {
+      "program": "pipeline",
+      "generator": "workflow",
+      "inputs": [
+        "app/specs/pipeline/workflows/deploy-watch.yml.json"
+      ],
+      "output": ".github/workflows/deploy-watch.yml"
+    },
+    {
+      "program": "pipeline",
+      "generator": "workflow",
+      "inputs": [
+        "app/specs/pipeline/workflows/try-page.yml.json"
+      ],
+      "output": ".github/workflows/try-page.yml"
+    },
+    {
+      "program": "pipeline",
+      "generator": "workflow",
+      "inputs": [
+        "app/specs/pipeline/workflows/merge-train.yml.json"
+      ],
+      "output": ".github/workflows/merge-train.yml"
+    },
+    {
+      "program": "standards",
+      "generator": "wcagfacts",
+      "split": "app/specs/standards/upstream/wcag.json",
+      "output": ".gen/wcag-facts"
+    },
+    {
+      "program": "standards",
+      "generator": "wcag",
+      "inputs": [
+        ".gen/wcag-facts"
+      ],
+      "output": "test/standards/generated/wcag-2.2.json"
+    },
+    {
+      "program": "standards",
+      "generator": "ariafacts",
+      "split": "app/specs/standards/upstream/wai-aria-1.2.html",
+      "output": ".gen/aria-facts"
+    },
+    {
+      "program": "standards",
+      "generator": "aria",
+      "inputs": [
+        ".gen/aria-facts"
+      ],
+      "output": "test/standards/generated/wai-aria-1.2.json"
     }
   ]
 }

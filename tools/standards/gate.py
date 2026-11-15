@@ -5,8 +5,9 @@
 The register, app/specs/standards/spec.json, names each standard a part of the
 Prism answers to, the part paths it governs, and where its own normative text
 is pinned. From that text, at its pinned SHA-256, each of the standard's
-inventories is extracted mechanically by tools/standards/extract/<extract>.py
-into requirements: the standard's own MUST, SHALL, SHOULD and MAY sentences,
+inventories is extracted mechanically, by a LexLean generator of generators/
+(an inventory naming the "generated" file it writes from its "vendored" source,
+held by GN-01) or by tools/standards/extract/<extract>.py, into requirements: the standard's own MUST, SHALL, SHOULD and MAY sentences,
 its numbered rules, or its registry's elements. Nothing is written by hand.
 The requirements are kept in test/standards/requirements.json.
 
@@ -110,6 +111,28 @@ def text_pin(standard, oracle):
     return text
 
 
+def generated(standard, inv, refusals):
+    """An inventory a LexLean generator writes: its source is vendored at the
+    pinned bytes, and the requirements file is a GN-01 output of that source."""
+    key, source = standard["key"], inv["source"]
+    vendored, path = ROOT / inv["vendored"], ROOT / inv["generated"]
+    if not vendored.exists() or hashlib.sha256(vendored.read_bytes()).hexdigest() != source["sha256"]:
+        refusals.append(f"{key}: {inv['vendored']} is not {source['url']} at the pinned {source['sha256']}")
+        return []
+    steps = load(ROOT / "generators/pipeline.json")["steps"]
+    if not any(step["output"] == inv["generated"] for step in steps):
+        refusals.append(f"{key}: no step of generators/pipeline.json writes {inv['generated']}")
+        return []
+    if not path.exists():
+        refusals.append(f"{key}: {inv['generated']} is missing: run tools/generators/run.sh")
+        return []
+    got = load(path)
+    for r in got:
+        if not r["id"].startswith(f"{key}-"):
+            refusals.append(f"{key}: {inv['generated']} has requirement {r['id']}, not one of {key}")
+    return got
+
+
 def derive(spec, cache, refusals):
     oracle = {s["key"]: s for s in load(ORACLE)["sources"]}
     out = {}
@@ -125,6 +148,9 @@ def derive(spec, cache, refusals):
             continue
         reqs = []
         for inv in standard.get("inventories", []):
+            if "generated" in inv:
+                reqs.extend(generated(standard, inv, refusals))
+                continue
             module = extractor(inv["extract"])
             if module is None:
                 refusals.append(f"{key}: no extractor tools/standards/extract/{inv['extract']}.py")
