@@ -28,6 +28,13 @@ examples are taken out mechanically:
   - "patterns": each distinct pattern string of a labelled research dataset
     whose category the source names (Mathur et al., "Dark Patterns at Scale",
     CSCW 2019: the urgency and scarcity lines found on shopping sites);
+  - "acts": each dialogue act of a corpus annotated in NXT (the AMI Meeting
+    Corpus) whose type the source maps onto the router's intents, in the
+    meetings the source names (its test partition), as the words its speaker
+    said joined as transcribed; an act any of whose words the corpus marks as
+    naming a person is left out, and a speaker whose named entities it has not
+    annotated is left out whole, so no participant's name enters the
+    repository;
   - "pairs": each sentence pair of a graded semantic-similarity benchmark in
     the genre the source names (the STS Benchmark's image and video captions,
     Cer et al., SemEval-2017 Task 1), with the similarity its annotators gave it
@@ -91,6 +98,8 @@ import re
 import sys
 import urllib.parse
 import urllib.request
+import xml.etree.ElementTree as ET
+import zipfile
 import zoneinfo
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
@@ -121,6 +130,17 @@ def fetch(source):
     # A benchmark published compressed (gzip, RFC 1952) is pinned as published and read uncompressed.
     if source["url"].endswith(".gz"):
         data = gzip.decompress(data)
+    # A corpus published as a zip archive is pinned as published; what is read
+    # of it is the members under the source's "members" folders, as one JSON
+    # object from each member's path to its text in the encoding it declares.
+    if source["url"].endswith(".zip"):
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            held = {
+                name: archive.read(name).decode(source.get("encoding", "utf-8"))
+                for name in sorted(archive.namelist())
+                if any(name.startswith(folder) for folder in source["members"]) and not name.endswith("/")
+            }
+        return json.dumps(held, ensure_ascii=False)
     return data.decode("utf-8")
 
 
@@ -1382,6 +1402,70 @@ def pair_examples(text, source):
             yield json.dumps({"a": pair["sentence1"], "b": pair["sentence2"], "score": pair["score"]}, ensure_ascii=False)
 
 
+NITE = "{http://nite.sourceforge.net/}"
+NITE_ID = NITE + "id"
+SPAN = re.compile(r"#id\(([^)]+)\)(?:\.\.id\(([^)]+)\))?")
+
+
+def nite_spans(root, role):
+    # Each element's pointer of the role and its child's span of words (NXT's id(a)..id(b) range).
+    for element in root:
+        pointer = next((p for p in element.findall(NITE + "pointer") if p.get("role") == role), None)
+        child = element.find(NITE + "child")
+        if pointer is None or child is None:
+            continue
+        kind = SPAN.search(pointer.get("href")).group(1)
+        first, last = SPAN.search(child.get("href")).groups()
+        yield kind, first, last or first
+
+
+def act_examples(text, source):
+    held = json.loads(text)
+    types = ET.fromstring(held[source["types"]].encode("latin-1"))
+    names = {t.get(NITE_ID): t.get("name") for t in types.iter() if t.get(NITE_ID)}
+    intents = {i: source["acts"][n] for i, n in names.items() if n in source["acts"]}
+    if set(source["acts"]) - set(names.values()):
+        refuse(f"{source['key']} maps act types its ontology does not have: {sorted(set(source['acts']) - set(names.values()))}")
+    entities = ET.fromstring(held[source["entities"]].encode("latin-1"))
+    person = next(t for t in entities.iter() if t.get("name") == source["person"])
+    people = {t.get(NITE_ID) for t in person.iter()}
+    for path in sorted(held):
+        m = re.fullmatch(r"dialogueActs/((\w+)\.\w+)\.dialog-act\.xml", path)
+        if not m or m.group(2) not in source["meetings"]:
+            continue
+        words_path, named_path = f"words/{m.group(1)}.words.xml", f"namedEntities/{m.group(1)}.ne.xml"
+        if words_path not in held:
+            refuse(f"{source['key']} has no words for {m.group(1)}")
+        # Only a speaker whose names the corpus has marked can be read without one.
+        if named_path not in held:
+            continue
+        order, at = [], {}
+        for w in ET.fromstring(held[words_path].encode("latin-1")):
+            if w.tag == "w":
+                at[w.get(NITE_ID)] = len(order)
+                order.append((w.text or "", w.get("punc") == "true"))
+        named = set()
+        for kind, first, last in nite_spans(ET.fromstring(held[named_path].encode("latin-1")), "type"):
+            if kind in people and first in at and last in at:
+                named.update(range(at[first], at[last] + 1))
+        for kind, first, last in nite_spans(ET.fromstring(held[path].encode("latin-1")), "da-aspect"):
+            if kind not in intents or first not in at or last not in at:
+                continue
+            span = range(at[first], at[last] + 1)
+            if named.intersection(span):
+                continue
+            said = ""
+            for word, punctuation in (order[i] for i in span):
+                said += word if punctuation or not said else " " + word
+            if said.strip():
+                yield json.dumps({"text": said.strip(), "act": names[kind], "intent": intents[kind], "meeting": m.group(2)}, ensure_ascii=False)
+
+
+def read_act(raw):
+    act = json.loads(raw)
+    return {"text": act["text"], "act": act["act"], "intent": act["intent"]}
+
+
 def read_similarity(raw):
     pair = json.loads(raw)
     return {"a": pair["a"], "b": pair["b"], "score": pair["score"]}
@@ -1396,8 +1480,8 @@ for source in SPEC["sources"]:
             refuse(f"{source['key']} erratum {erratum['id']} is not a verified correction of text it holds once")
         text = text.replace(erratum["says"], erratum["should"])
     texts[source["key"]] = text
-    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples, "patterns": lambda text: pattern_examples(text, source), "markup": lambda text: markup_examples(text, source), "page": page, "recurrences": recurrences, "pairs": lambda text: pair_examples(text, source)}[source["examples"]]
-    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc, "coercive": read_pattern, "accname": read_accname, "feed": read_feed, "recurrence": read_recurrence, "similarity": read_similarity}[source["kind"]]
+    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples, "patterns": lambda text: pattern_examples(text, source), "markup": lambda text: markup_examples(text, source), "page": page, "recurrences": recurrences, "pairs": lambda text: pair_examples(text, source), "acts": lambda text: act_examples(text, source)}[source["examples"]]
+    read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc, "coercive": read_pattern, "accname": read_accname, "feed": read_feed, "recurrence": read_recurrence, "similarity": read_similarity, "act": read_act}[source["kind"]]
     n = kept = 0
     for raw in take(text):
         n += 1
