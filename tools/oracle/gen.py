@@ -62,7 +62,15 @@ Python's email.header and base64 must also give, or the extraction is refused.
 
 Writes test/oracle/corpus.json, and model/authorities.toml with one cited
 authority per pinned source, realized by OR-01, so the oracle spec stays the one
-place a source is named. --check refuses either if stale. --cache DIR reads
+place a source is named.
+
+It also writes the vocabulary register from app/specs/vocab/spec.json:
+site/vocab/register.json and its Lean modules (Foundation.Vocab.V1.SchemaOrg,
+.Crosswalk, Foundation.Me.V1.Anchors), schema.org's release read in full and
+every term of eleven other schemas read from their own registries and
+ontologies, each pinned and cited (RT-01). Before it writes, the register is
+held to schema.org's own files: the release's whole graph and attic, the
+JSON-LD context, and every example of the release (the "schemaorg" source). --check refuses either if stale. --cache DIR reads
 and keeps the fetched sources there.
 
 usage: python3 -I tools/oracle/gen.py [--check] [--cache DIR]
@@ -81,6 +89,7 @@ import json
 import pathlib
 import re
 import sys
+import urllib.parse
 import urllib.request
 import zoneinfo
 
@@ -716,6 +725,663 @@ def read_feed(raw):
     names = [json.loads(m.group(1)) if m.group(1) else m.group(2).replace("\\'", "'") for m in re.finditer(r"\bname:\s*(?:(\"(?:[^\"\\\\]|\\\\.)*\")|'((?:[^'\\\\]|\\\\.)*)')", data)]
     return {"names": names}
 
+# ---------------------------------------------------------------------------
+# The vocabulary register (app/specs/vocab/spec.json, RT-01).
+#
+# schema.org's published release file, read in full, and every term of the
+# other schemas' own registries and ontologies, each fetched at its pin. The
+# readers below take each file by its own format: the release's JSON-LD graph,
+# an IANA registry's CSV or XML, Turtle (W3C REC, 2014) and RDF/XML (W3C REC,
+# 2014), with the standard library only. What they write is the register the
+# page reads and the Lean modules the proofs read, in the same order.
+
+VOCAB = json.loads((ROOT / "app/specs/vocab/spec.json").read_text(encoding="utf-8"))
+RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
+RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+OWL = "http://www.w3.org/2002/07/owl#"
+RDFS = "http://www.w3.org/2000/01/rdf-schema#"
+CLASS_TYPES = {OWL + "Class", RDFS + "Class"}
+PROPERTY_TYPES = {RDF_NS + "Property", OWL + "ObjectProperty", OWL + "DatatypeProperty", OWL + "AnnotationProperty", OWL + "FunctionalProperty"}
+
+
+def fetch_pin(pin):
+    path = cache / "vocab" / pin["file"] if cache else None
+    if path and path.exists():
+        data = path.read_bytes()
+    else:
+        request = urllib.request.Request(pin["url"], headers={"Accept": "text/turtle, application/rdf+xml;q=0.9, */*;q=0.5", "User-Agent": "prism-oracle/1"})
+        with urllib.request.urlopen(request, timeout=60) as response:
+            data = response.read()
+        if path:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(data)
+    digest = hashlib.sha256(data).hexdigest()
+    if digest != pin["sha256"]:
+        refuse(f"{pin['file']} at {pin['url']} is {digest}, not the pinned {pin['sha256']}")
+    return data
+
+
+def resolve(base, ref):
+    """RFC 3986 section 5.2 reference resolution (urllib.parse.urljoin) of a relative reference."""
+    return ref if re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", ref) else urllib.parse.urljoin(base, ref)
+
+
+TTL_TOKEN = re.compile(r'''
+    (?P<ws>\s+|\#[^\n]*)
+  | (?P<iri><[^>]*>)
+  | (?P<long>"""(?:[^"\\]|\\.|"(?!""))*"""|\'\'\'(?:[^'\\]|\\.|'(?!''))*\'\'\')
+  | (?P<short>"(?:[^"\\\n]|\\.)*"|'(?:[^'\\\n]|\\.)*')
+  | (?P<lang>@[A-Za-z]+(?:-[A-Za-z0-9]+)*)
+  | (?P<dt>\^\^)
+  | (?P<bnode>_:[A-Za-z0-9_.-]*[A-Za-z0-9_-])
+  | (?P<num>[+-]?(?:\d+\.\d*(?:[eE][+-]?\d+)?|\.\d+(?:[eE][+-]?\d+)?|\d+[eE][+-]?\d+|\d+))
+  | (?P<pname>(?:[A-Za-z][\w.-]*[\w-]|[A-Za-z])?:(?:[\w:%-](?:[\w.:%-]*[\w:%-])?)?|[A-Za-z][\w-]*)
+  | (?P<punct>[\[\]();,.])
+''', re.X)
+
+
+def turtle_triples(text):
+    """The triples of a Turtle document (W3C Turtle REC, 2014): the grammar of section 6.5."""
+    toks, i = [], 0
+    while i < len(text):
+        m = TTL_TOKEN.match(text, i)
+        if not m:
+            refuse(f"turtle: no token at {text[i:i + 40]!r}")
+        i = m.end()
+        if m.lastgroup != "ws":
+            toks.append((m.lastgroup, m.group()))
+    prefixes, base, triples, pos, blank = {}, "", [], [0], [0]
+
+    def peek():
+        return toks[pos[0]] if pos[0] < len(toks) else (None, None)
+
+    def take(want=None):
+        t = toks[pos[0]]
+        if want and t[1] != want:
+            refuse(f"turtle: {want} expected, found {t[1]}")
+        pos[0] += 1
+        return t
+
+    def fresh():
+        blank[0] += 1
+        return f"_:b{blank[0]}"
+
+    def iri(tok):
+        kind, v = tok
+        if kind == "iri":
+            return resolve(base, v[1:-1])
+        if kind == "pname" and ":" in v:
+            p, local = v.split(":", 1)
+            if p not in prefixes:
+                refuse(f"turtle: undeclared prefix {p}")
+            return prefixes[p] + re.sub(r"\\(.)", r"\1", local)
+        refuse(f"turtle: an IRI expected, found {v}")
+
+    def term():
+        kind, v = peek()
+        if kind in ("long", "short", "num") or v in ("true", "false"):
+            take()
+            if peek()[0] == "lang":
+                take()
+            elif peek()[0] == "dt":
+                take()
+                iri(take())
+            return ("literal", v)
+        if kind == "bnode":
+            take()
+            return v
+        if v == "[":
+            take()
+            node = fresh()
+            if peek()[1] != "]":
+                predicates(node)
+            take("]")
+            return node
+        if v == "(":
+            take()
+            head = node = "http://www.w3.org/1999/02/22-rdf-syntax-ns#nil"
+            items = []
+            while peek()[1] != ")":
+                items.append(term())
+            take(")")
+            for item in reversed(items):
+                cell = fresh()
+                triples.append((cell, RDF_NS + "first", item))
+                triples.append((cell, RDF_NS + "rest", node))
+                node = cell
+            return node if items else head
+        return iri(take())
+
+    def predicates(subject):
+        while True:
+            verb = take()
+            p = RDF_TYPE if verb == ("pname", "a") else iri(verb)
+            while True:
+                triples.append((subject, p, term()))
+                if peek()[1] != ",":
+                    break
+                take()
+            while peek()[1] == ";":
+                take()
+            if peek()[1] in (".", "]", None):
+                return
+
+    while pos[0] < len(toks):
+        kind, v = peek()
+        if v in ("@prefix", "@base") or v.upper() in ("PREFIX", "BASE"):
+            take()
+            if v.lower().endswith("prefix"):
+                name = take()[1]
+                prefixes[name[:-1]] = iri(take())
+            else:
+                base = iri(take())
+            if v.startswith("@"):
+                take(".")
+            continue
+        subject = term()
+        if peek()[1] != ".":
+            predicates(subject)
+        take(".")
+    return triples
+
+
+def rdfxml_triples(data):
+    """The triples of an RDF/XML document (W3C RDF 1.1 XML Syntax REC, 2014): node and property elements."""
+    import xml.etree.ElementTree as ET
+    XML_BASE = "{http://www.w3.org/XML/1998/namespace}base"
+    rdf = lambda local: "{" + RDF_NS + "}" + local  # noqa: E731
+    name = lambda tag: tag[1:].replace("}", "", 1)  # noqa: E731
+    triples, blank = [], [0]
+
+    def fresh():
+        blank[0] += 1
+        return f"_:x{blank[0]}"
+
+    def node(el, base):
+        base = resolve(base, el.get(XML_BASE)) if el.get(XML_BASE) else base
+        if el.get(rdf("about")) is not None:
+            s = resolve(base, el.get(rdf("about")))
+        elif el.get(rdf("ID")) is not None:
+            s = resolve(base, "#" + el.get(rdf("ID")))
+        elif el.get(rdf("nodeID")) is not None:
+            s = "_:" + el.get(rdf("nodeID"))
+        else:
+            s = fresh()
+        if el.tag != rdf("Description"):
+            triples.append((s, RDF_TYPE, name(el.tag)))
+        for k, v in el.attrib.items():
+            if k.startswith("{" + RDF_NS) or k.startswith("{http://www.w3.org/XML/1998/namespace}"):
+                continue
+            if k == rdf("type"):
+                triples.append((s, RDF_TYPE, resolve(base, v)))
+            else:
+                triples.append((s, name(k), ("literal", v)))
+        for prop in el:
+            p = name(prop.tag)
+            pbase = resolve(base, prop.get(XML_BASE)) if prop.get(XML_BASE) else base
+            if prop.get(rdf("resource")) is not None:
+                triples.append((s, p, resolve(pbase, prop.get(rdf("resource")))))
+            elif prop.get(rdf("nodeID")) is not None:
+                triples.append((s, p, "_:" + prop.get(rdf("nodeID"))))
+            elif prop.get(rdf("parseType")) == "Resource":
+                inner = fresh()
+                triples.append((s, p, inner))
+                wrapper = ET.Element(rdf("Description"), {rdf("nodeID"): inner[2:]})
+                wrapper.extend(list(prop))
+                node(wrapper, pbase)
+            elif len(prop) and prop.get(rdf("parseType")) != "Literal":
+                for child in prop:
+                    triples.append((s, p, node(child, pbase)))
+            else:
+                triples.append((s, p, ("literal", prop.text or "")))
+        return s
+
+    root = ET.fromstring(data)
+    base = root.get(XML_BASE) or ""
+    for el in (list(root) if root.tag == rdf("RDF") else [root]):
+        node(el, base)
+    return triples
+
+
+def ontology_terms(triples, ns):
+    """Every class and property a namespace's own document types, by local name (the order of their IRIs)."""
+    typed = {}
+    for s, p, o in triples:
+        if p == RDF_TYPE and isinstance(s, str) and not s.startswith("_:") and isinstance(o, str):
+            typed.setdefault(s, set()).add(o)
+    out = []
+    for s in sorted(typed):
+        if not s.startswith(ns):
+            continue
+        local = s[len(ns):]
+        if not local or "/" in local:
+            continue
+        if typed[s] & CLASS_TYPES:
+            out.append((local, "class"))
+        elif typed[s] & PROPERTY_TYPES:
+            out.append((local, "property"))
+    return out
+
+
+def iana_registry(text, registry):
+    m = re.search(r'<registry id="%s">(.*?)</registry>' % registry, text, re.S)
+    if not m:
+        refuse(f"no registry {registry}")
+    return m.group(1)
+
+
+def terms_of(read, files):
+    """(term, kind) for one reading of a pinned source, in the order the register keeps."""
+    data = files[read["source"]]
+    how = read["read"]
+    if how == "iana-csv":
+        names = sorted({r[read["column"]].strip() for r in csvlib.DictReader(io.StringIO(data.decode("utf-8"))) if r[read["column"]].strip()})
+        return [(n, read["kind"]) for n in names]
+    if how == "iana-headers":
+        protocols = "|".join(re.escape(p) for p in read["protocols"])
+        names = sorted({m.group(1).strip() for m in re.finditer(r"<record[^>]*>\s*<value>([^<]+)</value>\s*<protocol>(?:%s)</protocol>" % protocols, data.decode("utf-8"))})
+        return [(n, read["kind"]) for n in names]
+    if how == "iana-records":
+        text = data.decode("utf-8")
+        tag = read["element"]
+        names = {v.strip() for v in re.findall(r"<record[^>]*>.*?<%s>([^<]+)</%s>" % (tag, tag), iana_registry(text, read["registry"]), re.S) if " " not in v.strip()}
+        if "contexts" in read:  # object types named in the context column of the properties registry
+            for c in re.findall(r"<context>([^<]+)</context>", iana_registry(text, read["contexts"])):
+                names.update(x.strip() for x in c.split(",") if x.strip() and " " not in x.strip())
+        return [(n, read["kind"]) for n in sorted(names)]
+    if how == "turtle":
+        return ontology_terms(turtle_triples(data.decode("utf-8")), read["namespace"])
+    if how == "rdfxml":
+        return ontology_terms(rdfxml_triples(data), read["namespace"])
+    refuse(f"no reader {how}")
+
+
+def as_list(v):
+    return [] if v is None else (v if isinstance(v, list) else [v])
+
+
+def schemaorg_register(graph):
+    """Every node of the release, classed as its graph types it: rdfs:Class, rdf:Property, or an enumeration member."""
+    sch = {x["@id"]: x for x in graph if x["@id"].startswith("schema:")}
+    kinds = lambda x: as_list(x["@type"])  # noqa: E731
+    classes = {k: x for k, x in sch.items() if "rdfs:Class" in kinds(x)}
+    props = {k: x for k, x in sch.items() if "rdf:Property" in kinds(x)}
+    members = {k: x for k, x in sch.items() if k not in classes and k not in props}
+    # A type is numbered after all of its parents; ties by name, Thing first.
+    parents = {k: sorted(p["@id"] for p in as_list(x.get("rdfs:subClassOf")) if p["@id"] in classes) for k, x in classes.items()}
+    order, placed, pending = [], set(), sorted(classes, key=lambda k: (k != "schema:Thing", k))
+    while pending:
+        ready = sorted((k for k in pending if all(p in placed for p in parents[k])), key=lambda k: (k != "schema:Thing", k))
+        if not ready:
+            refuse("schema.org hierarchy has a cycle")
+        order += ready
+        placed.update(ready)
+        pending = [k for k in pending if k not in placed]
+    tix = {k: i for i, k in enumerate(order)}
+    pord = sorted(props)
+    pix = {k: i for i, k in enumerate(pord)}
+
+    def status(x):
+        part = (x.get("schema:isPartOf") or {}).get("@id", "")
+        return 3 if "schema:supersededBy" in x else 1 if "pending" in part else 2 if part else 0
+
+    def refs(x, key, table, what):
+        ids = [r["@id"] for r in as_list(x.get(key))]
+        missing = [i for i in ids if i.startswith("schema:") and i not in table]
+        if missing:
+            refuse(f"schema.org {x['@id']} {key} names {missing}, which the release does not define as a {what}")
+        return [table[i] for i in ids if i in table]
+
+    trows, tnames = [], []
+    for k in order:
+        x = classes[k]
+        trows.append((tix[k], [tix[p] for p in parents[k]], status(x)))
+        tnames.append({"id": k[7:], "label": str(x.get("rdfs:label", k[7:])), "status": status(x)})
+    prows, pnames = [], []
+    for k in pord:
+        x = props[k]
+        dom = sorted(set(refs(x, "schema:domainIncludes", tix, "type")))
+        rng = sorted(set(refs(x, "schema:rangeIncludes", tix, "type")))
+        inv = refs(x, "schema:inverseOf", pix, "property")
+        sup = refs(x, "schema:supersededBy", pix, "property")
+        if len(inv) > 1 or len(sup) > 1:
+            refuse(f"schema.org {k} has more than one inverse or successor")
+        none = len(pord)
+        prows.append((pix[k], dom, rng, inv[0] if inv else none, sup[0] if sup else none, status(x)))
+        pnames.append({"id": k[7:], "label": str(x.get("rdfs:label", k[7:])), "status": status(x)})
+    mrows, mnames = [], []
+    for k in sorted(members):
+        enum = sorted(t for t in kinds(members[k]) if t in tix)
+        if not enum:
+            refuse(f"schema.org {k} is neither a type, a property nor a member of an enumeration")
+        mrows.append(tix[enum[0]])
+        mnames.append({"id": k[7:], "enumeration": enum[0][7:]})
+    return dict(sch=sch, tix=tix, pix=pix, trows=trows, tnames=tnames, prows=prows, pnames=pnames, mrows=mrows, mnames=mnames)
+
+
+def crosswalk_rows(so, files):
+    keys = [v["key"] for v in VOCAB["vocabularies"]]
+    match_kinds = VOCAB["matchKinds"]
+    residual = {"class": ("Thing", so["tix"]["schema:Thing"]), "property": ("additionalProperty", so["pix"]["schema:additionalProperty"])}
+    rows, names = [], []
+    for v in VOCAB["vocabularies"]:
+        vi = keys.index(v["key"])
+        reads = v["terms"]
+        if reads[0]["read"] == "schemaorg-equivalences":
+            for k, x in sorted(so["sch"].items()):
+                for key, match in reads[0]["matches"].items():
+                    for e in as_list(x.get(key)):
+                        if k in so["tix"]:
+                            rows.append((vi, 0, match_kinds.index(match), so["tix"][k]))
+                            names.append({"vocabulary": v["key"], "term": e["@id"], "kind": "class", "match": match, "target": k[7:]})
+                        elif k in so["pix"]:
+                            rows.append((vi, 1, match_kinds.index(match), so["pix"][k]))
+                            names.append({"vocabulary": v["key"], "term": e["@id"], "kind": "property", "match": match, "target": k[7:]})
+            continue
+        terms = [tuple(t) for t in v.get("also", [])]
+        for r in reads:
+            terms += terms_of(r, files)
+        claims = {"class": v["crosswalk"]["classes"], "property": v["crosswalk"]["properties"]}
+        seen = set()
+        for term, kind in terms:
+            if (term, kind) in seen:
+                continue
+            seen.add((term, kind))
+            claim = claims[kind].get(term)
+            if claim:
+                match, target = claim
+                table = so["tix"] if kind == "class" else so["pix"]
+                if "schema:" + target not in table:
+                    refuse(f"crosswalk {v['key']}:{term} -> {target}: not a schema.org {'type' if kind == 'class' else 'property'}")
+                tgt = table["schema:" + target]
+            else:
+                match, (target, tgt) = "residual", residual[kind]
+            rows.append((vi, 0 if kind == "class" else 1, match_kinds.index(match), tgt))
+            names.append({"vocabulary": v["key"], "term": term, "kind": kind, "match": match, "target": target})
+        for kind, claimed in claims.items():
+            for term in claimed:
+                if (term, kind) not in seen:
+                    refuse(f"crosswalk names {v['key']}:{term}, which its pinned source does not define")
+    return rows, names
+
+
+# LexLean text as `lexlean fmt` writes it (tools/builder/lean.mjs, `layout`):
+# a record stays on one line when it fits in WIDTH columns, else one field per
+# line; a term is never broken, except a match, which breaks at its arms.
+LEAN_WIDTH = 100
+
+
+def lean_list(items, t="Nat"):
+    s = f"(nil {t})"
+    for x in reversed(items):
+        s = f"(cons {x} {s})"
+    return s
+
+
+def lean_record(head, fields):
+    one = f"{head}{{" + ", ".join(f"{k}: {v}" for k, v in fields) + "}"
+    if len(one) <= LEAN_WIDTH and "\n" not in one:
+        return one
+    return f"{head}{{\n" + ",\n".join(f"  {k}: {v}" for k, v in fields) + "\n}"
+
+
+def lean_fields(fields):
+    one = "[" + ", ".join(fields) + "]"
+    return one if len("  fields: " + one + ",") <= LEAN_WIDTH else "[\n" + ",\n".join(f"    {f}" for f in fields) + "\n  ]"
+
+
+class Lean:
+    def __init__(self, conf):
+        self.prefix, self.types, self.decls = conf["prefix"], conf["types"], []
+
+    def n(self, name):
+        return self.prefix + name[0].upper() + name[1:]
+
+    def t(self, name):
+        return self.types.get(name, name)
+
+    def structure(self, name, fields):
+        self.decls.append(lean_record("structure", [("name", self.t(name)), ("type_parameters", "[]"), ("parameters", "[]"), ("fields", lean_fields(fields))]))
+
+    def definition(self, name, result, body, parameters="[]", recursive=None):
+        fields = [("name", self.n(name)), ("parameters", parameters), ("result", result), ("body", body)]
+        self.decls.append(lean_record("definition", fields + ([("recursive_argument", recursive)] if recursive else [])))
+
+    def appender(self, rowtype):
+        t, f = self.t(rowtype), self.n(f"append{rowtype}s")
+        self.definition(f"append{rowtype}s", f"(List {t})", f"(match front\n    | List.nil => back\n    | List.cons item rest => (cons item ({f} rest back)))",
+                        f"[front : (List {t}), back : (List {t})]", "front")
+
+    def chunked(self, name, rowtype, rows):
+        """name0..nameK and name = name0 ++ ... ++ nameK, VOCAB['lean']['chunk'] rows each."""
+        size = VOCAB["lean"]["chunk"]
+        chunks = [rows[k:k + size] for k in range(0, len(rows), size)] or [[]]
+        t = self.t(rowtype)
+        for k, c in enumerate(chunks):
+            self.definition(f"{name}{k}", f"(List {t})", lean_list(c, t))
+        body = f"({self.n(name)}{len(chunks) - 1})"
+        for k in reversed(range(len(chunks) - 1)):
+            body = f"({self.n('append' + rowtype + 's')} ({self.n(name)}{k}) {body})"
+        self.definition(name, f"(List {t})", body)
+
+    def module(self, conf):
+        head = [f"\\begin{{lexlean}}{{{conf['module']}}}", "\\useglossary{lexlean.std.bool@1.2.0}", "\\useglossary{lexlean.std.nat@1.2.0}",
+                "\\useglossary{prism.arch@1.0.0}", f"\\title{{{conf['title']}}}", "\\begin{semanticmodule}"]
+        return "\n".join(head + ["\n\n".join(self.decls), "\\end{semanticmodule}", "\\end{lexlean}"]) + "\n"
+
+
+def vocabulary():
+    """{path: text} for the register and its three Lean modules."""
+    files = {p["file"]: fetch_pin(p) for p in VOCAB["sources"]}
+    S = VOCAB["schemaorg"]
+    so = schemaorg_register(json.loads(files[S["source"]].decode("utf-8"))["@graph"])
+    frows, fnames = crosswalk_rows(so, files)
+    digest = next(p["sha256"] for p in VOCAB["sources"] if p["file"] == S["source"])
+    mods = VOCAB["lean"]["modules"]
+    out = {}
+
+    L = Lean(mods["schemaorg"])
+    L.structure("TypeRow", ["{name: index, type: Nat}", "{name: parents, type: (List Nat)}", "{name: status, type: Nat}"])
+    L.structure("PropertyRow", ["{name: index, type: Nat}", "{name: domains, type: (List Nat)}", "{name: ranges, type: (List Nat)}",
+                                "{name: inverse, type: Nat}", "{name: supersededBy, type: Nat}", "{name: status, type: Nat}"])
+    for t in ("TypeRow", "PropertyRow", "Nat"):
+        L.appender(t)
+    L.definition("release", "String", json.dumps(S["release"]))
+    L.definition("sourceDigest", "String", json.dumps(digest))
+    for name, value in (("typeCount", len(so["trows"])), ("propertyCount", len(so["prows"])), ("memberCount", len(so["mrows"]))):
+        L.definition(name, "Nat", str(value))
+    TR, PR = L.t("TypeRow"), L.t("PropertyRow")
+    L.chunked("typeRows", "TypeRow", [f"(record {TR} {{index := {i}, parents := {lean_list(ps)}, status := {st}}})" for i, ps, st in so["trows"]])
+    L.chunked("propertyRows", "PropertyRow", [f"(record {PR} {{index := {i}, domains := {lean_list(d)}, ranges := {lean_list(r)}, inverse := {inv}, supersededBy := {sup}, status := {st}}})"
+                                              for i, d, r, inv, sup, st in so["prows"]])
+    L.chunked("memberRows", "Nat", [str(t) for t in so["mrows"]])
+    L.chunked("inverseTable", "Nat", [str(r[3]) for r in so["prows"]])
+    L.chunked("successorTable", "Nat", [str(r[4]) for r in so["prows"]])
+    out[mods["schemaorg"]["path"]] = L.module(mods["schemaorg"])
+
+    C = Lean(mods["crosswalk"])
+    C.structure("TermRow", ["{name: vocabulary, type: Nat}", "{name: kind, type: Nat}", "{name: match, type: Nat}", "{name: target, type: Nat}"])
+    C.appender("TermRow")
+    for name, value in (("vocabularyCount", len(VOCAB["vocabularies"])), ("termCount", len(frows)),
+                        ("residualType", so["tix"]["schema:Thing"]), ("residualProperty", so["pix"]["schema:additionalProperty"])):
+        C.definition(name, "Nat", str(value))
+    TT = C.t("TermRow")
+    C.chunked("termRows", "TermRow", [f"(record {TT} {{vocabulary := {a}, kind := {b}, match := {c}, target := {d}}})" for a, b, c, d in frows])
+    out[mods["crosswalk"]["path"]] = C.module(mods["crosswalk"])
+
+    dkeys = [d["key"] for d in VOCAB["domains"]]
+    anchors = []
+    for d, names in VOCAB["anchors"].items():
+        for n in names:
+            if "schema:" + n not in so["tix"]:
+                refuse(f"anchor {n} is not a schema.org type")
+            anchors.append((so["tix"]["schema:" + n], dkeys.index(d)))
+    anchors.sort()
+    floors = []
+    for n, v in sorted(VOCAB["propertyFloors"].items()):
+        if "schema:" + n not in so["pix"]:
+            refuse(f"property floor {n} is not a schema.org property")
+        floors.append((so["pix"]["schema:" + n], v))
+    floors.sort()
+    A = Lean(mods["anchors"])
+    A.structure("Anchor", ["{name: key, type: Nat}", "{name: value, type: Nat}"])
+    A.appender("Anchor")
+    A.definition("thingIndex", "Nat", str(so["tix"]["schema:Thing"]))
+    A.appender("Nat")
+    amap, domain = dict(anchors), []
+    for i, ps, _ in so["trows"]:  # an unanchored type takes the most protective domain of its parents
+        domain.append(amap[i] if i in amap else min([len(dkeys) - 1] + [domain[q] for q in ps]))
+    AN = A.t("Anchor")
+    A.chunked("domainTable", "Nat", [str(d) for d in domain])
+    A.chunked("anchorRows", "Anchor", [f"(record {AN} {{key := {t}, value := {d}}})" for t, d in anchors])
+    A.chunked("floorRows", "Anchor", [f"(record {AN} {{key := {p}, value := {v}}})" for p, v in floors])
+    out[mods["anchors"]["path"]] = A.module(mods["anchors"])
+
+    register = {
+        "spec": "me/vocabulary-register/1",
+        "sources": VOCAB["sources"],
+        "schemaorg": {"release": S["release"], "types": so["tnames"], "typeParents": [ps for _, ps, _ in so["trows"]], "properties": so["pnames"],
+                      "propertyDomains": [r[1] for r in so["prows"]], "propertyRanges": [r[2] for r in so["prows"]], "members": so["mnames"]},
+        "vocabularies": [{"key": v["key"], "title": v["title"], "authority": v["authority"]} for v in VOCAB["vocabularies"]],
+        "crosswalk": fnames,
+        "domains": VOCAB["domains"],
+        "anchors": VOCAB["anchors"],
+        "propertyFloors": VOCAB["propertyFloors"],
+        "statusCodes": S["statusCodes"],
+    }
+    out[VOCAB["register"]] = json.dumps(register, indent=1, ensure_ascii=False) + "\n"
+    return out, so, files
+
+
+
+def schemaorg_oracle(so, files, examples):
+    """The register against schema.org's own published files: the release's
+    whole graph (current terms and the attic), the JSON-LD context that
+    "https://schema.org" names, and every example of the release.
+
+    1. The register holds every term of the release's whole graph except
+       those the release itself puts in its attic (isPartOf attic.schema.org),
+       each node identical in both files.
+    2. The context defines exactly the whole graph's terms.
+    3. Each example's TYPES line names terms the release defines, and each
+       JSON-LD block is read by JSON-LD 1.1 term resolution (section 4.1)
+       against the pinned context: its keyword aliases, "@vocab", prefixes
+       and compact IRIs. A bare term of a block whose context adds another
+       document is that document's when schema.org does not define it; a
+       block with no context is in the vocabulary of the file it is an
+       example of. Every schema.org term used (key, @type, or a schema.org
+       IRI given as a value) must be in the register, or in the attic.
+    Returns the counts the register's coverage is stated with.
+    """
+    O = {o["role"]: o for o in VOCAB["schemaorg"]["oracles"]}
+    whole = {x["@id"]: x for x in json.loads(files[O["whole"]["file"]].decode("utf-8"))["@graph"] if x["@id"].startswith("schema:")}
+    attic = {k for k, x in whole.items() if (x.get("schema:isPartOf") or {}).get("@id") == "https://attic.schema.org"}
+    held = so["sch"]
+    problems = [f"{k} is in the release but not the register" for k in sorted(set(whole) - attic - set(held))]
+    problems += [f"{k} is in the register but not the release" for k in sorted(set(held) - set(whole))]
+    problems += [f"{k} differs from the release" for k in sorted(set(held) & set(whole)) if held[k] != whole[k]]
+    problems += [f"{k} is in the attic and the register" for k in sorted(attic & set(held))]
+    context = json.loads(files[O["context"]["file"]].decode("utf-8"))["@context"]
+    namespaces = {"http://schema.org/", "https://schema.org/"}
+    defined = {"schema:" + k for k, v in context.items() if isinstance(v, dict) and str(v.get("@id", "")).startswith("schema:")}
+    problems += [f"{k} is in the context but not the release" for k in sorted(defined - set(whole))]
+    problems += [f"{k} is in the release but not the context" for k in sorted(set(whole) - defined)]
+    names = {k[7:] for k in held}
+    old = {k[7:] for k in attic}
+    named = used = foreign = retired = 0
+
+    defects = {(d["example"], d["term"]): d for d in VOCAB["schemaorg"]["defects"]}
+    seen = set()
+
+    def check(local, eg, t):
+        nonlocal used, retired
+        used += 1
+        if (eg, t) in defects:
+            seen.add((eg, t))
+        elif local in old:
+            retired += 1
+        elif local not in names:
+            problems.append(f"{eg} uses {t}")
+
+    def scope(ctx, outer):
+        vocab, prefixes, aliases, others = outer
+        prefixes, aliases = dict(prefixes), dict(aliases)
+        for c in as_list(ctx):
+            if isinstance(c, str):
+                if re.fullmatch(r"https?://(?:[a-z-]+\.)?schema\.org/?", c):
+                    vocab = context["@vocab"]
+                    prefixes.update({k: v for k, v in context.items() if isinstance(v, str) and re.match(r"^https?://", v)})
+                    aliases.update({k: v for k, v in context.items() if isinstance(v, str) and v.startswith("@")})
+                else:
+                    others = True
+            elif isinstance(c, dict):
+                for k, v in c.items():
+                    if k == "@vocab":
+                        vocab = v
+                    elif isinstance(v, str) and not k.startswith("@"):
+                        prefixes[k] = v
+        return vocab, prefixes, aliases, others
+
+    def iri(t, ctx, eg):
+        """The IRI a term or compact IRI expands to, or None when another context defines it."""
+        nonlocal foreign
+        vocab, prefixes, aliases, others = ctx
+        if re.match(r"^https?://", t):
+            return t
+        if ":" in t:
+            p, local = t.split(":", 1)
+            return prefixes[p] + local if p in prefixes else None
+        if vocab in namespaces and others and t not in names and t not in old:
+            return None
+        return vocab + t if vocab else None
+
+    def term(t, ctx, eg):
+        nonlocal foreign
+        full = iri(t, ctx, eg)
+        ns = next((n for n in namespaces if full and full.startswith(n)), None)
+        if ns is None:
+            foreign += 1
+        else:
+            check(full[len(ns):], eg, t)
+
+    def walk(o, ctx, eg):
+        if isinstance(o, list):
+            for x in o:
+                walk(x, ctx, eg)
+        elif isinstance(o, dict):
+            if "@context" in o:
+                ctx = scope(o["@context"], ctx)
+            for k, v in o.items():
+                k = ctx[2].get(k, k)
+                if k == "@type":
+                    for t in as_list(v):
+                        term(t, ctx, eg)
+                elif k in ("@graph", "@reverse"):
+                    walk(v, ctx, eg)
+                elif not k.startswith("@"):
+                    term(k, ctx, eg)
+                    walk(v, ctx, eg)
+        elif isinstance(o, str) and re.fullmatch(r"https?://schema\.org/[A-Za-z0-9]+", o):
+            check(o.rsplit("/", 1)[1], eg, o)
+
+    for block in re.split(r"\n(?=TYPES: #eg-)", examples):
+        head = re.match(r"TYPES: (#eg-\d+)([^\n]*)", block)
+        if not head:
+            continue
+        eg = head.group(1)
+        for t in re.findall(r"[A-Za-z0-9]+", head.group(2)):
+            named += 1
+            if t not in names and t not in old:
+                problems.append(f"{eg} names {t}")
+        m = re.search(r"\nJSON:\s*\n(.*?)(?=\n[A-Z-]+:\s*\n|\Z)", block, re.S)
+        for script in re.findall(r'<script type="application/ld\+json">(.*?)</script>', m.group(1) if m else "", re.S):
+            walk(json.loads(script), scope("https://schema.org", ("", {}, {}, False)), eg)
+    problems += [f"defect {eg} {t} is not in the examples" for eg, t in sorted(set(defects) - seen)]
+    if problems:
+        refuse(f"schema.org {VOCAB['schemaorg']['release']}'s own files disagree with the register: " + "; ".join(problems[:20]))
+    return {"terms": len(held), "attic": len(attic), "contextTerms": len(defined), "examplesNamed": named, "examplesUsed": used, "examplesAttic": retired, "examplesForeign": foreign}
+
+
 
 def pair_examples(text, source):
     for row in text.splitlines():
@@ -731,7 +1397,7 @@ def read_similarity(raw):
     return {"a": pair["a"], "b": pair["b"], "score": pair["score"]}
 
 
-corpus = []
+corpus, texts = [], {}
 for source in SPEC["sources"]:
     text = unpaginate(fetch(source))
     # A verified erratum (the RFC Editor's errata) corrects the published text: what it says it says, once.
@@ -739,6 +1405,7 @@ for source in SPEC["sources"]:
         if erratum["status"] != "Verified" or text.count(erratum["says"]) != 1:
             refuse(f"{source['key']} erratum {erratum['id']} is not a verified correction of text it holds once")
         text = text.replace(erratum["says"], erratum["should"])
+    texts[source["key"]] = text
     take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples, "patterns": lambda text: pattern_examples(text, source), "markup": lambda text: markup_examples(text, source), "page": page, "recurrences": recurrences, "pairs": lambda text: pair_examples(text, source), "definitionLines": definition_lines, "definitionObjects": definition_objects}[source["examples"]]
     read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc, "coercive": read_pattern, "accname": read_accname, "feed": read_feed, "recurrence": read_recurrence, "similarity": read_similarity, "icalLine": read_ical_line, "icalObject": read_ical_object}[source["kind"]]
     n = kept = 0
@@ -836,15 +1503,41 @@ for source in json.loads((ROOT / "app/specs/oracle/vcard.json").read_text(encodi
         f"statement = {q('The entries ' + source['title'] + ' registers, the full inventory of the standard it serves')}",
         'realized_by = ["VC-01"]',
     ]
+for pin in VOCAB["sources"] + VOCAB["schemaorg"]["oracles"]:
+    rows += [
+        "",
+        "[[authority]]",
+        f"id = {q('SRC-VOCAB-' + re.sub(r'[^A-Z0-9]+', '-', pin['file'].upper()).strip('-'))}",
+        f"name = {q(pin['file'] + ' (' + pin['url'].split('/')[2] + ')')}",
+        f"citation = {q(pin['url'])}",
+        f"checksum = {q('sha256:' + pin['sha256'])}",
+        f"statement = {q('Every term ' + pin['file'] + ' defines, as the vocabulary register reads it')}",
+        'realized_by = ["RT-01"]',
+    ]
 authorities = "\n".join(rows) + "\n"
+
+# The vocabulary register, and schema.org's own files and examples held against it.
+generated, schemaorg, vocab_files = vocabulary()
+for pin in VOCAB["schemaorg"]["oracles"]:
+    vocab_files[pin["file"]] = fetch_pin(pin)
+coverage = schemaorg_oracle(schemaorg, vocab_files, texts[VOCAB["schemaorg"]["examples"]])
 
 if "--check" in args:
     if not OUT.exists() or OUT.read_text(encoding="utf-8") != text:
         refuse("test/oracle/corpus.json is stale: run python3 -I tools/oracle/gen.py")
     if not AUTHORITIES.exists() or AUTHORITIES.read_text(encoding="utf-8") != authorities:
         refuse("model/authorities.toml is stale: run python3 -I tools/oracle/gen.py")
+    for path, body in generated.items():
+        if not (ROOT / path).exists() or (ROOT / path).read_text(encoding="utf-8") != body:
+            refuse(f"{path} is stale: run python3 -I tools/oracle/gen.py")
     sys.exit(0)
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text(text, encoding="utf-8")
 AUTHORITIES.write_text(authorities, encoding="utf-8")
+for path, body in generated.items():
+    (ROOT / path).parent.mkdir(parents=True, exist_ok=True)
+    (ROOT / path).write_text(body, encoding="utf-8")
 print(f"oracle: {len(corpus)} examples from {len(SPEC['sources'])} specifications and {len(SPEC.get('classifications', []))} classifications, each a cited authority")
+print(f"vocabulary: schema.org {VOCAB['schemaorg']['release']} in full, {coverage['terms']} terms (the release's {coverage['contextTerms']} less its attic of {coverage['attic']}), "
+      f"{coverage['examplesUsed']} term uses in its own examples resolved ({coverage['examplesForeign']} of other vocabularies), "
+      f"{len(VOCAB['vocabularies']) - 1} other schemas crosswalked from {len(VOCAB['sources']) - 1} pinned files")

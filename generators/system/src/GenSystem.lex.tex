@@ -1,0 +1,570 @@
+\begin{lexlean}{GenSystem}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\title{System generator}
+\begin{semanticmodule}
+definition{
+  name: u,
+  parameters: [value : String],
+  result: Bytes,
+  body: (Foundation.Utf8::encode value)
+}
+
+definition{
+  name: cat,
+  parameters: [parts : (List Bytes)],
+  result: Bytes,
+  body: (match parts
+    | List.nil => 0x
+    | List.cons head rest => (Foundation.Bytes::appendBytes head (cat rest))),
+  recursive_argument: parts
+}
+
+definition{
+  name: nl,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes 0x0a value)
+}
+
+definition{
+  name: separated,
+  parameters: [items : (List Bytes)],
+  result: Bytes,
+  body: (match items
+    | List.nil => 0x
+    | List.cons head rest => (match rest
+      | List.nil => head
+      | List.cons next more => (Foundation.Bytes::appendBytes head (nl (separated rest))))),
+  recursive_argument: items
+}
+
+definition{
+  name: digit,
+  parameters: [d : Nat],
+  result: Bytes,
+  body: (if (d =? 0) then 0x30 else (if (d =? 1) then 0x31 else (if (d =? 2) then 0x32 else (if (d =? 3) then 0x33 else (if (d =? 4) then 0x34 else (if (d =? 5) then 0x35 else (if (d =? 6) then 0x36 else (if (d =? 7) then 0x37 else (if (d =? 8) then 0x38 else 0x39)))))))))
+}
+
+definition{
+  name: digitsFrom,
+  parameters: [n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (n <? 10) then (digit n) else (Foundation.Bytes::appendBytes (digitsFrom (prim quotient n 10 0 : Nat) rest) (digit (prim remainder n 10 0 : Nat))))),
+  recursive_argument: fuel
+}
+
+definition{name: num, parameters: [n : Nat], result: Bytes, body: (digitsFrom n 20)}
+
+definition{
+  name: quoted,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (cat (cons 0x22 (cons value (cons 0x22 (nil Bytes)))))
+}
+
+definition{
+  name: letterAt,
+  parameters: [table : Bytes, b : Nat],
+  result: Bytes,
+  body: (Foundation.Json::span table b (b + 1))
+}
+
+definition{
+  name: isAlnum,
+  parameters: [b : Nat],
+  result: Bool,
+  body: (((47 <? b) && (b <? 58)) || (((64 <? b) && (b <? 91)) || ((96 <? b) && (b <? 123))))
+}
+
+definition{
+  name: pascalFrom,
+  parameters: [s : Bytes, i : Nat, lead : Bool, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then acc else (let b : Nat := (Foundation.Tar::byteOr s i); (if (isAlnum b) then (let c : Bytes := (if (lead && ((96 <? b) && (b <? 123))) then (letterAt (u "ABCDEFGHIJKLMNOPQRSTUVWXYZ") (prim subtract b 97 : Nat)) else (Foundation.Json::span s i (i + 1))); (pascalFrom s (i + 1) false (Foundation.Bytes::appendBytes acc c) rest)) else (pascalFrom s (i + 1) true acc rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pascal,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (pascalFrom s 0 true 0x (Foundation.Bytes::byteLength s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: lowerFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then acc else (let b : Nat := (Foundation.Tar::byteOr s i); (let c : Bytes := (if ((64 <? b) && (b <? 91)) then (letterAt (u "abcdefghijklmnopqrstuvwxyz") (prim subtract b 65 : Nat)) else (Foundation.Json::span s i (i + 1))); (lowerFrom s (i + 1) (Foundation.Bytes::appendBytes acc c) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: lower,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (lowerFrom s 0 0x (Foundation.Bytes::byteLength s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: startsAt,
+  parameters: [s : Bytes, i : Nat, pattern : Bytes],
+  result: Bool,
+  body: (Foundation.Tar::sameBytes (Foundation.Json::span s i (i + (Foundation.Bytes::byteLength pattern))) pattern),
+  axioms: [propext]
+}
+
+definition{
+  name: occurrencesFrom,
+  parameters: [s : Bytes, pattern : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then acc else (if (((Foundation.Tar::byteOr s i) =? (Foundation.Tar::byteOr pattern 0)) && (startsAt s i pattern)) then (occurrencesFrom s pattern (i + 1) (acc + 1) rest) else (occurrencesFrom s pattern (i + 1) acc rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: base,
+  parameters: [index : Bytes, kind : String],
+  result: Nat,
+  body: (let line : Bytes := (cat (cons 0x0a (cons (u kind) (cons 0x0a (nil Bytes))))); (let all : Bytes := (Foundation.Bytes::appendBytes 0x0a index); (occurrencesFrom all line 0 0 (Foundation.Bytes::byteLength all)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: alnumEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (isAlnum (Foundation.Tar::byteOr s i)) then (alnumEnd s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: indexFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then 0x else (if (((Foundation.Tar::byteOr s i) =? 114) && (startsAt s i (u "record Foundation.Arch::"))) then (let k : Nat := (i + 24); (let e : Nat := (alnumEnd s k 64); (if (startsAt s e (u " {index := ")) then (Foundation.Bytes::appendBytes (Foundation.Json::span s k e) (Foundation.Bytes::appendBytes 0x0a (indexFrom s e rest))) else (indexFrom s e rest)))) else (indexFrom s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: archIndex,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (u "app/src/Architecture.lex.tex"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some piece => (ctor Option.some [Bytes] (indexFrom piece 0 (Foundation.Bytes::byteLength piece)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: fieldOf,
+  parameters: [name : String, value : Bytes],
+  result: Bytes,
+  body: (cat (cons (u name) (cons (u " := ") (cons value (nil Bytes)))))
+}
+
+definition{
+  name: fieldsFrom,
+  parameters: [items : (List Bytes)],
+  result: Bytes,
+  body: (match items
+    | List.nil => 0x
+    | List.cons head rest => (match rest
+      | List.nil => head
+      | List.cons next more => (cat (cons head (cons (u ", ") (cons (fieldsFrom rest) (nil Bytes))))))),
+  recursive_argument: items
+}
+
+definition{
+  name: rec,
+  parameters: [kind : String, fields : (List Bytes)],
+  result: Bytes,
+  body: (cat (cons (u "(record Foundation.Arch::") (cons (u kind) (cons (u " {") (cons (fieldsFrom fields) (cons (u "})") (nil Bytes)))))))
+}
+
+definition{
+  name: ctorOf,
+  parameters: [kind : String, name : String],
+  result: Bytes,
+  body: (cat (cons (u "(ctor Foundation.Arch::") (cons (u kind) (cons (u ".") (cons (u name) (cons (u ")") (nil Bytes)))))))
+}
+
+definition{
+  name: decl,
+  parameters: [name : Bytes, kind : Bytes, body : Bytes],
+  result: Bytes,
+  body: (cat (cons (u "definition{\n  name: ") (cons name (cons (u ",\n  parameters: [],\n  result: ") (cons kind (cons (u ",\n  body: ") (cons body (cons (u "\n}\n") (nil Bytes)))))))))
+}
+
+definition{
+  name: archDecl,
+  parameters: [name : Bytes, kind : String, body : Bytes],
+  result: Bytes,
+  body: (decl name (cat (cons (u "Foundation.Arch::") (cons (u kind) (nil Bytes)))) body)
+}
+
+definition{
+  name: sys,
+  parameters: [name : String],
+  result: Bytes,
+  body: (quoted (cat (cons (u "PrismSystem::") (cons (u name) (nil Bytes)))))
+}
+
+definition{
+  name: str,
+  parameters: [spec : Bytes, path : (Option Nat)],
+  result: Bytes,
+  body: (Foundation.Json::textAt spec path),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: key,
+  parameters: [spec : Bytes, at : (Option Nat), name : String],
+  result: (Option Nat),
+  body: (Foundation.Json::memberAt spec at (u name)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: thing,
+  parameters: [name : Bytes, view : String, kind : String, subject : Bytes],
+  result: Bytes,
+  body: (archDecl name "OpmThing" (rec "OpmThing" (cons (fieldOf "view" (sys view)) (cons (fieldOf "kind" (ctorOf "OpmThingKind" kind)) (cons (fieldOf "subject" subject) (nil Bytes))))))
+}
+
+definition{
+  name: link,
+  parameters: [name : String, kind : String, source : Bytes, target : Bytes],
+  result: Bytes,
+  body: (archDecl (u name) "OpmLink" (rec "OpmLink" (cons (fieldOf "view" (sys "designViewSystem")) (cons (fieldOf "kind" (ctorOf "OpmLinkKind" kind)) (cons (fieldOf "source" source) (cons (fieldOf "target" target) (nil Bytes)))))))
+}
+
+definition{
+  name: zoom,
+  parameters: [name : Bytes, process : Bytes, subprocess : Bytes, order : Nat],
+  result: Bytes,
+  body: (archDecl name "OpmZoom" (rec "OpmZoom" (cons (fieldOf "view" (sys "designViewSystemParts")) (cons (fieldOf "process" process) (cons (fieldOf "subprocess" subprocess) (cons (fieldOf "order" (num order)) (nil Bytes)))))))
+}
+
+definition{
+  name: decideOf,
+  parameters: [stem : Bytes],
+  result: Bytes,
+  body: (quoted (cat (cons (u "Design::processPrism") (cons (pascal stem) (cons (u "Decide") (nil Bytes)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: decisionsFrom,
+  parameters: [spec : Bytes, list : (Option Nat), part : Bytes, k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (match (Foundation.Json::elementAt spec list k)
+      | Option.none => 0x
+      | Option.some at => (let stem : Bytes := (str spec (ctor Option.some [Nat] at)); (let p : Bytes := (pascal stem); (cat (cons (nl (thing (cat (cons (u "opmSystemPartsDecide") (cons p (nil Bytes)))) "designViewSystemParts" "process" (decideOf stem))) (cons (nl (zoom (cat (cons (u "opmSystemZoom") (cons part (cons p (nil Bytes))))) (cat (cons (u "\"PrismSystem::processSystemPart") (cons part (cons (u "\"") (nil Bytes))))) (decideOf stem) k)) (cons (decisionsFrom spec list part (k + 1) rest) (nil Bytes))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: partsFrom,
+  parameters: [spec : Bytes, parts : (Option Nat), k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (match (Foundation.Json::elementAt spec parts k)
+      | Option.none => 0x
+      | Option.some at => (let p : (Option Nat) := (ctor Option.some [Nat] at); (let name : Bytes := (str spec (key spec p "name")); (let process : Bytes := (cat (cons (u "\"PrismSystem::processSystemPart") (cons name (cons (u "\"") (nil Bytes))))); (cat (cons (nl (archDecl (cat (cons (u "processSystemPart") (cons name (nil Bytes)))) "SystemProcess" (rec "SystemProcess" (cons (fieldOf "owner" (sys "componentSystemPrism")) (nil Bytes))))) (cons (nl (thing (cat (cons (u "opmSystemPartsPart") (cons name (nil Bytes)))) "designViewSystemParts" "process" process)) (cons (nl (zoom (cat (cons (u "opmSystemZoom") (cons name (nil Bytes)))) (sys "processSystemMain") process k)) (cons (decisionsFrom spec (key spec p "decisions") name 0 (Foundation.Bytes::byteLength spec)) (cons (partsFrom spec parts (k + 1) rest) (nil Bytes)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: owedCons,
+  parameters: [spec : Bytes, parts : (Option Nat), k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (u "(nil String)")
+    | Nat.succ rest => (match (Foundation.Json::elementAt spec parts k)
+      | Option.none => (u "(nil String)")
+      | Option.some at => (let p : (Option Nat) := (ctor Option.some [Nat] at); (match (key spec p "owed")
+        | Option.none => (owedCons spec parts (k + 1) rest)
+        | Option.some o => (cat (cons (u "(cons ") (cons (quoted (cat (cons (str spec (key spec p "name")) (cons (u ": ") (cons (str spec (ctor Option.some [Nat] o)) (nil Bytes)))))) (cons (u " ") (cons (owedCons spec parts (k + 1) rest) (cons (u ")") (nil Bytes))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: consOf,
+  parameters: [kind : String, items : (List Bytes)],
+  result: Bytes,
+  body: (match items
+    | List.nil => (cat (cons (u "(nil ") (cons (u kind) (cons (u ")") (nil Bytes)))))
+    | List.cons head rest => (cat (cons (u "(cons ") (cons head (cons (u " ") (cons (consOf kind rest) (cons (u ")") (nil Bytes)))))))),
+  recursive_argument: items
+}
+
+definition{
+  name: standardsCons,
+  parameters: [spec : Bytes, list : (Option Nat), k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (u "(nil Compliance::Obligation)")
+    | Nat.succ rest => (match (Foundation.Json::elementAt spec list k)
+      | Option.none => (u "(nil Compliance::Obligation)")
+      | Option.some at => (let x : (Option Nat) := (ctor Option.some [Nat] at); (cat (cons (u "(cons ") (cons (cat (cons (u "(record Compliance::Obligation {index := ") (cons (num k) (cons (u ", standard := ") (cons (quoted (str spec (Foundation.Json::elementAt spec x 1))) (cons (u ", subject := ") (cons (quoted (cat (cons (str spec (key spec (Foundation.Json::root spec) "name")) (cons (u ": ") (cons (str spec (Foundation.Json::elementAt spec x 0)) (nil Bytes)))))) (cons (u ", text := ") (cons (quoted (str spec (Foundation.Json::elementAt spec x 2))) (cons (u ", evidence := ") (cons (consOf "String" (cons (sys "designViewSystem") (cons (sys "designViewSystemParts") (nil Bytes)))) (cons (u "})") (nil Bytes))))))))))))) (cons (u " ") (cons (standardsCons spec list (k + 1) rest) (cons (u ")") (nil Bytes)))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: component,
+  parameters: [name : String, index : Nat, kind : String, title : Bytes, text : Bytes],
+  result: Bytes,
+  body: (archDecl (u name) "Component" (rec "Component" (cons (fieldOf "index" (num index)) (cons (fieldOf "kind" (ctorOf "ComponentKind" kind)) (cons (fieldOf "name" (quoted title)) (cons (fieldOf "text" (quoted text)) (nil Bytes)))))))
+}
+
+definition{
+  name: edge,
+  parameters: [name : String, index : Nat, source : Nat, target : Nat, kind : String],
+  result: Bytes,
+  body: (archDecl (u name) "Edge" (rec "Edge" (cons (fieldOf "index" (num index)) (cons (fieldOf "fromIndex" (num source)) (cons (fieldOf "toIndex" (num target)) (cons (fieldOf "kind" (ctorOf "EdgeKind" kind)) (nil Bytes)))))))
+}
+
+definition{
+  name: module,
+  parameters: [spec : Bytes, arch : Bytes],
+  result: Bytes,
+  body: (let r : (Option Nat) := (Foundation.Json::root spec); (let b : (Option Nat) := (key spec r "beneficiary"); (let a : (Option Nat) := (key spec r "attribute"); (let from : Bytes := (str spec (key spec a "from")); (let to : Bytes := (str spec (key spec a "to")); (let c : Nat := (base arch "Component"); (let e : Nat := (base arch "Edge"); (let held : Nat := c; (let person : Nat := (c + 1); (let prism : Nat := (c + 2); (let streams : Nat := (c + 3); (let main : Bytes := (sys "processSystemMain"); (let defs : (List Bytes) := (cons (archDecl (u "stakeholderPerson") "Stakeholder" (rec "Stakeholder" (cons (fieldOf "index" (num (base arch "Stakeholder"))) (cons (fieldOf "name" (quoted (str spec (key spec b "name")))) (cons (fieldOf "text" (quoted (str spec (key spec b "text")))) (nil Bytes)))))) (cons (archDecl (u "concernSystemHold") "Concern" (rec "Concern" (cons (fieldOf "index" (num (base arch "Concern"))) (cons (fieldOf "name" (quoted (str spec (key spec a "name")))) (cons (fieldOf "text" (quoted (str spec (key spec a "text")))) (nil Bytes)))))) (cons (component "componentSystemHeld" held "database" (str spec (key spec (key spec r "result") "name")) (str spec (key spec (key spec r "result") "text"))) (cons (component "componentSystemPerson" person "externalSystem" (str spec (key spec b "name")) (str spec (key spec r "counterpart"))) (cons (component "componentSystemPrism" prism "service" (str spec (key spec r "name")) (str spec (key spec r "text"))) (cons (component "componentSystemStreams" streams "externalSystem" (str spec (key spec (key spec r "input") "name")) (str spec (key spec (key spec r "input") "text"))) (cons (edge "edgeSystemBrowserToPrism" e 0 prism "controlFlow") (cons (edge "edgeSystemPersonToPrism" (e + 1) person prism "controlFlow") (cons (edge "edgeSystemPrismToHeld" (e + 2) prism held "dataFlow") (cons (edge "edgeSystemPrismToPerson" (e + 3) prism person "dataFlow") (cons (edge "edgeSystemStreamsToPrism" (e + 4) streams prism "dataFlow") (cons (archDecl (u "viewpointSystem") "Viewpoint" (rec "Viewpoint" (cons (fieldOf "index" (num (base arch "Viewpoint"))) (cons (fieldOf "stakeholderIndex" (num (base arch "Stakeholder"))) (cons (fieldOf "concernIndex" (num (base arch "Concern"))) (cons (fieldOf "modelKindIndex" (num 0)) (nil Bytes))))))) (cons (archDecl (u "viewSystem") "View" (rec "View" (cons (fieldOf "index" (num (base arch "View"))) (cons (fieldOf "viewpointIndex" (num (base arch "Viewpoint"))) (cons (fieldOf "modelKindIndex" (num 0)) (nil Bytes)))))) (cons (archDecl (u "processSystemMain") "SystemProcess" (rec "SystemProcess" (cons (fieldOf "owner" (sys "componentSystemPrism")) (nil Bytes)))) (cons (archDecl (cat (cons (u "stateSystem") (cons (pascal from) (nil Bytes)))) "SystemState" (rec "SystemState" (cons (fieldOf "owner" (sys "componentSystemPerson")) (nil Bytes)))) (cons (archDecl (cat (cons (u "stateSystem") (cons (pascal to) (nil Bytes)))) "SystemState" (rec "SystemState" (cons (fieldOf "owner" (sys "componentSystemPerson")) (nil Bytes)))) (cons (archDecl (u "designViewSystem") "DesignView" (rec "DesignView" (cons (fieldOf "title" (quoted (cat (cons (str spec (key spec r "name")) (cons (u ": ") (cons (str spec (key spec r "frame")) (nil Bytes))))))) (cons (fieldOf "viewpoint" (sys "viewpointSystem")) (cons (fieldOf "diagram" (ctorOf "DesignDiagram" "opmObjectProcess")) (nil Bytes)))))) (cons (archDecl (u "designViewSystemParts") "DesignView" (rec "DesignView" (cons (fieldOf "title" (quoted (cat (cons (u "Zooming into ") (cons (lower (str spec (key spec r "mainProcess"))) (cons (u ": the parts of the ") (cons (str spec (key spec r "name")) (nil Bytes)))))))) (cons (fieldOf "viewpoint" (sys "viewpointSystem")) (cons (fieldOf "diagram" (ctorOf "DesignDiagram" "opmObjectProcess")) (nil Bytes)))))) (cons (thing (u "opmSystemHeld") "designViewSystem" "object" (sys "componentSystemHeld")) (cons (thing (u "opmSystemPerson") "designViewSystem" "object" (sys "componentSystemPerson")) (cons (thing (u "opmSystemPrism") "designViewSystem" "object" (sys "componentSystemPrism")) (cons (thing (u "opmSystemStreams") "designViewSystem" "object" (sys "componentSystemStreams")) (cons (thing (u "opmSystemBrowser") "designViewSystem" "object" (quoted (u "Architecture::componentBrowser"))) (cons (thing (u "opmSystemMain") "designViewSystem" "process" main) (cons (archDecl (cat (cons (u "opmSystemPerson") (cons (pascal from) (nil Bytes)))) "OpmState" (rec "OpmState" (cons (fieldOf "view" (sys "designViewSystem")) (cons (fieldOf "thing" (sys "componentSystemPerson")) (cons (fieldOf "state" (quoted (cat (cons (u "PrismSystem::stateSystem") (cons (pascal from) (nil Bytes)))))) (nil Bytes)))))) (cons (archDecl (cat (cons (u "opmSystemPerson") (cons (pascal to) (nil Bytes)))) "OpmState" (rec "OpmState" (cons (fieldOf "view" (sys "designViewSystem")) (cons (fieldOf "thing" (sys "componentSystemPerson")) (cons (fieldOf "state" (quoted (cat (cons (u "PrismSystem::stateSystem") (cons (pascal to) (nil Bytes)))))) (nil Bytes)))))) (cons (link "opmSystemPersonAgent" "agent" (sys "componentSystemPerson") main) (cons (link "opmSystemPersonEffect" "effect" (sys "componentSystemPerson") main) (cons (link "opmSystemPrismExhibits" "exhibition" (sys "componentSystemPrism") main) (cons (link "opmSystemBrowserInstrument" "instrument" (quoted (u "Architecture::componentBrowser")) main) (cons (link "opmSystemStreamsConsumed" "consumption" (sys "componentSystemStreams") main) (cons (link "opmSystemHeldResult" "result" main (sys "componentSystemHeld")) (cons (thing (u "opmSystemPartsMain") "designViewSystemParts" "process" main) (nil Bytes)))))))))))))))))))))))))))))))))); (cat (cons (u "\\begin{lexlean}{PrismSystem}\n\\useglossary{lexlean.std.bool@1.2.0}\n\\useglossary{lexlean.std.nat@1.2.0}\n\\useglossary{prism.arch@1.0.0}\n\\importmodule{Architecture}\n\\importmodule{Compliance}\n\\importmodule{Design}\n\\importmodule{Foundation.Arch}\n\\title{design view}\n\\begin{semanticmodule}\n") (cons (separated defs) (cons (partsFrom spec (key spec r "parts") 0 (Foundation.Bytes::byteLength spec)) (cons (u "\n") (cons (decl (u "systemPartsOwed") (u "(List String)") (owedCons spec (key spec r "parts") 0 (Foundation.Bytes::byteLength spec))) (cons (u "\n") (cons (decl (u "systemStandards") (u "(List Compliance::Obligation)") (standardsCons spec (key spec r "standards") 0 (Foundation.Bytes::byteLength spec))) (cons (u "\ntheorem{\n  name: systemStandardsEvidenced,\n  parameters: [],\n  statement: ((Compliance::obligationsEvidenced 0 (systemStandards)) = true),\n  proof: decide{}\n}\n\\end{semanticmodule}\n\\end{lexlean}\n") (nil Bytes))))))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: generate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (u "app/specs/system/spec.json"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some spec => (match (Foundation.Tar::find archive (u ".gen/arch-index"))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some arch => (ctor Option.some [Bytes] (module spec arch)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: stemOf,
+  parameters: [name : Bytes],
+  result: Bytes,
+  body: (let n : Nat := (Foundation.Bytes::byteLength name); (if (n <? 12) then name else (if (Foundation.Tar::sameBytes (Foundation.Json::span name (prim subtract n 12 : Nat) n) (u ".prompt.json")) then (Foundation.Json::span name 0 (prim subtract n 12 : Nat)) else name))),
+  axioms: [propext]
+}
+
+definition{
+  name: holdIn,
+  parameters: [spec : Bytes, list : (Option Nat), stem : Bytes, j : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (match (Foundation.Json::elementAt spec list j)
+      | Option.none => 0
+      | Option.some at => (if (Foundation.Tar::sameBytes (str spec (ctor Option.some [Nat] at)) stem) then ((holdIn spec list stem (j + 1) rest) + 1) else (holdIn spec list stem (j + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: holdCount,
+  parameters: [spec : Bytes, parts : (Option Nat), stem : Bytes, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (match (Foundation.Json::elementAt spec parts k)
+      | Option.none => 0
+      | Option.some at => ((holdIn spec (key spec (ctor Option.some [Nat] at) "decisions") stem 0 (Foundation.Bytes::byteLength spec)) + (holdCount spec parts stem (k + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: inSet,
+  parameters: [set : Bytes, prompts : (Option Nat), stem : Bytes, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (match (Foundation.Json::elementAt set prompts j)
+      | Option.none => false
+      | Option.some at => (if (Foundation.Tar::sameBytes (stemOf (str set (ctor Option.some [Nat] at))) stem) then true else (inSet set prompts stem (j + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: decisionProblems,
+  parameters: [
+    spec : Bytes,
+    parts : (Option Nat),
+    set : Bytes,
+    prompts : (Option Nat),
+    j : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (match (Foundation.Json::elementAt set prompts j)
+      | Option.none => 0x
+      | Option.some at => (let stem : Bytes := (stemOf (str set (ctor Option.some [Nat] at))); (let c : Nat := (holdCount spec parts stem 0 (Foundation.Bytes::byteLength spec)); (let next : Bytes := (decisionProblems spec parts set prompts (j + 1) rest); (if (c =? 1) then next else (cat (cons (u "the decision ") (cons stem (cons (u " is a part of ") (cons (num c) (cons (u " parts, not one; ") (cons next (nil Bytes)))))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: strayFrom,
+  parameters: [
+    spec : Bytes,
+    list : (Option Nat),
+    set : Bytes,
+    prompts : (Option Nat),
+    j : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (match (Foundation.Json::elementAt spec list j)
+      | Option.none => 0x
+      | Option.some at => (let d : Bytes := (str spec (ctor Option.some [Nat] at)); (let next : Bytes := (strayFrom spec list set prompts (j + 1) rest); (if (inSet set prompts d 0 (Foundation.Bytes::byteLength set)) then next else (cat (cons (u "a part holds ") (cons d (cons (u ", which is no decision of the set; ") (cons next (nil Bytes))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mayOwe,
+  parameters: [name : Bytes],
+  result: Bool,
+  body: ((Foundation.Tar::sameBytes name (u "Me")) || (Foundation.Tar::sameBytes name (u "Synchronisation"))),
+  axioms: [propext]
+}
+
+definition{
+  name: partProblems,
+  parameters: [
+    spec : Bytes,
+    parts : (Option Nat),
+    set : Bytes,
+    prompts : (Option Nat),
+    k : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (match (Foundation.Json::elementAt spec parts k)
+      | Option.none => 0x
+      | Option.some at => (let p : (Option Nat) := (ctor Option.some [Nat] at); (let name : Bytes := (str spec (key spec p "name")); (let held : Bool := (0 <? (Foundation.Json::countAt spec (key spec p "decisions"))); (let owing : Bool := (match (key spec p "owed")
+        | Option.none => false
+        | Option.some o => true); (let next : Bytes := (partProblems spec parts set prompts (k + 1) rest); (cat (cons (strayFrom spec (key spec p "decisions") set prompts 0 (Foundation.Bytes::byteLength spec)) (cons (if (if held then owing else (if owing then false else true)) then (cat (cons (u "the part ") (cons name (cons (u " must hold a decision or say what it owes, not both or neither; ") (nil Bytes))))) else 0x) (cons (if owing then (if (mayOwe name) then 0x else (cat (cons (u "owed parts only shrink: ") (cons name (cons (u " added; ") (nil Bytes)))))) else 0x) (cons next (nil Bytes))))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: owes,
+  parameters: [spec : Bytes, parts : (Option Nat), name : Bytes, k : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (match (Foundation.Json::elementAt spec parts k)
+      | Option.none => false
+      | Option.some at => (let p : (Option Nat) := (ctor Option.some [Nat] at); (if (Foundation.Tar::sameBytes (str spec (key spec p "name")) name) then (match (key spec p "owed")
+        | Option.none => false
+        | Option.some o => true) else (owes spec parts name (k + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: registered,
+  parameters: [keys : Bytes, wanted : Bytes],
+  result: Bool,
+  body: (let line : Bytes := (cat (cons 0x0a (cons wanted (cons 0x0a (nil Bytes))))); (let all : Bytes := (Foundation.Bytes::appendBytes 0x0a keys); (0 <? (occurrencesFrom all line 0 0 (Foundation.Bytes::byteLength all))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: standardProblems,
+  parameters: [spec : Bytes, list : (Option Nat), register : Bytes, j : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (match (Foundation.Json::elementAt spec list j)
+      | Option.none => 0x
+      | Option.some at => (let k : Bytes := (str spec (Foundation.Json::elementAt spec (ctor Option.some [Nat] at) 0)); (let next : Bytes := (standardProblems spec list register (j + 1) rest); (if (registered register k) then next else (cat (cons (u "the standard ") (cons k (cons (u " is not in the standards register; ") (cons next (nil Bytes))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: problems,
+  parameters: [spec : Bytes, set : Bytes, register : Bytes],
+  result: Bytes,
+  body: (let r : (Option Nat) := (Foundation.Json::root spec); (let parts : (Option Nat) := (key spec r "parts"); (let prompts : (Option Nat) := (key set (Foundation.Json::root set) "prompts"); (let n : Nat := (Foundation.Bytes::byteLength spec); (cat (cons (decisionProblems spec parts set prompts 0 (Foundation.Bytes::byteLength set)) (cons (partProblems spec parts set prompts 0 n) (cons (if (owes spec parts (u "Me") 0 n) then 0x else (u "Me is realized: take it out of the parts that may owe; ")) (cons (if (owes spec parts (u "Synchronisation") 0 n) then 0x else (u "Synchronisation is realized: take it out of the parts that may owe; ")) (cons (standardProblems spec (key spec r "standards") register 0 n) (nil Bytes))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: check,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (u "app/specs/system/spec.json"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some spec => (match (Foundation.Tar::find archive (u "app/prompts/set.json"))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some set => (match (Foundation.Tar::find archive (u ".gen/register-keys"))
+        | Option.none => (ctor Option.none [Bytes])
+        | Option.some register => (ctor Option.some [Bytes] (problems spec set register))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: registerKey,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (u "app/specs/standards/spec.json"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some entry => (match (Foundation.Json::text entry (match (Foundation.Json::member entry (Foundation.Json::space entry 0) (u "key"))
+        | Option.none => 0
+        | Option.some v => v))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some k => (ctor Option.some [Bytes] (Foundation.Bytes::appendBytes k 0x0a)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

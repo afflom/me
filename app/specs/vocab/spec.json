@@ -1,0 +1,1855 @@
+{
+ "spec": "me/vocabulary/1",
+ "comment": "The Prism's vocabulary register: schema.org 30.1 in full (every type, property and enumeration member of its published file) and every term of eleven common schemas, each read from its authority's own published file pinned by SHA-256, and crosswalked onto schema.org. tools/oracle/gen.py reads this spec and writes site/vocab/register.json and the Lean modules in 'lean'; --check refuses them if stale. The crosswalk rows, domains, anchors and property floors are the design's claims (R2), stated here in the model; a claim naming a term its pinned source does not define is refused, and every term no claim maps is kept as residual (schema:additionalProperty or schema:additionalType on schema:Thing), so nothing a source defines is dropped.",
+ "schemaorg": {
+  "release": "30.1",
+  "source": "schemaorg-current-https.jsonld",
+  "examples": "schemaorg",
+  "statusCodes": [
+   "core",
+   "pending",
+   "extension",
+   "superseded"
+  ],
+  "oracles": [
+   {
+    "role": "whole",
+    "file": "schemaorg-all-https.jsonld",
+    "url": "https://raw.githubusercontent.com/schemaorg/schemaorg/5f2d8cdec99b7329459ef6584e94b6a840f88471/data/releases/30.1/schemaorg-all-https.jsonld",
+    "sha256": "07e7c663dbc12a0937581745e59a98ed12b8698f38e8e3b03650287d9df88ae5",
+    "retrieved": "2026-11-15",
+    "why": "the release's whole graph, its current terms and its attic, from the commit the examples are pinned at"
+   },
+   {
+    "role": "context",
+    "file": "jsonldcontext.jsonld",
+    "url": "https://schema.org/docs/jsonldcontext.jsonld",
+    "sha256": "65d0c5d17def9b171b7697bb0929eed17aa32f19af539e15302b6c20479b8930",
+    "retrieved": "2026-11-15",
+    "why": "the JSON-LD context \"https://schema.org\" names, which the examples are read by; schema.org publishes it unversioned, so a new release changes these bytes and the producer refuses until it is pinned again"
+   }
+  ],
+  "defects": [
+   {
+    "example": "#eg-0291",
+    "term": "Best for the Money",
+    "why": "the example gives a review's label as its \"type\", which the schema.org context aliases to @type, so it reads as a type no release defines; the release's own Recommendation examples are otherwise read in full"
+   },
+   {
+    "example": "#eg-0293",
+    "term": "Best for the Money",
+    "why": "the example gives a review's label as its \"type\", which the schema.org context aliases to @type, so it reads as a type no release defines; the release's own Recommendation examples are otherwise read in full"
+   }
+  ]
+ },
+ "sources": [
+  {
+   "file": "schemaorg-current-https.jsonld",
+   "url": "https://schema.org/version/30.1/schemaorg-current-https.jsonld",
+   "sha256": "0a4b8c4c910fc831ec8695196510973390906a5ee34dc6b862dfec4d21a12f74",
+   "retrieved": "2026-11-12"
+  },
+  {
+   "file": "vcard-properties.csv",
+   "url": "https://www.iana.org/assignments/vcard-elements/properties.csv",
+   "sha256": "88343dcd541b16659cee69121dcb5920046df0b2ec34f5dc5bd5b9cc70c68d26",
+   "retrieved": "2026-11-12"
+  },
+  {
+   "file": "icalendar-components.csv",
+   "url": "https://www.iana.org/assignments/icalendar/components.csv",
+   "sha256": "a6ea10a7d906fe3fcda48af5d6ffa114caa5435cbb22a7838e6cfd5a525ee15d",
+   "retrieved": "2026-11-12"
+  },
+  {
+   "file": "icalendar-properties.csv",
+   "url": "https://www.iana.org/assignments/icalendar/properties.csv",
+   "sha256": "b171ad1a01b3ab7d7ccda7dad783546ea2d88e97ede7b2625a72c2a621878e9d",
+   "retrieved": "2026-11-12"
+  },
+  {
+   "file": "message-headers.xml",
+   "url": "https://www.iana.org/assignments/message-headers/message-headers.xml",
+   "sha256": "c568afe384ea9c003ff624d573253db482603c65d00d6383677f1da04255e1a5",
+   "retrieved": "2026-11-12"
+  },
+  {
+   "file": "jscontact.xml",
+   "url": "https://www.iana.org/assignments/jscontact/jscontact.xml",
+   "sha256": "159719912975e1fc33b5cca37405e4b7ec172d9ec9b4c475fbf948c17f0a4470",
+   "retrieved": "2026-11-12"
+  },
+  {
+   "file": "jscalendar.xml",
+   "url": "https://www.iana.org/assignments/jscalendar/jscalendar.xml",
+   "sha256": "b928f9900702faf3f91d5be34e40bff76484ace9f8cc6bc3f30874b83fe4cace",
+   "retrieved": "2026-11-12"
+  },
+  {
+   "file": "activitystreams-owl.ttl",
+   "url": "https://www.w3.org/ns/activitystreams-owl",
+   "sha256": "e28fd3be62791b42422f2e97c0ab56141238e774be7aa860e5f03da1b2fe158f",
+   "retrieved": "2026-11-12"
+  },
+  {
+   "file": "prov-o.ttl",
+   "url": "https://www.w3.org/ns/prov-o",
+   "sha256": "7d203989f67b38bca572253942acc5a1bf24ce3ccfece16f072dcb4be2b79a96",
+   "retrieved": "2026-11-12"
+  },
+  {
+   "file": "dcterms.ttl",
+   "url": "https://www.dublincore.org/specifications/dublin-core/dcmi-terms/dublin_core_terms.ttl",
+   "sha256": "13df401072dd7015bf9d75162f3e41c8138075304b7b9cc1aa1e9c16db976797",
+   "retrieved": "2026-11-12"
+  },
+  {
+   "file": "foaf.rdf",
+   "url": "http://xmlns.com/foaf/spec/index.rdf",
+   "sha256": "3d859b5d92a2c3d041545d014fa826f682ca06d056af8c7b31e32d930abf2bc5",
+   "retrieved": "2026-11-12"
+  },
+  {
+   "file": "skos.rdf",
+   "url": "https://www.w3.org/2009/08/skos-reference/skos.rdf",
+   "sha256": "e79633b8d0564816cee8a99f5c9acf9a0e6fc7257c7209acd684ecad53a89dd6",
+   "retrieved": "2026-11-12"
+  },
+  {
+   "file": "ogp.ttl",
+   "url": "https://ogp.me/ns/ogp.me.ttl",
+   "sha256": "6bf11c8299765cf8db1ff2ed212d52a204dcda10ce7d1f9068b58a0026b1defd",
+   "retrieved": "2026-11-12"
+  }
+ ],
+ "matchKinds": [
+  "exact",
+  "close",
+  "broad",
+  "narrow",
+  "related",
+  "residual"
+ ],
+ "vocabularies": [
+  {
+   "key": "vcard",
+   "title": "vCard 4 properties",
+   "authority": "IANA vCard Elements registry (RFC 6350 and updates)",
+   "terms": [
+    {
+     "source": "vcard-properties.csv",
+     "read": "iana-csv",
+     "column": "Property",
+     "kind": "property"
+    }
+   ],
+   "also": [
+    [
+     "VCARD",
+     "class"
+    ]
+   ],
+   "crosswalk": {
+    "classes": {
+     "VCARD": [
+      "close",
+      "Person"
+     ]
+    },
+    "properties": {
+     "FN": [
+      "exact",
+      "name"
+     ],
+     "N": [
+      "close",
+      "familyName"
+     ],
+     "NICKNAME": [
+      "close",
+      "alternateName"
+     ],
+     "PHOTO": [
+      "exact",
+      "image"
+     ],
+     "BDAY": [
+      "exact",
+      "birthDate"
+     ],
+     "GENDER": [
+      "exact",
+      "gender"
+     ],
+     "ADR": [
+      "exact",
+      "address"
+     ],
+     "TEL": [
+      "exact",
+      "telephone"
+     ],
+     "EMAIL": [
+      "exact",
+      "email"
+     ],
+     "IMPP": [
+      "broad",
+      "contactPoint"
+     ],
+     "LANG": [
+      "exact",
+      "knowsLanguage"
+     ],
+     "GEO": [
+      "broad",
+      "homeLocation"
+     ],
+     "TITLE": [
+      "exact",
+      "jobTitle"
+     ],
+     "ROLE": [
+      "close",
+      "hasOccupation"
+     ],
+     "LOGO": [
+      "exact",
+      "logo"
+     ],
+     "ORG": [
+      "close",
+      "affiliation"
+     ],
+     "MEMBER": [
+      "exact",
+      "member"
+     ],
+     "RELATED": [
+      "broad",
+      "knows"
+     ],
+     "CATEGORIES": [
+      "close",
+      "keywords"
+     ],
+     "NOTE": [
+      "close",
+      "description"
+     ],
+     "REV": [
+      "exact",
+      "dateModified"
+     ],
+     "UID": [
+      "exact",
+      "identifier"
+     ],
+     "URL": [
+      "exact",
+      "url"
+     ],
+     "BIRTHPLACE": [
+      "exact",
+      "birthPlace"
+     ],
+     "DEATHPLACE": [
+      "exact",
+      "deathPlace"
+     ],
+     "DEATHDATE": [
+      "exact",
+      "deathDate"
+     ],
+     "EXPERTISE": [
+      "close",
+      "knowsAbout"
+     ],
+     "INTEREST": [
+      "broad",
+      "knowsAbout"
+     ],
+     "CONTACT-URI": [
+      "close",
+      "contactPoint"
+     ],
+     "CREATED": [
+      "exact",
+      "dateCreated"
+     ],
+     "SOCIALPROFILE": [
+      "close",
+      "sameAs"
+     ]
+    }
+   }
+  },
+  {
+   "key": "ical",
+   "title": "iCalendar components and properties",
+   "authority": "IANA iCalendar Elements registry (RFC 5545 and updates)",
+   "terms": [
+    {
+     "source": "icalendar-components.csv",
+     "read": "iana-csv",
+     "column": "Component",
+     "kind": "class"
+    },
+    {
+     "source": "icalendar-properties.csv",
+     "read": "iana-csv",
+     "column": "Property",
+     "kind": "property"
+    }
+   ],
+   "crosswalk": {
+    "classes": {
+     "VCALENDAR": [
+      "close",
+      "DataFeed"
+     ],
+     "VEVENT": [
+      "exact",
+      "Event"
+     ],
+     "VTODO": [
+      "close",
+      "Action"
+     ],
+     "VJOURNAL": [
+      "broad",
+      "CreativeWork"
+     ],
+     "VFREEBUSY": [
+      "close",
+      "Schedule"
+     ],
+     "VAVAILABILITY": [
+      "close",
+      "OpeningHoursSpecification"
+     ],
+     "AVAILABLE": [
+      "close",
+      "OpeningHoursSpecification"
+     ],
+     "PARTICIPANT": [
+      "close",
+      "Role"
+     ],
+     "VLOCATION": [
+      "exact",
+      "Place"
+     ]
+    },
+    "properties": {
+     "CATEGORIES": [
+      "close",
+      "keywords"
+     ],
+     "DESCRIPTION": [
+      "exact",
+      "description"
+     ],
+     "GEO": [
+      "broad",
+      "location"
+     ],
+     "LOCATION": [
+      "exact",
+      "location"
+     ],
+     "STATUS": [
+      "close",
+      "eventStatus"
+     ],
+     "SUMMARY": [
+      "exact",
+      "name"
+     ],
+     "COMPLETED": [
+      "close",
+      "endTime"
+     ],
+     "DTEND": [
+      "exact",
+      "endDate"
+     ],
+     "DTSTART": [
+      "exact",
+      "startDate"
+     ],
+     "DURATION": [
+      "exact",
+      "duration"
+     ],
+     "ATTENDEE": [
+      "exact",
+      "attendee"
+     ],
+     "ORGANIZER": [
+      "exact",
+      "organizer"
+     ],
+     "URL": [
+      "exact",
+      "url"
+     ],
+     "UID": [
+      "exact",
+      "identifier"
+     ],
+     "EXDATE": [
+      "exact",
+      "exceptDate"
+     ],
+     "RRULE": [
+      "close",
+      "eventSchedule"
+     ],
+     "CREATED": [
+      "exact",
+      "dateCreated"
+     ],
+     "LAST-MODIFIED": [
+      "exact",
+      "dateModified"
+     ],
+     "NAME": [
+      "exact",
+      "name"
+     ],
+     "IMAGE": [
+      "exact",
+      "image"
+     ],
+     "CONFERENCE": [
+      "close",
+      "location"
+     ],
+     "PARTICIPANT-TYPE": [
+      "close",
+      "roleName"
+     ]
+    }
+   }
+  },
+  {
+   "key": "mail",
+   "title": "Mail header fields",
+   "authority": "IANA Message Headers registry, protocols mail and MIME (RFC 5322, RFC 2045, RFC 4021 and updates)",
+   "terms": [
+    {
+     "source": "message-headers.xml",
+     "read": "iana-headers",
+     "protocols": [
+      "mail",
+      "MIME"
+     ],
+     "kind": "property"
+    }
+   ],
+   "crosswalk": {
+    "classes": {},
+    "properties": {
+     "From": [
+      "exact",
+      "sender"
+     ],
+     "To": [
+      "exact",
+      "toRecipient"
+     ],
+     "Cc": [
+      "exact",
+      "ccRecipient"
+     ],
+     "Bcc": [
+      "exact",
+      "bccRecipient"
+     ],
+     "Subject": [
+      "close",
+      "name"
+     ],
+     "Date": [
+      "exact",
+      "dateSent"
+     ],
+     "Message-ID": [
+      "exact",
+      "identifier"
+     ],
+     "In-Reply-To": [
+      "related",
+      "isPartOf"
+     ],
+     "References": [
+      "related",
+      "isPartOf"
+     ],
+     "Sender": [
+      "close",
+      "sender"
+     ],
+     "Content-Type": [
+      "exact",
+      "encodingFormat"
+     ],
+     "Keywords": [
+      "exact",
+      "keywords"
+     ]
+    }
+   }
+  },
+  {
+   "key": "jscontact",
+   "title": "JSContact",
+   "authority": "IANA JSContact registry (RFC 9553)",
+   "terms": [
+    {
+     "source": "jscontact.xml",
+     "read": "iana-records",
+     "registry": "jscontact-types",
+     "element": "value",
+     "contexts": "jscontact-properties",
+     "kind": "class"
+    },
+    {
+     "source": "jscontact.xml",
+     "read": "iana-records",
+     "registry": "jscontact-properties",
+     "element": "name",
+     "kind": "property"
+    }
+   ],
+   "crosswalk": {
+    "classes": {
+     "Card": [
+      "close",
+      "Person"
+     ],
+     "Address": [
+      "exact",
+      "PostalAddress"
+     ],
+     "EmailAddress": [
+      "close",
+      "ContactPoint"
+     ],
+     "Phone": [
+      "close",
+      "ContactPoint"
+     ],
+     "Organization": [
+      "exact",
+      "Organization"
+     ],
+     "OnlineService": [
+      "broad",
+      "ContactPoint"
+     ],
+     "Media": [
+      "close",
+      "MediaObject"
+     ],
+     "Note": [
+      "close",
+      "Comment"
+     ],
+     "Title": [
+      "close",
+      "OrganizationRole"
+     ]
+    },
+    "properties": {
+     "name": [
+      "exact",
+      "name"
+     ],
+     "emails": [
+      "exact",
+      "email"
+     ],
+     "phones": [
+      "exact",
+      "telephone"
+     ],
+     "addresses": [
+      "exact",
+      "address"
+     ],
+     "organizations": [
+      "close",
+      "affiliation"
+     ],
+     "titles": [
+      "close",
+      "jobTitle"
+     ],
+     "nicknames": [
+      "close",
+      "alternateName"
+     ],
+     "onlineServices": [
+      "close",
+      "sameAs"
+     ],
+     "preferredLanguages": [
+      "exact",
+      "knowsLanguage"
+     ],
+     "media": [
+      "close",
+      "image"
+     ],
+     "links": [
+      "close",
+      "url"
+     ],
+     "notes": [
+      "close",
+      "description"
+     ],
+     "keywords": [
+      "exact",
+      "keywords"
+     ],
+     "relatedTo": [
+      "broad",
+      "knows"
+     ],
+     "uid": [
+      "exact",
+      "identifier"
+     ],
+     "created": [
+      "exact",
+      "dateCreated"
+     ],
+     "updated": [
+      "exact",
+      "dateModified"
+     ],
+     "members": [
+      "exact",
+      "member"
+     ],
+     "personalInfo": [
+      "close",
+      "knowsAbout"
+     ]
+    }
+   }
+  },
+  {
+   "key": "jscalendar",
+   "title": "JSCalendar",
+   "authority": "IANA JSCalendar registry (RFC 8984)",
+   "terms": [
+    {
+     "source": "jscalendar.xml",
+     "read": "iana-records",
+     "registry": "jscalendar-types",
+     "element": "type",
+     "contexts": "jscalendar-properties",
+     "kind": "class",
+     "why": "The JSCalendar registry XML swaps the element names: <type> holds the name."
+    },
+    {
+     "source": "jscalendar.xml",
+     "read": "iana-records",
+     "registry": "jscalendar-properties",
+     "element": "type",
+     "kind": "property"
+    }
+   ],
+   "crosswalk": {
+    "classes": {
+     "Event": [
+      "exact",
+      "Event"
+     ],
+     "Task": [
+      "close",
+      "Action"
+     ],
+     "Group": [
+      "close",
+      "ItemList"
+     ],
+     "Location": [
+      "exact",
+      "Place"
+     ],
+     "VirtualLocation": [
+      "exact",
+      "VirtualLocation"
+     ],
+     "Participant": [
+      "close",
+      "Role"
+     ]
+    },
+    "properties": {
+     "title": [
+      "exact",
+      "name"
+     ],
+     "description": [
+      "exact",
+      "description"
+     ],
+     "start": [
+      "exact",
+      "startDate"
+     ],
+     "duration": [
+      "exact",
+      "duration"
+     ],
+     "locations": [
+      "exact",
+      "location"
+     ],
+     "virtualLocations": [
+      "close",
+      "location"
+     ],
+     "participants": [
+      "close",
+      "attendee"
+     ],
+     "status": [
+      "close",
+      "eventStatus"
+     ],
+     "uid": [
+      "exact",
+      "identifier"
+     ],
+     "created": [
+      "exact",
+      "dateCreated"
+     ],
+     "updated": [
+      "exact",
+      "dateModified"
+     ],
+     "keywords": [
+      "exact",
+      "keywords"
+     ],
+     "recurrenceRules": [
+      "close",
+      "eventSchedule"
+     ],
+     "progress": [
+      "close",
+      "actionStatus"
+     ]
+    }
+   }
+  },
+  {
+   "key": "as",
+   "title": "Activity Streams 2.0",
+   "authority": "W3C Activity Vocabulary",
+   "terms": [
+    {
+     "source": "activitystreams-owl.ttl",
+     "read": "turtle",
+     "namespace": "https://www.w3.org/ns/activitystreams#"
+    }
+   ],
+   "crosswalk": {
+    "classes": {
+     "Activity": [
+      "close",
+      "Action"
+     ],
+     "IntransitiveActivity": [
+      "broad",
+      "Action"
+     ],
+     "Accept": [
+      "close",
+      "AcceptAction"
+     ],
+     "Add": [
+      "exact",
+      "AddAction"
+     ],
+     "Announce": [
+      "close",
+      "ShareAction"
+     ],
+     "Arrive": [
+      "exact",
+      "ArriveAction"
+     ],
+     "Create": [
+      "exact",
+      "CreateAction"
+     ],
+     "Delete": [
+      "exact",
+      "DeleteAction"
+     ],
+     "Dislike": [
+      "exact",
+      "DislikeAction"
+     ],
+     "Follow": [
+      "exact",
+      "FollowAction"
+     ],
+     "Invite": [
+      "exact",
+      "InviteAction"
+     ],
+     "Join": [
+      "exact",
+      "JoinAction"
+     ],
+     "Leave": [
+      "exact",
+      "LeaveAction"
+     ],
+     "Like": [
+      "exact",
+      "LikeAction"
+     ],
+     "Listen": [
+      "exact",
+      "ListenAction"
+     ],
+     "Move": [
+      "exact",
+      "MoveAction"
+     ],
+     "Question": [
+      "exact",
+      "Question"
+     ],
+     "Read": [
+      "exact",
+      "ReadAction"
+     ],
+     "Reject": [
+      "exact",
+      "RejectAction"
+     ],
+     "Remove": [
+      "close",
+      "DeleteAction"
+     ],
+     "TentativeAccept": [
+      "close",
+      "RsvpAction"
+     ],
+     "TentativeReject": [
+      "close",
+      "RsvpAction"
+     ],
+     "Travel": [
+      "exact",
+      "TravelAction"
+     ],
+     "Update": [
+      "exact",
+      "UpdateAction"
+     ],
+     "View": [
+      "close",
+      "WatchAction"
+     ],
+     "Application": [
+      "exact",
+      "SoftwareApplication"
+     ],
+     "Group": [
+      "close",
+      "Organization"
+     ],
+     "Organization": [
+      "exact",
+      "Organization"
+     ],
+     "Person": [
+      "exact",
+      "Person"
+     ],
+     "Service": [
+      "close",
+      "SoftwareApplication"
+     ],
+     "Article": [
+      "exact",
+      "Article"
+     ],
+     "Audio": [
+      "exact",
+      "AudioObject"
+     ],
+     "Document": [
+      "exact",
+      "DigitalDocument"
+     ],
+     "Event": [
+      "exact",
+      "Event"
+     ],
+     "Image": [
+      "exact",
+      "ImageObject"
+     ],
+     "Note": [
+      "close",
+      "SocialMediaPosting"
+     ],
+     "Page": [
+      "exact",
+      "WebPage"
+     ],
+     "Place": [
+      "exact",
+      "Place"
+     ],
+     "Profile": [
+      "close",
+      "ProfilePage"
+     ],
+     "Video": [
+      "exact",
+      "VideoObject"
+     ],
+     "Object": [
+      "close",
+      "Thing"
+     ],
+     "Collection": [
+      "close",
+      "ItemList"
+     ],
+     "OrderedCollection": [
+      "close",
+      "ItemList"
+     ],
+     "CollectionPage": [
+      "close",
+      "ItemList"
+     ],
+     "OrderedCollectionPage": [
+      "close",
+      "ItemList"
+     ]
+    },
+    "properties": {
+     "actor": [
+      "exact",
+      "agent"
+     ],
+     "attributedTo": [
+      "close",
+      "creator"
+     ],
+     "audience": [
+      "exact",
+      "audience"
+     ],
+     "content": [
+      "close",
+      "text"
+     ],
+     "name": [
+      "exact",
+      "name"
+     ],
+     "endTime": [
+      "exact",
+      "endTime"
+     ],
+     "icon": [
+      "close",
+      "image"
+     ],
+     "image": [
+      "exact",
+      "image"
+     ],
+     "inReplyTo": [
+      "close",
+      "parentItem"
+     ],
+     "location": [
+      "exact",
+      "location"
+     ],
+     "published": [
+      "exact",
+      "datePublished"
+     ],
+     "replies": [
+      "close",
+      "comment"
+     ],
+     "startTime": [
+      "exact",
+      "startTime"
+     ],
+     "summary": [
+      "close",
+      "abstract"
+     ],
+     "tag": [
+      "close",
+      "keywords"
+     ],
+     "updated": [
+      "exact",
+      "dateModified"
+     ],
+     "url": [
+      "exact",
+      "url"
+     ],
+     "to": [
+      "close",
+      "recipient"
+     ],
+     "bto": [
+      "close",
+      "bccRecipient"
+     ],
+     "cc": [
+      "close",
+      "ccRecipient"
+     ],
+     "bcc": [
+      "exact",
+      "bccRecipient"
+     ],
+     "mediaType": [
+      "exact",
+      "encodingFormat"
+     ],
+     "duration": [
+      "exact",
+      "duration"
+     ],
+     "object": [
+      "exact",
+      "object"
+     ],
+     "target": [
+      "close",
+      "targetCollection"
+     ],
+     "result": [
+      "exact",
+      "result"
+     ],
+     "origin": [
+      "close",
+      "fromLocation"
+     ],
+     "instrument": [
+      "exact",
+      "instrument"
+     ],
+     "latitude": [
+      "exact",
+      "latitude"
+     ],
+     "longitude": [
+      "exact",
+      "longitude"
+     ],
+     "altitude": [
+      "close",
+      "elevation"
+     ],
+     "height": [
+      "exact",
+      "height"
+     ],
+     "width": [
+      "exact",
+      "width"
+     ],
+     "href": [
+      "close",
+      "url"
+     ],
+     "hreflang": [
+      "close",
+      "inLanguage"
+     ],
+     "describes": [
+      "close",
+      "mainEntity"
+     ]
+    }
+   }
+  },
+  {
+   "key": "prov",
+   "title": "PROV-O",
+   "authority": "W3C PROV-O",
+   "terms": [
+    {
+     "source": "prov-o.ttl",
+     "read": "turtle",
+     "namespace": "http://www.w3.org/ns/prov#"
+    }
+   ],
+   "crosswalk": {
+    "classes": {
+     "Activity": [
+      "close",
+      "Action"
+     ],
+     "Location": [
+      "close",
+      "Place"
+     ],
+     "Entity": [
+      "broad",
+      "Thing"
+     ]
+    },
+    "properties": {
+     "wasDerivedFrom": [
+      "close",
+      "isBasedOn"
+     ],
+     "wasAttributedTo": [
+      "close",
+      "creator"
+     ],
+     "generatedAtTime": [
+      "close",
+      "dateCreated"
+     ],
+     "hadPrimarySource": [
+      "close",
+      "isBasedOn"
+     ],
+     "wasRevisionOf": [
+      "related",
+      "isBasedOn"
+     ],
+     "startedAtTime": [
+      "exact",
+      "startTime"
+     ],
+     "endedAtTime": [
+      "exact",
+      "endTime"
+     ],
+     "wasAssociatedWith": [
+      "close",
+      "agent"
+     ],
+     "used": [
+      "related",
+      "instrument"
+     ],
+     "atLocation": [
+      "exact",
+      "location"
+     ],
+     "value": [
+      "close",
+      "value"
+     ]
+    }
+   }
+  },
+  {
+   "key": "dcterms",
+   "title": "DCMI Metadata Terms",
+   "authority": "Dublin Core Metadata Initiative",
+   "terms": [
+    {
+     "source": "dcterms.ttl",
+     "read": "turtle",
+     "namespace": "http://purl.org/dc/terms/"
+    }
+   ],
+   "crosswalk": {
+    "classes": {
+     "BibliographicResource": [
+      "close",
+      "CreativeWork"
+     ],
+     "Location": [
+      "close",
+      "Place"
+     ],
+     "LicenseDocument": [
+      "broad",
+      "CreativeWork"
+     ]
+    },
+    "properties": {
+     "title": [
+      "exact",
+      "name"
+     ],
+     "creator": [
+      "exact",
+      "creator"
+     ],
+     "subject": [
+      "close",
+      "about"
+     ],
+     "description": [
+      "exact",
+      "description"
+     ],
+     "publisher": [
+      "exact",
+      "publisher"
+     ],
+     "contributor": [
+      "exact",
+      "contributor"
+     ],
+     "type": [
+      "close",
+      "additionalType"
+     ],
+     "format": [
+      "exact",
+      "encodingFormat"
+     ],
+     "identifier": [
+      "exact",
+      "identifier"
+     ],
+     "source": [
+      "close",
+      "isBasedOn"
+     ],
+     "language": [
+      "exact",
+      "inLanguage"
+     ],
+     "coverage": [
+      "close",
+      "spatialCoverage"
+     ],
+     "rights": [
+      "close",
+      "copyrightNotice"
+     ],
+     "abstract": [
+      "exact",
+      "abstract"
+     ],
+     "accessRights": [
+      "close",
+      "conditionsOfAccess"
+     ],
+     "alternative": [
+      "exact",
+      "alternateName"
+     ],
+     "audience": [
+      "exact",
+      "audience"
+     ],
+     "bibliographicCitation": [
+      "close",
+      "citation"
+     ],
+     "created": [
+      "exact",
+      "dateCreated"
+     ],
+     "dateCopyrighted": [
+      "close",
+      "copyrightYear"
+     ],
+     "educationLevel": [
+      "exact",
+      "educationalLevel"
+     ],
+     "hasFormat": [
+      "close",
+      "workExample"
+     ],
+     "hasPart": [
+      "exact",
+      "hasPart"
+     ],
+     "isPartOf": [
+      "exact",
+      "isPartOf"
+     ],
+     "issued": [
+      "exact",
+      "datePublished"
+     ],
+     "license": [
+      "exact",
+      "license"
+     ],
+     "medium": [
+      "close",
+      "material"
+     ],
+     "modified": [
+      "exact",
+      "dateModified"
+     ],
+     "references": [
+      "close",
+      "citation"
+     ],
+     "rightsHolder": [
+      "exact",
+      "copyrightHolder"
+     ],
+     "spatial": [
+      "exact",
+      "spatialCoverage"
+     ],
+     "temporal": [
+      "exact",
+      "temporalCoverage"
+     ],
+     "valid": [
+      "broad",
+      "expires"
+     ]
+    }
+   }
+  },
+  {
+   "key": "foaf",
+   "title": "FOAF",
+   "authority": "FOAF Vocabulary Specification",
+   "terms": [
+    {
+     "source": "foaf.rdf",
+     "read": "rdfxml",
+     "namespace": "http://xmlns.com/foaf/0.1/"
+    }
+   ],
+   "crosswalk": {
+    "classes": {
+     "Person": [
+      "exact",
+      "Person"
+     ],
+     "Organization": [
+      "exact",
+      "Organization"
+     ],
+     "Group": [
+      "close",
+      "Organization"
+     ],
+     "Document": [
+      "close",
+      "CreativeWork"
+     ],
+     "Image": [
+      "exact",
+      "ImageObject"
+     ],
+     "Project": [
+      "close",
+      "Project"
+     ],
+     "PersonalProfileDocument": [
+      "close",
+      "ProfilePage"
+     ]
+    },
+    "properties": {
+     "name": [
+      "exact",
+      "name"
+     ],
+     "givenName": [
+      "exact",
+      "givenName"
+     ],
+     "familyName": [
+      "exact",
+      "familyName"
+     ],
+     "firstName": [
+      "close",
+      "givenName"
+     ],
+     "lastName": [
+      "close",
+      "familyName"
+     ],
+     "surname": [
+      "exact",
+      "familyName"
+     ],
+     "nick": [
+      "close",
+      "alternateName"
+     ],
+     "mbox": [
+      "close",
+      "email"
+     ],
+     "homepage": [
+      "close",
+      "url"
+     ],
+     "img": [
+      "exact",
+      "image"
+     ],
+     "depiction": [
+      "close",
+      "image"
+     ],
+     "knows": [
+      "exact",
+      "knows"
+     ],
+     "member": [
+      "exact",
+      "member"
+     ],
+     "birthday": [
+      "close",
+      "birthDate"
+     ],
+     "gender": [
+      "exact",
+      "gender"
+     ],
+     "title": [
+      "close",
+      "honorificPrefix"
+     ],
+     "phone": [
+      "close",
+      "telephone"
+     ],
+     "based_near": [
+      "close",
+      "homeLocation"
+     ],
+     "topic_interest": [
+      "close",
+      "knowsAbout"
+     ],
+     "interest": [
+      "close",
+      "knowsAbout"
+     ],
+     "maker": [
+      "close",
+      "creator"
+     ],
+     "primaryTopic": [
+      "close",
+      "mainEntity"
+     ],
+     "logo": [
+      "exact",
+      "logo"
+     ]
+    }
+   }
+  },
+  {
+   "key": "skos",
+   "title": "SKOS",
+   "authority": "W3C SKOS Reference",
+   "terms": [
+    {
+     "source": "skos.rdf",
+     "read": "rdfxml",
+     "namespace": "http://www.w3.org/2004/02/skos/core#"
+    }
+   ],
+   "crosswalk": {
+    "classes": {
+     "Concept": [
+      "close",
+      "DefinedTerm"
+     ],
+     "ConceptScheme": [
+      "close",
+      "DefinedTermSet"
+     ],
+     "Collection": [
+      "close",
+      "ItemList"
+     ],
+     "OrderedCollection": [
+      "close",
+      "ItemList"
+     ]
+    },
+    "properties": {
+     "prefLabel": [
+      "close",
+      "name"
+     ],
+     "altLabel": [
+      "close",
+      "alternateName"
+     ],
+     "definition": [
+      "close",
+      "description"
+     ],
+     "notation": [
+      "close",
+      "termCode"
+     ],
+     "inScheme": [
+      "close",
+      "inDefinedTermSet"
+     ],
+     "exactMatch": [
+      "close",
+      "sameAs"
+     ]
+    }
+   }
+  },
+  {
+   "key": "og",
+   "title": "Open Graph protocol",
+   "authority": "ogp.me",
+   "terms": [
+    {
+     "source": "ogp.ttl",
+     "read": "turtle",
+     "namespace": "http://ogp.me/ns#"
+    }
+   ],
+   "crosswalk": {
+    "classes": {},
+    "properties": {
+     "title": [
+      "exact",
+      "name"
+     ],
+     "type": [
+      "close",
+      "additionalType"
+     ],
+     "image": [
+      "exact",
+      "image"
+     ],
+     "url": [
+      "exact",
+      "url"
+     ],
+     "description": [
+      "exact",
+      "description"
+     ],
+     "locale": [
+      "close",
+      "inLanguage"
+     ],
+     "audio": [
+      "exact",
+      "audio"
+     ],
+     "video": [
+      "exact",
+      "video"
+     ]
+    }
+   }
+  },
+  {
+   "key": "external",
+   "title": "schema.org equivalences",
+   "authority": "schema.org 30.1 owl:equivalentClass, owl:equivalentProperty, skos matches",
+   "terms": [
+    {
+     "source": "schemaorg-current-https.jsonld",
+     "read": "schemaorg-equivalences",
+     "matches": {
+      "owl:equivalentClass": "exact",
+      "owl:equivalentProperty": "exact",
+      "skos:exactMatch": "exact",
+      "skos:closeMatch": "close"
+     }
+    }
+   ]
+  }
+ ],
+ "domains": [
+  {
+   "key": "health",
+   "floor": 3,
+   "title": "Health",
+   "holds": "conditions, care, prescriptions, insurance plans, anything medical"
+  },
+  {
+   "key": "money",
+   "floor": 2,
+   "title": "Money",
+   "holds": "orders, invoices, payments, accounts, subscriptions, offers"
+  },
+  {
+   "key": "identity",
+   "floor": 2,
+   "title": "Identity",
+   "holds": "the owner: names, credentials, permits, memberships"
+  },
+  {
+   "key": "people",
+   "floor": 2,
+   "title": "People",
+   "holds": "other people and organizations, and how the owner relates to them"
+  },
+  {
+   "key": "conversations",
+   "floor": 2,
+   "title": "Conversations",
+   "holds": "messages, threads, comments, posts, replies"
+  },
+  {
+   "key": "time",
+   "floor": 2,
+   "title": "Time",
+   "holds": "events, schedules, reservations, trips, tickets"
+  },
+  {
+   "key": "places",
+   "floor": 2,
+   "title": "Places",
+   "holds": "places, addresses, coordinates, virtual locations, travel"
+  },
+  {
+   "key": "work",
+   "floor": 1,
+   "title": "Work and learning",
+   "holds": "occupations, roles, projects, courses, programs"
+  },
+  {
+   "key": "things",
+   "floor": 1,
+   "title": "Things",
+   "holds": "products, vehicles, services the owner has or uses"
+  },
+  {
+   "key": "tasks",
+   "floor": 1,
+   "title": "Tasks",
+   "holds": "actions: to-dos, requests, things done or to do"
+  },
+  {
+   "key": "library",
+   "floor": 1,
+   "title": "Library",
+   "holds": "documents, pages, media, datasets, software"
+  },
+  {
+   "key": "topics",
+   "floor": 1,
+   "title": "Topics",
+   "holds": "everything else: concepts, terms, quantities, enumerations"
+  }
+ ],
+ "anchors": {
+  "health": [
+   "MedicalEntity",
+   "MedicalOrganization",
+   "HealthInsurancePlan",
+   "HealthPlanCostSharingSpecification",
+   "HealthPlanFormulary",
+   "HealthPlanNetwork",
+   "MedicalWebPage",
+   "MedicalAudience",
+   "MedicalEnumeration",
+   "HealthAspectEnumeration",
+   "BioChemEntity",
+   "HealthTopicContent",
+   "MedicalScholarlyArticle"
+  ],
+  "money": [
+   "Invoice",
+   "Order",
+   "OrderItem",
+   "Offer",
+   "Demand",
+   "PaymentMethod",
+   "PriceSpecification",
+   "MonetaryAmount",
+   "MonetaryAmountDistribution",
+   "FinancialProduct",
+   "FinancialIncentive",
+   "Grant",
+   "TradeAction",
+   "MerchantReturnPolicy",
+   "ProductReturnPolicy",
+   "ParcelDelivery",
+   "MemberProgram",
+   "MemberProgramTier",
+   "MediaSubscription",
+   "PaymentStatusType",
+   "OrderStatus",
+   "ExchangeRateSpecification"
+  ],
+  "identity": [
+   "EducationalOccupationalCredential",
+   "Permit",
+   "ProgramMembership",
+   "GenderType"
+  ],
+  "people": [
+   "Person",
+   "Organization",
+   "Audience",
+   "ContactPoint",
+   "InteractAction"
+  ],
+  "conversations": [
+   "Message",
+   "Conversation",
+   "Comment",
+   "Question",
+   "CommunicateAction",
+   "ReactAction",
+   "SocialMediaPosting"
+  ],
+  "time": [
+   "Event",
+   "Schedule",
+   "Reservation",
+   "Trip",
+   "Ticket",
+   "PlanAction",
+   "OpeningHoursSpecification",
+   "DayOfWeek",
+   "EventStatusType",
+   "EventAttendanceModeEnumeration",
+   "ReservationStatusType"
+  ],
+  "places": [
+   "Place",
+   "PostalAddress",
+   "GeoCoordinates",
+   "GeoShape",
+   "GeospatialGeometry",
+   "VirtualLocation",
+   "MoveAction",
+   "LocationFeatureSpecification"
+  ],
+  "work": [
+   "Occupation",
+   "JobPosting",
+   "Project",
+   "Course",
+   "EducationalOccupationalProgram",
+   "LearningResource",
+   "EmployeeRole",
+   "OrganizationRole",
+   "OccupationalExperienceRequirements"
+  ],
+  "things": [
+   "Product",
+   "Service",
+   "Brand"
+  ],
+  "tasks": [
+   "Action"
+  ],
+  "library": [
+   "CreativeWork"
+  ],
+  "topics": [
+   "Thing",
+   "Intangible",
+   "Taxon",
+   "StructuredValue",
+   "Enumeration",
+   "DefinedTerm",
+   "Class",
+   "Property",
+   "DataType",
+   "Boolean",
+   "Date",
+   "DateTime",
+   "Number",
+   "Text",
+   "Time",
+   "Quantity"
+  ]
+ },
+ "propertyFloors": {
+  "accessCode": 3,
+  "securityClearanceRequirement": 2,
+  "taxID": 2,
+  "vatID": 2,
+  "duns": 1,
+  "healthCondition": 3,
+  "netWorth": 2,
+  "birthDate": 2,
+  "deathDate": 2,
+  "gender": 2,
+  "nationality": 2,
+  "telephone": 2,
+  "email": 2,
+  "faxNumber": 2,
+  "address": 2,
+  "homeLocation": 2,
+  "knows": 2,
+  "spouse": 2,
+  "children": 2,
+  "parent": 2,
+  "sibling": 2,
+  "relatedTo": 2,
+  "colleague": 2,
+  "follows": 2
+ },
+ "lean": {
+  "chunk": 50,
+  "modules": {
+   "schemaorg": {
+    "path": "app/src/Foundation/Vocab/V1/SchemaOrg.lex.tex",
+    "module": "Foundation.Vocab.V1.SchemaOrg",
+    "title": "Schema.org register",
+    "prefix": "vocab",
+    "types": {
+     "TypeRow": "VocabTypeRow",
+     "PropertyRow": "VocabPropertyRow"
+    }
+   },
+   "crosswalk": {
+    "path": "app/src/Foundation/Vocab/V1/Crosswalk.lex.tex",
+    "module": "Foundation.Vocab.V1.Crosswalk",
+    "title": "Schema crosswalk",
+    "prefix": "crosswalk",
+    "types": {
+     "TermRow": "CrosswalkTermRow"
+    }
+   },
+   "anchors": {
+    "path": "app/src/Foundation/Me/V1/Anchors.lex.tex",
+    "module": "Foundation.Me.V1.Anchors",
+    "title": "Domain anchors",
+    "prefix": "anchors",
+    "types": {
+     "Anchor": "DomainAnchor"
+    }
+   }
+  }
+ },
+ "register": "site/vocab/register.json"
+}

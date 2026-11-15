@@ -4,6 +4,7 @@
 \useglossary{prism.arch@1.0.0}
 \importmodule{Foundation.Bytes}
 \importmodule{Prism}
+\importmodule{PrismAsk}
 \importmodule{PrismBoundary}
 \importmodule{PrismChronology}
 \importmodule{PrismCurate}
@@ -182,6 +183,14 @@ theorem{
   name: routesRouter,
   parameters: [rest : Bytes],
   statement: ((Prism::route (Prism::facetRouter) rest) = (PrismRouter::prismRouterDispatch rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: routesAsk,
+  parameters: [rest : Bytes],
+  statement: ((Prism::route (Prism::facetAsk) rest) = (PrismAsk::prismAskDispatch rest)),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }

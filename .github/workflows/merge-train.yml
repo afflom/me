@@ -39,7 +39,6 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
-      actions: read
       contents: write
       pull-requests: write
     steps:
@@ -49,6 +48,7 @@ jobs:
           ACCEPTED: ${{ needs.test.outputs.accepted }}
           GH_TOKEN: ${{ github.token }}
           MAIN: ${{ needs.test.outputs.main }}
+          REFUSED: ${{ needs.test.outputs.refused }}
           REPO: ${{ github.repository }}
           RUN: ${{ github.run_id }}
         shell: bash
@@ -82,9 +82,8 @@ jobs:
             echo "merged #$number at $expected"
           done
           mkdir -p refused
-          gh run download "$RUN" --repo "$REPO" --name train-refused --dir refused 2>/dev/null || true
+          printf '%s' "$REFUSED" | base64 -d >refused/refused.txt
           cat refused-merge.txt >>refused/refused.txt 2>/dev/null || true
-          touch refused/refused.txt
           while read -r number head why; do
             [[ -n $number ]] || continue
             marker="Merge train: $head"
@@ -100,6 +99,7 @@ jobs:
     outputs:
       accepted: ${{ steps.train.outputs.accepted }}
       main: ${{ steps.train.outputs.main }}
+      refused: ${{ steps.train.outputs.refused }}
     permissions:
       checks: read
       contents: read
@@ -184,11 +184,7 @@ jobs:
             fi
           done
           echo "accepted=${accepted[*]:-}" >>"$GITHUB_OUTPUT"
-          cp "$RUNNER_TEMP/refused" refused.txt
-      - name: Keep what the train refused
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: train-refused
-          if-no-files-found: ignore
-          path: refused.txt
-          retention-days: 7
+          # The refusals travel to the merge job as an output: a run cannot download its
+          # own artifacts while it is still running.
+          cat "$RUNNER_TEMP/refused"
+          echo "refused=$(base64 -w0 <"$RUNNER_TEMP/refused")" >>"$GITHUB_OUTPUT"
