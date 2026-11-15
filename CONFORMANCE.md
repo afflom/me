@@ -546,6 +546,7 @@ Never re-derived, vendored, or gated on.
 | `SRC-APG-FEED` | https://raw.githubusercontent.com/w3c/aria-practices/f14b2490a6728cda85fd7feafbd148b3c3eaf038/content/patterns/feed/examples/js/feedDisplay.js | `OR-01` |
 | `SRC-SCHEMAORG` | https://raw.githubusercontent.com/schemaorg/schemaorg/5f2d8cdec99b7329459ef6584e94b6a840f88471/data/releases/30.1/schemaorg-all-examples.txt | `OR-01` |
 | `SRC-STSB` | https://huggingface.co/datasets/mteb/stsbenchmark-sts/resolve/96943a16ea6a35129e253c659081cb59daf81b30/test.jsonl.gz | `OR-01` |
+| `SRC-AMI` | https://groups.inf.ed.ac.uk/ami/AMICorpusAnnotations/ami_public_manual_1.6.2.zip | `OR-01` |
 | `SRC-ICF` | https://icdcdn.who.int/static/releasefiles/2026-01/SimpleTabulation-ICF-en.zip | `WP-01` |
 | `SRC-IANA-VCARD` | https://www.iana.org/assignments/vcard-elements/vcard-elements.xml | `VC-01` |
 | `SRC-RFC6474` | https://www.rfc-editor.org/rfc/rfc6474.txt | `VC-01` |
