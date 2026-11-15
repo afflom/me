@@ -1,0 +1,861 @@
+\begin{lexlean}{GenPatch}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Json}
+\title{JSON patch processor}
+\begin{semanticmodule}
+structure{
+  name: JpHit,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: start, type: Nat}, {name: vstart, type: Nat}, {name: vend, type: Nat}]
+}
+
+structure{
+  name: JpTok,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: tok, type: Bytes}, {name: next, type: Nat}]
+}
+
+structure{
+  name: JpBest,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: key, type: Bytes}, {name: bstart, type: Nat}, {name: bend, type: Nat}]
+}
+
+definition{
+  name: jpAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (Foundation.Tar::byteOr s i),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpLen,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (Foundation.Bytes::byteLength s)
+}
+
+definition{
+  name: jpCat,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes a b)
+}
+
+definition{
+  name: jpSpan,
+  parameters: [s : Bytes, a : Nat, b : Nat],
+  result: Bytes,
+  body: (Foundation.Json::span s a b)
+}
+
+definition{
+  name: jpSame,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bool,
+  body: (Foundation.Tar::sameBytes a b),
+  axioms: [propext]
+}
+
+definition{
+  name: jpLess,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bool,
+  body: (prim equal (prim compare_bytes a b : Ordering) (prim compare_bytes 0x00 0x01 : Ordering) : Bool),
+  axioms: [propext]
+}
+
+definition{
+  name: jpByte,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (jpSpan 0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff n (n + 1))
+}
+
+definition{
+  name: jpIsWs,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 32) || ((b =? 10) || ((b =? 13) || (b =? 9))))
+}
+
+definition{name: jpIsDigit, parameters: [b : Nat], result: Bool, body: ((47 <? b) && (b <? 58))}
+
+definition{
+  name: jpWsFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((jpLen s) <? (i + 1)) then i else (if (jpIsWs (jpAt s i)) then (jpWsFrom s (i + 1) rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpWs,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (jpWsFrom s i ((jpLen s) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpDigitsFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (jpIsDigit (jpAt s i)) then (jpDigitsFrom s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpDigits,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (jpDigitsFrom s i ((jpLen s) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpHex,
+  parameters: [b : Nat],
+  result: Nat,
+  body: (if (jpIsDigit b) then (prim subtract b 48 : Nat) else (if ((96 <? b) && (b <? 103)) then (prim subtract b 87 : Nat) else (if ((64 <? b) && (b <? 71)) then (prim subtract b 55 : Nat) else 16)))
+}
+
+definition{
+  name: jpHex4Ok,
+  parameters: [s : Bytes, i : Nat],
+  result: Bool,
+  body: (((jpHex (jpAt s i)) <? 16) && (((jpHex (jpAt s (i + 1))) <? 16) && (((jpHex (jpAt s (i + 2))) <? 16) && ((jpHex (jpAt s (i + 3))) <? 16)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpHex4,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: ((((prim multiply (jpHex (jpAt s i)) 4096 : Nat) + (prim multiply (jpHex (jpAt s (i + 1))) 256 : Nat)) + (prim multiply (jpHex (jpAt s (i + 2))) 16 : Nat)) + (jpHex (jpAt s (i + 3)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpIsEscape,
+  parameters: [e : Nat],
+  result: Bool,
+  body: ((e =? 34) || ((e =? 92) || ((e =? 47) || ((e =? 98) || ((e =? 102) || ((e =? 110) || ((e =? 114) || (e =? 116))))))))
+}
+
+definition{
+  name: jpVStringFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (let b : Nat := (jpAt s i); (if ((jpLen s) <? (i + 1)) then (ctor Option.none [Nat]) else (if (b =? 34) then (ctor Option.some [Nat] (i + 1)) else (if (b <? 32) then (ctor Option.none [Nat]) else (if (b =? 92) then (let e : Nat := (jpAt s (i + 1)); (if (jpIsEscape e) then (jpVStringFrom s (i + 2) rest) else (if ((e =? 117) && (jpHex4Ok s (i + 2))) then (jpVStringFrom s (i + 6) rest) else (ctor Option.none [Nat])))) else (jpVStringFrom s (i + 1) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpVExp,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (let b : Nat := (jpAt s i); (if ((b =? 101) || (b =? 69)) then (let c : Nat := (jpAt s (i + 1)); (let k : Nat := (if ((c =? 43) || (c =? 45)) then (i + 2) else (i + 1)); (let j : Nat := (jpDigits s k); (if (j =? k) then (ctor Option.none [Nat]) else (ctor Option.some [Nat] j))))) else (ctor Option.some [Nat] i))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpVFrac,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (if ((jpAt s i) =? 46) then (let j : Nat := (jpDigits s (i + 1)); (if (j =? (i + 1)) then (ctor Option.none [Nat]) else (jpVExp s j))) else (jpVExp s i)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpVNumber,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Nat),
+  body: (let a : Nat := (if ((jpAt s i) =? 45) then (i + 1) else i); (let b : Nat := (jpAt s a); (if (b =? 48) then (jpVFrac s (a + 1)) else (if ((48 <? b) && (b <? 58)) then (jpVFrac s (jpDigits s a)) else (ctor Option.none [Nat]))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpLit,
+  parameters: [s : Bytes, i : Nat, w : Bytes],
+  result: (Option Nat),
+  body: (if (jpSame (jpSpan s i (i + (jpLen w))) w) then (ctor Option.some [Nat] (i + (jpLen w))) else (ctor Option.none [Nat])),
+  axioms: [propext]
+}
+
+definition{
+  name: jpV,
+  parameters: [s : Bytes, i : Nat, mode : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (if (mode =? 1) then (if ((jpAt s i) =? 34) then (match (jpVStringFrom s (i + 1) ((jpLen s) + 1))
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some k => (let c : Nat := (jpWs s k); (if ((jpAt s c) =? 58) then (match (jpV s (jpWs s (c + 1)) 0 rest)
+        | Option.none => (ctor Option.none [Nat])
+        | Option.some e => (let n : Nat := (jpWs s e); (if ((jpAt s n) =? 44) then (jpV s (jpWs s (n + 1)) 1 rest) else (if ((jpAt s n) =? 125) then (ctor Option.some [Nat] (n + 1)) else (ctor Option.none [Nat]))))) else (ctor Option.none [Nat])))) else (ctor Option.none [Nat])) else (if (mode =? 2) then (match (jpV s i 0 rest)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some e => (let n : Nat := (jpWs s e); (if ((jpAt s n) =? 44) then (jpV s (jpWs s (n + 1)) 2 rest) else (if ((jpAt s n) =? 93) then (ctor Option.some [Nat] (n + 1)) else (ctor Option.none [Nat]))))) else (let b : Nat := (jpAt s i); (if (b =? 34) then (jpVStringFrom s (i + 1) ((jpLen s) + 1)) else (if (b =? 123) then (let j : Nat := (jpWs s (i + 1)); (if ((jpAt s j) =? 125) then (ctor Option.some [Nat] (j + 1)) else (jpV s j 1 rest))) else (if (b =? 91) then (let j : Nat := (jpWs s (i + 1)); (if ((jpAt s j) =? 93) then (ctor Option.some [Nat] (j + 1)) else (jpV s j 2 rest))) else (if (b =? 116) then (jpLit s i 0x74727565) else (if (b =? 102) then (jpLit s i 0x66616c7365) else (if (b =? 110) then (jpLit s i 0x6e756c6c) else (jpVNumber s i))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpValid,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: (match (jpV s (jpWs s 0) 0 ((prim multiply (jpLen s) 2 : Nat) + 2))
+    | Option.none => false
+    | Option.some e => ((jpWs s e) =? (jpLen s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpCompactFrom,
+  parameters: [s : Bytes, i : Nat, start : Nat, ins : Bool, esc : Bool, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (jpCat acc (jpSpan s start (jpLen s)))
+    | Nat.succ rest => (if ((jpLen s) <? (i + 1)) then (jpCat acc (jpSpan s start (jpLen s))) else (let b : Nat := (jpAt s i); (if (ins && true) then (if (esc && true) then (jpCompactFrom s (i + 1) start true false acc rest) else (if (b =? 92) then (jpCompactFrom s (i + 1) start true true acc rest) else (if (b =? 34) then (jpCompactFrom s (i + 1) start false false acc rest) else (jpCompactFrom s (i + 1) start true false acc rest)))) else (if (jpIsWs b) then (jpCompactFrom s (i + 1) (i + 1) false false (jpCat acc (jpSpan s start i)) rest) else (jpCompactFrom s (i + 1) start (b =? 34) false acc rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpCompact,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (jpCompactFrom s 0 0 false false 0x ((jpLen s) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpUtf8,
+  parameters: [cp : Nat],
+  result: Bytes,
+  body: (if (cp <? 128) then (jpByte cp) else (if (cp <? 2048) then (jpCat (jpByte (192 + (prim quotient cp 64 0 : Nat))) (jpByte (128 + (prim remainder cp 64 0 : Nat)))) else (if (cp <? 65536) then (jpCat (jpByte (224 + (prim quotient cp 4096 0 : Nat))) (jpCat (jpByte (128 + (prim remainder (prim quotient cp 64 0 : Nat) 64 0 : Nat))) (jpByte (128 + (prim remainder cp 64 0 : Nat))))) else (jpCat (jpByte (240 + (prim quotient cp 262144 0 : Nat))) (jpCat (jpByte (128 + (prim remainder (prim quotient cp 4096 0 : Nat) 64 0 : Nat))) (jpCat (jpByte (128 + (prim remainder (prim quotient cp 64 0 : Nat) 64 0 : Nat))) (jpByte (128 + (prim remainder cp 64 0 : Nat)))))))))
+}
+
+definition{
+  name: jpDecodeFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (let e : Nat := (Foundation.Json::runEnd s i (jpLen s)); (let got : Bytes := (jpCat acc (jpSpan s i e)); (let b : Nat := (jpAt s e); (if ((jpLen s) <? (e + 1)) then (ctor Option.none [Bytes]) else (if (b =? 34) then (ctor Option.some [Bytes] got) else (let c : Nat := (jpAt s (e + 1)); (if (c =? 117) then (let u : Nat := (jpHex4 s (e + 2)); (if ((55295 <? u) && (u <? 56320)) then (let l : Nat := (jpHex4 s (e + 8)); (if ((((jpAt s (e + 6)) =? 92) && ((jpAt s (e + 7)) =? 117)) && ((56319 <? l) && (l <? 57344))) then (jpDecodeFrom s (e + 12) (jpCat got (jpUtf8 ((65536 + (prim multiply (prim subtract u 55296 : Nat) 1024 : Nat)) + (prim subtract l 56320 : Nat)))) rest) else (ctor Option.none [Bytes]))) else (if ((56319 <? u) && (u <? 57344)) then (ctor Option.none [Bytes]) else (jpDecodeFrom s (e + 6) (jpCat got (jpUtf8 u)) rest)))) else (match (Foundation.Json::escaped c)
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some x => (jpDecodeFrom s (e + 2) (jpCat got x) rest)))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpDecode,
+  parameters: [s : Bytes, i : Nat],
+  result: (Option Bytes),
+  body: (jpDecodeFrom s i 0x ((jpLen s) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpHexDigit,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (jpSpan 0x30313233343536373839616263646566 n (n + 1))
+}
+
+definition{
+  name: jpEsc,
+  parameters: [b : Nat],
+  result: Bytes,
+  body: (if (b =? 34) then 0x5c22 else (if (b =? 92) then 0x5c5c else (if (b =? 8) then 0x5c62 else (if (b =? 12) then 0x5c66 else (if (b =? 10) then 0x5c6e else (if (b =? 13) then 0x5c72 else (if (b =? 9) then 0x5c74 else (jpCat 0x5c753030 (jpCat (jpHexDigit (prim quotient b 16 0 : Nat)) (jpHexDigit (prim remainder b 16 0 : Nat)))))))))))
+}
+
+definition{
+  name: jpEncFrom,
+  parameters: [t : Bytes, i : Nat, start : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (jpCat acc (jpSpan t start (jpLen t)))
+    | Nat.succ rest => (if ((jpLen t) <? (i + 1)) then (jpCat acc (jpSpan t start (jpLen t))) else (let b : Nat := (jpAt t i); (if ((b =? 34) || ((b =? 92) || (b <? 32))) then (jpEncFrom t (i + 1) (i + 1) (jpCat (jpCat acc (jpSpan t start i)) (jpEsc b)) rest) else (jpEncFrom t (i + 1) start acc rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpEncode,
+  parameters: [t : Bytes],
+  result: Bytes,
+  body: (jpCat 0x22 (jpCat (jpEncFrom t 0 0 0x ((jpLen t) + 1)) 0x22)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpMemberFrom,
+  parameters: [s : Bytes, i : Nat, key : Bytes, fuel : Nat],
+  result: (Option JpHit),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [JpHit])
+    | Nat.succ rest => (let v : Nat := ((Foundation.Json::stringEnd s (i + 1)) + 2); (let e : Nat := (Foundation.Json::valueEnd s v); (let hit : Bool := (match (jpDecode s (i + 1))
+      | Option.none => false
+      | Option.some k => (jpSame k key)); (if (hit && true) then (ctor Option.some [JpHit] (record JpHit {start := i, vstart := v, vend := e})) else (if ((jpAt s e) =? 44) then (jpMemberFrom s (e + 1) key rest) else (ctor Option.none [JpHit]))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpMember,
+  parameters: [s : Bytes, key : Bytes],
+  result: (Option JpHit),
+  body: (if ((jpAt s 0) =? 123) then (if ((jpAt s 1) =? 125) then (ctor Option.none [JpHit]) else (jpMemberFrom s 1 key ((jpLen s) + 1))) else (ctor Option.none [JpHit])),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpElementFrom,
+  parameters: [s : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: (Option JpHit),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [JpHit])
+    | Nat.succ rest => (let e : Nat := (Foundation.Json::valueEnd s i); (if (n =? 0) then (ctor Option.some [JpHit] (record JpHit {start := i, vstart := i, vend := e})) else (if ((jpAt s e) =? 44) then (jpElementFrom s (e + 1) (prim subtract n 1 : Nat) rest) else (ctor Option.none [JpHit]))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpElement,
+  parameters: [s : Bytes, n : Nat],
+  result: (Option JpHit),
+  body: (if ((jpAt s 0) =? 91) then (if ((jpAt s 1) =? 93) then (ctor Option.none [JpHit]) else (jpElementFrom s 1 n ((jpLen s) + 1))) else (ctor Option.none [JpHit])),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpCountFrom,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let e : Nat := (Foundation.Json::valueEnd s i); (if ((jpAt s e) =? 44) then (jpCountFrom s (e + 1) (acc + 1) rest) else (acc + 1)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpCount,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (if ((jpAt s 0) =? 91) then (if ((jpAt s 1) =? 93) then 0 else (jpCountFrom s 1 0 ((jpLen s) + 1))) else 0),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpCut,
+  parameters: [s : Bytes, a : Nat, b : Nat],
+  result: Bytes,
+  body: (if ((jpAt s b) =? 44) then (jpCat (jpSpan s 0 a) (jpSpan s (b + 1) (jpLen s))) else (if ((0 <? a) && ((jpAt s (prim subtract a 1 : Nat)) =? 44)) then (jpCat (jpSpan s 0 (prim subtract a 1 : Nat)) (jpSpan s b (jpLen s))) else (jpCat (jpSpan s 0 a) (jpSpan s b (jpLen s))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpSplice,
+  parameters: [s : Bytes, a : Nat, b : Nat, x : Bytes],
+  result: Bytes,
+  body: (jpCat (jpCat (jpSpan s 0 a) x) (jpSpan s b (jpLen s)))
+}
+
+definition{
+  name: jpTokFrom,
+  parameters: [p : Bytes, j : Nat, acc : Bytes, fuel : Nat],
+  result: (Option JpTok),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [JpTok])
+    | Nat.succ rest => (if (((jpLen p) <? (j + 1)) || ((jpAt p j) =? 47)) then (ctor Option.some [JpTok] (record JpTok {tok := acc, next := j})) else (if ((jpAt p j) =? 126) then (let n : Nat := (jpAt p (j + 1)); (if (n =? 48) then (jpTokFrom p (j + 2) (jpCat acc 0x7e) rest) else (if (n =? 49) then (jpTokFrom p (j + 2) (jpCat acc 0x2f) rest) else (ctor Option.none [JpTok])))) else (jpTokFrom p (j + 1) (jpCat acc (jpByte (jpAt p j))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpToken,
+  parameters: [p : Bytes, i : Nat],
+  result: (Option JpTok),
+  body: (jpTokFrom p (i + 1) 0x ((jpLen p) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpIndexFrom,
+  parameters: [t : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (if ((jpLen t) <? (i + 1)) then (ctor Option.some [Nat] acc) else (let b : Nat := (jpAt t i); (if (jpIsDigit b) then (jpIndexFrom t (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract b 48 : Nat)) rest) else (ctor Option.none [Nat]))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpIndex,
+  parameters: [t : Bytes],
+  result: (Option Nat),
+  body: (if ((jpLen t) =? 0) then (ctor Option.none [Nat]) else (if (((jpAt t 0) =? 48) && (1 <? (jpLen t))) then (ctor Option.none [Nat]) else (jpIndexFrom t 0 0 ((jpLen t) + 1)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpAddMember,
+  parameters: [s : Bytes, t : Bytes, val : Bytes],
+  result: Bytes,
+  body: (let entry : Bytes := (jpCat (jpCat (jpEncode t) 0x3a) val); (if ((jpLen s) =? 2) then (jpCat (jpCat 0x7b entry) 0x7d) else (jpCat (jpCat (jpSpan s 0 (prim subtract (jpLen s) 1 : Nat)) (jpCat 0x2c entry)) 0x7d))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpAddElement,
+  parameters: [s : Bytes, c : Nat, k : Nat, val : Bytes],
+  result: (Option Bytes),
+  body: (if (c <? k) then (ctor Option.none [Bytes]) else (if (c =? 0) then (ctor Option.some [Bytes] (jpCat (jpCat 0x5b val) 0x5d)) else (if (k =? c) then (ctor Option.some [Bytes] (jpCat (jpCat (jpSpan s 0 (prim subtract (jpLen s) 1 : Nat)) (jpCat 0x2c val)) 0x5d)) else (match (jpElement s k)
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some e => (ctor Option.some [Bytes] (jpSplice s (project e start) (project e start) (jpCat val 0x2c))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpEdit,
+  parameters: [s : Bytes, p : Bytes, i : Nat, op : Nat, val : Bytes, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (if ((jpLen p) <? (i + 1)) then (if (op =? 1) then (ctor Option.none [Bytes]) else (ctor Option.some [Bytes] val)) else (match (jpToken p i)
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some tk => (let t : Bytes := (project tk tok); (let j : Nat := (project tk next); (let last : Bool := ((jpLen p) <? (j + 1)); (let b : Nat := (jpAt s 0); (if (b =? 123) then (match (jpMember s t)
+        | Option.none => (if (last && (op =? 0)) then (ctor Option.some [Bytes] (jpAddMember s t val)) else (ctor Option.none [Bytes]))
+        | Option.some m => (if (last && true) then (if (op =? 1) then (ctor Option.some [Bytes] (jpCut s (project m start) (project m vend))) else (ctor Option.some [Bytes] (jpSplice s (project m vstart) (project m vend) val))) else (match (jpEdit (jpSpan s (project m vstart) (project m vend)) p j op val rest)
+          | Option.none => (ctor Option.none [Bytes])
+          | Option.some c => (ctor Option.some [Bytes] (jpSplice s (project m vstart) (project m vend) c))))) else (if (b =? 91) then (let c : Nat := (jpCount s); (let n : (Option Nat) := (if ((last && (op =? 0)) && (jpSame t 0x2d)) then (ctor Option.some [Nat] c) else (jpIndex t)); (match n
+        | Option.none => (ctor Option.none [Bytes])
+        | Option.some k => (if (last && (op =? 0)) then (jpAddElement s c k val) else (match (jpElement s k)
+          | Option.none => (ctor Option.none [Bytes])
+          | Option.some e => (if (last && true) then (if (op =? 1) then (ctor Option.some [Bytes] (jpCut s (project e start) (project e vend))) else (ctor Option.some [Bytes] (jpSplice s (project e start) (project e vend) val))) else (match (jpEdit (jpSpan s (project e start) (project e vend)) p j op val rest)
+            | Option.none => (ctor Option.none [Bytes])
+            | Option.some r => (ctor Option.some [Bytes] (jpSplice s (project e start) (project e vend) r))))))))) else (ctor Option.none [Bytes])))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpGet,
+  parameters: [s : Bytes, p : Bytes, i : Nat, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (if ((jpLen p) <? (i + 1)) then (ctor Option.some [Bytes] s) else (match (jpToken p i)
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some tk => (let t : Bytes := (project tk tok); (let j : Nat := (project tk next); (let b : Nat := (jpAt s 0); (if (b =? 123) then (match (jpMember s t)
+        | Option.none => (ctor Option.none [Bytes])
+        | Option.some m => (jpGet (jpSpan s (project m vstart) (project m vend)) p j rest)) else (if (b =? 91) then (match (jpIndex t)
+        | Option.none => (ctor Option.none [Bytes])
+        | Option.some k => (match (jpElement s k)
+          | Option.none => (ctor Option.none [Bytes])
+          | Option.some e => (jpGet (jpSpan s (project e start) (project e vend)) p j rest))) else (ctor Option.none [Bytes]))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpNatFrom,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let b : Nat := (jpAt s i); (if (jpIsDigit b) then (jpNatFrom s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract b 48 : Nat)) rest) else acc))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpDecFrom,
+  parameters: [n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (n <? 10) then (jpHexDigit n) else (jpCat (jpDecFrom (prim quotient n 10 0 : Nat) rest) (jpHexDigit (prim remainder n 10 0 : Nat))))),
+  recursive_argument: fuel
+}
+
+definition{name: jpDec, parameters: [n : Nat], result: Bytes, body: (jpDecFrom n (n + 1))}
+
+definition{
+  name: jpFirstNonZero,
+  parameters: [d : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((jpLen d) <? (i + 1)) then i else (if ((jpAt d i) =? 48) then (jpFirstNonZero d (i + 1) rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpLastNonZero,
+  parameters: [d : Bytes, j : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => j
+    | Nat.succ rest => (if (j =? 0) then 0 else (if ((jpAt d (prim subtract j 1 : Nat)) =? 48) then (jpLastNonZero d (prim subtract j 1 : Nat) rest) else j))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpNumCanon,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let neg : Bool := ((jpAt s 0) =? 45); (let i : Nat := (if (neg && true) then 1 else 0); (let j : Nat := (jpDigits s i); (let ip : Bytes := (jpSpan s i j); (let hasF : Bool := ((jpAt s j) =? 46); (let k : Nat := (if (hasF && true) then (jpDigits s (j + 1)) else j); (let fp : Bytes := (if (hasF && true) then (jpSpan s (j + 1) k) else 0x); (let hasE : Bool := (((jpAt s k) =? 101) || ((jpAt s k) =? 69)); (let sgn : Nat := (jpAt s (k + 1)); (let es : Nat := (if ((sgn =? 43) || (sgn =? 45)) then (k + 2) else (k + 1)); (let ev : Nat := (if (hasE && true) then (jpNatFrom s es 0 ((jpLen s) + 1)) else 0); (let eneg : Bool := (hasE && (sgn =? 45)); (let d : Bytes := (jpCat ip fp); (let a : Nat := (jpFirstNonZero d 0 ((jpLen d) + 1)); (let z : Nat := (jpLastNonZero d (jpLen d) ((jpLen d) + 1)); (if (z <? (a + 1)) then 0x30 else (let pos : Nat := ((if (eneg && true) then 0 else ev) + (prim subtract (jpLen d) z : Nat)); (let ng : Nat := ((if (eneg && true) then ev else 0) + (jpLen fp)); (jpCat (if (neg && true) then 0x2d else 0x) (jpCat (jpSpan d a z) (jpCat 0x65 (if (ng <? (pos + 1)) then (jpDec (prim subtract pos ng : Nat)) else (jpCat 0x2d (jpDec (prim subtract ng pos : Nat))))))))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpKeysOkFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (match (jpDecode s (i + 1))
+      | Option.none => false
+      | Option.some k => (let e : Nat := (Foundation.Json::valueEnd s ((Foundation.Json::stringEnd s (i + 1)) + 2)); (if ((jpAt s e) =? 44) then (jpKeysOkFrom s (e + 1) rest) else true)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpKeysOk,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: (if ((jpAt s 1) =? 125) then true else (jpKeysOkFrom s 1 ((jpLen s) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpBestFrom,
+  parameters: [s : Bytes, i : Nat, prev : (Option Bytes), best : (Option JpBest), fuel : Nat],
+  result: (Option JpBest),
+  body: (match fuel
+    | Nat.zero => best
+    | Nat.succ rest => (let v : Nat := ((Foundation.Json::stringEnd s (i + 1)) + 2); (let e : Nat := (Foundation.Json::valueEnd s v); (let k : Bytes := (match (jpDecode s (i + 1))
+      | Option.none => 0x
+      | Option.some x => x); (let above : Bool := (match prev
+      | Option.none => true
+      | Option.some q => (jpLess q k)); (let better : Bool := (match best
+      | Option.none => true
+      | Option.some bb => (jpLess k (project bb key))); (let nb : (Option JpBest) := (if (above && better) then (ctor Option.some [JpBest] (record JpBest {key := k, bstart := v, bend := e})) else best); (if ((jpAt s e) =? 44) then (jpBestFrom s (e + 1) prev nb rest) else nb)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpBest,
+  parameters: [s : Bytes, prev : (Option Bytes)],
+  result: (Option JpBest),
+  body: (if ((jpAt s 1) =? 125) then (ctor Option.none [JpBest]) else (jpBestFrom s 1 prev (ctor Option.none [JpBest]) ((jpLen s) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpCanon,
+  parameters: [s : Bytes, mode : Nat, prev : (Option Bytes), acc : Bytes, n : Nat, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (if (mode =? 1) then (match (jpBest s prev)
+      | Option.none => (ctor Option.some [Bytes] (jpCat acc 0x7d))
+      | Option.some bb => (match (jpCanon (jpSpan s (project bb bstart) (project bb bend)) 0 (ctor Option.none [Bytes]) 0x 0 rest)
+        | Option.none => (ctor Option.none [Bytes])
+        | Option.some cv => (jpCanon s 1 (ctor Option.some [Bytes] (project bb key)) (jpCat (jpCat acc (if (n =? 0) then 0x else 0x2c)) (jpCat (jpCat (jpEncode (project bb key)) 0x3a) cv)) (n + 1) rest))) else (if (mode =? 2) then (match (jpElement s n)
+      | Option.none => (ctor Option.some [Bytes] (jpCat acc 0x5d))
+      | Option.some e => (match (jpCanon (jpSpan s (project e start) (project e vend)) 0 (ctor Option.none [Bytes]) 0x 0 rest)
+        | Option.none => (ctor Option.none [Bytes])
+        | Option.some cv => (jpCanon s 2 prev (jpCat acc (jpCat (if (n =? 0) then 0x else 0x2c) cv)) (n + 1) rest))) else (let b : Nat := (jpAt s 0); (if (b =? 34) then (match (jpDecode s 1)
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some d => (ctor Option.some [Bytes] (jpEncode d))) else (if (b =? 91) then (jpCanon s 2 prev 0x5b 0 rest) else (if (b =? 123) then (if (jpKeysOk s) then (jpCanon s 1 (ctor Option.none [Bytes]) 0x7b 0 rest) else (ctor Option.none [Bytes])) else (if ((b =? 116) || ((b =? 102) || (b =? 110))) then (ctor Option.some [Bytes] s) else (ctor Option.some [Bytes] (jpNumCanon s)))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpCanonical,
+  parameters: [s : Bytes],
+  result: (Option Bytes),
+  body: (jpCanon s 0 (ctor Option.none [Bytes]) 0x 0 ((prim multiply (jpLen s) 3 : Nat) + 3)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpEqual,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bool,
+  body: (match (jpCanonical a)
+    | Option.none => false
+    | Option.some x => (match (jpCanonical b)
+      | Option.none => false
+      | Option.some y => (jpSame x y))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpCountKeyFrom,
+  parameters: [s : Bytes, i : Nat, key : Bytes, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let e : Nat := (Foundation.Json::valueEnd s ((Foundation.Json::stringEnd s (i + 1)) + 2)); (let hit : Nat := (match (jpDecode s (i + 1))
+      | Option.none => 0
+      | Option.some k => (if (jpSame k key) then 1 else 0)); (if ((jpAt s e) =? 44) then (jpCountKeyFrom s (e + 1) key (acc + hit) rest) else (acc + hit))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpCountKey,
+  parameters: [s : Bytes, key : Bytes],
+  result: Nat,
+  body: (if ((jpAt s 1) =? 125) then 0 else (jpCountKeyFrom s 1 key 0 ((jpLen s) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpValue,
+  parameters: [s : Bytes, key : Bytes],
+  result: (Option Bytes),
+  body: (match (jpMember s key)
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some m => (ctor Option.some [Bytes] (jpSpan s (project m vstart) (project m vend)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpPointer,
+  parameters: [v : (Option Bytes)],
+  result: (Option Bytes),
+  body: (match v
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some x => (if ((jpAt x 0) =? 34) then (match (jpDecode x 1)
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some d => (if (((jpLen d) =? 0) || ((jpAt d 0) =? 47)) then (ctor Option.some [Bytes] d) else (ctor Option.none [Bytes]))) else (ctor Option.none [Bytes]))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpPrefix,
+  parameters: [f : Bytes, p : Bytes],
+  result: Bool,
+  body: (((jpLen f) <? (jpLen p)) && (jpSame (jpSpan p 0 ((jpLen f) + 1)) (jpCat f 0x2f))),
+  axioms: [propext]
+}
+
+definition{
+  name: jpOnce,
+  parameters: [o : Bytes],
+  result: Bool,
+  body: ((((jpCountKey o 0x6f70) <? 2) && ((jpCountKey o 0x70617468) <? 2)) && (((jpCountKey o 0x66726f6d) <? 2) && ((jpCountKey o 0x76616c7565) <? 2))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpMoveCopy,
+  parameters: [doc : Bytes, o : Bytes, path : Bytes, copy : Bool, f : Nat],
+  result: (Option Bytes),
+  body: (match (jpPointer (jpValue o 0x66726f6d))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some fr => (match (jpGet doc fr 0 f)
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some v => (if (copy && true) then (jpEdit doc path 0 0 v f) else (if (jpPrefix fr path) then (ctor Option.none [Bytes]) else (match (jpEdit doc fr 0 1 0x f)
+        | Option.none => (ctor Option.none [Bytes])
+        | Option.some r => (jpEdit r path 0 0 v f)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpReplace,
+  parameters: [doc : Bytes, path : Bytes, val : (Option Bytes), f : Nat],
+  result: (Option Bytes),
+  body: (match val
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some v => (match (jpGet doc path 0 f)
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some w => (jpEdit doc path 0 2 v f))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpTest,
+  parameters: [doc : Bytes, path : Bytes, val : (Option Bytes), f : Nat],
+  result: (Option Bytes),
+  body: (match val
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some v => (match (jpGet doc path 0 f)
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some w => (if (jpEqual w v) then (ctor Option.some [Bytes] doc) else (ctor Option.none [Bytes])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpAdd,
+  parameters: [doc : Bytes, path : Bytes, val : (Option Bytes), f : Nat],
+  result: (Option Bytes),
+  body: (match val
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some v => (jpEdit doc path 0 0 v f)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpOp,
+  parameters: [doc : Bytes, o : Bytes, op : Bytes, path : Bytes, f : Nat],
+  result: (Option Bytes),
+  body: (let val : (Option Bytes) := (jpValue o 0x76616c7565); (if (jpSame op 0x616464) then (jpAdd doc path val f) else (if (jpSame op 0x72656d6f7665) then (jpEdit doc path 0 1 0x f) else (if (jpSame op 0x7265706c616365) then (jpReplace doc path val f) else (if (jpSame op 0x6d6f7665) then (jpMoveCopy doc o path false f) else (if (jpSame op 0x636f7079) then (jpMoveCopy doc o path true f) else (if (jpSame op 0x74657374) then (jpTest doc path val f) else (ctor Option.none [Bytes])))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpApply,
+  parameters: [doc : Bytes, o : Bytes],
+  result: (Option Bytes),
+  body: (let f : Nat := (((jpLen doc) + (jpLen o)) + 2); (if (((jpAt o 0) =? 123) && (jpOnce o)) then (match (jpValue o 0x6f70)
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some opv => (match (jpPointer (jpValue o 0x70617468))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some path => (match (if ((jpAt opv 0) =? 34) then (jpDecode opv 1) else (ctor Option.none [Bytes]))
+        | Option.none => (ctor Option.none [Bytes])
+        | Option.some op => (jpOp doc o op path f)))) else (ctor Option.none [Bytes]))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpPatchFrom,
+  parameters: [doc : Bytes, p : Bytes, n : Nat, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (match (jpElement p n)
+      | Option.none => (ctor Option.some [Bytes] doc)
+      | Option.some e => (match (jpApply doc (jpSpan p (project e start) (project e vend)))
+        | Option.none => (ctor Option.none [Bytes])
+        | Option.some d => (jpPatchFrom d p (n + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpRun,
+  parameters: [doc : Bytes, p : Bytes],
+  result: (Option Bytes),
+  body: (if ((jpAt p 0) =? 91) then (jpPatchFrom doc p 0 ((jpLen p) + 1)) else (ctor Option.none [Bytes])),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpPatch,
+  parameters: [doc : Bytes, patch : Bytes],
+  result: (Option Bytes),
+  body: (if ((jpValid doc) && (jpValid patch)) then (jpRun (jpCompact doc) (jpCompact patch)) else (ctor Option.none [Bytes])),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpCaseWhy,
+  parameters: [c : Bytes],
+  result: Bytes,
+  body: (match (jpValue c 0x646f63)
+    | Option.none => 0x6e6f20646f63
+    | Option.some d => (match (jpValue c 0x7061746368)
+      | Option.none => 0x6e6f207061746368
+      | Option.some p => (let r : (Option Bytes) := (jpRun d p); (match (jpValue c 0x6578706563746564)
+        | Option.some x => (match r
+          | Option.none => 0x6661696c65642c206578706563746564206120726573756c74
+          | Option.some got => (if (jpEqual got x) then 0x else (jpCat 0x676f7420 got)))
+        | Option.none => (match (jpMember c 0x6572726f72)
+          | Option.some q => (match r
+            | Option.none => 0x
+            | Option.some got => (jpCat 0x6170706c6965642c20657870656374656420616e206572726f723a20 got))
+          | Option.none => (match r | Option.none => 0x6661696c6564 | Option.some got => 0x)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpCasesFrom,
+  parameters: [s : Bytes, name : Bytes, n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (jpElement s n)
+      | Option.none => acc
+      | Option.some e => (let c : Bytes := (jpSpan s (project e start) (project e vend)); (let why : Bytes := (jpCaseWhy c); (let line : Bytes := (if ((jpLen why) =? 0) then 0x else (jpCat (jpCat (jpCat name (jpCat 0x206361736520 (jpDec n))) (jpCat 0x3a20 why)) 0x0a)); (jpCasesFrom s name (n + 1) (jpCat acc line) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpOracleFile,
+  parameters: [name : Bytes, raw : Bytes],
+  result: Bytes,
+  body: (if (jpValid raw) then (let s : Bytes := (jpCompact raw); (jpCasesFrom s name 0 0x ((jpLen s) + 1))) else (jpCat name 0x3a206e6f74204a534f4e0a)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpOracleFrom,
+  parameters: [archive : Bytes, h : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((jpAt archive h) =? 0) then acc else (let size : Nat := (Foundation.Tar::entrySize archive h); (let name : Bytes := (Foundation.Tar::entryName archive h); (let raw : Bytes := (jpSpan archive (h + 512) ((h + 512) + size)); (jpOracleFrom archive ((h + 512) + (Foundation.Tar::padded size)) (jpCat acc (jpOracleFile name raw)) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpTotalFrom,
+  parameters: [archive : Bytes, h : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((jpAt archive h) =? 0) then acc else (let size : Nat := (Foundation.Tar::entrySize archive h); (let raw : Bytes := (jpSpan archive (h + 512) ((h + 512) + size)); (jpTotalFrom archive ((h + 512) + (Foundation.Tar::padded size)) (acc + (jpCount (jpCompact raw))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jpOracle,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (let fuel : Nat := ((prim quotient (jpLen archive) 512 0 : Nat) + 1); (let why : Bytes := (jpOracleFrom archive 0 0x fuel); (if ((jpLen why) =? 0) then (ctor Option.some [Bytes] (jpCat (jpDec (jpTotalFrom archive 0 0 fuel)) 0x206361736573206f66206a736f6e2d70617463682d7465737473206170706c696564206173205246432036393032207361797320616e64206173207468652063617365732065787065637420697420746f0a)) else (ctor Option.none [Bytes])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jpOracleWhy,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (jpOracleFrom archive 0 0x ((prim quotient (jpLen archive) 512 0 : Nat) + 1)),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

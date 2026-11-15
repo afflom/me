@@ -1,6 +1,6 @@
 // The R4 router over the generated decision: run with `node site/router/router.test.mjs`.
-// The page asks the root guest; here the same tree (table.mjs, held to the
-// spec by tools/facet/gen.py --check, as the builder holds the LexLean module) stands in for it.
+// The page asks the root guest; here the same tree (table.mjs, the spec
+// written by GenTable and held by GN-01, as the builder holds the LexLean module) stands in for it.
 import assert from "node:assert/strict";
 import { judge, FIELDS, GUARANTEES } from "./table.mjs";
 import { route } from "./router.mjs";

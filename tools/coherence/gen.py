@@ -46,7 +46,7 @@ def refuse(why):
 root_src = (ROOT / "tools/prism_root.py").read_text()
 root_block = root_src[root_src.index("FACETS = [") : root_src.index("]", root_src.index("FACETS = ["))]
 ROOT_FACETS = re.findall(r'\(\s*"([a-z0-9]+)"\s*,', root_block)
-host_src = (ROOT / "site/device/host.mjs").read_text()
+host_src = (ROOT / "site/device/probe.mjs").read_text()
 SURFACES = re.findall(r"'([a-z]+)'", re.search(r"export const SURFACES = \[([^\]]*)\]", host_src).group(1))
 
 ports = [p["key"] for p in SPEC["ports"]]

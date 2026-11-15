@@ -1,0 +1,463 @@
+\begin{lexlean}{GenSurface}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\title{Surface generator}
+\begin{semanticmodule}
+definition{
+  name: surfU,
+  parameters: [value : String],
+  result: Bytes,
+  body: (Foundation.Utf8::encode value)
+}
+
+definition{
+  name: surfCat,
+  parameters: [parts : (List Bytes)],
+  result: Bytes,
+  body: (match parts
+    | List.nil => 0x
+    | List.cons head rest => (Foundation.Bytes::appendBytes head (surfCat rest))),
+  recursive_argument: parts
+}
+
+definition{
+  name: surfJoin,
+  parameters: [acc : Bytes, item : Bytes],
+  result: Bytes,
+  body: (if ((Foundation.Bytes::byteLength acc) =? 0) then item else (surfCat (cons acc (cons 0x2c20 (cons item (nil Bytes))))))
+}
+
+definition{
+  name: surfCompactFrom,
+  parameters: [s : Bytes, i : Nat, stop : Nat, inString : Bool, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (let c : Nat := (Foundation.Tar::byteOr s i); (if inString then (if (c =? 92) then (surfCompactFrom s (i + 2) stop true (Foundation.Bytes::appendBytes acc (Foundation.Json::span s i (i + 2))) rest) else (surfCompactFrom s (i + 1) stop (if (c =? 34) then false else true) (Foundation.Bytes::appendBytes acc (Foundation.Json::span s i (i + 1))) rest)) else (if (c =? 34) then (surfCompactFrom s (i + 1) stop true (Foundation.Bytes::appendBytes acc 0x22) rest) else (if ((c =? 32) || ((c =? 10) || ((c =? 9) || (c =? 13)))) then (surfCompactFrom s (i + 1) stop false acc rest) else (if (c =? 44) then (surfCompactFrom s (i + 1) stop false (Foundation.Bytes::appendBytes acc 0x2c20) rest) else (if (c =? 58) then (surfCompactFrom s (i + 1) stop false (Foundation.Bytes::appendBytes acc 0x3a20) rest) else (surfCompactFrom s (i + 1) stop false (Foundation.Bytes::appendBytes acc (Foundation.Json::span s i (i + 1))) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfCompact,
+  parameters: [s : Bytes, pos : (Option Nat)],
+  result: Bytes,
+  body: (match pos
+    | Option.none => 0x
+    | Option.some i => (surfCompactFrom s i (Foundation.Json::valueEnd s i) false 0x (Foundation.Bytes::byteLength s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfDigitsFrom,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr s i); (if ((47 <? b) && (b <? 58)) then (surfDigitsFrom s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract b 48 : Nat)) rest) else acc))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfNatAt,
+  parameters: [s : Bytes, pos : (Option Nat)],
+  result: (Option Nat),
+  body: (match pos
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some i => (let b : Nat := (Foundation.Tar::byteOr s i); (if ((47 <? b) && (b <? 58)) then (ctor Option.some [Nat] (surfDigitsFrom s i 0 20)) else (ctor Option.none [Nat])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfDigit,
+  parameters: [d : Nat],
+  result: Bytes,
+  body: (Foundation.Json::span (surfU "0123456789") d (d + 1))
+}
+
+definition{
+  name: surfNumber,
+  parameters: [n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (n <? 10) then (surfDigit n) else (Foundation.Bytes::appendBytes (surfNumber (prim quotient n 10 0 : Nat) rest) (surfDigit (prim remainder n 10 0 : Nat))))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfTextOf,
+  parameters: [s : Bytes, pos : (Option Nat), key : String],
+  result: Bytes,
+  body: (Foundation.Json::textAt s (Foundation.Json::memberAt s pos (surfU key))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfExport,
+  parameters: [name : String, value : Bytes],
+  result: Bytes,
+  body: (surfCat (cons (surfU "export const ") (cons (surfU name) (cons (surfU " = ") (cons value (cons 0x3b0a (nil Bytes)))))))
+}
+
+definition{
+  name: surfMember,
+  parameters: [s : Bytes, pos : (Option Nat), key : String],
+  result: Bytes,
+  body: (surfCompact s (Foundation.Json::memberAt s pos (surfU key))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfFirstDomain,
+  parameters: [s : Bytes, place : (Option Nat)],
+  result: (Option Nat),
+  body: (surfNatAt s (Foundation.Json::elementAt s (Foundation.Json::memberAt s place (surfU "domains")) 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfActPlacesFrom,
+  parameters: [s : Bytes, places : (Option Nat), act : Bytes, d : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (match (Foundation.Json::elementAt s places n)
+      | Option.none => false
+      | Option.some p => (if ((Foundation.Tar::sameBytes (surfTextOf s (ctor Option.some [Nat] p) "act") act) && (match (surfFirstDomain s (ctor Option.some [Nat] p))
+        | Option.none => false
+        | Option.some dom0 => (dom0 =? d))) then true else (surfActPlacesFrom s places act d (n + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfActDomainsFrom,
+  parameters: [s : Bytes, places : (Option Nat), act : Bytes, d : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (surfActPlacesFrom s places act d 0 (Foundation.Json::countAt s places)) then (surfActDomainsFrom s places act (d + 1) (surfJoin acc (surfNumber d 20)) rest) else (surfActDomainsFrom s places act (d + 1) acc rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfActWordFrom,
+  parameters: [s : Bytes, acts : (Option Nat), act : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (match (Foundation.Json::elementAt s acts n)
+      | Option.none => 0x
+      | Option.some a => (if (Foundation.Tar::sameBytes (surfTextOf s (ctor Option.some [Nat] a) "key") act) then (surfMember s (ctor Option.some [Nat] a) "word") else (surfActWordFrom s acts act (n + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfFeeder,
+  parameters: [s : Bytes, top : (Option Nat), f : (Option Nat)],
+  result: Bytes,
+  body: (let act : Bytes := (surfTextOf s f "act"); (let places : (Option Nat) := (Foundation.Json::memberAt s top (surfU "places")); (let isNone : Bool := (Foundation.Tar::sameBytes act (surfU "none")); (let word : Bytes := (if isNone then (surfCompact s (Foundation.Json::memberAt s (Foundation.Json::memberAt s top (surfU "words")) (surfTextOf s f "word"))) else (surfActWordFrom s (Foundation.Json::memberAt s top (surfU "acts")) act 0 (Foundation.Json::countAt s (Foundation.Json::memberAt s top (surfU "acts"))))); (let domains : Bytes := (if isNone then (surfMember s f "domains") else (surfCat (cons 0x5b (cons (surfActDomainsFrom s places act 0 0x 64) (cons 0x5d (nil Bytes)))))); (surfCat (cons (surfU "{") (cons 0x226b6579223a20 (cons (surfMember s f "key") (cons (surfU ", ") (cons 0x22616374223a20 (cons (surfMember s f "act") (cons (surfU ", ") (cons 0x2273657474696e67223a20 (cons (surfMember s f "setting") (cons (surfU ", ") (cons 0x22776f7264223a20 (cons word (cons (surfU ", ") (cons 0x22646f6d61696e73223a20 (cons domains (cons (surfU "}") (nil Bytes))))))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfFeedersFrom,
+  parameters: [
+    s : Bytes,
+    top : (Option Nat),
+    feeders : (Option Nat),
+    n : Nat,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s feeders n)
+      | Option.none => acc
+      | Option.some f => (surfFeedersFrom s top feeders (n + 1) (surfJoin acc (surfFeeder s top (ctor Option.some [Nat] f))) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfFontsFrom,
+  parameters: [s : Bytes, fonts : (Option Nat), n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s fonts n)
+      | Option.none => acc
+      | Option.some i => (let f : (Option Nat) := (ctor Option.some [Nat] i); (if (Foundation.Tar::sameBytes (surfTextOf s f "load") (surfU "gesture")) then (surfFontsFrom s fonts (n + 1) (surfJoin acc (surfCat (cons (surfU "{") (cons 0x2266616d696c79223a20 (cons (surfMember s f "family") (cons (surfU ", ") (cons 0x2266696c65223a20 (cons (surfMember s f "file") (cons (surfU ", ") (cons 0x22776569676874223a20 (cons (surfMember s f "weight") (cons (surfU "}") (nil Bytes))))))))))))) rest) else (surfFontsFrom s fonts (n + 1) acc rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfMembersFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Tar::byteOr s i) =? 34) then (let ke : Nat := (Foundation.Json::stringEnd s (i + 1)); (let v : Nat := (Foundation.Json::space s ((Foundation.Json::space s (ke + 1)) + 1)); (let next : Nat := (Foundation.Json::space s (Foundation.Json::valueEnd s v)); (let key : Bytes := (Foundation.Json::span s (i + 1) ke); (let acc2 : Bytes := (if (Foundation.Tar::sameBytes key (surfU "comment")) then acc else (surfJoin acc (surfCat (cons 0x22 (cons key (cons 0x223a20 (cons (surfCompact s (ctor Option.some [Nat] v)) (nil Bytes)))))))); (if ((Foundation.Tar::byteOr s next) =? 44) then (surfMembersFrom s (Foundation.Json::space s (next + 1)) acc2 rest) else acc2)))))) else acc)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfVoice,
+  parameters: [s : Bytes, voice : (Option Nat), resonance : Bool],
+  result: Bytes,
+  body: (match voice
+    | Option.none => 0x
+    | Option.some i => (surfCat (cons (surfU "{") (cons (surfJoin (surfMembersFrom s (Foundation.Json::space s (i + 1)) 0x (Foundation.Bytes::byteLength s)) (if resonance then 0x227265736f6e616e6365223a20222e2e2f7265736f6e616e63652f7265736f6e616e63652e6d6a7322 else 0x227265736f6e616e6365223a206e756c6c)) (cons (surfU "}") (nil Bytes)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfModule,
+  parameters: [s : Bytes, resonance : Bool],
+  result: Bytes,
+  body: (let r : (Option Nat) := (Foundation.Json::root s); (surfCat (cons (surfU "// Generated by GenSurface (generators/surface) from app/specs/surface/spec.json. Do not edit.") (cons 0x0a (cons (surfU "// The same records as app/src/PrismSurface.lex.tex, whose proofs bind every") (cons 0x0a (cons (surfU "// place to its view in the design model. The page renders only these.") (cons 0x0a0a (cons (surfExport "DOMAINS" (surfMember s r "domains")) (cons (surfExport "FLOORS" (surfMember s r "floors")) (cons (surfExport "LABELS" (surfMember s r "labels")) (cons (surfExport "ROLES" (surfMember s r "roles")) (cons (surfExport "ACTS" (surfMember s r "acts")) (cons (surfExport "PLACES" (surfMember s r "places")) (cons (surfExport "GROUPS" (surfMember s r "groups")) (cons (surfExport "SETTINGS" (surfMember s r "settings")) (cons (surfExport "SECTIONS" (surfMember s r "sections")) (cons (surfExport "SETUP" (surfMember s r "setup")) (cons (surfExport "MEDIA" (surfMember s r "media")) (cons (surfExport "WORDS" (surfMember s r "words")) (cons (surfExport "FEEDERS" (surfCat (cons 0x5b (cons (surfFeedersFrom s r (Foundation.Json::memberAt s r (surfU "feeders")) 0 0x (Foundation.Bytes::byteLength s)) (cons 0x5d (nil Bytes)))))) (cons (surfExport "FONTS" (surfCat (cons 0x5b (cons (surfFontsFrom s (Foundation.Json::memberAt s (Foundation.Json::memberAt s r (surfU "look")) (surfU "fonts")) 0 0x (Foundation.Bytes::byteLength s)) (cons 0x5d (nil Bytes)))))) (cons (surfExport "VOICE" (surfVoice s (Foundation.Json::memberAt s r (surfU "voice")) resonance)) (nil Bytes)))))))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfHasEvery,
+  parameters: [s : Bytes, keys : (List String)],
+  result: Bool,
+  body: (match keys
+    | List.nil => true
+    | List.cons head rest => (match (Foundation.Json::memberAt s (Foundation.Json::root s) (surfU head))
+      | Option.none => false
+      | Option.some v => (surfHasEvery s rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: keys
+}
+
+definition{
+  name: surfGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (surfU "app/specs/surface/spec.json"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (if (surfHasEvery s (cons "domains" (cons "floors" (cons "labels" (cons "roles" (cons "acts" (cons "places" (cons "groups" (cons "settings" (cons "sections" (cons "setup" (cons "media" (cons "words" (cons "feeders" (cons "look" (cons "voice" (nil String))))))))))))))))) then (ctor Option.some [Bytes] (surfModule s (match (Foundation.Tar::find archive (surfU "site/resonance/resonance.mjs"))
+      | Option.none => false
+      | Option.some m => true))) else (ctor Option.none [Bytes]))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfEscapeFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then acc else (let c : Nat := (Foundation.Tar::byteOr s i); (let out : Bytes := (if (c =? 38) then 0x26616d703b else (if (c =? 60) then 0x266c743b else (if (c =? 62) then 0x2667743b else (if (c =? 34) then 0x2671756f743b else (if (c =? 39) then 0x26237832373b else (Foundation.Json::span s i (i + 1))))))); (surfEscapeFrom s (i + 1) (Foundation.Bytes::appendBytes acc out) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfEscape,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (surfEscapeFrom s 0 0x (Foundation.Bytes::byteLength s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfWord,
+  parameters: [s : Bytes, top : (Option Nat), key : Bytes],
+  result: Bytes,
+  body: (surfEscape (Foundation.Json::textAt s (Foundation.Json::memberAt s (Foundation.Json::memberAt s top (surfU "words")) key))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfNavFrom,
+  parameters: [s : Bytes, places : (Option Nat), sheet : Bool, n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s places n)
+      | Option.none => acc
+      | Option.some i => (let p : (Option Nat) := (ctor Option.some [Nat] i); (let host : Bytes := (surfTextOf s p "host"); (let home : Bool := (Foundation.Tar::sameBytes host (surfU "home")); (let line : Bytes := (if sheet then (if (Foundation.Tar::sameBytes host (surfU "sheet")) then (surfCat (cons 0x202020203c627574746f6e20747970653d22627574746f6e2220636c6173733d2270722d676f2070722d73686565742220646174612d706c6163653d22 (cons (surfTextOf s p "key") (cons 0x223e (cons (surfEscape (surfTextOf s p "name")) (cons 0x3c2f627574746f6e3e0a (nil Bytes))))))) else 0x) else (if (home || (Foundation.Tar::sameBytes host (surfU "nav"))) then (surfCat (cons 0x2020202020203c6c693e3c627574746f6e20747970653d22627574746f6e2220636c6173733d2270722d676f2220646174612d706c6163653d22 (cons (surfTextOf s p "key") (cons (if home then 0x2220617269612d63757272656e743d227061676522 else 0x22) (cons 0x3e (cons (surfEscape (surfTextOf s p "name")) (cons 0x3c2f627574746f6e3e3c2f6c693e0a (nil Bytes)))))))) else 0x)); (surfNavFrom s places sheet (n + 1) (Foundation.Bytes::appendBytes acc line) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfStepsFrom,
+  parameters: [
+    s : Bytes,
+    top : (Option Nat),
+    setup : (Option Nat),
+    n : Nat,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s setup n)
+      | Option.none => acc
+      | Option.some i => (surfStepsFrom s top setup (n + 1) (surfCat (cons acc (cons (if (n =? 0) then 0x3c6c6920636c6173733d2270722d737465702070722d737465702d6e657874223e else 0x3c6c6920636c6173733d2270722d73746570223e) (cons (surfWord s top (surfTextOf s (ctor Option.some [Nat] i) "word")) (cons 0x3c2f6c693e (nil Bytes)))))) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfHasDomainFrom,
+  parameters: [s : Bytes, list : (Option Nat), d : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (match (Foundation.Json::elementAt s list n)
+      | Option.none => false
+      | Option.some i => (match (surfNatAt s (ctor Option.some [Nat] i))
+        | Option.none => (surfHasDomainFrom s list d (n + 1) rest)
+        | Option.some v => (if (v =? d) then true else (surfHasDomainFrom s list d (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfFeederOfFrom,
+  parameters: [s : Bytes, feeders : (Option Nat), d : Nat, n : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (match (Foundation.Json::elementAt s feeders n)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some i => (let f : (Option Nat) := (ctor Option.some [Nat] i); (if ((Foundation.Tar::sameBytes (surfTextOf s f "act") (surfU "none")) && (surfHasDomainFrom s (Foundation.Json::memberAt s f (surfU "domains")) d 0 (Foundation.Bytes::byteLength s))) then f else (surfFeederOfFrom s feeders d (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfFeed,
+  parameters: [s : Bytes, top : (Option Nat), p : (Option Nat)],
+  result: Bytes,
+  body: (let key : Bytes := (surfTextOf s p "key"); (let fills : Bytes := (surfTextOf s p "fills"); (if (0 <? (Foundation.Bytes::byteLength fills)) then (surfCat (cons 0x3c627574746f6e20747970653d22627574746f6e2220636c6173733d2270722d636172642d666565642220646174612d73657475703d22 (cons fills (cons 0x2220646174612d706c6163653d22 (cons key (cons 0x223e (cons (surfWord s top (surfU "setup.connect")) (cons 0x3c2f627574746f6e3e (nil Bytes))))))))) else (match (match (surfFirstDomain s p)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some d => (surfFeederOfFrom s (Foundation.Json::memberAt s top (surfU "feeders")) d 0 (Foundation.Bytes::byteLength s)))
+    | Option.none => 0x
+    | Option.some f => (let fd : (Option Nat) := (ctor Option.some [Nat] f); (surfCat (cons 0x3c627574746f6e20747970653d22627574746f6e2220636c6173733d2270722d636172642d666565642220646174612d666565643d22 (cons (surfTextOf s fd "key") (cons 0x2220646174612d706c6163653d22 (cons key (cons 0x223e (cons (surfWord s top (surfTextOf s fd "word")) (cons 0x3c2f627574746f6e3e (nil Bytes)))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfCardsFrom,
+  parameters: [
+    s : Bytes,
+    top : (Option Nat),
+    places : (Option Nat),
+    n : Nat,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s places n)
+      | Option.none => acc
+      | Option.some i => (let p : (Option Nat) := (ctor Option.some [Nat] i); (if (Foundation.Tar::sameBytes (surfTextOf s p "host") (surfU "nav")) then (surfCardsFrom s top places (n + 1) (surfCat (cons acc (cons 0x2020202020203c6c6920636c6173733d2270722d636172642070722d636172642d656d707479223e3c627574746f6e20747970653d22627574746f6e2220636c6173733d2270722d636172642d676f2220646174612d706c6163653d22 (cons (surfTextOf s p "key") (cons 0x223e3c7370616e20636c6173733d2270722d636172642d6e616d65223e (cons (surfEscape (surfTextOf s p "name")) (cons 0x3c2f7370616e3e3c7370616e20636c6173733d2270722d636172642d636f756e74223e3c2f7370616e3e3c2f627574746f6e3e3c7370616e20636c6173733d2270722d636172642d6c6174657374223e3c2f7370616e3e (cons (surfFeed s top p) (cons 0x3c2f6c693e0a (nil Bytes)))))))))) rest) else (surfCardsFrom s top places (n + 1) acc rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfHostFrom,
+  parameters: [s : Bytes, places : (Option Nat), host : String, n : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (match (Foundation.Json::elementAt s places n)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some i => (if (Foundation.Tar::sameBytes (surfTextOf s (ctor Option.some [Nat] i) "host") (surfU host)) then (ctor Option.some [Nat] i) else (surfHostFrom s places host (n + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfActFrom,
+  parameters: [s : Bytes, acts : (Option Nat), key : String, n : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (match (Foundation.Json::elementAt s acts n)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some i => (if (Foundation.Tar::sameBytes (surfTextOf s (ctor Option.some [Nat] i) "key") (surfU key)) then (ctor Option.some [Nat] i) else (surfActFrom s acts key (n + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: surfNavHtml,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let top : (Option Nat) := (Foundation.Json::root s); (let places : (Option Nat) := (Foundation.Json::memberAt s top (surfU "places")); (let fuel : Nat := (Foundation.Bytes::byteLength s); (surfCat (cons 0x3c212d2d2047656e6572617465642062792047656e53757266616365202867656e657261746f72732f73757266616365292066726f6d206170702f73706563732f737572666163652f737065632e6a736f6e2e20446f206e6f7420656469742e0a202020202054686520507269736d277320706c616365732c2066726f6d20507269736d537572666163653a206f6e6520706572206f776e65722076696577206f66207468652064657369676e0a20202020206d6f64656c20696e2074686520706572736f6e277320766965772c207468656e207468652073657474696e67732073686565742e20457665727920776f7264206865726520697320746865206d6f64656c27732e202d2d3e0a3c64697620636c6173733d2270722220646174612d736c6f743d2273757266616365223e0a20203c6e617620636c6173733d2270722d6e6176222069643d2270722d6e61762220617269612d6c6162656c3d22 (cons (surfWord s top (surfU "places")) (cons 0x223e0a202020203c756c20636c6173733d2270722d67726f7570223e0a (cons (surfNavFrom s places false 0 0x fuel) (cons 0x202020203c2f756c3e0a (cons (surfNavFrom s places true 0 0x fuel) (nil Bytes))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfPlaceHtml,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let top : (Option Nat) := (Foundation.Json::root s); (let places : (Option Nat) := (Foundation.Json::memberAt s top (surfU "places")); (let fuel : Nat := (Foundation.Bytes::byteLength s); (let hp : (Option Nat) := (surfHostFrom s places "home" 0 fuel); (let act : Bytes := (surfTextOf s hp "act"); (surfCat (cons 0x20203c2f6e61763e0a20203c73656374696f6e20636c6173733d2270722d706c616365222069643d2270722d706c6163652220617269612d6c6162656c6c656462793d2270722d7469746c65223e0a202020203c68656164657220636c6173733d2270722d746f70223e3c68322069643d2270722d7469746c65223e (cons (surfEscape (surfTextOf s hp "name")) (cons 0x3c2f68323e3c7370616e2069643d2270722d636f756e742220636c6173733d2270722d636f756e74223e3c2f7370616e3e3c2f6865616465723e0a202020203c6469762069643d2270722d6163742220636c6173733d2270722d61637422 (cons (if (Foundation.Tar::sameBytes act (surfU "none")) then 0x else (surfCat (cons 0x20646174612d6163743d22 (cons act (cons 0x22 (nil Bytes)))))) (nil Bytes))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfSetupHtml,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let top : (Option Nat) := (Foundation.Json::root s); (let places : (Option Nat) := (Foundation.Json::memberAt s top (surfU "places")); (let fuel : Nat := (Foundation.Bytes::byteLength s); (let setup : (Option Nat) := (Foundation.Json::memberAt s top (surfU "setup")); (surfCat (cons 0x3e3c2f6469763e0a202020203c73656374696f6e20636c6173733d2270722d7365747570222069643d2270722d73657475702220617269612d6c6162656c6c656462793d2270722d73657475702d7469746c65223e3c68656164657220636c6173733d2270722d73657475702d746f70223e3c68332069643d2270722d73657475702d7469746c65223e (cons (surfWord s top (surfU "setup")) (cons 0x3c2f68333e3c7370616e20636c6173733d2270722d636f756e74223e3120 (cons (surfWord s top (surfU "setup.of")) (cons 0x20 (cons (surfNumber (Foundation.Json::countAt s setup) 20) (cons 0x3c2f7370616e3e3c2f6865616465723e3c6f6c20636c6173733d2270722d7374657073223e (cons (surfStepsFrom s top setup 0 0x fuel) (cons 0x3c2f6f6c3e3c627574746f6e20747970653d22627574746f6e2220636c6173733d2270722d73657475702d676f223e (cons (surfWord s top (surfU "setup.continue")) (nil Bytes)))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfHomeHtml,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let top : (Option Nat) := (Foundation.Json::root s); (let places : (Option Nat) := (Foundation.Json::memberAt s top (surfU "places")); (let fuel : Nat := (Foundation.Bytes::byteLength s); (surfCat (cons 0x3c2f627574746f6e3e3c2f73656374696f6e3e0a202020203c756c2069643d2270722d686f6d652220636c6173733d2270722d686f6d652220617269612d6c6162656c3d22 (cons (surfWord s top (surfU "places")) (cons 0x223e0a (cons (surfCardsFrom s top places 0 0x fuel) (cons 0x202020203c2f756c3e0a202020203c6f6c2069643d2270722d6c6973742220636c6173733d2270722d6c6973742220617269612d6c6162656c6c656462793d2270722d7469746c65223e3c6c6920636c6173733d2270722d656d707479223e (cons (surfWord s top (surfU "empty")) (nil Bytes))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfTailHtml,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let top : (Option Nat) := (Foundation.Json::root s); (let places : (Option Nat) := (Foundation.Json::memberAt s top (surfU "places")); (let fuel : Nat := (Foundation.Bytes::byteLength s); (let ap : (Option Nat) := (surfHostFrom s places "composer" 0 fuel); (let ask : Bytes := (surfEscape (surfTextOf s ap "name")); (surfCat (cons 0x3c2f6c693e3c2f6f6c3e0a202020203c6469762069643d2270722d73657474696e67732220636c6173733d2270722d73657474696e6773222068696464656e3e3c2f6469763e0a20203c2f73656374696f6e3e0a3c2f6469763e0a0a3c6469762069643d2270722d726573756c742220646174612d736c6f743d22726573756c742220636c6173733d22726573756c742220617269612d6c6976653d22706f6c697465223e3c6f75747075742069643d2270722d6f75742220636c6173733d2269646c65223e3c2f6f75747075743e3c2f6469763e0a0a3c666f726d2069643d2270722d61736b2220636c6173733d2270722d61736b2220646174612d736c6f743d22616374696f6e732220646174612d6c6162656c3d22 (cons ask (cons 0x223e0a20203c74657874617265612069643d2270722d70726f6d70742220726f77733d22332220617269612d6c6162656c3d22 (cons ask (cons 0x2220706c616365686f6c6465723d22 (cons (surfWord s top (surfU "ask.placeholder")) (cons 0x22206175746f636f6d706c6574653d226f666622207370656c6c636865636b3d2274727565223e3c2f74657874617265613e0a20203c627574746f6e2069643d2270722d61736b2d676f2220747970653d227375626d6974223e (cons (surfEscape (surfTextOf s (surfActFrom s (Foundation.Json::memberAt s top (surfU "acts")) "ask" 0 fuel) "word")) (cons 0x3c2f627574746f6e3e0a3c2f666f726d3e0a (nil Bytes)))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfCardHtml,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (surfCat (cons (surfNavHtml s) (cons (surfPlaceHtml s) (cons (surfSetupHtml s) (cons (surfHomeHtml s) (cons (surfTailHtml s) (nil Bytes))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: surfCardGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (surfU "app/specs/surface/spec.json"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (if (surfHasEvery s (cons "places" (cons "setup" (cons "words" (cons "feeders" (cons "acts" (nil String))))))) then (ctor Option.some [Bytes] (surfCardHtml s)) else (ctor Option.none [Bytes]))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

@@ -7,6 +7,13 @@
       "output": ".gen/browser-index"
     },
     {
+      "generator": "browserprobe",
+      "inputs": [
+        ".gen/browser-index"
+      ],
+      "output": "site/device/probe.mjs"
+    },
+    {
       "generator": "browseridl",
       "inputs": [
         ".gen/browser-index",
@@ -461,6 +468,14 @@
         "site/vault/vault.mjs"
       ],
       "output": ".gen/browser/adapter/site/vault/vault.mjs"
+    },
+    {
+      "generator": "browseradapter",
+      "inputs": [
+        ".gen/browser-index",
+        "site/device/probe.mjs"
+      ],
+      "output": ".gen/browser/adapter/site/device/probe.mjs"
     }
   ]
 }

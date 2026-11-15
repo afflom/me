@@ -3,8 +3,7 @@
 //! The Lean kernel proves the guarantees when `just vv` runs `prismpm verify`
 //! on `app/`. These tests hold the claims fixed (thirteen guarantees, which the
 //! builder states as fifteen properties, each on
-//! exactly `[Quot.sound, propext]`), check the spec still writes the table
-//! (`tools/facet/gen.py --check`), run the router and its compiled readers in
+//! exactly `[Quot.sound, propext]`), run the router and its compiled readers in
 //! Node (`site/router/router.test.mjs`), and check that the page keeps the
 //! owner's words only after the router has mapped them.
 
@@ -71,15 +70,6 @@ fn router_ru_01() {
     assert!(
         read("app/src/Prism.lex.tex").contains("(PrismRouter::prismRouterDispatch rest)"),
         "RU-01: the Prism root routes router to PrismRouter"
-    );
-    run(
-        "python3",
-        &[
-            "-I",
-            "tools/facet/gen.py",
-            "app/specs/router/spec.json",
-            "--check",
-        ],
     );
 }
 

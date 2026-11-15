@@ -3,8 +3,7 @@
 //! The Lean kernel proves the guarantees when `just vv` runs `prismpm verify`
 //! on `app/`. These tests hold the claims fixed (ten guarantees, which the
 //! builder states as sixteen properties, each on
-//! exactly `[Quot.sound, propext]`), check the spec still writes the table
-//! (`tools/facet/gen.py --check`), run the compiled guest over every request
+//! exactly `[Quot.sound, propext]`), run the compiled guest over every request
 //! and the learning loop in Node (`site/resonance/resonance.test.mjs`), and
 //! check that the page answers gestures only through the root guest.
 
@@ -71,15 +70,6 @@ fn resonance_rs_01() {
     assert!(
         read("app/src/Prism.lex.tex").contains("(PrismResonance::prismResonanceDispatch rest)"),
         "RS-01: the Prism root routes resonance to PrismResonance"
-    );
-    run(
-        "python3",
-        &[
-            "-I",
-            "tools/facet/gen.py",
-            "app/specs/resonance/spec.json",
-            "--check",
-        ],
     );
     run("node", &["site/resonance/resonance.test.mjs"]);
 }
