@@ -102,7 +102,7 @@ fn coherence_co_01() {
     );
 }
 
-/// `CO-02`: Every facet the Prism root routes is one model in the coherence registry with typed ports, live with the page modules that ask it or sealed by a PrismHost surface, and the build refuses a registry whose flow leaves a port unproduced or untaken, a place unfed, an act or setting undriven, a feeder's media without a domain or a domain without vocabulary
+/// `CO-02`: Every facet the Prism root routes is one model in the coherence registry with typed ports, live with the page modules that ask it or sealed by a PrismHost surface, and the build refuses a registry whose flow leaves a port unproduced or untaken, a place unfed, an act or setting undriven or a feeder's media without a domain
 #[test]
 fn coherence_co_02() {
     let gen = read("tools/coherence/gen.py");
@@ -136,7 +136,6 @@ fn coherence_co_02() {
                 "which has no domain in the surface's media table",
                 "every feeder's media has a domain",
             ),
-            ("needs its vocabulary", "every domain has vocabulary"),
             (
                 "is sealed but drives the page",
                 "a sealed facet shows nothing",
@@ -150,7 +149,6 @@ fn coherence_co_02() {
         "gives 'span'",
         "setting halt is driven by no live facet",
         "'fax', which has no domain",
-        "needs its vocabulary",
         "google is sealed but drives the page",
         "act 'write' is driven by no live facet",
     ] {
@@ -166,7 +164,7 @@ fn coherence_co_02() {
     );
 }
 
-/// `CO-03`: A kept item belongs to its media's domain and to every domain whose vocabulary in the coherence registry it uses, and an Ask finds the span its intent words name
+/// `CO-03`: A kept item belongs to its media's domain and is about the facets of the whole person (WHO ICF) its meaning is nearest, and an Ask finds the span its intent words name and draws first on what is about the facets it is about
 #[test]
 fn coherence_co_03() {
     let sense = read("site/coherence/sense.mjs");
@@ -176,12 +174,16 @@ fn coherence_co_03() {
         &sense,
         &[
             (
-                "import { VOCABULARY, INTENTS, MEDIA } from \"./coherence.mjs\";",
-                "words come only from the registry",
+                "import { INTENTS, MEDIA } from \"./coherence.mjs\";",
+                "domains and intents come only from the registry",
             ),
             (
-                "if (item.sealed) return [...out];",
-                "a sealed item is placed by its media alone",
+                "return [item.domain ?? MEDIA[item.media] ?? 0];",
+                "no list of words files an item outside its media's domain",
+            ),
+            (
+                "if ((item.facets ?? []).some((f) => named.has(f))) score += 1;",
+                "an Ask draws first on what is about its facets of the person",
             ),
             (
                 "if (item.sealed) continue;",

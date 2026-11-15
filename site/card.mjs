@@ -420,7 +420,7 @@ export default async function start({ app, reason, $ }) {
         const got = await vault.get(row.address);
         if (got.outcome !== "restore" && got.outcome !== "hashonly") continue;
         item = readItem({ address: row.address, outcome: got.outcome, bytes: got.bytes, meta: got.meta, at: row.at });
-        // Its domains: its media's, and each one its words name (the coherence registry's vocabulary).
+        // Its domains: the ones the router filed it in, or its media's.
         item.domains = item.mapped ?? domainsOf(item);
         readOnce.set(row.address, item);
       }
@@ -455,7 +455,8 @@ export default async function start({ app, reason, $ }) {
   const meaningOf = () => (meaning$ ??= import("./router/meaning.mjs").then(({ meaningReader }) => (meaning = meaningReader({ line, halted }))));
   let meaningRun = null;
   function meanItems() {
-    if (meaningRun || haltedNow) return meaningRun;
+    // Nothing held, nothing to read: a first visit fetches no part of the reader.
+    if (meaningRun || haltedNow || !items.some((item) => !item.sealed && !item.meaning)) return meaningRun;
     meaningRun = (async () => {
       const reader = await meaningOf();
       for (;;) {
@@ -464,13 +465,22 @@ export default async function start({ app, reason, $ }) {
         const vectors = await reader.embed(todo.map((item) => `${item.title ?? ""}\n${item.body ?? ""}`));
         if (!vectors) break;
         meaningOpen = true;
-        todo.forEach((item, i) => { item.meaning = vectors[i]; });
+        const facets = await facetsReader(reader);
+        todo.forEach((item, i) => { item.meaning = vectors[i]; item.facets = facets(vectors[i]); });
       }
     })().catch((error) => console.warn(`meaning: ${error?.message ?? error}`)).finally(() => { meaningRun = null; });
     return meaningRun;
   }
+  // The facets of the whole person (WHO's ICF, site/person/icf.mjs) a meaning is
+  // about: the facets' own titles read once by the same reader, then the nearest.
+  let facetsOf = null;
+  let facets$ = null;
+  const facetsReader = (reader) => (facets$ ??= Promise.all([import("./person/icf.mjs"), import("./router/meaning.mjs"), import("./router/table.mjs")]).then(async ([icf, { nearness }, { PROVIDERS }]) => {
+    const vectors = await reader.embed(icf.FACETS.map(icf.facetText));
+    return (facetsOf = (vector) => icf.nearestFacets(vector, vectors, { near: PROVIDERS.meaning?.near ?? 1, nearness }));
+  }));
   // The meaning reader as the router reads with it, once it has opened.
-  const meaningRead = () => (meaningOpen && meaning ? { read: async (text) => (await meaning.embed([text]))?.[0] ?? null } : null);
+  const meaningRead = () => (meaningOpen && meaning ? { read: async (text) => (await meaning.embed([text]))?.[0] ?? null, facets: facetsOf } : null);
 
   // Resonance: every gesture of the owner toward a thing is answered by
   // PrismResonance and teaches PrismLearning, through the root guest. What it
