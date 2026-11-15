@@ -28,6 +28,8 @@ const models = read("../../app/specs/models/spec.json");
 const pairs = read("corpus.json").corpus.filter((e) => e.kind === "similarity");
 const SAME_TOPIC = 1;
 const SOME_DETAILS = 2;
+// The opening words of the sentence that says nothing held matched the ask.
+const UNMATCHED = PROVIDERS.sentence.frames.unmatched.split("{")[0].trim();
 
 const rank = (xs) => {
   const order = xs.map((x, i) => [x, i]).sort((a, b) => a[0] - b[0]);
@@ -118,7 +120,10 @@ test("Ask finds a kept caption from its pair where their words alone miss each o
       let found = false;
       for (let tries = 0; tries < 60 && !found; tries += 1) {
         await say(p.expect.b);
-        found = (await page.locator(".pr-drawn").innerText()).includes(p.expect.a);
+        // Found by what it means: the answer names it, and does not say nothing matched
+        // (the overview of everything held would list it either way).
+        const said = await page.locator("#pr-out").innerText();
+        found = said.includes(p.expect.a) && !said.includes(UNMATCHED);
         if (!found) await page.waitForTimeout(2000);
       }
       if (!found) lost.push(p.id);
