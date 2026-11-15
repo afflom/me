@@ -1,0 +1,400 @@
+{
+  "spec": "me/handwritten-ratchet/1",
+  "about": "Where every tracked file of the Prism comes from. A file is generated when a producer below writes it, upstream when it is byte-equal to the pinned template or named with its hash in a lock, model when it is under a model root, and hand-written otherwise. Hand-written files may only shrink: none may be added, none may grow,, after verdant-resonance VR-67..VR-69 (prism/handwritten-ratchet.json, measureHandwrittenAndAxiomRatchetState).",
+  "model": [
+    "app/specs/",
+    "app/prompts/"
+  ],
+  "producers": [
+    {
+      "id": "generators",
+      "run": [
+        "sh",
+        "tools/generators/run.sh"
+      ],
+      "lexlean": true
+    },
+    {
+      "id": "prompts",
+      "run": [
+        "python3",
+        "-I",
+        "tools/prompts/gen.py"
+      ],
+      "lexlean": false
+    },
+    {
+      "id": "coherence",
+      "run": [
+        "python3",
+        "-I",
+        "tools/coherence/gen.py"
+      ],
+      "lexlean": false
+    },
+    {
+      "id": "dest",
+      "run": [
+        "python3",
+        "-I",
+        "tools/dest/gen.py"
+      ],
+      "lexlean": false
+    },
+    {
+      "id": "holon",
+      "run": [
+        "python3",
+        "-I",
+        "tools/holon/gen.py"
+      ],
+      "lexlean": false
+    },
+    {
+      "id": "kappa",
+      "run": [
+        "python3",
+        "-I",
+        "tools/kappa/gen.py"
+      ],
+      "lexlean": false
+    },
+    {
+      "id": "oracle",
+      "run": [
+        "python3",
+        "-I",
+        "tools/oracle/gen.py"
+      ],
+      "lexlean": false
+    },
+    {
+      "id": "source",
+      "run": [
+        "python3",
+        "-I",
+        "tools/source/gen.py"
+      ],
+      "lexlean": false
+    },
+    {
+      "id": "surface",
+      "run": [
+        "python3",
+        "-I",
+        "tools/surface/gen.py"
+      ],
+      "lexlean": false
+    },
+    {
+      "id": "uorc",
+      "run": [
+        "python3",
+        "-I",
+        "tools/uorc/gen.py"
+      ],
+      "lexlean": false
+    },
+    {
+      "id": "facet-resonance",
+      "run": [
+        "python3",
+        "-I",
+        "tools/facet/gen.py",
+        "app/specs/resonance/spec.json"
+      ],
+      "lexlean": false
+    },
+    {
+      "id": "facet-router",
+      "run": [
+        "python3",
+        "-I",
+        "tools/facet/gen.py",
+        "app/specs/router/spec.json"
+      ],
+      "lexlean": false
+    },
+    {
+      "id": "realize",
+      "run": [
+        "python3",
+        "-I",
+        "tools/realize/gate.py"
+      ],
+      "lexlean": false
+    },
+    {
+      "id": "root",
+      "run": [
+        "python3",
+        "-I",
+        "tools/prism_root.py",
+        "app/src"
+      ],
+      "lexlean": false
+    },
+    {
+      "id": "conformance",
+      "run": [
+        "cargo",
+        "run",
+        "-q",
+        "--locked",
+        "-p",
+        "xtask",
+        "--",
+        "check-model",
+        "--write"
+      ],
+      "env": {
+        "CARGO_TARGET_DIR": "@root/target/handwritten-cargo"
+      },
+      "lexlean": false
+    },
+    {
+      "id": "guests",
+      "run": [
+        "python3",
+        "-I",
+        "tools/guests/gen.py",
+        "pins"
+      ],
+      "lexlean": false
+    },
+    {
+      "id": "person",
+      "run": [
+        "python3",
+        "-I",
+        "tools/person/gen.py"
+      ],
+      "lexlean": false
+    },
+    {
+      "id": "standards",
+      "run": [
+        "python3",
+        "-I",
+        "tools/standards/gate.py",
+        "--write"
+      ],
+      "lexlean": false
+    }
+  ],
+  "built": [
+    {
+      "id": "guests",
+      "paths": [
+        "site/*/guest/*.wasm",
+        "site/vault/test/guests/*.wasm"
+      ],
+      "by": "tools/guests/build.sh in the locked SDK",
+      "checked": "GU-01 (tools/guests/gen.py check)",
+      "lexlean": true
+    },
+    {
+      "id": "drawn",
+      "paths": [
+        "site/og.png",
+        "site/icons/*.png"
+      ],
+      "by": "bootstrap/og.py and bootstrap/icons.py, drawn again by every page build",
+      "checked": "bootstrap/page.mjs refuses an image not drawn for site/app.json",
+      "lexlean": false
+    },
+    {
+      "id": "cargo",
+      "paths": [
+        "Cargo.lock"
+      ],
+      "by": "cargo, resolving Cargo.toml",
+      "checked": "every cargo command runs --locked",
+      "lexlean": false
+    },
+    {
+      "id": "npm",
+      "paths": [
+        "package-lock.json"
+      ],
+      "by": "npm, resolving package.json",
+      "checked": "npm ci refuses a lock that disagrees",
+      "lexlean": false
+    },
+    {
+      "id": "lexlean",
+      "paths": [
+        "app/lexlean.lock"
+      ],
+      "by": "lexlean lock in the locked SDK",
+      "checked": "prismpm verify refuses a stale lock",
+      "lexlean": false
+    },
+    {
+      "id": "frame-sync",
+      "paths": [
+        "frame.lock"
+      ],
+      "by": "bootstrap/frame-sync.mjs",
+      "checked": "bootstrap/frame-sync.mjs --check",
+      "lexlean": false
+    },
+    {
+      "id": "template-update",
+      "paths": [
+        "template.lock"
+      ],
+      "by": "the template-update workflow",
+      "checked": "prismpm template check",
+      "lexlean": false
+    }
+  ],
+  "upstream": {
+    "template": "template.lock",
+    "frame": "frame.lock",
+    "locks": [
+      "template.lock",
+      "frame.lock",
+      "brand.lock"
+    ],
+    "vendored": [
+      {
+        "prefix": "tools/builder/",
+        "repository": "https://github.com/afflom/prism-devrel",
+        "revision": "f8c0300a2c938691d08ede68a21b238e9ed9b994",
+        "subdir": "builder/",
+        "recorded": "tools/builder/VENDOR.md"
+      }
+    ]
+  },
+  "classes": [
+    {
+      "id": "docs",
+      "paths": [
+        "*.md",
+        "**/*.md",
+        "LICENSE-*",
+        "assets/**"
+      ]
+    },
+    {
+      "id": "pins",
+      "paths": [
+        "site/**/*.lock.json",
+        "site/google/platform.json",
+        "site/app.json"
+      ]
+    },
+    {
+      "id": "page-test",
+      "paths": [
+        "site/**/*.test.mjs",
+        "site/vault/test/**",
+        "test/**",
+        "try/test.mjs",
+        "identity/test.mjs",
+        "bootstrap/*.test.mjs"
+      ]
+    },
+    {
+      "id": "extension",
+      "paths": [
+        "site/extension/**"
+      ]
+    },
+    {
+      "id": "page",
+      "paths": [
+        "site/**",
+        "try/**",
+        "identity/**",
+        "frame/**"
+      ]
+    },
+    {
+      "id": "lean",
+      "paths": [
+        "app/src/**",
+        "app/language/**",
+        "app/*"
+      ]
+    },
+    {
+      "id": "conformance",
+      "paths": [
+        "crates/**",
+        "features/**",
+        "model/**",
+        "openspec/**"
+      ]
+    },
+    {
+      "id": "tooling",
+      "paths": [
+        "tools/**",
+        "xtask/**",
+        "bootstrap/**"
+      ]
+    },
+    {
+      "id": "pipeline",
+      "paths": [
+        ".github/**",
+        ".devcontainer/**",
+        ".cargo/**",
+        "Justfile",
+        "*.toml",
+        "*.json",
+        "*.lock",
+        ".gitignore",
+        ".gitattributes"
+      ]
+    }
+  ],
+  "comments": {
+    "slash": [
+      ".mjs",
+      ".js",
+      ".ts",
+      ".rs",
+      ".d.ts"
+    ],
+    "block": [
+      ".css"
+    ],
+    "hash": [
+      ".py",
+      ".sh",
+      ".toml",
+      ".yml",
+      ".yaml",
+      "Justfile",
+      ".gitignore",
+      ".gitattributes",
+      ".txt"
+    ],
+    "percent": [
+      ".tex"
+    ],
+    "markup": [
+      ".html",
+      ".svg",
+      ".md"
+    ]
+  },
+  "plugins": {
+    "about": "Directories a producer loads every file of, one per standard or source: a new file there is a plug-in of that producer, not a new part, and its lines still count toward the hand-written total. tools/generators/*.sh is the one generic driver of the LexLean generators (generators/, the F1 pattern).",
+    "paths": [
+      "tools/standards/extract/*.py",
+      "tools/generators/*.sh"
+    ]
+  },
+  "lexlean": {
+    "about": "Alex 2026-11-15 10:04Z: everything is required to be in prism/LexLean. A file authored in LexLean is the Prism's own source and may grow; every other file is measured as distance from LexLean: hand-written code (ratcheted), model records outside LexLean, and files written by a producer that is not itself LexLean built by PrismPM. A generator is its own PrismPM text/3 project under generators/ (the F1 pattern): it is LexLean, and its outputs are generated in LexLean.",
+    "paths": [
+      "app/src/**/*.lex.tex",
+      "app/language/**",
+      "generators/**"
+    ]
+  }
+}

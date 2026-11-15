@@ -66,6 +66,19 @@
      }
     },
     {
+     "name": "Check that no hand-written part was added or grew",
+     "shell": "bash",
+     "run": "python3 -I tools/handwritten/gate.py --check",
+     "#": {
+      "": [
+       "HW-01, the shrink-only ratchet: this tree and the base revision (the merge",
+       "base with main, or main's parent) are measured alike, every producer run",
+       "in a scratch copy and every file compared with its pinned upstream; no",
+       "file may become hand-written, nor the hand-written total grow."
+      ]
+     }
+    },
+    {
      "name": "Check that every part fully implements its standards",
      "shell": "bash",
      "env": {
