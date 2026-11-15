@@ -5,6 +5,7 @@
 // conferencing boilerplate, and a repeating event is shown at its next time.
 // Loaded only once something is kept, so a first visit carries none of it.
 import { nextInstance } from "../time/recur.mjs";
+import { spanOf } from "../calendar/ical.mjs";
 
 const unfold = (text) => text.replace(/\r?\n[ \t]/g, " ");
 
@@ -164,4 +165,13 @@ export function nextTime(component, start, now = Date.now()) {
   if (!/^RRULE[:;]/im.test(component.replace(/\r?\n[ \t]/g, "")) || !Number.isFinite(start) || start >= now) return start;
   const at = nextInstance(component, now);
   return Number.isFinite(at) ? at : start;
+}
+
+// When an event or to-do starts and ends, as the standard reads it (site/calendar/ical.mjs, RFC 5545
+// 3.6, 3.8.2): its time zones' own observances, an end, a due time or a duration. A date is its
+// local midnight; a time with no zone is floating, so it is the person's own wall-time.
+const msOf = (m) => (!m ? NaN : m.at !== undefined ? m.at : m.date ? new Date(`${m.date}T00:00:00`).getTime() : m.local ? new Date(m.local).getTime() : NaN);
+export function calendarSpan(text) {
+  const span = spanOf(text);
+  return span ? { start: msOf(span.start), end: msOf(span.end) } : null;
 }

@@ -489,6 +489,8 @@ Never re-derived, vendored, or gated on.
 | `SRC-RFC5322` | https://www.rfc-editor.org/rfc/rfc5322.txt | `OR-01` |
 | `SRC-RFC5545` | https://www.rfc-editor.org/rfc/rfc5545.txt | `OR-01` |
 | `SRC-RFC5545-RECUR` | https://www.rfc-editor.org/rfc/rfc5545.txt | `OR-01` |
+| `SRC-RFC5545-LINES` | https://www.rfc-editor.org/rfc/rfc5545.txt | `OR-01` |
+| `SRC-RFC5545-OBJECTS` | https://www.rfc-editor.org/rfc/rfc5545.txt | `OR-01` |
 | `SRC-RFC5546` | https://www.rfc-editor.org/rfc/rfc5546.txt | `OR-01` |
 | `SRC-RFC6350` | https://www.rfc-editor.org/rfc/rfc6350.txt | `OR-01` |
 | `SRC-RFC6047` | https://www.rfc-editor.org/rfc/rfc6047.txt | `OR-01` |
@@ -502,6 +504,7 @@ Never re-derived, vendored, or gated on.
 | `SRC-WPT-COMP-NAME-FROM-CONTENT` | https://raw.githubusercontent.com/web-platform-tests/wpt/cc8dcb79914d9bc3356ce6641d040022a52f20d8/accname/name/comp_name_from_content.html | `OR-01` |
 | `SRC-APG-FEED` | https://raw.githubusercontent.com/w3c/aria-practices/f14b2490a6728cda85fd7feafbd148b3c3eaf038/content/patterns/feed/examples/js/feedDisplay.js | `OR-01` |
 | `SRC-SCHEMAORG` | https://raw.githubusercontent.com/schemaorg/schemaorg/5f2d8cdec99b7329459ef6584e94b6a840f88471/data/releases/30.1/schemaorg-all-examples.txt | `OR-01` |
+| `SRC-IANA-ICALENDAR` | https://www.iana.org/assignments/icalendar/icalendar.xml | `OR-01` |
 
 ## Claims that are not conformance IDs
 

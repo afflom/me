@@ -187,7 +187,9 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const timed = icsField(text, "DTSTART");
     const due = icsField(text, "DUE");
     const made = ["DTSTAMP", "CREATED", "LAST-MODIFIED"].map((name) => icsField(text, name)).find((t) => !Number.isNaN(t)) ?? NaN;
-    const first = Number.isNaN(timed) ? due : timed;
+    // Read by the standard's own reader when it is loaded: zones by their observances, an end by DTEND, DUE or DURATION.
+    const read = reader?.calendarSpan ? reader.calendarSpan(whole) : null;
+    const first = read && Number.isFinite(read.start) ? read.start : Number.isNaN(timed) ? due : timed;
     // What it is to the event it names (RFC 5546): its method, identity, revision and instance.
     const method = calendarField(whole, "METHOD").toUpperCase();
     const uid = calendarField(text, "UID");
@@ -199,7 +201,7 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const component = /^BEGIN:(VEVENT|VTODO|VJOURNAL)/.exec(text)?.[1] ?? (/^BEGIN:VFREEBUSY/m.test(whole) ? "VFREEBUSY" : "VEVENT");
     const allDay = /^\d{8}$/.test(calendarField(text, "DTSTART"));
     // Opened, an event reads as the person would say it: when, where, who, and its notes.
-    const end = icsField(text, "DTEND") - first + start;
+    const end = (read && Number.isFinite(read.end) ? read.end : icsField(text, "DTEND")) - first + start;
     const span = Number.isNaN(start) ? "" : [new Date(start), allDay || Number.isNaN(end) ? null : new Date(end)]
       .filter(Boolean).map((d, i) => d.toLocaleString(undefined, i === 0 ? (allDay ? { dateStyle: "full" } : { dateStyle: "full", timeStyle: "short" }) : (allDay ? { dateStyle: "full" } : { timeStyle: "short" }))).join(" – ");
     const people = [...unfoldCalendar(text).matchAll(/^(?:ORGANIZER|ATTENDEE)([^:\r\n]*):(.*)$/gim)]
