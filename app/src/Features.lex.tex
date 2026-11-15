@@ -523,6 +523,13 @@ definition{
 }
 
 definition{
+  name: acceptPrismSourceINV007,
+  parameters: [],
+  result: String,
+  body: "PrismSourceProofs::inv007Holds"
+}
+
+definition{
   name: acceptPrismVaultRestoreINV001,
   parameters: [],
   result: String,
@@ -2546,6 +2553,13 @@ definition{
 }
 
 definition{
+  name: featurePrismSourceRule7,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when service is linkedin and route is seen then refuse", calls := (cons "PrismSource::prismSourceRule7" (cons "PrismSource::prismSourceJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
   name: featurePrismSourceOtherwise,
   parameters: [],
   result: Foundation.Arch::Feature,
@@ -2599,6 +2613,13 @@ definition{
   parameters: [],
   result: Foundation.Arch::Feature,
   body: (record Foundation.Arch::Feature {statement := "never when service is linkedin and route is own then read", calls := (cons "PrismSource::prismSourceJudge" (nil String)), acceptance := (cons "Features::acceptPrismSourceINV006" (nil String))})
+}
+
+definition{
+  name: featurePrismSourceINV007,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when service is linkedin and route is seen then read", calls := (cons "PrismSource::prismSourceJudge" (nil String)), acceptance := (cons "Features::acceptPrismSourceINV007" (nil String))})
 }
 
 definition{
@@ -4425,14 +4446,14 @@ definition{
   name: journeyPrismSourceUser,
   parameters: [],
   result: Foundation.Arch::Journey,
-  body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderUser", steps := (cons "Features::featurePrismSourceRule1" (cons "Features::featurePrismSourceRule2" (cons "Features::featurePrismSourceRule3" (cons "Features::featurePrismSourceRule4" (cons "Features::featurePrismSourceRule5" (cons "Features::featurePrismSourceRule6" (cons "Features::featurePrismSourceOtherwise" (nil String))))))))})
+  body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderUser", steps := (cons "Features::featurePrismSourceRule1" (cons "Features::featurePrismSourceRule2" (cons "Features::featurePrismSourceRule3" (cons "Features::featurePrismSourceRule4" (cons "Features::featurePrismSourceRule5" (cons "Features::featurePrismSourceRule6" (cons "Features::featurePrismSourceRule7" (cons "Features::featurePrismSourceOtherwise" (nil String)))))))))})
 }
 
 definition{
   name: journeyPrismSourceVerifier,
   parameters: [],
   result: Foundation.Arch::Journey,
-  body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderVerifier", steps := (cons "Features::featurePrismSourceRefuseMalformed" (cons "Features::featurePrismSourceINV001" (cons "Features::featurePrismSourceINV002" (cons "Features::featurePrismSourceINV003" (cons "Features::featurePrismSourceINV004" (cons "Features::featurePrismSourceINV005" (cons "Features::featurePrismSourceINV006" (nil String))))))))})
+  body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderVerifier", steps := (cons "Features::featurePrismSourceRefuseMalformed" (cons "Features::featurePrismSourceINV001" (cons "Features::featurePrismSourceINV002" (cons "Features::featurePrismSourceINV003" (cons "Features::featurePrismSourceINV004" (cons "Features::featurePrismSourceINV005" (cons "Features::featurePrismSourceINV006" (cons "Features::featurePrismSourceINV007" (nil String)))))))))})
 }
 
 definition{

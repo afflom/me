@@ -396,6 +396,7 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
 
 // DV-05: PrismSource, every request: a declared service by every route the browser offers, read only.
 {
+  const SITES = Object.fromEntries(JSON.parse(await readFile(new URL('../../app/specs/source/contracts.json', import.meta.url), 'utf8')).sites.map((c) => [c.service, c]));
   const source = await openGuest(new Uint8Array(await readFile(new URL(SOURCE_GUEST.path, import.meta.url))), SOURCE_GUEST.sha256);
   let n = 0;
   for (const [service, route, act, halted] of product(['gmail', 'calendar', 'discord', 'whatsapp', 'linkedin', 'other'], ['seen', 'own', 'export'], ['read', 'write'], ['no', 'yes'])) {
@@ -405,7 +406,10 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
     ok(answer === 'read' || answer === 'refuse', why);
     if (halted === 'yes' || act === 'write' || service === 'other') ok(answer === 'refuse', `halted, write or undeclared ${why}`);
     if (route === 'own' && ['discord', 'whatsapp', 'linkedin'].includes(service)) ok(answer === 'refuse', `no private interface ${why}`);
-    if (halted === 'no' && act === 'read' && service !== 'other' && !(route === 'own' && ['discord', 'whatsapp', 'linkedin'].includes(service))) ok(answer === 'read', `a declared service is read by every other route ${why}`);
+    // A site whose own terms bar the extension (its contract, app/specs/source/contracts.json) is read from its download only.
+    const barred = service !== 'other' && route !== 'export' && SITES[service].terms.some((t) => t.bars.includes('extension'));
+    if (barred) ok(answer === 'refuse', `no live route where the site's terms bar the extension ${why}`);
+    if (halted === 'no' && act === 'read' && service !== 'other' && !barred && !(route === 'own' && ['discord', 'whatsapp', 'linkedin'].includes(service))) ok(answer === 'read', `a declared service is read by every other route ${why}`);
   }
   ok(n === 72, 'every source request is decided');
   // The Connections setting: a state and a next step per service, from the declarations.
