@@ -134,6 +134,14 @@ function icsTime(value, params = "") {
 }
 const icsField = (text, name) => { const line = calendarLine(text, name); return line ? icsTime(line[2].trim(), line[1]) : NaN; };
 
+// The first words of a text, as a heading: its first line, cut at a word near 80 characters.
+function headline(text = "") {
+  const line = String(text).split(/\r?\n/).map((l) => l.trim()).find((l) => l && !/^>/.test(l)) ?? "";
+  if (line.length <= 80) return line;
+  const cut = line.slice(0, 80);
+  return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), 40)).trim()}…`;
+}
+
 // How the person's content reads (site/read/read.mjs), loaded once something is kept.
 let reader = null;
 // The Node suites read real-shaped bytes the way the page does.
@@ -154,15 +162,17 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const said = reader ? reader.messageBody(text) : text.split(/\r?\n\r?\n/).slice(1).join("\n\n").trim();
     // An invitation it carries (RFC 6047) reads as its event does, after what the sender wrote.
     const event = reader ? reader.messageEvent(text) : "";
-    const carried = event ? readItem({ address, outcome, bytes: new TextEncoder().encode(event), meta: { about: { media: "calendar" } } }).body : "";
-    const body = [said, carried].filter(Boolean).join("\n\n");
+    const carries = event ? readItem({ address: `${address}#event`, outcome, bytes: new TextEncoder().encode(event), meta: { about: { media: "calendar", domain: 5 } }, at }) : null;
+    const body = [said, carries?.body].filter(Boolean).join("\n\n");
     // Its place in its conversation (RFC 5322 3.6.4): what it is, what it answers, what it builds on.
     const ids = (field) => (h[field] ?? "").match(/<[^<>\s]+>/g) ?? [];
     const place = { ...(ids("message-id").length ? { id: ids("message-id")[0] } : {}), ...(ids("in-reply-to").length ? { replyTo: ids("in-reply-to") } : {}), ...(ids("references").length ? { refs: ids("references") } : {}) };
     // Who it comes from: its sender's address, and the list it came through (RFC 2919 List-Id).
     const list = /<([^<>\s]+)>/.exec(h["list-id"] ?? "")?.[1]?.toLowerCase();
     const from = { ...(addressOf(h.from) ? { from: addressOf(h.from) } : {}), ...(list ? { list } : {}) };
-    return { ...base, ...place, ...from, at: Number.isNaN(when) ? base.at : when, title: headerWords(h.subject ?? "").replace(/\s+/g, " ").trim(), who: person(h.from || h.to), text, body };
+    // A message without a subject is headed by its first words, as a mail client lists it.
+    const title = headerWords(h.subject ?? "").replace(/\s+/g, " ").trim() || headline(said);
+    return { ...base, ...place, ...from, at: Number.isNaN(when) ? base.at : when, title, who: person(h.from || h.to), text, body, ...(carries ? { carries } : {}) };
   }
   if (base.media === "calendar") {
     // The event's own fields: the calendar's time zones come first and carry DTSTARTs of their own (1970).
@@ -183,7 +193,8 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const recurrence = calendarField(text, "RECURRENCE-ID");
     // A repeating event is shown at its next time, not at the first one years ago.
     const start = reader && components[0] ? reader.nextTime(components[0], first) : first;
-    const title = calendarField(text, "SUMMARY");
+    // A to-do or a journal entry (RFC 5545 3.6.2, 3.6.3) is something to do or a note, not a meeting.
+    const component = /^BEGIN:(VEVENT|VTODO|VJOURNAL)/.exec(text)?.[1] ?? (/^BEGIN:VFREEBUSY/m.test(whole) ? "VFREEBUSY" : "VEVENT");
     const allDay = /^\d{8}$/.test(calendarField(text, "DTSTART"));
     // Opened, an event reads as the person would say it: when, where, who, and its notes.
     const end = icsField(text, "DTEND") - first + start;
@@ -196,9 +207,14 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const comments = [...unfoldCalendar(text).matchAll(/^COMMENT(?:;[^:\r\n]*)?:(.*)$/gim)].map(([, value]) => (reader ? reader.eventText(value) : value.trim()));
     // The object's further events (an iMIP PUBLISH of several) read after it: what, where, and their notes.
     const others = components.slice(1).flatMap((other) => ["SUMMARY", "LOCATION", "DESCRIPTION"].map((name) => calendarField(other.replace(/BEGIN:VALARM[\s\S]*?END:VALARM/g, ""), name)));
-    const body = [title, span, calendarField(text, "LOCATION"), [...new Set(people)].slice(0, 12).join(", "), notes, ...comments, ...others].filter(Boolean).join("\n");
+    // Without a summary it is headed by its notes, as a calendar shows it.
+    const title = calendarField(text, "SUMMARY") || headline([notes, ...comments].join("\n"));
+    const location = calendarField(text, "LOCATION");
+    const body = [title, span, location, [...new Set(people)].slice(0, 12).join(", "), notes, ...comments, ...others].filter(Boolean).join("\n");
     const at = Number.isNaN(start) ? (Number.isNaN(made) ? base.at : made) : start;
-    return { ...base, at, ...(Number.isNaN(end) ? {} : { end }), allDay, title, who: calendarField(text, "LOCATION"), text: whole, body,
+    // Where it is, else who it is with.
+    const who = location || people.find(Boolean) || "";
+    return { ...base, ...(component === "VEVENT" ? {} : { component, ...(component === "VFREEBUSY" ? {} : { domain: 9 }) }), at, ...(Number.isNaN(end) ? {} : { end }), allDay, title, who, ...(location ? { where: location } : {}), text: whole, body,
       ...(Number.isNaN(start) ? { undated: true } : {}), ...(method ? { method } : {}), ...(uid ? { uid, sequence } : {}), ...(recurrence ? { recurrence } : {}) };
   }
   if (base.media === "contactCard") {
@@ -214,13 +230,21 @@ const UPDATES = new Set(["REPLY", "CANCEL", "REFRESH", "COUNTER", "DECLINECOUNTE
 // The calendar as the person holds it: each event once, at its latest revision
 // (per instance), with the replies and requests about it folded into it, and a
 // cancellation marking it cancelled. Everything else passes unchanged.
-export function reconcile(items) {
+export function reconcile(kept) {
+  // One message is one message (RFC 5322 3.6.4 Message-ID), however many copies were kept:
+  // the same mail from Gmail and from a Takeout, or forwarded to the person twice.
+  const ids = new Set();
+  const once = kept.filter((item) => item.media !== "message" || !item.id || (!ids.has(item.id) && ids.add(item.id)));
+  // An invitation a message carries (RFC 6047) is also an event, held as the calendar holds it:
+  // once by its UID with the calendar's own copy, updated by the replies and cancellations mailed about it.
+  const items = [...once, ...once.filter((item) => item.carries?.uid).map((item) => ({ ...item.carries, domains: [item.carries.domain], label: item.label, via: item.address }))];
   const key = (item) => `${item.uid}|${item.recurrence ?? ""}`;
   const events = new Map();
   for (const item of items) {
     if (item.media !== "calendar" || !item.uid || UPDATES.has(item.method)) continue;
     const have = events.get(key(item));
-    if (!have || item.sequence > have.sequence || (item.sequence === have.sequence && item.at > have.at)) events.set(key(item), item);
+    // At the same revision the calendar's own copy is kept over one a message carried.
+    if (!have || item.sequence > have.sequence || (item.sequence === have.sequence && (have.via && !item.via || (Boolean(have.via) === Boolean(item.via) && item.at > have.at)))) events.set(key(item), item);
   }
   const updates = new Map();
   for (const item of items) {
@@ -240,17 +264,27 @@ export function reconcile(items) {
   return out;
 }
 
-const short = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" });
+// The places an item is listed in. A message, an event, a to-do and a card are each
+// in the place of what they are (their own domain); a note the person kept, which is
+// no kind of thing by itself, is in each place the router mapped its words onto.
+// What else an item's words name is what it is about (search, labels), not where it is.
+// Free/busy time (RFC 5545 3.6.4) says when someone is busy, not what happens: it is in no place.
+export const placesOf = (item) => (item.component === "VFREEBUSY" ? [] : item.media === "plainText" ? item.domains ?? [item.domain] : [item.domain]);
+
+// A date in another year than this one says its year.
+const formats = (options) => [new Intl.DateTimeFormat(undefined, options), new Intl.DateTimeFormat(undefined, { ...options, year: "numeric" })];
+const dated = ([thisYear, otherYear], date) => (date.getFullYear() === new Date().getFullYear() ? thisYear : otherYear).format(date);
+const short = formats({ day: "numeric", month: "short" });
 const clock = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
 // Something that happens at a time (an event, or a jot the router gave a time) shows its day and clock.
-const dayClock = new Intl.DateTimeFormat(undefined, { weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
-const dayOnly = new Intl.DateTimeFormat(undefined, { weekday: "short", day: "numeric", month: "short" });
+const dayClock = formats({ weekday: "short", day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+const dayOnly = formats({ weekday: "short", day: "numeric", month: "short" });
 const scheduled = (item) => (item.start != null || (item.media === "calendar" && !item.undated)) && item.at;
-const whenOfItem = (item) => (scheduled(item) ? (item.allDay ? dayOnly : dayClock).format(new Date(item.at)) : when(item.at));
+const whenOfItem = (item) => (scheduled(item) ? dated(item.allDay ? dayOnly : dayClock, new Date(item.at)) : when(item.at));
 const when = (at) => {
   if (!at) return "";
   const date = new Date(at);
-  return date.toDateString() === new Date().toDateString() ? clock.format(date) : short.format(date);
+  return date.toDateString() === new Date().toDateString() ? clock.format(date) : dated(short, date);
 };
 
 // A browser that kept an earlier deploy runs it until its service worker is
@@ -597,7 +631,7 @@ export default async function start({ app, reason, $ }) {
     const parts = [
       element("span", { className: "pr-when", textContent: whenOfItem(item) }),
       element("span", { className: "pr-what", textContent: what }),
-      element("span", { className: "pr-who", textContent: item.who || DOMAINS[item.domain] || "" })];
+      element("span", { className: "pr-who", textContent: item.who || "" })];
     if (item.sealed || !item.body) return element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}` }, ...parts);
     // A list item holding a button that opens it (WCAG 1.3.1, 4.1.2): the row stays a row of its list.
     const open = element("button", { type: "button", className: "pr-open" }, ...parts);
@@ -735,7 +769,7 @@ export default async function start({ app, reason, $ }) {
       return row;
     }) : [emptyRow()]));
     // Notes kept here stay here, after the people.
-    const notes = items.filter((item) => item.media === "plainText" && (item.domains ?? [item.domain]).some((d) => current.domains.includes(d)));
+    const notes = items.filter((item) => item.media === "plainText" && placesOf(item).some((d) => current.domains.includes(d)));
     list.append(...notes.slice(0, 50).map(rowOf));
   }
 
@@ -743,7 +777,7 @@ export default async function start({ app, reason, $ }) {
     const list = $("pr-list");
     if (current.host === "home") { paintToday(list).catch((error) => say(error?.message ?? String(error), "bad")); return; }
     if (people && current.key === people.place) { paintPeople(list); return; }
-    let shown = items.filter((item) => (item.domains ?? [item.domain]).some((d) => current.domains.includes(d)));
+    let shown = items.filter((item) => placesOf(item).some((d) => current.domains.includes(d)));
     if (current.show === "search") {
       const words = query.toLowerCase().split(/\s+/).filter(Boolean);
       shown = words.length ? items.filter((item) => words.every((w) => `${item.title} ${item.who} ${item.body ?? item.text}`.toLowerCase().includes(w))) : [];
@@ -773,8 +807,9 @@ export default async function start({ app, reason, $ }) {
     }
     if (order !== "upcoming") return newest.slice(0, SHOWN).map(rowOf);
     const from = new Date().setHours(0, 0, 0, 0);
-    const ahead = shown.filter((item) => item.at >= from && !item.cancelled).sort((a, b) => a.at - b.at).slice(0, SHOWN);
-    const past = newest.filter((item) => item.at < from).slice(0, Math.max(0, SHOWN - ahead.length));
+    // What is ahead is what has a time of its own; a thing only received today is not ahead.
+    const ahead = shown.filter((item) => scheduled(item) && item.at >= from && !item.cancelled).sort((a, b) => a.at - b.at).slice(0, SHOWN);
+    const past = newest.filter((item) => !ahead.includes(item) && !(item.cancelled && item.at >= from)).slice(0, Math.max(0, SHOWN - ahead.length));
     const heading = (word) => element("li", { className: "pr-section", textContent: WORDS[word] });
     return [...(ahead.length ? [heading("upcoming"), ...ahead.map(rowOf)] : []), ...(past.length ? [heading("earlier"), ...past.map(rowOf)] : [])];
   }
@@ -784,9 +819,15 @@ export default async function start({ app, reason, $ }) {
   function homeCards() {
     for (const card of document.querySelectorAll("#pr-home .pr-card")) {
       const place = byKey.get(card.querySelector(".pr-card-go").dataset.place);
-      const held = items.filter((item) => (item.domains ?? [item.domain]).some((d) => place.domains.includes(d)));
-      card.querySelector(".pr-card-count").textContent = held.length ? String(held.length) : "";
-      card.querySelector(".pr-card-latest").textContent = held.length ? (held[0].sealed ? WORDS.sealed : held[0].title || "") : "";
+      const held = items.filter((item) => placesOf(item).some((d) => place.domains.includes(d)));
+      const count = people && place.key === people.place ? people.all.length : held.length;
+      card.querySelector(".pr-card-count").textContent = count ? String(count) : "";
+      // Its card names what the person would look for there: the next thing ahead on a
+      // calendar, the person last in touch among people, else the newest thing that came.
+      const from = new Date().setHours(0, 0, 0, 0);
+      const next = place.order === "upcoming" ? held.filter((item) => scheduled(item) && item.at >= from && !item.cancelled).sort((a, b) => a.at - b.at)[0] : null;
+      const one = people && place.key === people.place ? people.all[0]?.name : (next ?? held.find((item) => item.at <= Date.now()) ?? held[0]);
+      card.querySelector(".pr-card-latest").textContent = typeof one === "string" ? one : one ? (one.sealed ? WORDS.sealed : one.title || "") : "";
       card.classList.toggle("pr-card-empty", !held.length);
     }
   }

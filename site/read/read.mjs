@@ -57,6 +57,9 @@ export function decode(body, encoding, charset) {
 // The leaf parts of a message, each with its type and decoded text.
 function parts(text, depth = 0, attached = false) {
   const { head, body } = split(text);
+  // A part whose header fields follow a stray blank line (as in RFC 6047 section 4.3's own
+  // example) is read with those fields: a body never starts with a Content- field.
+  if (depth && !head.trim() && /^Content-[\w-]+:/i.test(body)) return parts(body, depth, attached);
   const h = fields(head);
   const type = (h["content-type"] ?? "text/plain").split(";")[0].trim().toLowerCase();
   const boundary = param(h["content-type"], "boundary");

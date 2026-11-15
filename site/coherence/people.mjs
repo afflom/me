@@ -16,7 +16,22 @@ const words = (value = "") => value.replace(/=\?([^?]+)\?([bqBQ])\?([^?]*)\?=/g,
 });
 const clean = (name) => words(name).replace(/^"|"$/g, "").replace(/\\([,;])/g, "$1").trim();
 
-function mailbox(value = "") {
+// RFC 5322 3.2.2: a comment is parenthesised (nested, with quoted pairs) outside a quoted string, and is not the name.
+function uncomment(value = "") {
+  let out = "", depth = 0, quoted = false;
+  for (let i = 0; i < value.length; i++) {
+    const c = value[i];
+    if (c === "\\" && (quoted || depth)) { if (!depth) out += c + (value[i + 1] ?? ""); i++; continue; }
+    if (!depth && c === '"') quoted = !quoted;
+    if (!quoted && c === "(") { depth++; continue; }
+    if (!quoted && depth && c === ")") { depth--; continue; }
+    if (!depth) out += c;
+  }
+  return out.replace(/\s+/g, " ").trim();
+}
+
+function mailbox(raw = "") {
+  const value = uncomment(raw);
   const named = /^\s*"?([^"<]*?)"?\s*<([^>]+)>\s*$/.exec(value);
   if (named) return { name: clean(named[1]) || named[2], address: named[2].toLowerCase() };
   const bare = value.trim().replace(/[<>]/g, "");

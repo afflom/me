@@ -56,12 +56,14 @@ export function sequence(items) {
   }
   for (const item of messages) out.set(item.address, out.get(item.id));
   for (const id of byId.keys()) out.delete(id);
-  // Each event's revisions, by its own SEQUENCE.
+  // Each event's revisions, by its own SEQUENCE: per instance, since an instance
+  // (RFC 5545 RECURRENCE-ID) is revised on its own, not a revision of the rest.
   const revisions = new Map();
   for (const item of items) {
     if (item.media !== "calendar" || !item.uid) continue;
-    if (!revisions.has(item.uid)) revisions.set(item.uid, []);
-    revisions.get(item.uid).push(item);
+    const key = `${item.uid}|${item.recurrence ?? ""}`;
+    if (!revisions.has(key)) revisions.set(key, []);
+    revisions.get(key).push(item);
   }
   for (const group of revisions.values()) {
     const steps = [...new Set(group.map((item) => item.sequence ?? 0))].sort((a, b) => a - b);

@@ -56,8 +56,8 @@ fn coherence_co_01() {
                 "every kept item is placed where the R4 router mapped it, else by the registry's domains",
             ),
             (
-                "(item.domains ?? [item.domain]).some((d) => current.domains.includes(d))",
-                "a place lists every item in its domains",
+                "placesOf(item).some((d) => current.domains.includes(d))",
+                "a place lists every item placed in its domains: a thing in the place of what it is, a kept note where the router mapped it",
             ),
             (
                 "const relate = async (a, b, c, d) => line(`when ${a} ${b} ${c} ${d}`);",

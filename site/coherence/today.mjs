@@ -34,7 +34,7 @@ export async function today(items, { now = Date.now(), relate, done, mine = () =
   };
   const horizon = base + TODAY.ahead * DAY;
   const events = items
-    .filter((item) => item.media === "calendar" && !item.sealed && !item.undated && !item.cancelled && item.at < horizon && endOf(item) > now)
+    .filter((item) => item.media === "calendar" && !["VJOURNAL", "VFREEBUSY"].includes(item.component) && !item.sealed && !item.undated && !item.cancelled && item.at < horizon && endOf(item) > now)
     .sort((a, b) => a.at - b.at);
   const agenda = [];
   for (const item of events) {
@@ -54,7 +54,8 @@ export async function today(items, { now = Date.now(), relate, done, mine = () =
     }
   }
   const recent = items.filter((item) => item.media === "message").sort((a, b) => b.at - a.at).slice(0, TODAY.recent);
-  const tasks = items.filter((item) => item.media !== "calendar" && item.media !== "message" && item.start == null && (item.domains ?? [item.domain]).includes(9)).sort((a, b) => b.at - a.at).slice(0, TODAY.tasks);
+  // To do: the notes kept about it, and the calendar's to-dos and journal entries (RFC 5545 VTODO, VJOURNAL) not already on the agenda.
+  const tasks = items.filter((item) => (item.media === "plainText" && item.start == null && (item.domains ?? [item.domain]).includes(9)) || (["VTODO", "VJOURNAL"].includes(item.component) && !item.cancelled && !events.includes(item))).sort((a, b) => b.at - a.at).slice(0, TODAY.tasks);
   return { agenda, recent, tasks, needs: needs(items, { now, done, mine }) };
 }
 
