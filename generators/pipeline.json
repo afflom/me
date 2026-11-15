@@ -623,6 +623,46 @@
         ".gen/aria-facts"
       ],
       "output": "test/standards/generated/wai-aria-1.2.json"
+    },
+    {
+      "program": "surface",
+      "generator": "surface",
+      "inputs": [
+        "app/specs/surface/spec.json",
+        "site/resonance/resonance.mjs"
+      ],
+      "output": "site/surface/surface.mjs"
+    },
+    {
+      "program": "surface",
+      "generator": "cardhtml",
+      "inputs": [
+        "app/specs/surface/spec.json"
+      ],
+      "output": "site/card.html"
+    },
+    {
+      "program": "look",
+      "generator": "look",
+      "inputs": [
+        "app/specs/surface/spec.json"
+      ],
+      "output": ".gen/look.css"
+    },
+    {
+      "program": "look",
+      "generator": "cardrest",
+      "split": "site/card.css",
+      "output": ".gen/card-rest.css"
+    },
+    {
+      "program": "look",
+      "generator": "cardcss",
+      "inputs": [
+        ".gen/look.css",
+        ".gen/card-rest.css"
+      ],
+      "output": "site/card.css"
     }
   ]
 }
