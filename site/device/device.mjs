@@ -31,6 +31,7 @@ const encoder = new TextEncoder();
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
 import { isZip, zipEntries } from './zip.mjs';
 import { exportItems, exportKind } from '../source/exports.mjs';
+import { mboxSeparator } from '../read/mail.mjs';
 
 const sha256 = async (bytes) => hex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
 const fail = (code, message) => Object.assign(new Error(message ?? code), { code });
@@ -49,8 +50,10 @@ export function formatOf(name, parent = '') {
 const MEDIA = { mbox: 'message', eml: 'message', maildir: 'message', ics: 'calendar', vcf: 'contactCard' };
 const TYPE = { message: 'message/rfc822', calendar: 'text/calendar', contactCard: 'text/vcard' };
 
-// mbox: messages begin at a line "From " after a blank line (or at the start);
-// mboxrd's ">From " quoting is undone. Streamed, so a large export is read in pieces.
+// mbox (RFC 4155): each message begins at a separator line, read by its
+// grammar (site/read/mail.mjs), at the start or after the empty line that ends
+// the message before; mboxrd's ">From " quoting is undone (RFC 4155 2).
+// Streamed, so a large export is read in pieces.
 export async function* mboxMessages(chunks) {
   const decoder = new TextDecoder();
   let carry = '';
@@ -63,7 +66,7 @@ export async function* mboxMessages(chunks) {
     const lines = carry.split('\n');
     carry = lines.pop();
     for (const line of lines) {
-      if (line.startsWith('From ') && (message === null || /\r?\n\r?\n$/.test(message) || message === '')) {
+      if (mboxSeparator(line) && (message === null || /\r?\n\r?\n$/.test(message) || message === '')) {
         yield* finish();
         message = '';
       } else if (message !== null) {

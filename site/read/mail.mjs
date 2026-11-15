@@ -290,3 +290,12 @@ export function mailboxesIn(raw, names) {
   }
   return out;
 }
+
+// Whether a line of an mbox file is a separator line (RFC 4155 2: "From", a
+// space, an address of some kind, a space, a timestamp of some kind), and
+// whether it is the default format's own (Appendix A).
+export const mboxSeparator = (line) => {
+  const text = line.replace(/\r$/, "");
+  if (!text.startsWith("From ") || !grammar.match("mbox-separator", text)) return null;
+  return { standard: Boolean(grammar.match("mbox-default-separator", text)) };
+};

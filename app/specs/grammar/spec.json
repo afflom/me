@@ -3,7 +3,7 @@
   "grammars": [
     {
       "key": "mail",
-      "title": "Internet message header fields and MIME entities (RFC 5322, RFC 6532's UTF-8, RFC 2919's List-Id, RFC 2045, RFC 2046's multipart body, RFC 2183, RFC 2231, with RFC 2978's charset names, RFC 5646's language tags and RFC 5234's core rules)",
+      "title": "Internet message header fields and MIME entities (RFC 5322, RFC 6532's UTF-8, RFC 2919's List-Id, RFC 2045, RFC 2046's multipart body, RFC 2183, RFC 2231, with RFC 2978's charset names, RFC 5646's language tags, RFC 4155's mbox separator lines and RFC 5234's core rules)",
       "out": "site/read/grammar/mail.mjs",
       "texts": [
         {
@@ -198,6 +198,14 @@
             "2.1"
           ],
           "lends": true
+        },
+        {
+          "key": "rfc4155",
+          "url": "https://www.rfc-editor.org/rfc/rfc4155.txt",
+          "sha256": "41dcdacf425e68ad861e0e2a123bbad198ff281798c23f8c54fe426c5f77a06f",
+          "sections": [
+            "A"
+          ]
         }
       ],
       "bindings": {
@@ -282,6 +290,18 @@
         "lwsp-char": [
           "SP / HTAB",
           "RFC 822 3.3, as RFC 2045 and RFC 2046 use it: LWSP-char is SPACE or HTAB"
+        ],
+        "mbox-separator": [
+          "%s\"From\" SP 1*%x21-10FFFF SP 1*%x20-10FFFF",
+          "RFC 4155 2: a separator line is \"the exact character sequence of \\\"From\\\", followed by a single Space character (0x20), an email address of some kind, another Space character, a timestamp sequence of some kind\", which are \"known to vary widely across implementations\""
+        ],
+        "mbox-default-separator": [
+          "%s\"From\" SP addr-spec SP ctime",
+          "RFC 4155 Appendix A: the default format's separator line, \"From\", a single Space, the sender's address \"conformant with the addr-spec syntax\", a single Space and the UTC timestamp"
+        ],
+        "ctime": [
+          "day-name SP month SP (SP DIGIT / 2DIGIT) SP 2DIGIT \":\" 2DIGIT \":\" 2DIGIT SP 4DIGIT",
+          "RFC 4155 Appendix A: \"the traditional UNIX 'ctime' output sans timezone\", which POSIX asctime() writes as \"%.3s %.3s%3d %.2d:%.2d:%.2d %d\" (the day of the month padded to three characters with spaces)"
         ]
       },
       "zones": "rfc5322",
