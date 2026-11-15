@@ -1,0 +1,64 @@
+{
+  "comment": "vCard's full inventory and its grammar, from two pinned authorities: RFC 6350 (the same text app/specs/oracle/spec.json pins) and IANA's vCard Elements registry. tools/oracle/vcard.py derives the page's property table and the test examples from them. A registry entry neither implemented nor exercised is listed in debt with a reason; debt only shrinks.",
+  "standard": "rfc6350",
+  "sources": [
+    {
+      "key": "rfc6350",
+      "title": "RFC 6350 vCard Format Specification",
+      "url": "https://www.rfc-editor.org/rfc/rfc6350.txt",
+      "sha256": "763c63b28fb9050111ee4878ea605e9e61ba2cb9f3c316bbbba936eda0dd1980"
+    },
+    {
+      "key": "iana-vcard",
+      "title": "IANA vCard Elements registry",
+      "url": "https://www.iana.org/assignments/vcard-elements/vcard-elements.xml",
+      "sha256": "76398e42b1fdc0a078037a48c17c99483637baf86e134fb58fbffd8c42abdab7"
+    }
+  ],
+  "debt": [
+    {
+      "name": "property XML",
+      "why": "RFC 6350 6.1.5 gives no example of it, and its value is an XML fragment (RFC 6351) with no example to derive from"
+    },
+    {
+      "name": "value-type boolean",
+      "why": "Kept as written: its section 4 ABNF checks and reads it once the generic ABNF engine (tools/standards/abnf.py, site/read/abnf.mjs, sources thread) lands"
+    },
+    {
+      "name": "value-type date",
+      "why": "Kept as written: its section 4 ABNF checks and reads it once the generic ABNF engine (tools/standards/abnf.py, site/read/abnf.mjs, sources thread) lands"
+    },
+    {
+      "name": "value-type date-and-or-time",
+      "why": "Kept as written: its section 4 ABNF checks and reads it once the generic ABNF engine (tools/standards/abnf.py, site/read/abnf.mjs, sources thread) lands"
+    },
+    {
+      "name": "value-type date-time",
+      "why": "Kept as written: its section 4 ABNF checks and reads it once the generic ABNF engine (tools/standards/abnf.py, site/read/abnf.mjs, sources thread) lands"
+    },
+    {
+      "name": "value-type float",
+      "why": "Kept as written: its section 4 ABNF checks and reads it once the generic ABNF engine (tools/standards/abnf.py, site/read/abnf.mjs, sources thread) lands"
+    },
+    {
+      "name": "value-type integer",
+      "why": "Kept as written: its section 4 ABNF checks and reads it once the generic ABNF engine (tools/standards/abnf.py, site/read/abnf.mjs, sources thread) lands"
+    },
+    {
+      "name": "value-type language-tag",
+      "why": "Kept as written: its section 4 ABNF checks and reads it once the generic ABNF engine (tools/standards/abnf.py, site/read/abnf.mjs, sources thread) lands"
+    },
+    {
+      "name": "value-type time",
+      "why": "Kept as written: its section 4 ABNF checks and reads it once the generic ABNF engine (tools/standards/abnf.py, site/read/abnf.mjs, sources thread) lands"
+    },
+    {
+      "name": "value-type timestamp",
+      "why": "Kept as written: its section 4 ABNF checks and reads it once the generic ABNF engine (tools/standards/abnf.py, site/read/abnf.mjs, sources thread) lands"
+    },
+    {
+      "name": "value-type utc-offset",
+      "why": "Kept as written: its section 4 ABNF checks and reads it once the generic ABNF engine (tools/standards/abnf.py, site/read/abnf.mjs, sources thread) lands"
+    }
+  ]
+}

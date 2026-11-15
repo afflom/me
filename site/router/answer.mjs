@@ -11,6 +11,7 @@ import { withoutTime } from "./features.mjs";
 import { drawOn, windowOf, termsOf, wordsOf, mentions } from "../coherence/sense.mjs";
 import { relativeOf, sequence, spanOf } from "../time/time.mjs";
 import { everyOf, rhythms, sourceOf } from "../time/rhythm.mjs";
+import { nearness } from "./meaning.mjs";
 
 const S = PROVIDERS.sentence;
 const RANK = ["public", "internal", "confidential", "restricted"];
@@ -67,16 +68,22 @@ export function keptSentence(text, mapped) {
 }
 
 // keep: false treats every prompt as a question (a box that only asks).
-export async function answer(prompt, { items = [], me = null, line, halted, now = Date.now(), keep = true }) {
+// meaning: the router's meaning reader (site/router/meaning.mjs), when it has opened.
+export async function answer(prompt, options) {
+  const { items = [], me = null, line, halted, now = Date.now(), keep = true, meaning = null } = options;
   const text = (prompt ?? "").trim();
   const none = { sentences: [], sources: [], offers: [], mapped: null };
   if (!text) return none;
-  const mapped = await route({ source: "note", values: { text }, line, halted, now });
+  const mapped = await route({ source: "note", values: { text }, line, halted, now, learned: meaning ? { meaning } : {} });
   if (mapped.refused) return { ...none, mapped };
   // What time it is is the Prism's own clock, not anything held.
   if (asksNow(text, termsOf(text))) return { sentences: [end(fill(S.frames.now, { when: full.format(new Date(now)) }))], sources: [], offers: [], mapped };
+  // What is not a question is offered to keep: one that lands in time says where,
+  // anything else is also answered from what is held, as words looked for.
   if (keep && mapped.intent !== "question") {
-    return { sentences: [keptSentence(text, mapped)], sources: [], offers: [{ kind: "keep" }], mapped };
+    if (mapped.start != null) return { sentences: [keptSentence(text, mapped)], sources: [], offers: [{ kind: "keep" }], mapped };
+    const asked = await answer(prompt, { ...options, keep: false });
+    return { ...asked, offers: [...asked.offers.filter((o) => o.kind !== S.offers.empty), { kind: "keep" }] };
   }
   // A question over an empty Prism says so and leads to connecting.
   const held = items.filter((item) => !item.sealed);
@@ -91,7 +98,10 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
   // The words that name what is asked about, without the ones that only ask how things stand.
   const named = terms.filter((t) => !S.overview.includes(t) && !S.greet.includes(t));
   const span = windowOf(text, now);
-  let used = drawOn(items, text, { now });
+  // What the ask means, near what each item means (PROVIDERS.meaning), as well as the words they share.
+  const near = PROVIDERS.meaning?.near ?? 1;
+  const close = (item) => (mapped.meaning && item.meaning ? nearness(mapped.meaning, item.meaning) : 0);
+  let used = drawOn(items, text, { now, vector: mapped.meaning, near });
   let lead = [];
   let many = Boolean(span);
   if (kind && !span) {
@@ -125,7 +135,7 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
   // Asked only words the readers pass over (a kind, a weekday, "should"), those words are what is sought.
   const bare = wordsOf(text);
   const sought = named.length ? named : bare.length && bare.every((w) => !S.greet.includes(w) && !S.overview.includes(w)) ? bare : [];
-  const found = sought.length ? held.filter((item) => (!kind || !named.length || ofKind(item)) && mentions(item, sought)).sort((a, b) => (b.at ?? 0) - (a.at ?? 0)) : [];
+  const found = sought.length || mapped.meaning ? held.filter((item) => (!kind || !named.length || ofKind(item)) && ((sought.length && mentions(item, sought)) || close(item) >= near)).sort((a, b) => (b.at ?? 0) - (a.at ?? 0)) : [];
   const offers = told.flatMap((item) => {
     const k = S.offers[item.media === "message" ? "message" : item.media === "plainText" ? "note" : ""];
     return k ? [{ kind: k, item }] : [];

@@ -200,11 +200,20 @@
    "inventories": [
     {
      "extract": "bcp14"
+    },
+    {
+     "extract": "iana-vcard",
+     "source": {
+      "url": "https://www.iana.org/assignments/vcard-elements/vcard-elements.xml",
+      "sha256": "76398e42b1fdc0a078037a48c17c99483637baf86e134fb58fbffd8c42abdab7"
+     }
     }
    ],
    "governs": [
     "site/source/exports.mjs",
-    "site/device/device.mjs"
+    "site/device/device.mjs",
+    "site/read/vcard.mjs",
+    "site/read/vcard.table.mjs"
    ],
    "realizedBy": [
     "ST-01"
@@ -236,9 +245,12 @@
    "issuer": "ISO/IEC JTC 1",
    "text": null,
    "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
-   "governs": [],
+   "governs": [
+    "app/src/PrismSystem.lex.tex"
+   ],
    "realizedBy": [
-    "ST-01"
+    "ST-01",
+    "SY-01"
    ]
   },
   {
@@ -247,9 +259,12 @@
    "issuer": "ISO/IEC JTC 1",
    "text": null,
    "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
-   "governs": [],
+   "governs": [
+    "app/src/PrismSystem.lex.tex"
+   ],
    "realizedBy": [
-    "ST-01"
+    "ST-01",
+    "SY-01"
    ]
   },
   {
@@ -258,9 +273,12 @@
    "issuer": "IEEE",
    "text": null,
    "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
-   "governs": [],
+   "governs": [
+    "app/src/PrismSystem.lex.tex"
+   ],
    "realizedBy": [
-    "ST-01"
+    "ST-01",
+    "SY-01"
    ]
   },
   {
@@ -269,9 +287,12 @@
    "issuer": "ISO/IEC JTC 1",
    "text": null,
    "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
-   "governs": [],
+   "governs": [
+    "app/src/PrismSystem.lex.tex"
+   ],
    "realizedBy": [
-    "ST-01"
+    "ST-01",
+    "SY-01"
    ]
   },
   {
@@ -291,9 +312,12 @@
    "issuer": "ISO/TC 159",
    "text": null,
    "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
-   "governs": [],
+   "governs": [
+    "app/src/PrismSystem.lex.tex"
+   ],
    "realizedBy": [
-    "ST-01"
+    "ST-01",
+    "SY-01"
    ]
   },
   {
@@ -302,9 +326,12 @@
    "issuer": "ISO/TC 159",
    "text": null,
    "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
-   "governs": [],
+   "governs": [
+    "app/src/PrismSystem.lex.tex"
+   ],
    "realizedBy": [
-    "ST-01"
+    "ST-01",
+    "SY-01"
    ]
   },
   {
@@ -313,9 +340,12 @@
    "issuer": "ISO/TC 159",
    "text": null,
    "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
-   "governs": [],
+   "governs": [
+    "app/src/PrismSystem.lex.tex"
+   ],
    "realizedBy": [
-    "ST-01"
+    "ST-01",
+    "SY-01"
    ]
   },
   {
@@ -324,9 +354,12 @@
    "issuer": "ISO/TC 184",
    "text": null,
    "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
-   "governs": [],
+   "governs": [
+    "app/src/PrismSystem.lex.tex"
+   ],
    "realizedBy": [
-    "ST-01"
+    "ST-01",
+    "SY-01"
    ]
   },
   {
@@ -335,9 +368,12 @@
    "issuer": "ISO/IEC JTC 1",
    "text": null,
    "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
-   "governs": [],
+   "governs": [
+    "app/src/PrismSystem.lex.tex"
+   ],
    "realizedBy": [
-    "ST-01"
+    "ST-01",
+    "SY-01"
    ]
   },
   {
@@ -377,25 +413,306 @@
   },
   {
    "key": "wcag-2.2",
-   "title": "W3C Web Content Accessibility Guidelines 2.2",
+   "title": "W3C Web Content Accessibility Guidelines 2.2, conformance at level AA",
    "issuer": "W3C",
-   "text": null,
-   "unpinned": "W3C's wcag.json inventory (success criteria) needs pinning with the wcag-json extractor",
-   "governs": [],
+   "text": {
+    "url": "https://www.w3.org/TR/WCAG22/",
+    "sha256": "6e3c5fe397257cae509a2fb4752b73062cf8cbeb92c2cec618989b17e4cf7057"
+   },
+   "governs": [
+    "site/card.mjs",
+    "site/app.mjs",
+    "site/surface/surface.mjs"
+   ],
    "realizedBy": [
     "ST-01"
-   ]
+   ],
+   "inventories": [
+    {
+     "extract": "wcag-json",
+     "levels": [
+      "A",
+      "AA"
+     ],
+     "source": {
+      "url": "https://www.w3.org/WAI/WCAG22/wcag.json",
+      "sha256": "b6bedebc86e96c4989722dd7ebb49eb604f8b832de04f7a570430c5ebee097e6"
+     }
+    }
+   ],
+   "engine": {
+    "name": "axe-core",
+    "url": "https://cdn.jsdelivr.net/npm/axe-core@4.10.3/axe.min.js",
+    "sha256": "880970c081707360e64f34cea25ff91892f5bc95675b0776925b9709dd8a68bb"
+   },
+   "enforcedBy": {
+    "wcag-2.2-1.1.1": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: image-alt, input-image-alt, object-alt, role-img-alt, svg-img-alt, aria-meter-name, aria-progressbar-name"
+    },
+    "wcag-2.2-1.2.1": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "absent: audio, video"
+    },
+    "wcag-2.2-1.2.2": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "absent: audio, video"
+    },
+    "wcag-2.2-1.2.3": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "absent: audio, video"
+    },
+    "wcag-2.2-1.2.4": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "absent: audio, video"
+    },
+    "wcag-2.2-1.2.5": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "absent: audio, video"
+    },
+    "wcag-2.2-1.3.1": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: aria-required-children, aria-required-parent, definition-list, dlitem, list, listitem, p-as-heading, td-has-header, td-headers-attr, th-has-data-cells, aria-hidden-body"
+    },
+    "wcag-2.2-1.3.2": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: reading-order"
+    },
+    "wcag-2.2-1.3.3": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: sensory-words"
+    },
+    "wcag-2.2-1.3.4": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: css-orientation-lock"
+    },
+    "wcag-2.2-1.3.5": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: autocomplete-valid"
+    },
+    "wcag-2.2-1.4.1": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: link-in-text-block"
+    },
+    "wcag-2.2-1.4.2": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "absent: audio, video"
+    },
+    "wcag-2.2-1.4.3": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: color-contrast"
+    },
+    "wcag-2.2-1.4.4": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: text-200"
+    },
+    "wcag-2.2-1.4.5": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "absent: img, canvas"
+    },
+    "wcag-2.2-1.4.10": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: reflow"
+    },
+    "wcag-2.2-1.4.11": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: non-text-contrast"
+    },
+    "wcag-2.2-1.4.12": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: text-spacing"
+    },
+    "wcag-2.2-1.4.13": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "absent: [role=tooltip]"
+    },
+    "wcag-2.2-2.1.1": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: keyboard"
+    },
+    "wcag-2.2-2.1.2": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: keyboard"
+    },
+    "wcag-2.2-2.1.4": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: character-keys"
+    },
+    "wcag-2.2-2.2.1": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: meta-refresh"
+    },
+    "wcag-2.2-2.2.2": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: endless-motion"
+    },
+    "wcag-2.2-2.3.1": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: endless-motion"
+    },
+    "wcag-2.2-2.4.1": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: bypass"
+    },
+    "wcag-2.2-2.4.2": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: document-title"
+    },
+    "wcag-2.2-2.4.3": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "absent: [tabindex]:not([tabindex='0'], [tabindex='-1'])"
+    },
+    "wcag-2.2-2.4.4": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: link-name, area-alt"
+    },
+    "wcag-2.2-2.4.5": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: multiple-ways"
+    },
+    "wcag-2.2-2.4.6": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: headings-labels"
+    },
+    "wcag-2.2-2.4.7": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: keyboard"
+    },
+    "wcag-2.2-2.4.11": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: keyboard"
+    },
+    "wcag-2.2-2.5.1": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "absent: [draggable=true]"
+    },
+    "wcag-2.2-2.5.2": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: pointer-cancellation"
+    },
+    "wcag-2.2-2.5.3": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: label-content-name-mismatch"
+    },
+    "wcag-2.2-2.5.4": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: no-motion"
+    },
+    "wcag-2.2-2.5.7": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "absent: [draggable=true]"
+    },
+    "wcag-2.2-2.5.8": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: target-size"
+    },
+    "wcag-2.2-3.1.1": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: html-has-lang, html-lang-valid, html-xml-lang-mismatch"
+    },
+    "wcag-2.2-3.1.2": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: valid-lang"
+    },
+    "wcag-2.2-3.2.1": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: keyboard"
+    },
+    "wcag-2.2-3.2.2": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: on-input"
+    },
+    "wcag-2.2-3.2.3": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: consistent-navigation"
+    },
+    "wcag-2.2-3.2.4": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: consistent-navigation"
+    },
+    "wcag-2.2-3.2.6": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: consistent-navigation"
+    },
+    "wcag-2.2-3.3.1": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: error-identification"
+    },
+    "wcag-2.2-3.3.2": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: form-field-multiple-labels, label, select-name"
+    },
+    "wcag-2.2-3.3.3": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: error-identification"
+    },
+    "wcag-2.2-3.3.4": {
+     "suite": "test/page/acts.test.mjs",
+     "how": "suite: review before send"
+    },
+    "wcag-2.2-3.3.7": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: redundant-entry"
+    },
+    "wcag-2.2-3.3.8": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "absent: input[type=password]"
+    },
+    "wcag-2.2-4.1.2": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: aria-allowed-attr, aria-braille-equivalent, aria-command-name, aria-conditional-attr, aria-deprecated-role, aria-hidden-focus, aria-input-field-name, aria-prohibited-attr, aria-required-attr, aria-roledescription, aria-roles, aria-toggle-field-name, aria-tooltip-name, aria-valid-attr-value, aria-valid-attr, button-name, duplicate-id-aria, frame-title-unique, frame-title, input-button-name, label, nested-interactive, summary-name"
+    },
+    "wcag-2.2-4.1.3": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "probe: status-messages"
+    }
+   },
+   "failing": {
+    "wcag-2.2-1.4.11": "the canonical frame's address field has a 1.6:1 edge; UOR-Foundation/template#93 raises it to 3:1",
+    "wcag-2.2-2.1.1": "Tab skips the canonical frame's #github and #share; UOR-Foundation/template#93 ends the omnibox's edit on Tab",
+    "wcag-2.2-2.1.4": "site/app.mjs (template-locked) opens the spec on '.' alone; UOR-Foundation/template#93 removes the shortcut",
+    "wcag-2.2-2.4.7": "the canonical frame's #home link draws no focus ring; UOR-Foundation/template#93 draws one"
+   }
   },
   {
    "key": "wai-aria-1.2",
    "title": "W3C Accessible Rich Internet Applications 1.2",
    "issuer": "W3C",
-   "text": null,
-   "unpinned": "the ARIA roles, states and properties need pinning with an extractor, and WPT's aria suite as oracle",
-   "governs": [],
+   "text": {
+    "url": "https://www.w3.org/TR/wai-aria-1.2/",
+    "sha256": "c0fea16fc747779569ab754d2d25bca3e2b7e8a673b8ef5362aeb9ebc73a4849"
+   },
+   "governs": [
+    "site/card.mjs",
+    "site/app.mjs",
+    "site/surface/surface.mjs"
+   ],
    "realizedBy": [
     "ST-01"
-   ]
+   ],
+   "inventories": [
+    {
+     "extract": "aria-html"
+    }
+   ],
+   "enforcedByKind": {
+    "abstract role": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: aria-roles"
+    },
+    "role": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: aria-roles, aria-allowed-role, aria-deprecated-role, aria-required-attr, aria-required-children, aria-required-parent, aria-allowed-attr, aria-prohibited-attr"
+    },
+    "state": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: aria-valid-attr, aria-valid-attr-value, aria-allowed-attr, aria-conditional-attr, aria-prohibited-attr, aria-required-attr, aria-hidden-focus, aria-hidden-body"
+    },
+    "property": {
+     "suite": "test/page/standards.test.mjs",
+     "how": "axe-core rules: aria-valid-attr, aria-valid-attr-value, aria-allowed-attr, aria-conditional-attr, aria-prohibited-attr, aria-required-attr, aria-braille-equivalent, aria-roledescription"
+    }
+   }
   },
   {
    "key": "accname-1.2",
@@ -517,6 +834,19 @@
    "realizedBy": [
     "ST-01"
    ]
+  },
+  {
+   "key": "semeval-2017-sts",
+   "title": "SemEval-2017 Task 1 Semantic Textual Similarity (STS Benchmark)",
+   "issuer": "SemEval (ACL SIGLEX)",
+   "text": null,
+   "unpinned": "its graded pairs are pinned as the stsb oracle and held by test/oracle/meaning.test.mjs (QR-15); an extractor that reads its annotation guidelines into requirements is pending",
+   "governs": [
+    "site/router/meaning.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ]
   }
  ],
  "ungoverned": {},
@@ -590,7 +920,6 @@
   "app/src/RoutingProofs.lex.tex",
   "app/src/Security.lex.tex",
   "app/src/VocabProofs.lex.tex",
-  "site/app.mjs",
   "site/coherence/coherence.mjs",
   "site/coherence/sense.mjs",
   "site/coherence/today.mjs",
@@ -637,7 +966,6 @@
   "site/source/services.mjs",
   "site/source/shape.mjs",
   "site/spec.mjs",
-  "site/surface/surface.mjs",
   "site/time/rhythm.mjs",
   "site/uorc/guest.mjs",
   "site/uorc/objects.mjs",

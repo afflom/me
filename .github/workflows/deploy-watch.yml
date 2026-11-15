@@ -1,3 +1,5 @@
+# deploy-watch.yml is rendered from the pipeline model, app/specs/pipeline/spec.json, by
+# `cargo run -q --locked -p xtask -- pipeline --write`: change the model, not this file.
 # Keeps the live page on main's newest commit, or says loudly that it is not.
 #
 # After every pages run, every 20 minutes, and on demand, it looks at main's
@@ -13,12 +15,14 @@
 name: deploy watch
 
 on:
-  workflow_run:
-    workflows: [pages]
-    types: [completed]
   schedule:
-    - cron: '7,27,47 * * * *'
+    - cron: 7,27,47 * * * *
   workflow_dispatch:
+  workflow_run:
+    types:
+      - completed
+    workflows:
+      - pages
 
 permissions: {}
 
@@ -39,12 +43,12 @@ jobs:
       pull-requests: write
     steps:
       - name: Compare main's head with what is deployed, and act
-        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
           OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.repository }}
           SERVER: ${{ github.server_url }}
+        shell: bash
         run: |
           set -euo pipefail
           label=deploy-blocked

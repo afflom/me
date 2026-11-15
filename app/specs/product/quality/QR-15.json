@@ -1,0 +1,30 @@
+{
+  "key": "QR-15",
+  "name": "Found by what it means",
+  "characteristic": "functional suitability",
+  "subcharacteristic": "functional correctness",
+  "says": "the Prism's meaning model ranks texts by how alike they are as the STS Benchmark's annotators do, what it calls near is what they call on the same topic, and Ask finds a kept thing by what it means where its words alone miss it",
+  "measures": [
+    {
+      "key": "meaning-rank",
+      "says": "Spearman rank correlation, in hundredths, between the meaning model's cosine and the annotators' grade over the STS Benchmark test split's caption pairs (test/oracle/corpus.json)",
+      "direction": "atLeast",
+      "threshold": 85,
+      "gate": "test/oracle/meaning.test.mjs"
+    },
+    {
+      "key": "near-agreement",
+      "says": "percent of those pairs where the router's near (PROVIDERS.meaning.near) agrees with the annotators on whether the two are on the same topic (graded 1 or more)",
+      "direction": "atLeast",
+      "threshold": 90,
+      "gate": "test/oracle/meaning.test.mjs"
+    },
+    {
+      "key": "meaning-missed",
+      "says": "caption pairs graded as sharing some details or closer (2 or more) whose words alone (site/coherence/sense.mjs drawOn without a meaning) miss each other, where Ask on the page, given one kept as a note and told the other, does not find the kept one",
+      "direction": "atMost",
+      "threshold": 0,
+      "gate": "test/oracle/meaning.test.mjs"
+    }
+  ]
+}
