@@ -21,12 +21,16 @@ examples are taken out mechanically:
     and the instances the specification lists for it after "==>";
   - "page": the whole test page, its cases graded in a browser (the Web
     Platform Tests' accname pages: each case names its expected name);
+  - "markup": each example of a schema.org release (its examples file) whose
+    JSON-LD names, at its top, a type the source labels, carried as the HTML
+    body of a MIME entity (RFC 2045: a Content-Type and nothing else), the way
+    mail that books or sells embeds it (JSON-LD 1.1 section 7);
   - "patterns": each distinct pattern string of a labelled research dataset
     whose category the source names (Mathur et al., "Dark Patterns at Scale",
     CSCW 2019: the urgency and scarcity lines found on shopping sites).
 A source's "label" is the kind of thing its specification says its whole
-messages and events are; the reference reader adds the people each
-example is with.
+messages and events are, or its "labels" the kind each schema.org type it
+carries is; the reference reader adds the people each example is with.
 An example is kept only if every address in it is at a domain reserved for
 documentation (the spec's "reserved" list, after RFC 2606 and RFC 6761), so no
 real person's address enters the repository; likewise every international
@@ -270,6 +274,22 @@ def pattern_examples(text, source):
         yield json.dumps({"text": words, "category": row["Pattern Category"], "type": row["Pattern Type"]})
 
 
+def markup_examples(text, source):
+    """Each schema.org example's JSON-LD whose top object is of a labelled type."""
+    for block in re.split(r"\n(?=TYPES: #eg-)", text):
+        m = re.search(r"\nJSON:\s*\n(.*?)(?=\n[A-Z-]+:\s*\n|\Z)", block, re.S)
+        if not m:
+            continue
+        for script in re.findall(r'<script type="application/ld\+json">.*?</script>', m.group(1), re.S):
+            try:
+                top = json.loads(re.sub(r"^<script[^>]*>|</script>$", "", script))
+            except ValueError:
+                continue
+            types = [str(t) for t in ([top.get("@type")] if isinstance(top, dict) and not isinstance(top.get("@type"), list) else (top.get("@type") if isinstance(top, dict) else []))]
+            if any(t in source["labels"] for t in types):
+                yield "MIME-Version: 1.0\r\nContent-Type: text/html; charset=utf-8\r\n\r\n" + script.replace("\r\n", "\n").replace("\n", "\r\n") + "\r\n"
+
+
 ADDRESS = re.compile(r"[A-Za-z0-9._%+!$&*=^`{|}~'-]+@([A-Za-z0-9.-]+)")
 
 
@@ -323,6 +343,39 @@ def read_message(raw):
             if invited:
                 parties = invited
                 expect["carries"] = "text/calendar"
+    # The schema.org objects its HTML carries as JSON-LD (JSON-LD 1.1 section
+    # 7): their types, and the people they name (a Person as underName,
+    # customer, attendee or broker) as who it is with.
+    types, named = [], []
+
+    def visit(node):
+        if isinstance(node, list):
+            for n in node:
+                visit(n)
+        elif isinstance(node, dict):
+            if isinstance(node.get("@graph"), list):
+                visit(node["@graph"])
+                return
+            t = node.get("@type")
+            for one in (t if isinstance(t, list) else [t] if t else []):
+                types.append(re.sub(r"^(https?://schema\.org/|schema:)", "", str(one)))
+            for key in ("underName", "customer", "attendee", "broker"):
+                v = node.get(key)
+                for p in (v if isinstance(v, list) else [v]):
+                    if isinstance(p, dict) and "Person" in ([p.get("@type")] if not isinstance(p.get("@type"), list) else p.get("@type")) and p.get("name"):
+                        if p["name"].strip() not in named:
+                            named.append(p["name"].strip())
+
+    for part in msg.walk():
+        if part.get_content_type() == "text/html":
+            for js in re.findall(r"<script\b[^>]*type=[\"']?application/ld\+json[\"']?[^>]*>(.*?)</script>", part.get_content(), re.S | re.I):
+                try:
+                    visit(json.loads(js))
+                except ValueError:
+                    pass
+    if types:
+        expect["types"] = types
+        parties += [n for n in named if n not in parties]
     expect["parties"] = parties
     # What its sender says first: the first sentence of the plain text body's
     # first line that is not quoted (RFC 3676 4.5: a quote starts with ">").
@@ -601,10 +654,13 @@ def read_contact(raw):
 # Every label is a kind the Prism's kind reader names; a kind with no source
 # says why, and leaves the list once a source gives it examples.
 KINDS = {k["key"] for k in json.loads((ROOT / "app/specs/router/spec.json").read_text(encoding="utf-8"))["providers"]["kind"]["kinds"]}
-sourced = {s["label"] for s in SPEC["sources"] if "label" in s}
+sourced = {s["label"] for s in SPEC["sources"] if "label" in s} | {k for s in SPEC["sources"] for k in s.get("labels", {}).values()}
 for s in SPEC["sources"]:
-    if s["kind"] in ("message", "calendar") and s.get("label") not in KINDS:
+    if s["kind"] in ("message", "calendar") and not s.get("labels") and s.get("label") not in KINDS:
         refuse(f"{s['key']} labels its examples {s.get('label')!r}, which is not a kind the kind reader names")
+    for t, k in s.get("labels", {}).items():
+        if k not in KINDS:
+            refuse(f"{s['key']} labels its {t} examples {k!r}, which is not a kind the kind reader names")
 for u in SPEC.get("unsourced", []):
     if u.get("label") not in KINDS or not str(u.get("why", "")).strip():
         refuse(f"unsourced {u.get('label')!r} is not a kind with a reason")
@@ -651,7 +707,7 @@ for source in SPEC["sources"]:
         if erratum["status"] != "Verified" or text.count(erratum["says"]) != 1:
             refuse(f"{source['key']} erratum {erratum['id']} is not a verified correction of text it holds once")
         text = text.replace(erratum["says"], erratum["should"])
-    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples, "patterns": lambda text: pattern_examples(text, source), "page": page, "recurrences": recurrences}[source["examples"]]
+    take = {"dashes": dashes, "vcalendar": objects("VCALENDAR"), "vcard": objects("VCARD"), "headers": headers, "displayed": displayed, "vectors": vectors, "csv": csv_examples, "otc": otc_examples, "patterns": lambda text: pattern_examples(text, source), "markup": lambda text: markup_examples(text, source), "page": page, "recurrences": recurrences}[source["examples"]]
     read = {"message": read_message, "calendar": read_calendar, "contact": read_contact, "headerText": read_displayed, "base64": read_vector, "csv": read_csv, "oneTimeCode": read_otc, "coercive": read_pattern, "accname": read_accname, "feed": read_feed, "recurrence": read_recurrence}[source["kind"]]
     n = kept = 0
     for raw in take(text):
@@ -663,6 +719,8 @@ for source in SPEC["sources"]:
         # What a person calls it is what its specification says it is.
         if "label" in source:
             expect["label"] = source["label"]
+        elif "labels" in source:
+            expect["label"] = next(source["labels"][t] for t in expect.get("types", []) if t in source["labels"])
         corpus.append({"id": f"{source['key']}-{n}", "source": source["key"], "kind": source["kind"], "raw": raw, "expect": expect})
     if not kept:
         refuse(f"{source['key']} gave no example at a documentation domain")

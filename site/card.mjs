@@ -152,7 +152,9 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     // Its place in its conversation (RFC 5322 3.6.4): what it is, what it answers, what it builds on.
     const ids = (field) => (h[field] ?? "").match(/<[^<>\s]+>/g) ?? [];
     const place = { ...(ids("message-id").length ? { id: ids("message-id")[0] } : {}), ...(ids("in-reply-to").length ? { replyTo: ids("in-reply-to") } : {}), ...(ids("references").length ? { refs: ids("references") } : {}) };
-    return { ...base, ...place, at: Number.isNaN(when) ? base.at : when, title: headerWords(h.subject ?? "").replace(/\s+/g, " ").trim(), who: person(h.from || h.to), text, body };
+    // The schema.org objects it carries (a booking, an order), as its sender typed them.
+    const markup = reader?.messageMarkup ? reader.messageMarkup(text) : [];
+    return { ...base, ...place, ...(markup.length ? { markup } : {}), at: Number.isNaN(when) ? base.at : when, title: headerWords(h.subject ?? "").replace(/\s+/g, " ").trim(), who: person(h.from || h.to), text, body };
   }
   if (base.media === "calendar") {
     // The event's own fields: the calendar's time zones come first and carry DTSTARTs of their own (1970).
