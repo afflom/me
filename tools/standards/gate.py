@@ -82,25 +82,18 @@ TEXTS = ROOT / "app/specs/standards/texts"
 
 def fetch(pin, write, refusals, what):
     path = TEXTS / pin["sha256"]
-    if path.exists():
-        data = path.read_bytes()
-    elif not write:
-        refusals.append(f"{what}: {pin['url']} is not kept at app/specs/standards/texts/{pin['sha256']}: run python3 -I tools/standards/gate.py --write")
+    try:
+        if not (path.exists() or write):
+            raise OSError(f"it is not kept at {path.relative_to(ROOT)}: run python3 -I tools/standards/gate.py --write")
+        data = path.read_bytes() if path.exists() else urllib.request.urlopen(pin["url"], timeout=60).read()
+    except OSError as error:
+        refusals.append(f"{what}: {pin['url']} could not be read: {error}")
         return None
-    else:
-        try:
-            with urllib.request.urlopen(pin["url"], timeout=60) as response:
-                data = response.read()
-        except OSError as error:
-            refusals.append(f"{what}: {pin['url']} could not be read: {error}")
-            return None
     digest = hashlib.sha256(data).hexdigest()
     if digest != pin["sha256"]:
         refusals.append(f"{what}: {pin['url']} is {digest}, not the pinned {pin['sha256']}")
         return None
-    if not path.exists():
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(data)
+    path.exists() or path.write_bytes(data)
     return data
 
 
