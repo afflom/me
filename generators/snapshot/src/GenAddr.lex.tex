@@ -1,0 +1,176 @@
+\begin{lexlean}{GenAddr}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Tar}
+\importmodule{GenPatch}
+\importmodule{GenJcs}
+\importmodule{Sha256}
+\title{Snapshot addresser}
+\begin{semanticmodule}
+definition{
+  name: adAddress,
+  parameters: [doc : Bytes],
+  result: (Option Bytes),
+  body: (match (GenJcs::jcCanonicalize doc)
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some c => (ctor Option.some [Bytes] (GenPatch::jpCat 0x7368613235363a (Sha256::sha256Hex c)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: adFindFrom,
+  parameters: [s : Bytes, pat : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (GenPatch::jpLen s)
+    | Nat.succ rest => (if ((GenPatch::jpLen s) <? (i + (GenPatch::jpLen pat))) then (GenPatch::jpLen s) else (if (GenPatch::jpSame (GenPatch::jpSpan s i (i + (GenPatch::jpLen pat))) pat) then i else (adFindFrom s pat (i + 1) rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: adFind,
+  parameters: [s : Bytes, pat : Bytes, i : Nat],
+  result: Nat,
+  body: (adFindFrom s pat i ((GenPatch::jpLen s) + 1)),
+  axioms: [propext]
+}
+
+definition{
+  name: adUnhexFrom,
+  parameters: [s : Bytes, i : Nat, k : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (k =? 0) then acc else (adUnhexFrom s (i + 2) (prim subtract k 1 : Nat) (GenPatch::jpCat acc (GenPatch::jpByte ((prim multiply (GenPatch::jpHex (GenPatch::jpAt s i)) 16 : Nat) + (GenPatch::jpHex (GenPatch::jpAt s (i + 1)))))) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: adUnhex,
+  parameters: [s : Bytes, i : Nat, k : Nat],
+  result: Bytes,
+  body: (adUnhexFrom s i k 0x (k + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: adShortFrom,
+  parameters: [s : Bytes, i : Nat, count : Nat, bad : Bytes, fuel : Nat],
+  result: GenJcs::JcReport,
+  body: (match fuel
+    | Nat.zero => (record GenJcs::JcReport {passed := 0x, failed := 0x6e6f206675656c0a})
+    | Nat.succ rest => (let p : Nat := (adFind s 0x4c656e203d20 i); (if ((GenPatch::jpLen s) <? (p + 1)) then (if (((GenPatch::jpLen bad) =? 0) && (0 <? count)) then (record GenJcs::JcReport {passed := (GenPatch::jpCat (GenPatch::jpDec count) 0x206d65737361676573206f66204e49535420434156502053484132353653686f72744d73672e727370206861736865642061732046495053203138302d3420736179730a), failed := 0x}) else (record GenJcs::JcReport {passed := 0x, failed := (if ((GenPatch::jpLen bad) =? 0) then 0x6e6f206d657373616765730a else bad)})) else (let n : Nat := (GenPatch::jpNatFrom s (p + 6) 0 6); (let m : Nat := (adFind s 0x4d7367203d20 p); (let d : Nat := (adFind s 0x4d44203d20 m); (let got : Bytes := (Sha256::sha256Hex (adUnhex s (m + 6) (prim quotient n 8 0 : Nat))); (let want : Bytes := (GenPatch::jpSpan s (d + 5) (d + 69)); (let ok : Bool := (GenPatch::jpSame got want); (adShortFrom s (d + 69) (count + 1) (if (ok && true) then bad else (GenPatch::jpCat bad (GenPatch::jpCat 0x4c656e203d20 (GenPatch::jpCat (GenPatch::jpDec n) (GenPatch::jpCat 0x3a20676f7420 (GenPatch::jpCat got 0x0a)))))) rest)))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: adShort,
+  parameters: [s : Bytes],
+  result: GenJcs::JcReport,
+  body: (adShortFrom s 0 0 0x ((prim quotient (GenPatch::jpLen s) 8 0 : Nat) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: adMonteFrom,
+  parameters: [a : Bytes, b : Bytes, c : Bytes, k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => c
+    | Nat.succ rest => (if (k =? 0) then c else (adMonteFrom b c (Sha256::sha256 (GenPatch::jpCat (GenPatch::jpCat a b) c)) (prim subtract k 1 : Nat) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: adMonteStep,
+  parameters: [seed : Bytes],
+  result: Bytes,
+  body: (adMonteFrom seed seed seed 1000 1001),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: adMonteFrom2,
+  parameters: [s : Bytes, i : Nat, seed : Bytes, count : Nat, bad : Bytes, fuel : Nat],
+  result: GenJcs::JcReport,
+  body: (match fuel
+    | Nat.zero => (record GenJcs::JcReport {passed := 0x, failed := 0x6e6f206675656c0a})
+    | Nat.succ rest => (let p : Nat := (adFind s 0x4d44203d20 i); (if ((GenPatch::jpLen s) <? (p + 1)) then (if (((GenPatch::jpLen bad) =? 0) && (0 <? count)) then (record GenJcs::JcReport {passed := (GenPatch::jpCat (GenPatch::jpDec count) 0x20636865636b706f696e7473206f66204e4953542043415650205348413235364d6f6e74652e727370206861736865642061732046495053203138302d3420736179730a), failed := 0x}) else (record GenJcs::JcReport {passed := 0x, failed := (if ((GenPatch::jpLen bad) =? 0) then 0x6e6f20636865636b706f696e74730a else bad)})) else (let md : Bytes := (adMonteStep seed); (let ok : Bool := (GenPatch::jpSame md (adUnhex s (p + 5) 32)); (adMonteFrom2 s (p + 69) md (count + 1) (if (ok && true) then bad else (GenPatch::jpCat bad (GenPatch::jpCat 0x434f554e54203d20 (GenPatch::jpCat (GenPatch::jpDec count) 0x3a20646966666572730a)))) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: adMonte,
+  parameters: [s : Bytes],
+  result: GenJcs::JcReport,
+  body: (let q : Nat := (adFind s 0x53656564203d20 0); (adMonteFrom2 s 0 (adUnhex s (q + 7) 32) 0 0x ((prim quotient (GenPatch::jpLen s) 8 0 : Nat) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: adLockAt,
+  parameters: [s : Bytes, header : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (GenPatch::jpLen s)
+    | Nat.succ rest => (if ((Foundation.Tar::byteOr s header) =? 0) then (GenPatch::jpLen s) else (let nm : Bytes := (Foundation.Tar::entryName s header); (let ln : Nat := (GenPatch::jpLen nm); (if ((8 <? ln) && (GenPatch::jpSame (GenPatch::jpSpan nm (prim subtract ln 9 : Nat) ln) 0x6c6f636b2e6a736f6e)) then header else (adLockAt s ((header + 512) + (Foundation.Tar::padded (Foundation.Tar::entrySize s header))) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: adEntriesFrom,
+  parameters: [s : Bytes, header : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Tar::byteOr s header) =? 0) then acc else (adEntriesFrom s ((header + 512) + (Foundation.Tar::padded (Foundation.Tar::entrySize s header))) (acc + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: adText,
+  parameters: [s : Bytes, key : Bytes],
+  result: Bytes,
+  body: (match (GenPatch::jpMember s key)
+    | Option.none => 0x
+    | Option.some h => (match (GenPatch::jpDecode s ((project h vstart) + 1))
+      | Option.none => 0x
+      | Option.some t => t)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: adLockFrom,
+  parameters: [archive : Bytes, files : Bytes, n : Nat, passed : Bytes, bad : Bytes, fuel : Nat],
+  result: GenJcs::JcReport,
+  body: (match fuel
+    | Nat.zero => (record GenJcs::JcReport {passed := passed, failed := bad})
+    | Nat.succ rest => (match (GenPatch::jpElement files n)
+      | Option.none => (record GenJcs::JcReport {passed := passed, failed := bad})
+      | Option.some h => (let el : Bytes := (GenPatch::jpSpan files (project h vstart) (project h vend)); (let path : Bytes := (adText el 0x70617468); (let want : Bytes := (adText el 0x736861323536); (match (Foundation.Tar::find archive path)
+        | Option.none => (adLockFrom archive files (n + 1) passed (GenPatch::jpCat bad (GenPatch::jpCat path 0x3a206e6f7420696e2074686520726571756573740a)) rest)
+        | Option.some body => (let got : Bytes := (Sha256::sha256Hex body); (if (GenPatch::jpSame got want) then (adLockFrom archive files (n + 1) (GenPatch::jpCat passed (GenPatch::jpCat path (GenPatch::jpCat 0x207368613235363a (GenPatch::jpCat got 0x0a)))) bad rest) else (adLockFrom archive files (n + 1) passed (GenPatch::jpCat bad (GenPatch::jpCat path (GenPatch::jpCat 0x3a20676f7420 (GenPatch::jpCat got 0x0a)))) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: adLock,
+  parameters: [archive : Bytes],
+  result: GenJcs::JcReport,
+  body: (let at : Nat := (adLockAt archive 0 ((prim quotient (GenPatch::jpLen archive) 512 0 : Nat) + 1)); (if ((GenPatch::jpLen archive) <? (at + 1)) then (record GenJcs::JcReport {passed := 0x, failed := 0x6e6f206c6f636b2e6a736f6e0a}) else (let lock : Bytes := (GenPatch::jpCompact (GenPatch::jpSpan archive (at + 512) ((at + 512) + (Foundation.Tar::entrySize archive at)))); (let files : Bytes := (match (GenPatch::jpMember lock 0x66696c6573)
+    | Option.none => 0x
+    | Option.some h => (GenPatch::jpSpan lock (project h vstart) (project h vend))); (let listed : Nat := (GenPatch::jpCount files); (let r : GenJcs::JcReport := (adLockFrom archive files 0 0x 0x (listed + 1)); (if ((listed + 1) =? (adEntriesFrom archive 0 0 ((prim quotient (GenPatch::jpLen archive) 512 0 : Nat) + 1))) then (if (0 <? listed) then r else (record GenJcs::JcReport {passed := 0x, failed := 0x6c6f636b2e6a736f6e206c69737473206e6f2066696c65730a})) else (record GenJcs::JcReport {passed := (project r passed), failed := (GenPatch::jpCat (project r failed) 0x7468652072657175657374206361727269657320612066696c652074686174206c6f636b2e6a736f6e20646f6573206e6f74206c6973740a)})))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

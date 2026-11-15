@@ -1,16 +1,14 @@
 """The whole-person model, made from WHO's ICF: python3 -I tools/person/gen.py [--check] [--cache DIR]
 
 The whole person is WHO's ICF release pinned in app/specs/oracle/spec.json
-(`classifications`). Its tabulation (csv) and workbook (OOXML, ECMA-376) must
-agree field by field, and the classification must hold its structure across
-entities: parents in the release, one root per tabulation, a "- " per level in
-titles, codes led by the component's letter and extending the parent's by one
-level, DepthInKind, IsLeaf, unique codes and URIs. Each line on its own is
-generators/person/src/GenIcf.lex.tex's to check: it writes the rows,
-site/person/icf-rows.mjs (tools/generators/run.sh, GN-01), from the tabulation
-kept at app/specs/oracle/icf/, and they must be these entities field by field.
-Every entity keeps its code, title and URI (licence terms 1.2.3); the model's
-own functions in site/person/icf.mjs are marked as the Prism's (1.2.5).
+(`classifications`). This fetches it, keeps its tabulation byte for byte at
+app/specs/oracle/icf/, and refuses a release whose tabulation (csv) and
+workbook (OOXML, ECMA-376) disagree on any field. The classification's own
+structure, each line and across entities, is refused by generators/person
+(GenIcf, GenIcfTree; tools/generators/run.sh, GN-01), whose rows,
+site/person/icf-rows.mjs, must be these entities field by field. Every entity
+keeps its code, title and URI (licence terms 1.2.3); the model's own functions
+in site/person/icf.mjs are marked as the Prism's (1.2.5).
 --check writes nothing and refuses a stale model; --cache DIR keeps fetches.
 """
 import csv
@@ -34,7 +32,6 @@ CHECK = "--check" in args
 # show each check refuses the defect it is for.
 PLANT = args[args.index("--plant") + 1 : args.index("--plant") + 4] if "--plant" in args else None
 FIELDS = ["Foundation URI", "Linearization URI", "Code", "BlockId", "Title", "ClassKind", "DepthInKind", "IsResidual", "BrowserLink", "isLeaf", "CodingNote", "Parent"]
-COMPONENTS = {"b": "Body functions", "s": "Body structures", "d": "Activities and participation", "e": "Environmental factors"}
 
 
 def refuse(why):
@@ -135,81 +132,28 @@ for n, (a, b) in enumerate(zip(rows, book_rows)):
         if x != y:
             refuse(f"entity {n + 1}: the tabulation's {field} is {a[field]!r}, the workbook's {b[field]!r}")
 
-# The classification, held to its own structure.
+# The classification's structure, line by line and across entities, is
+# generators/person's to refuse (GenIcf, GenIcfTree); these are its entities.
 FOUNDATION = "http://id.who.int/icd/entity/"
 LINEAR = "http://id.who.int/icd/release/11/icf/"
-by_uri = {}
-for n, row in enumerate(rows):
-    uri, linear = row["Foundation URI"], row["Linearization URI"]
-    # Each line on its own (kind, flags, URIs, residuals) is GenIcf's to refuse.
-    if linear in by_uri or (uri and uri in by_uri):
-        refuse(f"{linear} is in the release twice")
-    by_uri[linear] = n
-    if uri:
-        by_uri[uri] = n
-children = {}
-for row in rows:
-    if row["Parent"]:
-        if row["Parent"] not in by_uri:
-            refuse(f"{row['Linearization URI']}'s parent {row['Parent']} is not in the release")
-        children.setdefault(rows[by_uri[row["Parent"]]]["Linearization URI"], []).append(row["Linearization URI"])
-roots = [row for row in rows if not row["Parent"]]
-if [r["Title"] for r in roots] != ["ICF Category", "ICF Qualifier"] or any(r["ClassKind"] != "chapter" for r in roots):
-    refuse(f"the release's roots are {[r['Title'] for r in roots]}, not the ICF categories and qualifiers")
-
-codes = set()
 entities = []
-for n, row in enumerate(rows):
-    uri = row["Foundation URI"] or row["Linearization URI"]
-    chain = []
-    up = row["Parent"]
-    while up:
-        chain.append(rows[by_uri[up]])
-        up = rows[by_uri[up]]["Parent"]
-    level = len(chain)
+for row in rows:
     title = row["Title"]
-    if not title.startswith("- " * level) or title[2 * level :].startswith("- ") or not title[2 * level :].strip():
-        refuse(f"{uri}'s title {title!r} does not carry its {level} levels")
-    title = title[2 * level :]
-    code = row["Code"]
-    kind = row["ClassKind"]
-    if kind == "category":
-        if not code or code in codes:
-            refuse(f"{uri} is a category with code {code!r}, empty or seen before")
-        codes.add(code)
-        root = chain[-1]["Title"]
-        letter = code[0]
-        if root == "ICF Category":
-            # The component is the first-level block above it, and its letter leads the code.
-            component = chain[-2]["Title"][2:]
-            if COMPONENTS.get(letter) != component:
-                refuse(f"{code} is under {component}, not {COMPONENTS.get(letter)}")
-            if not re.fullmatch(r"[bsde][1-9]\d{2}\d{0,2}", code):
-                refuse(f"{code} is not an ICF category code")
-        elif not re.fullmatch(r"q[bfcmps]\d", code):
-            refuse(f"{code} is not an ICF qualifier code")
-        above = [c for c in chain if c["ClassKind"] == "category"]
-        if int(row["DepthInKind"]) != len([c for c in chain if c["ClassKind"] == "category"]) + 1:
-            refuse(f"{code}'s depth in kind is {row['DepthInKind']}, not {len(above) + 1}")
-        if above and not (code.startswith(above[0]["Code"]) and len(code) == len(above[0]["Code"]) + 1):
-            refuse(f"{code} does not extend its parent {above[0]['Code']} by one level")
-    elif code:
-        refuse(f"{uri} is a {kind} with code {code}")
-    leaf = row["isLeaf"] == "True"
-    if leaf != (row["Linearization URI"] not in children):
-        refuse(f"{uri} says it is {'a leaf' if leaf else 'not a leaf'}, but {len(children.get(row['Linearization URI'], []))} entities name it as parent")
+    level = 0
+    while title.startswith("- ", 2 * level):
+        level += 1
     entities.append([
         row["Foundation URI"][len(FOUNDATION):] or None,
         row["Linearization URI"][len(LINEAR):],
-        code,
+        row["Code"],
         row["BlockId"],
-        title,
+        title[2 * level :],
         level,
-        kind,
-        int(row["DepthInKind"]),
+        row["ClassKind"],
+        int(row["DepthInKind"]) if row["DepthInKind"].isdigit() else row["DepthInKind"],
         row["IsResidual"] == "True",
-        leaf,
-        rows[by_uri[row["Parent"]]]["Foundation URI"][len(FOUNDATION):] if row["Parent"] else None,
+        row["isLeaf"] == "True",
+        row["Parent"][len(FOUNDATION):] or None,
         row["CodingNote"],
     ])
 
