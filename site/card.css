@@ -41,7 +41,7 @@ button.pr-go[aria-current="page"] { background: color-mix(in oklch, var(--vr-ver
 .pr-top h2:focus { outline: none; }
 /* The place's act waits by its title: the list leads, the form opens on request. */
 .pr-top .pr-new { margin-inline-start: auto; align-self: center; padding-inline: var(--space-4); min-height: 2.75rem; }
-.pr-compose[hidden] { display: none; }
+.pr-compose[hidden], .pr-act:has(> .pr-compose[hidden]) { display: none; }
 .pr-count { font-family: var(--font-mono); font-size: var(--text-14); color: var(--vr-verdant); font-variant-numeric: tabular-nums; }
 
 .pr-row { display: flex; flex-wrap: wrap; gap: var(--space-2); align-items: stretch; }
@@ -77,7 +77,7 @@ button.pr-go[aria-current="page"] { background: color-mix(in oklch, var(--vr-ver
 .pr-who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-14); color: var(--muted-foreground); text-align: end; }
 .pr-item:not(.pr-sealed) { cursor: pointer; }
 .pr-sealed .pr-what { color: var(--muted-foreground); font-weight: 400; font-style: italic; }
-.pr-empty { padding: var(--space-6) 0; color: var(--muted-foreground); }
+.pr-empty { padding: var(--space-6) 0; color: var(--muted-foreground); display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; }
 
 .pr-settings { display: flex; flex-direction: column; gap: var(--space-6); }
 .pr-set h3 { margin: 0 0 var(--space-2); font-family: var(--font-mono); font-size: var(--text-14); font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--vr-verdant); }

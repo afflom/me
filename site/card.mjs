@@ -626,7 +626,17 @@ export default async function start({ app, reason, $ }) {
 
   // What the device row's file picker takes: zips (Takeout) and the formats PrismFolder reads.
   const FILE_TYPES = ".zip,.mbox,.mbx,.eml,.ics,.ical,.vcf,.vcard,.txt,.csv";
-  const emptyRow = () => element("li", { className: "pr-empty", textContent: WORDS.empty });
+  // An empty place says so and offers what fills it: the same step as its card on the home.
+  const emptyRow = () => {
+    const row = element("li", { className: "pr-empty" }, element("span", { textContent: WORDS.empty }));
+    const feed = document.querySelector(`#pr-home .pr-card-feed[data-place="${current.key}"]`);
+    if (feed && current.host !== "home") {
+      const fill = element("button", { type: "button", className: "pr-empty-go", textContent: feed.textContent });
+      fill.addEventListener("click", () => feed.click());
+      row.append(fill);
+    }
+    return row;
+  };
 
   // Today: the agenda ahead (PrismChronology says what falls today and what
   // clashes), then what came in lately, then what is to do.
@@ -799,7 +809,9 @@ export default async function start({ app, reason, $ }) {
       const feeder = FEEDERS.find((f) => f.key === button.dataset.feed);
       if (feeder.act !== "none") {
         go(button.dataset.place);
-        $("pr-act").querySelector("input, textarea")?.focus();
+        // An act behind its button by the title is opened; a note's field is at hand already.
+        if ($("pr-new")?.getAttribute("aria-expanded") === "false") $("pr-new").click();
+        else $("pr-act").querySelector("input, textarea")?.focus();
         return;
       }
       go(PLACES.find((p) => p.show === "settings").key);
