@@ -1,6 +1,6 @@
 {
   "spec": "me/handwritten-ratchet/1",
-  "about": "Where every tracked file of the Prism comes from. A file is generated when a producer below writes it, upstream when it is byte-equal to the pinned template or named with its hash in a lock, model when it is under a model root, and hand-written otherwise. Hand-written files may only shrink: none may be added, none may grow, and the ledger is tight, after verdant-resonance VR-67..VR-69 (prism/handwritten-ratchet.json, measureHandwrittenAndAxiomRatchetState).",
+  "about": "Where every tracked file of the Prism comes from. A file is generated when a producer below writes it, upstream when it is byte-equal to the pinned template or named with its hash in a lock, model when it is under a model root, and hand-written otherwise. Hand-written files may only shrink: none may be added, none may grow,, after verdant-resonance VR-67..VR-69 (prism/handwritten-ratchet.json, measureHandwrittenAndAxiomRatchetState).",
   "model": [
     "app/specs/",
     "app/prompts/"
@@ -104,6 +104,15 @@
         "-I",
         "tools/facet/gen.py",
         "app/specs/router/spec.json"
+      ],
+      "lexlean": false
+    },
+    {
+      "id": "system",
+      "run": [
+        "python3",
+        "-I",
+        "tools/system/gen.py"
       ],
       "lexlean": false
     },
@@ -392,7 +401,6 @@
       ".md"
     ]
   },
-  "self": "app/specs/handwritten/ledger.json",
   "plugins": {
     "about": "Directories a producer loads every file of, one per standard or source: a new file there is a plug-in of that producer, not a new part, and its lines still count toward the hand-written total. tools/generators/*.sh is the one generic driver of the LexLean generators (generators/, the F1 pattern).",
     "paths": [

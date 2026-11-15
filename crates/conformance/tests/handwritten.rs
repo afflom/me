@@ -1,10 +1,12 @@
 //! The `handwritten` suite: one test per scenario in `features/suites/handwritten.feature`.
 //!
 //! `tools/handwritten/gate.py` measures where every tracked file comes from
-//! (app/specs/handwritten/spec.json) and keeps app/specs/handwritten/ledger.json.
-//! Here the ledger must be current for the tree as it is; the ratchet against
-//! the base revision runs on every pull request and on main in the page build
-//! (`--full --check`), and `test/handwritten/gate.test.mjs` plants each defect.
+//! (app/specs/handwritten/spec.json), this tree and its base revision alike.
+//! The ratchet runs in the page build on every pull request and on main
+//! (`--check`, which runs every producer and fetches the pinned upstreams);
+//! here, without the network, every producer must exist, every generator must
+//! be a producer, and every file must have a class. `test/handwritten/gate.test.mjs`
+//! plants each defect.
 
 use std::path::PathBuf;
 use std::process::Command;
@@ -21,25 +23,19 @@ fn root() -> PathBuf {
 #[test]
 fn handwritten_hw_01() {
     let out = Command::new("python3")
-        .args(["-I", "tools/handwritten/gate.py", "--check", "--no-base"])
+        .args(["-I", "tools/handwritten/gate.py", "--lint"])
         .current_dir(root())
         .output()
         .expect("python3 runs");
     assert!(
         out.status.success(),
-        "HW-01: the hand-written ledger is not the tree's:\n{}",
+        "HW-01: the hand-written spec does not hold the tree:\n{}",
         String::from_utf8_lossy(&out.stderr)
     );
-    let ledger = std::fs::read_to_string(root().join("app/specs/handwritten/ledger.json"))
-        .expect("the ledger is committed");
-    for kind in [
-        "\"is\": \"generated\"",
-        "\"is\": \"upstream\"",
-        "\"is\": \"model\"",
-    ] {
-        assert!(
-            ledger.contains(kind),
-            "HW-01: the ledger holds no {kind} file"
-        );
-    }
+    let pipeline = std::fs::read_to_string(root().join("app/specs/pipeline/spec.json"))
+        .expect("the pipeline model is committed");
+    assert!(
+        pipeline.contains("tools/handwritten/gate.py --check"),
+        "HW-01: the page build must run the ratchet"
+    );
 }
