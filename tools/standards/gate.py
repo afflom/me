@@ -131,7 +131,7 @@ def generated(standard, inv, refusals):
     if not path.exists():
         refusals.append(f"{key}: {inv['generated']} is missing: run tools/generators/run.sh")
         return []
-    got = load(path)
+    got = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()] if path.suffix == ".jsonl" else load(path)
     for r in got:
         if not r["id"].startswith(f"{key}-"):
             refusals.append(f"{key}: {inv['generated']} has requirement {r['id']}, not one of {key}")
