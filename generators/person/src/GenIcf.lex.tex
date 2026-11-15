@@ -1,0 +1,308 @@
+\begin{lexlean}{GenIcf}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\title{ICF generator}
+\begin{semanticmodule}
+definition{
+  name: icfText,
+  parameters: [value : String],
+  result: Bytes,
+  body: (Foundation.Utf8::encode value)
+}
+
+definition{
+  name: icfSlice,
+  parameters: [s : Bytes, start : Nat, stop : Nat],
+  result: Bytes,
+  body: (match (Foundation.Bytes::sliceBytes s start (prim subtract stop start : Nat))
+    | Option.none => 0x
+    | Option.some b => b)
+}
+
+definition{
+  name: icfLen,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (Foundation.Bytes::byteLength s)
+}
+
+definition{
+  name: icfJoin,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes a b)
+}
+
+definition{
+  name: icfStarts,
+  parameters: [s : Bytes, prefix : Bytes],
+  result: Bool,
+  body: (Foundation.Tar::sameBytes (icfSlice s 0 (icfLen prefix)) prefix),
+  axioms: [propext]
+}
+
+definition{
+  name: icfEnds,
+  parameters: [s : Bytes, suffix : Bytes],
+  result: Bool,
+  body: (((icfLen suffix) <=? (icfLen s)) && (Foundation.Tar::sameBytes (icfSlice s (prim subtract (icfLen s) (icfLen suffix) : Nat) (icfLen s)) suffix)),
+  axioms: [propext]
+}
+
+definition{
+  name: icfStopAt,
+  parameters: [s : Bytes, i : Nat, stop : Nat, mark : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => stop
+    | Nat.succ rest => (if (stop <=? i) then stop else (if ((Foundation.Tar::byteOr s i) =? mark) then i else (icfStopAt s (i + 1) stop mark rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: icfFieldStart,
+  parameters: [s : Bytes, i : Nat, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (k =? 0) then i else (icfFieldStart s ((icfStopAt s i (icfLen s) 9 (icfLen s)) + 1) (prim subtract k 1 : Nat) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: icfRaw,
+  parameters: [line : Bytes, k : Nat],
+  result: Bytes,
+  body: (let a : Nat := (icfFieldStart line 0 k 16); (icfSlice line a (icfStopAt line a (icfLen line) 9 (icfLen line)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: icfTabs,
+  parameters: [s : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if ((icfLen s) <=? i) then n else (icfTabs s (i + 1) (if ((Foundation.Tar::byteOr s i) =? 9) then (n + 1) else n) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: icfUndouble,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((icfLen s) <=? i) then acc else (if (((Foundation.Tar::byteOr s i) =? 34) && ((Foundation.Tar::byteOr s (i + 1)) =? 34)) then (icfUndouble s (i + 2) (icfJoin acc 0x22) rest) else (icfUndouble s (i + 1) (icfJoin acc (icfSlice s i (i + 1))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: icfField,
+  parameters: [line : Bytes, k : Nat],
+  result: Bytes,
+  body: (let f : Bytes := (icfRaw line k); (if ((2 <=? (icfLen f)) && (((Foundation.Tar::byteOr f 0) =? 34) && ((Foundation.Tar::byteOr f (prim subtract (icfLen f) 1 : Nat)) =? 34))) then (icfUndouble (icfSlice f 1 (prim subtract (icfLen f) 1 : Nat)) 0 0x (icfLen f)) else f)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: icfEscape,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((icfLen s) <=? i) then acc else (let b : Nat := (Foundation.Tar::byteOr s i); (icfEscape s (i + 1) (icfJoin acc (if ((b =? 34) || (b =? 92)) then (icfJoin 0x5c (icfSlice s i (i + 1))) else (icfSlice s i (i + 1)))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: icfString,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (icfJoin 0x22 (icfJoin (icfEscape s 0 0x (icfLen s)) 0x22)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: icfDigitsFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((icfLen s) <=? i) then true else (let b : Nat := (Foundation.Tar::byteOr s i); ((47 <? b) && ((b <? 58) && (icfDigitsFrom s (i + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: icfNumber,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: ((1 <=? (icfLen s)) && (icfDigitsFrom s 0 (icfLen s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: icfAfter,
+  parameters: [s : Bytes, prefix : Bytes],
+  result: Bytes,
+  body: (icfSlice s (icfLen prefix) (icfLen s))
+}
+
+definition{
+  name: icfEntityUri,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: ((icfStarts s (icfText "http://id.who.int/icd/entity/")) && (icfNumber (icfAfter s (icfText "http://id.who.int/icd/entity/")))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: icfIdOr,
+  parameters: [uri : Bytes],
+  result: Bytes,
+  body: (if ((icfLen uri) =? 0) then (icfText "null") else (icfString (icfAfter uri (icfText "http://id.who.int/icd/entity/")))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: icfFlag,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: ((Foundation.Tar::sameBytes s (icfText "True")) || (Foundation.Tar::sameBytes s (icfText "False"))),
+  axioms: [propext]
+}
+
+definition{
+  name: icfBool,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (if (Foundation.Tar::sameBytes s (icfText "True")) then (icfText "true") else (icfText "false")),
+  axioms: [propext]
+}
+
+definition{
+  name: icfDashes,
+  parameters: [t : Bytes, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if (icfStarts (icfSlice t (prim multiply n 2 : Nat) (icfLen t)) 0x2d20) then (icfDashes t (n + 1) rest) else n)),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: icfKind,
+  parameters: [k : Bytes],
+  result: Bool,
+  body: ((Foundation.Tar::sameBytes k (icfText "chapter")) || ((Foundation.Tar::sameBytes k (icfText "block")) || (Foundation.Tar::sameBytes k (icfText "category")))),
+  axioms: [propext]
+}
+
+definition{
+  name: icfResidualUri,
+  parameters: [line : Bytes],
+  result: Bool,
+  body: (let linear : Bytes := (icfField line 1); (let parent : Bytes := (icfField line 11); ((Foundation.Tar::sameBytes (icfField line 7) (icfText "True")) && ((icfEntityUri parent) && ((Foundation.Tar::sameBytes linear (icfJoin (icfText "http://id.who.int/icd/release/11/icf/") (icfJoin (icfAfter parent (icfText "http://id.who.int/icd/entity/")) (icfText "/other")))) || (Foundation.Tar::sameBytes linear (icfJoin (icfText "http://id.who.int/icd/release/11/icf/") (icfJoin (icfAfter parent (icfText "http://id.who.int/icd/entity/")) (icfText "/unspecified"))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: icfWhy,
+  parameters: [line : Bytes],
+  result: Bytes,
+  body: (let uri : Bytes := (icfField line 0); (let linear : Bytes := (icfField line 1); (let code : Bytes := (icfField line 2); (let kind : Bytes := (icfField line 5); (if ((icfTabs line 0 0 (icfLen line)) =? 11) then (if ((((icfLen uri) =? 0) && (icfResidualUri line)) || ((icfEntityUri uri) && (Foundation.Tar::sameBytes linear (icfJoin (icfText "http://id.who.int/icd/release/11/icf/") (icfAfter uri (icfText "http://id.who.int/icd/entity/")))))) then (if (icfKind kind) then (if (if (Foundation.Tar::sameBytes kind (icfText "category")) then (1 <=? (icfLen code)) else ((icfLen code) =? 0)) then (if ((icfNumber (icfField line 6)) && ((icfFlag (icfField line 7)) && (icfFlag (icfField line 9)))) then (if (((icfLen (icfField line 11)) =? 0) || (icfEntityUri (icfField line 11))) then 0x else (icfJoin linear (icfText ": its parent is not a WHO entity URI\n"))) else (icfJoin linear (icfText ": its depth or a flag is not one\n"))) else (icfJoin linear (icfText ": a category has a code and nothing else does\n"))) else (icfJoin linear (icfText ": its kind is not chapter, block or category\n"))) else (icfJoin linear (icfText ": its URIs are not WHO's for one entity, or a residual of its parent\n"))) else (icfJoin linear (icfText ": it does not have the release's twelve columns\n"))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: icfDigit,
+  parameters: [d : Nat],
+  result: Bytes,
+  body: (icfSlice (icfText "0123456789") d (d + 1))
+}
+
+definition{
+  name: icfDigits,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (if (n <? 10) then (icfDigit n) else (icfJoin (icfDigit (prim quotient n 10 0 : Nat)) (icfDigit (prim remainder n 10 0 : Nat))))
+}
+
+definition{
+  name: icfRow,
+  parameters: [line : Bytes],
+  result: Bytes,
+  body: (let title : Bytes := (icfField line 4); (let level : Nat := (icfDashes title 0 (icfLen title)); (icfJoin (icfText "ROWS.push([") (icfJoin (icfIdOr (icfField line 0)) (icfJoin 0x2c20 (icfJoin (icfString (icfAfter (icfField line 1) (icfText "http://id.who.int/icd/release/11/icf/"))) (icfJoin 0x2c20 (icfJoin (icfString (icfField line 2)) (icfJoin 0x2c20 (icfJoin (icfString (icfField line 3)) (icfJoin 0x2c20 (icfJoin (icfString (icfSlice title (prim multiply level 2 : Nat) (icfLen title))) (icfJoin 0x2c20 (icfJoin (icfDigits level) (icfJoin 0x2c20 (icfJoin (icfString (icfField line 5)) (icfJoin 0x2c20 (icfJoin (icfField line 6) (icfJoin 0x2c20 (icfJoin (icfBool (icfField line 7)) (icfJoin 0x2c20 (icfJoin (icfBool (icfField line 9)) (icfJoin 0x2c20 (icfJoin (icfIdOr (icfField line 11)) (icfJoin 0x2c20 (icfJoin (icfString (icfField line 10)) (icfText "]);\n"))))))))))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: icfIsHeader,
+  parameters: [line : Bytes],
+  result: Bool,
+  body: ((icfStarts line (icfText "Foundation URI\t")) || (icfStarts line (icfJoin 0xefbbbf (icfText "Foundation URI\t")))),
+  axioms: [propext]
+}
+
+definition{
+  name: icfLineOf,
+  parameters: [s : Bytes, i : Nat, e : Nat],
+  result: Bytes,
+  body: (if ((i <? e) && ((Foundation.Tar::byteOr s (prim subtract e 1 : Nat)) =? 13)) then (icfSlice s i (prim subtract e 1 : Nat)) else (icfSlice s i e)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: icfRowsFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((icfLen s) <=? i) then acc else (let e : Nat := (icfStopAt s i (icfLen s) 10 (icfLen s)); (let line : Bytes := (icfLineOf s i e); (icfRowsFrom s (e + 1) (icfJoin acc (if ((icfLen line) =? 0) then 0x else (if (icfIsHeader line) then (icfText "// Every entity of WHO's International Classification of Functioning,\n// Disability and Health (ICF) release pinned in app/specs/oracle/spec.json, in the\n// release's order, with its code, title and URI as WHO publishes it.\n// International Classification of Functioning, Disability and Health (ICF), World Health Organization (WHO) 2001. Licensed under the Creative Commons Attribution-NoDerivatives 3.0 IGO licence (CC BY-ND 3.0 IGO).\n// Written by generators/person/src/GenIcf.lex.tex from each line of the release's tabulation. Do not edit.\n// Each row: foundation id (null for a residual category), linearization id, code,\n// block id, title, its level in the tabulation, kind, depth in kind, residual,\n// leaf, parent's foundation id (null for a root), coding note.\nexport const ROWS = [];\n") else (icfRow line)))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: icfWhyFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((icfLen s) <=? i) then acc else (let e : Nat := (icfStopAt s i (icfLen s) 10 (icfLen s)); (let line : Bytes := (icfLineOf s i e); (icfWhyFrom s (e + 1) (icfJoin acc (if (((icfLen line) =? 0) || (icfIsHeader line)) then 0x else (icfWhy line))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rows,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (icfText "app/specs/oracle/icf/SimpleTabulation-ICF-en.txt"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some tabulation => (ctor Option.some [Bytes] (icfRowsFrom tabulation 0 0x (icfLen tabulation)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: refusals,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (match (Foundation.Tar::find archive (icfText "app/specs/oracle/icf/SimpleTabulation-ICF-en.txt"))
+    | Option.none => 0x
+    | Option.some tabulation => (icfWhyFrom tabulation 0 0x (icfLen tabulation))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

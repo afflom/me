@@ -224,7 +224,7 @@ fn device_dv_05() {
         "app/src/PrismSourceProofs.lex.tex",
         "PrismSource",
         "PrismSourceRequest",
-        6,
+        7,
     );
     let declared = read("app/specs/source/services.json");
     assert!(
