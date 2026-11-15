@@ -50,7 +50,7 @@ test("a journey in a regime that does not exist is refused", () =>
   refuses((f) => { f.product.journeys.find((j) => j.key === "J1").when = ["dawn"]; }, /journey J1 happens in 'dawn', which is no regime/));
 
 test("a working journey no part serves is refused", () =>
-  refuses((f) => { f.product.features = f.product.features.filter((x) => x.key !== "F-14"); }, /journey J11 works, but no feature or facet names a part that serves it/));
+  refuses((f) => { f.product.features = f.product.features.filter((x) => x.key !== "F-32"); }, /journey J11 works, but no feature or facet names a part that serves it/));
 
 test("a stratum naming an agency that does not exist is refused", () =>
   refuses((f) => { f.parts.strata[0].who = ["nobody"]; }, /stratum harness names agency 'nobody'/));

@@ -1,0 +1,44 @@
+{
+  "key": "QR-12",
+  "name": "Each thing once, in the place of what it is",
+  "characteristic": "functional suitability",
+  "subcharacteristic": "functional appropriateness",
+  "says": "a message is in Messages, an event on the Calendar, a to-do or journal entry in Notes, each once and headed by its own words, and an invitation a message carries is on the Calendar as its event, and a conversation is one row",
+  "measures": [
+    {
+      "key": "message-twice",
+      "says": "messages among the validation oracles' message examples (test/oracle/corpus.json) held more than once although they share one Message-ID",
+      "direction": "atMost",
+      "threshold": 0,
+      "gate": "test/oracle/places.test.mjs"
+    },
+    {
+      "key": "out-of-place",
+      "says": "oracle messages, events, to-dos and journal entries listed in a place other than the one of what they are",
+      "direction": "atMost",
+      "threshold": 0,
+      "gate": "test/oracle/places.test.mjs"
+    },
+    {
+      "key": "unheaded",
+      "says": "oracle items that say something but are listed with no heading",
+      "direction": "atMost",
+      "threshold": 0,
+      "gate": "test/oracle/places.test.mjs"
+    },
+    {
+      "key": "invitation-missed",
+      "says": "oracle messages carrying an RFC 6047 invitation whose event is not on the calendar",
+      "direction": "atMost",
+      "threshold": 0,
+      "gate": "test/oracle/places.test.mjs"
+    },
+    {
+      "key": "conversation-split",
+      "says": "oracle messages of one conversation (RFC 5322 In-Reply-To, References) listed in Messages as rows of their own instead of as that conversation's one row",
+      "direction": "atMost",
+      "threshold": 0,
+      "gate": "test/oracle/places.test.mjs"
+    }
+  ]
+}

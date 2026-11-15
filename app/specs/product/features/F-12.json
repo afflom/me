@@ -1,16 +1,19 @@
 {
   "key": "F-12",
-  "statement": "Opening a person shows what is open between the owner and them: the people the owner's content is with, by who they are rather than how they wrote their name, and between them the latest message and the next meeting",
+  "statement": "How often a source's content arrives is measured from when its things came: the shortest cycle they keep, in the largest of wall-time's periods it fills and in its own zone's wall-time, as a day, a week, the nth weekday of a month, or several arrivals a cycle; the chat says it beside a sender's message, and claims none where the arrivals keep none",
   "journeys": [
-    "J7"
+    "J8",
+    "J15"
   ],
   "calls": [
-    "site/coherence/people.mjs#peopleOf",
-    "site/coherence/people.mjs#between"
+    "site/time/rhythm.mjs#rhythmOf",
+    "site/time/rhythm.mjs#rhythms",
+    "site/time/rhythm.mjs#sourceOf",
+    "site/time/rhythm.mjs#everyOf",
+    "site/router/answer.mjs#sentenceOf"
   ],
   "acceptance": [
-    "test/coherence/coherence.test.mjs",
-    "test/product/journeys.test.mjs"
+    "test/time/rhythm.test.mjs"
   ],
   "quality": [
     "QR-11"

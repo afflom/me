@@ -80,7 +80,7 @@ console.log(`router: ${asked.length} decisions, all held`);
 // under the Boundary; anything else is offered to keep with its confirmation.
 const { answer } = await import("./answer.mjs");
 const boundaryLine = async (text) => (text.startsWith("boundary") ? (text.trim().endsWith(" yes") ? "deny" : "allow") : line(text));
-const flight = { address: "f", media: "calendar", title: "Flight to Lisbon", who: "Airport", body: "", label: "confidential", at: new Date(2026, 10, 16, 8).getTime(), domains: [5] };
+const flight = { address: "f", media: "calendar", title: "Flight to Lisbon", who: "Airport", where: "Airport", body: "", label: "confidential", at: new Date(2026, 10, 16, 8).getTime(), domains: [5] };
 const mail = { address: "m", media: "message", title: "Lunch on Thursday?", who: "Robin Example", body: "Are you free?", label: "confidential", at: new Date(2026, 10, 12, 9).getTime(), domains: [4] };
 const ask = (text, halted = "no") => answer(text, { items: [flight, mail], line: boundaryLine, halted: () => halted, now: WEDNESDAY });
 const flightAnswer = await ask("When is my flight?");
