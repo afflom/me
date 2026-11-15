@@ -1,0 +1,171 @@
+{
+ "name": "build",
+ "on": {
+  "push": {
+   "branches": [
+    "prism/build/**"
+   ]
+  },
+  "workflow_dispatch": null,
+  "workflow_call": {
+   "outputs": {
+    "artifact": {
+     "description": "The name of the artifact that holds the holo and its provenance.",
+     "value": "${{ jobs.build.outputs.artifact }}"
+    },
+    "holo": {
+     "description": "The holo's file name inside the artifact.",
+     "value": "${{ jobs.build.outputs.holo }}"
+    },
+    "fingerprint": {
+     "description": "The archive fingerprint `prismpm verify` recorded for the holo.",
+     "value": "${{ jobs.build.outputs.fingerprint }}"
+    },
+    "attestation-url": {
+     "description": "Where GitHub shows the signed provenance of the holo.",
+     "value": "${{ jobs.build.outputs.attestation-url }}"
+    }
+   }
+  }
+ },
+ "permissions": {
+  "contents": "read"
+ },
+ "concurrency": {
+  "group": "build-${{ github.sha }}",
+  "cancel-in-progress": false
+ },
+ "jobs": {
+  "build": {
+   "name": "build and verify the holo, sign its provenance",
+   "runs-on": "ubuntu-24.04",
+   "timeout-minutes": 45,
+   "permissions": {
+    "contents": "read",
+    "id-token": "write",
+    "attestations": "write"
+   },
+   "outputs": {
+    "artifact": "${{ steps.collect.outputs.artifact }}",
+    "holo": "${{ steps.collect.outputs.holo }}",
+    "fingerprint": "${{ steps.collect.outputs.fingerprint }}",
+    "attestation-url": "${{ steps.attest.outputs.attestation-url }}"
+   },
+   "steps": [
+    {
+     "name": "Check out the exact event revision",
+     "uses": "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+     "with": {
+      "fetch-depth": 0,
+      "persist-credentials": false
+     }
+    },
+    {
+     "name": "Find the app",
+     "id": "app",
+     "shell": "bash",
+     "run": "set -euo pipefail\nif [[ -f app/lexlean.toml ]]; then\n  project=app\n  command='just app'\nelif [[ -f prism/prism.toml ]]; then\n  project=prism\n  command='cd prism && lexlean lock && lexlean fmt --all && lexlean lock && prismpm verify'\nelif [[ -f prism.toml ]]; then\n  project=.\n  command='lexlean lock && lexlean fmt --all && lexlean lock && prismpm verify'\nelse\n  printf '%s\\n' 'no app here: neither app/lexlean.toml, prism/prism.toml nor prism.toml' >&2\n  exit 64\nfi\n{\n  echo \"project=$project\"\n  echo \"command=$command\"\n} >>\"$GITHUB_OUTPUT\"\n",
+     "#": {
+      "run": [
+       "A template instance keeps its app in app/ and builds it with `just app`.",
+       "An app the guided journey wrote (`prism-code mcp`) lives in prism/, or at",
+       "the root when the repository is the app, and is built as the journey",
+       "builds it in the image. Either way `prismpm verify` is the build."
+      ]
+     }
+    },
+    {
+     "name": "Build and verify the holo through the locked SDK",
+     "shell": "bash",
+     "env": {
+      "COMMAND": "${{ steps.app.outputs.command }}"
+     },
+     "run": "set -euo pipefail\nimage=$(sed -n 's/.*\"sdk_image\":\"\\([^\"]*\\)\".*/\\1/p' prismpm.lock)\nif [[ ! $image =~ ^[a-z0-9.-]+(:[0-9]{1,5})?/[a-z0-9./_-]+@sha256:[0-9a-f]{64}$ ]]; then\n  printf '%s\\n' 'prismpm.lock does not select an immutable SDK image' >&2\n  exit 64\nfi\ndocker_config=$(mktemp -d)\n# The SDK's /tmp is a private directory on the runner's own disk, as\n# bootstrap.yml has it since template 1cb0d36: the patched SDK's build\n# outgrows a fixed 2 GiB tmpfs.\nscratch=$(mktemp -d)\nmkdir -p \"$scratch/prismpm-home/.docker\"\ntrap 'rm -rf \"$docker_config\" \"$scratch\"' EXIT\nprintf '{}\\n' >\"$docker_config/config.json\"\ndocker run --rm \\\n  --user \"$(id -u):$(id -g)\" \\\n  --group-add \"$(stat -c '%g' /var/run/docker.sock)\" \\\n  --volume \"$scratch:/tmp\" \\\n  --volume \"$PWD:$PWD\" \\\n  --volume /var/run/docker.sock:/var/run/docker.sock \\\n  --volume \"$docker_config:/tmp/prismpm-home/.docker:ro\" \\\n  --workdir \"$PWD\" \\\n  --env DOCKER_CONFIG=/tmp/prismpm-home/.docker \\\n  --env BUILDX_CONFIG=/tmp/prismpm-buildx \\\n  --env HOME=/tmp/prismpm-home \\\n  --env PRISMPM_EPHEMERAL_HOME=1 \\\n  \"$image\" sh -c \"$COMMAND\"\n"
+    },
+    {
+     "name": "Collect the holo, its build directory and what this run knows about them",
+     "id": "collect",
+     "shell": "bash",
+     "env": {
+      "PROJECT": "${{ steps.app.outputs.project }}",
+      "REPOSITORY": "${{ github.repository }}",
+      "SHA": "${{ github.sha }}",
+      "RUN_ID": "${{ github.run_id }}",
+      "RUN_URL": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+      "WORKFLOW_REF": "${{ github.workflow_ref }}",
+      "EVENT": "${{ github.event_name }}",
+      "REF": "${{ github.ref }}"
+     },
+     "run": "set -euo pipefail\nshopt -s nullglob\nholos=(\"$PROJECT\"/.prism/build/*/*.holo)\nif [[ ${#holos[@]} -ne 1 ]]; then\n  printf 'expected one holo, found %d\\n' \"${#holos[@]}\" >&2\n  exit 64\nfi\nholo=${holos[0]}\nbuild_dir=$(dirname \"$holo\")\nbuild_id=$(basename \"$build_dir\")\nname=$(basename \"$holo\")\nout=\"$RUNNER_TEMP/prism-build\"\nmkdir -p \"$out/build\"\ncp -r \"$build_dir\"/. \"$out/build/\"\nfingerprint=$(node -e 'process.stdout.write(JSON.parse(require(\"fs\").readFileSync(process.argv[1], \"utf8\")).archive_fingerprint)' \"$build_dir/application/holo-identities.json\")\nsha256=$(sha256sum \"$holo\" | cut -d' ' -f1)\nnode -e '\n  const [out, data] = process.argv.slice(1);\n  const record = JSON.parse(data);\n  require(\"fs\").writeFileSync(`${out}/build.json`, `${JSON.stringify(record, null, 2)}\\n`);\n' \"$out\" \"$(jq -cn \\\n  --arg repository \"$REPOSITORY\" --arg sha \"$SHA\" --arg run_id \"$RUN_ID\" --arg run_url \"$RUN_URL\" \\\n  --arg workflow_ref \"$WORKFLOW_REF\" --arg event \"$EVENT\" --arg ref \"$REF\" \\\n  --arg project \"$PROJECT\" --arg build \"$build_id\" --arg holo \"$name\" --arg fingerprint \"$fingerprint\" --arg sha256 \"$sha256\" \\\n  '{schema: \"prism/remote-build/1\", repository: $repository, sha: $sha, run_id: ($run_id | tonumber), run_url: $run_url, workflow_ref: $workflow_ref, event: $event, ref: $ref, project: $project, build: $build, holo: $holo, fingerprint: $fingerprint, holo_sha256: $sha256}')\"\n{\n  echo \"artifact=prism-build-$SHA\"\n  echo \"holo=$name\"\n  echo \"fingerprint=$fingerprint\"\n  echo \"path=$out\"\n  echo \"holo-path=$out/build/$name\"\n} >>\"$GITHUB_OUTPUT\"\n"
+    },
+    {
+     "name": "Sign the holo's provenance as this repository's workflow",
+     "id": "attest",
+     "uses": "actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8",
+     "with": {
+      "subject-path": "${{ steps.collect.outputs.holo-path }}",
+      "show-summary": false
+     }
+    },
+    {
+     "name": "Keep the provenance beside the holo",
+     "shell": "bash",
+     "env": {
+      "BUNDLE": "${{ steps.attest.outputs.bundle-path }}",
+      "OUT": "${{ steps.collect.outputs.path }}"
+     },
+     "run": "set -euo pipefail\ncp \"$BUNDLE\" \"$OUT/provenance.sigstore.json\"\n"
+    },
+    {
+     "name": "Upload the holo, its build directory and its provenance",
+     "uses": "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02",
+     "with": {
+      "name": "${{ steps.collect.outputs.artifact }}",
+      "path": "${{ steps.collect.outputs.path }}",
+      "if-no-files-found": "error"
+     }
+    },
+    {
+     "name": "Say what was built",
+     "shell": "bash",
+     "env": {
+      "HOLO": "${{ steps.collect.outputs.holo }}",
+      "FINGERPRINT": "${{ steps.collect.outputs.fingerprint }}",
+      "ARTIFACT": "${{ steps.collect.outputs.artifact }}",
+      "ATTESTATION_URL": "${{ steps.attest.outputs.attestation-url }}",
+      "SHA": "${{ github.sha }}"
+     },
+     "run": "set -euo pipefail\n{\n  echo \"## $HOLO\"\n  echo\n  echo \"| | |\"\n  echo \"| --- | --- |\"\n  echo \"| commit | \\`$SHA\\` |\"\n  echo \"| fingerprint | \\`$FINGERPRINT\\` |\"\n  echo \"| artifact | \\`$ARTIFACT\\` (the holo, its build directory, \\`build.json\\`, \\`provenance.sigstore.json\\`) |\"\n  echo \"| provenance | $ATTESTATION_URL |\"\n  echo\n  echo 'Verified on this runner by `prismpm verify`: every theorem through the Lean kernel, the guest built from the model, every acceptance vector replayed. Check it again on your own device:'\n  echo\n  echo '```'\n  echo \"npx prism-code@latest build --remote github --ref $SHA\"\n  echo '```'\n} >>\"$GITHUB_STEP_SUMMARY\"\n"
+    }
+   ]
+  }
+ },
+ "#": {
+  "name": [
+   "Builds and verifies the repository's app on a GitHub runner, and hands the",
+   "holo back as a signed artifact, so no machine of the author's needs Docker,",
+   "the SDK image or a toolchain. Project content, not universal policy: a",
+   "repository may extend or replace it.",
+   "",
+   "Three ways in, one job:",
+   "  - `prism-code build --remote github` pushes one commit to a ref under",
+   "    prism/build/ and waits for this run; the run's head SHA is that commit",
+   "    and nothing else, whatever the author's branch does meanwhile.",
+   "  - `pages.yml` calls it on every push to main, then publishes the page from",
+   "    the artifact it leaves. The SDK step lives here and nowhere else in the",
+   "    project's workflows; `bootstrap.yml`, universal policy, keeps its own.",
+   "  - Run workflow, from the Actions tab or GitHub Mobile.",
+   "",
+   "What the artifact `prism-build-<sha>` holds: the holo, the build directory",
+   "beside it (`manifest.json`, `application/`), `build.json` naming the commit,",
+   "the repository, the run and the holo's fingerprint, and",
+   "`provenance.sigstore.json`, this run's signed provenance from",
+   "actions/attest-build-provenance. The signer is this repository's workflow",
+   "through GitHub's OIDC issuer, and the statement's subject is the holo's",
+   "SHA-256, so a holo from another commit, another repository or another",
+   "workflow is refused by whoever checks the bundle. The device that downloads",
+   "the artifact verifies the holo again itself: the build is not trusted, it",
+   "is checked."
+  ]
+ }
+}
