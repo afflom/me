@@ -27,8 +27,8 @@ has the recorded blob; the full measure re-derives every claim.
 
 The ratchet, after verdant-resonance VR-67..VR-69 (prism/handwritten-ratchet.json):
 against the ledger of the base revision (the merge base with origin/main, or
-on main the first parent), no file may become hand-written and no class of
-hand-written files may hold more non-comment lines. Moving a part into the
+on main the first parent), no file may become hand-written and the hand-written
+files together may not hold more non-comment lines. Moving a part into the
 model or a producer is always allowed; adding one by hand never is.
 """
 import hashlib
@@ -328,11 +328,15 @@ def ratchet(now, base, ref):
             refusals.append(f"{p}: a new hand-written part (it was {base[p]['is'] if p in base else 'absent'} at {ref}); author it in the model or a producer instead")
         elif e["is"] == "hand" and e["lines"] is None and e.get("blob") != base[p].get("blob"):
             refusals.append(f"{p}: a hand-made binary changed; it must come from a producer")
+    # The whole, as verdant counts it (maxHandwrittenGameNonCommentLines): a
+    # part may move from one class to another, say from the page into its
+    # producer, as long as less is written by hand in all.
     tn, tb = totals(now), totals(base)
-    for c, v in sorted(tn.items()):
-        before = tb.get(c, {"lines": 0})["lines"]
-        if v["lines"] > before:
-            refusals.append(f"class {c}: hand-written lines grew from {before} to {v['lines']} since {ref}; hand-written code may only shrink")
+    total_now = sum(v["lines"] for v in tn.values())
+    total_base = sum(v["lines"] for v in tb.values())
+    if total_now > total_base:
+        grew = ", ".join(f"{c} {tb.get(c, {'lines': 0})['lines']} -> {v['lines']}" for c, v in sorted(tn.items()) if v["lines"] > tb.get(c, {"lines": 0})["lines"])
+        refusals.append(f"hand-written lines grew from {total_base} to {total_now} since {ref} ({grew}); hand-written code may only shrink")
     return refusals
 
 

@@ -1,6 +1,6 @@
 // HW-01: tools/handwritten/gate.py passes the committed tree and refuses each
-// planted defect with its reason: a new hand-written part, a hand-written
-// class that grew, a stale ledger, upstream bytes edited in place, and (in
+// planted defect with its reason: a new hand-written part, hand-written
+// code that grew in all, a stale ledger, upstream bytes edited in place, and (in
 // full) a hand-written file the ledger calls generated.
 // usage: node --test test/handwritten/gate.test.mjs
 import assert from "node:assert/strict";
@@ -56,7 +56,7 @@ test("refuses a new hand-written part", () => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-test("refuses a hand-written class that grew, even with its ledger rewritten", () => {
+test("refuses hand-written code that grew, even with its ledger rewritten", () => {
   const dir = scratch();
   const file = hand(dir);
   appendFileSync(join(dir, file), "export const grown = 1;\n");
