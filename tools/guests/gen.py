@@ -224,11 +224,12 @@ def main(argv):
         print(write(argv[1], argv[2]))
     elif argv[:1] == ["record"] and len(argv) == 3:
         g = GUESTS[argv[1]]
+        (ROOT / g["wasm"]).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(argv[2], ROOT / g["wasm"])
         digest = sha(ROOT / g["wasm"])
-        line, old = pin_line(g)
-        pin = ROOT / g["pin"]
-        pin.write_text(pin.read_text().replace(line, line.replace(old, digest)))
+        if (pin := ROOT / g["pin"]).exists():  # a new guest's pin is written below, with the rest
+            line, old = pin_line(g)
+            pin.write_text(pin.read_text().replace(line, line.replace(old, digest)))
         held = lock()
         held[argv[1]] = {"source": source(argv[1]), "wasm": digest}
         LOCK.write_text(json.dumps({k: held[k] for k in GUESTS if k in held}, indent=2) + "\n")
