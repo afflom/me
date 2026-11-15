@@ -9,15 +9,22 @@
 // each act's meaning vector from the compiled model, in a browser on the built
 // site, so the intent head (PROVIDERS.intent.head) reads the tasks.
 // QR-16's thresholds are its quality record's.
-// usage: PAGE_SITE=<built site> node --test test/oracle/intent.test.mjs
+// INTENT_FIT=<acts> instead fits the head on AMI's scenario training partition
+// (written outside the repository by tools/oracle/gen.py --fit-acts): a logistic
+// regression, task against fact, over the meaning vectors of the acts the
+// question rule does not take, by full-batch gradient descent from zero, written
+// to providers.intent.head in the router spec. Owed to LexLean, once a
+// generator's request can hold the vectors.
+// usage: PAGE_SITE=<built site> [INTENT_FIT=<acts>] node --test test/oracle/intent.test.mjs
 import assert from "node:assert/strict";
-import { createReadStream, existsSync, readFileSync } from "node:fs";
+import { createReadStream, existsSync, readFileSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { extname, join, resolve } from "node:path";
 import test from "node:test";
 import { FIELDS, judge, PROVIDERS } from "../../site/router/table.mjs";
 import { route } from "../../site/router/router.mjs";
+import { asksQuestion } from "../../site/router/features.mjs";
 
 const { chromium } = createRequire(import.meta.url)("playwright");
 const site = resolve(process.env.PAGE_SITE ?? "site");
@@ -83,4 +90,30 @@ test("the router reads what each act asks as AMI's annotators marked it (QR-16)"
   const found = { "question-found": percent(held.question), "task-found": percent(held.task), "fact-found": percent(held.fact) };
   console.log(`# QR-16 ${Object.entries(found).map(([k, v]) => `${k} ${v}%`).join(", ")} over ${acts.length} acts`);
   for (const [key, value] of Object.entries(found)) assert.ok(value >= threshold[key], `"${key}": ${value}% < ${threshold[key]}%`);
+});
+
+test("the intent head is fit on the training partition", { skip: !process.env.INTENT_FIT, timeout: 7200000 }, async () => {
+  const train = readFileSync(process.env.INTENT_FIT, "utf8").trim().split("\n").map((l) => JSON.parse(l)).filter((a) => a.intent !== "question" && !asksQuestion(a.text));
+  const vectors = await meanings(train.map((a) => a.text));
+  const [STEPS, RATE, DECAY] = [2000, 4, 1e-4];
+  const xs = train.map((a) => vectors.get(a.text));
+  const y = train.map((a) => (a.intent === "task" ? 1 : 0));
+  const w = new Float64Array(xs[0].length);
+  let b = 0;
+  for (let step = 0; step < STEPS; step += 1) {
+    const g = new Float64Array(w.length);
+    let gb = 0;
+    xs.forEach((v, i) => {
+      const e = 1 / (1 + Math.exp(-v.reduce((z, x, k) => z + w[k] * x, b))) - y[i];
+      v.forEach((x, k) => { g[k] += e * x; });
+      gb += e;
+    });
+    w.forEach((_, k) => { w[k] -= RATE * (g[k] / xs.length + DECAY * w[k]); });
+    b -= (RATE * gb) / xs.length;
+  }
+  const url = new URL("../../app/specs/router/spec.json", import.meta.url);
+  const spec = JSON.parse(readFileSync(url, "utf8"));
+  const round = (x) => Number(x.toFixed(4));
+  Object.assign(spec.providers.intent.head, { model: spec.providers.meaning.model, fit: { source: "ami", acts: xs.length, tasks: y.filter(Boolean).length, steps: STEPS, rate: RATE, decay: DECAY }, bias: round(b), weights: Array.from(w, round) });
+  writeFileSync(url, `${JSON.stringify(spec, null, 2)}\n`);
 });

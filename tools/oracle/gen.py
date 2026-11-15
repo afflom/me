@@ -1476,7 +1476,7 @@ def read_similarity(raw):
 
 
 # --fit-acts OUT: the training partition's acts of each act source, for a fit
-# (tools/oracle/fit-intent.mjs) to read; written outside the repository.
+# (INTENT_FIT in test/oracle/intent.test.mjs) to read; written outside the repository.
 if "--fit-acts" in args:
     out = pathlib.Path(args[args.index("--fit-acts") + 1])
     rows = [row for source in SPEC["sources"] if source["examples"] == "acts" for row in act_examples(fetch(source), source, source["train"], unnamed=True)]

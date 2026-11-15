@@ -1,0 +1,49 @@
+{
+ "comment": "The acceptance vectors of the vcard guest (app/specs/guests, app/src/PrismVcard): RFC 6350 and RFC 9555 example lines with how RFC 6350 reads them (test/oracle/vcard.json); two of RFC 6350's own cards split from one file; and cards written from RFC 6350's own FN, EMAIL and TEL values, escaped per 3.4 and folded per 3.2.",
+ "examples": [
+  [
+   "line\nBEGIN:VCARD",
+   "{\"name\":\"BEGIN\",\"params\":{},\"type\":\"text\",\"value\":\"VCARD\"}"
+  ],
+  [
+   "line\nSOURCE:ldap://ldap.example.com/cn=Babs%20Jensen,%20o=Babsco,%20c=US",
+   "{\"name\":\"SOURCE\",\"params\":{},\"type\":\"uri\",\"value\":\"ldap://ldap.example.com/cn=Babs%20Jensen,%20o=Babsco,%20c=US\"}"
+  ],
+  [
+   "line\nORG:ABC\\, Inc.;North American Division;Marketing",
+   "{\"name\":\"ORG\",\"params\":{},\"type\":\"text\",\"value\":[\"ABC, Inc.\",\"North American Division\",\"Marketing\"]}"
+  ],
+  [
+   "line\nN:Public;John;Quinlan;Mr.;Esq.",
+   "{\"name\":\"N\",\"params\":{},\"type\":\"text\",\"value\":[[\"Public\"],[\"John\"],[\"Quinlan\"],[\"Mr.\"],[\"Esq.\"]]}"
+  ],
+  [
+   "line\nADR;GEO=\"geo:12.3457,78.910\";LABEL=\"Mr. John Q. Public, Esq.\\nMail Drop: TNE QB\\n123 Main Street\\nAny Town, CA  91921-1234\\nU.S.A.\":;;123 Main Street;Any Town;CA;91921-1234;U.S.A.",
+   "{\"name\":\"ADR\",\"params\":{\"GEO\":[\"geo:12.3457,78.910\"],\"LABEL\":[\"Mr. John Q. Public, Esq.\\\\nMail Drop: TNE QB\\\\n123 Main Street\\\\nAny Town, CA  91921-1234\\\\nU.S.A.\"]},\"type\":\"text\",\"value\":[[\"\"],[\"\"],[\"123 Main Street\"],[\"Any Town\"],[\"CA\"],[\"91921-1234\"],[\"U.S.A.\"]]}"
+  ],
+  [
+   "line\nTEL;VALUE=uri;PREF=1;TYPE=\"voice,home\":tel:+1-555-555-0100;ext=5555",
+   "{\"name\":\"TEL\",\"params\":{\"VALUE\":[\"uri\"],\"PREF\":[\"1\"],\"TYPE\":[\"voice\",\"home\"]},\"type\":\"uri\",\"value\":\"tel:+1-555-555-0100;ext=5555\"}"
+  ],
+  [
+   "line\nNOTE;AUTHOR=\"mailto:john@example.com\":This is some note.",
+   "{\"name\":\"NOTE\",\"params\":{\"AUTHOR\":[\"mailto:john@example.com\"]},\"type\":\"text\",\"value\":\"This is some note.\"}"
+  ],
+  [
+   "line\nitem1.X-FOO;X-BAR=Hello:World!",
+   "{\"group\":\"item1\",\"name\":\"X-FOO\",\"params\":{\"X-BAR\":[\"Hello\"]},\"type\":\"text\",\"value\":\"World!\"}"
+  ],
+  [
+   "cards\nBEGIN:VCARD\r\nVERSION:4.0\r\nKIND:individual\r\nFN:Jane Doe\r\nORG:ABC\\, Inc.;North American Division;Marketing\r\nEND:VCARD\r\nBEGIN:VCARD\r\nVERSION:4.0\r\nKIND:group\r\nFN:The Doe family\r\nMEMBER:urn:uuid:03a0e51f-d1aa-4385-8a53-e29025acd8af\r\nMEMBER:urn:uuid:b8767877-b4a1-4c70-9acc-505d3819e519\r\nEND:VCARD\r\n",
+   "BEGIN:VCARD\r\nVERSION:4.0\r\nKIND:individual\r\nFN:Jane Doe\r\nORG:ABC\\, Inc.;North American Division;Marketing\r\nEND:VCARD\r\n\u0000BEGIN:VCARD\r\nVERSION:4.0\r\nKIND:group\r\nFN:The Doe family\r\nMEMBER:urn:uuid:03a0e51f-d1aa-4385-8a53-e29025acd8af\r\nMEMBER:urn:uuid:b8767877-b4a1-4c70-9acc-505d3819e519\r\nEND:VCARD\r\n"
+  ],
+  [
+   "write\nMr. John Q. Public, Esq.\nemail jqpublic@xyz.example.com\ntel tel:+1-555-555-0100",
+   "BEGIN:VCARD\r\nVERSION:4.0\r\nFN:Mr. John Q. Public\\, Esq.\r\nEMAIL:jqpublic@xyz.example.com\r\nTEL:tel:+1-555-555-0100\r\nEND:VCARD\r\n"
+  ],
+  [
+   "write\n\nemail jane_doe@example.com\nemail jdoe@example.com",
+   "BEGIN:VCARD\r\nVERSION:4.0\r\nFN:jane_doe@example.com\r\nEMAIL:jane_doe@example.com\r\nEMAIL:jdoe@example.com\r\nEND:VCARD\r\n"
+  ]
+ ]
+}
