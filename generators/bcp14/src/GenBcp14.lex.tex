@@ -1,0 +1,623 @@
+\begin{lexlean}{GenBcp14}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\importmodule{Sha256}
+\title{Key word requirement extractor}
+\begin{semanticmodule}
+definition{
+  name: bcU,
+  parameters: [value : String],
+  result: Bytes,
+  body: (Foundation.Utf8::encode value)
+}
+
+definition{
+  name: bcCat,
+  parameters: [parts : (List Bytes)],
+  result: Bytes,
+  body: (match parts
+    | List.nil => 0x
+    | List.cons head rest => (Foundation.Bytes::appendBytes head (bcCat rest))),
+  recursive_argument: parts
+}
+
+definition{
+  name: bcAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (Foundation.Tar::byteOr s i),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcLen,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (Foundation.Bytes::byteLength s)
+}
+
+definition{
+  name: bcSpan,
+  parameters: [s : Bytes, a : Nat, e : Nat],
+  result: Bytes,
+  body: (Foundation.Json::span s a e)
+}
+
+definition{name: bcIsDigit, parameters: [b : Nat], result: Bool, body: ((47 <? b) && (b <? 58))}
+
+definition{name: bcIsUpper, parameters: [b : Nat], result: Bool, body: ((64 <? b) && (b <? 91))}
+
+definition{
+  name: bcIsWs,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 32) || (((8 <? b) && (b <? 14)) || ((27 <? b) && (b <? 32))))
+}
+
+definition{
+  name: bcIsWord,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((bcIsDigit b) || ((bcIsUpper b) || (((96 <? b) && (b <? 123)) || ((b =? 95) || (127 <? b)))))
+}
+
+definition{
+  name: bcLower,
+  parameters: [b : Nat],
+  result: Nat,
+  body: (if (bcIsUpper b) then (b + 32) else b)
+}
+
+definition{
+  name: bcEqFrom,
+  parameters: [s : Bytes, i : Nat, pat : Bytes, k : Nat, fold : Bool, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((bcLen pat) <? (k + 1)) then true else (if ((bcLen s) <? ((i + k) + 1)) then false else (let b : Nat := (bcAt s (i + k)); (if ((if fold then (bcLower b) else b) =? (bcAt pat k)) then (bcEqFrom s i pat (k + 1) fold rest) else false))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcEqAt,
+  parameters: [s : Bytes, i : Nat, pat : Bytes],
+  result: Bool,
+  body: (bcEqFrom s i pat 0 false (bcLen pat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcFindFrom,
+  parameters: [s : Bytes, i : Nat, e : Nat, pat : Bytes, fold : Bool, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if (e <? (i + (bcLen pat))) then false else (if (bcEqFrom s i pat 0 fold (bcLen pat)) then true else (bcFindFrom s (i + 1) e pat fold rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcHas,
+  parameters: [s : Bytes, a : Nat, e : Nat, pat : Bytes],
+  result: Bool,
+  body: (bcFindFrom s a e pat false (e + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcHasFolded,
+  parameters: [s : Bytes, a : Nat, e : Nat, pat : Bytes],
+  result: Bool,
+  body: (bcFindFrom s a e pat true (e + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcLineEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((bcLen s) <? (i + 1)) then i else (if ((bcAt s i) =? 10) then i else (bcLineEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcLineStop,
+  parameters: [s : Bytes, a : Nat, e : Nat],
+  result: Nat,
+  body: (if ((a <? e) && ((bcAt s (prim subtract e 1 : Nat)) =? 13)) then (prim subtract e 1 : Nat) else e),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcWsEnd,
+  parameters: [s : Bytes, i : Nat, e : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (e <? (i + 1)) then e else (if (bcIsWs (bcAt s i)) then (bcWsEnd s (i + 1) e rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcBlank,
+  parameters: [s : Bytes, a : Nat, e : Nat],
+  result: Bool,
+  body: ((bcWsEnd s a e (prim subtract e a : Nat)) =? e),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcTrimEnd,
+  parameters: [s : Bytes, a : Nat, e : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => e
+    | Nat.succ rest => (if (e <? (a + 1)) then a else (if (bcIsWs (bcAt s (prim subtract e 1 : Nat))) then (bcTrimEnd s a (prim subtract e 1 : Nat) rest) else e))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcDigitsEnd,
+  parameters: [s : Bytes, i : Nat, e : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (e <? (i + 1)) then e else (if (bcIsDigit (bcAt s i)) then (bcDigitsEnd s (i + 1) e rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcDotsEnd,
+  parameters: [s : Bytes, j : Nat, e : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => j
+    | Nat.succ rest => (if (((j + 1) <? e) && (((bcAt s j) =? 46) && (bcIsDigit (bcAt s (j + 1))))) then (bcDotsEnd s (bcDigitsEnd s (j + 1) e e) e rest) else j)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcAppendix,
+  parameters: [s : Bytes, a : Nat, e : Nat],
+  result: Bool,
+  body: (((a + 9) <? e) && ((bcEqAt s a 0x417070656e64697820) && (bcIsUpper (bcAt s (a + 9))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcNumberEnd,
+  parameters: [s : Bytes, a : Nat, e : Nat],
+  result: Nat,
+  body: (if ((a <? e) && (bcIsDigit (bcAt s a))) then (bcDotsEnd s (bcDigitsEnd s a e e) e e) else (if (bcAppendix s a e) then (bcDotsEnd s (a + 10) e e) else 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcSecStart,
+  parameters: [s : Bytes, a : Nat],
+  result: Nat,
+  body: (if (bcIsDigit (bcAt s a)) then a else (a + 9)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcAfterDot,
+  parameters: [s : Bytes, t : Nat, e : Nat],
+  result: Nat,
+  body: (if ((t <? e) && ((bcAt s t) =? 46)) then (t + 1) else t),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcTitleStart,
+  parameters: [s : Bytes, t : Nat, e : Nat],
+  result: Nat,
+  body: (bcWsEnd s (bcAfterDot s t e) e e),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcHeadEnd,
+  parameters: [s : Bytes, a : Nat, e : Nat],
+  result: Nat,
+  body: (let t : Nat := (bcNumberEnd s a e); (if (t =? 0) then 0 else (let d : Nat := (bcAfterDot s t e); (let w : Nat := (bcWsEnd s d e e); (if ((d <? w) && ((w <? e) && (not (bcHas s a e 0x2e2e2e2e)))) then t else 0))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcNotSpecification,
+  parameters: [s : Bytes, a : Nat, e : Nat],
+  result: Bool,
+  body: ((bcHasFolded s a e (bcU "reference")) || ((bcHasFolded s a e (bcU "acknowledg")) || ((bcHasFolded s a e (bcU "change log")) || ((bcHasFolded s a e (bcU "changelog")) || ((bcHasFolded s a e (bcU "changes from")) || ((bcHasFolded s a e (bcU "differences from")) || ((bcHasFolded s a e (bcU "iana considerations")) || ((bcHasFolded s a e (bcU "author")) || ((bcHasFolded s a e (bcU "contributor")) || ((bcHasFolded s a e (bcU "copyright")) || (bcHasFolded s a e (bcU "intellectual property")))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcTitleExcluded,
+  parameters: [s : Bytes, t : Nat, e : Nat],
+  result: Bool,
+  body: (let w : Nat := (bcTitleStart s t e); (bcNotSpecification s w (bcTrimEnd s w e (prim subtract e w : Nat)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcExcludedFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((bcLen s) <? (i + 1)) then acc else (let n : Nat := (bcLineEnd s i (bcLen s)); (let e : Nat := (bcLineStop s i n); (let t : Nat := (bcHeadEnd s i e); (if ((0 <? t) && (bcTitleExcluded s t e)) then (bcExcludedFrom s (n + 1) (bcCat (cons acc (cons (bcSpan s (bcSecStart s i) t) (cons 0x0a (nil Bytes))))) rest) else (bcExcludedFrom s (n + 1) acc rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcExcluded,
+  parameters: [piece : Bytes],
+  result: Bytes,
+  body: (bcExcludedFrom piece 0 0x (bcLen piece)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcLastStart,
+  parameters: [s : Bytes, j : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if (j =? 0) then 0 else (if ((bcAt s (prim subtract j 1 : Nat)) =? 10) then j else (bcLastStart s (prim subtract j 1 : Nat) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcPopBlanks,
+  parameters: [acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let n : Nat := (bcLen acc); (if (n =? 0) then acc else (let last : Nat := (prim subtract n 1 : Nat); (let ls : Nat := (bcLastStart acc last n); (if (bcBlank acc ls last) then (bcPopBlanks (bcSpan acc 0 ls) rest) else acc)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcDigitsBack,
+  parameters: [s : Bytes, a : Nat, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => k
+    | Nat.succ rest => (if ((a + 1) <? (k + 1)) then (if (bcIsDigit (bcAt s (prim subtract k 1 : Nat))) then (bcDigitsBack s a (prim subtract k 1 : Nat) rest) else k) else k)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcFooter,
+  parameters: [s : Bytes, a : Nat, e : Nat],
+  result: Bool,
+  body: (let t : Nat := (bcTrimEnd s a e (prim subtract e a : Nat)); (if ((a <? t) && ((bcAt s (prim subtract t 1 : Nat)) =? 93)) then (let k : Nat := (bcDigitsBack s a (prim subtract t 1 : Nat) t); (((k + 1) <? t) && (((a + 6) <? (k + 1)) && (bcEqAt s (prim subtract k 6 : Nat) 0x5b5061676520)))) else false)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcPopFooter,
+  parameters: [acc : Bytes],
+  result: Bytes,
+  body: (let n : Nat := (bcLen acc); (if (n =? 0) then acc else (let last : Nat := (prim subtract n 1 : Nat); (let ls : Nat := (bcLastStart acc last n); (if (bcFooter acc ls last) then (bcSpan acc 0 ls) else acc))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcCleanFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, broken : Bool, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((bcLen s) <? (i + 1)) then acc else (let n : Nat := (bcLineEnd s i (bcLen s)); (let e : Nat := (bcLineStop s i n); (if ((i <? e) && ((bcAt s i) =? 12)) then (bcCleanFrom s (n + 1) (bcPopFooter (bcPopBlanks acc (bcLen acc))) true rest) else (if (broken && ((bcEqAt s i 0x52464320) || (bcBlank s i e))) then (bcCleanFrom s (n + 1) acc true rest) else (bcCleanFrom s (n + 1) (bcCat (cons acc (cons (bcSpan s i e) (cons 0x0a (nil Bytes))))) false rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcDecimal,
+  parameters: [k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let d : Bytes := (bcSpan 0x30313233343536373839 (prim remainder k 10 0 : Nat) ((prim remainder k 10 0 : Nat) + 1)); (if (k <? 10) then d else (Foundation.Bytes::appendBytes (bcDecimal (prim quotient k 10 0 : Nat) rest) d)))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcWordAt,
+  parameters: [x : Bytes, i : Nat, word : Bytes],
+  result: Bool,
+  body: (let m : Nat := (i + (bcLen word)); ((bcEqAt x i word) && (((i =? 0) || (not (bcIsWord (bcAt x (prim subtract i 1 : Nat))))) && (((bcLen x) =? m) || (not (bcIsWord (bcAt x m))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcLevelAt,
+  parameters: [x : Bytes, i : Nat],
+  result: Nat,
+  body: (if ((bcWordAt x i (bcU "MUST")) || ((bcWordAt x i (bcU "REQUIRED")) || (bcWordAt x i (bcU "SHALL")))) then 1 else (if ((bcWordAt x i (bcU "SHOULD")) || (bcWordAt x i (bcU "RECOMMENDED"))) then 2 else (if ((bcWordAt x i (bcU "MAY")) || (bcWordAt x i (bcU "OPTIONAL"))) then 3 else 0))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcLevelFrom,
+  parameters: [x : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if ((bcLen x) <? (i + 1)) then 0 else (let level : Nat := (bcLevelAt x i); (if (level =? 0) then (bcLevelFrom x (i + 1) rest) else level)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcQuotedAt,
+  parameters: [x : Bytes, i : Nat],
+  result: Bool,
+  body: (((bcAt x i) =? 34) && ((bcEqAt x (i + 1) (bcU "MUST")) || ((bcEqAt x (i + 1) (bcU "SHALL")) || ((bcEqAt x (i + 1) (bcU "SHOULD")) || ((bcEqAt x (i + 1) (bcU "MAY")) || ((bcEqAt x (i + 1) (bcU "REQUIRED")) || ((bcEqAt x (i + 1) (bcU "RECOMMENDED")) || (bcEqAt x (i + 1) (bcU "OPTIONAL"))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcQuotedFrom,
+  parameters: [x : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((bcLen x) <? (i + 1)) then false else (if (bcQuotedAt x i) then true else (bcQuotedFrom x (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcRunEnd,
+  parameters: [x : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((bcLen x) <? (i + 1)) then i else (if (bcIsWs (bcAt x i)) then i else (bcRunEnd x (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcNormFrom,
+  parameters: [x : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let n : Nat := (bcLen x); (let w : Nat := (bcWsEnd x i n n); (if (n <? (w + 1)) then acc else (let v : Nat := (bcRunEnd x w n); (let gap : Bytes := (if ((0 <? (bcLen acc)) && (i <? w)) then 0x20 else 0x); (bcNormFrom x v (bcCat (cons acc (cons gap (cons (bcSpan x w v) (nil Bytes))))) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcSafeEnd,
+  parameters: [x : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((bcLen x) <? (i + 1)) then i else (let b : Nat := (bcAt x i); (if ((b <? 32) || ((b =? 34) || (b =? 92))) then i else (bcSafeEnd x (i + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcEscape,
+  parameters: [b : Nat],
+  result: Bytes,
+  body: (if (b =? 34) then 0x5c22 else (if (b =? 92) then 0x5c5c else (Foundation.Bytes::appendBytes 0x5c753030 (Foundation.Bytes::appendBytes (Sha256::shaNibble (prim quotient b 16 0 : Nat)) (Sha256::shaNibble (prim remainder b 16 0 : Nat))))))
+}
+
+definition{
+  name: bcJsonFrom,
+  parameters: [x : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let n : Nat := (bcLen x); (if (n <? (i + 1)) then acc else (let v : Nat := (bcSafeEnd x i n); (if (v =? i) then (bcJsonFrom x (i + 1) (Foundation.Bytes::appendBytes acc (bcEscape (bcAt x i))) rest) else (bcJsonFrom x v (Foundation.Bytes::appendBytes acc (bcSpan x i v)) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcCountFrom,
+  parameters: [acc : Bytes, i : Nat, whole : Bytes, more : Bytes, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => k
+    | Nat.succ rest => (if ((bcLen acc) <? (i + 1)) then k else (let next : Nat := ((bcLineEnd acc i (bcLen acc)) + 1); (if ((bcEqAt acc i whole) || (bcEqAt acc i more)) then (bcCountFrom acc next whole more (k + 1) rest) else (bcCountFrom acc next whole more k rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcKind,
+  parameters: [level : Nat],
+  result: Bytes,
+  body: (if (level =? 1) then (bcU "must") else (if (level =? 2) then (bcU "should") else (bcU "may")))
+}
+
+definition{
+  name: bcRequirement,
+  parameters: [x : Bytes, key : Bytes, cite : Bytes, sec : Bytes, acc : Bytes],
+  result: Bytes,
+  body: (let level : Nat := (bcLevelFrom x 0 (bcLen x)); (if ((level =? 0) || (bcQuotedFrom x 0 (bcLen x))) then acc else (let text : Bytes := (bcNormFrom x 0 0x (bcLen x)); (let base : Bytes := (bcCat (cons key (cons 0x2d (cons sec (cons 0x2d (cons (bcSpan (Sha256::sha256Hex text) 0 8) (nil Bytes))))))); (let head : Bytes := (Foundation.Bytes::appendBytes 0x7b226964223a2022 base); (let k : Nat := (bcCountFrom acc 0 (Foundation.Bytes::appendBytes head 0x22) (Foundation.Bytes::appendBytes head 0x2d) 0 (bcLen acc)); (let rid : Bytes := (if (k =? 0) then base else (bcCat (cons base (cons 0x2d (cons (bcDecimal (k + 1) (k + 2)) (nil Bytes)))))); (Foundation.Bytes::appendBytes acc (bcCat (cons 0x7b226964223a2022 (cons rid (cons 0x222c20226b696e64223a2022 (cons (bcKind level) (cons 0x222c2022726566223a2022 (cons cite (cons 0x20 (cons sec (cons 0x222c202274657874223a2022 (cons (bcJsonFrom text 0 0x (bcLen text)) (cons 0x227d (cons 0x0a (nil Bytes)))))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcSentencesFrom,
+  parameters: [
+    p : Bytes,
+    st : Nat,
+    i : Nat,
+    key : Bytes,
+    cite : Bytes,
+    sec : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let n : Nat := (bcLen p); (if (n <? (i + 1)) then (bcRequirement (bcSpan p st n) key cite sec acc) else (let prev : Nat := (if (i =? 0) then 0 else (bcAt p (prim subtract i 1 : Nat))); (if ((bcIsWs (bcAt p i)) && ((prev =? 46) || ((prev =? 59) || (prev =? 58)))) then (let w : Nat := (bcWsEnd p i n n); (let c : Nat := (bcAt p w); (if ((w <? n) && ((bcIsUpper c) || ((c =? 40) || ((c =? 34) || (c =? 39))))) then (bcSentencesFrom p w w key cite sec (bcRequirement (bcSpan p st i) key cite sec acc) rest) else (bcSentencesFrom p st w key cite sec acc rest)))) else (bcSentencesFrom p st (i + 1) key cite sec acc rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcParagraph,
+  parameters: [p : Bytes, live : Bool, key : Bytes, cite : Bytes, sec : Bytes, acc : Bytes],
+  result: Bytes,
+  body: (if (live && (0 <? (bcLen p))) then (bcSentencesFrom p 0 0 key cite sec acc ((bcLen p) + 1)) else acc),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcListedFrom,
+  parameters: [sec : Bytes, list : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((bcLen list) <? (i + 1)) then false else (let e : Nat := (bcLineEnd list i (bcLen list)); (let m : Nat := (prim subtract e i : Nat); (if ((0 <? m) && ((bcEqAt sec 0 (bcSpan list i e)) && (((bcLen sec) =? m) || ((m <? (bcLen sec)) && ((bcAt sec m) =? 46))))) then true else (bcListedFrom sec list (e + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcSectionsFrom,
+  parameters: [
+    c : Bytes,
+    i : Nat,
+    excluded : Bytes,
+    key : Bytes,
+    cite : Bytes,
+    sec : Bytes,
+    live : Bool,
+    para : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((bcLen c) <? (i + 1)) then (bcParagraph para live key cite sec acc) else (let e : Nat := (bcLineEnd c i (bcLen c)); (let t : Nat := (bcHeadEnd c i e); (if (0 <? t) then (let next : Bytes := (bcSpan c (bcSecStart c i) t); (bcSectionsFrom c (e + 1) excluded key cite next (not ((bcTitleExcluded c t e) || (bcListedFrom next excluded 0 (bcLen excluded)))) 0x (bcParagraph para live key cite sec acc) rest)) else (if (bcBlank c i e) then (bcSectionsFrom c (e + 1) excluded key cite sec live 0x (bcParagraph para live key cite sec acc) rest) else (let w : Nat := (bcWsEnd c i e e); (let line : Bytes := (bcSpan c w (bcTrimEnd c w e (prim subtract e w : Nat))); (bcSectionsFrom c (e + 1) excluded key cite sec live (if ((bcLen para) =? 0) then line else (bcCat (cons para (cons 0x20 (cons line (nil Bytes)))))) acc rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcRequirements,
+  parameters: [piece : Bytes, excluded : Bytes, key : Bytes, cite : Bytes],
+  result: Bytes,
+  body: (let c : Bytes := (bcCleanFrom piece 0 0x false (bcLen piece)); (bcSectionsFrom c 0 excluded key cite 0x false 0x 0x ((bcLen c) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcNameStart,
+  parameters: [t : Bytes, i : Nat, start : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => start
+    | Nat.succ rest => (if ((bcLen t) <? (i + 1)) then start else (if ((bcAt t i) =? 47) then (bcNameStart t (i + 1) (i + 1) rest) else (bcNameStart t (i + 1) start rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcDotFrom,
+  parameters: [t : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((bcLen t) <? (i + 1)) then i else (if ((bcAt t i) =? 46) then i else (bcDotFrom t (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcKey,
+  parameters: [target : Bytes],
+  result: Bytes,
+  body: (let a : Nat := (bcNameStart target 0 0 (bcLen target)); (bcSpan target a (bcDotFrom target a (bcLen target)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcWritten,
+  parameters: [content : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes 0x7772697474656e0a content)
+}
+
+definition{
+  name: bcRefused,
+  parameters: [reasons : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes 0x726566757365643a20 reasons)
+}
+
+definition{
+  name: bcTextFrom,
+  parameters: [archive : Bytes, header : Nat, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (if ((bcAt archive header) =? 0) then (ctor Option.none [Bytes]) else (let name : Bytes := (Foundation.Tar::entryName archive header); (let size : Nat := (Foundation.Tar::entrySize archive header); (if (bcEqAt name 0 0x2e67656e2f) then (bcTextFrom archive ((header + 512) + (Foundation.Tar::padded size)) rest) else (Foundation.Bytes::sliceBytes archive (header + 512) size)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcFirst,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (bcTextFrom archive 0 (prim quotient (bcLen archive) 512 0 : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcExcludedReport,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (match (bcFirst archive)
+    | Option.none => (bcRefused (bcU "no input text"))
+    | Option.some piece => (bcWritten (bcExcluded piece))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcReport,
+  parameters: [archive : Bytes, target : Bytes],
+  result: Bytes,
+  body: (let key : Bytes := (bcKey target); (if (not ((3 <? (bcLen key)) && ((bcEqAt key 0 (bcU "rfc")) && (bcIsDigit (bcAt key 3))))) then (bcRefused (Foundation.Bytes::appendBytes (bcU "not an RFC's requirements: ") target)) else (let list : Bytes := (bcCat (cons (bcU ".gen/") (cons key (cons (bcU ".excluded") (nil Bytes))))); (match (bcFirst archive)
+    | Option.none => (bcRefused (bcU "no input text"))
+    | Option.some piece => (match (Foundation.Tar::find archive list)
+      | Option.none => (bcRefused (Foundation.Bytes::appendBytes (bcU "no file ") list))
+      | Option.some excluded => (bcWritten (bcRequirements piece excluded key (Foundation.Bytes::appendBytes (bcU "RFC ") (bcSpan key 3 (bcLen key)))))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
