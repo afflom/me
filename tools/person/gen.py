@@ -31,8 +31,12 @@ leaf, coding note and parent, so every stored entity keeps its code, title
 and URI as the licence requires (terms 1.2.3). Nothing is added to an entity;
 the model's own functions over the entities are marked as the Prism's.
 
-Writes site/person/icf.mjs, which the page loads. --check writes nothing and
-refuses a stale model. --cache DIR reads and keeps the fetched files there.
+Writes site/person/icf.mjs, which the page loads, and the release's tabulation
+byte for byte to app/specs/oracle/icf/, from which the LexLean generator
+generators/person/src/GenIcf.lex.tex writes the entities' rows,
+site/person/icf-rows.mjs (tools/generators/run.sh, GN-01); those rows must be
+the entities read here, field by field, or this refuses. --check writes nothing
+and refuses a stale model. --cache DIR reads and keeps the fetched files there.
 """
 import csv
 import hashlib
@@ -239,15 +243,16 @@ for n, row in enumerate(rows):
         code,
         row["BlockId"],
         title,
+        level,
         kind,
         int(row["DepthInKind"]),
         row["IsResidual"] == "True",
         leaf,
-        by_uri[row["Parent"]] if row["Parent"] else -1,
+        rows[by_uri[row["Parent"]]]["Foundation URI"][len(FOUNDATION):] if row["Parent"] else None,
         row["CodingNote"],
     ])
 
-counts = {k: sum(1 for e in entities if e[5] == k) for k in ("chapter", "block", "category")}
+counts = {k: sum(1 for e in entities if e[6] == k) for k in ("chapter", "block", "category")}
 release = {
     "title": source["title"],
     "release": source["release"],
@@ -274,18 +279,19 @@ lines = [
     "",
     f"export const RELEASE = Object.freeze({q(release)});",
     "",
-    "// Each entity, in the release's order: foundation id (none for a residual",
-    "// category, which is only in the linearization), linearization id, code, block id, title,",
-    "// kind, depth in kind, residual, leaf, parent (its index, or -1), coding note.",
-    "export const FIELDS = Object.freeze([\"id\", \"linear\", \"code\", \"block\", \"title\", \"kind\", \"depth\", \"residual\", \"leaf\", \"parent\", \"note\"]);",
-    "const ROWS = [",
-    *[f"  {q(e)}," for e in entities],
-    "];",
+    "// Each entity, in the release's order, as generators/person/src/GenIcf.lex.tex",
+    "// writes it from the release's tabulation (app/specs/oracle/icf): foundation id",
+    "// (none for a residual category, which is only in the linearization), linearization",
+    "// id, code, block id, title, level, kind, depth in kind, residual, leaf, parent's",
+    "// foundation id (none for a root), coding note.",
+    "import { ROWS } from \"./icf-rows.mjs\";",
+    "export const FIELDS = Object.freeze([\"id\", \"linear\", \"code\", \"block\", \"title\", \"level\", \"kind\", \"depth\", \"residual\", \"leaf\", \"parent\", \"note\"]);",
     "",
     "// The Prism's own functions over the entities follow (not WHO's: ICF terms 1.2.5).",
+    "const INDEX = new Map(ROWS.flatMap(([id], i) => (id ? [[id, i]] : [])));",
     "const entity = (i) => {",
-    "  const [id, linear, code, block, title, kind, depth, residual, leaf, parent, note] = ROWS[i];",
-    "  return Object.freeze({ index: i, uri: id ? RELEASE.foundation + id : null, release: RELEASE.linearization + linear, code, block, title, kind, depth, residual, leaf, parent, note });",
+    "  const [id, linear, code, block, title, level, kind, depth, residual, leaf, parent, note] = ROWS[i];",
+    "  return Object.freeze({ index: i, uri: id ? RELEASE.foundation + id : null, release: RELEASE.linearization + linear, code, block, title, level, kind, depth, residual, leaf, parent: parent === null ? -1 : INDEX.get(parent), note });",
     "};",
     "export const ENTITIES = Object.freeze(ROWS.map((_, i) => entity(i)));",
     "const BY_CODE = new Map(ENTITIES.filter((e) => e.code).map((e) => [e.code, e]));",
@@ -324,12 +330,54 @@ lines = [
 ]
 text = "\n".join(lines)
 OUT = ROOT / source["model"]
+# The release's tabulation, kept byte for byte so the LexLean generator
+# (generators/person, tools/generators/run.sh) writes the rows from it; and the
+# rows it writes, which must be these entities field by field.
+COPY = ROOT / "app/specs/oracle/icf" / source["tabulation"]
+ROWS_OUT = OUT.with_name("icf-rows.mjs")
+NOTICE = COPY.with_name("NOTICE")
+notice = "\n".join([
+    f"{source['tabulation']} is from {source['title']},",
+    f"exactly as WHO publishes it in {source['url']}",
+    f"(SHA-256 {source['sha256']}), unaltered.",
+    f"{source['licence']['citation']}.",
+    f"Licence terms: {source['licence']['terms']}.",
+    "Written by tools/person/gen.py, which refuses a copy that is not the release's.",
+    "",
+])
 if PLANT:
     sys.exit("person: the planted defect was not refused")
+
+
+def generated_rows():
+    if not ROWS_OUT.exists():
+        return None
+    return [json.loads(line[len("ROWS.push(") : -len(");")]) for line in ROWS_OUT.read_text(encoding="utf-8").splitlines() if line.startswith("ROWS.push(")]
+
+
+def rows_agree():
+    got = generated_rows()
+    if got is None:
+        refuse(f"{ROWS_OUT.relative_to(ROOT)} is missing: run tools/generators/run.sh")
+    if len(got) != len(entities):
+        refuse(f"{ROWS_OUT.relative_to(ROOT)} has {len(got)} rows, the release {len(entities)} entities")
+    for e, g in zip(entities, got):
+        if e != g:
+            refuse(f"{ROWS_OUT.relative_to(ROOT)} writes {g}, the release holds {e}")
+
+
 if CHECK:
+    if not COPY.exists() or COPY.read_bytes() != tab_raw or not NOTICE.exists() or NOTICE.read_text(encoding="utf-8") != notice:
+        refuse(f"{COPY.relative_to(ROOT)} is not the release's tabulation: run python3 -I tools/person/gen.py")
     if not OUT.exists() or OUT.read_text(encoding="utf-8") != text:
         refuse(f"{source['model']} is stale: run python3 -I tools/person/gen.py")
+    rows_agree()
     sys.exit(0)
+COPY.parent.mkdir(parents=True, exist_ok=True)
+COPY.write_bytes(tab_raw)
+NOTICE.write_text(notice, encoding="utf-8")
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text(text, encoding="utf-8")
+if generated_rows() is not None:
+    rows_agree()
 print(f"person: ICF {source['release']} ({release['version']}), {counts['category']} categories, {counts['block']} blocks, {counts['chapter']} roots, from both forms of the release")
