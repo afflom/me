@@ -1,0 +1,671 @@
+\begin{lexlean}{Foundation.Abnf}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\title{Augmented grammar}
+\begin{semanticmodule}
+inductive{
+  name: Node,
+  type_parameters: [],
+  parameters: [],
+  constructors: [
+    {name: Ref, fields: [Nat]},
+    {name: Lit, fields: [(List Nat)]},
+    {name: Cs, fields: [(List Nat)]},
+    {name: Range, fields: [Nat, Nat]},
+    {name: Alt, fields: [(List Node)]},
+    {name: Seq, fields: [(List Node)]},
+    {name: Rep, fields: [Nat, Nat, Bool, Node]},
+    {name: Prose, fields: []}
+  ]
+}
+
+structure{
+  name: Span,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: rule, type: Nat},
+    {name: start, type: Nat},
+    {name: stop, type: Nat},
+    {name: depth, type: Nat}
+  ]
+}
+
+definition{
+  name: abnfByte,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => 0
+    | Option.some b => (prim to_nat b : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: abnfWidth,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (abnfByte s i); (if (b <? 192) then 1 else (if (b <? 224) then 2 else (if (b <? 240) then 3 else 4)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: abnfTail,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (prim subtract (abnfByte s i) 128 : Nat),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: abnfCodeAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (abnfByte s i); (if (b <? 192) then b else (if (b <? 224) then ((prim multiply (prim subtract b 192 : Nat) 64 : Nat) + (abnfTail s (i + 1))) else (if (b <? 240) then (((prim multiply (prim subtract b 224 : Nat) 4096 : Nat) + (prim multiply (abnfTail s (i + 1)) 64 : Nat)) + (abnfTail s (i + 2))) else (((prim multiply (prim subtract b 240 : Nat) 262144 : Nat) + (prim multiply (abnfTail s (i + 1)) 4096 : Nat)) + ((prim multiply (abnfTail s (i + 2)) 64 : Nat) + (abnfTail s (i + 3)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: abnfLower,
+  parameters: [c : Nat],
+  result: Nat,
+  body: (if ((64 <? c) && (c <? 91)) then (c + 32) else c)
+}
+
+definition{
+  name: abnfHas,
+  parameters: [x : Nat, l : (List Nat)],
+  result: Bool,
+  body: (match l
+    | List.nil => false
+    | List.cons y rest => (if (x =? y) then true else (abnfHas x rest))),
+  recursive_argument: l
+}
+
+definition{
+  name: abnfAppend,
+  parameters: [a : (List Nat), b : (List Nat)],
+  result: (List Nat),
+  body: (match a | List.nil => b | List.cons x rest => (cons x (abnfAppend rest b))),
+  recursive_argument: a
+}
+
+definition{
+  name: abnfUnion,
+  parameters: [a : (List Nat), b : (List Nat)],
+  result: (List Nat),
+  body: (match b
+    | List.nil => a
+    | List.cons x rest => (if (abnfHas x a) then (abnfUnion a rest) else (abnfUnion (abnfAppend a (cons x (nil Nat))) rest))),
+  recursive_argument: b
+}
+
+definition{
+  name: abnfFresh,
+  parameters: [l : (List Nat), seen : (List Nat)],
+  result: (List Nat),
+  body: (match l
+    | List.nil => (nil Nat)
+    | List.cons x rest => (if (abnfHas x seen) then (abnfFresh rest seen) else (cons x (abnfFresh rest seen)))),
+  recursive_argument: l
+}
+
+definition{
+  name: abnfInsertDown,
+  parameters: [x : Nat, l : (List Nat)],
+  result: (List Nat),
+  body: (match l
+    | List.nil => (cons x (nil Nat))
+    | List.cons y rest => (if (y <? x) then (cons x (cons y rest)) else (cons y (abnfInsertDown x rest)))),
+  recursive_argument: l
+}
+
+definition{
+  name: abnfLongestFirst,
+  parameters: [l : (List Nat)],
+  result: (List Nat),
+  body: (match l
+    | List.nil => (nil Nat)
+    | List.cons x rest => (abnfInsertDown x (abnfLongestFirst rest))),
+  recursive_argument: l
+}
+
+definition{
+  name: abnfLitEnd,
+  parameters: [want : (List Nat), s : Bytes, n : Nat, pos : Nat, sensitive : Bool],
+  result: (Option Nat),
+  body: (match want
+    | List.nil => (ctor Option.some [Nat] pos)
+    | List.cons c rest => (if (n <=? pos) then (ctor Option.none [Nat]) else (if (if sensitive then ((abnfCodeAt s pos) =? c) else ((abnfLower (abnfCodeAt s pos)) =? (abnfLower c))) then (abnfLitEnd rest s n (pos + (abnfWidth s pos)) sensitive) else (ctor Option.none [Nat])))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: want
+}
+
+definition{
+  name: abnfCount,
+  parameters: [l : (List Nat)],
+  result: Nat,
+  body: (match l | List.nil => 0 | List.cons x rest => ((abnfCount rest) + 1)),
+  recursive_argument: l
+}
+
+definition{
+  name: abnfLitEnds,
+  parameters: [want : (List Nat), s : Bytes, n : Nat, sensitive : Bool, at : (List Nat)],
+  result: (List Nat),
+  body: (match at
+    | List.nil => (nil Nat)
+    | List.cons p rest => (abnfUnion (match (abnfLitEnd want s n p sensitive)
+      | Option.none => (nil Nat)
+      | Option.some e => (cons e (nil Nat))) (abnfLitEnds want s n sensitive rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: at
+}
+
+definition{
+  name: abnfRangeEnds,
+  parameters: [low : Nat, high : Nat, s : Bytes, n : Nat, at : (List Nat)],
+  result: (List Nat),
+  body: (match at
+    | List.nil => (nil Nat)
+    | List.cons p rest => (abnfUnion (if ((p <? n) && ((low <=? (abnfCodeAt s p)) && ((abnfCodeAt s p) <=? high))) then (cons (p + (abnfWidth s p)) (nil Nat)) else (nil Nat)) (abnfRangeEnds low high s n rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: at
+}
+
+definition{
+  name: abnfJoinNodes,
+  parameters: [a : (List Node), b : (List Node)],
+  result: (List Node),
+  body: (match a | List.nil => b | List.cons x rest => (cons x (abnfJoinNodes rest b))),
+  recursive_argument: a
+}
+
+definition{
+  name: abnfRule,
+  parameters: [rules : (List Node), i : Nat],
+  result: Node,
+  body: (match rules
+    | List.nil => constructor{arguments: [], constructor: Node.Prose, type_arguments: []}
+    | List.cons r rest => (if (i =? 0) then r else (abnfRule rest (prim subtract i 1 : Nat)))),
+  recursive_argument: rules
+}
+
+definition{
+  name: abnfEnds,
+  parameters: [fuel : Nat, rules : (List Node), s : Bytes, n : Nat, node : Node, at : (List Nat)],
+  result: (List Nat),
+  body: (match fuel
+    | Nat.zero => (nil Nat)
+    | Nat.succ more => (match node
+      | Node.Ref i => (abnfEnds more rules s n (abnfRule rules i) at)
+      | Node.Lit want => (abnfLitEnds want s n false at)
+      | Node.Cs want => (abnfLitEnds want s n true at)
+      | Node.Range low high => (abnfRangeEnds low high s n at)
+      | Node.Alt kids => (abnfEndsAlt more rules s n kids at)
+      | Node.Seq kids => (abnfEndsSeq more rules s n kids at)
+      | Node.Rep low high bounded inner => (abnfEndsRep more rules s n low high bounded inner at 0 (if (low =? 0) then at else (nil Nat)) at)
+      | Node.Prose => (nil Nat))),
+  axioms: [Quot.sound, propext],
+  mutual: AbnfEnds,
+  recursive_argument: fuel
+}
+
+definition{
+  name: abnfEndsAlt,
+  parameters: [
+    fuel : Nat,
+    rules : (List Node),
+    s : Bytes,
+    n : Nat,
+    kids : (List Node),
+    at : (List Nat)
+  ],
+  result: (List Nat),
+  body: (match fuel
+    | Nat.zero => (nil Nat)
+    | Nat.succ more => (match kids
+      | List.nil => (nil Nat)
+      | List.cons kid rest => (abnfUnion (abnfEnds more rules s n kid at) (abnfEndsAlt more rules s n rest at)))),
+  axioms: [Quot.sound, propext],
+  mutual: AbnfEnds,
+  recursive_argument: fuel
+}
+
+definition{
+  name: abnfEndsSeq,
+  parameters: [
+    fuel : Nat,
+    rules : (List Node),
+    s : Bytes,
+    n : Nat,
+    kids : (List Node),
+    at : (List Nat)
+  ],
+  result: (List Nat),
+  body: (match fuel
+    | Nat.zero => (nil Nat)
+    | Nat.succ more => (match kids
+      | List.nil => at
+      | List.cons kid rest => (match at
+        | List.nil => (nil Nat)
+        | List.cons p others => (abnfEndsSeq more rules s n rest (abnfEnds more rules s n kid at))))),
+  axioms: [Quot.sound, propext],
+  mutual: AbnfEnds,
+  recursive_argument: fuel
+}
+
+definition{
+  name: abnfEndsRep,
+  parameters: [
+    fuel : Nat,
+    rules : (List Node),
+    s : Bytes,
+    n : Nat,
+    low : Nat,
+    high : Nat,
+    bounded : Bool,
+    inner : Node,
+    frontier : (List Nat),
+    k : Nat,
+    out : (List Nat),
+    seen : (List Nat)
+  ],
+  result: (List Nat),
+  body: (match fuel
+    | Nat.zero => (abnfLongestFirst out)
+    | Nat.succ more => (match frontier
+      | List.nil => (abnfLongestFirst out)
+      | List.cons p others => (if (bounded && (high <=? k)) then (abnfLongestFirst out) else (let next : (List Nat) := (abnfEnds more rules s n inner frontier); (abnfEndsRep more rules s n low high bounded inner (if ((k + 1) <? low) then next else (abnfFresh next seen)) (k + 1) (if (low <=? (k + 1)) then (abnfUnion out next) else out) (abnfUnion seen next)))))),
+  axioms: [Quot.sound, propext],
+  mutual: AbnfEnds,
+  recursive_argument: fuel
+}
+
+definition{
+  name: abnfJoin,
+  parameters: [a : (List Span), b : (List Span)],
+  result: (List Span),
+  body: (match a | List.nil => b | List.cons x rest => (cons x (abnfJoin rest b))),
+  recursive_argument: a
+}
+
+definition{
+  name: abnfDerive,
+  parameters: [
+    fuel : Nat,
+    rules : (List Node),
+    s : Bytes,
+    n : Nat,
+    node : Node,
+    pos : Nat,
+    stop : Nat,
+    depth : Nat
+  ],
+  result: (Option (List Span)),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [(List Span)])
+    | Nat.succ more => (if (abnfHas stop (abnfEnds more rules s n node (cons pos (nil Nat)))) then (match node
+      | Node.Ref i => (match (abnfDerive more rules s n (abnfRule rules i) pos stop (depth + 1))
+        | Option.none => (ctor Option.none [(List Span)])
+        | Option.some kids => (ctor Option.some [(List Span)] (cons (record Span {rule := i, start := pos, stop := stop, depth := depth}) kids)))
+      | Node.Lit want => (ctor Option.some [(List Span)] (nil Span))
+      | Node.Cs want => (ctor Option.some [(List Span)] (nil Span))
+      | Node.Range low high => (ctor Option.some [(List Span)] (nil Span))
+      | Node.Alt kids => (abnfDeriveAlt more rules s n kids pos stop depth)
+      | Node.Seq kids => (abnfDeriveSeq more rules s n kids pos stop depth)
+      | Node.Rep low high bounded inner => (abnfDeriveRep more rules s n low high bounded inner pos stop 0 depth)
+      | Node.Prose => (ctor Option.none [(List Span)])) else (ctor Option.none [(List Span)]))),
+  axioms: [Quot.sound, propext],
+  mutual: AbnfDerive,
+  recursive_argument: fuel
+}
+
+definition{
+  name: abnfDeriveAlt,
+  parameters: [
+    fuel : Nat,
+    rules : (List Node),
+    s : Bytes,
+    n : Nat,
+    kids : (List Node),
+    pos : Nat,
+    stop : Nat,
+    depth : Nat
+  ],
+  result: (Option (List Span)),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [(List Span)])
+    | Nat.succ more => (match kids
+      | List.nil => (ctor Option.none [(List Span)])
+      | List.cons kid rest => (match (abnfDerive more rules s n kid pos stop depth)
+        | Option.none => (abnfDeriveAlt more rules s n rest pos stop depth)
+        | Option.some found => (ctor Option.some [(List Span)] found)))),
+  axioms: [Quot.sound, propext],
+  mutual: AbnfDerive,
+  recursive_argument: fuel
+}
+
+definition{
+  name: abnfDeriveSeq,
+  parameters: [
+    fuel : Nat,
+    rules : (List Node),
+    s : Bytes,
+    n : Nat,
+    kids : (List Node),
+    pos : Nat,
+    stop : Nat,
+    depth : Nat
+  ],
+  result: (Option (List Span)),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [(List Span)])
+    | Nat.succ more => (match kids
+      | List.nil => (if (pos =? stop) then (ctor Option.some [(List Span)] (nil Span)) else (ctor Option.none [(List Span)]))
+      | List.cons kid rest => (abnfDeriveSeqTry more rules s n kid rest (abnfEnds more rules s n kid (cons pos (nil Nat))) pos stop depth))),
+  axioms: [Quot.sound, propext],
+  mutual: AbnfDerive,
+  recursive_argument: fuel
+}
+
+definition{
+  name: abnfDeriveSeqTry,
+  parameters: [
+    fuel : Nat,
+    rules : (List Node),
+    s : Bytes,
+    n : Nat,
+    kid : Node,
+    rest : (List Node),
+    cands : (List Nat),
+    pos : Nat,
+    stop : Nat,
+    depth : Nat
+  ],
+  result: (Option (List Span)),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [(List Span)])
+    | Nat.succ more => (match cands
+      | List.nil => (ctor Option.none [(List Span)])
+      | List.cons e others => (if (stop <? e) then (abnfDeriveSeqTry more rules s n kid rest others pos stop depth) else (match (abnfDerive more rules s n kid pos e depth)
+        | Option.none => (abnfDeriveSeqTry more rules s n kid rest others pos stop depth)
+        | Option.some head => (match (abnfDeriveSeq more rules s n rest e stop depth)
+          | Option.none => (abnfDeriveSeqTry more rules s n kid rest others pos stop depth)
+          | Option.some tail => (ctor Option.some [(List Span)] (abnfJoin head tail))))))),
+  axioms: [Quot.sound, propext],
+  mutual: AbnfDerive,
+  recursive_argument: fuel
+}
+
+definition{
+  name: abnfDeriveRep,
+  parameters: [
+    fuel : Nat,
+    rules : (List Node),
+    s : Bytes,
+    n : Nat,
+    low : Nat,
+    high : Nat,
+    bounded : Bool,
+    inner : Node,
+    pos : Nat,
+    stop : Nat,
+    k : Nat,
+    depth : Nat
+  ],
+  result: (Option (List Span)),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [(List Span)])
+    | Nat.succ more => (if ((pos =? stop) && (low <=? k)) then (ctor Option.some [(List Span)] (nil Span)) else (if (bounded && (high <=? k)) then (ctor Option.none [(List Span)]) else (abnfDeriveRepTry more rules s n low high bounded inner (abnfEnds more rules s n inner (cons pos (nil Nat))) pos stop k depth)))),
+  axioms: [Quot.sound, propext],
+  mutual: AbnfDerive,
+  recursive_argument: fuel
+}
+
+definition{
+  name: abnfDeriveRepTry,
+  parameters: [
+    fuel : Nat,
+    rules : (List Node),
+    s : Bytes,
+    n : Nat,
+    low : Nat,
+    high : Nat,
+    bounded : Bool,
+    inner : Node,
+    cands : (List Nat),
+    pos : Nat,
+    stop : Nat,
+    k : Nat,
+    depth : Nat
+  ],
+  result: (Option (List Span)),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [(List Span)])
+    | Nat.succ more => (match cands
+      | List.nil => (ctor Option.none [(List Span)])
+      | List.cons e others => (if ((stop <? e) || ((e =? pos) && (low <=? k))) then (abnfDeriveRepTry more rules s n low high bounded inner others pos stop k depth) else (match (abnfDerive more rules s n inner pos e depth)
+        | Option.none => (abnfDeriveRepTry more rules s n low high bounded inner others pos stop k depth)
+        | Option.some head => (match (abnfDeriveRep more rules s n low high bounded inner e stop (k + 1) depth)
+          | Option.none => (abnfDeriveRepTry more rules s n low high bounded inner others pos stop k depth)
+          | Option.some tail => (ctor Option.some [(List Span)] (abnfJoin head tail))))))),
+  axioms: [Quot.sound, propext],
+  mutual: AbnfDerive,
+  recursive_argument: fuel
+}
+
+definition{
+  name: abnfMatch,
+  parameters: [rules : (List Node), rule : Nat, s : Bytes, n : Nat, fuel : Nat],
+  result: (Option (List Span)),
+  body: (abnfDerive fuel rules s n constructor{
+    arguments: [rule],
+    constructor: Node.Ref,
+    type_arguments: []
+  } 0 n 0),
+  axioms: [Quot.sound, propext]
+}
+
+structure{
+  name: Decoded,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: node, type: Node}, {name: next, type: Nat}]
+}
+
+structure{
+  name: DecodedList,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: nodes, type: (List Node)}, {name: next, type: Nat}]
+}
+
+structure{
+  name: DecodedCodes,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: codes, type: (List Nat)}, {name: next, type: Nat}]
+}
+
+definition{
+  name: abnfWord,
+  parameters: [b : Bytes, at : Nat],
+  result: Nat,
+  body: ((prim multiply (abnfByte b at) 256 : Nat) + (abnfByte b (at + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: abnfTriple,
+  parameters: [b : Bytes, at : Nat],
+  result: Nat,
+  body: ((prim multiply (abnfByte b at) 65536 : Nat) + (abnfWord b (at + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: abnfCodes,
+  parameters: [count : Nat, b : Bytes, at : Nat],
+  result: DecodedCodes,
+  body: (match count
+    | Nat.zero => (record DecodedCodes {codes := (nil Nat), next := at})
+    | Nat.succ left => (let rest : DecodedCodes := (abnfCodes left b (at + 3)); (record DecodedCodes {codes := (cons (abnfTriple b at) (project rest codes)), next := (project rest next)}))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: count
+}
+
+definition{
+  name: abnfDecode,
+  parameters: [fuel : Nat, b : Bytes, at : Nat],
+  result: Decoded,
+  body: (match fuel
+    | Nat.zero => (record Decoded {node := constructor{
+      arguments: [],
+      constructor: Node.Prose,
+      type_arguments: []
+    }, next := at})
+    | Nat.succ more => (let tag : Nat := (abnfByte b at); (if (tag =? 0) then (record Decoded {node := constructor{
+      arguments: [(abnfWord b (at + 1))],
+      constructor: Node.Ref,
+      type_arguments: []
+    }, next := (at + 3)}) else (if ((tag =? 1) || (tag =? 2)) then (let got : DecodedCodes := (abnfCodes (abnfWord b (at + 1)) b (at + 3)); (record Decoded {node := (if (tag =? 1) then constructor{
+      arguments: [(project got codes)],
+      constructor: Node.Lit,
+      type_arguments: []
+    } else constructor{
+      arguments: [(project got codes)],
+      constructor: Node.Cs,
+      type_arguments: []
+    }), next := (project got next)})) else (if (tag =? 3) then (record Decoded {node := constructor{
+      arguments: [(abnfTriple b (at + 1)), (abnfTriple b (at + 4))],
+      constructor: Node.Range,
+      type_arguments: []
+    }, next := (at + 7)}) else (if ((tag =? 4) || (tag =? 5)) then (let got : DecodedList := (abnfDecodeList more (abnfWord b (at + 1)) b (at + 3)); (record Decoded {node := (if (tag =? 4) then constructor{
+      arguments: [(project got nodes)],
+      constructor: Node.Alt,
+      type_arguments: []
+    } else constructor{
+      arguments: [(project got nodes)],
+      constructor: Node.Seq,
+      type_arguments: []
+    }), next := (project got next)})) else (if (tag =? 6) then (let inner : Decoded := (abnfDecode more b (at + 6)); (record Decoded {node := constructor{
+      arguments: [
+        (abnfWord b (at + 1)),
+        (abnfWord b (at + 3)),
+        ((abnfByte b (at + 5)) =? 1),
+        (project inner node)
+      ],
+      constructor: Node.Rep,
+      type_arguments: []
+    }, next := (project inner next)})) else (record Decoded {node := constructor{
+      arguments: [],
+      constructor: Node.Prose,
+      type_arguments: []
+    }, next := (at + 1)})))))))),
+  axioms: [Quot.sound, propext],
+  mutual: AbnfDecode,
+  recursive_argument: fuel
+}
+
+definition{
+  name: abnfDecodeList,
+  parameters: [fuel : Nat, count : Nat, b : Bytes, at : Nat],
+  result: DecodedList,
+  body: (match fuel
+    | Nat.zero => (record DecodedList {nodes := (nil Node), next := at})
+    | Nat.succ more => (if (count =? 0) then (record DecodedList {nodes := (nil Node), next := at}) else (let head : Decoded := (abnfDecode more b at); (let rest : DecodedList := (abnfDecodeList more (prim subtract count 1 : Nat) b (project head next)); (record DecodedList {nodes := (cons (project head node) (project rest nodes)), next := (project rest next)}))))),
+  axioms: [Quot.sound, propext],
+  mutual: AbnfDecode,
+  recursive_argument: fuel
+}
+
+definition{
+  name: abnfTable,
+  parameters: [b : Bytes],
+  result: (List Node),
+  body: (project (abnfDecodeList 100000 (abnfWord b 0) b 2) nodes),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: abnfDigit,
+  parameters: [d : Nat],
+  result: String,
+  body: (if (d =? 0) then "0" else (if (d =? 1) then "1" else (if (d =? 2) then "2" else (if (d =? 3) then "3" else (if (d =? 4) then "4" else (if (d =? 5) then "5" else (if (d =? 6) then "6" else (if (d =? 7) then "7" else (if (d =? 8) then "8" else "9")))))))))
+}
+
+definition{
+  name: abnfDecimalFrom,
+  parameters: [fuel : Nat, n : Nat, acc : String],
+  result: String,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ more => (let digits : String := (prim join (cons (abnfDigit (prim remainder n 10 0 : Nat)) (cons acc (nil String))) "" : String); (if (n <? 10) then digits else (abnfDecimalFrom more (prim quotient n 10 0 : Nat) digits)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: abnfDecimal,
+  parameters: [n : Nat],
+  result: String,
+  body: (abnfDecimalFrom 24 n ""),
+  axioms: [propext]
+}
+
+definition{
+  name: abnfSpanText,
+  parameters: [x : Span],
+  result: String,
+  body: (prim join (cons (abnfDecimal (project x rule)) (cons (abnfDecimal (project x start)) (cons (abnfDecimal (project x stop)) (cons (abnfDecimal (project x depth)) (nil String))))) "," : String),
+  axioms: [propext]
+}
+
+definition{
+  name: abnfSpansText,
+  parameters: [spans : (List Span)],
+  result: (List String),
+  body: (match spans
+    | List.nil => (nil String)
+    | List.cons x rest => (cons (abnfSpanText x) (abnfSpansText rest))),
+  axioms: [propext],
+  recursive_argument: spans
+}
+
+definition{
+  name: abnfNumberEnd,
+  parameters: [fuel : Nat, s : Bytes, i : Nat, acc : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ more => (let d : Nat := (abnfByte s i); (if ((d <? 48) || (57 <? d)) then acc else (abnfNumberEnd more s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: abnfDigitsCount,
+  parameters: [fuel : Nat, s : Bytes, i : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ more => (let d : Nat := (abnfByte s i); (if (((d <? 48) || (57 <? d)) || ((prim length s : Nat) <=? i)) then i else (abnfDigitsCount more s (i + 1))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: abnfAnswer,
+  parameters: [table : Bytes, request : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (let cut : Nat := (abnfDigitsCount 6 request 0); (if ((cut =? 0) || (not ((abnfByte request cut) =? 32))) then (prim utf8_encode "invalid" : Bytes) else (match (prim slice request (cut + 1) (prim subtract (prim length request : Nat) (cut + 1) : Nat) : (Option Bytes))
+    | Option.none => (prim utf8_encode "invalid" : Bytes)
+    | Option.some text => (match (abnfMatch (abnfTable table) (abnfNumberEnd 6 request 0 0) text (prim length text : Nat) fuel)
+      | Option.none => (prim utf8_encode "none" : Bytes)
+      | Option.some spans => (prim utf8_encode (prim join (abnfSpansText spans) " " : String) : Bytes))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

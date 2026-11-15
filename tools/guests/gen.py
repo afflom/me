@@ -8,8 +8,8 @@
 app/specs/guests/spec.json lists every guest: the core wasm the page's Node
 suites open, the file that pins it by SHA-256, the app modules it is built
 from (each with its proofs), the dispatch it answers with, and where its
-acceptance vectors come from (the builder's prompt, or a spec whose examples
-are raw requests). `write` lays out app/'s toolchain files, Foundation, those
+acceptance vectors come from (the builder's prompt, a spec whose examples
+are raw requests, or "file:" a generated file of them). `write` lays out app/'s toolchain files, Foundation, those
 modules and a <Guest>App module whose application record routes every request
 straight to that dispatch. tools/guests/build.sh builds each stale project in
 the locked SDK with no network (lexlean lock, fmt, lock, verify, then prismpm
@@ -43,6 +43,8 @@ def pascal(s):
 def vectors(g):
     """The acceptance vectors: the prompt's examples, or a raw-request spec's."""
     v = g["vectors"]
+    if v.startswith("file:"):
+        return [tuple(e) for e in json.loads((ROOT / v[5:]).read_text())["examples"]]
     if v.startswith("spec:"):
         return [tuple(e) for e in json.loads((APP / f"specs/{v[5:]}/spec.json").read_text())["examples"]]
     return [(e["request"], e["response"]) for e in json.loads((APP / f"prompts/{v}.prompt.json").read_text())["app"]["examples"]]
