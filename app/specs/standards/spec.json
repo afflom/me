@@ -1,0 +1,650 @@
+{
+ "comment": "ST-01's register: every standard a part of the Prism answers to, the parts it governs (path globs over tools/parts/gate.py's parts), and its own normative text pinned by SHA-256 ('text', or 'oracle' to reuse an oracle source's pin). Each inventory names an extractor, tools/standards/extract/<extract>.py, that turns the pinned bytes into requirements (test/standards/requirements.json). A requirement is enforced when a suite that reaches a governed part carries 'enforces: <id>', or 'enforcedBy' names that suite for it; every other requirement is debt (debt.json), which only shrinks. A standard without a pinned text says why: 'withheld' (its issuer does not publish it) or 'unpinned' (what it waits on). A part no standard governs is listed under 'ungoverned' with the reason none applies, or under 'unassigned', which only shrinks. Run python3 -I tools/standards/gate.py --check.",
+ "standards": [
+  {
+   "key": "rfc5322",
+   "title": "RFC 5322 Internet Message Format",
+   "issuer": "IETF",
+   "text": {
+    "oracle": "rfc5322"
+   },
+   "inventories": [
+    {
+     "extract": "bcp14"
+    }
+   ],
+   "governs": [
+    "site/read/read.mjs",
+    "site/card.mjs",
+    "site/router/parts.mjs",
+    "site/coherence/people.mjs",
+    "site/dest/dest.mjs",
+    "site/time/time.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc2045",
+   "title": "RFC 2045 MIME Part One: Format of Internet Message Bodies",
+   "issuer": "IETF",
+   "text": {
+    "url": "https://www.rfc-editor.org/rfc/rfc2045.txt",
+    "sha256": "9bb251635dd37fda97dcce6c08dea019432117a0f1e389051d2ecbf7b76350b0"
+   },
+   "inventories": [
+    {
+     "extract": "bcp14"
+    }
+   ],
+   "governs": [
+    "site/read/read.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc2046",
+   "title": "RFC 2046 MIME Part Two: Media Types",
+   "issuer": "IETF",
+   "text": {
+    "url": "https://www.rfc-editor.org/rfc/rfc2046.txt",
+    "sha256": "7ac4096b9263e11a704f06892638258ac1ddc0394dd75ffdc171e7b5ba0123e0"
+   },
+   "inventories": [
+    {
+     "extract": "bcp14"
+    }
+   ],
+   "governs": [
+    "site/read/read.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc2047",
+   "title": "RFC 2047 MIME Part Three: Message Header Extensions for Non-ASCII Text",
+   "issuer": "IETF",
+   "text": {
+    "oracle": "rfc2047"
+   },
+   "inventories": [
+    {
+     "extract": "bcp14"
+    }
+   ],
+   "governs": [
+    "site/card.mjs",
+    "site/coherence/people.mjs",
+    "site/router/parts.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc4648",
+   "title": "RFC 4648 The Base16, Base32, and Base64 Data Encodings",
+   "issuer": "IETF",
+   "text": {
+    "oracle": "rfc4648"
+   },
+   "inventories": [
+    {
+     "extract": "bcp14"
+    }
+   ],
+   "governs": [
+    "site/read/read.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc4155",
+   "title": "RFC 4155 The application/mbox Media Type",
+   "issuer": "IETF",
+   "text": {
+    "url": "https://www.rfc-editor.org/rfc/rfc4155.txt",
+    "sha256": "41dcdacf425e68ad861e0e2a123bbad198ff281798c23f8c54fe426c5f77a06f"
+   },
+   "inventories": [
+    {
+     "extract": "bcp14"
+    }
+   ],
+   "governs": [
+    "site/device/device.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc5545",
+   "title": "RFC 5545 Internet Calendaring and Scheduling Core Object Specification (iCalendar)",
+   "issuer": "IETF",
+   "text": {
+    "oracle": "rfc5545"
+   },
+   "inventories": [
+    {
+     "extract": "bcp14"
+    }
+   ],
+   "governs": [
+    "site/card.mjs",
+    "site/read/read.mjs",
+    "site/router/parts.mjs",
+    "site/time/recur.mjs",
+    "site/time/time.mjs",
+    "site/dest/dest.mjs",
+    "site/device/device.mjs",
+    "site/google/google.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc5546",
+   "title": "RFC 5546 iCalendar Transport-Independent Interoperability Protocol (iTIP)",
+   "issuer": "IETF",
+   "text": {
+    "oracle": "rfc5546"
+   },
+   "inventories": [
+    {
+     "extract": "bcp14"
+    }
+   ],
+   "governs": [
+    "site/card.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc6047",
+   "title": "RFC 6047 iCalendar Message-Based Interoperability Protocol (iMIP)",
+   "issuer": "IETF",
+   "text": {
+    "oracle": "rfc6047"
+   },
+   "inventories": [
+    {
+     "extract": "bcp14"
+    }
+   ],
+   "governs": [
+    "site/read/read.mjs",
+    "site/card.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc6350",
+   "title": "RFC 6350 vCard Format Specification",
+   "issuer": "IETF",
+   "text": {
+    "oracle": "rfc6350"
+   },
+   "inventories": [
+    {
+     "extract": "bcp14"
+    }
+   ],
+   "governs": [
+    "site/source/exports.mjs",
+    "site/device/device.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc4180",
+   "title": "RFC 4180 Common Format and MIME Type for Comma-Separated Values (CSV) Files",
+   "issuer": "IETF",
+   "text": {
+    "oracle": "rfc4180"
+   },
+   "inventories": [
+    {
+     "extract": "rules",
+     "section": "2"
+    }
+   ],
+   "governs": [
+    "site/source/exports.mjs"
+   ],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "iso-iec-30173",
+   "title": "ISO/IEC 30173:2023 Digital twin: concepts and terminology",
+   "issuer": "ISO/IEC JTC 1",
+   "text": null,
+   "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "iso-iec-30188",
+   "title": "ISO/IEC 30188:2024 Digital twin: reference architecture",
+   "issuer": "ISO/IEC JTC 1",
+   "text": null,
+   "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "ieee-p7006",
+   "title": "IEEE P7006 Standard for Personal Data Artificial Intelligence (AI) Agent",
+   "issuer": "IEEE",
+   "text": null,
+   "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "iso-iec-25012",
+   "title": "ISO/IEC 25012:2008 Data quality model",
+   "issuer": "ISO/IEC JTC 1",
+   "text": null,
+   "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "iso-iec-25010",
+   "title": "ISO/IEC 25010:2023 Product quality model",
+   "issuer": "ISO/IEC JTC 1",
+   "text": null,
+   "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "iso-9241-110",
+   "title": "ISO 9241-110:2020 Interaction principles",
+   "issuer": "ISO/TC 159",
+   "text": null,
+   "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "iso-9241-112",
+   "title": "ISO 9241-112:2017 Principles for the presentation of information",
+   "issuer": "ISO/TC 159",
+   "text": null,
+   "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "iso-9241-11",
+   "title": "ISO 9241-11:2018 Usability: definitions and concepts",
+   "issuer": "ISO/TC 159",
+   "text": null,
+   "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "iso-19450",
+   "title": "ISO/PAS 19450:2015 Object-Process Methodology",
+   "issuer": "ISO/TC 184",
+   "text": null,
+   "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "iso-iec-ieee-42010",
+   "title": "ISO/IEC/IEEE 42010:2022 Architecture description",
+   "issuer": "ISO/IEC JTC 1",
+   "text": null,
+   "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "iso-iec-29100",
+   "title": "ISO/IEC 29100:2024 Privacy framework",
+   "issuer": "ISO/IEC JTC 1",
+   "text": null,
+   "unpinned": "ISO makes 29100 freely available to read but not to redistribute: an extractor over its publicly available text is needed",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "iso-iec-7812-1",
+   "title": "ISO/IEC 7812-1 Identification of issuers (card numbers)",
+   "issuer": "ISO/IEC JTC 1",
+   "text": null,
+   "withheld": "its issuer does not publish the text freely, so no requirement list can be pinned until one is",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "who-icf",
+   "title": "WHO International Classification of Functioning, Disability and Health",
+   "issuer": "WHO",
+   "text": null,
+   "unpinned": "the ICF classification's machine-readable release needs pinning with an extractor of its codes",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "wcag-2.2",
+   "title": "W3C Web Content Accessibility Guidelines 2.2",
+   "issuer": "W3C",
+   "text": null,
+   "unpinned": "W3C's wcag.json inventory (success criteria) needs pinning with the wcag-json extractor",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "wai-aria-1.2",
+   "title": "W3C Accessible Rich Internet Applications 1.2",
+   "issuer": "W3C",
+   "text": null,
+   "unpinned": "the ARIA roles, states and properties need pinning with an extractor, and WPT's aria suite as oracle",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "accname-1.2",
+   "title": "W3C Accessible Name and Description Computation 1.2",
+   "issuer": "W3C",
+   "text": null,
+   "unpinned": "the steps of the computation need pinning with an extractor; WPT accname is the oracle",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "schemaorg-person",
+   "title": "Schema.org Person",
+   "issuer": "Schema.org",
+   "text": null,
+   "unpinned": "the vocabulary's Person properties need pinning with an extractor (schemaorg-current-https.jsonld)",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc2183",
+   "title": "RFC 2183 Content-Disposition header field",
+   "issuer": "IETF",
+   "text": null,
+   "unpinned": "pinning with the bcp14 extractor",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc2231",
+   "title": "RFC 2231 MIME parameter value and encoded word extensions",
+   "issuer": "IETF",
+   "text": null,
+   "unpinned": "pinning with the bcp14 extractor",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc3339",
+   "title": "RFC 3339 Date and Time on the Internet: Timestamps",
+   "issuer": "IETF",
+   "text": null,
+   "unpinned": "pinning with the bcp14 extractor",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "iana-tz",
+   "title": "IANA Time Zone Database",
+   "issuer": "IANA",
+   "text": null,
+   "unpinned": "pinning a tzdata release with an extractor of its zones and rules",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc8984",
+   "title": "RFC 8984 JSCalendar",
+   "issuer": "IETF",
+   "text": null,
+   "unpinned": "pinning with the bcp14 extractor",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc9553",
+   "title": "RFC 9553 JSContact",
+   "issuer": "IETF",
+   "text": null,
+   "unpinned": "pinning with the bcp14 extractor",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "rfc8785",
+   "title": "RFC 8785 JSON Canonicalization Scheme",
+   "issuer": "IETF",
+   "text": null,
+   "unpinned": "pinning with the bcp14 extractor and its test vectors",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "w3c-activitystreams",
+   "title": "W3C Activity Streams 2.0",
+   "issuer": "W3C",
+   "text": null,
+   "unpinned": "pinning the vocabulary with an extractor",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "first-tlp-2.0",
+   "title": "FIRST Traffic Light Protocol 2.0",
+   "issuer": "FIRST",
+   "text": null,
+   "unpinned": "pinning, if it is the source of the Boundary's sensitivity ranks",
+   "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  }
+ ],
+ "ungoverned": {},
+ "unassigned": [
+  "app/src/Architecture.lex.tex",
+  "app/src/Compliance.lex.tex",
+  "app/src/Design.lex.tex",
+  "app/src/DesignProofs.lex.tex",
+  "app/src/Features.lex.tex",
+  "app/src/Foundation/Arch.lex.tex",
+  "app/src/Foundation/Bytes.lex.tex",
+  "app/src/Foundation/Me/V1/Anchors.lex.tex",
+  "app/src/Foundation/Me/V1/Model.lex.tex",
+  "app/src/Foundation/Person/V1/Model.lex.tex",
+  "app/src/Foundation/Qual.lex.tex",
+  "app/src/Foundation/Sec.lex.tex",
+  "app/src/Foundation/View/Text/V1/Model.lex.tex",
+  "app/src/Foundation/Vocab/V1/Crosswalk.lex.tex",
+  "app/src/Foundation/Vocab/V1/SchemaOrg.lex.tex",
+  "app/src/InverseProofs.lex.tex",
+  "app/src/PersonProofs.lex.tex",
+  "app/src/Prism.lex.tex",
+  "app/src/PrismBoundary.lex.tex",
+  "app/src/PrismBoundaryProofs.lex.tex",
+  "app/src/PrismChronology.lex.tex",
+  "app/src/PrismChronologyProofs.lex.tex",
+  "app/src/PrismCurate.lex.tex",
+  "app/src/PrismCurateProofs.lex.tex",
+  "app/src/PrismDest.lex.tex",
+  "app/src/PrismDestProofs.lex.tex",
+  "app/src/PrismFolder.lex.tex",
+  "app/src/PrismFolderProofs.lex.tex",
+  "app/src/PrismGoogle.lex.tex",
+  "app/src/PrismGoogleLink.lex.tex",
+  "app/src/PrismGoogleLinkProofs.lex.tex",
+  "app/src/PrismGoogleProofs.lex.tex",
+  "app/src/PrismHolon.lex.tex",
+  "app/src/PrismHolonProofs.lex.tex",
+  "app/src/PrismHost.lex.tex",
+  "app/src/PrismHostProofs.lex.tex",
+  "app/src/PrismKappa.lex.tex",
+  "app/src/PrismKappaLabel.lex.tex",
+  "app/src/PrismKappaProofs.lex.tex",
+  "app/src/PrismLearning.lex.tex",
+  "app/src/PrismLearningProofs.lex.tex",
+  "app/src/PrismModels.lex.tex",
+  "app/src/PrismModelsProofs.lex.tex",
+  "app/src/PrismProofs.lex.tex",
+  "app/src/PrismR4.lex.tex",
+  "app/src/PrismR4Proofs.lex.tex",
+  "app/src/PrismRealizability.lex.tex",
+  "app/src/PrismRealizabilityProofs.lex.tex",
+  "app/src/PrismResonance.lex.tex",
+  "app/src/PrismResonanceProofs.lex.tex",
+  "app/src/PrismRoute.lex.tex",
+  "app/src/PrismRouter.lex.tex",
+  "app/src/PrismRouterProofs.lex.tex",
+  "app/src/PrismSource.lex.tex",
+  "app/src/PrismSourceProofs.lex.tex",
+  "app/src/PrismSurface.lex.tex",
+  "app/src/PrismSurfaceProofs.lex.tex",
+  "app/src/PrismUorc.lex.tex",
+  "app/src/PrismUorcProofs.lex.tex",
+  "app/src/PrismVaultRestore.lex.tex",
+  "app/src/PrismVaultRestoreProofs.lex.tex",
+  "app/src/PrismVaultStore.lex.tex",
+  "app/src/PrismVaultStoreProofs.lex.tex",
+  "app/src/Production/ThreatModel.lex.tex",
+  "app/src/PropertyProofs.lex.tex",
+  "app/src/Quality.lex.tex",
+  "app/src/RoutingProofs.lex.tex",
+  "app/src/Security.lex.tex",
+  "app/src/VocabProofs.lex.tex",
+  "site/app.mjs",
+  "site/coherence/coherence.mjs",
+  "site/coherence/sense.mjs",
+  "site/coherence/today.mjs",
+  "site/dest/guest.mjs",
+  "site/dest/table.mjs",
+  "site/device/extension.mjs",
+  "site/device/host.mjs",
+  "site/device/zip.mjs",
+  "site/extension/background.js",
+  "site/extension/bridge.js",
+  "site/extension/name.js",
+  "site/extension/seen.js",
+  "site/google/guest.mjs",
+  "site/google/ingest.mjs",
+  "site/google/relay.mjs",
+  "site/google/seal.mjs",
+  "site/guest-worker.mjs",
+  "site/holon/guest.mjs",
+  "site/holon/holon.mjs",
+  "site/holon/page.mjs",
+  "site/holon/table.mjs",
+  "site/kappa/guest.mjs",
+  "site/kappa/kappa.mjs",
+  "site/kappa/table.mjs",
+  "site/models/model-worker.mjs",
+  "site/models/models.mjs",
+  "site/r4/decide.mjs",
+  "site/r4/fingerprint.mjs",
+  "site/r4/grant.mjs",
+  "site/r4/pieces.mjs",
+  "site/r4/r4-worker.mjs",
+  "site/r4/r4.mjs",
+  "site/r4/receipt.mjs",
+  "site/r4/store.mjs",
+  "site/resonance/guest.mjs",
+  "site/resonance/resonance.mjs",
+  "site/resonance/table.mjs",
+  "site/router/answer.mjs",
+  "site/router/features.mjs",
+  "site/router/labels.mjs",
+  "site/router/router.mjs",
+  "site/router/table.mjs",
+  "site/source/declared.mjs",
+  "site/source/services.mjs",
+  "site/source/shape.mjs",
+  "site/spec.mjs",
+  "site/surface/surface.mjs",
+  "site/time/rhythm.mjs",
+  "site/uorc/guest.mjs",
+  "site/uorc/objects.mjs",
+  "site/uorc/table.mjs",
+  "site/vault/test/guests.mjs",
+  "site/vault/test/scenario.mjs",
+  "site/vault/test/vault-gate.mjs",
+  "site/vault/vault.mjs",
+  "site/voice.mjs",
+  "site/worker-gate.mjs"
+ ]
+}
