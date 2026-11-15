@@ -1,0 +1,225 @@
+\begin{lexlean}{GenBrowser}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\title{Browser capability checker}
+\begin{semanticmodule}
+definition{
+  name: brU,
+  parameters: [value : String],
+  result: Bytes,
+  body: (Foundation.Utf8::encode value)
+}
+
+definition{
+  name: brCat3,
+  parameters: [a : Bytes, b : Bytes, c : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes a (Foundation.Bytes::appendBytes b c))
+}
+
+definition{
+  name: brStarts,
+  parameters: [s : Bytes, i : Nat, pattern : Bytes],
+  result: Bool,
+  body: (Foundation.Tar::sameBytes (Foundation.Json::span s i (i + (Foundation.Bytes::byteLength pattern))) pattern),
+  axioms: [propext]
+}
+
+definition{
+  name: brFindFrom,
+  parameters: [s : Bytes, pattern : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (Foundation.Bytes::byteLength s)
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then (Foundation.Bytes::byteLength s) else (if (((Foundation.Tar::byteOr s i) =? (Foundation.Tar::byteOr pattern 0)) && (brStarts s i pattern)) then i else (brFindFrom s pattern (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brContains,
+  parameters: [s : Bytes, pattern : Bytes],
+  result: Bool,
+  body: ((brFindFrom s pattern 0 (Foundation.Bytes::byteLength s)) <? (Foundation.Bytes::byteLength s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: brByteEnd,
+  parameters: [s : Bytes, i : Nat, stop : Nat, wanted : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => stop
+    | Nat.succ rest => (if (stop <? (i + 1)) then stop else (if ((Foundation.Tar::byteOr s i) =? wanted) then i else (brByteEnd s (i + 1) stop wanted rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brDigitEnd,
+  parameters: [s : Bytes, i : Nat, stop : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (stop <? (i + 1)) then stop else (let b : Nat := (Foundation.Tar::byteOr s i); (if ((47 <? b) && (b <? 58)) then (brDigitEnd s (i + 1) stop rest) else i)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brDigitsOf,
+  parameters: [s : Bytes, i : Nat, stop : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (stop <? (i + 1)) then 0x else (let b : Nat := (Foundation.Tar::byteOr s i); (if ((47 <? b) && (b <? 58)) then (let e : Nat := (brDigitEnd s i stop (prim subtract stop i : Nat)); (brCat3 (brU " ") (Foundation.Json::span s i e) (brDigitsOf s e stop rest))) else (brDigitsOf s (i + 1) stop rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brMemberLine,
+  parameters: [s : Bytes, i : Nat],
+  result: Bytes,
+  body: (let n : Nat := (Foundation.Bytes::byteLength s); (let qa : Nat := (brByteEnd s i n 34 n); (let k : Nat := (qa + 14); (let qb : Nat := (brByteEnd s k n 34 n); (let ad : Nat := ((brFindFrom s (brU "adapters := ") qb n) + 12); (let e : Nat := (brFindFrom s (brU "(nil Nat)") ad n); (brCat3 (brCat3 (brU "M ") (Foundation.Json::span s i qa) (brU " ")) (Foundation.Json::span s k qb) (brCat3 (brDigitsOf s ad e (prim subtract e ad : Nat)) (brU "\n") 0x)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: brIndexFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength s); (if (n <? (i + 1)) then 0x else (let b : Nat := (Foundation.Tar::byteOr s i); (if ((b =? 34) && (brStarts s i (brU "\"site/"))) then (let q : Nat := (brByteEnd s (i + 1) n 34 n); (brCat3 (brU "A ") (Foundation.Json::span s (i + 1) q) (Foundation.Bytes::appendBytes (brU "\n") (brIndexFrom s (q + 1) rest)))) else (if ((b =? 114) && (brStarts s i (brU "record BrowserMember {iface := \""))) then (let j : Nat := (i + 32); (Foundation.Bytes::appendBytes (brMemberLine s j) (brIndexFrom s j rest))) else (brIndexFrom s (i + 1) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brIndex,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (brU "app/src/PrismBrowser.lex.tex"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some piece => (ctor Option.some [Bytes] (brIndexFrom piece 0 (Foundation.Bytes::byteLength piece)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: brDeclared,
+  parameters: [idl : Bytes, member : Bytes],
+  result: Bool,
+  body: (if (Foundation.Tar::sameBytes member (brU "constructor")) then (brContains idl (brU "constructor(")) else (if (Foundation.Tar::sameBytes member (brU "async_iterable")) then (brContains idl (brU "async_iterable<")) else ((brContains idl (brCat3 (brU " ") member (brU "("))) || (brContains idl (brCat3 (brU " ") member (brU ";")))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: brCalls,
+  parameters: [text : Bytes, iface : Bytes, member : Bytes],
+  result: Bool,
+  body: (if (Foundation.Tar::sameBytes member (brU "constructor")) then (brContains text iface) else (if (Foundation.Tar::sameBytes member (brU "async_iterable")) then (brContains text (brU ".entries()")) else (brContains text member))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: brNatFrom,
+  parameters: [s : Bytes, i : Nat, stop : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (brNatFrom s (i + 1) stop ((prim multiply acc 10 : Nat) + (prim subtract (Foundation.Tar::byteOr s i) 48 : Nat)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brHasIndex,
+  parameters: [line : Bytes, i : Nat, wanted : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength line); (if (n <? (i + 1)) then false else (let e : Nat := (brByteEnd line i n 32 n); (if ((brNatFrom line i e 0 (prim subtract e i : Nat)) =? wanted) then true else (brHasIndex line (e + 1) wanted rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brReason,
+  parameters: [iface : Bytes, member : Bytes, why : String],
+  result: Bytes,
+  body: (brCat3 (brCat3 iface (brU ".") member) (brU why) (brU "\n"))
+}
+
+definition{
+  name: brIdlProblems,
+  parameters: [index : Bytes, i : Nat, iface : Bytes, idl : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength index); (if (n <? (i + 1)) then 0x else (let e : Nat := (brByteEnd index i n 10 n); (let line : Bytes := (Foundation.Json::span index i e); (let m : Nat := (Foundation.Bytes::byteLength line); (let w1 : Nat := (brByteEnd line 2 m 32 m); (let w2 : Nat := (brByteEnd line (w1 + 1) m 32 m); (let ifc : Bytes := (Foundation.Json::span line 2 w1); (let mem : Bytes := (Foundation.Json::span line (w1 + 1) w2); (let here : Bytes := (if ((brStarts line 0 (brU "M ")) && (Foundation.Tar::sameBytes ifc iface)) then (if (brDeclared idl mem) then 0x else (brReason ifc mem " is not declared in its pinned IDL")) else 0x); (Foundation.Bytes::appendBytes here (brIdlProblems index (e + 1) iface idl rest))))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brAdapterAt,
+  parameters: [index : Bytes, i : Nat, path : Bytes, count : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength index); (if (n <? (i + 1)) then (ctor Option.none [Nat]) else (let e : Nat := (brByteEnd index i n 10 n); (let line : Bytes := (Foundation.Json::span index i e); (if (brStarts line 0 (brU "A ")) then (if (Foundation.Tar::sameBytes line (Foundation.Bytes::appendBytes (brU "A ") path)) then (ctor Option.some [Nat] count) else (brAdapterAt index (e + 1) path (count + 1) rest)) else (brAdapterAt index (e + 1) path count rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brAdapterProblems,
+  parameters: [index : Bytes, i : Nat, slot : Nat, text : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength index); (if (n <? (i + 1)) then 0x else (let e : Nat := (brByteEnd index i n 10 n); (let line : Bytes := (Foundation.Json::span index i e); (let m : Nat := (Foundation.Bytes::byteLength line); (let w1 : Nat := (brByteEnd line 2 m 32 m); (let w2 : Nat := (brByteEnd line (w1 + 1) m 32 m); (let ifc : Bytes := (Foundation.Json::span line 2 w1); (let mem : Bytes := (Foundation.Json::span line (w1 + 1) w2); (let here : Bytes := (if ((brStarts line 0 (brU "M ")) && (brHasIndex line (w2 + 1) slot m)) then (if (brCalls text ifc mem) then 0x else (brReason ifc mem " is named as called by this adapter, which does not call it")) else 0x); (Foundation.Bytes::appendBytes here (brAdapterProblems index (e + 1) slot text rest))))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brAfter,
+  parameters: [s : Bytes, prefix : Bytes],
+  result: Bytes,
+  body: (Foundation.Json::span s (Foundation.Bytes::byteLength prefix) (Foundation.Bytes::byteLength s))
+}
+
+definition{
+  name: brCheckIdl,
+  parameters: [archive : Bytes, target : Bytes],
+  result: (Option Bytes),
+  body: (let iface : Bytes := (brAfter target (brU ".gen/browser/idl/")); (match (Foundation.Tar::find archive (brU ".gen/browser-index"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some index => (match (Foundation.Tar::find archive (brCat3 (brU "app/specs/browser/idl/") iface (brU ".idl")))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some idl => (ctor Option.some [Bytes] (brIdlProblems index 0 iface idl (Foundation.Bytes::byteLength index)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: brCheckAdapter,
+  parameters: [archive : Bytes, target : Bytes],
+  result: (Option Bytes),
+  body: (let path : Bytes := (brAfter target (brU ".gen/browser/adapter/")); (match (Foundation.Tar::find archive (brU ".gen/browser-index"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some index => (match (Foundation.Tar::find archive path)
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some text => (match (brAdapterAt index 0 path 0 (Foundation.Bytes::byteLength index))
+        | Option.none => (ctor Option.some [Bytes] (Foundation.Bytes::appendBytes path (brU " is not an adapter PrismBrowser names\n")))
+        | Option.some slot => (ctor Option.some [Bytes] (brAdapterProblems index 0 slot text (Foundation.Bytes::byteLength index))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

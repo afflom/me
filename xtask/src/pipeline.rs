@@ -1,11 +1,13 @@
 //! The pipeline model rendered: `cargo xtask pipeline [--write]`.
 //!
-//! `app/specs/pipeline/spec.json` holds each workflow this repository owns as
-//! data: its triggers, permissions, jobs and steps, and the reason for each
-//! (the `#` entry of a mapping gives the comment lines above each of its keys;
-//! `""` is the comment above a list item such as a step). This renders each to
+//! `app/specs/pipeline/spec.json` names each workflow this repository owns, and
+//! `app/specs/pipeline/workflows/<name>.json` holds it as data: its triggers,
+//! permissions, jobs and steps, and the reason for each (the `#` entry of a
+//! mapping gives the comment lines above each of its keys; `""` is the comment
+//! above a list item such as a step). This renders each to
 //! `.github/workflows/<name>`. Without `--write` a rendered file that differs
-//! from the model fails, so a workflow is changed only by changing the model.
+//! from the model fails, so a workflow is changed only by changing the model;
+//! a model file the list does not name fails too.
 //! The template's own workflows (`bootstrap.yml` and the others template.lock
 //! names) are not in the model.
 
@@ -16,6 +18,7 @@ use serde_json::{Map, Value};
 use crate::Fail;
 
 const MODEL: &str = "app/specs/pipeline/spec.json";
+const WORKFLOWS: &str = "app/specs/pipeline/workflows";
 
 /// The order a reader expects a workflow's, a job's and a step's keys in;
 /// any other key follows, in name order.
@@ -182,7 +185,7 @@ fn mapping(out: &mut String, indent: usize, map: &Map<String, Value>, inline: bo
 /// One workflow of the model as its file.
 pub fn render(name: &str, workflow: &Map<String, Value>) -> String {
     let mut out = format!(
-        "# {name} is rendered from the pipeline model, {MODEL}, by\n\
+        "# {name} is rendered from the pipeline model, {WORKFLOWS}/{name}.json, by\n\
          # `cargo run -q --locked -p xtask -- pipeline --write`: change the model, not this file.\n"
     );
     if let Some(head) = workflow.get("#").and_then(|c| c.get("")) {
@@ -208,12 +211,30 @@ pub fn render(name: &str, workflow: &Map<String, Value>) -> String {
 
 pub fn pipeline(root: &Path, write: bool) -> Result<(), Fail> {
     let model: Value = serde_json::from_str(&std::fs::read_to_string(root.join(MODEL))?)?;
-    let workflows = model
+    let names: Vec<String> = model
         .get("workflows")
-        .and_then(Value::as_object)
-        .ok_or("the pipeline model has no workflows")?;
+        .and_then(Value::as_array)
+        .ok_or("the pipeline model names no workflows")?
+        .iter()
+        .map(|n| {
+            n.as_str()
+                .map(str::to_string)
+                .ok_or("a workflow is named by a string")
+        })
+        .collect::<Result<_, _>>()?;
+    for entry in std::fs::read_dir(root.join(WORKFLOWS))? {
+        let file = entry?.file_name().to_string_lossy().into_owned();
+        let named = file
+            .strip_suffix(".json")
+            .is_some_and(|n| names.iter().any(|m| m == n));
+        if !named {
+            return Err(format!("{WORKFLOWS}/{file} is not a workflow {MODEL} names").into());
+        }
+    }
     let mut stale = Vec::new();
-    for (name, workflow) in workflows {
+    for name in &names {
+        let text = std::fs::read_to_string(root.join(WORKFLOWS).join(format!("{name}.json")))?;
+        let workflow: Value = serde_json::from_str(&text)?;
         let workflow = workflow
             .as_object()
             .ok_or_else(|| format!("{name}: a workflow is a mapping"))?;
@@ -227,13 +248,13 @@ pub fn pipeline(root: &Path, write: bool) -> Result<(), Fail> {
     }
     if stale.is_empty() {
         println!(
-            "pipeline: {} workflows are what {MODEL} renders",
-            workflows.len()
+            "pipeline: {} workflows are what {WORKFLOWS} renders",
+            names.len()
         );
         Ok(())
     } else {
         Err(format!(
-            "{} differ from {MODEL}: change the model and run `cargo run -q --locked -p xtask -- pipeline --write`",
+            "{} differ from {WORKFLOWS}: change the model and run `cargo run -q --locked -p xtask -- pipeline --write`",
             stale.join(", ")
         )
         .into())
