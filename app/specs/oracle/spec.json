@@ -146,6 +146,28 @@
       "url": "https://raw.githubusercontent.com/w3c/aria-practices/f14b2490a6728cda85fd7feafbd148b3c3eaf038/content/patterns/feed/examples/js/feedDisplay.js",
       "sha256": "f622302b3833ebd9e154def27fb1d901f19f823b6a5c8e165dd68fdbd17e6aa6",
       "examples": "page"
+    },
+    {
+      "key": "schemaorg",
+      "kind": "message",
+      "title": "Schema.org 30.1 examples (data/releases/30.1/schemaorg-all-examples.txt), each a reservation, order or invoice in JSON-LD",
+      "url": "https://raw.githubusercontent.com/schemaorg/schemaorg/5f2d8cdec99b7329459ef6584e94b6a840f88471/data/releases/30.1/schemaorg-all-examples.txt",
+      "sha256": "9df6e30b130614e9bb224b82b7426de24cb8c535f8c5a24752b6b53f228d04e7",
+      "examples": "markup",
+      "labels": {
+        "FlightReservation": "travel",
+        "TrainReservation": "travel",
+        "BusReservation": "travel",
+        "BoatReservation": "travel",
+        "TaxiReservation": "travel",
+        "RentalCarReservation": "travel",
+        "LodgingReservation": "travel",
+        "ReservationPackage": "travel",
+        "Order": "receipt",
+        "Invoice": "receipt",
+        "EventReservation": "event",
+        "FoodEstablishmentReservation": "event"
+      }
     }
   ],
   "debt": [
@@ -294,19 +316,11 @@
   "unsourced": [
     {
       "label": "update",
-      "why": "RFC 2369 and RFC 8058 give the List-Unsubscribe and List-Id header fields only as fragments, never inside a whole message"
-    },
-    {
-      "label": "receipt",
-      "why": "no specification publishes a whole order or payment receipt message"
-    },
-    {
-      "label": "travel",
-      "why": "no specification publishes a whole booking or itinerary message"
+      "why": "RFC 2369 and RFC 8058 give the List-Unsubscribe and List-Id header fields only as fragments, never inside a whole message; schema.org 30.1 has no type for a newsletter or list message"
     },
     {
       "label": "notice",
-      "why": "no specification publishes a whole account or security notice message"
+      "why": "no specification publishes a whole account or security notice message; schema.org 30.1 has no type for one"
     }
   ]
 }

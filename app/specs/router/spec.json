@@ -381,7 +381,7 @@
       "kind": "compiled",
       "model": "prism-kind-reader",
       "maps": "genre",
-      "comment": "What sort of thing an item is. Its sender comes first, read from the shape of its parts: a note is the owner's, a card is a person, an event is on the calendar, a message from a list, in bulk or from an automated address is automated, and anything else a person wrote. A kind applies only to the senders it names: for those, the kind is the first in order whose shape it has or whose words its subject uses, then (automated senders only) whose words open its body; else the sender's fallback. A person writing about a flight is still a person writing.",
+      "comment": "What sort of thing an item is. Its sender comes first, read from the shape of its parts: a note is the owner's, a card is a person, an event is on the calendar, a message from a list, in bulk or from an automated address is automated, and anything else a person wrote. A kind applies only to the senders it names: for those, the kind is the first in order whose shape it has or whose words its subject uses, then (automated senders only) whose words open its body; else the sender's fallback. A person writing about a flight is still a person writing. A message that carries schema.org markup is from a business's mailer, and the schema.org type it carries is a shape: a reservation for a trip is travel, an order or an invoice is a receipt, a reservation for an event or a table is an event.",
       "kinds": [
         {
           "key": "person",
@@ -415,16 +415,29 @@
         {
           "key": "event",
           "name": "Events",
-          "shapes": [],
+          "shapes": [
+            "schema:EventReservation",
+            "schema:FoodEstablishmentReservation"
+          ],
           "words": [],
           "senders": [
-            "calendar"
+            "calendar",
+            "automated"
           ]
         },
         {
           "key": "travel",
           "name": "Travel",
-          "shapes": [],
+          "shapes": [
+            "schema:FlightReservation",
+            "schema:TrainReservation",
+            "schema:BusReservation",
+            "schema:BoatReservation",
+            "schema:TaxiReservation",
+            "schema:RentalCarReservation",
+            "schema:LodgingReservation",
+            "schema:ReservationPackage"
+          ],
           "words": [
             "flight",
             "boarding pass",
@@ -448,7 +461,10 @@
         {
           "key": "receipt",
           "name": "Receipts",
-          "shapes": [],
+          "shapes": [
+            "schema:Order",
+            "schema:Invoice"
+          ],
           "words": [
             "receipt",
             "your order",
@@ -546,7 +562,8 @@
       "automated": [
         "list",
         "bulk",
-        "robot"
+        "robot",
+        "markup"
       ]
     },
     "topic": {

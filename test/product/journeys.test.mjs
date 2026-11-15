@@ -57,6 +57,14 @@ test("every journey that works for the person keeps working, and none works unre
     ...rows.map(({ journey, fresh, back }) => `| ${journey.key} ${journey.name} | ${journey.status} | ${fresh.ok && back.ok ? "works" : "not yet"} | ${fresh.ok ? (back.ok ? "" : `after a reload: ${back.why}`) : fresh.why} |`),
   ]);
   const { broken, unrecorded } = verdict(rows);
+  // QR-30: each measure the record names this suite the gate of, against its own threshold.
+  const measured = { "journeys-broken": broken.length };
+  for (const q of product.quality ?? []) for (const m of q.measures) {
+    if (m.gate !== "test/product/journeys.test.mjs") continue;
+    assert.ok(m.key in measured, `${q.key} measure ${m.key} names this suite, which does not compute it`);
+    const value = measured[m.key];
+    assert.ok(m.direction === "atLeast" ? value >= m.threshold : value <= m.threshold, `${q.key} ${m.key}: ${value} against ${m.direction} ${m.threshold}`);
+  }
   assert.deepEqual(broken.map((r) => `${r.journey.key}: ${r.fresh.why ?? `after a reload: ${r.back.why}`}`), [], "a journey that worked no longer works");
   assert.deepEqual(unrecorded.map((r) => r.journey.key), [], "these journeys now work: set their status to \"works\" in app/specs/product/journeys/<key>.json so they are held from now on");
 });

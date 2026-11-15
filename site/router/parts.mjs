@@ -152,11 +152,16 @@ export function partsOf(item) {
     const from = mailboxes(header(head, "From") || header(head, "Sender")).map((p) => ({ ...p, role: "from" }));
     const to = ["To", "Cc"].flatMap((name) => mailboxes(header(head, name)).map((p) => ({ ...p, role: "to" })));
     const shape = messageShape(raw, head, from);
+    // The schema.org objects it carries: each type is a part of its shape,
+    // and the people they name are who it is with.
+    const markup = item.markup ?? [];
+    if (markup.length) shape.push("markup", ...new Set(markup.flatMap((m) => m.types.map((t) => `schema:${t}`))));
+    const named = [...new Set(markup.flatMap((m) => m.people))].map((name) => ({ name, address: "", role: "to" }));
     // An automated message's sender is a mailer, not someone the person is
     // with; an invitation it carries names who the event is with.
     const automated = PROVIDERS.kind.automated.some((x) => shape.includes(x));
     const invited = shape.includes("attachment-calendar") ? peopleOfEvent(unfoldCalendar(raw)) : [];
-    const party = invited.length ? invited : [...from, ...to].map((p) => ({ ...p, robot: automated || isRobot(p) }));
+    const party = invited.length ? invited : [...from, ...to].map((p) => ({ ...p, robot: automated || isRobot(p) })).concat(named);
     return { source, values: { subject: item.title ?? "", text: item.body ?? "", lead: leadOf(item.body ?? ""), party, shape } };
   }
   if (source === "calendar") {

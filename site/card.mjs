@@ -170,9 +170,11 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     // Who it comes from: its sender's address, and the list it came through (RFC 2919 List-Id).
     const list = /<([^<>\s]+)>/.exec(h["list-id"] ?? "")?.[1]?.toLowerCase();
     const from = { ...(addressOf(h.from) ? { from: addressOf(h.from) } : {}), ...(list ? { list } : {}) };
+    // The schema.org objects it carries (a booking, an order), as its sender typed them.
+    const markup = reader?.messageMarkup ? reader.messageMarkup(text) : [];
     // A message without a subject is headed by its first words, as a mail client lists it.
     const title = headerWords(h.subject ?? "").replace(/\s+/g, " ").trim() || headline(said);
-    return { ...base, ...place, ...from, at: Number.isNaN(when) ? base.at : when, title, who: person(h.from || h.to), text, body, ...(carries ? { carries } : {}) };
+    return { ...base, ...place, ...from, ...(markup.length ? { markup } : {}), at: Number.isNaN(when) ? base.at : when, title, who: person(h.from || h.to), text, body, ...(carries ? { carries } : {}) };
   }
   if (base.media === "calendar") {
     // The event's own fields: the calendar's time zones come first and carry DTSTARTs of their own (1970).

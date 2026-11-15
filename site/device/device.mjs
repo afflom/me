@@ -104,7 +104,7 @@ export function formatOfText(text) {
   if (/^BEGIN:VCALENDAR/i.test(head)) return 'ics';
   if (/^BEGIN:VCARD/i.test(head)) return 'vcf';
   if (/^From \S+/.test(head)) return 'mbox';
-  if (/^(?:[A-Za-z][A-Za-z0-9-]*:[^\n]*\r?\n(?:[ \t][^\n]*\r?\n)*)+\r?\n/.test(head) && /^(?:from|date|subject|message-id|received|return-path|delivered-to):/im.test(head)) return 'eml';
+  if (/^(?:[A-Za-z][A-Za-z0-9-]*:[^\n]*\r?\n(?:[ \t][^\n]*\r?\n)*)+\r?\n/.test(head) && /^(?:from|date|subject|message-id|received|return-path|delivered-to|mime-version):/im.test(head)) return 'eml';
   return 'other';
 }
 
