@@ -130,8 +130,9 @@ button.pr-go[aria-current="page"] { background: color-mix(in oklch, var(--vr-ver
 .pr-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 
 /* The rail: the Prism's word, the question, and what happened. */
-#pr-out { white-space: pre-wrap; overflow-wrap: anywhere; font-size: var(--text-16); font-weight: 500; line-height: 1.45; }
-#pr-out.good { color: var(--vr-verdant); }
+/* The Prism's line reads in the page's own type; a good outcome is marked by its edge, not by colouring the words. */
+#pr-out { white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-sans); font-size: var(--text-16); font-weight: 400; line-height: 1.5; color: var(--foreground); }
+#pr-out.good { padding-inline-start: var(--space-3); box-shadow: inset 2px 0 0 var(--vr-verdant); }
 #pr-out.bad, #pr-out.refuse { color: var(--destructive); }
 #pr-out.warn { color: var(--warning); }
 #pr-out.wait { color: var(--muted-foreground); }
