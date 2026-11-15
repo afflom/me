@@ -1,0 +1,29 @@
+{
+  "comment": "The steps of the standards program (generators/standards/), run in order by tools/generators/run.sh. A step reads repository files and the .gen/ outputs of this program's earlier steps only.",
+  "steps": [
+    {
+      "generator": "wcagfacts",
+      "split": "app/specs/standards/upstream/wcag.json",
+      "output": ".gen/wcag-facts"
+    },
+    {
+      "generator": "wcag",
+      "inputs": [
+        ".gen/wcag-facts"
+      ],
+      "output": "test/standards/generated/wcag-2.2.json"
+    },
+    {
+      "generator": "ariafacts",
+      "split": "app/specs/standards/upstream/wai-aria-1.2.html",
+      "output": ".gen/aria-facts"
+    },
+    {
+      "generator": "aria",
+      "inputs": [
+        ".gen/aria-facts"
+      ],
+      "output": "test/standards/generated/wai-aria-1.2.json"
+    }
+  ]
+}
