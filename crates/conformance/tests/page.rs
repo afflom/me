@@ -73,7 +73,10 @@ fn page_pg_02() {
     // LexLean generators GenSurfaceModel, GenSurface and GenLook write them,
     // and GenSurfaceModel refuses any visible word that is not a name.
     let steps = read("generators/surfacemodel/steps.json");
-    for output in ["app/src/PrismSurface.lex.tex", "app/src/PrismSurfaceProofs.lex.tex"] {
+    for output in [
+        "app/src/PrismSurface.lex.tex",
+        "app/src/PrismSurfaceProofs.lex.tex",
+    ] {
         assert!(
             steps.contains(&format!("\"output\": \"{output}\"")),
             "PG-02: GenSurfaceModel must write {output}"
