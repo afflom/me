@@ -1,0 +1,325 @@
+{
+  "comment": "The grammars the Prism reads its content by, each the specifications' own ABNF taken from their pinned text by tools/standards/grammar.py (tools/standards/abnf.py) and written to out as data for site/read/abnf.mjs. texts: each specification, pinned by SHA-256, and the sections whose rules it contributes (all, when none are named). lends: a text whose rules are taken only where the others refer to them (RFC 5234's core rules). rules: the only rules a text gives. replaces: rules a text defines anew over an earlier one's (RFC 2231 over RFC 2045's parameter). lexical: in RFC 822's notation (\":=\"), the rules written whole, as tokens; in the rest comments and white space may stand between elements (RFC 822 3.1.4). errata: verified errata, applied to the text first (occurs: how many times its words stand there, once unless said). bindings: a rule its specification states in prose, given here in ABNF (or as the characters one class leaves once others are taken out: except, minus) with the reason, so a machine can match it; each must replace a prose rule. headers: the header fields the grammar defines, each by the literal its rule opens with (\"Date:\"), the current rule first and its obsolete form (RFC 5322 section 4) after. zones: RFC 5322 section 4.3's obsolete zone names, from its own sentences. witnesses: where to write, for each rule, the shortest field or message the grammar derives through it, so a suite can show the reader matches every rule. examples: each indented example field of the named texts (an example field line with the lines that continue it), with what Python's email package (policy.default, RFC 2045, RFC 2183, RFC 2231) reads of it, or that it finds it defective, as the reference the reader is held to; an example naming an address at a domain not reserved for documentation (the oracle spec's reserved list) is left out.",
+  "grammars": [
+    {
+      "key": "mail",
+      "title": "Internet message header fields and MIME entities (RFC 5322, RFC 6532's UTF-8, RFC 2919's List-Id, RFC 2045, RFC 2046's multipart body, RFC 2183, RFC 2231, with RFC 2978's charset names, RFC 5646's language tags, RFC 4155's mbox separator lines and RFC 5234's core rules)",
+      "out": "site/read/grammar/mail.mjs",
+      "texts": [
+        {
+          "key": "rfc5234",
+          "url": "https://www.rfc-editor.org/rfc/rfc5234.txt",
+          "sha256": "fc871020f53baa6b60fc6835c557b433f38d53c5cc41ab56d03622b084f53a12",
+          "sections": [
+            "B.1"
+          ],
+          "lends": true
+        },
+        {
+          "key": "rfc5322",
+          "url": "https://www.rfc-editor.org/rfc/rfc5322.txt",
+          "sha256": "cb459acca15a2aa895863eaeff6f1d5b9c4ca15578ae3e3706f757787a385969"
+        },
+        {
+          "key": "rfc6532",
+          "url": "https://www.rfc-editor.org/rfc/rfc6532.txt",
+          "sha256": "154317842bdd99e2030117a808d2d74039932d1c1c3d4b014cc865069066c6cb",
+          "sections": [
+            "3"
+          ]
+        },
+        {
+          "key": "rfc2919",
+          "url": "https://www.rfc-editor.org/rfc/rfc2919.txt",
+          "sha256": "aa78f55f7182a3d67dabdf861d27cfe0d0d47e5fd3565d71f9ed4a9d95458bb8"
+        },
+        {
+          "key": "rfc2045",
+          "url": "https://www.rfc-editor.org/rfc/rfc2045.txt",
+          "sha256": "9bb251635dd37fda97dcce6c08dea019432117a0f1e389051d2ecbf7b76350b0",
+          "sections": [
+            "A"
+          ],
+          "lexical": [
+            "token",
+            "tspecials",
+            "x-token",
+            "ietf-token",
+            "iana-token",
+            "extension-token",
+            "hex-octet",
+            "ptext",
+            "safe-char",
+            "qp-line",
+            "qp-part",
+            "qp-section",
+            "qp-segment",
+            "quoted-printable",
+            "transport-padding",
+            "attribute",
+            "value",
+            "type",
+            "subtype",
+            "discrete-type",
+            "composite-type",
+            "mechanism",
+            "entity-headers",
+            "mime-message-headers",
+            "mime-part-headers",
+            "mime-extension-field"
+          ],
+          "errata": [
+            {
+              "id": 512,
+              "status": "Verified",
+              "url": "https://www.rfc-editor.org/errata/eid512",
+              "occurs": 2,
+              "says": "\",\" / \";\" / \":\" / \"\\\" / <\">\n\"/\" / \"[\" / \"]\" / \"?\" / \"=\"",
+              "should": "\",\" / \";\" / \":\" / \"\\\" / <\"> /\n\"/\" / \"[\" / \"]\" / \"?\" / \"=\""
+            }
+          ]
+        },
+        {
+          "key": "rfc2046",
+          "url": "https://www.rfc-editor.org/rfc/rfc2046.txt",
+          "sha256": "7ac4096b9263e11a704f06892638258ac1ddc0394dd75ffdc171e7b5ba0123e0",
+          "sections": [
+            "5.1.1"
+          ],
+          "lexical": "all"
+        },
+        {
+          "key": "rfc2183",
+          "url": "https://www.rfc-editor.org/rfc/rfc2183.txt",
+          "sha256": "ae813297acfd928d2b8918eb2ee5ca8d73aa5874b568a4051e75f1392f9a7198",
+          "sections": [
+            "2"
+          ],
+          "lexical": [
+            "disposition-type",
+            "quoted-date-time"
+          ],
+          "errata": [
+            {
+              "id": 3847,
+              "status": "Verified",
+              "url": "https://www.rfc-editor.org/errata/eid3847",
+              "says": "modification-date=\"Wed, 12 Feb 1997 16:29:51 -0500\";\nContent-Description: a complete map of the human genome",
+              "should": "modification-date=\"Wed, 12 Feb 1997 16:29:51 -0500\"\nContent-Description: a complete map of the human genome"
+            }
+          ]
+        },
+        {
+          "key": "rfc2231",
+          "url": "https://www.rfc-editor.org/rfc/rfc2231.txt",
+          "sha256": "e69cbc8c05097736c5296575e7a2e0cb2a2a09c522640eb40ecc4a9dca56076d",
+          "sections": [
+            "7"
+          ],
+          "rules": [
+            "parameter",
+            "attribute",
+            "attribute-char",
+            "regular-parameter",
+            "regular-parameter-name",
+            "section",
+            "initial-section",
+            "other-sections",
+            "extended-parameter",
+            "extended-initial-name",
+            "extended-other-names",
+            "extended-initial-value",
+            "extended-other-values",
+            "ext-octet",
+            "charset",
+            "language"
+          ],
+          "replaces": [
+            "parameter",
+            "attribute"
+          ],
+          "lexical": [
+            "attribute",
+            "attribute-char",
+            "regular-parameter-name",
+            "section",
+            "initial-section",
+            "other-sections",
+            "extended-initial-name",
+            "extended-other-names",
+            "extended-initial-value",
+            "extended-other-values",
+            "ext-octet",
+            "charset",
+            "language"
+          ],
+          "errata": [
+            {
+              "id": 477,
+              "status": "Verified",
+              "url": "https://www.rfc-editor.org/errata/eid477",
+              "says": "extended-parameter := (extended-initial-name \"=\" extended-value) /",
+              "should": "extended-parameter := (extended-initial-name \"=\" extended-initial-value) /"
+            },
+            {
+              "id": 7326,
+              "status": "Verified",
+              "url": "https://www.rfc-editor.org/errata/eid7326",
+              "says": "\"6\" / \"7\" / \"8\" / \"9\") *DIGIT)",
+              "should": "\"6\" / \"7\" / \"8\" / \"9\") *DIGIT"
+            },
+            {
+              "id": 590,
+              "status": "Verified",
+              "url": "https://www.rfc-editor.org/errata/eid590",
+              "says": "Content-Type: application/x-stuff\n title*0*=us-ascii'en'This%20is%20even%20more%20\n title*1*=%2A%2A%2Afun%2A%2A%2A%20\n title*2=\"isn't it!\"",
+              "should": "Content-Type: application/x-stuff;\n title*0*=us-ascii'en'This%20is%20even%20more%20;\n title*1*=%2A%2A%2Afun%2A%2A%2A%20;\n title*2=\"isn't it!\""
+            }
+          ]
+        },
+        {
+          "key": "rfc2978",
+          "url": "https://www.rfc-editor.org/rfc/rfc2978.txt",
+          "sha256": "5c8f8a8ada6408241213ed29ade767c9be7c00e5c3a20ad14fe09f6e53b0b984",
+          "sections": [
+            "2.3"
+          ],
+          "rules": [
+            "mime-charset",
+            "mime-charset-chars"
+          ],
+          "lends": true
+        },
+        {
+          "key": "rfc5646",
+          "url": "https://www.rfc-editor.org/rfc/rfc5646.txt",
+          "sha256": "5d9515f053163c80e7294a84d18217dc83471acc7caa9773da2ac40deeec8228",
+          "sections": [
+            "2.1"
+          ],
+          "lends": true
+        },
+        {
+          "key": "rfc4155",
+          "url": "https://www.rfc-editor.org/rfc/rfc4155.txt",
+          "sha256": "41dcdacf425e68ad861e0e2a123bbad198ff281798c23f8c54fe426c5f77a06f",
+          "sections": [
+            "A"
+          ]
+        }
+      ],
+      "bindings": {
+        "utf8-2": [
+          "%x80-7FF",
+          "RFC 3629 section 4's two-octet sequences, as the code points they encode: the page reads decoded text, where a UTF-8 sequence is one character"
+        ],
+        "utf8-3": [
+          "%x800-D7FF / %xE000-FFFF",
+          "RFC 3629 section 4's three-octet sequences, as the code points they encode (surrogates are not characters)"
+        ],
+        "utf8-4": [
+          "%x10000-10FFFF",
+          "RFC 3629 section 4's four-octet sequences, as the code points they encode"
+        ],
+        "token": [
+          {
+            "except": "char",
+            "minus": [
+              "sp",
+              "ctl",
+              "tspecials"
+            ],
+            "many": true
+          },
+          "RFC 2045 5.1: \"1*<any (US-ASCII) CHAR except SPACE, CTLs, or tspecials>\", taken as the characters CHAR leaves once SPACE, CTL and tspecials are taken out"
+        ],
+        "attribute-char": [
+          {
+            "except": "char",
+            "minus": [
+              "sp",
+              "ctl",
+              "tspecials",
+              "\"*\"",
+              "\"'\"",
+              "\"%\""
+            ]
+          },
+          "RFC 2231 7: \"<any (US-ASCII) CHAR except SPACE, CTLs, \\\"*\\\", \\\"'\\\", \\\"%\\\", or tspecials>\", taken the same way"
+        ],
+        "safe-char": [
+          "%d33-60 / %d62-126",
+          "RFC 2045 6.7: \"any octet with decimal value of 33 through 60 inclusive, and 62 through 126\""
+        ],
+        "x-token": [
+          "\"X-\" token",
+          "RFC 2045 5.1: \"The two characters \\\"X-\\\" or \\\"x-\\\" followed, with no intervening white space, by any token\" (a quoted string in ABNF is case-insensitive)"
+        ],
+        "ietf-token": [
+          "token",
+          "RFC 2045 5.1: an extension token defined by a standards-track RFC and registered with IANA is a token; which are registered is the IANA registry's to say"
+        ],
+        "iana-token": [
+          "token",
+          "RFC 2045 5.1: a publicly-defined extension token registered with IANA is a token; which are registered is the IANA registry's to say"
+        ],
+        "mime-extension-field": [
+          "\"Content-\" *ftext \":\" unstructured",
+          "RFC 2045 9: \"Any RFC 822 header field which begins with the string \\\"Content-\\\"\", an optional field (RFC 5322 3.6.8) by that name, without its CRLF, which entity-headers writes after it"
+        ],
+        "octet": [
+          "%x00-10FFFF",
+          "RFC 2046 5.1.1: \"any 0-255 octet value\"; the page reads decoded text, where any character stands for the octets that encode it"
+        ],
+        "charset": [
+          "mime-charset",
+          "RFC 2231 7: \"registered character set name\": IANA's character sets, whose names RFC 2978 2.3 writes as mime-charset"
+        ],
+        "language": [
+          "language-tag",
+          "RFC 2231 7: \"registered language tag [RFC-1766]\": RFC 1766 is now BCP 47, RFC 5646, whose tags 2.1 writes as Language-Tag"
+        ],
+        "space": [
+          "SP",
+          "RFC 822 3.3, as RFC 2045 uses it: SPACE is ASCII SP"
+        ],
+        "tab": [
+          "HTAB",
+          "RFC 822 3.3, as RFC 2045 uses it: HTAB is ASCII HT"
+        ],
+        "lwsp-char": [
+          "SP / HTAB",
+          "RFC 822 3.3, as RFC 2045 and RFC 2046 use it: LWSP-char is SPACE or HTAB"
+        ],
+        "mbox-separator": [
+          "%s\"From\" SP 1*%x21-10FFFF SP 1*%x20-10FFFF",
+          "RFC 4155 2: a separator line is \"the exact character sequence of \\\"From\\\", followed by a single Space character (0x20), an email address of some kind, another Space character, a timestamp sequence of some kind\", which are \"known to vary widely across implementations\""
+        ],
+        "mbox-default-separator": [
+          "%s\"From\" SP addr-spec SP ctime",
+          "RFC 4155 Appendix A: the default format's separator line, \"From\", a single Space, the sender's address \"conformant with the addr-spec syntax\", a single Space and the UTC timestamp"
+        ],
+        "ctime": [
+          "day-name SP month SP (SP DIGIT / 2DIGIT) SP 2DIGIT \":\" 2DIGIT \":\" 2DIGIT SP 4DIGIT",
+          "RFC 4155 Appendix A: \"the traditional UNIX 'ctime' output sans timezone\", which POSIX asctime() writes as \"%.3s %.3s%3d %.2d:%.2d:%.2d %d\" (the day of the month padded to three characters with spaces)"
+        ]
+      },
+      "zones": "rfc5322",
+      "witnesses": "test/standards/mail.witnesses.json",
+      "headers": true,
+      "examples": {
+        "texts": [
+          "rfc2045",
+          "rfc2046",
+          "rfc2183",
+          "rfc2231"
+        ],
+        "names": [
+          "Content-Type",
+          "Content-Disposition"
+        ],
+        "out": "test/standards/mail.examples.json"
+      }
+    }
+  ]
+}
