@@ -11,13 +11,13 @@ Feature: coherence
     Then every place that lists things lists something, Today marks today's events and their clash, each question is answered with the matching kept item or says nothing held matches it, and the halted question is answered Halted
 
   @CO-02 @build
-  Scenario: Every facet the Prism root routes is one model in the coherence registry with typed ports, live with the page modules that ask it or sealed by a PrismHost surface, and the build refuses a registry whose flow leaves a port unproduced or untaken, a place unfed, an act or setting undriven, a feeder's media without a domain or a domain without vocabulary
+  Scenario: Every facet the Prism root routes is one model in the coherence registry with typed ports, live with the page modules that ask it or sealed by a PrismHost surface, and the build refuses a registry whose flow leaves a port unproduced or untaken, a place unfed, an act or setting undriven or a feeder's media without a domain
     Given app/specs/coherence/spec.json and the root's facets in tools/prism_root.py
     When test/coherence/coherence.test.mjs runs tools/coherence/gen.py --check and then each planted defect
     Then the committed registry passes and every planted defect is refused with its reason
 
   @CO-03 @build
-  Scenario: A kept item belongs to its media's domain and to every domain whose vocabulary in the coherence registry it uses, and an Ask finds the span its intent words name
+  Scenario: A kept item belongs to its media's domain and is about the facets of the whole person (WHO ICF) its meaning is nearest, and an Ask finds the span its intent words name and draws first on what is about the facets it is about
     Given site/coherence/sense.mjs and site/coherence/today.mjs over the registry
     When test/coherence/coherence.test.mjs places a bank statement, asks about tomorrow and a flight, and builds Today with a stand-in for the when facet
     Then the statement is in Money and Conversations, tomorrow is the next day, the flight is drawn and nothing else, and Today asks only spans within one week

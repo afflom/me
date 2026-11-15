@@ -2,6 +2,7 @@
 \useglossary{lexlean.std.bool@1.2.0}
 \useglossary{lexlean.std.nat@1.2.0}
 \useglossary{prism.arch@1.0.0}
+\importmodule{PrismAsk}
 \importmodule{PrismBoundary}
 \importmodule{PrismChronology}
 \importmodule{PrismCurate}
@@ -172,6 +173,14 @@ theorem{
   name: realizabilityModelsComplete,
   parameters: [],
   statement: ((PrismRealizability::realizabilityDescriptorComplete (PrismRealizability::realizabilityModels)) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityAskComplete,
+  parameters: [],
+  statement: ((PrismRealizability::realizabilityDescriptorComplete (PrismRealizability::realizabilityAsk)) = true),
   proof: reflexivity{},
   axioms: []
 }
@@ -1036,6 +1045,54 @@ theorem{
   name: realizabilityModelsHaltedMatters,
   parameters: [],
   statement: ((((PrismModels::prismModelsJudge (record PrismModels::PrismModelsRequest {source := (PrismModels::prismModelsSourceLocked), format := (PrismModels::prismModelsFormatOnnx), runtime := (PrismModels::prismModelsRuntimeMatch), weights := (PrismModels::prismModelsWeightsMatch), route := (PrismModels::prismModelsRouteGranted), halted := (PrismModels::prismModelsHaltedNo)})) =? (PrismModels::prismModelsAnswerRun)) && ((PrismModels::prismModelsJudge (record PrismModels::PrismModelsRequest {source := (PrismModels::prismModelsSourceLocked), format := (PrismModels::prismModelsFormatOnnx), runtime := (PrismModels::prismModelsRuntimeMatch), weights := (PrismModels::prismModelsWeightsMatch), route := (PrismModels::prismModelsRouteGranted), halted := (PrismModels::prismModelsHaltedYes)})) =? (PrismModels::prismModelsAnswerRefuse))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityAskHaltedMatters,
+  parameters: [],
+  statement: ((((PrismAsk::prismAskJudge (record PrismAsk::PrismAskRequest {halted := (PrismAsk::prismAskHaltedNo), clock := (PrismAsk::prismAskClockNot), box := (PrismAsk::prismAskBoxKeeps), intent := (PrismAsk::prismAskIntentQuestion), timed := (PrismAsk::prismAskTimedNo), held := (PrismAsk::prismAskHeldSome)})) =? (PrismAsk::prismAskAnswerAnswer)) && ((PrismAsk::prismAskJudge (record PrismAsk::PrismAskRequest {halted := (PrismAsk::prismAskHaltedYes), clock := (PrismAsk::prismAskClockNot), box := (PrismAsk::prismAskBoxKeeps), intent := (PrismAsk::prismAskIntentQuestion), timed := (PrismAsk::prismAskTimedNo), held := (PrismAsk::prismAskHeldSome)})) =? (PrismAsk::prismAskAnswerPaused))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityAskClockMatters,
+  parameters: [],
+  statement: ((((PrismAsk::prismAskJudge (record PrismAsk::PrismAskRequest {halted := (PrismAsk::prismAskHaltedNo), clock := (PrismAsk::prismAskClockNot), box := (PrismAsk::prismAskBoxKeeps), intent := (PrismAsk::prismAskIntentQuestion), timed := (PrismAsk::prismAskTimedNo), held := (PrismAsk::prismAskHeldSome)})) =? (PrismAsk::prismAskAnswerAnswer)) && ((PrismAsk::prismAskJudge (record PrismAsk::PrismAskRequest {halted := (PrismAsk::prismAskHaltedNo), clock := (PrismAsk::prismAskClockAsked), box := (PrismAsk::prismAskBoxKeeps), intent := (PrismAsk::prismAskIntentQuestion), timed := (PrismAsk::prismAskTimedNo), held := (PrismAsk::prismAskHeldSome)})) =? (PrismAsk::prismAskAnswerClock))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityAskBoxMatters,
+  parameters: [],
+  statement: ((((PrismAsk::prismAskJudge (record PrismAsk::PrismAskRequest {halted := (PrismAsk::prismAskHaltedNo), clock := (PrismAsk::prismAskClockNot), box := (PrismAsk::prismAskBoxKeeps), intent := (PrismAsk::prismAskIntentTask), timed := (PrismAsk::prismAskTimedYes), held := (PrismAsk::prismAskHeldSome)})) =? (PrismAsk::prismAskAnswerKeep)) && ((PrismAsk::prismAskJudge (record PrismAsk::PrismAskRequest {halted := (PrismAsk::prismAskHaltedNo), clock := (PrismAsk::prismAskClockNot), box := (PrismAsk::prismAskBoxAsks), intent := (PrismAsk::prismAskIntentTask), timed := (PrismAsk::prismAskTimedYes), held := (PrismAsk::prismAskHeldSome)})) =? (PrismAsk::prismAskAnswerAnswer))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityAskIntentMatters,
+  parameters: [],
+  statement: ((((PrismAsk::prismAskJudge (record PrismAsk::PrismAskRequest {halted := (PrismAsk::prismAskHaltedNo), clock := (PrismAsk::prismAskClockNot), box := (PrismAsk::prismAskBoxKeeps), intent := (PrismAsk::prismAskIntentQuestion), timed := (PrismAsk::prismAskTimedNo), held := (PrismAsk::prismAskHeldSome)})) =? (PrismAsk::prismAskAnswerAnswer)) && ((PrismAsk::prismAskJudge (record PrismAsk::PrismAskRequest {halted := (PrismAsk::prismAskHaltedNo), clock := (PrismAsk::prismAskClockNot), box := (PrismAsk::prismAskBoxKeeps), intent := (PrismAsk::prismAskIntentTask), timed := (PrismAsk::prismAskTimedNo), held := (PrismAsk::prismAskHeldSome)})) =? (PrismAsk::prismAskAnswerLook))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityAskTimedMatters,
+  parameters: [],
+  statement: ((((PrismAsk::prismAskJudge (record PrismAsk::PrismAskRequest {halted := (PrismAsk::prismAskHaltedNo), clock := (PrismAsk::prismAskClockNot), box := (PrismAsk::prismAskBoxKeeps), intent := (PrismAsk::prismAskIntentTask), timed := (PrismAsk::prismAskTimedYes), held := (PrismAsk::prismAskHeldSome)})) =? (PrismAsk::prismAskAnswerKeep)) && ((PrismAsk::prismAskJudge (record PrismAsk::PrismAskRequest {halted := (PrismAsk::prismAskHaltedNo), clock := (PrismAsk::prismAskClockNot), box := (PrismAsk::prismAskBoxKeeps), intent := (PrismAsk::prismAskIntentTask), timed := (PrismAsk::prismAskTimedNo), held := (PrismAsk::prismAskHeldSome)})) =? (PrismAsk::prismAskAnswerLook))) = true),
+  proof: reflexivity{},
+  axioms: []
+}
+
+theorem{
+  name: realizabilityAskHeldMatters,
+  parameters: [],
+  statement: ((((PrismAsk::prismAskJudge (record PrismAsk::PrismAskRequest {halted := (PrismAsk::prismAskHaltedNo), clock := (PrismAsk::prismAskClockNot), box := (PrismAsk::prismAskBoxKeeps), intent := (PrismAsk::prismAskIntentQuestion), timed := (PrismAsk::prismAskTimedNo), held := (PrismAsk::prismAskHeldSome)})) =? (PrismAsk::prismAskAnswerAnswer)) && ((PrismAsk::prismAskJudge (record PrismAsk::PrismAskRequest {halted := (PrismAsk::prismAskHaltedNo), clock := (PrismAsk::prismAskClockNot), box := (PrismAsk::prismAskBoxKeeps), intent := (PrismAsk::prismAskIntentQuestion), timed := (PrismAsk::prismAskTimedNo), held := (PrismAsk::prismAskHeldNone)})) =? (PrismAsk::prismAskAnswerEmpty))) = true),
   proof: reflexivity{},
   axioms: []
 }

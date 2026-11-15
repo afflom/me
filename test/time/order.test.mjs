@@ -106,9 +106,12 @@ test("wall-time tells how far a thing is from now, in the period it spans", () =
 test("the chat answers from now: the time, how long ago, and a message's turn", async () => {
   const { judge, FIELDS } = await import("../../site/router/table.mjs");
   const { answer } = await import("../../site/router/answer.mjs");
+  const { specDecider } = await import("../../site/r4/decide.mjs");
+  const askDecide = specDecider(JSON.parse(readFileSync(new URL("../../app/specs/ask/spec.json", import.meta.url), "utf8")));
   const line = async (text) => {
     const [facet, ...rest] = text.split(" ");
     if (facet === "boundary") return "allow";
+    if (facet === "ask") return askDecide(rest.join(" ")).outcome;
     return judge(Object.fromEntries(FIELDS.map(([name], i) => [name, rest[i]])));
   };
   const thread = messages.filter((e) => e.source === "rfc5322").map(read).map((item) => ({ ...item, label: "confidential" }));

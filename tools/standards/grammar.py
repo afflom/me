@@ -165,10 +165,25 @@ for g in SPEC["grammars"]:
         name = mod.name.removesuffix(".lex.tex")
         low = name[:1].lower() + name[1:]
         _, table_bytes = abnf.encode(table["rules"])
+        # One large literal exceeds the compiler's recursion limit when the guest is exported (PP5004), so the
+        # table is written in chunks of CHUNK bytes joined by append in a balanced tree, as the SDK's literal chunks are.
+        CHUNK = 256
+        pieces = [table_bytes[i:i + CHUNK] for i in range(0, len(table_bytes), CHUNK)] or [b""]
+        chunks = "".join(
+            f"definition{{\n  name: {low}Chunk{i},\n  parameters: [],\n  result: Bytes,\n  body: 0x{piece.hex()}\n}}\n\n"
+            for i, piece in enumerate(pieces)
+        )
+
+        def joined(lo, hi):
+            if hi - lo == 1:
+                return f"({low}Chunk{lo})"
+            mid = (lo + hi) // 2
+            return f"(prim append {joined(lo, mid)} {joined(mid, hi)} : Bytes)"
+
         outputs[ROOT / mod] = (
             f"\\begin{{lexlean}}{{{name}}}\n\\useglossary{{lexlean.std.bool@1.2.0}}\n\\useglossary{{lexlean.std.nat@1.2.0}}\n"
             f"\\useglossary{{prism.arch@1.0.0}}\n\\importmodule{{Foundation.Abnf}}\n\\title{{Augmented grammar}}\n\\begin{{semanticmodule}}\n"
-            f"definition{{\n  name: {low}Table,\n  parameters: [],\n  result: Bytes,\n  body: 0x{table_bytes.hex()}\n}}\n\n"
+            f"{chunks}definition{{\n  name: {low}Table,\n  parameters: [],\n  result: Bytes,\n  body: {joined(0, len(pieces))}\n}}\n\n"
             f"definition{{\n  name: {low}Dispatch,\n  parameters: [value : Bytes],\n  result: Bytes,\n"
             f"  body: (Foundation.Abnf::abnfAnswer ({low}Table) value 100000),\n  axioms: [Quot.sound, propext]\n}}\n"
             "\\end{semanticmodule}\n\\end{lexlean}\n"

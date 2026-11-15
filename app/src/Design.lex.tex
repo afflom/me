@@ -2219,6 +2219,111 @@ definition{
 }
 
 definition{
+  name: processPrismAskSendRequest,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentBrowser"})
+}
+
+definition{
+  name: processPrismAskDecide,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: processPrismAskParseRequest,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: processPrismAskJudge,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: processPrismAskEncodeAnswer,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: processPrismAskBuildAndVerify,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismBuild"})
+}
+
+definition{
+  name: processPrismAskRule1,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: processPrismAskRule2,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: processPrismAskRule3,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: processPrismAskRule4,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: processPrismAskRule5,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: processPrismAskRule6,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: processPrismAskRule7,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: processPrismAskRule8,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: processPrismAskOtherwise,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
   name: statePrismBoundaryIdle,
   parameters: [],
   result: Foundation.Arch::SystemState,
@@ -3283,6 +3388,69 @@ definition{
 }
 
 definition{
+  name: statePrismAskIdle,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: statePrismAskDeciding,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: statePrismAskRefused,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: statePrismAskAnsweredPaused,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: statePrismAskAnsweredClock,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: statePrismAskAnsweredEmpty,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: statePrismAskAnsweredAnswer,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: statePrismAskAnsweredKeep,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: statePrismAskAnsweredLook,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
   name: viewPrismBoundaryOpmDecide,
   parameters: [],
   result: Foundation.Arch::DesignView,
@@ -3812,6 +3980,34 @@ definition{
   parameters: [],
   result: Foundation.Arch::DesignView,
   body: (record Foundation.Arch::DesignView {title := "States of the Prism Kappa guest", viewpoint := "Architecture::viewpointPrismKappaVerifierRefusedMalformedRequests", diagram := (ctor Foundation.Arch::DesignDiagram.umlStateMachine)})
+}
+
+definition{
+  name: viewPrismAskOpmDecide,
+  parameters: [],
+  result: Foundation.Arch::DesignView,
+  body: (record Foundation.Arch::DesignView {title := "Deciding a Prism Ask request", viewpoint := "Architecture::viewpointPrismAskUserCorrectAnswers", diagram := (ctor Foundation.Arch::DesignDiagram.opmObjectProcess)})
+}
+
+definition{
+  name: viewPrismAskUmlComponents,
+  parameters: [],
+  result: Foundation.Arch::DesignView,
+  body: (record Foundation.Arch::DesignView {title := "Components of Prism Ask", viewpoint := "Architecture::viewpointPrismAskVerifierIntegrityOfThePublishedApp", diagram := (ctor Foundation.Arch::DesignDiagram.umlComponent)})
+}
+
+definition{
+  name: viewPrismAskUmlRequest,
+  parameters: [],
+  result: Foundation.Arch::DesignView,
+  body: (record Foundation.Arch::DesignView {title := "Answering a Prism Ask request", viewpoint := "Architecture::viewpointPrismAskUserCorrectAnswers", diagram := (ctor Foundation.Arch::DesignDiagram.umlSequence)})
+}
+
+definition{
+  name: viewPrismAskUmlStates,
+  parameters: [],
+  result: Foundation.Arch::DesignView,
+  body: (record Foundation.Arch::DesignView {title := "States of the Prism Ask guest", viewpoint := "Architecture::viewpointPrismAskVerifierRefusedMalformedRequests", diagram := (ctor Foundation.Arch::DesignDiagram.umlStateMachine)})
 }
 
 definition{
@@ -4613,6 +4809,48 @@ definition{
 }
 
 definition{
+  name: opmPrismAskBrowser,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "Design::viewPrismAskOpmDecide", kind := (ctor Foundation.Arch::OpmThingKind.object), subject := "Architecture::componentBrowser"})
+}
+
+definition{
+  name: opmPrismAskGuest,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "Design::viewPrismAskOpmDecide", kind := (ctor Foundation.Arch::OpmThingKind.object), subject := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: opmPrismAskDecide,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "Design::viewPrismAskOpmDecide", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismAskDecide"})
+}
+
+definition{
+  name: opmPrismAskParseRequest,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "Design::viewPrismAskOpmDecide", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismAskParseRequest"})
+}
+
+definition{
+  name: opmPrismAskJudge,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "Design::viewPrismAskOpmDecide", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismAskJudge"})
+}
+
+definition{
+  name: opmPrismAskEncodeAnswer,
+  parameters: [],
+  result: Foundation.Arch::OpmThing,
+  body: (record Foundation.Arch::OpmThing {view := "Design::viewPrismAskOpmDecide", kind := (ctor Foundation.Arch::OpmThingKind.process), subject := "Design::processPrismAskEncodeAnswer"})
+}
+
+definition{
   name: opmPrismBoundaryGuestIdle,
   parameters: [],
   result: Foundation.Arch::OpmState,
@@ -4876,6 +5114,20 @@ definition{
   parameters: [],
   result: Foundation.Arch::OpmState,
   body: (record Foundation.Arch::OpmState {view := "Design::viewPrismKappaOpmDecide", thing := "Architecture::componentPrismKappaPrismKappaGuest", state := "Design::statePrismKappaDeciding"})
+}
+
+definition{
+  name: opmPrismAskGuestIdle,
+  parameters: [],
+  result: Foundation.Arch::OpmState,
+  body: (record Foundation.Arch::OpmState {view := "Design::viewPrismAskOpmDecide", thing := "Architecture::componentPrismAskPrismAskGuest", state := "Design::statePrismAskIdle"})
+}
+
+definition{
+  name: opmPrismAskGuestDeciding,
+  parameters: [],
+  result: Foundation.Arch::OpmState,
+  body: (record Foundation.Arch::OpmState {view := "Design::viewPrismAskOpmDecide", thing := "Architecture::componentPrismAskPrismAskGuest", state := "Design::statePrismAskDeciding"})
 }
 
 definition{
@@ -5544,6 +5796,41 @@ definition{
 }
 
 definition{
+  name: opmPrismAskGuestAgent,
+  parameters: [],
+  result: Foundation.Arch::OpmLink,
+  body: (record Foundation.Arch::OpmLink {view := "Design::viewPrismAskOpmDecide", kind := (ctor Foundation.Arch::OpmLinkKind.agent), source := "Architecture::componentPrismAskPrismAskGuest", target := "Design::processPrismAskDecide"})
+}
+
+definition{
+  name: opmPrismAskBrowserInstrument,
+  parameters: [],
+  result: Foundation.Arch::OpmLink,
+  body: (record Foundation.Arch::OpmLink {view := "Design::viewPrismAskOpmDecide", kind := (ctor Foundation.Arch::OpmLinkKind.instrument), source := "Architecture::componentBrowser", target := "Design::processPrismAskParseRequest"})
+}
+
+definition{
+  name: opmPrismAskParseInvokesJudge,
+  parameters: [],
+  result: Foundation.Arch::OpmLink,
+  body: (record Foundation.Arch::OpmLink {view := "Design::viewPrismAskOpmDecide", kind := (ctor Foundation.Arch::OpmLinkKind.invocation), source := "Design::processPrismAskParseRequest", target := "Design::processPrismAskJudge"})
+}
+
+definition{
+  name: opmPrismAskJudgeInvokesEncode,
+  parameters: [],
+  result: Foundation.Arch::OpmLink,
+  body: (record Foundation.Arch::OpmLink {view := "Design::viewPrismAskOpmDecide", kind := (ctor Foundation.Arch::OpmLinkKind.invocation), source := "Design::processPrismAskJudge", target := "Design::processPrismAskEncodeAnswer"})
+}
+
+definition{
+  name: opmPrismAskEncodeAffectsBrowser,
+  parameters: [],
+  result: Foundation.Arch::OpmLink,
+  body: (record Foundation.Arch::OpmLink {view := "Design::viewPrismAskOpmDecide", kind := (ctor Foundation.Arch::OpmLinkKind.effect), source := "Architecture::componentBrowser", target := "Design::processPrismAskEncodeAnswer"})
+}
+
+definition{
   name: opmPrismBoundaryZoomParseRequest,
   parameters: [],
   result: Foundation.Arch::OpmZoom,
@@ -5940,6 +6227,27 @@ definition{
   parameters: [],
   result: Foundation.Arch::OpmZoom,
   body: (record Foundation.Arch::OpmZoom {view := "Design::viewPrismKappaOpmDecide", process := "Design::processPrismKappaDecide", subprocess := "Design::processPrismKappaEncodeAnswer", order := 2})
+}
+
+definition{
+  name: opmPrismAskZoomParseRequest,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "Design::viewPrismAskOpmDecide", process := "Design::processPrismAskDecide", subprocess := "Design::processPrismAskParseRequest", order := 0})
+}
+
+definition{
+  name: opmPrismAskZoomJudge,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "Design::viewPrismAskOpmDecide", process := "Design::processPrismAskDecide", subprocess := "Design::processPrismAskJudge", order := 1})
+}
+
+definition{
+  name: opmPrismAskZoomEncodeAnswer,
+  parameters: [],
+  result: Foundation.Arch::OpmZoom,
+  body: (record Foundation.Arch::OpmZoom {view := "Design::viewPrismAskOpmDecide", process := "Design::processPrismAskDecide", subprocess := "Design::processPrismAskEncodeAnswer", order := 2})
 }
 
 definition{
@@ -6738,6 +7046,48 @@ definition{
   parameters: [],
   result: Foundation.Arch::UmlComponent,
   body: (record Foundation.Arch::UmlComponent {view := "Design::viewPrismKappaUmlComponents", component := "Architecture::componentSourceRepository"})
+}
+
+definition{
+  name: umlPrismAskBrowser,
+  parameters: [],
+  result: Foundation.Arch::UmlComponent,
+  body: (record Foundation.Arch::UmlComponent {view := "Design::viewPrismAskUmlComponents", component := "Architecture::componentBrowser"})
+}
+
+definition{
+  name: umlPrismAskGitHubPages,
+  parameters: [],
+  result: Foundation.Arch::UmlComponent,
+  body: (record Foundation.Arch::UmlComponent {view := "Design::viewPrismAskUmlComponents", component := "Architecture::componentGitHubPages"})
+}
+
+definition{
+  name: umlPrismAskPrismAskGuest,
+  parameters: [],
+  result: Foundation.Arch::UmlComponent,
+  body: (record Foundation.Arch::UmlComponent {view := "Design::viewPrismAskUmlComponents", component := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: umlPrismAskPrismAskPage,
+  parameters: [],
+  result: Foundation.Arch::UmlComponent,
+  body: (record Foundation.Arch::UmlComponent {view := "Design::viewPrismAskUmlComponents", component := "Architecture::componentPrismAskPrismAskPage"})
+}
+
+definition{
+  name: umlPrismAskPrismBuild,
+  parameters: [],
+  result: Foundation.Arch::UmlComponent,
+  body: (record Foundation.Arch::UmlComponent {view := "Design::viewPrismAskUmlComponents", component := "Architecture::componentPrismBuild"})
+}
+
+definition{
+  name: umlPrismAskSourceRepository,
+  parameters: [],
+  result: Foundation.Arch::UmlComponent,
+  body: (record Foundation.Arch::UmlComponent {view := "Design::viewPrismAskUmlComponents", component := "Architecture::componentSourceRepository"})
 }
 
 definition{
@@ -7672,6 +8022,55 @@ definition{
 }
 
 definition{
+  name: umlPrismAskBrowserToPrismAskGuest,
+  parameters: [],
+  result: Foundation.Arch::UmlConnector,
+  body: (record Foundation.Arch::UmlConnector {view := "Design::viewPrismAskUmlComponents", edge := "Architecture::edgePrismAskBrowserToPrismAskGuest"})
+}
+
+definition{
+  name: umlPrismAskGitHubPagesToBrowser,
+  parameters: [],
+  result: Foundation.Arch::UmlConnector,
+  body: (record Foundation.Arch::UmlConnector {view := "Design::viewPrismAskUmlComponents", edge := "Architecture::edgeGitHubPagesToBrowser"})
+}
+
+definition{
+  name: umlPrismAskPrismAskGuestToBrowser,
+  parameters: [],
+  result: Foundation.Arch::UmlConnector,
+  body: (record Foundation.Arch::UmlConnector {view := "Design::viewPrismAskUmlComponents", edge := "Architecture::edgePrismAskPrismAskGuestToBrowser"})
+}
+
+definition{
+  name: umlPrismAskPrismAskPageToGitHubPages,
+  parameters: [],
+  result: Foundation.Arch::UmlConnector,
+  body: (record Foundation.Arch::UmlConnector {view := "Design::viewPrismAskUmlComponents", edge := "Architecture::edgePrismAskPrismAskPageToGitHubPages"})
+}
+
+definition{
+  name: umlPrismAskPrismBuildToPrismAskGuest,
+  parameters: [],
+  result: Foundation.Arch::UmlConnector,
+  body: (record Foundation.Arch::UmlConnector {view := "Design::viewPrismAskUmlComponents", edge := "Architecture::edgePrismAskPrismBuildToPrismAskGuest"})
+}
+
+definition{
+  name: umlPrismAskPrismBuildToPrismAskPage,
+  parameters: [],
+  result: Foundation.Arch::UmlConnector,
+  body: (record Foundation.Arch::UmlConnector {view := "Design::viewPrismAskUmlComponents", edge := "Architecture::edgePrismAskPrismBuildToPrismAskPage"})
+}
+
+definition{
+  name: umlPrismAskSourceRepositoryToPrismBuild,
+  parameters: [],
+  result: Foundation.Arch::UmlConnector,
+  body: (record Foundation.Arch::UmlConnector {view := "Design::viewPrismAskUmlComponents", edge := "Architecture::edgeSourceRepositoryToPrismBuild"})
+}
+
+definition{
   name: seqPrismBoundaryBrowser,
   parameters: [],
   result: Foundation.Arch::UmlLifeline,
@@ -7938,6 +8337,20 @@ definition{
 }
 
 definition{
+  name: seqPrismAskBrowser,
+  parameters: [],
+  result: Foundation.Arch::UmlLifeline,
+  body: (record Foundation.Arch::UmlLifeline {view := "Design::viewPrismAskUmlRequest", component := "Architecture::componentBrowser", order := 0})
+}
+
+definition{
+  name: seqPrismAskPrismAskGuest,
+  parameters: [],
+  result: Foundation.Arch::UmlLifeline,
+  body: (record Foundation.Arch::UmlLifeline {view := "Design::viewPrismAskUmlRequest", component := "Architecture::componentPrismAskPrismAskGuest", order := 1})
+}
+
+definition{
   name: seqPrismBoundaryRequest,
   parameters: [],
   result: Foundation.Arch::UmlMessage,
@@ -8201,6 +8614,20 @@ definition{
   parameters: [],
   result: Foundation.Arch::UmlMessage,
   body: (record Foundation.Arch::UmlMessage {view := "Design::viewPrismKappaUmlRequest", kind := (ctor Foundation.Arch::UmlMessageKind.reply), order := 1, source := "Architecture::componentPrismKappaPrismKappaGuest", target := "Architecture::componentBrowser", process := "Design::processPrismKappaDecide"})
+}
+
+definition{
+  name: seqPrismAskRequest,
+  parameters: [],
+  result: Foundation.Arch::UmlMessage,
+  body: (record Foundation.Arch::UmlMessage {view := "Design::viewPrismAskUmlRequest", kind := (ctor Foundation.Arch::UmlMessageKind.synchronous), order := 0, source := "Architecture::componentBrowser", target := "Architecture::componentPrismAskPrismAskGuest", process := "Design::processPrismAskDecide"})
+}
+
+definition{
+  name: seqPrismAskReply,
+  parameters: [],
+  result: Foundation.Arch::UmlMessage,
+  body: (record Foundation.Arch::UmlMessage {view := "Design::viewPrismAskUmlRequest", kind := (ctor Foundation.Arch::UmlMessageKind.reply), order := 1, source := "Architecture::componentPrismAskPrismAskGuest", target := "Architecture::componentBrowser", process := "Design::processPrismAskDecide"})
 }
 
 definition{
@@ -9265,6 +9692,69 @@ definition{
   parameters: [],
   result: Foundation.Arch::UmlState,
   body: (record Foundation.Arch::UmlState {view := "Design::viewPrismKappaUmlStates", state := "Design::statePrismKappaAnsweredBadhex", initial := false})
+}
+
+definition{
+  name: stPrismAskIdle,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismAskUmlStates", state := "Design::statePrismAskIdle", initial := true})
+}
+
+definition{
+  name: stPrismAskDeciding,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismAskUmlStates", state := "Design::statePrismAskDeciding", initial := false})
+}
+
+definition{
+  name: stPrismAskRefused,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismAskUmlStates", state := "Design::statePrismAskRefused", initial := false})
+}
+
+definition{
+  name: stPrismAskAnsweredPaused,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismAskUmlStates", state := "Design::statePrismAskAnsweredPaused", initial := false})
+}
+
+definition{
+  name: stPrismAskAnsweredClock,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismAskUmlStates", state := "Design::statePrismAskAnsweredClock", initial := false})
+}
+
+definition{
+  name: stPrismAskAnsweredEmpty,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismAskUmlStates", state := "Design::statePrismAskAnsweredEmpty", initial := false})
+}
+
+definition{
+  name: stPrismAskAnsweredAnswer,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismAskUmlStates", state := "Design::statePrismAskAnsweredAnswer", initial := false})
+}
+
+definition{
+  name: stPrismAskAnsweredKeep,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismAskUmlStates", state := "Design::statePrismAskAnsweredKeep", initial := false})
+}
+
+definition{
+  name: stPrismAskAnsweredLook,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismAskUmlStates", state := "Design::statePrismAskAnsweredLook", initial := false})
 }
 
 definition{
@@ -11743,6 +12233,132 @@ definition{
   parameters: [],
   result: Foundation.Arch::UmlTransition,
   body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismKappaUmlStates", order := 18, source := "Design::statePrismKappaRefused", target := "Design::statePrismKappaIdle", trigger := "Design::processPrismKappaEncodeAnswer"})
+}
+
+definition{
+  name: trPrismAskAccept,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 0, source := "Design::statePrismAskIdle", target := "Design::statePrismAskDeciding", trigger := "Design::processPrismAskParseRequest"})
+}
+
+definition{
+  name: trPrismAskRefuse,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 1, source := "Design::statePrismAskIdle", target := "Design::statePrismAskRefused", trigger := "Design::processPrismAskParseRequest"})
+}
+
+definition{
+  name: trPrismAskRule1,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 2, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredPaused", trigger := "Design::processPrismAskRule1"})
+}
+
+definition{
+  name: trPrismAskRule2,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 3, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredClock", trigger := "Design::processPrismAskRule2"})
+}
+
+definition{
+  name: trPrismAskRule3,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 4, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredEmpty", trigger := "Design::processPrismAskRule3"})
+}
+
+definition{
+  name: trPrismAskRule4,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 5, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredAnswer", trigger := "Design::processPrismAskRule4"})
+}
+
+definition{
+  name: trPrismAskRule5,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 6, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredEmpty", trigger := "Design::processPrismAskRule5"})
+}
+
+definition{
+  name: trPrismAskRule6,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 7, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredAnswer", trigger := "Design::processPrismAskRule6"})
+}
+
+definition{
+  name: trPrismAskRule7,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 8, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredKeep", trigger := "Design::processPrismAskRule7"})
+}
+
+definition{
+  name: trPrismAskRule8,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 9, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredKeep", trigger := "Design::processPrismAskRule8"})
+}
+
+definition{
+  name: trPrismAskOtherwise,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 10, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredLook", trigger := "Design::processPrismAskOtherwise"})
+}
+
+definition{
+  name: trPrismAskResetPaused,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 11, source := "Design::statePrismAskAnsweredPaused", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
+}
+
+definition{
+  name: trPrismAskResetClock,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 12, source := "Design::statePrismAskAnsweredClock", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
+}
+
+definition{
+  name: trPrismAskResetEmpty,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 13, source := "Design::statePrismAskAnsweredEmpty", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
+}
+
+definition{
+  name: trPrismAskResetAnswer,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 14, source := "Design::statePrismAskAnsweredAnswer", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
+}
+
+definition{
+  name: trPrismAskResetKeep,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 15, source := "Design::statePrismAskAnsweredKeep", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
+}
+
+definition{
+  name: trPrismAskResetLook,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 16, source := "Design::statePrismAskAnsweredLook", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
+}
+
+definition{
+  name: trPrismAskResetRefused,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 17, source := "Design::statePrismAskRefused", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
 }
 \end{semanticmodule}
 \end{lexlean}
