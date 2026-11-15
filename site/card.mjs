@@ -584,34 +584,33 @@ export default async function start({ app, reason, $ }) {
   const openAt = new Map();
   function rowOf(item) {
     const what = item.sealed ? WORDS.sealed : item.title || "—";
-    const row = element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}` },
+    const parts = [
       element("span", { className: "pr-when", textContent: whenOfItem(item) }),
       element("span", { className: "pr-what", textContent: what }),
-      element("span", { className: "pr-who", textContent: item.who || DOMAINS[item.domain] || "" }));
-    if (item.sealed || !item.body) return row;
-    row.tabIndex = 0;
-    row.setAttribute("role", "button");
-    row.setAttribute("aria-expanded", "false");
+      element("span", { className: "pr-who", textContent: item.who || DOMAINS[item.domain] || "" })];
+    if (item.sealed || !item.body) return element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}` }, ...parts);
+    // A list item holding a button that opens it (WCAG 1.3.1, 4.1.2): the row stays a row of its list.
+    const open = element("button", { type: "button", className: "pr-row" }, ...parts);
+    open.setAttribute("aria-expanded", "false");
+    const row = element("li", { className: "pr-item" }, open);
     const show = (since = Date.now()) => {
-      row.setAttribute("aria-expanded", "true");
+      open.setAttribute("aria-expanded", "true");
       row.append(element("pre", { className: "pr-preview", textContent: item.body }));
       opened.set(row, { item, since });
     };
     const toggle = () => {
-      if (row.getAttribute("aria-expanded") === "true") {
-        row.setAttribute("aria-expanded", "false");
+      if (open.getAttribute("aria-expanded") === "true") {
+        open.setAttribute("aria-expanded", "false");
         row.querySelector(".pr-preview")?.remove(); closeOpened(row); openAt.delete(item.address);
       } else { const since = Date.now(); show(since); openAt.set(item.address, since); }
     };
     if (item.address && openAt.has(item.address)) {
-      for (const [node, open] of opened) if (open.item.address === item.address) opened.delete(node);
+      for (const [node, was] of opened) if (was.item.address === item.address) opened.delete(node);
       show(openAt.get(item.address));
     }
-    // A press anywhere on an opened item closes it, unless the person is selecting its words.
+    // A press anywhere on an opened item closes it, unless the person is selecting its words;
+    // the button's own Enter and Space arrive here as its click.
     row.addEventListener("click", () => { if (!String(getSelection?.() ?? "")) toggle(); });
-    row.addEventListener("keydown", (event) => {
-      if (event.target === row && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); toggle(); }
-    });
     return row;
   }
 
@@ -1321,7 +1320,7 @@ export default async function start({ app, reason, $ }) {
       link.addEventListener("click", (event) => {
         event.preventDefault();
         const row = rows[said.sources.indexOf(item)];
-        if (row.getAttribute("aria-expanded") === "false") row.click();
+        if (row.querySelector(".pr-row")?.getAttribute("aria-expanded") === "false") row.querySelector(".pr-row").click();
         row.scrollIntoView({ block: "nearest" });
       });
       return link;

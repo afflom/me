@@ -78,7 +78,7 @@ test("every act completes: sent things are kept where they left from, items open
     await listed(TO);
     const row = page.locator("#pr-list .pr-item", { hasText: FIRST_LINE });
     await row.click();
-    assert.equal(await row.getAttribute("aria-expanded"), "true");
+    assert.equal(await row.locator(".pr-row").getAttribute("aria-expanded"), "true");
     assert.match(await row.locator(".pr-preview").textContent(), new RegExp(REST.join("\n").replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 
     // Ask draws on the kept task before the model answers.
