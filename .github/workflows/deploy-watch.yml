@@ -1,4 +1,4 @@
-# deploy-watch.yml is rendered from the pipeline model, app/specs/pipeline/spec.json, by
+# deploy-watch.yml is rendered from the pipeline model, app/specs/pipeline/workflows/deploy-watch.yml.json, by
 # `cargo run -q --locked -p xtask -- pipeline --write`: change the model, not this file.
 # Keeps the live page on main's newest commit, or says loudly that it is not.
 #
@@ -136,12 +136,20 @@ jobs:
             exit 0
           fi
 
-          # The checks that refused, by name, from the job's own log.
+          # What refused, in the job's own words: the last lines the failing step
+          # printed before its error (a gate's refusal), then the failing tests.
           job_id=$(jq -r '.id // empty' <<<"${failed:-{\}}")
           tests=""
           if [[ -n $job_id ]]; then
-            tests=$(gh api "repos/$REPO/actions/jobs/$job_id/logs" 2>/dev/null \
-              | sed -nE 's/^[0-9TZ:.-]+ +not ok [0-9]+ - (.*)$/- \1/p' | sort -u | head -n 10 || true)
+            tests=$(gh api "repos/$REPO/actions/jobs/$job_id/logs" 2>/dev/null | awk '
+                { sub(/^[0-9TZ:.-]+ /, "") }
+                /^not ok [0-9]+ - / { sub(/^not ok [0-9]+ - /, ""); if (!seen[$0]++) tests[++t] = $0; next }
+                /^##\[endgroup\]/ { n = 0; next }
+                /^##\[error\]/ { if (!done) { for (i = 1; i <= n; i++) print "- " buf[i]; done = 1 }; next }
+                /^(\033\[|\||##\[| |\+ |$)/ { next }
+                { if (n == 6) { for (i = 1; i < 6; i++) buf[i] = buf[i + 1]; n = 5 }; buf[++n] = $0 }
+                END { for (i = 1; i <= t && i <= 10; i++) print "- " tests[i] }
+              ' || true)
           fi
           # The pull requests whose merge made main's head: the thread that merged
           # one hears about it on its own pull request, not only in the issue.
@@ -160,7 +168,7 @@ jobs:
             "| live page is | \`$live\` |" \
             "| merged by | ${prs:+#${prs// / #}} |" \
             "" \
-            "${tests:+Checks that refused:}" \
+            "${tests:+What refused, from the log:}" \
             "${tests}" \
             "" \
             "Every gate that refused here also runs on pull requests, so the fix lands as a pull request; this issue closes itself when main is live again.")
