@@ -19,12 +19,19 @@ const FREQS = ["SECONDLY", "MINUTELY", "HOURLY", "DAILY", "WEEKLY", "MONTHLY", "
 const unfold = (text) => text.replace(/\r?\n[ \t]/g, "");
 const lines = (text, name) => [...unfold(text).matchAll(new RegExp(`^${name}((?:;[^:\\r\\n]*)?):([^\\r\\n]*)$`, "gim"))].map(([, params, value]) => [params, value.trim()]);
 
+// One formatter per zone: making one is the slow part of reading a zone's wall-time.
+const clocks = new Map();
+const zoneClock = (zone) => {
+  if (!clocks.has(zone)) clocks.set(zone, new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }));
+  return clocks.get(zone);
+};
+
 // Wall-time in a named zone, as UTC, through the browser's own zone data.
-function utcOf(wall, zone) {
+export function utcOf(wall, zone) {
   if (zone === "UTC") return wall;
   if (!zone) { const d = new Date(wall); return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), d.getUTCHours(), d.getUTCMinutes(), d.getUTCSeconds()).getTime(); }
   try {
-    const parts = new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
+    const parts = zoneClock(zone);
     const offset = (at) => { const p = Object.fromEntries(parts.formatToParts(at).map(({ type, value }) => [type, +value])); return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - at; };
     const first = wall - offset(wall);
     return wall - offset(first);

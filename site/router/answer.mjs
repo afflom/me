@@ -10,6 +10,7 @@ import { route } from "./router.mjs";
 import { withoutTime } from "./features.mjs";
 import { drawOn, windowOf, termsOf, wordsOf, mentions } from "../coherence/sense.mjs";
 import { relativeOf, sequence, spanOf } from "../time/time.mjs";
+import { everyOf, rhythms, sourceOf } from "../time/rhythm.mjs";
 
 const S = PROVIDERS.sentence;
 const RANK = ["public", "internal", "confidential", "restricted"];
@@ -39,7 +40,7 @@ const whatOf = (item) => item.title || (item.body ?? "").split("\n")[0] || "";
 // and the order of what is held, it says how far the item is from now and,
 // for a message, its place in its own conversation; for an event revised
 // since, that this is an earlier version of it.
-export function sentenceOf(item, me = null, { now = null, order = null } = {}) {
+export function sentenceOf(item, me = null, { now = null, order = null, rhythm = null } = {}) {
   const parts = { what: whatOf(item), who: item.who ?? "", when: whenOf(item.at, item.allDay, now) };
   const place = order?.get(item.address);
   if (item.media === "message") {
@@ -48,7 +49,10 @@ export function sentenceOf(item, me = null, { now = null, order = null } = {}) {
     const lead = item.labels?.lead ?? "";
     const says = lead && lead.toLowerCase() !== parts.what.toLowerCase() ? fill(S.frames.lead, { lead }) : "";
     const turn = (place?.of > 1 ? fill(S.frames.turn, place) : "") + (Number.isFinite(place?.after) ? fill(S.frames.after, { after: spanOf(place.after) }) : "");
-    return fill(S.frames.message, { ...parts, who: mine ? (me.name ?? parts.who) : parts.who }) + turn + says;
+    // How often its sender writes, where what they sent keeps a rhythm (site/time/rhythm.mjs).
+    const often = mine ? null : rhythm?.get(sourceOf(item));
+    const beat = often ? fill(often.per > 1 ? S.frames.rhythmMany : S.frames.rhythm, { every: everyOf(often), per: often.per }) : "";
+    return fill(S.frames.message, { ...parts, who: mine ? (me.name ?? parts.who) : parts.who }) + turn + says + beat;
   }
   if (item.media === "contactCard") return fill(S.frames.contact, parts);
   if (item.media === "calendar" || item.start != null) return fill(S.frames.event, parts) + (parts.who && item.media === "calendar" ? fill(S.frames.place, parts) : "") + (place && !place.latest ? S.frames.earlier : "");
@@ -114,7 +118,8 @@ export async function answer(prompt, { items = [], me = null, line, halted, now 
   const naming = many ? [] : used.filter((item) => mentions(item, named));
   const told = many ? used.slice(0, S.most) : naming.length > 1 ? naming.slice(0, S.most) : used.slice(0, 1);
   const order = sequence(held);
-  const sentences = [...lead.map((s) => `${s}.`), ...told.map((item) => end(sentenceOf(item, me, { now, order })))];
+  const rhythm = rhythms(held);
+  const sentences = [...lead.map((s) => `${s}.`), ...told.map((item) => end(sentenceOf(item, me, { now, order, rhythm })))];
   // Everything held that names the asked words is found: the sentences say
   // the few, and the list beneath holds those first, then the rest, newest first.
   // Asked only words the readers pass over (a kind, a weekday, "should"), those words are what is sought.

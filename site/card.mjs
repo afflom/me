@@ -92,6 +92,13 @@ const person = (raw = "") => {
   return headerWords(named ? named[1] : from.replace(/[<>]/g, ""));
 };
 
+// The address a field names first (RFC 5322 3.4 addr-spec), without its comments: "pete@silly.test".
+const addressOf = (raw = "") => {
+  const plain = uncomment(raw);
+  const spec = /<\s*([^<>]+?)\s*>/.exec(plain)?.[1] ?? /[^\s,;:<>"]+@[^\s,;<>"]+/.exec(plain)?.[0] ?? "";
+  return spec.replace(/\s+/g, "").toLowerCase();
+};
+
 function calendarLine(text, name) {
   return new RegExp(`^${name}((?:;[^:]*)?):(.*)$`, "mi").exec(unfoldCalendar(text));
 }
@@ -152,9 +159,12 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     // Its place in its conversation (RFC 5322 3.6.4): what it is, what it answers, what it builds on.
     const ids = (field) => (h[field] ?? "").match(/<[^<>\s]+>/g) ?? [];
     const place = { ...(ids("message-id").length ? { id: ids("message-id")[0] } : {}), ...(ids("in-reply-to").length ? { replyTo: ids("in-reply-to") } : {}), ...(ids("references").length ? { refs: ids("references") } : {}) };
+    // Who it comes from: its sender's address, and the list it came through (RFC 2919 List-Id).
+    const list = /<([^<>\s]+)>/.exec(h["list-id"] ?? "")?.[1]?.toLowerCase();
+    const from = { ...(addressOf(h.from) ? { from: addressOf(h.from) } : {}), ...(list ? { list } : {}) };
     // The schema.org objects it carries (a booking, an order), as its sender typed them.
     const markup = reader?.messageMarkup ? reader.messageMarkup(text) : [];
-    return { ...base, ...place, ...(markup.length ? { markup } : {}), at: Number.isNaN(when) ? base.at : when, title: headerWords(h.subject ?? "").replace(/\s+/g, " ").trim(), who: person(h.from || h.to), text, body };
+    return { ...base, ...place, ...from, ...(markup.length ? { markup } : {}), at: Number.isNaN(when) ? base.at : when, title: headerWords(h.subject ?? "").replace(/\s+/g, " ").trim(), who: person(h.from || h.to), text, body };
   }
   if (base.media === "calendar") {
     // The event's own fields: the calendar's time zones come first and carry DTSTARTs of their own (1970).
@@ -586,34 +596,33 @@ export default async function start({ app, reason, $ }) {
   const openAt = new Map();
   function rowOf(item) {
     const what = item.sealed ? WORDS.sealed : item.title || "—";
-    const row = element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}` },
+    const parts = [
       element("span", { className: "pr-when", textContent: whenOfItem(item) }),
       element("span", { className: "pr-what", textContent: what }),
-      element("span", { className: "pr-who", textContent: item.who || DOMAINS[item.domain] || "" }));
-    if (item.sealed || !item.body) return row;
-    row.tabIndex = 0;
-    row.setAttribute("role", "button");
-    row.setAttribute("aria-expanded", "false");
+      element("span", { className: "pr-who", textContent: item.who || DOMAINS[item.domain] || "" })];
+    if (item.sealed || !item.body) return element("li", { className: `pr-item${item.sealed ? " pr-sealed" : ""}` }, ...parts);
+    // A list item holding a button that opens it (WCAG 1.3.1, 4.1.2): the row stays a row of its list.
+    const open = element("button", { type: "button", className: "pr-open" }, ...parts);
+    open.setAttribute("aria-expanded", "false");
+    const row = element("li", { className: "pr-item" }, open);
     const show = (since = Date.now()) => {
-      row.setAttribute("aria-expanded", "true");
+      open.setAttribute("aria-expanded", "true");
       row.append(element("pre", { className: "pr-preview", textContent: item.body }));
       opened.set(row, { item, since });
     };
     const toggle = () => {
-      if (row.getAttribute("aria-expanded") === "true") {
-        row.setAttribute("aria-expanded", "false");
+      if (open.getAttribute("aria-expanded") === "true") {
+        open.setAttribute("aria-expanded", "false");
         row.querySelector(".pr-preview")?.remove(); closeOpened(row); openAt.delete(item.address);
       } else { const since = Date.now(); show(since); openAt.set(item.address, since); }
     };
     if (item.address && openAt.has(item.address)) {
-      for (const [node, open] of opened) if (open.item.address === item.address) opened.delete(node);
+      for (const [node, was] of opened) if (was.item.address === item.address) opened.delete(node);
       show(openAt.get(item.address));
     }
-    // A press anywhere on an opened item closes it, unless the person is selecting its words.
+    // A press anywhere on an opened item closes it, unless the person is selecting its words;
+    // the button's own Enter and Space arrive here as its click.
     row.addEventListener("click", () => { if (!String(getSelection?.() ?? "")) toggle(); });
-    row.addEventListener("keydown", (event) => {
-      if (event.target === row && (event.key === "Enter" || event.key === " ")) { event.preventDefault(); toggle(); }
-    });
     return row;
   }
 
@@ -1323,7 +1332,7 @@ export default async function start({ app, reason, $ }) {
       link.addEventListener("click", (event) => {
         event.preventDefault();
         const row = rows[said.sources.indexOf(item)];
-        if (row.getAttribute("aria-expanded") === "false") row.click();
+        if (row.querySelector(".pr-open")?.getAttribute("aria-expanded") === "false") row.querySelector(".pr-open").click();
         row.scrollIntoView({ block: "nearest" });
       });
       return link;

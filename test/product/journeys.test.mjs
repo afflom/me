@@ -57,7 +57,7 @@ test("every journey that works for the person keeps working, and none works unre
     ...rows.map(({ journey, fresh, back }) => `| ${journey.key} ${journey.name} | ${journey.status} | ${fresh.ok && back.ok ? "works" : "not yet"} | ${fresh.ok ? (back.ok ? "" : `after a reload: ${back.why}`) : fresh.why} |`),
   ]);
   const { broken, unrecorded } = verdict(rows);
-  // QR-11: each measure the record names this suite the gate of, against its own threshold.
+  // QR-30: each measure the record names this suite the gate of, against its own threshold.
   const measured = { "journeys-broken": broken.length };
   for (const q of product.quality ?? []) for (const m of q.measures) {
     if (m.gate !== "test/product/journeys.test.mjs") continue;
