@@ -66,13 +66,14 @@ def limits(g):
 def write(gid, out):
     g = GUESTS[gid]
     out = pathlib.Path(out)
-    if out.exists():
-        shutil.rmtree(out)
+    shutil.rmtree(out, ignore_errors=True)
     (out / "src").mkdir(parents=True)
     for name in ("lakefile.toml", "lean-toolchain", "lake-manifest.json", "prismpm.toml"):
         shutil.copy(APP / name, out / name)
     shutil.copytree(APP / "language", out / "language")
     shutil.copytree(APP / "src/Foundation", out / "src/Foundation")
+    # A guest that names its memory is a text-application/2 core: the SDK stdlib's V2 model, byte for byte.
+    v2 = "memory" in g and shutil.copytree(APP / "specs/guests/stdlib/Foundation", out / "src/Foundation", dirs_exist_ok=True)
     files = []
     for m in g["modules"]:
         for name in (f"{m}.lex.tex", f"{m}Proofs.lex.tex"):
@@ -91,21 +92,14 @@ def write(gid, out):
     for r, a in reversed(vectors(g) + [("", "invalid"), ("x" * (req + 1), "invalid"), ("x" * alloc, "invalid")]):
         vec = f"(cons (record Foundation.View.Text.V1.Model::AcceptanceVector {{request := {h(r)}, response := {h(a)}}}) {vec})"
     module = g["dispatch"].split("::")[0]
-    # A guest that needs more than the SDK's default memory (32 pages, 64 KiB of stack)
-    # says so, and is built under the SDK's text-application/2 profile, which carries both.
-    model, profile, v2, memory = "V1", 1, "", ""
-    if "memory" in g:
-        pages, stack = g["memory"]
-        model, profile, v2 = "V2", 2, "\n\\importmodule{Foundation.View.Text.V2.Model}"
-        memory = f"coreMemoryPages := ({pages} : UInt32), coreStackBytes := ({stack} : UInt32), "
     name = f"prism-{gid}"
     (out / f"src/{appm}.lex.tex").write_text(rf"""\begin{{lexlean}}{{{appm}}}
 \useglossary{{lexlean.std.bool@1.2.0}}
 \useglossary{{lexlean.std.nat@1.2.0}}
 \useglossary{{prism.arch@1.0.0}}
 \importmodule{{Foundation.Bytes}}
-\importmodule{{Foundation.View.Text.V1.Model}}{v2}
-\importmodule{{{module}}}
+\importmodule{{Foundation.View.Text.V1.Model}}
+{"\\importmodule{Foundation.View.Text.V2.Model}" + chr(10) if v2 else ""}\importmodule{{{module}}}
 \title{{Text application model}}
 \begin{{semanticmodule}}
 definition{{
@@ -119,8 +113,8 @@ definition{{
 definition{{
   name: application,
   parameters: [],
-  result: Foundation.View.Text.{model}.Model::TextApplication,
-  body: (record Foundation.View.Text.{model}.Model::TextApplication {{profile := "prismpm/text-application/{profile}", name := "{name}", cargoName := "{name}", cargoVersion := "0.1.0", cargoDescription := "The {gid} decision of the Prism, on its own.", cargoRepository := "https://github.com/afflom/me", cargoHomepage := "https://afflom.github.io/me/", libraryRoots := (cons "Me.{appm}.dispatch" (nil String)), acceptanceVectors := {vec}, entryRoot := "Me.{appm}.dispatch", coreContract := "hologram:guest/core-wasm@1", requestMaximum := ({req} : UInt32), responseMaximum := ({resp} : UInt32), guestAllocationMaximum := ({alloc} : UInt32), {memory}capabilitiesEmpty := true, fatArchive := true, primaryLayer := (0 : UInt8), viewLayer := (1 : UInt8), view := (record Foundation.View.Text.V1.Model::TextView {{title := "{name}", heading := "{name}", inputLabel := "Request", submitLabel := "Decide", outputLabel := "Answer", inputError := "Invalid request", responseError := "Invalid response"}})}})
+  result: Foundation.View.Text.V{2 if v2 else 1}.Model::TextApplication,
+  body: (record Foundation.View.Text.V{2 if v2 else 1}.Model::TextApplication {{profile := "prismpm/text-application/{2 if v2 else 1}", name := "{name}", cargoName := "{name}", cargoVersion := "0.1.0", cargoDescription := "The {gid} decision of the Prism, on its own.", cargoRepository := "https://github.com/afflom/me", cargoHomepage := "https://afflom.github.io/me/", libraryRoots := (cons "Me.{appm}.dispatch" (nil String)), acceptanceVectors := {vec}, entryRoot := "Me.{appm}.dispatch", coreContract := "hologram:guest/core-wasm@1", requestMaximum := ({req} : UInt32), responseMaximum := ({resp} : UInt32), guestAllocationMaximum := ({alloc} : UInt32),{f" coreMemoryPages := ({g['memory'][0]} : UInt32), coreStackBytes := ({g['memory'][1]} : UInt32)," if v2 else ""} capabilitiesEmpty := true, fatArchive := true, primaryLayer := (0 : UInt8), viewLayer := (1 : UInt8), view := (record Foundation.View.Text.V1.Model::TextView {{title := "{name}", heading := "{name}", inputLabel := "Request", submitLabel := "Decide", outputLabel := "Answer", inputError := "Invalid request", responseError := "Invalid response"}})}})
 }}
 \end{{semanticmodule}}
 \end{{lexlean}}
@@ -182,12 +176,11 @@ def main(argv):
         print(write(argv[1], argv[2]))
     elif argv[:1] == ["record"] and len(argv) == 3:
         g = GUESTS[argv[1]]
-        (ROOT / g["wasm"]).parent.mkdir(parents=True, exist_ok=True)
         shutil.copy(argv[2], ROOT / g["wasm"])
         digest = sha(ROOT / g["wasm"])
-        if (pin := ROOT / g["pin"]).exists():  # a new guest's pin is written by generators/guests
-            line, old = pin_line(g)
-            pin.write_text(pin.read_text().replace(line, line.replace(old, digest)))
+        line, old = pin_line(g)
+        pin = ROOT / g["pin"]
+        pin.write_text(pin.read_text().replace(line, line.replace(old, digest)))
         held = lock()
         held[argv[1]] = {"source": source(argv[1]), "wasm": digest}
         LOCK.write_text(json.dumps({k: held[k] for k in GUESTS if k in held}, indent=2) + "\n")

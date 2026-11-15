@@ -154,9 +154,47 @@
       "vectors": "host"
     },
     {
+      "id": "scxml",
+      "wasm": "site/scxml/guest/scxml.wasm",
+      "pin": "site/scxml/guest.mjs",
+      "modules": [
+        "PrismScxml"
+      ],
+      "dispatch": "PrismScxml::prismScxmlDispatch",
+      "vectors": "spec:scxml",
+      "limits": [
+        3072,
+        16,
+        6144
+      ],
+      "memory": [
+        2048,
+        1048576
+      ]
+    },
+    {
+      "id": "vcard",
+      "wasm": "site/read/guest/vcard.wasm",
+      "pin": "site/read/guest.mjs",
+      "as": "vcard",
+      "sync": true,
+      "modules": [
+        "PrismVcardTable",
+        "PrismVcard"
+      ],
+      "dispatch": "PrismVcard::vcardDispatch",
+      "vectors": "spec:vcard",
+      "limits": [
+        4096,
+        8192,
+        8192
+      ]
+    },
+    {
       "id": "grammar-mail",
       "wasm": "site/read/guest/grammar-mail.wasm",
       "pin": "site/read/guest.mjs",
+      "as": "mail",
       "modules": [
         "Abnf",
         "PrismGrammarMail"

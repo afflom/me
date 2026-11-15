@@ -15,7 +15,8 @@
 // "rule,start,end,depth" in UTF-8 octets, in order; that is the tree here.
 //   const g = abnf(table); const tree = g.match("orig-date", "Date: ...\r\n");
 //   tree = { rule, start, end, text, kids: [trees of named rules] }
-import { GUEST, openGuestSync } from "./guest.mjs";
+import { GUESTS, openGuestSync } from "./guest.mjs";
+const GUEST = GUESTS.mail;
 
 const encoder = new TextEncoder();
 const url = new URL(GUEST.path, import.meta.url);
