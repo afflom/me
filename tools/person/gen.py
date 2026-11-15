@@ -309,6 +309,17 @@ lines = [
     "// The component and the chapter an entity is in, or null for a root or a qualifier.",
     "export const componentOf = (e) => [e, ...ancestors(e)].find((a) => COMPONENTS.includes(a)) ?? null;",
     "export const chapterOf = (e) => [e, ...ancestors(e)].find((a) => CHAPTERS.includes(a)) ?? null;",
+    "// The facets of the whole person that what arrives is filed under: the",
+    "// classification's second-level categories (a component letter and three",
+    "// digits), each read by meaning as its title in its chapter's words.",
+    "export const FACETS = Object.freeze(CATEGORIES.filter((e) => e.code.length === 4));",
+    "export const facetText = (e) => `${e.title} (${chapterOf(e).title})`;",
+    "// The facets nearest a meaning vector, nearest first: at most `most`, each at",
+    "// least `near`, given the facets' own vectors in FACETS order.",
+    "export function nearestFacets(vector, vectors, { near, most = 3, nearness }) {",
+    "  if (!vector || !vectors) return [];",
+    "  return vectors.map((v, i) => [nearness(vector, v), i]).filter(([c]) => c >= near).sort((a, b) => b[0] - a[0]).slice(0, most).map(([, i]) => FACETS[i].code);",
+    "}",
     "",
 ]
 text = "\n".join(lines)
