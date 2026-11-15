@@ -27,5 +27,5 @@ Feature: product
   @PT-01 @build
   Scenario: Every part of the Prism, each module of its page and of its model, answers what it is, why it is there, who acts in it, where it runs, when it acts and how it is checked, each answer derived from the record and grounded in a stratum of app/specs/parts/spec.json after verdant's W5H certificate; why traces each part through the features, facets and journeys it serves to the stakeholder concerns they answer, and the gate refuses an ungrounded part, an unanswered question, a concern no journey answers or a working journey no part serves, beyond a debt that only shrinks
     Given every tracked module of the page and of the model, the parts record, the product record and the coherence registry
-    When test/parts/gate.test.mjs runs tools/parts/gate.py on the committed record and on each planted defect, with the suites that reach each part from test/parts/reach.txt, which the LexLean program generators/parts writes
+    When tools/generators/run.sh runs the LexLean program generators/parts over them (test/parts/parts.txt, test/parts/reach.txt and its checks), and GN-01 replays each planted defect in generators/parts/cases
     Then the committed record passes and every planted defect is refused with its reason

@@ -16,6 +16,19 @@
     },
     {
       "generator": "ptpath",
+      "glob": [
+        "site/*.mjs",
+        "site/extension/*.js",
+        "app/src/*.lex.tex",
+        ":(exclude)*/vendor/*",
+        ":(exclude)*/worker-runtime/*",
+        ":(exclude)*.test.mjs"
+      ],
+      "head": true,
+      "output": "test/parts/parts.txt"
+    },
+    {
+      "generator": "ptpath",
       "output": ".gen/pt-helpers",
       "glob": [
         "test/*.mjs",

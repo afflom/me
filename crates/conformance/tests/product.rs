@@ -2,10 +2,10 @@
 //!
 //! The behaviour runs in `pages.yml`: `test/product/screen.test.mjs` and
 //! `test/product/journeys.test.mjs` (on the assembled page, and again on the
-//! published page). The record's gate is the LexLean program
-//! generators/product, run by GN-01, which also replays its planted defects
-//! (generators/product/cases/) and fails when one gets another report. These
-//! tests hold the wiring fixed.
+//! published page). The record's gates are the LexLean programs
+//! generators/product (PD-03) and generators/parts (PT-01), run by GN-01,
+//! which also replays their planted defects (generators/<program>/cases/) and
+//! fails when one gets another report. These tests hold the wiring fixed.
 
 use std::path::PathBuf;
 
@@ -136,7 +136,7 @@ fn product_pd_03() {
 /// `PT-01`: Every part of the Prism, each module of its page and of its model, answers what it is, why it is there, who acts in it, where it runs, when it acts and how it is checked, each answer derived from the record and grounded in a stratum of app/specs/parts/spec.json after verdant's W5H certificate; why traces each part through the features, facets and journeys it serves to the stakeholder concerns they answer, and the gate refuses an ungrounded part, an unanswered question, a concern no journey answers or a working journey no part serves, beyond a debt that only shrinks
 #[test]
 fn product_pt_01() {
-    let gate = read("tools/parts/gate.py");
+    let gate = read("generators/parts/src/GenTrace.lex.tex");
     for needle in [
         "is grounded in no stratum",
         "does not answer",
@@ -145,22 +145,42 @@ fn product_pt_01() {
     ] {
         assert!(
             gate.contains(needle),
-            "PT-01: tools/parts/gate.py must contain `{needle}`"
+            "PT-01: generators/parts/src/GenTrace.lex.tex must contain `{needle}`"
         );
     }
-    let test = read("test/parts/gate.test.mjs");
+    let steps = read("generators/parts/steps.json");
+    for generator in [
+        "ptreach",
+        "ptgroundcheck",
+        "ptstrata",
+        "ptconcerncheck",
+        "ptjourneycheck",
+        "pttrace",
+        "ptdebt",
+    ] {
+        assert!(
+            steps.contains(&format!("\"generator\": \"{generator}\"")),
+            "PT-01: generators/parts/steps.json must run {generator}"
+        );
+    }
+    for output in ["test/parts/parts.txt", "test/parts/reach.txt"] {
+        assert!(
+            steps.contains(&format!("\"output\": \"{output}\"")),
+            "PT-01: generators/parts writes {output}"
+        );
+    }
+    let cases = std::fs::read_dir(
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../generators/parts/cases"),
+    )
+    .expect("PT-01: generators/parts/cases holds the planted defects")
+    .filter(|e| {
+        e.as_ref()
+            .map(|e| e.path().extension().is_some_and(|x| x == "request"))
+            .unwrap_or(false)
+    })
+    .count();
     assert!(
-        test.contains("tools/parts/gate.py"),
-        "PT-01: the planted defects run the gate"
-    );
-    // How a part is checked starts from the suites that reach it, which the
-    // LexLean program generators/parts writes and GN-01 holds.
-    assert!(
-        read("generators/parts/steps.json").contains("\"output\": \"test/parts/reach.txt\""),
-        "PT-01: generators/parts writes test/parts/reach.txt"
-    );
-    assert!(
-        gate.contains("test/parts/reach.txt"),
-        "PT-01: tools/parts/gate.py reads the reach generators/parts writes"
+        cases >= 20,
+        "PT-01: the planted defects are generators/parts/cases"
     );
 }
