@@ -1,42 +1,17 @@
 """The whole-person model, made from WHO's ICF: python3 -I tools/person/gen.py [--check] [--cache DIR]
 
-A twin of a person needs a model of the whole person. The Prism's is the
-International Classification of Functioning, Disability and Health (ICF), as
-WHO publishes it in its classification release, pinned in
-app/specs/oracle/spec.json under `classifications`: the release's archive by
-SHA-256, its licence terms by SHA-256.
-
-The release carries the classification twice, as a tab-separated tabulation
-and as a workbook. Each is read by its own reader (the tabulation by Python's
-csv module, the workbook by its Office Open XML parts, ECMA-376), and the two
-must agree on every entity, field by field, or nothing is written. The
-classification is then held to its own structure, or refused:
-  - every entity's parent is an entity of the release, and there is exactly
-    one root per tabulation (the ICF categories and the ICF qualifiers);
-  - a block's or category's title carries one "- " per level below its root,
-    which the tabulation uses to draw the hierarchy (the model keeps the title
-    without it);
-  - a category's code begins with its component's letter (b, s, d, e; q for
-    a qualifier), and a category under a category extends its parent's code
-    by one level (ICF 2001, coding conventions: one digit for a chapter, two
-    for the second level, one each for the third and fourth);
-  - DepthInKind counts the categories above it plus one, IsLeaf holds exactly
-    when no entity names it as parent, and codes and URIs are unique;
-  - its URIs are WHO's entity and linearization URIs for the entity's own id.
-
-What the model keeps of each entity is every field of the release except the
-browser link (a spreadsheet formula, which is the URI again): its foundation
-URI, linearization URI, code, block id, title, kind, depth in kind, residual,
-leaf, coding note and parent, so every stored entity keeps its code, title
-and URI as the licence requires (terms 1.2.3). Nothing is added to an entity;
-the model's own functions over the entities are marked as the Prism's.
-
-Writes site/person/icf.mjs, which the page loads, and the release's tabulation
-byte for byte to app/specs/oracle/icf/, from which the LexLean generator
-generators/person/src/GenIcf.lex.tex writes the entities' rows,
-site/person/icf-rows.mjs (tools/generators/run.sh, GN-01); those rows must be
-the entities read here, field by field, or this refuses. --check writes nothing
-and refuses a stale model. --cache DIR reads and keeps the fetched files there.
+The whole person is WHO's ICF release pinned in app/specs/oracle/spec.json
+(`classifications`). Its tabulation (csv) and workbook (OOXML, ECMA-376) must
+agree field by field, and the classification must hold its structure across
+entities: parents in the release, one root per tabulation, a "- " per level in
+titles, codes led by the component's letter and extending the parent's by one
+level, DepthInKind, IsLeaf, unique codes and URIs. Each line on its own is
+generators/person/src/GenIcf.lex.tex's to check: it writes the rows,
+site/person/icf-rows.mjs (tools/generators/run.sh, GN-01), from the tabulation
+kept at app/specs/oracle/icf/, and they must be these entities field by field.
+Every entity keeps its code, title and URI (licence terms 1.2.3); the model's
+own functions in site/person/icf.mjs are marked as the Prism's (1.2.5).
+--check writes nothing and refuses a stale model; --cache DIR keeps fetches.
 """
 import csv
 import hashlib
@@ -166,21 +141,7 @@ LINEAR = "http://id.who.int/icd/release/11/icf/"
 by_uri = {}
 for n, row in enumerate(rows):
     uri, linear = row["Foundation URI"], row["Linearization URI"]
-    if row["ClassKind"] not in ("chapter", "block", "category"):
-        refuse(f"entity {n + 1} is of kind {row['ClassKind']}")
-    if row["IsResidual"] not in ("True", "False") or row["isLeaf"] not in ("True", "False") or not row["DepthInKind"].isdigit():
-        refuse(f"entity {n + 1} has a flag or depth that is not one")
-    if uri:
-        if not uri.startswith(FOUNDATION) or not uri[len(FOUNDATION):].isdigit():
-            refuse(f"entity {n + 1}'s foundation URI {uri} is not a WHO entity URI")
-        if linear != LINEAR + uri[len(FOUNDATION):]:
-            refuse(f"{uri}'s linearization URI {linear} is not its own")
-    else:
-        # A residual category (other specified, unspecified) exists only in the
-        # linearization: its URI is its parent's, then /other or /unspecified.
-        parent = row["Parent"]
-        if row["IsResidual"] != "True" or not parent.startswith(FOUNDATION) or linear not in (LINEAR + parent[len(FOUNDATION):] + "/other", LINEAR + parent[len(FOUNDATION):] + "/unspecified"):
-            refuse(f"entity {n + 1} ({linear}) has no foundation URI and is not a residual of its parent")
+    # Each line on its own (kind, flags, URIs, residuals) is GenIcf's to refuse.
     if linear in by_uri or (uri and uri in by_uri):
         refuse(f"{linear} is in the release twice")
     by_uri[linear] = n
@@ -349,21 +310,12 @@ if PLANT:
     sys.exit("person: the planted defect was not refused")
 
 
-def generated_rows():
-    if not ROWS_OUT.exists():
-        return None
-    return [json.loads(line[len("ROWS.push(") : -len(");")]) for line in ROWS_OUT.read_text(encoding="utf-8").splitlines() if line.startswith("ROWS.push(")]
-
-
 def rows_agree():
-    got = generated_rows()
-    if got is None:
-        refuse(f"{ROWS_OUT.relative_to(ROOT)} is missing: run tools/generators/run.sh")
-    if len(got) != len(entities):
-        refuse(f"{ROWS_OUT.relative_to(ROOT)} has {len(got)} rows, the release {len(entities)} entities")
-    for e, g in zip(entities, got):
-        if e != g:
-            refuse(f"{ROWS_OUT.relative_to(ROOT)} writes {g}, the release holds {e}")
+    """The rows GenIcf wrote are these entities, field by field."""
+    lines = ROWS_OUT.read_text(encoding="utf-8").splitlines() if ROWS_OUT.exists() else []
+    got = [json.loads(line[len("ROWS.push(") : -len(");")]) for line in lines if line.startswith("ROWS.push(")]
+    if got != entities:
+        refuse(f"{ROWS_OUT.relative_to(ROOT)} is not the release's entities ({len(got)} rows of {len(entities)}): run tools/generators/run.sh")
 
 
 if CHECK:
@@ -378,6 +330,4 @@ COPY.write_bytes(tab_raw)
 NOTICE.write_text(notice, encoding="utf-8")
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text(text, encoding="utf-8")
-if generated_rows() is not None:
-    rows_agree()
 print(f"person: ICF {source['release']} ({release['version']}), {counts['category']} categories, {counts['block']} blocks, {counts['chapter']} roots, from both forms of the release")
