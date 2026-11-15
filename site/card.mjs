@@ -205,17 +205,21 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const notes = reader ? reader.eventText(/^DESCRIPTION(?:;[^:]*)?:(.*)$/mi.exec(unfoldCalendar(text))?.[1] ?? "") : calendarField(text, "DESCRIPTION");
     // Comments to the calendar user (RFC 5545 §3.8.1.4), such as a reply's reason, read after the notes.
     const comments = [...unfoldCalendar(text).matchAll(/^COMMENT(?:;[^:\r\n]*)?:(.*)$/gim)].map(([, value]) => (reader ? reader.eventText(value) : value.trim()));
-    // The object's further events (an iMIP PUBLISH of several) read after it: what, where, and their notes.
-    const others = components.slice(1).flatMap((other) => ["SUMMARY", "LOCATION", "DESCRIPTION"].map((name) => calendarField(other.replace(/BEGIN:VALARM[\s\S]*?END:VALARM/g, ""), name)));
+    // The object's further events (an iMIP PUBLISH of several, an instance's own revision)
+    // are events of their own, each read with the calendar's zones and method.
+    const more = components.length > 1 && !meta.single ? components.slice(1).map((own, i) => {
+      const alone = components.reduce((rest, other) => (other === own ? rest : rest.replace(other, "")), whole);
+      return readItem({ address: `${address}#${i + 1}`, outcome, bytes: new TextEncoder().encode(alone), meta: { ...meta, single: true }, at: base.at });
+    }) : [];
     // Without a summary it is headed by its notes, as a calendar shows it.
     const title = calendarField(text, "SUMMARY") || headline([notes, ...comments].join("\n"));
     const location = calendarField(text, "LOCATION");
-    const body = [title, span, location, [...new Set(people)].slice(0, 12).join(", "), notes, ...comments, ...others].filter(Boolean).join("\n");
+    const body = [title, span, location, [...new Set(people)].slice(0, 12).join(", "), notes, ...comments].filter(Boolean).join("\n");
     const at = Number.isNaN(start) ? (Number.isNaN(made) ? base.at : made) : start;
     // Where it is, else who it is with.
     const who = location || people.find(Boolean) || "";
     return { ...base, ...(component === "VEVENT" ? {} : { component, ...(component === "VFREEBUSY" ? {} : { domain: 9 }) }), at, ...(Number.isNaN(end) ? {} : { end }), allDay, title, who, ...(location ? { where: location } : {}), text: whole, body,
-      ...(Number.isNaN(start) ? { undated: true } : {}), ...(method ? { method } : {}), ...(uid ? { uid, sequence } : {}), ...(recurrence ? { recurrence } : {}) };
+      ...(Number.isNaN(start) ? { undated: true } : {}), ...(method ? { method } : {}), ...(uid ? { uid, sequence } : {}), ...(recurrence ? { recurrence } : {}), ...(more.length ? { more } : {}) };
   }
   if (base.media === "contactCard") {
     const field = (name) => calendarField(text, name);
@@ -237,7 +241,9 @@ export function reconcile(kept) {
   const once = kept.filter((item) => item.media !== "message" || !item.id || (!ids.has(item.id) && ids.add(item.id)));
   // An invitation a message carries (RFC 6047) is also an event, held as the calendar holds it:
   // once by its UID with the calendar's own copy, updated by the replies and cancellations mailed about it.
-  const items = [...once, ...once.filter((item) => item.carries?.uid).map((item) => ({ ...item.carries, domains: [item.carries.domain], label: item.label, via: item.address }))];
+  const carried = once.filter((item) => item.carries?.uid).map((item) => ({ ...item.carries, domains: [item.carries.domain], label: item.label, via: item.address }));
+  // A calendar object of several events is each of them.
+  const items = [...once, ...carried].flatMap((item) => [item, ...(item.more ?? []).map((one) => ({ ...one, domains: [one.domain], label: item.label, ...(item.via ? { via: item.via } : {}) }))]);
   const key = (item) => `${item.uid}|${item.recurrence ?? ""}`;
   const events = new Map();
   for (const item of items) {
@@ -668,7 +674,10 @@ export default async function start({ app, reason, $ }) {
     const row = element("li", { className: "pr-item" }, open);
     const show = (since = Date.now()) => {
       open.setAttribute("aria-expanded", "true");
-      row.append(element("pre", { className: "pr-preview", textContent: item.body }));
+      // Opened, it reads on from its row: a first line that only repeats the heading is not said twice.
+      const lines = item.body.split("\n");
+      const said = lines[0].trim() === (item.title ?? "").trim() ? lines.slice(1).join("\n").trim() : item.body;
+      row.append(element("pre", { className: "pr-preview", textContent: said || item.body }));
       opened.set(row, { item, since });
     };
     const toggle = () => {
@@ -804,7 +813,7 @@ export default async function start({ app, reason, $ }) {
     list.replaceChildren(...(people.all.length ? people.all.slice(0, 200).map((p) => {
       const latest = people.between(p)[0];
       const row = element("li", { className: "pr-item pr-person" },
-        element("span", { className: "pr-when", textContent: latest ? when(latest.at) : "" }),
+        element("span", { className: "pr-when", textContent: latest ? whenOfItem(latest) : "" }),
         element("button", { type: "button", className: "pr-what pr-person-go", textContent: p.name }),
         element("span", { className: "pr-who", textContent: latest?.title ?? "" }));
       row.querySelector("button").addEventListener("click", () => { personOpen = p.key; paintList(); });
