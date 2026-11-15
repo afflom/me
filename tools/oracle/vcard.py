@@ -106,10 +106,10 @@ NS = "{http://www.iana.org/assignments}"
 
 # ---- RFC 6350's grammar, as its ABNF blocks state it -------------------------
 
-def abnf_rules(block):
+def abnf_rules(block, header=r"ABNF:"):
     """name -> definition, continuation lines joined, comments dropped."""
     rules, current = {}, None
-    m = re.search(r"\n   ABNF:\n(.*?)(?=\n   [A-Z][a-z]+( [a-z]+)*(\(s\))?:|\Z)", block, re.S)
+    m = re.search(rf"\n   {header}[^\n]*\n(.*?)(?=\n   [A-Z][a-z]+( [a-z]+)*(\(s\))?:?[ \t]*\n|\n   [A-Z][a-z]+( [a-z]+)*(\(s\))?:|\Z)", block, re.S)
     if not m:
         return rules
     for line in m.group(1).split("\n"):
@@ -231,12 +231,71 @@ for h, block in section_blocks(chapter6, r"^(6\.\d+\.\d+)\.  ([A-Z][A-Z0-9-]*)\n
     PROPERTIES[name] = entry
     m = re.search(r"\n   Examples?:(.*)$", block, re.S)
     if m:
-        EXAMPLE_LINES.append((name, section, m.group(1)))
-# Chapter 5 shows each parameter on the properties it applies to.
+        EXAMPLE_LINES.append((STANDARD, name, section, m.group(1)))
 # Chapter 5 shows each parameter on the properties it applies to, in its prose as well as
 # under "Examples": every indented content line outside its ABNF.
 for h, block in section_blocks(chapter5, r"^(5\.\d+)\.  ([A-Z][A-Z0-9-]*)\n"):
-    EXAMPLE_LINES.append((h.group(2), h.group(1), re.sub(r"\n   ABNF:\n.*?(?=\n   \S|\Z)", "\n", block, flags=re.S)))
+    EXAMPLE_LINES.append((STANDARD, h.group(2), h.group(1), re.sub(r"\n   ABNF:\n.*?(?=\n   \S|\Z)", "\n", block, flags=re.S)))
+
+
+# ---- The RFCs that extend it, each by RFC 6350 section 10.2.1's template -----
+# A property section names "Property name:", its "Value type:", "Cardinality:",
+# "Property parameters:" and "Format definition:" (ABNF); a parameter section
+# "Parameter name:" and its format; a value section "Value:". Every section's
+# "Example(s):" lines are examples, the RFC's updates to RFC 6350 properties among them.
+EXTENSIONS = {}
+for src in SPEC["sources"]:
+    if src.get("extends") != STANDARD:
+        continue
+    t = unpaginate(fetch(src))
+    for erratum in src.get("errata", []):
+        if t.count(erratum["says"]) != 1:
+            refuse(f"{src['key']} erratum {erratum['id']} is not text it holds once")
+        t = t.replace(erratum["says"], erratum["should"])
+    EXTENSIONS[src["key"]] = t
+    for h, block in section_blocks(t, r"^(\d+(?:\.\d+)*)\.  (.+)\n"):
+        section = h.group(1)
+        field = lambda f: (re.search(rf"\n   {f}:[ \t]*(.*?)(?=\n\n|\n   [A-Z][A-Za-z ()]*:)", "\n" + block, re.S) or [None, None])[1]
+        rules = abnf_rules(block, r"(?:ABNF:?|Format definition:)")
+        for tok, pname in [(m.group(1), m.group(2) or m.group(3)) for m in re.finditer(r'^\s+([A-Za-z-]+)\s*=\s*(?:"([A-Z-]+)="|"([A-Z-]+)"\s*"=")', block, re.M)]:
+            PARAM_TOKEN.setdefault(tok.lower(), pname)
+        pname = field("Parameter name")
+        if pname and pname.split()[0] not in PARAMETERS:
+            PARAMETERS[pname.split()[0]] = {"section": section, "rfc": src["key"]}
+        name = field("Property name")
+        if name:
+            name = name.split()[0]
+            lower = {k.lower(): v for k, v in rules.items()}
+            value = lower.get(f"{name.lower()}-value")
+            if value is None:
+                top = next((v for v in rules.values() if v.startswith(f'"{name}"')), None)
+                if top is None or '":"' not in top:
+                    refuse(f"{src['key']} {section} {name} has no value rule")
+                value = top.split('":"', 1)[1].strip()
+            lrules = {**rules, **{k.lower(): v for k, v in rules.items()}}
+            alts = alternatives(value)
+            first = alts[0].split()[0]
+            entry = {"section": section, "rfc": src["key"], **({"cardinality": field("Cardinality").split()[0]} if field("Cardinality") else {}), "default": type_of(first, lrules)}
+            if '";"' in value:
+                entry["shape"] = "structured"
+            elif first.lower() == "text-list":
+                entry["shape"] = "list"
+            param_text = " ".join(v for k, v in rules.items() if k.lower().startswith(name.lower() + "-param"))
+            types = sorted({w.lower() for g in re.findall(r'"VALUE"\s*"="\s*(\([^)]*\)|"[^"]*")|"VALUE="\s*(\([^)]*\)|"[^"]*")', param_text) for part in g for w in re.findall(r'"([A-Za-z-]+)"', part)})
+            if types:
+                entry["types"] = types
+            listed = re.sub(r"\([^)]*\)", "", field("Property parameters") or "")
+            params = {w for w in re.findall(r"\b[A-Z][A-Z0-9-]+\b", listed)}
+            params |= {PARAM_TOKEN[t.lower()] for t in re.findall(r"[a-z][a-z0-9-]*-param(?:eter)?", param_text) if t.lower() in PARAM_TOKEN}
+            if params:
+                entry["params"] = sorted(params)
+            enum = [a.strip('"') for a in alts if a.startswith('"')]
+            if enum:
+                entry["values"] = enum
+            PROPERTIES.setdefault(name, entry)
+        m = re.search(r"\n   Examples?(?:\(s\))?:?[ \t]*(.*)$", block, re.S)
+        if m:
+            EXAMPLE_LINES.append((src["key"], (name or pname or h.group(2)).split()[0], section, m.group(1)))
 
 
 # ---- The reference reader: RFC 6350 sections 3.3 and 3.4 ---------------------
@@ -291,32 +350,42 @@ def read_line(line):
         read = unescape(value)
     else:
         read = value
-    out = {"name": name, "params": params, "type": kind, "value": read}
-    if group:
-        out["group"] = group
-    return out
+    return {**({"group": group} if group else {}), "name": name, "params": params, "type": kind, "value": read}
 
 
 # ---- The examples chapter 6 gives, line by line -----------------------------
 
 def example_lines(raw):
-    """Each content line of an Examples block, its folded continuation joined (3.2)."""
+    """Each content line of an Examples block with its folded continuations (3.2), as written."""
     out, indent = [], None
     for line in raw.split("\n"):
         if not line.strip():
-            indent = None if indent is None else indent
             continue
         lead = len(line) - len(line.lstrip(" "))
         body = line.strip()
-        if out and indent is not None and lead > indent and not LINE.match(body) and not body.startswith(";"):
-            out[-1] += line[indent + 1:]
+        # A comment (";" and a space) or a figure's caption ends the example; it continues nothing.
+        comment = re.match(r"^;\s|^Figure \d+:", body)
+        if out and indent is not None and lead > indent and not LINE.match(body) and not comment:
+            out[-1].append(line[indent:])
             continue
-        if re.match(r"^(?:[A-Za-z0-9-]+\.)?[A-Z][A-Z0-9-]*[;:]", body) and not body.startswith(";"):
-            out.append(body)
+        # A display wrap at the line's own indent: a run with no space that starts no content line.
+        if out and indent is not None and lead == indent and not re.search(r"\s", body) and not re.match(r"^(?:[A-Za-z0-9-]+\.)?[A-Z][A-Z0-9-]*[;:]", body):
+            out[-1].append(" " + body)
+            continue
+        if re.match(r"^(?:[A-Za-z0-9-]+\.)?[A-Z][A-Z0-9-]*[;:]", body) and not comment:
+            out.append([body])
             indent = lead
         else:
             indent = None
     return out
+
+
+def unfold(parts):
+    """A folded line unfolds by removing each line break and the one space after it (3.2). An
+    RFC's display indents a continuation further, so where that does not give a content line,
+    the reading that does is the one with the display indent removed."""
+    once = parts[0] + "".join(c[1:] for c in parts[1:])
+    return once if read_line(once) is not None else parts[0] + "".join(c.lstrip() for c in parts[1:])
 
 
 reserved = ORACLE["reserved"]
@@ -355,13 +424,16 @@ def documentation_only(raw):
 
 
 examples, skipped = [], []
-for name, section, raw in EXAMPLE_LINES:
-    for i, line in enumerate(example_lines(raw), 1):
-        ident = f"{STANDARD}-{section}-{i}"
-        if "<..." in line:
-            skipped.append({"id": ident, "why": "the RFC elides part of it"})
+for rfc_key, name, section, raw in EXAMPLE_LINES:
+    for i, parts in enumerate(example_lines(raw), 1):
+        ident = f"{rfc_key}-{section}-{i}"
+        # Where the RFC elides the rest of a value (<...remainder...>), the line is read as far as it is given.
+        whole = [p for p in parts if "<..." not in p]
+        elided = len(whole) < len(parts) or "<..." in parts[0]
+        if "<..." in whole[0] if whole else True:
+            skipped.append({"id": ident, "why": "the RFC elides the line itself"})
             continue
-        line = fictional(line)
+        line = fictional(unfold(whole))
         if not documentation_only(line):
             skipped.append({"id": ident, "why": "an address outside the documentation domains"})
             continue
@@ -369,33 +441,38 @@ for name, section, raw in EXAMPLE_LINES:
         if read is None:
             skipped.append({"id": ident, "why": "not a content line by RFC 6350 3.3"})
             continue
-        examples.append({"id": ident, "section": section, "raw": line, "expect": read})
+        examples.append({"id": ident, "rfc": rfc_key, "section": section, "raw": line, **({"elided": True} if elided else {}), "expect": read})
 
 
 # ---- The registry rows RFC 6350 defines: its full inventory -----------------
 
+RFCS = [STANDARD, *EXTENSIONS]
+
+
 def rows(reg_id):
+    """Every row of a registry, with the RFC that defines it: RFC 6350 where it does, else the
+    first RFC it cites (pinned or not: a row whose RFC is not pinned must be in debt)."""
     reg = registry.find(f"{NS}registry[@id='{reg_id}']")
     for rec in reg.findall(f"{NS}record"):
         refs = [x for x in rec.iter(f"{NS}xref") if x.get("type") == "rfc"]
-        if not any(x.get("data") == STANDARD for x in refs):
-            continue
         get = lambda tag: " ".join((rec.findtext(f"{NS}{tag}") or "").split())
-        yield get, next(x.get("section") for x in refs if x.get("data") == STANDARD)
+        ref = next((x for x in refs if x.get("data") == STANDARD), None)
+        ref = ref if ref is not None else next((x for x in refs if x.get("data") in RFCS), refs[0])
+        yield get, ref.get("section"), ref.get("data")
 
 
 inventory = []
-for get, sec in rows("properties"):
-    inventory.append({"kind": "property", "name": get("description") or get("name"), "clause": sec})
-for get, sec in rows("parameters"):
-    inventory.append({"kind": "parameter", "name": get("description") or get("name"), "clause": sec})
-for get, sec in rows("value-data-types"):
-    inventory.append({"kind": "value-type", "name": get("name").lower(), "clause": sec})
-for get, sec in rows("property-values"):
-    inventory.append({"kind": "property-value", "name": f"{get('name')}:{get('description')}", "property": get("name"), "value": get("description"), "clause": sec})
-for get, sec in rows("parameter-values"):
+for get, sec, std in rows("properties"):
+    inventory.append({"kind": "property", "name": get("description") or get("name"), "standard": std, "clause": sec})
+for get, sec, std in rows("parameters"):
+    inventory.append({"kind": "parameter", "name": get("description") or get("name"), "standard": std, "clause": sec})
+for get, sec, std in rows("value-data-types"):
+    inventory.append({"kind": "value-type", "name": get("name").lower(), "standard": std, "clause": sec})
+for get, sec, std in rows("property-values"):
+    inventory.append({"kind": "property-value", "name": f"{get('name')}:{get('description')}", "property": get("name"), "value": get("description"), "standard": std, "clause": sec})
+for get, sec, std in rows("parameter-values"):
     props = [p.strip() for p in re.split(r",|\band\b", get("name")) if p.strip()]
-    inventory.append({"kind": "parameter-value", "name": f"{get('description')}={get('value')}", "parameter": get("description"), "value": get("value"), "properties": props, "clause": sec})
+    inventory.append({"kind": "parameter-value", "name": f"{get('description')}={get('value')}", "parameter": get("description"), "value": get("value"), "properties": props, "standard": std, "clause": sec})
 
 # The ids ST-01's register gives the same rows (tools/standards/extract/iana_vcard.py).
 import importlib.util
@@ -403,7 +480,7 @@ _ex = importlib.util.spec_from_file_location("iana_vcard", ROOT / "tools/standar
 iana_vcard = importlib.util.module_from_spec(_ex)
 _ex.loader.exec_module(iana_vcard)
 for entry in inventory:
-    entry["id"] = iana_vcard.ident(STANDARD, entry["kind"], entry["name"], entry.get("properties", [None])[0] if entry["kind"] == "parameter-value" else None)
+    entry["id"] = iana_vcard.ident(entry["standard"], entry["kind"], entry["name"], entry.get("properties", [None])[0] if entry["kind"] == "parameter-value" else None)
 
 
 def exercised(entry, ex):
@@ -425,7 +502,8 @@ def derive(entry):
     of a property it applies to, with that value put in."""
     if entry["kind"] == "parameter-value":
         for ex in examples:
-            if ex["expect"]["name"] in entry["properties"] and not ex.get("from") and entry["parameter"] in PROPERTIES[ex["expect"]["name"]].get("params", []):
+            # The registry row names the properties the value applies to.
+            if ex["expect"]["name"] in entry["properties"] and not ex.get("from"):
                 m = LINE.match(ex["raw"])
                 params = re.sub(rf";{entry['parameter']}=(\"[^\"]*\"|[^;:]*)", "", m.group(3), flags=re.I)
                 line = f"{m.group(2)}{params};{entry['parameter']}={entry['value']}:{m.group(4)}"
@@ -451,7 +529,7 @@ for entry in inventory:
         got = derive(entry)
         if got:
             line, origin = got
-            examples.append({"id": f"{STANDARD}-{entry['kind']}-{entry['name']}", "section": entry["clause"], "raw": line, "from": origin, "expect": read_line(line)})
+            examples.append({"id": f"{entry['standard']}-{entry['kind']}-{entry['name']}" + (f"-{entry['properties'][0]}" if entry["kind"] == "parameter-value" else ""), "rfc": entry["standard"], "section": entry["clause"], "raw": line, "from": origin, "expect": read_line(line)})
 
 debt = {d["name"]: d for d in SPEC.get("debt", [])}
 unmet = []
@@ -474,7 +552,7 @@ for entry in inventory:
     if not met and key not in debt:
         unmet.append(f"{k} {n} ({entry['clause']}): {'not implemented' if not entry['implemented'] else 'exercised by no example'}")
 if unmet:
-    refuse("RFC 6350 registry entries neither met nor in debt:\n  " + "\n  ".join(unmet))
+    refuse("vCard registry entries neither met nor in debt:\n  " + "\n  ".join(unmet))
 for key, d in debt.items():
     if not str(d.get("why", "")).strip():
         refuse(f"debt {key} gives no reason")
@@ -519,4 +597,4 @@ TABLE.write_text(table, encoding="utf-8")
 SUITE.write_text(suite, encoding="utf-8")
 OUT.write_text(out, encoding="utf-8")
 met = sum(1 for e in inventory if e["implemented"] and e["examples"])
-print(f"vcard: {len(PROPERTIES)} properties, {len(PARAMETERS)} parameters; {met} of {len(inventory)} RFC 6350 registry entries implemented and exercised by {len(examples)} examples ({sum(1 for e in examples if e.get('from'))} derived), {len(debt)} in debt, {len(skipped)} example lines skipped")
+print(f"vcard: {len(PROPERTIES)} properties, {len(PARAMETERS)} parameters from {len(RFCS)} RFCs; {met} of {len(inventory)} vCard registry entries implemented and exercised by {len(examples)} examples ({sum(1 for e in examples if e.get('from'))} derived), {len(debt)} in debt, {len(skipped)} example lines skipped")
