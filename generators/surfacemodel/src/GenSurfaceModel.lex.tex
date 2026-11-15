@@ -1220,7 +1220,7 @@ definition{
   name: smoHead,
   parameters: [],
   result: Bytes,
-  body: 0x5c626567696e7b6c65786c65616e7d7b507269736d537572666163657d0a5c757365676c6f73736172797b6c65786c65616e2e7374642e626f6f6c40312e322e307d0a5c757365676c6f73736172797b6c65786c65616e2e7374642e6e617440312e322e307d0a5c757365676c6f73736172797b707269736d2e6172636840312e302e307d0a5c7469746c657b507269736d20737572666163657d0a5c626567696e7b73656d616e7469636d6f64756c657d0a
+  body: (smoU "\\begin{lexlean}{PrismSurface}\n\\useglossary{lexlean.std.bool@1.2.0}\n\\useglossary{lexlean.std.nat@1.2.0}\n\\useglossary{prism.arch@1.0.0}\n\\title{Prism surface}\n\\begin{semanticmodule}\n")
 }
 
 definition{
@@ -1297,7 +1297,7 @@ definition{
   name: smoTail,
   parameters: [],
   result: Bytes,
-  body: 0x5c656e647b73656d616e7469636d6f64756c657d0a5c656e647b6c65786c65616e7d0a
+  body: (smoU "\\end{semanticmodule}\n\\end{lexlean}\n")
 }
 
 definition{
@@ -1349,7 +1349,7 @@ definition{
   name: smoProofsHead,
   parameters: [],
   result: Bytes,
-  body: (smoCat (cons 0x5c626567696e7b6c65786c65616e7d7b507269736d5375726661636550726f6f66737d0a5c757365676c6f73736172797b6c65786c65616e2e7374642e626f6f6c40312e322e307d0a5c757365676c6f73736172797b6c65786c65616e2e7374642e6e617440312e322e307d0a5c757365676c6f73736172797b707269736d2e6172636840312e302e307d0a5c696d706f72746d6f64756c657b466f756e646174696f6e2e566f6361622e56312e536368656d614f72677d0a5c696d706f72746d6f64756c657b466f756e646174696f6e2e566f6361622e56312e43726f737377616c6b7d0a5c696d706f72746d6f64756c657b466f756e646174696f6e2e4d (cons 0x652e56312e416e63686f72737d0a5c696d706f72746d6f64756c657b466f756e646174696f6e2e4d652e56312e4d6f64656c7d0a5c696d706f72746d6f64756c657b507269736d537572666163657d0a5c7469746c657b507269736d20737572666163652067756172616e746565737d0a5c626567696e7b73656d616e7469636d6f64756c657d0a (nil Bytes))))
+  body: (smoU "\\begin{lexlean}{PrismSurfaceProofs}\n\\useglossary{lexlean.std.bool@1.2.0}\n\\useglossary{lexlean.std.nat@1.2.0}\n\\useglossary{prism.arch@1.0.0}\n\\importmodule{Foundation.Vocab.V1.SchemaOrg}\n\\importmodule{Foundation.Vocab.V1.Crosswalk}\n\\importmodule{Foundation.Me.V1.Anchors}\n\\importmodule{Foundation.Me.V1.Model}\n\\importmodule{PrismSurface}\n\\title{Prism surface guarantees}\n\\begin{semanticmodule}\n")
 }
 
 definition{
