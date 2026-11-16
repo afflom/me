@@ -20,6 +20,7 @@ import { load } from "../../tools/specs/record.mjs";
 const corpus = JSON.parse(readFileSync("test/oracle/corpus.json", "utf8")).corpus.filter((e) => "label" in e.expect).map((e) => ({ media: e.kind, raw: e.raw, id: e.id, expect: { kind: e.expect.label, parties: e.expect.parties ?? [], lead: e.expect.label === "person" ? e.expect.lead : undefined } }));
 const GATE = "test/router/labels.test.mjs";
 const product = load("app/specs/product/spec.json");
+const measure = (key) => product.quality.flatMap((q) => q.measures).find((m) => m.key === key);
 useReader(reader);
 
 const asked = [];
@@ -37,10 +38,16 @@ const many = Array.from({ length: 10 }, () => corpus).flat();
 const started = performance.now();
 const bulk = many.map(({ media, raw }, i) => readItem({ address: `m${i}`, outcome: "restore", bytes: encoder.encode(raw), meta: { about: { media, domain: 4, at: i } } }));
 await labelAll(bulk, { line, halted: () => "no" });
-const ms = performance.now() - started;
+const labeled = performance.now();
+// The same process then times the measure's pace work (its record says what that is), and the
+// labeling time is stated as on a machine that does the pace work in the record's time: a
+// slower or busier machine slows both alike, so the code decides the measure, not the runner
+// (GitHub's runners read 257 to 330 on code that read 169 to 192 elsewhere).
+for (let i = 0; i < 40; i += 1) many.forEach((e) => JSON.parse(JSON.stringify(e)).raw.match(/\p{L}{4,}/gu));
+const ms = ((labeled - started) * measure("labeling-ms-per-100").pace.ms) / (performance.now() - labeled);
 // A cold start happens once in a process, so two more processes time one each and the
-// measure is the middle of the three: neither one lucky sample (#145 doubled this figure
-// and merged on one) nor one slow moment of a shared runner decides it.
+// measure is the middle of the three: no one sample decides it (#145 doubled this figure
+// and merged on one).
 if (process.env.LABELING_SAMPLE) process.exit(console.log(ms) ?? 0);
 const middle = [ms, ...[1, 2].map(() => Number(execFileSync(process.execPath, [GATE], { env: { ...process.env, LABELING_SAMPLE: "1", NODE_TEST_CONTEXT: "" }, encoding: "utf8" })))].sort((a, b) => a - b)[1];
 
@@ -72,9 +79,7 @@ const measured = {
   "lead-accuracy": Math.floor((100 * (leads.length - wrongLead.length)) / leads.length),
 };
 console.log(`labels: ${items.length} items; ${JSON.stringify(measured)}; ${learned.people.length} people and ${learned.topics.size} topics learned`);
-if (wrong.kind.length) console.log(`  kind: ${wrong.kind.join("\n        ")}`);
-if (wrong.party.length) console.log(`  party: ${wrong.party.join("\n         ")}`);
-if (wrongLead.length) console.log(`  lead: ${wrongLead.join("\n        ")}`);
+for (const [name, bad] of [["kind", wrong.kind], ["party", wrong.party], ["lead", wrongLead]]) if (bad.length) console.log(`  ${name}: ${bad.join("\n    ")}`);
 
 // Each measure this file is named the gate of, against its record's own threshold.
 let held = 0;
@@ -103,8 +108,7 @@ assert.ok(learned.people.some((p) => p.name === "Mary Smith") && !learned.topics
 const blind = itemsOf();
 await labelAll(blind, { line: async (text) => (text.includes(" shape kind ") ? "skip" : line(text)), halted: () => "no" });
 const blindKind = Math.floor((100 * blind.filter((item, i) => item.labels?.kind === corpus[i].expect.kind).length) / blind.length);
-const kindMeasure = product.quality.flatMap((q) => q.measures).find((m) => m.key === "kind-accuracy");
-assert.ok(blindKind < kindMeasure.threshold, `the kind measure misses a router that hides an item's parts (${blindKind})`);
+assert.ok(blindKind < measure("kind-accuracy").threshold, `the kind measure misses a router that hides an item's parts (${blindKind})`);
 
 // The halt switch: nothing is labeled.
 const stopped = itemsOf();
