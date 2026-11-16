@@ -1,7 +1,7 @@
-"""The whole-person model, made from WHO's ICF: python3 -I tools/person/gen.py [--check] [--cache DIR]
+"""The whole-person model, made from WHO's ICF: python3 -I tools/person/gen.py [--check] [--fetch]
 
 The whole person is WHO's ICF release pinned in app/specs/oracle/spec.json
-(`classifications`). This fetches it, keeps its tabulation byte for byte at
+(`classifications`). This reads it, keeps its tabulation byte for byte at
 app/specs/oracle/icf/, and refuses a release whose tabulation (csv) and
 workbook (OOXML, ECMA-376) disagree on any field. The classification's own
 structure, each line and across entities, is refused by generators/person
@@ -9,7 +9,8 @@ structure, each line and across entities, is refused by generators/person
 site/person/icf-rows.mjs, must be these entities field by field. Every entity
 keeps its code, title and URI (licence terms 1.2.3); the model's own functions
 in site/person/icf.mjs (GenIcfModule) are marked as the Prism's (1.2.5).
---check writes nothing and refuses a stale copy; --cache DIR keeps fetches.
+--check writes nothing and refuses a stale copy; the release is read from
+app/specs/standards/texts/<sha256>, and only --fetch keeps a pin that is not kept yet.
 """
 import csv
 import hashlib
@@ -25,7 +26,7 @@ import zipfile
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SPEC = json.loads((ROOT / "app/specs/oracle/spec.json").read_text(encoding="utf-8"))
 args = sys.argv[1:]
-cache = pathlib.Path(args[args.index("--cache") + 1]) if "--cache" in args else None
+TEXTS = ROOT / "app/specs/standards/texts"
 CHECK = "--check" in args
 # --plant FORM OLD NEW: replace OLD by NEW in the release's tabulation, its
 # workbook or both (FORM), then run every check and write nothing, so a test can
@@ -38,20 +39,14 @@ def refuse(why):
     sys.exit(f"person: {why}")
 
 
-def fetch(key, url, sha256):
-    path = cache / key if cache else None
-    if path and path.exists():
-        data = path.read_bytes()
-    else:
-        request = urllib.request.Request(url, headers={"User-Agent": "prism-person-gen"})
-        with urllib.request.urlopen(request, timeout=120) as response:
-            data = response.read()
-        if path:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(data)
-    digest = hashlib.sha256(data).hexdigest()
-    if digest != sha256:
-        refuse(f"{url} is {digest}, not the pinned {sha256}")
+def fetch(url, sha256, headers={"User-Agent": "prism-person-gen"}):
+    path = TEXTS / sha256
+    if not path.exists() and "--fetch" not in args:
+        refuse(f"{url} is not kept at {path.relative_to(ROOT)}: run this with --fetch")
+    data = path.read_bytes() if path.exists() else urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=120).read()
+    if hashlib.sha256(data).hexdigest() != sha256:
+        refuse(f"{url} is {hashlib.sha256(data).hexdigest()}, not the pinned {sha256}")
+    path.exists() or path.write_bytes(data)
     return data
 
 
@@ -96,8 +91,8 @@ def workbook(raw):
 source = SPEC["classifications"][0]
 if source["key"] != "icf":
     refuse("the oracle's first classification is not the ICF")
-archive = zipfile.ZipFile(io.BytesIO(fetch("icf.zip", source["url"], source["sha256"])))
-fetch("icd-licence.pdf", source["licence"]["terms"], source["licence"]["termsSha256"])
+archive = zipfile.ZipFile(io.BytesIO(fetch(source["url"], source["sha256"])))
+fetch(source["licence"]["terms"], source["licence"]["termsSha256"])
 tab_raw = archive.read(source["tabulation"])
 book_raw = archive.read(source["workbook"])
 if PLANT:
