@@ -13,15 +13,16 @@ in site/person/icf.mjs (GenIcfModule) are marked as the Prism's (1.2.5).
 app/specs/standards/texts/<sha256>, and only --fetch keeps a pin that is not kept yet.
 """
 import csv
-import hashlib
 import io
 import json
 import pathlib
 import re
 import sys
-import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "standards"))
+import abnf  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SPEC = json.loads((ROOT / "app/specs/oracle/spec.json").read_text(encoding="utf-8"))
@@ -40,14 +41,7 @@ def refuse(why):
 
 
 def fetch(url, sha256, headers={"User-Agent": "prism-person-gen"}):
-    path = TEXTS / sha256
-    if not path.exists() and "--fetch" not in args:
-        refuse(f"{url} is not kept at {path.relative_to(ROOT)}: run this with --fetch")
-    data = path.read_bytes() if path.exists() else urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=120).read()
-    if hashlib.sha256(data).hexdigest() != sha256:
-        refuse(f"{url} is {hashlib.sha256(data).hexdigest()}, not the pinned {sha256}")
-    path.exists() or path.write_bytes(data)
-    return data
+    return abnf.kept_bytes(url, sha256, TEXTS, refuse, "--fetch" in args, headers)
 
 
 def tabulation(raw):

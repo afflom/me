@@ -96,7 +96,7 @@ assert.match(lunch.sentences[0], /^Robin Example wrote “Lunch on Thursday\?”
 assert.deepEqual(lunch.offers.map((o) => o.kind), ["reply"], "a message offers a reply");
 const jotted = await ask("Call the dentist Friday at 3");
 assert.deepEqual(jotted.offers, [{ kind: "keep" }]);
-assert.match(jotted.sentences[0], /^Call the dentist, Fri, Nov 13 at 3:00\s?PM$/u, jotted.sentences[0]);
+assert.match(jotted.sentences[0], /^Keep “Call the dentist” for Fri, Nov 13 at 3:00\s?PM\?$/u, jotted.sentences[0]);
 const pausedAnswer = await ask("When is my flight?", "yes");
 assert.deepEqual(pausedAnswer.sentences, [], "paused, nothing is answered");
 // The chat box only asks (keep: false), as the page does.
@@ -168,7 +168,8 @@ for (const word of words) {
   const shown = await answer(word.toUpperCase(), { items: kept, line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
   const names = new RegExp(`(?<!\\p{L})${word}(?!\\p{L})`, "iu");
   // An example is found when what the page holds of it is listed (one of its events, when it holds several).
-  for (const { example, text } of held) if (names.test(text) && !ofExample(example).some((item) => shown.sources.includes(item))) findLost.push(`${word}: ${example.id}`);
+  // A list that was cut says so (shown.cut, and the reply's last sentence): only an uncut list must hold every match.
+  for (const { example, text } of held) if (!shown.cut && names.test(text) && !ofExample(example).some((item) => shown.sources.includes(item))) findLost.push(`${word}: ${example.id}`);
 }
 // QR-04 "find-missing": examples that name the asked word and are missing from the list.
 assert.ok(findLost.length <= 0, `find-missing: ${findLost.length} (${findLost.slice(0, 12).join("; ")})`);

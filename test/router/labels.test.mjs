@@ -9,6 +9,7 @@
 // is computed here and held to its own threshold.
 // usage: node test/router/labels.test.mjs
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { judge, FIELDS, GUARANTEES } from "../../site/router/table.mjs";
 import { learn, labelAll } from "../../site/router/labels.mjs";
@@ -37,6 +38,11 @@ const started = performance.now();
 const bulk = many.map(({ media, raw }, i) => readItem({ address: `m${i}`, outcome: "restore", bytes: encoder.encode(raw), meta: { about: { media, domain: 4, at: i } } }));
 await labelAll(bulk, { line, halted: () => "no" });
 const ms = performance.now() - started;
+// A cold start happens once in a process, so two more processes time one each and the
+// measure is the slowest of the three: one lucky sample must not pass a slow change
+// (#145 doubled this figure and merged on one).
+if (process.env.LABELING_SAMPLE) process.exit(console.log(ms) ?? 0);
+const slowest = Math.max(ms, ...[1, 2].map(() => Number(execFileSync(process.execPath, [GATE], { env: { ...process.env, LABELING_SAMPLE: "1", NODE_TEST_CONTEXT: "" }, encoding: "utf8" }))));
 
 const items = itemsOf();
 await labelAll(items, { line, halted: () => "no" });
@@ -61,7 +67,7 @@ const measured = {
   "kind-accuracy": share(wrong.kind),
   "party-accuracy": share(wrong.party),
   "unlabeled-items": items.filter((item) => !item.labels).length,
-  "labeling-ms-per-100": Math.ceil((ms * 100) / many.length),
+  "labeling-ms-per-100": Math.ceil((slowest * 100) / many.length),
   "topic-coverage": Math.floor((100 * topicsShown) / items.length),
   "lead-accuracy": Math.floor((100 * (leads.length - wrongLead.length)) / leads.length),
 };

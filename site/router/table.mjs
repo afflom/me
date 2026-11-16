@@ -691,11 +691,12 @@ export const SPEC = {
         "lead": ": {$lead}",
         "rhythm": ".input {$per :string}\n.match $per\n1 {{; they write about every {$every}}}\n* {{; they write about {$per} times every {$every}}}",
         "when": ".input {$time :string}\n.input {$ago :string}\n.match $time $ago\n|| || {{{$day}}}\n|| * {{{$day} ({$ago})}}\n* || {{{$day} at {$time}}}\n* * {{{$day} at {$time} ({$ago})}}",
-        "kept": ".input {$when :string}\n.match $when\n|| {{{$what}}}\n* {{{$what}, {$when}}}",
+        "kept": ".input {$when :string}\n.match $when\n|| {{Keep “{$what}” as a note?}}\n* {{Keep “{$what}” for {$when}?}}",
         "now": "It is {$when}",
         "unmatched": "Nothing you hold mentions “{$what}”",
         "empty": "Nothing has arrived yet: connect your mail and calendar, or keep a note, and ask again",
-        "help": "Ask about your day, a person, your mail, your calendar or your notes"
+        "help": "Ask about your day, a person, your mail, your calendar or your notes",
+        "more": "{$count} more are not listed"
       },
       "now": {
         "words": [

@@ -2,7 +2,8 @@
 //!
 //! The Lean kernel checks PrismRealizabilityProofs when `just vv` runs
 //! `prismpm verify` on `app/`. What this test holds fixed is what those proofs
-//! are about: the gate passes on the specs as they are, the proved model is
+//! are about: the gate passes on the specs as they are and on what the LexLean
+//! program generators/realize answers over each facet's request space, the proved model is
 //! exactly what the gate writes from them, and every field of every facet has
 //! its witness theorem, stated against that facet's own judge.
 
@@ -46,6 +47,7 @@ fn realize_rz_01() {
     );
 
     let model = read("app/specs/realizability/spec.json");
+    let steps = read("generators/realize/steps.json");
     let proofs = read("app/src/PrismRealizabilityProofs.lex.tex");
     let toml = read("app/lexlean.toml");
     for file in [
@@ -75,6 +77,14 @@ fn realize_rz_01() {
             continue;
         };
         seen += 1;
+        // generators/realize answers the facet's whole request space, one
+        // step per facet, into test/realize/<facet>.txt (held by GN-01).
+        assert!(
+            steps.contains(&format!(
+                "\"file\": \"app/specs/{dir}/spec.json\",\n        \"array\": \"\"\n      }},\n      \"output\": \"test/realize/{dir}.txt\""
+            )),
+            "RZ-01: generators/realize/steps.json has no rzfacts step for {dir}"
+        );
         let spec = read(&format!("app/specs/{dir}/spec.json"));
         let fields = spec
             .split("\"fields\":")

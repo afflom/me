@@ -30,7 +30,7 @@ It refuses:
   - a "governs" path that matches no part, and an "enforces" id or
     "enforcedBy" entry for no requirement, or in a suite that is not tracked
     or reaches no part the standard governs;
-  - a part of the Prism (tools/parts/gate.py's parts) that no standard
+  - a part of the Prism (test/parts/parts.txt, PT-01's parts) that no standard
     governs and that is not listed under "ungoverned" with the reason no
     standard applies, or under "unassigned" (debt, exactly as it stands);
   - an unenforced requirement that the debt does not list, and listed debt
@@ -64,9 +64,10 @@ ORACLE = ROOT / "app/specs/oracle/spec.json"
 SUITES = ["test/*.test.mjs", "site/*.test.mjs", "crates/conformance/tests/*.rs"]
 MARK = re.compile(r"enforces:\s*([A-Za-z0-9._\- ,]+)")
 
-_parts_spec = importlib.util.spec_from_file_location("parts_gate", ROOT / "tools/parts/gate.py")
-parts_gate = importlib.util.module_from_spec(_parts_spec)
-_parts_spec.loader.exec_module(parts_gate)
+# PT-01's parts and the suites that reach each one, which the LexLean program
+# generators/parts writes and GN-01 holds.
+PARTS = ROOT / "test/parts/parts.txt"
+REACH = ROOT / "test/parts/reach.txt"
 
 
 def load(path):
@@ -125,7 +126,7 @@ def generated(standard, inv, refusals):
     if not vendored.exists() or hashlib.sha256(vendored.read_bytes()).hexdigest() != source["sha256"]:
         refusals.append(f"{key}: {inv['vendored']} is not {source['url']} at the pinned {source['sha256']}")
         return []
-    steps = [step for f in sorted(ROOT.glob("generators/*/steps.json")) for step in load(f)["steps"]]
+    steps = [step for pattern in ("generators/*/steps.json", "generators/*/steps/*.json") for f in sorted(ROOT.glob(pattern)) for step in load(f)["steps"]]
     if not any(step["output"] == inv["generated"] for step in steps):
         refusals.append(f"{key}: no step of a generators/<program>/steps.json writes {inv['generated']}")
         return []
@@ -181,14 +182,27 @@ def derive(spec, write, refusals):
 
 
 def tracked(*patterns):
-    return parts_gate.tracked(*patterns)
+    out = subprocess.run(["git", "-C", str(ROOT), "ls-files", "--", *patterns], capture_output=True, text=True, check=True).stdout
+    return [line for line in out.splitlines() if (ROOT / line).is_file()]
+
+
+def glob_re(pattern):
+    out, i = "", 0
+    while i < len(pattern):
+        if pattern.startswith("**/", i):
+            out, i = out + "(?:[^/]+/)*", i + 3
+        elif pattern[i] == "*":
+            out, i = out + "[^/]*", i + 1
+        else:
+            out, i = out + re.escape(pattern[i]), i + 1
+    return re.compile(out + r"\Z")
 
 
 def governed(spec, parts, refusals):
     by_part = {p: [] for p in parts}
     for standard in spec["standards"]:
         for pattern in standard.get("governs", []):
-            rx = parts_gate.glob_re(pattern)
+            rx = glob_re(pattern)
             hits = [p for p in parts if rx.match(p)]
             if not hits:
                 refusals.append(f"{standard['key']}: governs {pattern}, which is no part of the Prism")
@@ -199,16 +213,11 @@ def governed(spec, parts, refusals):
 
 def enforcement(spec, requirements, parts, by_part, refusals):
     """For each requirement id, the suites that enforce it."""
-    texts = {p: (ROOT / p).read_text(encoding="utf-8") for p in parts}
-    # A suite that drives Chromium reaches the page's entries, as in PT-01.
-    parts_gate.ENTRIES.clear()
-    for page in tracked("site/*.html"):
-        for src in re.findall(r"<script[^>]*\bsrc=\"(\./[^\"]+\.mjs)\"", (ROOT / page).read_text(encoding="utf-8")):
-            r = parts_gate.relative(page, src)
-            if r in texts:
-                parts_gate.ENTRIES.add(r)
-    reach = parts_gate.suites_reaching(set(parts), texts)
-    reached = {s: {p for p, ss in reach.items() if s in ss} for s in set().union(*reach.values())}
+    reached = {}
+    for line in REACH.read_text(encoding="utf-8").splitlines():
+        part, suite = line.split(" ")
+        if part in parts:
+            reached.setdefault(suite, set()).add(part)
     owner = {r["id"]: key for key, reqs in requirements.items() for r in reqs}
     governs = {k: {p for p, ks in by_part.items() if k in ks} for k in set().union(*by_part.values())}
     suites = set(t for t in tracked(*SUITES) if "/vendor/" not in t)
@@ -281,7 +290,7 @@ def main(argv):
     elif not REQUIREMENTS.exists() or REQUIREMENTS.read_text(encoding="utf-8") != rendered:
         refusals.append("test/standards/requirements.json is not what the pinned standards give: run python3 -I tools/standards/gate.py --write")
 
-    parts = parts_gate.parts_of_repo()
+    parts = PARTS.read_text(encoding="utf-8").split()
     by_part = governed(spec, parts, refusals)
     enforced = enforcement(spec, requirements, parts, by_part, refusals)
 
