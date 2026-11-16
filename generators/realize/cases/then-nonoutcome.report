@@ -1,0 +1,22 @@
+written
+boundary points 800 longest 46
+boundary bad public none browser none no yes	nope
+boundary witness label	public none browser none no no	restricted none browser none no no	allow	hashonly
+boundary witness detector	public none browser none no no	public pci browser none no no	allow	hashonly
+boundary witness destination	public none github owner no no	public none browser owner no no	deny	allow
+boundary witness approval	confidential none outbound none no no	confidential none outbound owner no no	ask	allow
+boundary witness identifier	confidential none outbound none no no	confidential none outbound none yes no	ask	deny
+boundary witness halted	public none github owner no no	public none github owner no yes	deny	nope
+boundary live REQ-001
+boundary live REQ-002
+boundary live REQ-003
+boundary live REQ-004
+boundary live REQ-005
+boundary live REQ-006
+boundary live REQ-007
+boundary live REQ-008
+boundary live REQ-009
+boundary live REQ-010
+boundary wrong public none browser none no yes	deny	nope
+boundary wrong confidential none outbound owner no yes	deny	nope
+boundary agree 15 of 17

@@ -1,0 +1,25 @@
+{
+  "comment": "The steps of the senses program (generators/senses/), run in order by tools/generators/run.sh: the senses' schedule and time zone cases from RFC 5545 at its pinned bytes, and ST-01's inventory of the W3C Turtle test suite from its manifest.",
+  "steps": [
+    {
+      "generator": "sensesevents",
+      "split": "app/specs/standards/texts/c256f809479d98aa23d71bbd1658b3800ea9f13f41ca56e59c8d2de1b31cbfcb",
+      "breakBefore": "^[0-9]+[.][0-9.]*[.]? ",
+      "output": ".gen/senses-events"
+    },
+    {
+      "generator": "sensescases",
+      "inputs": [
+        ".gen/senses-events",
+        "app/specs/senses/clocks.json"
+      ],
+      "output": "app/specs/senses/observed/spec.json"
+    },
+    {
+      "generator": "turtle",
+      "split": "app/specs/standards/upstream/turtle-manifest.ttl",
+      "breakBefore": "^<#",
+      "output": "test/standards/generated/w3c-turtle-1.1.jsonl"
+    }
+  ]
+}

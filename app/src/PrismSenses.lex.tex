@@ -1084,6 +1084,52 @@ definition{
 }
 
 definition{
+  name: snLess,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bool,
+  body: (prim equal (prim compare_bytes a b : Ordering) (prim compare_bytes 0x00 0x01 : Ordering) : Bool),
+  axioms: [propext]
+}
+
+definition{
+  name: snUtc,
+  parameters: [v : Bytes],
+  result: Bool,
+  body: ((((snLen v) =? 20) && ((snAt v 19) =? 90)) && (snRfc3339 v)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snHeldBad,
+  parameters: [body : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((snLen body) <? (i + 1)) then false else (let e : Nat := (snLineEnd body i); (let v : Bytes := (snCut body (i + 5) e); (if (not (snMatch body i (prim utf8_encode "held " : Bytes))) then (snHeldBad body (e + 1) rest) else (if ((snUtc (snSlice v 0 20)) && (((snAt v 20) =? 32) && ((snUtc (snSlice v 21 20)) && (((snAt v 41) =? 32) && (snAll v 42 (snLen v) 5))))) then (snHeldBad body (e + 1) rest) else true)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snHeldFrom,
+  parameters: [body : Bytes, i : Nat, now : Bytes, under : Bool, best : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => best
+    | Nat.succ rest => (if ((snLen body) <? (i + 1)) then best else (let e : Nat := (snLineEnd body i); (let v : Bytes := (snCut body (i + 5) e); (let a : Bytes := (snSlice v 0 20); (let sooner : Bool := (((snLen best) =? 0) || (snLess a (snSlice best 0 20))); (if (not (snMatch body i (prim utf8_encode "held " : Bytes))) then (snHeldFrom body (e + 1) now under best rest) else (if ((if under then ((not (snLess now a)) && (snLess now (snSlice v 21 20))) else (snLess now a)) && sooner) then (snHeldFrom body (e + 1) now under v rest) else (snHeldFrom body (e + 1) now under best rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snHeld,
+  parameters: [body : Bytes, now : Bytes, under : Bool],
+  result: Bytes,
+  body: (snHeldFrom body 0 now under 0x (snLen body)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: snAddress,
   parameters: [v : Bytes],
   result: Bool,
@@ -1095,7 +1141,7 @@ definition{
   name: snSense,
   parameters: [flat : Bool, body : Bytes, base : Bytes, now : Bytes, k : Nat],
   result: SnTok,
-  body: (if (k =? 0) then (let v : Bytes := (snField body (prim utf8_encode "local " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (if (not (snRfc3339 v)) then (record SnTok {ok := false, text := (prim utf8_encode "refused: local is not an RFC 3339 date-time" : Bytes), next := 0}) else (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "localTime" : Bytes) (prim utf8_encode "clock" : Bytes) v (prim utf8_encode "dateTime" : Bytes) 0x 0x), next := 0})))) else (if (k =? 1) then (let v : Bytes := (snField body (prim utf8_encode "zone " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (if (not (snAll v 0 (snLen v) 1)) then (record SnTok {ok := false, text := (prim utf8_encode "refused: zone is not a time zone name" : Bytes), next := 0}) else (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "timeZone" : Bytes) (prim utf8_encode "clock" : Bytes) v 0x 0x 0x), next := 0})))) else (if (k =? 2) then (let v : Bytes := (snField body (prim utf8_encode "event " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (let t : SnTok := (snTimed flat base now v (prim utf8_encode "scheduleNow" : Bytes)); (if (project t ok) then t else (record SnTok {ok := false, text := (prim utf8_encode "refused: event is not start, end and UID" : Bytes), next := 0}))))) else (if (k =? 3) then (let v : Bytes := (snField body (prim utf8_encode "next " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (let t : SnTok := (snTimed flat base now v (prim utf8_encode "scheduleNext" : Bytes)); (if (project t ok) then t else (record SnTok {ok := false, text := (prim utf8_encode "refused: next is not start, end and UID" : Bytes), next := 0}))))) else (if (k =? 4) then (let v : Bytes := (snField body (prim utf8_encode "identity " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (if (not (snAddress v)) then (record SnTok {ok := false, text := (prim utf8_encode "refused: identity is not a sha256 address" : Bytes), next := 0}) else (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "identity" : Bytes) (prim utf8_encode "identity" : Bytes) v 0x 0x 0x), next := 0})))) else (if (k =? 5) then (let v : Bytes := (snField body (prim utf8_encode "functioning " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (if (not (snAddress v)) then (record SnTok {ok := false, text := (prim utf8_encode "refused: functioning is not a sha256 address" : Bytes), next := 0}) else (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "functioningProfile" : Bytes) (prim utf8_encode "functioning" : Bytes) v 0x 0x 0x), next := 0})))) else (if (k =? 6) then (let v : Bytes := (snField body (prim utf8_encode "place " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (if (not (snAll v 0 (snLen v) 2)) then (record SnTok {ok := false, text := (prim utf8_encode "refused: place is not a place key" : Bytes), next := 0}) else (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "place" : Bytes) (prim utf8_encode "surface" : Bytes) v 0x 0x 0x), next := 0})))) else (let v : Bytes := (snField body (prim utf8_encode "position " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (let a : Nat := (snByteAt v 0 32); (let b : Nat := (snByteAt v (a + 1) 32); (let n : Nat := (snLen v); (if ((b <? n) && (((snByteAt v (b + 1) 32) =? n) && ((snDecimal v 0 a) && ((snDecimal v (a + 1) b) && (snDecimal v (b + 1) n))))) then (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "location" : Bytes) (prim utf8_encode "position" : Bytes) (prim append (prim utf8_encode "geo:" : Bytes) (prim append (snSlice v 0 a) (prim append 0x2c (prim append (snCut v (a + 1) b) (prim append (prim utf8_encode ";u=" : Bytes) (snFrom v (b + 1)) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) (prim utf8_encode "anyURI" : Bytes) 0x 0x), next := 0}) else (record SnTok {ok := false, text := (prim utf8_encode "refused: position is not latitude, longitude and accuracy" : Bytes), next := 0})))))))))))))),
+  body: (if (k =? 0) then (let v : Bytes := (snField body (prim utf8_encode "local " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (if (not (snRfc3339 v)) then (record SnTok {ok := false, text := (prim utf8_encode "refused: local is not an RFC 3339 date-time" : Bytes), next := 0}) else (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "localTime" : Bytes) (prim utf8_encode "clock" : Bytes) v (prim utf8_encode "dateTime" : Bytes) 0x 0x), next := 0})))) else (if (k =? 1) then (let v : Bytes := (snField body (prim utf8_encode "zone " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (if (not (snAll v 0 (snLen v) 1)) then (record SnTok {ok := false, text := (prim utf8_encode "refused: zone is not a time zone name" : Bytes), next := 0}) else (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "timeZone" : Bytes) (prim utf8_encode "clock" : Bytes) v 0x 0x 0x), next := 0})))) else (if (k =? 2) then (let v : Bytes := (let w : Bytes := (snField body (prim utf8_encode "event " : Bytes)); (if ((snLen w) =? 0) then (snHeld body now true) else w)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (let t : SnTok := (snTimed flat base now v (prim utf8_encode "scheduleNow" : Bytes)); (if (project t ok) then t else (record SnTok {ok := false, text := (prim utf8_encode "refused: event is not start, end and UID" : Bytes), next := 0}))))) else (if (k =? 3) then (let v : Bytes := (let w : Bytes := (snField body (prim utf8_encode "next " : Bytes)); (if ((snLen w) =? 0) then (snHeld body now false) else w)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (let t : SnTok := (snTimed flat base now v (prim utf8_encode "scheduleNext" : Bytes)); (if (project t ok) then t else (record SnTok {ok := false, text := (prim utf8_encode "refused: next is not start, end and UID" : Bytes), next := 0}))))) else (if (k =? 4) then (let v : Bytes := (snField body (prim utf8_encode "identity " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (if (not (snAddress v)) then (record SnTok {ok := false, text := (prim utf8_encode "refused: identity is not a sha256 address" : Bytes), next := 0}) else (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "identity" : Bytes) (prim utf8_encode "identity" : Bytes) v 0x 0x 0x), next := 0})))) else (if (k =? 5) then (let v : Bytes := (snField body (prim utf8_encode "functioning " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (if (not (snAddress v)) then (record SnTok {ok := false, text := (prim utf8_encode "refused: functioning is not a sha256 address" : Bytes), next := 0}) else (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "functioningProfile" : Bytes) (prim utf8_encode "functioning" : Bytes) v 0x 0x 0x), next := 0})))) else (if (k =? 6) then (let v : Bytes := (snField body (prim utf8_encode "place " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (if (not (snAll v 0 (snLen v) 2)) then (record SnTok {ok := false, text := (prim utf8_encode "refused: place is not a place key" : Bytes), next := 0}) else (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "place" : Bytes) (prim utf8_encode "surface" : Bytes) v 0x 0x 0x), next := 0})))) else (let v : Bytes := (snField body (prim utf8_encode "position " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (let a : Nat := (snByteAt v 0 32); (let b : Nat := (snByteAt v (a + 1) 32); (let n : Nat := (snLen v); (if ((b <? n) && (((snByteAt v (b + 1) 32) =? n) && ((snDecimal v 0 a) && ((snDecimal v (a + 1) b) && (snDecimal v (b + 1) n))))) then (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "location" : Bytes) (prim utf8_encode "position" : Bytes) (prim append (prim utf8_encode "geo:" : Bytes) (prim append (snSlice v 0 a) (prim append 0x2c (prim append (snCut v (a + 1) b) (prim append (prim utf8_encode ";u=" : Bytes) (snFrom v (b + 1)) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) (prim utf8_encode "anyURI" : Bytes) 0x 0x), next := 0}) else (record SnTok {ok := false, text := (prim utf8_encode "refused: position is not latitude, longitude and accuracy" : Bytes), next := 0})))))))))))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -1114,7 +1160,7 @@ definition{
   name: snObserve,
   parameters: [flat : Bool, body : Bytes],
   result: Bytes,
-  body: (let base : Bytes := (snField body (prim utf8_encode "base " : Bytes)); (let now : Bytes := (snField body (prim utf8_encode "now " : Bytes)); (let n : Nat := (snLen base); (if (not (((not ((snSchemeEnd base) =? 0)) && ((snAt base (prim subtract n 1 : Nat)) =? 47)) && (snAll base 0 n 4))) then (prim utf8_encode "refused: base is not an absolute IRI ending in /" : Bytes) else (if (not (snRfc3339 now)) then (prim utf8_encode "refused: now is not an RFC 3339 date-time" : Bytes) else (let out : Bytes := (snSensesFrom flat body base now 0 0x 9); (if (flat || (snMatch out 0 (prim utf8_encode "refused: " : Bytes))) then out else (let verdict : Bytes := (snCheck out); (if (snMatch verdict 0 (prim utf8_encode "conforms " : Bytes)) then out else (prim append (prim utf8_encode "refused: the observations are not SOSA: " : Bytes) verdict : Bytes)))))))))),
+  body: (let base : Bytes := (snField body (prim utf8_encode "base " : Bytes)); (let now : Bytes := (snField body (prim utf8_encode "now " : Bytes)); (let n : Nat := (snLen base); (if (not (((not ((snSchemeEnd base) =? 0)) && ((snAt base (prim subtract n 1 : Nat)) =? 47)) && (snAll base 0 n 4))) then (prim utf8_encode "refused: base is not an absolute IRI ending in /" : Bytes) else (if (not (snRfc3339 now)) then (prim utf8_encode "refused: now is not an RFC 3339 date-time" : Bytes) else (if ((not ((snLen (snField body (prim utf8_encode "held " : Bytes))) =? 0)) && (not (snUtc now))) then (prim utf8_encode "refused: with held items now is in UTC to the second" : Bytes) else (if (snHeldBad body 0 (snLen body)) then (prim utf8_encode "refused: held is not start and end in UTC to the second, and an id" : Bytes) else (let out : Bytes := (snSensesFrom flat body base now 0 0x 9); (if (flat || (snMatch out 0 (prim utf8_encode "refused: " : Bytes))) then out else (let verdict : Bytes := (snCheck out); (if (snMatch verdict 0 (prim utf8_encode "conforms " : Bytes)) then out else (prim append (prim utf8_encode "refused: the observations are not SOSA: " : Bytes) verdict : Bytes)))))))))))),
   axioms: [Quot.sound, propext]
 }
 

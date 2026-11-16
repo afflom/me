@@ -8,6 +8,8 @@
 // The router reads them as the page does once its meaning model has opened:
 // each act's meaning vector from the compiled model, in a browser on the built
 // site, so the intent head (PROVIDERS.intent.head) reads the tasks.
+// The same reading is measured on DialogBank, ISO 24617-2 annotated by its own
+// editors, where its acts are supplied (DIALOGUE_HELD); no gate holds it.
 // QR-16's thresholds are its quality record's.
 // INTENT_FIT=<acts> instead fits the head on AMI's scenario training partition
 // (written outside the repository by tools/oracle/gen.py --fit-acts): a logistic
@@ -15,41 +17,28 @@
 // question rule does not take, by full-batch gradient descent from zero, written
 // to providers.intent.head in the router spec. Owed to LexLean, once a
 // generator's request can hold the vectors.
-// usage: PAGE_SITE=<built site> [INTENT_FIT=<acts>] node --test test/oracle/intent.test.mjs
+// usage: PAGE_SITE=<built site> [INTENT_FIT=<acts>] [DIALOGUE_HELD=<acts>] node --test test/oracle/intent.test.mjs
 import assert from "node:assert/strict";
-import { createReadStream, existsSync, readFileSync, writeFileSync } from "node:fs";
-import { createServer } from "node:http";
+import { createHash } from "node:crypto";
+import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { extname, join, resolve } from "node:path";
 import test from "node:test";
 import { FIELDS, judge, PROVIDERS } from "../../site/router/table.mjs";
 import { route } from "../../site/router/router.mjs";
 import { asksQuestion } from "../../site/router/features.mjs";
+import { serve } from "./examples.mjs";
 
 const { chromium } = createRequire(import.meta.url)("playwright");
-const site = resolve(process.env.PAGE_SITE ?? "site");
-const types = { ".html": "text/html", ".mjs": "text/javascript", ".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".wasm": "application/wasm", ".svg": "image/svg+xml", ".webmanifest": "application/manifest+json" };
-
 const read = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
 const record = read("../../app/specs/product/quality/QR-16.json");
 const threshold = Object.fromEntries(record.measures.map((m) => [m.key, m.threshold]));
-const acts = read("corpus.json").corpus.filter((e) => e.kind === "act");
+const { corpus } = read("corpus.json");
+const acts = corpus.filter((e) => e.kind === "act").map((e) => e.expect);
 const line = async (text) => judge(Object.fromEntries(FIELDS.map(([name], i) => [name, text.split(" ")[i + 1]])));
-const AS_ISO = { event: "fact" };
-const models = read("../../app/specs/models/spec.json");
 
 // Each act's meaning vector, from the compiled model on the built page.
 async function meanings(texts) {
-  const server = createServer((request, response) => {
-    let path = decodeURIComponent(new URL(request.url, "http://localhost").pathname).replace(/^\/me\//, "/");
-    if (path.endsWith("/")) path += "index.html";
-    const file = resolve(join(site, path));
-    if (!file.startsWith(site) || !existsSync(file)) return response.writeHead(404).end();
-    response.writeHead(200, { "content-type": types[extname(file)] ?? "application/octet-stream" });
-    createReadStream(file).pipe(response);
-  });
-  await new Promise((done) => server.listen(0, "127.0.0.1", done));
-  const base = `http://127.0.0.1:${server.address().port}/me`;
+  const { base, close } = await serve();
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
@@ -61,35 +50,54 @@ async function meanings(texts) {
       const reader = meaningReader({ line: async (l) => decide(l.replace(/^model /, "")).outcome });
       const v = await reader.embed(texts);
       return v && v.map((x) => Array.from(x));
-    }, { base, spec: models, texts });
+    }, { base, spec: read("../../app/specs/models/spec.json"), texts });
     assert.ok(vectors, "the meaning model opened");
     return new Map(texts.map((t, i) => [t, vectors[i]]));
   } finally {
     await browser.close();
-    server.close();
+    close();
   }
 }
 
 test("the corpus holds the AMI test partition's acts of every intent", () => {
-  for (const intent of ["question", "task", "fact"]) assert.ok(acts.some((a) => a.expect.intent === intent), `no ${intent} act`);
+  for (const intent of ["question", "task", "fact"]) assert.ok(acts.some((a) => a.intent === intent), `no ${intent} act`);
 });
 
-test("the router reads what each act asks as AMI's annotators marked it (QR-16)", { timeout: 1800000 }, async () => {
-  assert.equal(PROVIDERS.intent.head?.model, PROVIDERS.meaning.model, "the intent head reads the compiled meaning model's vectors");
-  const vectors = await meanings([...new Set(acts.map((a) => a.expect.text))]);
+// The percent of each intent's acts the router reads as their annotators marked them.
+async function found(acts, keys) {
+  const vectors = await meanings([...new Set(acts.map((a) => a.text))]);
   const learned = { meaning: { read: async (text) => vectors.get(text) ?? null } };
   const held = { question: [0, 0], task: [0, 0], fact: [0, 0] };
   for (const act of acts) {
-    const mapped = await route({ source: "note", values: { text: act.expect.text }, line, halted: () => "no", now: 0, learned });
-    const got = AS_ISO[mapped.intent] ?? mapped.intent;
-    const tally = held[act.expect.intent];
-    tally[1] += 1;
-    if (got === act.expect.intent) tally[0] += 1;
+    const mapped = await route({ source: "note", values: { text: act.text }, line, halted: () => "no", now: 0, learned });
+    held[act.intent][1] += 1;
+    if (({ event: "fact" }[mapped.intent] ?? mapped.intent) === act.intent) held[act.intent][0] += 1;
   }
-  const percent = ([hit, of]) => Math.floor((100 * hit) / of);
-  const found = { "question-found": percent(held.question), "task-found": percent(held.task), "fact-found": percent(held.fact) };
-  console.log(`# QR-16 ${Object.entries(found).map(([k, v]) => `${k} ${v}%`).join(", ")} over ${acts.length} acts`);
-  for (const [key, value] of Object.entries(found)) assert.ok(value >= threshold[key], `"${key}": ${value}% < ${threshold[key]}%`);
+  const percent = Object.entries(held).map(([intent, [hit, of]]) => [keys[intent], Math.floor((100 * hit) / of)]);
+  console.log(`# QR-16 ${percent.map(([k, v]) => `${k} ${v}%`).join(", ")} over ${acts.length} acts`);
+  for (const [key, value] of percent) assert.ok(value >= (threshold[key] ?? 0), `"${key}": ${value}% < ${threshold[key]}%`);
+}
+
+test("the router reads what each act asks as AMI's annotators marked it (QR-16)", { timeout: 1800000 }, async () => {
+  assert.equal(PROVIDERS.intent.head?.model, PROVIDERS.meaning.model, "the intent head reads the compiled meaning model's vectors");
+  await found(acts, { question: "question-found", task: "task-found", fact: "fact-found" });
+});
+
+// DialogBank's dialogues are held out of the repository and no gate downloads
+// them (the oracle spec says why), so this runs only where DIALOGUE_HELD names
+// the acts (tools/oracle/gen.py --fetch --held), checked against the count and
+// SHA-256 the corpus carries. Where it does not run it says so on the job's
+// summary: nothing here is a threshold.
+test("the router reads what each act asks as DialogBank's gold ISO 24617-2 annotation marks it", { timeout: 1800000 }, async (t) => {
+  const kept = corpus.find((e) => e.id === "dialogbank-held").expect;
+  if (!process.env.DIALOGUE_HELD) {
+    const why = `DialogBank's ${kept.acts} acts are not enforced here: they are not in the repository and no gate downloads them`;
+    if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `- ${why}\n`);
+    return t.skip(why);
+  }
+  const text = readFileSync(process.env.DIALOGUE_HELD, "utf8");
+  assert.equal(createHash("sha256").update(text).digest("hex"), kept.sha256, "the dialogues are the ones the corpus counts");
+  await found(text.trim().split("\n").map((l) => JSON.parse(l)).filter((a) => a.intent), { question: "dialogue question-found", task: "dialogue task-found", fact: "dialogue fact-found" });
 });
 
 test("the intent head is fit on the training partition", { skip: !process.env.INTENT_FIT, timeout: 7200000 }, async () => {
