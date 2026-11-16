@@ -5,7 +5,7 @@
 // bytes whose SHA-256 is not the pinned one are refused before they compile.
 
 export const GUESTS = {
-  mail: { path: 'guest/grammar-mail.wasm', sha256: '317d4741a3c93eb749fd97dd774be3050df68978394ae16b2272a81e240ed408' },
+  mail: { path: 'guest/grammar-mail.wasm', sha256: '94064e50ebacbad172e68d984d80e44d2775d908ce4e772f437d433b87858ec4' },
   vcard: { path: 'guest/vcard.wasm', sha256: '48780c76070326bab5ebd1853dc497e1ed5940aae4fec6be0cea6a0967f28bdc' },
 };
 
@@ -33,8 +33,17 @@ export async function openGuest(bytes, sha256) {
   return async (line) => run((await WebAssembly.instantiate(module, {})).exports, line);
 }
 
-// The same, answered synchronously once the one asynchronous step (check and compile) is done.
+// The same, answered synchronously once the one asynchronous step (check and
+// compile) is done, by one instance kept and put back as it began before each
+// request: its memory above the stack as first instantiated, and what it grew
+// by zero. An instance a request trapped is dropped. So no state carries over,
+// and reading thousands of fields does not leave thousands of instances.
 export async function openGuestSync(bytes, sha256) {
   const module = await compile(bytes, sha256);
-  return (line) => run(new WebAssembly.Instance(module, {}).exports, line);
+  let x = null, first = null, from = 0;
+  return (line) => {
+    if (x) { const memory = new Uint8Array(x.memory.buffer); memory.set(first, from); memory.fill(0, from + first.length); }
+    else { x = new WebAssembly.Instance(module, {}).exports; from = Number(x.__stack_high?.value ?? 0); first = new Uint8Array(x.memory.buffer).slice(from); }
+    try { return run(x, line); } catch (error) { x = null; throw error; }
+  };
 }
