@@ -1332,15 +1332,13 @@ export default async function start({ app, reason, $ }) {
   // Boundary allows at the highest label among them.
   const drawn = element("ol", { className: "pr-list pr-drawn" });
   drawn.setAttribute("aria-label", WORDS["ask.placeholder"]);
-  // The chat: earlier turns above, the answer now in the result, then where
-  // it came from (each a link that opens it) and the decision it offers.
-  const chat = element("ol", { className: "pr-chat" });
+  // The chat is its own region, a log (WAI-ARIA 1.2) outside the status line's:
+  // each turn as it is said, with where it came from (each a link that opens
+  // it) and the decision it offers.
+  const chat = element("div", { className: "pr-chat", role: "log" });
   chat.setAttribute("aria-label", PLACES.find((p) => p.host === "composer")?.name ?? WORDS["ask.placeholder"]);
-  const more = element("div", { className: "pr-said-more" });
-  out.before(chat);
-  out.after(more);
-  more.after(drawn);
-  let lastTurn = null;
+  (out.closest("#result") ?? out.parentElement).before(chat);
+  chat.after(drawn);
   const writePlace = () => PLACES.find((p) => p.act === "write" && onPage(p));
   const notePlace = () => (current.act === "note" ? current : PLACES.find((p) => p.act === "note" && onPage(p)));
   async function offer(kind, item, prompt) {
@@ -1362,13 +1360,10 @@ export default async function start({ app, reason, $ }) {
     }
   }
   function turn(prompt, said) {
-    // The turn before moves up with what was said; this one shows its words above the answer.
-    if (lastTurn) lastTurn.node.append(element("p", { className: "pr-said", textContent: lastTurn.said }));
-    const node = element("li", { className: "pr-turn" }, element("p", { className: "pr-you", textContent: prompt }));
+    // A turn is what was asked and what was said, together; one sentence per item, each on its own line.
+    const node = element("div", { className: "pr-turn" }, element("p", { className: "pr-you", textContent: prompt }), element("p", { className: "pr-said", textContent: said.sentences.join("\n") }));
     chat.append(node);
     node.scrollIntoView({ block: "nearest" });
-    // One sentence per item, each on its own line, so several answers read as a list.
-    lastTurn = { node, said: said.sentences.join("\n") };
     const rows = said.sources.map(rowOf);
     drawn.replaceChildren(...rows);
     // The sentences link to the items they say; the list beneath holds all that was found.
@@ -1394,7 +1389,7 @@ export default async function start({ app, reason, $ }) {
       button.addEventListener("click", () => { button.disabled = true; offer(kind, item, prompt).catch((error) => say(error?.message ?? String(error), "bad")); });
       return button;
     }).filter(Boolean);
-    more.replaceChildren(...(links.length ? [element("p", { className: "pr-sources" }, ...links)] : []), ...(offers.length ? [element("div", { className: "pr-offers" }, ...offers)] : []));
+    node.append(...(links.length ? [element("p", { className: "pr-sources" }, ...links)] : []), ...(offers.length ? [element("div", { className: "pr-offers" }, ...offers)] : []));
   }
   out.style.whiteSpace = "pre-line";
   out.style.minWidth = "0";
@@ -1410,8 +1405,8 @@ export default async function start({ app, reason, $ }) {
       const [{ answer }] = await Promise.all([import("./router/answer.mjs"), notesKept]);
       // A question is answered; anything else the person says is offered to keep, in its place and time.
       const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: true, meaning: haltedNow ? null : meaningRead() });
-      turn(prompt, said);
-      if (said.sentences.length) { say(said.sentences.join("\n"), "good"); $("pr-prompt").value = ""; }
+      drawn.replaceChildren();
+      if (said.sentences.length) { turn(prompt, said); say("", "idle"); $("pr-prompt").value = ""; }
       else if (haltedNow) say(WORDS.halted, "bad");
       else if (said.refused) say(WORDS["answer.asks"], "warn");
       else say(WORDS["answer.none"], "");
