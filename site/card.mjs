@@ -1459,6 +1459,7 @@ export default async function start({ app, reason, $ }) {
       const [{ answer }] = await Promise.all([import("./router/answer.mjs"), notesKept]);
       // A question is answered; anything else the person says is offered to keep, in its place and time.
       const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: true, meaning: haltedNow ? null : meaningRead() });
+      drawn.replaceChildren();
       if (said.sentences.length) { turn(prompt, said); say("", "idle"); $("pr-prompt").value = ""; }
       else if (haltedNow) say(WORDS.halted, "bad");
       else if (said.refused) say(WORDS["answer.asks"], "warn");
