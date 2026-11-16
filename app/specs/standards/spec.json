@@ -282,7 +282,7 @@
    "governs": [
     "site/source/exports.mjs",
     "site/device/device.mjs",
-    "site/read/vcard.mjs",
+    "site/read/read.mjs",
     "site/read/vcard.table.mjs",
     "app/src/PrismVcard.lex.tex",
     "app/src/PrismVcardTable.lex.tex",
@@ -318,7 +318,7 @@
     }
    ],
    "governs": [
-    "site/read/vcard.mjs",
+    "site/read/read.mjs",
     "site/read/vcard.table.mjs",
     "app/src/PrismVcard.lex.tex",
     "app/src/PrismVcardTable.lex.tex",
@@ -354,7 +354,7 @@
     }
    ],
    "governs": [
-    "site/read/vcard.mjs",
+    "site/read/read.mjs",
     "site/read/vcard.table.mjs",
     "app/src/PrismVcard.lex.tex",
     "app/src/PrismVcardTable.lex.tex",
@@ -390,7 +390,7 @@
     }
    ],
    "governs": [
-    "site/read/vcard.mjs",
+    "site/read/read.mjs",
     "site/read/vcard.table.mjs",
     "app/src/PrismVcard.lex.tex",
     "app/src/PrismVcardTable.lex.tex",
@@ -426,7 +426,7 @@
     }
    ],
    "governs": [
-    "site/read/vcard.mjs",
+    "site/read/read.mjs",
     "site/read/vcard.table.mjs",
     "app/src/PrismVcard.lex.tex",
     "app/src/PrismVcardTable.lex.tex",
@@ -462,7 +462,7 @@
     }
    ],
    "governs": [
-    "site/read/vcard.mjs",
+    "site/read/read.mjs",
     "site/read/vcard.table.mjs",
     "app/src/PrismVcard.lex.tex",
     "app/src/PrismVcardTable.lex.tex",
@@ -498,7 +498,7 @@
     }
    ],
    "governs": [
-    "site/read/vcard.mjs",
+    "site/read/read.mjs",
     "site/read/vcard.table.mjs",
     "app/src/PrismVcard.lex.tex",
     "app/src/PrismVcardTable.lex.tex",
@@ -534,7 +534,7 @@
     }
    ],
    "governs": [
-    "site/read/vcard.mjs",
+    "site/read/read.mjs",
     "site/read/vcard.table.mjs",
     "app/src/PrismVcard.lex.tex",
     "app/src/PrismVcardTable.lex.tex",
@@ -562,7 +562,7 @@
     }
    ],
    "governs": [
-    "site/read/vcard.mjs",
+    "site/read/read.mjs",
     "site/read/vcard.table.mjs",
     "app/src/PrismVcard.lex.tex",
     "app/src/PrismVcardTable.lex.tex",
@@ -776,7 +776,8 @@
    "governs": [
     "site/card.mjs",
     "site/app.mjs",
-    "site/surface/surface.mjs"
+    "site/surface/surface.mjs",
+    "site/surface/setup.mjs"
    ],
    "realizedBy": [
     "ST-01"
@@ -1036,7 +1037,8 @@
    "governs": [
     "site/card.mjs",
     "site/app.mjs",
-    "site/surface/surface.mjs"
+    "site/surface/surface.mjs",
+    "site/surface/setup.mjs"
    ],
    "realizedBy": [
     "ST-01"
@@ -1731,9 +1733,132 @@
    "key": "w3c-sosa-ssn",
    "title": "W3C/OGC Semantic Sensor Network Ontology (SOSA/SSN), Recommendation 19 October 2017",
    "issuer": "W3C",
+   "text": {
+    "url": "https://www.w3.org/TR/2017/REC-vocab-ssn-20171019/",
+    "sha256": "f563c81c267c36d9a59a163c0a1cafcd75a0eedb5664e20a778fed8547fee31f"
+   },
+   "inventories": [
+    {
+     "generated": "test/standards/generated/w3c-sosa-ssn.json",
+     "vendored": "app/specs/standards/upstream/sosa.ttl",
+     "source": {
+      "url": "https://www.w3.org/ns/sosa/sosa.ttl",
+      "sha256": "c70b0d1c843c0047e4c98e0a89392e46a05752ff6365bda7f7f55303905a0392"
+     }
+    }
+   ],
+   "governs": [
+    "app/src/PrismSenses.lex.tex",
+    "app/src/PrismSosaTable.lex.tex",
+    "site/senses/guest.mjs"
+   ],
+   "enforcedBy": {
+    "w3c-sosa-ssn-FeatureOfInterest": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example ice-core-sosa.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:FeatureOfInterest and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-ObservableProperty": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example seismograph.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:ObservableProperty and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-Observation": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example ice-core-sosa.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:Observation and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-Sample": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example ice-core-sosa.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:Sample and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-Sampling": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example ice-core-sosa.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:Sampling and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-Sensor": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example seismograph.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:Sensor and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-hasFeatureOfInterest": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example ice-core-sosa.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:hasFeatureOfInterest and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-hasResult": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example ice-core-sosa.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:hasResult and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-hasSample": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example ice-core-sosa.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:hasSample and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-hasSimpleResult": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example ice-core-sosa.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:hasSimpleResult and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-isObservedBy": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example seismograph.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:isObservedBy and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-isResultOf": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example ice-core-sosa.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:isResultOf and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-isSampleOf": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example ice-core-sosa.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:isSampleOf and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-madeBySampler": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example ice-core-sosa.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:madeBySampler and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-madeBySensor": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example seismograph.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:madeBySensor and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-madeObservation": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example spinning-cups-sosa.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:madeObservation and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-observedProperty": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example ice-core-sosa.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:observedProperty and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-observes": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example seismograph.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:observes and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-phenomenonTime": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example sunspots.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:phenomenonTime and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    },
+    "w3c-sosa-ssn-resultTime": {
+     "suite": "crates/conformance/tests/guests.rs",
+     "how": "the Recommendation's example ice-core-sosa.ttl, byte for byte as W3C serves it (app/specs/senses/spec.json), uses sosa:resultTime and is an acceptance vector of the senses guest, which holds the term to its kind in the pinned ontology; prismpm build runs it and GU-01 holds the pinned wasm to those vectors"
+    }
+   },
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "w3c-turtle-1.1",
+   "title": "W3C RDF 1.1 Turtle, Recommendation 25 February 2014",
+   "issuer": "W3C",
    "text": null,
-   "unpinned": "the Prism's senses (each stream a sosa:Sensor, each arriving item a sosa:Observation of the person as sosa:FeatureOfInterest) are the next slice of the nervous system, which pins the ontology and its examples",
+   "unpinned": "PrismSenses reads the Turtle of the SOSA/SSN Recommendation's examples (collections, local-name escapes and IRI dot segments are refused as not read yet) and writes N-Triples; its requirement inventory is the W3C Turtle test suite, which the next slice of the nervous system pins and runs",
    "governs": [],
+   "realizedBy": [
+    "ST-01"
+   ]
+  },
+  {
+   "key": "unicode-messageformat-2",
+   "title": "Unicode MessageFormat 2.0 (LDML 48.2, UTS #35 Part 9)",
+   "issuer": "Unicode Consortium",
+   "text": null,
+   "unpinned": "its text (UTS #35 Part 9 at LDML 48.2) and its test suite are pinned by SHA-256 in app/specs/message/spec.json, and the suite's tests are the acceptance vectors of the message guests (GU-01): 326 of 461 held, the other 135 listed there by cause; the generator that reads the suite's test files into requirements is the next slice",
+   "governs": [
+    "app/src/PrismMessage.lex.tex",
+    "site/message/guest.mjs"
+   ],
    "realizedBy": [
     "ST-01"
    ]
