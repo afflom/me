@@ -98,7 +98,7 @@ definition{
   result: Bool,
   body: (match places
     | List.nil => true
-    | List.cons place rest => ((if ((project place viewpoint) =? 1) then ((project place host) =? 4) else (not ((project place host) =? 4))) && (surfacePageIsPersonView rest))),
+    | List.cons place rest => ((if ((project place viewpoint) =? (PrismSurface::surfaceViewpointSystem)) then ((project place host) =? (PrismSurface::surfaceHostNone)) else (not ((project place host) =? (PrismSurface::surfaceHostNone)))) && (surfacePageIsPersonView rest))),
   recursive_argument: places
 }
 
@@ -108,7 +108,7 @@ definition{
   result: Bool,
   body: (match places
     | List.nil => true
-    | List.cons place rest => ((if (((project place viewpoint) =? 0) && ((project place kind) =? 0)) then (not ((project place order) =? 0)) else ((project place order) =? 0)) && (surfacePlacesOrdered rest))),
+    | List.cons place rest => ((if (((project place viewpoint) =? (PrismSurface::surfaceViewpointPerson)) && ((project place kind) =? (PrismSurface::surfaceShowList))) then (not ((project place order) =? 0)) else ((project place order) =? 0)) && (surfacePlacesOrdered rest))),
   recursive_argument: places
 }
 
@@ -118,7 +118,7 @@ definition{
   result: Bool,
   body: (match places
     | List.nil => true
-    | List.cons place rest => (((not (surfaceMember (project place act) (PrismSurface::surfaceOutboundActs))) || ((((project place role) =? 1) || ((project place role) =? 2)) || ((project place role) =? 4))) && ((if ((project place act) =? 5) then ((project place host) =? 2) else (not ((project place host) =? 2))) && (surfaceActsSound rest)))),
+    | List.cons place rest => (((not (surfaceMember (project place act) (PrismSurface::surfaceOutboundActs))) || ((((project place role) =? 1) || ((project place role) =? 2)) || ((project place role) =? 4))) && ((if ((project place act) =? (PrismSurface::surfaceActAsk)) then ((project place host) =? (PrismSurface::surfaceHostComposer)) else (not ((project place host) =? (PrismSurface::surfaceHostComposer)))) && (surfaceActsSound rest)))),
   recursive_argument: places
 }
 
@@ -135,7 +135,7 @@ definition{
   result: Bool,
   body: (match places
     | List.nil => true
-    | List.cons place rest => (((not ((project place act) =? 1)) || (1 <=? (Foundation.Me.V1.Model::designFloorOf (surfaceFirstOr 0 (project place domains))))) && (surfaceNotesNeverPublic rest))),
+    | List.cons place rest => (((not ((project place act) =? (PrismSurface::surfaceActNote))) || (1 <=? (Foundation.Me.V1.Model::designFloorOf (surfaceFirstOr 0 (project place domains))))) && (surfaceNotesNeverPublic rest))),
   recursive_argument: places
 }
 
@@ -235,7 +235,7 @@ definition{
   result: Bool,
   body: (match places
     | List.nil => true
-    | List.cons place rest => (((not ((project place kind) =? 0)) || (surfaceAnyFed (project place domains))) && (surfacePlacesFed rest))),
+    | List.cons place rest => (((not ((project place kind) =? (PrismSurface::surfaceShowList))) || (surfaceAnyFed (project place domains))) && (surfacePlacesFed rest))),
   recursive_argument: places
 }
 
@@ -359,7 +359,7 @@ definition{
   result: Bool,
   body: (match settings
     | List.nil => true
-    | List.cons setting rest => (((surfaceSectionsHolding index (PrismSurface::surfaceSections)) =? (if ((project setting viewpoint) =? 1) then 0 else 1)) && (surfaceSettingsSectioned (index + 1) rest))),
+    | List.cons setting rest => (((surfaceSectionsHolding index (PrismSurface::surfaceSections)) =? (if ((project setting viewpoint) =? (PrismSurface::surfaceViewpointSystem)) then 0 else 1)) && (surfaceSettingsSectioned (index + 1) rest))),
   recursive_argument: settings
 }
 
@@ -394,10 +394,20 @@ definition{
 }
 
 definition{
+  name: surfaceGroupsUsedFrom,
+  parameters: [group : Nat, left : Nat],
+  result: Bool,
+  body: (match left
+    | Nat.zero => true
+    | Nat.succ k => ((surfaceGroupUsed group (PrismSurface::surfaceSettings)) && (surfaceGroupsUsedFrom (group + 1) k))),
+  recursive_argument: left
+}
+
+definition{
   name: surfaceGroupsUsed,
   parameters: [],
   result: Bool,
-  body: ((surfaceGroupUsed 0 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 1 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 2 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 3 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 4 (PrismSurface::surfaceSettings)) && ((surfaceGroupUsed 5 (PrismSurface::surfaceSettings)) && true))))))
+  body: (surfaceGroupsUsedFrom 0 (PrismSurface::surfaceGroupCount))
 }
 
 theorem{
@@ -417,21 +427,21 @@ theorem{
 theorem{
   name: surfaceOneHome,
   parameters: [],
-  statement: ((surfaceHostCount 0 (PrismSurface::surfacePlaces)) = 1),
+  statement: ((surfaceHostCount (PrismSurface::surfaceHostHome) (PrismSurface::surfacePlaces)) = 1),
   proof: decide{}
 }
 
 theorem{
   name: surfaceOneComposer,
   parameters: [],
-  statement: ((surfaceHostCount 2 (PrismSurface::surfacePlaces)) = 1),
+  statement: ((surfaceHostCount (PrismSurface::surfaceHostComposer) (PrismSurface::surfacePlaces)) = 1),
   proof: decide{}
 }
 
 theorem{
   name: surfaceOneSheet,
   parameters: [],
-  statement: ((surfaceHostCount 3 (PrismSurface::surfacePlaces)) = 1),
+  statement: ((surfaceHostCount (PrismSurface::surfaceHostSheet) (PrismSurface::surfacePlaces)) = 1),
   proof: decide{}
 }
 
@@ -473,7 +483,7 @@ theorem{
 theorem{
   name: surfaceMenuIsShort,
   parameters: [],
-  statement: (((surfaceHostCount 1 (PrismSurface::surfacePlaces)) <=? 4) = true),
+  statement: (((surfaceHostCount (PrismSurface::surfaceHostNav) (PrismSurface::surfacePlaces)) <=? 4) = true),
   proof: decide{}
 }
 

@@ -1,0 +1,605 @@
+\begin{lexlean}{PrismVcard}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{PrismVcardTable}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: vcardApp,
+  parameters: [left : Bytes, right : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes left right)
+}
+
+definition{
+  name: vcardLen,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (Foundation.Bytes::byteLength s)
+}
+
+definition{
+  name: vcardAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (Foundation.Bytes::byteAt s i)
+    | Option.none => 0
+    | Option.some b => (prim to_nat b : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardCut,
+  parameters: [s : Bytes, start : Nat, stop : Nat],
+  result: Bytes,
+  body: (match (Foundation.Bytes::sliceBytes s start (prim subtract stop start : Nat))
+    | Option.none => 0x
+    | Option.some b => b)
+}
+
+definition{
+  name: vcardSame,
+  parameters: [left : Bytes, right : Bytes],
+  result: Bool,
+  body: (prim equal (prim compare_bytes left right : Ordering) (prim compare_bytes 0x00 0x00 : Ordering) : Bool),
+  axioms: [propext]
+}
+
+definition{
+  name: vcardIsToken,
+  parameters: [b : Nat],
+  result: Bool,
+  body: (((47 <? b) && (b <? 58)) || (((64 <? b) && (b <? 91)) || (((96 <? b) && (b <? 123)) || (b =? 45))))
+}
+
+definition{
+  name: vcardTokenEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (vcardIsToken (vcardAt s i)) then (vcardTokenEnd s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardUpperFrom,
+  parameters: [s : Bytes, i : Nat, stop : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (let b : Nat := (vcardAt s i); (let c : Bytes := (if ((96 <? b) && (b <? 123)) then (vcardCut 0x4142434445464748494a4b4c4d4e4f505152535455565758595a (prim subtract b 97 : Nat) (prim subtract b 96 : Nat)) else (vcardCut s i (i + 1))); (vcardUpperFrom s (i + 1) stop (vcardApp acc c) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardUpper,
+  parameters: [s : Bytes, start : Nat, stop : Nat],
+  result: Bytes,
+  body: (vcardUpperFrom s start stop 0x (vcardLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardLowerFrom,
+  parameters: [s : Bytes, i : Nat, stop : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (let b : Nat := (vcardAt s i); (let c : Bytes := (if ((64 <? b) && (b <? 91)) then (vcardCut 0x6162636465666768696a6b6c6d6e6f707172737475767778797a (prim subtract b 65 : Nat) (prim subtract b 64 : Nat)) else (vcardCut s i (i + 1))); (vcardLowerFrom s (i + 1) stop (vcardApp acc c) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardLower,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (vcardLowerFrom s 0 (vcardLen s) 0x (vcardLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardHexDigit,
+  parameters: [d : Nat],
+  result: Bytes,
+  body: (vcardCut 0x30313233343536373839616263646566 d (d + 1))
+}
+
+definition{
+  name: vcardEscapeControl,
+  parameters: [s : Bytes, i : Nat, b : Nat],
+  result: Bytes,
+  body: (if (b =? 8) then 0x5c62 else (if (b =? 12) then 0x5c66 else (if (b <? 32) then (vcardApp 0x5c753030 (vcardApp (vcardHexDigit (prim quotient b 16 0 : Nat)) (vcardHexDigit (prim remainder b 16 0 : Nat)))) else (vcardCut s i (i + 1))))),
+}
+
+definition{
+  name: vcardEscapeByte,
+  parameters: [s : Bytes, i : Nat],
+  result: Bytes,
+  body: (let b : Nat := (vcardAt s i); (if (b =? 34) then 0x5c22 else (if (b =? 92) then 0x5c5c else (if (b =? 10) then 0x5c6e else (if (b =? 13) then 0x5c72 else (if (b =? 9) then 0x5c74 else (vcardEscapeControl s i b))))))),
+  axioms: [Quot.sound, propext]
+}
+
+
+definition{
+  name: vcardEscapeFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((vcardLen s) <? (i + 1)) then acc else (vcardEscapeFrom s (i + 1) (vcardApp acc (vcardEscapeByte s i)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardStr,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (vcardApp 0x22 (vcardApp (vcardEscapeFrom value 0 0x (vcardLen value)) 0x22)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardJoined,
+  parameters: [acc : Bytes, item : Bytes],
+  result: Bytes,
+  body: (if ((vcardLen acc) =? 0) then item else (vcardApp acc (vcardApp 0x2c item)))
+}
+
+definition{
+  name: vcardUnescapeFrom,
+  parameters: [s : Bytes, i : Nat, stop : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (let b : Nat := (vcardAt s i); (let n : Nat := (vcardAt s (i + 1)); (if ((b =? 92) && ((i + 1) <? stop)) then (if ((n =? 92) || ((n =? 44) || (n =? 59))) then (vcardUnescapeFrom s (i + 2) stop (vcardApp acc (vcardCut s (i + 1) (i + 2))) rest) else (if ((n =? 110) || (n =? 78)) then (vcardUnescapeFrom s (i + 2) stop (vcardApp acc 0x0a) rest) else (vcardUnescapeFrom s (i + 1) stop (vcardApp acc (vcardCut s i (i + 1))) rest))) else (vcardUnescapeFrom s (i + 1) stop (vcardApp acc (vcardCut s i (i + 1))) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardText,
+  parameters: [s : Bytes, start : Nat, stop : Nat],
+  result: Bytes,
+  body: (vcardStr (vcardUnescapeFrom s start stop 0x (vcardLen s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardPieceEnd,
+  parameters: [s : Bytes, i : Nat, stop : Nat, sep : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => stop
+    | Nat.succ rest => (if (stop <? (i + 1)) then stop else (let b : Nat := (vcardAt s i); (if ((b =? 92) && ((i + 1) <? stop)) then (vcardPieceEnd s (i + 2) stop sep rest) else (if (b =? sep) then i else (vcardPieceEnd s (i + 1) stop sep rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardPieces,
+  parameters: [s : Bytes, i : Nat, stop : Nat, sep : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let e : Nat := (vcardPieceEnd s i stop sep (vcardLen s)); (let got : Bytes := (vcardJoined acc (vcardText s i e)); (if (e <? stop) then (vcardPieces s (e + 1) stop sep got rest) else got)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardListComponents,
+  parameters: [s : Bytes, i : Nat, stop : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let e : Nat := (vcardPieceEnd s i stop 59 (vcardLen s)); (let got : Bytes := (vcardJoined acc (vcardApp 0x5b (vcardApp (vcardPieces s i e 44 0x (vcardLen s)) 0x5d))); (if (e <? stop) then (vcardListComponents s (e + 1) stop got rest) else got)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardPlainEnd,
+  parameters: [s : Bytes, i : Nat, stop : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => stop
+    | Nat.succ rest => (if (stop <? (i + 1)) then stop else (if ((vcardAt s i) =? 44) then i else (vcardPlainEnd s (i + 1) stop rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardTypeValues,
+  parameters: [s : Bytes, i : Nat, stop : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let e : Nat := (vcardPlainEnd s i stop (vcardLen s)); (let got : Bytes := (vcardJoined acc (vcardStr (vcardCut s i e))); (if (e <? stop) then (vcardTypeValues s (e + 1) stop got rest) else got)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardQuoteEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((vcardLen s) <? (i + 1)) then i else (if ((vcardAt s i) =? 34) then i else (vcardQuoteEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardIsBareStop,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 0) || ((b =? 34) || ((b =? 59) || ((b =? 58) || (b =? 44)))))
+}
+
+definition{
+  name: vcardBareEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (vcardIsBareStop (vcardAt s i)) then i else (vcardBareEnd s (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardItemEnd,
+  parameters: [s : Bytes, j : Nat],
+  result: Nat,
+  body: (if ((vcardAt s j) =? 34) then ((vcardQuoteEnd s (j + 1) (vcardLen s)) + 1) else (vcardBareEnd s j (vcardLen s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardItemsEnd,
+  parameters: [s : Bytes, j : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => j
+    | Nat.succ rest => (let e : Nat := (vcardItemEnd s j); (if ((vcardAt s e) =? 44) then (vcardItemsEnd s (e + 1) rest) else e))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardParamsEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (let c : Nat := (vcardAt s i); (if (c =? 58) then (ctor Option.some [Nat] i) else (if (c =? 59) then (let k : Nat := (vcardTokenEnd s (i + 1) (vcardLen s)); (if (k =? (i + 1)) then (ctor Option.none [Nat]) else (if ((vcardAt s k) =? 61) then (vcardParamsEnd s (vcardItemsEnd s (k + 1) (vcardLen s)) rest) else (ctor Option.none [Nat])))) else (ctor Option.none [Nat]))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardItems,
+  parameters: [s : Bytes, j : Nat, isType : Bool, firstBare : Bool, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let q : Bool := ((vcardAt s j) =? 34); (if (q && firstBare) then acc else (let e : Nat := (vcardItemEnd s j); (let a : Nat := (if q then (j + 1) else j); (let z : Nat := (if q then (prim subtract e 1 : Nat) else e); (let more : Bool := ((vcardAt s e) =? 44); (let drop : Bool := (if (more || q) then false else (a =? z)); (let got : Bytes := (if drop then acc else (if isType then (vcardTypeValues s a z acc (vcardLen s)) else (vcardJoined acc (vcardStr (vcardCut s a z))))); (if more then (vcardItems s (e + 1) isType firstBare got rest) else got)))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardValuesFor,
+  parameters: [s : Bytes, i : Nat, key : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((vcardAt s i) =? 59) then (let k : Nat := (vcardTokenEnd s (i + 1) (vcardLen s)); (let next : Nat := (vcardItemsEnd s (k + 1) (vcardLen s)); (let got : Bytes := (if (vcardSame (vcardUpper s (i + 1) k) key) then (vcardItems s (k + 1) (vcardSame key 0x54595045) (if ((vcardAt s (k + 1)) =? 34) then false else true) acc (vcardLen s)) else acc); (vcardValuesFor s next key got rest)))) else acc)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardHoldsFrom,
+  parameters: [set : Bytes, pattern : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((vcardLen set) <? (i + (vcardLen pattern))) then false else (if (vcardSame (vcardCut set i (i + (vcardLen pattern))) pattern) then true else (vcardHoldsFrom set pattern (i + 1) rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardKeysFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((vcardAt s i) =? 59) then (let k : Nat := (vcardTokenEnd s (i + 1) (vcardLen s)); (let key : Bytes := (vcardUpper s (i + 1) k); (let next : Nat := (vcardItemsEnd s (k + 1) (vcardLen s)); (vcardKeysFrom s next (if (vcardHoldsFrom acc (vcardApp 0x0a (vcardApp key 0x0a)) 0 (vcardLen acc)) then acc else (vcardApp acc (vcardApp key 0x0a))) rest)))) else acc)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardLineStop,
+  parameters: [set : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((vcardLen set) <? (i + 1)) then i else (if ((vcardAt set i) =? 10) then i else (vcardLineStop set (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardParamsJson,
+  parameters: [s : Bytes, start : Nat, set : Bytes, pos : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((vcardLen set) <? (pos + 2)) then acc else (let e : Nat := (vcardLineStop set (pos + 1) (vcardLen set)); (let key : Bytes := (vcardCut set (pos + 1) e); (vcardParamsJson s start set e (vcardJoined acc (vcardApp (vcardStr key) (vcardApp 0x3a5b (vcardApp (vcardValuesFor s start key 0x (vcardLen s)) 0x5d)))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardValueType,
+  parameters: [s : Bytes, i : Nat, fallback : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => fallback
+    | Nat.succ rest => (if ((vcardAt s i) =? 59) then (let k : Nat := (vcardTokenEnd s (i + 1) (vcardLen s)); (if (vcardSame (vcardUpper s (i + 1) k) 0x56414c5545) then (let j : Nat := (k + 1); (let e : Nat := (vcardItemEnd s j); (if ((vcardAt s j) =? 34) then (vcardCut s (j + 1) (prim subtract e 1 : Nat)) else (vcardCut s j e)))) else (vcardValueType s (vcardItemsEnd s (k + 1) (vcardLen s)) fallback rest))) else fallback)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: vcardValueJson,
+  parameters: [s : Bytes, shape : Bytes, comps : Bytes, kind : Bytes, v : Nat],
+  result: Bytes,
+  body: (let n : Nat := (vcardLen s); (let isText : Bool := (vcardSame kind 0x74657874); (if (vcardSame shape 0x73747275637475726564) then (vcardApp 0x5b (vcardApp (if (vcardSame comps 0x6c697374) then (vcardListComponents s v n 0x n) else (vcardPieces s v n 59 0x n)) 0x5d)) else (if (isText && (vcardSame shape 0x6c697374)) then (vcardApp 0x5b (vcardApp (vcardPieces s v n 44 0x n) 0x5d)) else (if isText then (vcardText s v n) else (vcardStr (vcardCut s v n))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardParamsObject,
+  parameters: [s : Bytes, stop : Nat],
+  result: Bytes,
+  body: (let set : Bytes := (vcardKeysFrom s stop 0x0a (vcardLen s)); (vcardApp 0x7b (vcardApp (vcardParamsJson s stop set 0 0x (vcardLen set)) 0x7d))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardHead,
+  parameters: [group : Bytes, name : Bytes],
+  result: Bytes,
+  body: (vcardApp (if ((vcardLen group) =? 0) then 0x7b else (vcardApp 0x7b2267726f7570223a (vcardApp (vcardStr group) 0x2c))) (vcardApp 0x226e616d65223a (vcardStr name))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardTail,
+  parameters: [params : Bytes, kind : Bytes, value : Bytes],
+  result: Bytes,
+  body: (vcardApp 0x2c22706172616d73223a (vcardApp params (vcardApp 0x2c2274797065223a (vcardApp (vcardStr kind) (vcardApp 0x2c2276616c7565223a (vcardApp value 0x7d)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardRow,
+  parameters: [table : Bytes, pattern : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (vcardLen table)
+    | Nat.succ rest => (if ((vcardLen table) <? (i + (vcardLen pattern))) then (vcardLen table) else (if (vcardSame (vcardCut table i (i + (vcardLen pattern))) pattern) then (i + (vcardLen pattern)) else (vcardRow table pattern (i + 1) rest)))),
+  recursive_argument: fuel,
+  axioms: [propext]
+}
+
+definition{
+  name: vcardWordEnd,
+  parameters: [table : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (vcardAt table i); (if ((b =? 32) || ((b =? 10) || (b =? 0))) then i else (vcardWordEnd table (i + 1) rest)))),
+  recursive_argument: fuel,
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardWordAt,
+  parameters: [table : Bytes, i : Nat, k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let e : Nat := (vcardWordEnd table i (vcardLen table)); (match k
+      | Nat.zero => (let w : Bytes := (vcardCut table i e); (if (vcardSame w 0x2d) then 0x else w))
+      | Nat.succ j => (if ((vcardAt table e) =? 32) then (vcardWordAt table (e + 1) j rest) else 0x)))),
+  recursive_argument: fuel,
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardReadAt,
+  parameters: [s : Bytes, table : Bytes, group : Bytes, start : Nat, stop : Nat, colon : Nat],
+  result: Bytes,
+  body: (let name : Bytes := (vcardUpper s start stop); (let row : Nat := (vcardRow table (vcardApp 0x0a (vcardApp name 0x20)) 0 (vcardLen table)); (let declared : Bytes := (vcardWordAt table row 2 3); (let kind : Bytes := (vcardLower (vcardValueType s stop (if ((vcardLen declared) =? 0) then 0x74657874 else declared) (vcardLen s))); (vcardApp (vcardHead group name) (vcardTail (vcardParamsObject s stop) kind (vcardValueJson s (vcardWordAt table row 0 3) (vcardWordAt table row 1 3) kind (colon + 1)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+
+definition{
+  name: vcardReadLine,
+  parameters: [s : Bytes, table : Bytes],
+  result: Bytes,
+  body: (let e1 : Nat := (vcardTokenEnd s 0 (vcardLen s)); (if (e1 =? 0) then 0x6e756c6c else (let dotted : Bool := ((vcardAt s e1) =? 46); (let start : Nat := (if dotted then (e1 + 1) else 0); (let stop : Nat := (if dotted then (vcardTokenEnd s (e1 + 1) (vcardLen s)) else e1); (if (stop =? start) then 0x6e756c6c else (match (vcardParamsEnd s stop (vcardLen s))
+    | Option.none => 0x6e756c6c
+    | Option.some colon => (vcardReadAt s table (if dotted then (vcardCut s 0 e1) else 0x) start stop colon)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardIsFoldSpace,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 32) || (b =? 9))
+}
+
+definition{
+  name: vcardRunEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((vcardLen s) <? (i + 1)) then i else (let b : Nat := (vcardAt s i); (if ((b =? 10) || (b =? 13)) then i else (vcardRunEnd s (i + 1) rest))))),
+  recursive_argument: fuel,
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardUnfoldFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((vcardLen s) <? (i + 1)) then acc else (let e : Nat := (vcardRunEnd s i (vcardLen s)); (let got : Bytes := (vcardApp acc (vcardCut s i e)); (let crlf : Bool := (((vcardAt s e) =? 13) && ((vcardAt s (e + 1)) =? 10)); (let k : Nat := (if crlf then (e + 2) else (e + 1)); (if ((vcardLen s) <? (e + 1)) then got else (if (vcardIsFoldSpace (vcardAt s k)) then (vcardUnfoldFrom s (k + 1) got rest) else (vcardUnfoldFrom s k (vcardApp got 0x0a) rest))))))))),
+  recursive_argument: fuel,
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardLineEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((vcardLen s) <? (i + 1)) then i else (if ((vcardAt s i) =? 10) then i else (vcardLineEnd s (i + 1) rest)))),
+  recursive_argument: fuel,
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardIsLine,
+  parameters: [s : Bytes, i : Nat, e : Nat, word : Bytes],
+  result: Bool,
+  body: (if ((prim subtract e i : Nat) =? (vcardLen word)) then (vcardSame (vcardUpper s i e) word) else false),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardCardsFrom,
+  parameters: [u : Bytes, i : Nat, inCard : Bool, cur : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((vcardLen u) <? (i + 1)) then acc else (let e : Nat := (vcardLineEnd u i (vcardLen u)); (let line : Bytes := (vcardApp (vcardCut u i e) 0x0d0a); (if inCard then (if (vcardIsLine u i e 0x454e443a5643415244) then (let card : Bytes := (vcardApp cur line); (vcardCardsFrom u (e + 1) false 0x (if ((vcardLen acc) =? 0) then card else (vcardApp acc (vcardApp 0x00 card))) rest)) else (vcardCardsFrom u (e + 1) true (vcardApp cur line) acc rest)) else (if (vcardIsLine u i e 0x424547494e3a5643415244) then (vcardCardsFrom u (e + 1) true line acc rest) else (vcardCardsFrom u (e + 1) false 0x acc rest))))))),
+  recursive_argument: fuel,
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardCards,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let u : Bytes := (vcardUnfoldFrom s 0 0x (vcardLen s)); (vcardCardsFrom u 0 false 0x 0x (vcardLen u))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardTextEscapeFrom,
+  parameters: [s : Bytes, i : Nat, stop : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (let b : Nat := (vcardAt s i); (vcardTextEscapeFrom s (i + 1) stop (vcardApp acc (if ((b =? 92) || ((b =? 44) || (b =? 59))) then (vcardApp 0x5c (vcardCut s i (i + 1))) else (vcardCut s i (i + 1)))) rest)))),
+  recursive_argument: fuel,
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardCutBack,
+  parameters: [s : Bytes, c : Nat, floor : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => c
+    | Nat.succ rest => (let b : Nat := (vcardAt s c); (if ((floor <? c) && ((127 <? b) && (b <? 192))) then (vcardCutBack s (prim subtract c 1 : Nat) floor rest) else c))),
+  recursive_argument: fuel,
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardFoldFrom,
+  parameters: [s : Bytes, i : Nat, width : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((vcardLen s) <? ((i + width) + 1)) then (vcardApp acc (vcardApp (vcardCut s i (vcardLen s)) 0x0d0a)) else (let c : Nat := (vcardCutBack s (i + width) i 4); (vcardFoldFrom s c 74 (vcardApp acc (vcardApp (vcardCut s i c) 0x0d0a20)) rest)))),
+  recursive_argument: fuel,
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardFold,
+  parameters: [line : Bytes],
+  result: Bytes,
+  body: (vcardFoldFrom line 0 75 0x (vcardLen line)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardProperty,
+  parameters: [name : Bytes, s : Bytes, i : Nat, e : Nat],
+  result: Bytes,
+  body: (vcardFold (vcardApp name (vcardTextEscapeFrom s i e 0x (vcardLen s)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardTagged,
+  parameters: [s : Bytes, i : Nat, tag : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (vcardLen s)
+    | Nat.succ rest => (if ((vcardLen s) <? (i + 1)) then (vcardLen s) else (if (vcardSame (vcardCut s i (i + (vcardLen tag))) tag) then i else (vcardTagged s ((vcardLineEnd s i (vcardLen s)) + 1) tag rest)))),
+  recursive_argument: fuel,
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardValuesFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((vcardLen s) <? (i + 1)) then acc else (let e : Nat := (vcardLineEnd s i (vcardLen s)); (let got : Bytes := (if (vcardSame (vcardCut s i (i + 6)) 0x656d61696c20) then (vcardApp acc (vcardProperty 0x454d41494c3a s (i + 6) e)) else (if (vcardSame (vcardCut s i (i + 4)) 0x74656c20) then (vcardApp acc (vcardProperty 0x54454c3a s (i + 4) e)) else acc)); (vcardValuesFrom s (e + 1) got rest))))),
+  recursive_argument: fuel,
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardWrite,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let n : Nat := (vcardLen s); (let e : Nat := (vcardLineEnd s 0 n); (let m : Nat := (vcardTagged s (e + 1) 0x656d61696c20 n); (let t : Nat := (vcardTagged s (e + 1) 0x74656c20 n); (let fn : Bytes := (if (0 <? e) then (vcardProperty 0x464e3a s 0 e) else (if (m <? n) then (vcardProperty 0x464e3a s (m + 6) (vcardLineEnd s m n)) else (if (t <? n) then (vcardProperty 0x464e3a s (t + 4) (vcardLineEnd s t n)) else (vcardFold 0x464e3a)))); (vcardApp 0x424547494e3a56434152440d0a56455253494f4e3a342e300d0a (vcardApp fn (vcardApp (vcardValuesFrom s (e + 1) 0x n) 0x454e443a56434152440d0a)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: vcardDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (let n : Nat := (vcardLen value); (if (vcardSame (vcardCut value 0 5) 0x6c696e650a) then (vcardReadLine (vcardCut value 5 n) (PrismVcardTable::vcardTable)) else (if (vcardSame (vcardCut value 0 6) 0x63617264730a) then (vcardCards (vcardCut value 6 n)) else (if (vcardSame (vcardCut value 0 6) 0x77726974650a) then (vcardWrite (vcardCut value 6 n)) else 0x696e76616c6964)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
