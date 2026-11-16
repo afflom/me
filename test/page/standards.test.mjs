@@ -1,6 +1,6 @@
 // The front end implements its standards in full, and the registry says how
 // each requirement is enforced. Every requirement of every standard that
-// governs the page (app/specs/standards/spec.json) names the check that holds
+// governs the page (app/specs/standards/register/) names the check that holds
 // it, and this suite runs exactly those checks, read from the registry:
 //   "axe-core rules: a, b"  the pinned axe-core engine's rules, on every screen
 //   "absent: <selector>"    a verified not-applicable: nothing on any screen,
@@ -9,7 +9,7 @@
 //                           test procedure (W3C's Understanding documents)
 //   "suite: <words>"        another suite, named by the entry's "suite"
 // A requirement that fails and is not on the standard's debt
-// (app/specs/standards/debt.json) fails this suite, and so does debt that now
+// (app/specs/standards/debt/) fails this suite, and so does debt that now
 // passes, so the debt only shrinks.
 //
 // The walk is on the specifications' own examples (test/oracle/corpus.json)
@@ -39,8 +39,7 @@ const { example, toOf } = await import(resolve("test/oracle/examples.mjs"));
 const SUITE = "test/page/standards.test.mjs";
 // QR-20's measure: requirements failing beyond the debt, at most 0.
 const MEASURE = "wcag-failing";
-const REGISTRY = JSON.parse(readFileSync("app/specs/standards/spec.json", "utf8")).standards;
-const DEBTS = existsSync("app/specs/standards/debt.json") ? JSON.parse(readFileSync("app/specs/standards/debt.json", "utf8")) : {};
+const { standards: REGISTRY, debt: DEBTS } = (await import(resolve("tools/specs/record.mjs"))).load("app/specs/standards/spec.json");
 // A standard may enforce every requirement of a kind alike ("enforcedByKind"): its checks fail as that kind.
 const enforcing = (s) => [...Object.entries(s.enforcedBy ?? {}), ...Object.entries(s.enforcedByKind ?? {}).map(([kind, e]) => [`every ${kind}`, e])];
 const STANDARDS = REGISTRY.filter((s) => enforcing(s).some(([, e]) => e.suite === SUITE));

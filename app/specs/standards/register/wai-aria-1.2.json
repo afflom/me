@@ -1,0 +1,46 @@
+{
+ "key": "wai-aria-1.2",
+ "title": "W3C Accessible Rich Internet Applications 1.2",
+ "issuer": "W3C",
+ "text": {
+  "url": "https://www.w3.org/TR/wai-aria-1.2/",
+  "sha256": "c0fea16fc747779569ab754d2d25bca3e2b7e8a673b8ef5362aeb9ebc73a4849"
+ },
+ "governs": [
+  "site/card.mjs",
+  "site/app.mjs",
+  "site/surface/surface.mjs",
+  "site/surface/setup.mjs"
+ ],
+ "realizedBy": [
+  "ST-01"
+ ],
+ "inventories": [
+  {
+   "generated": "test/standards/generated/wai-aria-1.2.json",
+   "vendored": "app/specs/standards/upstream/wai-aria-1.2.html",
+   "source": {
+    "url": "https://www.w3.org/TR/wai-aria-1.2/",
+    "sha256": "c0fea16fc747779569ab754d2d25bca3e2b7e8a673b8ef5362aeb9ebc73a4849"
+   }
+  }
+ ],
+ "enforcedByKind": {
+  "abstract role": {
+   "suite": "test/page/standards.test.mjs",
+   "how": "axe-core rules: aria-roles"
+  },
+  "role": {
+   "suite": "test/page/standards.test.mjs",
+   "how": "axe-core rules: aria-roles, aria-allowed-role, aria-deprecated-role, aria-required-attr, aria-required-children, aria-required-parent, aria-allowed-attr, aria-prohibited-attr"
+  },
+  "state": {
+   "suite": "test/page/standards.test.mjs",
+   "how": "axe-core rules: aria-valid-attr, aria-valid-attr-value, aria-allowed-attr, aria-conditional-attr, aria-prohibited-attr, aria-required-attr, aria-hidden-focus, aria-hidden-body"
+  },
+  "property": {
+   "suite": "test/page/standards.test.mjs",
+   "how": "axe-core rules: aria-valid-attr, aria-valid-attr-value, aria-allowed-attr, aria-conditional-attr, aria-prohibited-attr, aria-required-attr, aria-braille-equivalent, aria-roledescription"
+  }
+ }
+}
