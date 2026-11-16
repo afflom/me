@@ -90,7 +90,7 @@ button.pr-go[aria-current="page"] { background: color-mix(in oklch, var(--vr-ver
 .pr-detail > summary::-webkit-details-marker { display: none; }
 .pr-detail > summary::after { content: ""; flex: none; width: 0.5rem; height: 0.5rem; margin-inline-start: auto; border-right: 2px solid var(--muted-foreground); border-bottom: 2px solid var(--muted-foreground); transform: rotate(-45deg); transition: transform var(--duration) var(--ease); }
 .pr-detail[open] > summary::after { transform: rotate(45deg); }
-.pr-detail > summary:focus-visible { outline: 2px solid var(--ring); outline-offset: -2px; }
+.pr-detail > summary:focus-visible { outline: 2px solid var(--vr-verdant); outline-offset: -2px; }
 .pr-detail > .pr-controls { padding: 0 var(--space-4) var(--space-3); }
 /* A service's steps: the done ones ticked, the next one a button with how to do it. */
 .pr-steps { list-style: none; margin: 0; padding: 0 var(--space-4) var(--space-4); display: flex; flex-direction: column; gap: var(--space-2); counter-reset: step; }
@@ -124,7 +124,7 @@ button.pr-go[aria-current="page"] { background: color-mix(in oklch, var(--vr-ver
 .pr input[role="switch"]:checked { background: var(--primary); }
 .pr input[role="switch"]:checked::after { transform: translateX(1.25rem); background: var(--primary-foreground); }
 #pr-halt:checked { background: var(--destructive); }
-.pr input[role="switch"]:focus-visible { outline: var(--ring-width) solid var(--ring); outline-offset: var(--ring-offset); }
+.pr input[role="switch"]:focus-visible { outline: var(--ring-width) solid var(--vr-verdant); outline-offset: var(--ring-offset); }
 .pr-file { display: inline-flex; align-items: center; min-height: 2.75rem; padding: 0 var(--space-4); border-radius: var(--radius-control); border: var(--border-width) solid var(--border); background: var(--secondary); color: var(--secondary-foreground); font-size: var(--text-14); font-weight: 500; cursor: pointer; }
 .pr-file:hover { background: var(--accent); }
 .pr-file input { position: absolute; width: 1px; height: 1px; opacity: 0; }
@@ -229,7 +229,7 @@ html:not(.immersive) body {
 .pr-list .pr-group-rows { list-style: none; margin: 0; padding: 0; }
 .pr-list > li.pr-group > h3.pr-section { margin: 0; padding: var(--space-4) 0 var(--space-1); font-family: var(--font-mono); font-size: var(--text-14); font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--vr-verdant); }
 .pr-list > li.pr-section { padding: var(--space-4) 0 var(--space-1); border-top: 0; font-family: var(--font-mono); font-size: var(--text-14); font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; color: var(--vr-verdant); }
-.pr-item.pr-now .pr-when { color: var(--vr-solar); }
+.pr-item.pr-now .pr-when { color: var(--foreground); font-weight: 600; }
 .pr-item.pr-now { box-shadow: inset 2px 0 0 var(--vr-solar); padding-inline-start: var(--space-2); }
 .pr-item.pr-clash { box-shadow: inset 2px 0 0 var(--warning); padding-inline-start: var(--space-2); }
 .pr-item.pr-clash .pr-when { color: var(--warning); }

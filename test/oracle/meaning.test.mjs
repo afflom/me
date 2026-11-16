@@ -9,18 +9,15 @@
 // QR-15's thresholds are its quality record's.
 // usage: PAGE_SITE=<built site> node --test test/oracle/meaning.test.mjs
 import assert from "node:assert/strict";
-import { createReadStream, existsSync, readFileSync } from "node:fs";
-import { createServer } from "node:http";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { extname, join, resolve } from "node:path";
 import test from "node:test";
 import { drawOn } from "../../site/coherence/sense.mjs";
 import { PROVIDERS } from "../../site/router/table.mjs";
+import { serve } from "./examples.mjs";
 
 const { chromium } = createRequire(import.meta.url)("playwright");
-const site = resolve(process.env.PAGE_SITE ?? "site");
 const published = process.env.PAGE_URL;
-const types = { ".html": "text/html", ".mjs": "text/javascript", ".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".wasm": "application/wasm", ".svg": "image/svg+xml", ".webmanifest": "application/manifest+json" };
 const read = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
 const record = read("../../app/specs/product/quality/QR-15.json");
 const threshold = Object.fromEntries(record.measures.map((m) => [m.key, m.threshold]));
@@ -51,19 +48,8 @@ const spearman = (xs, ys) => {
   return cov / Math.sqrt(va * vb);
 };
 
-const server = createServer((request, response) => {
-  let path = decodeURIComponent(new URL(request.url, "http://localhost").pathname).replace(/^\/me\//, "/");
-  if (path.endsWith("/")) path += "index.html";
-  const file = resolve(join(site, path));
-  if (!file.startsWith(site) || !existsSync(file)) return response.writeHead(404).end();
-  response.writeHead(200, { "content-type": types[extname(file)] ?? "application/octet-stream" });
-  createReadStream(file).pipe(response);
-});
-const origin = async () => {
-  if (published) return published.replace(/\/$/, "");
-  if (!server.listening) await new Promise((done) => server.listen(0, "127.0.0.1", done));
-  return `http://127.0.0.1:${server.address().port}/me`;
-};
+let served;
+const origin = async () => published?.replace(/\/$/, "") ?? (served ??= await serve()).base;
 
 test("the meaning model ranks the benchmark's pairs as its annotators do, and near is their same topic (QR-15)", { timeout: 900000 }, async () => {
   assert.equal(PROVIDERS.meaning?.kind, "compiled", "the router spec compiles the meaning model in");
@@ -133,6 +119,6 @@ test("Ask finds a kept caption from its pair where their words alone miss each o
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
-    if (server.listening) server.close();
+    served?.close();
   }
 });

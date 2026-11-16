@@ -31,13 +31,14 @@ app/specs/standards/texts/<sha256>, never from the network; --fetch keeps a pin 
 
 usage: python3 -I tools/oracle/vcard.py [--check] [--fetch]
 """
-import hashlib
 import json
 import pathlib
 import re
 import sys
-import urllib.request
 import xml.etree.ElementTree as ET
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "standards"))
+import abnf  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SPEC = json.loads((ROOT / "app/specs/oracle/vcard.json").read_text(encoding="utf-8"))
@@ -54,41 +55,7 @@ def refuse(why):
 
 
 def fetch(source, headers={}):
-    url, sha256 = source["url"], source["sha256"]
-    path = TEXTS / sha256
-    if not path.exists() and "--fetch" not in args:
-        refuse(f"{url} is not kept at {path.relative_to(ROOT)}: run this with --fetch")
-    data = path.read_bytes() if path.exists() else urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=120).read()
-    if hashlib.sha256(data).hexdigest() != sha256:
-        refuse(f"{url} is {hashlib.sha256(data).hexdigest()}, not the pinned {sha256}")
-    path.exists() or path.write_bytes(data)
-    return data.decode("utf-8")
-
-
-def unpaginate(text):
-    """The RFC's text without its page breaks (footer, form feed, header)."""
-    lines = text.replace("\r\n", "\n").split("\n")
-    out, i = [], 0
-    while i < len(lines):
-        line = lines[i]
-        if line.startswith("\f"):
-            while out and not out[-1].strip():
-                out.pop()
-            if out and re.search(r"\[Page \d+\]\s*$", out[-1]):
-                out.pop()
-            while out and not out[-1].strip():
-                out.pop()
-            i += 1
-            if i < len(lines) and lines[i].startswith("RFC "):
-                i += 1
-            while i < len(lines) and not lines[i].strip():
-                i += 1
-            if not (out and i < len(lines) and out[-1].startswith("   ") and lines[i].startswith("   ")):
-                out.append("")
-            continue
-        out.append(line)
-        i += 1
-    return "\n".join(out)
+    return abnf.kept_bytes(source["url"], source["sha256"], TEXTS, refuse, "--fetch" in args, headers).decode("utf-8")
 
 
 source = {s["key"]: s for s in SPEC["sources"]}
@@ -96,7 +63,7 @@ rfc = SPEC["sources"][0]
 pinned = next((s for s in ORACLE["sources"] if s["key"] == rfc["key"]), None)
 if not pinned or pinned["sha256"] != rfc["sha256"]:
     refuse(f"{rfc['key']} must be the source app/specs/oracle/spec.json pins, at the same sha256")
-text = unpaginate(fetch(rfc))
+text = abnf.unpaginate(fetch(rfc), examples=True)
 registry = ET.fromstring(fetch(source["iana-vcard"]))
 NS = "{http://www.iana.org/assignments}"
 
@@ -244,7 +211,7 @@ EXTENSIONS = {}
 for src in SPEC["sources"]:
     if src.get("extends") != STANDARD:
         continue
-    t = unpaginate(fetch(src))
+    t = abnf.unpaginate(fetch(src), examples=True)
     for erratum in src.get("errata", []):
         if t.count(erratum["says"]) != 1:
             refuse(f"{src['key']} erratum {erratum['id']} is not text it holds once")
