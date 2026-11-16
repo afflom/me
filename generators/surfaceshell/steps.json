@@ -1,0 +1,21 @@
+{
+  "comment": "The steps of the surface shell program (generators/surfaceshell/), run in order by tools/generators/run.sh. A step reads repository files and the .gen/ outputs of this program's earlier steps only.",
+  "steps": [
+    {
+      "generator": "classes",
+      "inputs": [
+        "site/card.css"
+      ],
+      "output": ".gen/shell-classes"
+    },
+    {
+      "generator": "setup",
+      "inputs": [
+        "app/specs/surface/spec.json",
+        ".gen/shell-classes",
+        "site/card.html"
+      ],
+      "output": "site/surface/setup.mjs"
+    }
+  ]
+}
