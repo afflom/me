@@ -1,0 +1,11 @@
+[
+  {"id": "unicode-messageformat-2-functions-string-0", "ref": "test/tests/functions/string.json#/tests/0", "text": ".input {$foo :string} .match $foo |1| {{one}} * {{other}}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-string-1", "ref": "test/tests/functions/string.json#/tests/1", "text": ".input {$foo :string} .match $foo 1 {{one}} * {{other}}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-string-2", "ref": "test/tests/functions/string.json#/tests/2", "text": ".input {$foo :string} .match $foo 1 {{one}} * {{other}}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-string-3", "ref": "test/tests/functions/string.json#/tests/3", "text": ".input {$foo :string} .match $foo 1 {{one}} * {{other}}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-string-4", "ref": "test/tests/functions/string.json#/tests/4", "text": ".local $x = {\u1E0A\u0323 :string} .match $x \u1E0A\u0323 {{Not normalized}} \u1E0C\u0307 {{Normalized}} * {{Wrong}}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-string-5", "ref": "test/tests/functions/string.json#/tests/5", "text": ".local $x = {\u1E0A\u0323 :string} .match $x |\u1E0A\u0323| {{Not normalized}} |\u1E0C\u0307| {{Normalized}} * {{Wrong}}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-string-6", "ref": "test/tests/functions/string.json#/tests/6", "text": ".local $x = {\u1E0A\u0323 :string} .match $x \u1E0A\u0323 {{Not normalized}} |\u1E0C\u0307| {{Normalized}} * {{Wrong}}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-string-7", "ref": "test/tests/functions/string.json#/tests/7", "text": ".local $x = {\u1E0A\u0323 :string} .match $x \u1E0C\u0307 {{Right}} * {{Wrong}}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-string-8", "ref": "test/tests/functions/string.json#/tests/8", "text": ".local $x = {\u1E0C\u0307 :string} .match $x \u1E0A\u0323 {{Right}} * {{Wrong}}", "kind": "test"}
+]
