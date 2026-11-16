@@ -156,19 +156,21 @@ jobs:
                 "$image" bash -c 'set -euo pipefail; mkdir -p "$HOME"; just fmt-check model template-check lint test'
           }
           ready=()
+          : >"$RUNNER_TEMP/refused"
           while read -r number head draft fork; do
             [[ $draft == false && $fork == false ]] || continue
             ok=true
             for name in "page / gates" "acceptance / ubuntu-24.04"; do
               state=$(gh api "repos/$REPO/commits/$head/check-runs" -f check_name="$name" -X GET --jq '[.check_runs[] | .conclusion][0] // "pending"')
               [[ $state == success ]] || ok=false
+              # A check that ended without passing is said once, so a pull request is never left waiting in silence.
+              case $state in success | pending) ;; *) printf '%s %s %s\n' "$number" "$head" "its check \"$name\" ended $state on this head, so it is not green; push to this branch to run it again" >>"$RUNNER_TEMP/refused" ;; esac
             done
             if $ok; then ready+=("$number:$head"); fi
           done < <(gh api "repos/$REPO/pulls?state=open&base=main&sort=created&direction=asc&per_page=50" \
             --jq '.[] | "\(.number) \(.head.sha) \(.draft) \(.head.repo.full_name != .base.repo.full_name)"')
           echo "ready: ${ready[*]:-none}"
           accepted=()
-          : >"$RUNNER_TEMP/refused"
           for entry in "${ready[@]}"; do
             number=${entry%%:*}
             head=${entry#*:}

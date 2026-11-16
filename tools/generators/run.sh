@@ -1,6 +1,8 @@
 #!/bin/sh
 # Runs every step of generators/<program>/steps.json through its program, the
-# programs in name order. Request bounds are in generators/pipeline.json.
+# programs in name order. A program may keep its steps one file each instead, as
+# generators/<program>/steps/*.json in name order, so two changes that each add a
+# step never meet in one file. Request bounds are in generators/pipeline.json.
 # Each program is a LexLean text/3 application, generators/<program>/, built by
 # `prismpm build` and pinned by tools/generators/build.sh. Their Foundation is
 # one module set, generators/foundation/, copied byte for byte into each.
@@ -20,7 +22,7 @@ mode=${1:-write}
 
 # A program is pinned to its sources: a change to generators/<program>/ needs build.sh.
 digest() { # digest PROGRAM
-  sources=$(git ls-files --others --cached --exclude-standard "generators/$1" | grep -v -e "^generators/$1/bin/" -e "^generators/$1/lock.json$" -e "^generators/$1/steps.json$" | sort)
+  sources=$(git ls-files --others --cached --exclude-standard "generators/$1" | grep -v -e "^generators/$1/bin/" -e "^generators/$1/lock.json$" -e "^generators/$1/steps.json$" -e "^generators/$1/steps/" | sort)
   printf '{\n  "comment": "Written by tools/generators/build.sh. GN-01 fails when generators/%s or its program no longer match.",\n  "sources": "%s",\n  "program": "%s"\n}\n' \
     "$1" "$(sha256sum $sources | sha256sum | cut -c1-64)" "$(sha256sum "generators/$1/bin/prism-generators" | cut -c1-64)"
 }
@@ -64,10 +66,10 @@ run() { # run GENERATOR OUTPUT STAGE PATHS... -> appends the written file to $wo
   tail -c +9 "$work/report" >> "$work/out"
 }
 
-for steps_file in generators/*/steps.json; do
-program=$(basename "$(dirname "$steps_file")")
+for lock in generators/*/lock.json; do
+program=$(basename "$(dirname "$lock")"); steps_file="generators/$program/steps.json"
 : > "$work/made"
-js .steps < "$steps_file" | while read -r step; do
+for f in "$steps_file" "generators/$program"/steps/*.json; do [ ! -e "$f" ] || js .steps < "$f"; done | while read -r step; do
   gen=$(echo "$step" | js .generator); out=$(echo "$step" | js .output); ins=$(echo "$step" | js .inputs)
   for f in $ins; do
     case $f in .gen/*) grep -qxF "$f" "$work/made" || {

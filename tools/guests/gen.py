@@ -5,7 +5,7 @@
     python3 -I tools/guests/gen.py write ID DIR     the scratch project that builds guest ID
     python3 -I tools/guests/gen.py record ID WASM   take a built core wasm in: copy, pin, lock
 
-app/specs/guests/spec.json lists every guest: the core wasm the page's Node
+app/specs/guests/<facet>/<id>.json is one guest: the core wasm the page's Node
 suites open, the file that pins it by SHA-256, the app modules it is built
 from (each with its proofs), the dispatch it answers with, and where its
 acceptance vectors come from (the builder's prompt, or a spec whose examples
@@ -15,7 +15,7 @@ straight to that dispatch. tools/guests/build.sh builds each stale project in
 the locked SDK with no network (lexlean lock, fmt, lock, verify, then prismpm
 build) and records `.prism/build/<id>/core-wasm/*.wasm`.
 
-app/specs/guests/lock.json holds, per guest, the SHA-256 of the project `write`
+app/specs/guests/<facet>/<id>.lock.json holds, for that guest, the SHA-256 of the project `write`
 lays out (every input byte the build reads) and of the wasm built from it.
 `check` fails when a guest's modules, vectors or limits changed since it was
 built, when its wasm is not the one recorded, or when its pin says otherwise:
@@ -32,9 +32,9 @@ import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 APP = ROOT / "app"
-SPEC = json.loads((APP / "specs/guests/spec.json").read_text())
-LOCK = APP / "specs/guests/lock.json"
-GUESTS = {g["id"]: g for g in SPEC["guests"]}
+FILES = {p: json.loads(p.read_text()) for p in sorted((APP / "specs/guests").glob("*/*.json"))}
+GUESTS = {g["id"]: g for p, g in FILES.items() if not p.name.endswith(".lock.json")}
+LOCKS = {g["id"]: p.with_name(f"{g['id']}.lock.json") for p, g in FILES.items() if not p.name.endswith(".lock.json")}
 
 
 def pascal(s):
@@ -154,7 +154,7 @@ def pin_line(g):
 
 
 def lock():
-    return json.loads(LOCK.read_text()) if LOCK.exists() else {}
+    return {gid: FILES[p] for gid, p in LOCKS.items() if p in FILES}
 
 
 def problems(gid, held):
@@ -181,9 +181,7 @@ def main(argv):
         line, old = pin_line(g)
         pin = ROOT / g["pin"]
         pin.write_text(pin.read_text().replace(line, line.replace(old, digest)))
-        held = lock()
-        held[argv[1]] = {"source": source(argv[1]), "wasm": digest}
-        LOCK.write_text(json.dumps({k: held[k] for k in GUESTS if k in held}, indent=2) + "\n")
+        LOCKS[argv[1]].write_text(json.dumps({"source": source(argv[1]), "wasm": digest}, indent=2) + "\n")
         print(f"{argv[1]}: {digest}")
     elif argv == ["stale"]:
         held = lock()

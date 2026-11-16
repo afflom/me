@@ -91,9 +91,9 @@ definition{
 
 definition{
   name: ggSha,
-  parameters: [lock : Bytes, gid : Bytes],
+  parameters: [lock : Bytes],
   result: Bytes,
-  body: (Foundation.Json::textAt lock (Foundation.Json::memberAt lock (Foundation.Json::memberAt lock (Foundation.Json::root lock) gid) 0x7761736d)),
+  body: (Foundation.Json::textAt lock (Foundation.Json::memberAt lock (Foundation.Json::root lock) 0x7761736d)),
   axioms: [Quot.sound, propext]
 }
 
@@ -101,7 +101,7 @@ definition{
   name: ggRow,
   parameters: [spec : Bytes, lock : Bytes, e : Nat, here : Bytes],
   result: Bytes,
-  body: (let wasm : Bytes := (ggField spec e "wasm"); (ggApp (ggApp (ggApp (ggApp 0x7b20706174683a2027 (ggSpan wasm ((ggLen here) + 1) (ggLen wasm))) 0x272c207368613235363a2027) (ggSha lock (ggField spec e "id"))) 0x27207d)),
+  body: (let wasm : Bytes := (ggField spec e "wasm"); (ggApp (ggApp (ggApp (ggApp 0x7b20706174683a2027 (ggSpan wasm ((ggLen here) + 1) (ggLen wasm))) 0x272c207368613235363a2027) (ggSha lock)) 0x27207d)),
   axioms: [Quot.sound, propext]
 }
 
@@ -109,7 +109,7 @@ definition{
   name: ggFaulty,
   parameters: [spec : Bytes, lock : Bytes, e : Nat, here : Bytes],
   result: Bool,
-  body: (let wasm : Bytes := (ggField spec e "wasm"); ((not (ggSame (ggSpan wasm 0 ((ggLen here) + 1)) (ggApp here 0x2f))) || ((ggLen (ggSha lock (ggField spec e "id"))) =? 0))),
+  body: (let wasm : Bytes := (ggField spec e "wasm"); ((not (ggSame (ggSpan wasm 0 ((ggLen here) + 1)) (ggApp here 0x2f))) || ((ggLen (ggSha lock)) =? 0))),
   axioms: [Quot.sound, propext]
 }
 
@@ -135,33 +135,67 @@ definition{
 }
 
 definition{
-  name: ggFoldFrom,
+  name: ggIsGuest,
+  parameters: [name : Bytes],
+  result: Bool,
+  body: (let n : Nat := (ggLen name); (if (n <? 11) then false else ((ggSame (ggSpan name (prim subtract n 5 : Nat) n) 0x2e6a736f6e) && (not (ggSame (ggSpan name (prim subtract n 10 : Nat) n) 0x2e6c6f636b2e6a736f6e))))),
+  axioms: [propext]
+}
+
+definition{
+  name: ggLockOf,
+  parameters: [archive : Bytes, name : Bytes],
+  result: Bytes,
+  body: (match (Foundation.Tar::find archive (ggApp (ggSpan name 0 (prim subtract (ggLen name) 4 : Nat)) 0x6c6f636b2e6a736f6e))
+    | Option.none => 0x
+    | Option.some lock => lock),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ggGuestPiece,
   parameters: [
+    archive : Bytes,
+    name : Bytes,
     spec : Bytes,
-    lock : Bytes,
-    gs : (Option Nat),
     target : Bytes,
     here : Bytes,
     mode : Nat,
-    i : Nat,
+    acc : Bytes
+  ],
+  result: Bytes,
+  body: (match (Foundation.Json::root spec)
+    | Option.none => acc
+    | Option.some e => (if (ggSame (ggField spec e "pin") target) then (ggPiece spec (ggLockOf archive name) e here mode acc) else acc)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ggFoldFrom,
+  parameters: [
+    archive : Bytes,
+    target : Bytes,
+    here : Bytes,
+    mode : Nat,
+    header : Nat,
     acc : Bytes,
     fuel : Nat
   ],
   result: Bytes,
   body: (match fuel
     | Nat.zero => acc
-    | Nat.succ rest => (match (Foundation.Json::elementAt spec gs i)
+    | Nat.succ rest => (if ((ggAt archive header) =? 0) then acc else (let name : Bytes := (Foundation.Tar::entryName archive header); (let size : Nat := (Foundation.Tar::entrySize archive header); (ggFoldFrom archive target here mode ((header + 512) + (Foundation.Tar::padded size)) (if (ggIsGuest name) then (match (Foundation.Bytes::sliceBytes archive (header + 512) size)
       | Option.none => acc
-      | Option.some e => (ggFoldFrom spec lock gs target here mode (i + 1) (if (ggSame (ggField spec e "pin") target) then (ggPiece spec lock e here mode acc) else acc) rest))),
+      | Option.some spec => (ggGuestPiece archive name spec target here mode acc)) else acc) rest))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
   name: ggFold,
-  parameters: [spec : Bytes, lock : Bytes, target : Bytes, here : Bytes, mode : Nat],
+  parameters: [archive : Bytes, target : Bytes, here : Bytes, mode : Nat],
   result: Bytes,
-  body: (ggFoldFrom spec lock (Foundation.Json::memberAt spec (Foundation.Json::root spec) 0x677565737473) target here mode 0 0x (ggLen spec)),
+  body: (ggFoldFrom archive target here mode 0 0x (ggLen archive)),
   axioms: [Quot.sound, propext]
 }
 
@@ -316,9 +350,9 @@ definition{
 
 definition{
   name: ggRender,
-  parameters: [spec : Bytes, lock : Bytes, target : Bytes],
+  parameters: [archive : Bytes, target : Bytes],
   result: (Option Bytes),
-  body: (let k : Nat := (ggLastSlash target); (let here : Bytes := (ggSpan target 0 k); (let facet : Bytes := (ggSpan here ((ggLastSlash here) + 1) k); (let n : Nat := (ggLen (ggFold spec lock target here 3)); (if (((n =? 0) || (0 <? (ggLen (ggFold spec lock target here 5)))) || (not (ggSame (ggSpan target k (ggLen target)) 0x2f67756573742e6d6a73))) then (ctor Option.none [Bytes]) else (let head : Bytes := (ggApp (ggApp (ggApp (ggApp (ggHead1) (if (n =? 1) then 0x else 0x73)) 0x206f6620) (ggFold spec lock target here 0)) (ggHead2)); (let body : Bytes := (if (n =? 1) then (ggApp (ggApp 0x6578706f727420636f6e7374204755455354203d20 (ggFold spec lock target here 2)) 0x3b0a) else (ggApp (ggApp 0x6578706f727420636f6e737420475545535453203d207b0a (ggFold spec lock target here 1)) 0x7d3b0a)); (ctor Option.some [Bytes] (ggApp (ggApp (ggApp (ggApp (ggApp head body) (ggCore1)) facet) (ggCore2)) (if (0 <? (ggLen (ggFold spec lock target here 4))) then (ggSync) else 0x)))))))))),
+  body: (let k : Nat := (ggLastSlash target); (let here : Bytes := (ggSpan target 0 k); (let facet : Bytes := (ggSpan here ((ggLastSlash here) + 1) k); (let n : Nat := (ggLen (ggFold archive target here 3)); (if (((n =? 0) || (0 <? (ggLen (ggFold archive target here 5)))) || (not (ggSame (ggSpan target k (ggLen target)) 0x2f67756573742e6d6a73))) then (ctor Option.none [Bytes]) else (let head : Bytes := (ggApp (ggApp (ggApp (ggApp (ggHead1) (if (n =? 1) then 0x else 0x73)) 0x206f6620) (ggFold archive target here 0)) (ggHead2)); (let body : Bytes := (if (n =? 1) then (ggApp (ggApp 0x6578706f727420636f6e7374204755455354203d20 (ggFold archive target here 2)) 0x3b0a) else (ggApp (ggApp 0x6578706f727420636f6e737420475545535453203d207b0a (ggFold archive target here 1)) 0x7d3b0a)); (ctor Option.some [Bytes] (ggApp (ggApp (ggApp (ggApp (ggApp head body) (ggCore1)) facet) (ggCore2)) (if (0 <? (ggLen (ggFold archive target here 4))) then (ggSync) else 0x)))))))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -326,11 +360,7 @@ definition{
   name: ggGuestPin,
   parameters: [archive : Bytes, target : Bytes],
   result: (Option Bytes),
-  body: (match (Foundation.Tar::find archive 0x6170702f73706563732f6775657374732f737065632e6a736f6e)
-    | Option.none => (ctor Option.none [Bytes])
-    | Option.some spec => (match (Foundation.Tar::find archive 0x6170702f73706563732f6775657374732f6c6f636b2e6a736f6e)
-      | Option.none => (ctor Option.none [Bytes])
-      | Option.some lock => (ggRender spec lock target))),
+  body: (ggRender archive target),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}
