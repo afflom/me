@@ -1,0 +1,208 @@
+\begin{lexlean}{GenSenses}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\title{Senses cases generator}
+\begin{semanticmodule}
+definition{
+  name: senU,
+  parameters: [value : String],
+  result: Bytes,
+  body: (Foundation.Utf8::encode value)
+}
+
+definition{
+  name: senCat,
+  parameters: [parts : (List Bytes)],
+  result: Bytes,
+  body: (match parts
+    | List.nil => 0x
+    | List.cons head rest => (Foundation.Bytes::appendBytes head (senCat rest))),
+  recursive_argument: parts
+}
+
+definition{
+  name: senStartsAt,
+  parameters: [s : Bytes, i : Nat, pattern : Bytes],
+  result: Bool,
+  body: (Foundation.Tar::sameBytes (Foundation.Json::span s i (i + (Foundation.Bytes::byteLength pattern))) pattern),
+  axioms: [propext]
+}
+
+definition{
+  name: senFind,
+  parameters: [s : Bytes, i : Nat, pattern : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (Foundation.Bytes::byteLength s)
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then (Foundation.Bytes::byteLength s) else (if (senStartsAt s i pattern) then i else (senFind s (i + 1) pattern rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: senSkip,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((Foundation.Tar::byteOr s i) =? 32) then (senSkip s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: senIsLetter,
+  parameters: [b : Nat],
+  result: Bool,
+  body: (((64 <? b) && (b <? 91)) || ((96 <? b) && (b <? 123)))
+}
+
+definition{
+  name: senNameEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (senIsLetter (Foundation.Tar::byteOr s i)) then (senNameEnd s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: senLess,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bool,
+  body: (prim equal (prim compare_bytes a b : Ordering) (prim compare_bytes 0x00 0x01 : Ordering) : Bool),
+  axioms: [propext]
+}
+
+definition{
+  name: senIs,
+  parameters: [s : Bytes, a : Nat, e : Nat, word : Bytes],
+  result: Bool,
+  body: ((senStartsAt s a word) && ((a + (Foundation.Bytes::byteLength word)) =? e)),
+  axioms: [propext]
+}
+
+definition{
+  name: senDigits,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr s i); (((47 <? b) && (b <? 58)) && (senDigits s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: senStamp,
+  parameters: [s : Bytes, a : Nat, e : Nat],
+  result: Bytes,
+  body: (if (((((a + 16) =? e) && (senDigits s a 8)) && (((Foundation.Tar::byteOr s (a + 8)) =? 84) && (senDigits s (a + 9) 6))) && ((Foundation.Tar::byteOr s (a + 15)) =? 90)) then (senCat (cons (Foundation.Json::span s (a + 0) (a + 4)) (cons 0x2d (cons (Foundation.Json::span s (a + 4) (a + 6)) (cons 0x2d (cons (Foundation.Json::span s (a + 6) (a + 8)) (cons 0x54 (cons (Foundation.Json::span s (a + 9) (a + 11)) (cons 0x3a (cons (Foundation.Json::span s (a + 11) (a + 13)) (cons 0x3a (cons (Foundation.Json::span s (a + 13) (a + 15)) (cons 0x5a (nil Bytes)))))))))))))) else 0x),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: senScan,
+  parameters: [
+    s : Bytes,
+    i : Nat,
+    cal : Bool,
+    ev : Bool,
+    tz : Bool,
+    uid : Bytes,
+    st : Bytes,
+    en : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then acc else (let e : Nat := (senFind s i 0x0a (Foundation.Bytes::byteLength s)); (let a : Nat := (senSkip s i (Foundation.Bytes::byteLength s)); (if (senIs s a e 0x424547494e3a5643414c454e444152) then (senScan s (e + 1) true false false 0x 0x 0x acc rest) else (if (senIs s a e 0x454e443a5643414c454e444152) then (senScan s (e + 1) false false false 0x 0x 0x acc rest) else (if (not cal) then (senScan s (e + 1) cal ev tz uid st en acc rest) else (if (senIs s a e 0x424547494e3a564556454e54) then (senScan s (e + 1) cal true tz 0x 0x 0x acc rest) else (if (senIs s a e 0x454e443a564556454e54) then (if (((ev && (not ((Foundation.Bytes::byteLength uid) =? 0))) && (not ((Foundation.Bytes::byteLength st) =? 0))) && (not ((Foundation.Bytes::byteLength en) =? 0))) then (senScan s (e + 1) cal false tz 0x 0x 0x (Foundation.Bytes::appendBytes acc (senCat (cons 0x6576656e7420 (cons st (cons 0x20 (cons en (cons 0x20 (cons uid (cons 0x0a (nil Bytes)))))))))) rest) else (senScan s (e + 1) cal false tz 0x 0x 0x acc rest)) else (if (senIs s a e 0x424547494e3a5654494d455a4f4e45) then (senScan s (e + 1) cal ev true uid st en acc rest) else (if (senIs s a e 0x454e443a5654494d455a4f4e45) then (senScan s (e + 1) cal ev false uid st en acc rest) else (if (tz && (senStartsAt s a 0x545a49443a)) then (senScan s (e + 1) cal ev tz uid st en (Foundation.Bytes::appendBytes acc (senCat (cons 0x7a6f6e6520 (cons (Foundation.Json::span s (a + 5) e) (cons 0x0a (nil Bytes)))))) rest) else (if (ev && (senStartsAt s a 0x5549443a)) then (senScan s (e + 1) cal ev tz (Foundation.Json::span s (a + 4) e) st en acc rest) else (if (ev && (senStartsAt s a 0x445453544152543a)) then (senScan s (e + 1) cal ev tz uid (senStamp s (a + 8) e) en acc rest) else (if (ev && (senStartsAt s a 0x4454454e443a)) then (senScan s (e + 1) cal ev tz uid st (senStamp s (a + 6) e) acc rest) else (senScan s (e + 1) cal ev tz uid st en acc rest)))))))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: senEvents,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (senU "app/specs/standards/texts/c256f809479d98aa23d71bbd1658b3800ea9f13f41ca56e59c8d2de1b31cbfcb"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (ctor Option.some [Bytes] (senScan s 0 false false false 0x 0x 0x 0x (Foundation.Bytes::byteLength s)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: senPick,
+  parameters: [s : Bytes, i : Nat, now : Bytes, under : Bool, best : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => best
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then best else (let e : Nat := (senFind s i 0x0a (Foundation.Bytes::byteLength s)); (if (not (senStartsAt s i 0x6576656e7420)) then (senPick s (e + 1) now under best rest) else (if ((if under then ((not (senLess now (Foundation.Json::span s (i + 6) (i + 26)))) && (senLess now (Foundation.Json::span s (i + 27) (i + 47)))) else (senLess now (Foundation.Json::span s (i + 6) (i + 26)))) && (((Foundation.Bytes::byteLength best) =? 0) || (senLess (Foundation.Json::span s (i + 6) (i + 26)) (Foundation.Json::span best 0 20)))) then (senPick s (e + 1) now under (Foundation.Json::span s (i + 6) e) rest) else (senPick s (e + 1) now under best rest)))))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: senZone,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then 0x else (let e : Nat := (senFind s i 0x0a (Foundation.Bytes::byteLength s)); (if (senStartsAt s i 0x7a6f6e6520) then (Foundation.Json::span s (i + 5) e) else (senZone s (e + 1) rest))))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: senHeld,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then acc else (let e : Nat := (senFind s i 0x0a (Foundation.Bytes::byteLength s)); (senHeld s (e + 1) (if (senStartsAt s i 0x6576656e7420) then (senCat (cons acc (cons 0x68656c6420 (cons (Foundation.Json::span s (i + 6) e) (cons 0x5c6e (nil Bytes)))))) else acc) rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: senCase,
+  parameters: [base : Bytes, now : Bytes, zone : Bytes, under : Bytes, later : Bytes, held : Bytes],
+  result: Bytes,
+  body: (senCat (cons 0x202020205b22666c6174 (cons 0x5c6e (cons 0x6261736520 (cons base (cons 0x5c6e (cons 0x6e6f7720 (cons now (cons 0x5c6e (cons (if ((Foundation.Bytes::byteLength zone) =? 0) then 0x else (senCat (cons 0x7a6f6e6520 (cons zone (cons 0x5c6e (nil Bytes)))))) (cons held (cons 0x222c2022 (cons (if ((Foundation.Bytes::byteLength zone) =? 0) then 0x else (senCat (cons 0x74696d655a6f6e6520 (cons zone (cons 0x5c6e (nil Bytes)))))) (cons (if ((Foundation.Bytes::byteLength under) =? 0) then 0x else (senCat (cons 0x7363686564756c654e6f7720 (cons (senCat (cons (Foundation.Json::span under 0 20) (cons 0x2f (cons (Foundation.Json::span under 21 41) (cons (Foundation.Json::span under 41 (Foundation.Bytes::byteLength under)) (nil Bytes)))))) (cons 0x5c6e (nil Bytes)))))) (cons (if ((Foundation.Bytes::byteLength later) =? 0) then 0x else (senCat (cons 0x7363686564756c654e65787420 (cons (senCat (cons (Foundation.Json::span later 0 20) (cons 0x2f (cons (Foundation.Json::span later 21 41) (cons (Foundation.Json::span later 41 (Foundation.Bytes::byteLength later)) (nil Bytes)))))) (cons 0x5c6e (nil Bytes)))))) (cons 0x225d (nil Bytes)))))))))))))))))
+}
+
+definition{
+  name: senCases,
+  parameters: [c : Bytes, s : Bytes, base : Bytes, k : Nat, acc : Bytes, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.some [Bytes] acc)
+    | Nat.succ rest => (let now : Bytes := (Foundation.Json::textAt c (Foundation.Json::elementAt c (Foundation.Json::memberAt c (Foundation.Json::root c) 0x636c6f636b73) k)); (let under : Bytes := (senPick s 0 now true 0x (Foundation.Bytes::byteLength s)); (let later : Bytes := (senPick s 0 now false 0x (Foundation.Bytes::byteLength s)); (if ((not ((Foundation.Bytes::byteLength now) =? 20)) || (((Foundation.Bytes::byteLength under) =? 0) && ((Foundation.Bytes::byteLength later) =? 0))) then (ctor Option.none [Bytes]) else (senCases c s base (k + 1) (Foundation.Bytes::appendBytes acc (Foundation.Bytes::appendBytes (if ((Foundation.Bytes::byteLength acc) =? 0) then 0x else 0x2c0a) (senCase base now (senZone s 0 (Foundation.Bytes::byteLength s)) under later (senHeld s 0 0x (Foundation.Bytes::byteLength s))))) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: senGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (senU "app/specs/senses/clocks.json"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some c => (match (Foundation.Tar::find archive (senU ".gen/senses-events"))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some s => (let base : Bytes := (Foundation.Json::textAt c (Foundation.Json::memberAt c (Foundation.Json::root c) 0x62617365)); (let n : Nat := (Foundation.Json::countAt c (Foundation.Json::memberAt c (Foundation.Json::root c) 0x636c6f636b73)); (if ((((n =? 0) || ((Foundation.Bytes::byteLength base) =? 0)) || (not ((senFind s 0 0x22 (Foundation.Bytes::byteLength s)) =? (Foundation.Bytes::byteLength s)))) || ((not ((senFind s 0 0x5c (Foundation.Bytes::byteLength s)) =? (Foundation.Bytes::byteLength s))) || (not ((senFind base 0 0x22 (Foundation.Bytes::byteLength base)) =? (Foundation.Bytes::byteLength base))))) then (ctor Option.none [Bytes]) else (match (senCases c s base 0 0x n)
+        | Option.none => (ctor Option.none [Bytes])
+        | Option.some rows => (ctor Option.some [Bytes] (senCat (cons 0x7b0a202022636f6d6d656e74223a20225772697474656e2062792067656e657261746f72732f73656e736573202873656e7365736361736573292066726f6d205246432035353435206174206974732070696e6e656420627974657320616e64206170702f73706563732f73656e7365732f636c6f636b732e6a736f6e3a20646f206e6f7420656469742e2045616368206578616d706c6520697320612027666c6174272072657175657374206f66207468652073656e73657320677565737420616e642069747320616e73776572206174206f6e652070696e6e656420636c6f636b2e205468652074696d65207a6f6e652069732074686520545a4944206f6620746865205246432773205654494d455a4f4e45206578616d706c652e20546865207265717565737420686f6c64732c206173202768656c6427206c696e65732c20657665727920564556454e54206f6620746865205246432773206943616c656e646172206f626a656374732074686174206769766573204454535441525420616e64204454454e4420696e205554432c207769746820697473205549442c20737461727420616e6420656e642061732074686520524643207072696e7473207468656d2c207772697474656e2061732052464320333333393b2074686520616e73776572206e616d657320746865206f6e6520756e646572207761792061742074686520636c6f636b20616e6420746865206e65787420746f20626567696e2c2063686f73656e20686572652061706172742066726f6d207468652067756573742e222c0a2020226578616d706c6573223a205b0a (cons rows (cons 0x0a20205d0a7d0a (nil Bytes)))))))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

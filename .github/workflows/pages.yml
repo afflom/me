@@ -102,6 +102,12 @@ jobs:
       # tag or a manual run proves in full. A reused proof leaves no holo, so
       # the holo is then built (six minutes, no proof) and must carry the very
       # build ID the reused attestation verified, or this job fails.
+      #
+      # The merge train merges with the workflow's own token, which starts no
+      # push run, so it dispatches this workflow on main instead. That dispatch
+      # stands for the push and is named so here, or every publish would prove
+      # in full (30 minutes, and main's run for #162 was cut at the job limit).
+      # A run a person starts by hand is still a manual run and proves in full.
       - name: Name the SDK image digest and the Lean toolchain the proof runs on
         id: proof-inputs
         shell: bash
@@ -133,7 +139,7 @@ jobs:
       # `xtask proof-reuse` still accepts it only if it binds main's checkout,
       # and any failure here just means: prove in full.
       - name: On main, the proof the merged pull request's page build kept
-        if: steps.proof-cache.outputs.cache-hit != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: steps.proof-cache.outputs.cache-hit != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
@@ -150,7 +156,7 @@ jobs:
           echo "candidate proof from the merged pull request's run $run"
       - name: Build and verify the holo through the locked SDK
         env:
-          PRISM_PROOF_EVENT: ${{ github.event_name }}:${{ github.ref }}
+          PRISM_PROOF_EVENT: ${{ (github.event_name == 'workflow_dispatch' && github.actor == 'github-actions[bot]') && 'push' || github.event_name }}:${{ github.ref }}
         shell: bash
         run: |
           set -euo pipefail
