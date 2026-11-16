@@ -1,0 +1,89 @@
+\begin{lexlean}{GenAnno}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\title{Annotation test assertions generator}
+\begin{semanticmodule}
+definition{
+  name: annoPart,
+  parameters: [s : Bytes, start : Nat, stop : Nat],
+  result: Bytes,
+  body: (match (Foundation.Bytes::sliceBytes s start (prim subtract stop start : Nat))
+    | Option.none => 0x
+    | Option.some b => b)
+}
+
+definition{
+  name: annoAfterSlash,
+  parameters: [s : Bytes, i : Nat, last : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => last
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then last else (annoAfterSlash s (i + 1) (if ((Foundation.Tar::byteOr s i) =? 47) then (i + 1) else last) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: annoHyphen,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then i else (if ((Foundation.Tar::byteOr s i) =? 45) then i else (annoHyphen s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: annoJoin,
+  parameters: [a : Bytes, b : Bytes, c : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes a (Foundation.Bytes::appendBytes b c))
+}
+
+definition{
+  name: annoEntry,
+  parameters: [path : Bytes, kind : Bytes],
+  result: Bytes,
+  body: (let n : Nat := (Foundation.Bytes::byteLength path); (let base : Nat := (annoAfterSlash path 0 0 n); (let stem : Bytes := (annoPart path base (prim subtract n 5 : Nat)); (let section : Bytes := (annoPart path base (annoHyphen path base n)); (annoJoin (annoJoin 0x20207b226964223a20227733632d616e6e6f746174696f6e2d6d6f64656c2d stem 0x222c2022726566223a2022) (annoJoin section 0x222c202274657874223a2022 path) (annoJoin 0x222c20226b696e64223a2022 kind 0x227d)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: annoEntries,
+  parameters: [s : Bytes, list : (Option Nat), k : Nat, kind : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s list k)
+      | Option.none => acc
+      | Option.some e => (annoEntries s list (k + 1) kind (annoJoin acc (if (k =? 0) then 0x else 0x2c0a) (annoEntry (Foundation.Json::textAt s (ctor Option.some [Nat] e)) kind)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: annoList,
+  parameters: [s : Bytes],
+  result: (Option Bytes),
+  body: (let list : (Option Nat) := (Foundation.Json::memberAt s (Foundation.Json::root s) 0x617373657274696f6e73); (let kind : Bytes := (match (Foundation.Json::memberAt s (Foundation.Json::root s) 0x736b69704661696c75726573)
+    | Option.none => 0x6d757374
+    | Option.some skipped => 0x6f7074696f6e616c); (if ((Foundation.Json::countAt s list) =? 0) then (ctor Option.none [Bytes]) else (ctor Option.some [Bytes] (annoJoin 0x5b0a (annoEntries s list 0 kind 0x (Foundation.Json::countAt s list)) 0x0a5d0a))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: annoGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Bytes::sliceBytes archive 512 (Foundation.Tar::entrySize archive 0))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some test => (annoList test)),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

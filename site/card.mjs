@@ -4,7 +4,8 @@
 // vault, R4, the routed models and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
 import { lines, timeOf, utcOf } from "./time/recur.mjs";
-import { PLACES, ACTS, LABELS, FLOORS, SETTINGS, SECTIONS, SETUP, WORDS, DOMAINS, FEEDERS, FONTS } from "./surface/surface.mjs";
+import { PLACES, ACTS, LABELS, FLOORS, SETTINGS, SECTIONS, WORDS, DOMAINS, FEEDERS, FONTS } from "./surface/surface.mjs";
+import { makeSetup } from "./surface/setup.mjs";
 // The coherence registry's runtime: what an item is about, what an Ask is
 // after, and Today. Loaded once there is something kept or asked, so an
 // ordinary first visit fetches none of it.
@@ -153,7 +154,7 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
       ...(Number.isNaN(start) ? { undated: true } : {}), ...(method ? { method } : {}), ...(uid ? { uid, sequence } : {}), ...(recurrence ? { recurrence } : {}), ...(more.length ? { more } : {}) };
   }
   if (base.media === "contactCard") {
-    // Every property it holds, read as RFC 6350 defines it (site/read/vcard.mjs).
+    // Every property it holds, read as RFC 6350 defines it (the vcard guest, site/read/read.mjs).
     const card = reader?.readCard ? reader.readCard(text) : null;
     if (card) {
       // Of several instances, the one the card prefers (5.3 PREF: 1 is most preferred).
@@ -496,8 +497,9 @@ export default async function start({ app, reason, $ }) {
   // fetches none of it.
   let deviceOpen = null;
   const deviceOf = () => (deviceOpen ??= (async () => {
-    const [{ openDevice }, { ingestInto }, host] = await Promise.all([import("./device/device.mjs"), import("./google/ingest.mjs"), import("./device/host.mjs")]);
-    const source = openDevice({ decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted, lanes: host.lanes(), source: (rest) => line(`source ${rest}`), arrived: noteArrived });
+    const [{ openDevice }, { ingestInto }, host, read] = await Promise.all([import("./device/device.mjs"), import("./google/ingest.mjs"), import("./device/host.mjs"), import("./read/read.mjs")]);
+    reader ??= read;
+    const source = openDevice({ decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted, vcard: read.vcard, lanes: host.lanes(), source: (rest) => line(`source ${rest}`), arrived: noteArrived });
     return { source, ask: (more = {}) => host.plan({ decide: (rest) => line(`host ${rest}`), halted, ...more }) };
   })());
   async function reportDevice(t) {
@@ -700,7 +702,7 @@ export default async function start({ app, reason, $ }) {
     const turn = ++painting;
     // The home's cards count every place and offer each one's feeder.
     homeCards();
-    paintSetup();
+    setup.paint();
     list.hidden = !items.length;
     if (!items.length) { list.replaceChildren(emptyRow()); return; }
     const { today, lineOf } = await coherence();
@@ -869,7 +871,7 @@ export default async function start({ app, reason, $ }) {
   }
   for (const button of document.querySelectorAll("#pr-home .pr-card-go")) button.addEventListener("click", () => go(button.dataset.place, true));
   for (const button of document.querySelectorAll("#pr-home .pr-card-feed[data-setup]")) {
-    button.addEventListener("click", () => setupAt(SETUP.findIndex((step) => step.key === button.dataset.setup)));
+    button.addEventListener("click", () => setup.openKey(button.dataset.setup));
   }
   for (const button of document.querySelectorAll("#pr-home .pr-card-feed[data-feed]")) {
     button.addEventListener("click", () => {
@@ -897,69 +899,14 @@ export default async function start({ app, reason, $ }) {
   }
 
 
-  // Set up: the few sections a person meets first (PrismSurface's setup), in
-  // order. Until each is done Today leads with one card naming the steps and
-  // the next; Continue opens that step alone in Settings, numbered, with Back,
-  // Later and Next. An empty place offers the step that fills it.
+  // Set up is the surface model's (site/surface/setup.mjs); here is only when what each step asks is done.
   let servicesLive = false;
-  const SECTION_DONE = {
+  const setup = makeSetup({ $, element, go, here: () => current, done: {
     self: () => Boolean(declared()),
     // Connected once something came from a service or a file; a note the person kept is not a service.
     sources: () => servicesLive || items.some((item) => item.media !== "plainText"),
-  };
-  const stepDone = (step) => (SECTION_DONE[step.section] ?? (() => false))();
-  const setupLeft = () => SETUP.filter((step) => !stepDone(step));
-  let setupStep = -1;
+  } });
   const setupCard = $("pr-setup");
-  function paintSetup() {
-    const left = setupLeft();
-    const shown = current.host === "home" && left.length > 0;
-    setupCard.hidden = !shown;
-    if (!shown) return false;
-    const next = left[0];
-    const steps = element("ol", { className: "pr-steps" }, ...SETUP.map((step) => element("li", {
-      className: stepDone(step) ? "pr-step pr-step-done" : step === next ? "pr-step pr-step-next" : "pr-step",
-      textContent: WORDS[step.word],
-    })));
-    const go_ = element("button", { type: "button", className: "pr-setup-go", textContent: WORDS["setup.continue"] });
-    go_.addEventListener("click", () => setupAt(SETUP.indexOf(next)));
-    const done = SETUP.length - left.length;
-    setupCard.replaceChildren(
-      element("header", { className: "pr-setup-top" },
-        element("h3", { id: "pr-setup-title", textContent: WORDS.setup }),
-        element("span", { className: "pr-count", textContent: `${done + 1} ${WORDS["setup.of"]} ${SETUP.length}` })),
-      steps, go_);
-    return true;
-  }
-  // One step of set up, alone in the settings panel.
-  function setupAt(index) {
-    if (index < 0 || index >= SETUP.length) { go(PLACES.find((p) => p.host === "home").key, true); return; }
-    go(PLACES.find((p) => p.show === "settings").key, false, index);
-  }
-  function paintSetupStep() {
-    const panel = $("pr-settings");
-    panel.querySelector(".pr-setup-bar")?.remove();
-    panel.querySelector(".pr-setup-head")?.remove();
-    const step = SETUP[setupStep];
-    for (const node of panel.querySelectorAll(".pr-set")) node.hidden = Boolean(step) && node.dataset.section !== step.section;
-    panel.classList.toggle("pr-setup-on", Boolean(step));
-    if (!step) return;
-    $("pr-title").textContent = WORDS.setup;
-    $("pr-count").hidden = false;
-    $("pr-count").textContent = `${setupStep + 1} ${WORDS["setup.of"]} ${SETUP.length}`;
-    panel.prepend(element("h3", { className: "pr-setup-head", textContent: WORDS[step.word] }));
-    const button = (word, to, primary = false) => {
-      const b = element("button", { type: "button", className: primary ? "pr-setup-go" : "", textContent: word });
-      b.addEventListener("click", () => setupAt(to));
-      return b;
-    };
-    const last = setupStep === SETUP.length - 1;
-    panel.append(element("nav", { className: "pr-setup-bar" },
-      setupStep > 0 ? button(WORDS["setup.back"], setupStep - 1) : element("span"),
-      element("span", { className: "pr-setup-right" },
-        last ? element("span") : button(WORDS["setup.later"], SETUP.length),
-        button(last ? WORDS.done : WORDS["setup.next"], setupStep + 1, true))));
-  }
 
   // One act per place, as PrismSurface names it. Outbound acts are prepared,
   // shown word for word, and leave only on the owner's Send.
@@ -1113,7 +1060,7 @@ export default async function start({ app, reason, $ }) {
   function go(key, focus = false, step = -1) {
     const place = byKey.get(key);
     if (!onPage(place)) return;
-    setupStep = step;
+    setup.select(step);
     current = place;
     personOpen = null;
     store.set(PLACE_KEY, key);
@@ -1131,8 +1078,8 @@ export default async function start({ app, reason, $ }) {
     // The home's cards hold their latest items only while the home is shown, so an item is in one place at a time.
     if (place.host !== "home") for (const latest of document.querySelectorAll("#pr-home .pr-card-latest")) latest.textContent = "";
     actForm(place);
-    if (settings) { buildSettings(); paintSettings(); paintSetupStep(); }
-    else { paintSetup(); paintList(); }
+    if (settings) { buildSettings(); paintSettings(); setup.paintStep(); }
+    else { setup.paint(); paintList(); }
     if (focus) $("pr-title").focus({ preventScroll: false });
   }
   $("pr-title").tabIndex = -1;
@@ -1385,20 +1332,18 @@ export default async function start({ app, reason, $ }) {
   // Boundary allows at the highest label among them.
   const drawn = element("ol", { className: "pr-list pr-drawn" });
   drawn.setAttribute("aria-label", WORDS["ask.placeholder"]);
-  // The chat: earlier turns above, the answer now in the result, then where
-  // it came from (each a link that opens it) and the decision it offers.
-  const chat = element("ol", { className: "pr-chat" });
+  // The chat is its own region, a log (WAI-ARIA 1.2) outside the status line's:
+  // each turn as it is said, with where it came from (each a link that opens
+  // it) and the decision it offers.
+  const chat = element("div", { className: "pr-chat", role: "log" });
   chat.setAttribute("aria-label", PLACES.find((p) => p.host === "composer")?.name ?? WORDS["ask.placeholder"]);
-  const more = element("div", { className: "pr-said-more" });
-  out.before(chat);
-  out.after(more);
-  more.after(drawn);
-  let lastTurn = null;
+  (out.closest("#result") ?? out.parentElement).before(chat);
+  chat.after(drawn);
   const writePlace = () => PLACES.find((p) => p.act === "write" && onPage(p));
   const notePlace = () => (current.act === "note" ? current : PLACES.find((p) => p.act === "note" && onPage(p)));
   async function offer(kind, item, prompt) {
     if (kind === "done" && item) { clear(item); say(WORDS.done, "good"); return; }
-    if (kind === "connect") { setupAt(SETUP.findIndex((s) => s.key === "sources")); return; }
+    if (kind === "connect") { setup.openKey("sources"); return; }
     if (kind === "keep") { const place = notePlace(); if (place) await keepNote(place, prompt); return; }
     if (kind === "reply" && item) {
       const place = writePlace();
@@ -1415,13 +1360,9 @@ export default async function start({ app, reason, $ }) {
     }
   }
   function turn(prompt, said) {
-    // The turn before moves up with what was said; this one shows its words above the answer.
-    if (lastTurn) lastTurn.node.append(element("p", { className: "pr-said", textContent: lastTurn.said }));
-    const node = element("li", { className: "pr-turn" }, element("p", { className: "pr-you", textContent: prompt }));
+    // A turn is what was asked and what was said, together; one sentence per item, each on its own line.
+    const node = element("div", { className: "pr-turn" }, element("p", { className: "pr-you", textContent: prompt }), element("p", { className: "pr-said", textContent: said.sentences.join("\n") }));
     chat.append(node);
-    node.scrollIntoView({ block: "nearest" });
-    // One sentence per item, each on its own line, so several answers read as a list.
-    lastTurn = { node, said: said.sentences.join("\n") };
     const rows = said.sources.map(rowOf);
     drawn.replaceChildren(...rows);
     // The sentences link to the items they say; the list beneath holds all that was found.
@@ -1447,7 +1388,9 @@ export default async function start({ app, reason, $ }) {
       button.addEventListener("click", () => { button.disabled = true; offer(kind, item, prompt).catch((error) => say(error?.message ?? String(error), "bad")); });
       return button;
     }).filter(Boolean);
-    more.replaceChildren(...(links.length ? [element("p", { className: "pr-sources" }, ...links)] : []), ...(offers.length ? [element("div", { className: "pr-offers" }, ...offers)] : []));
+    node.append(...(links.length ? [element("p", { className: "pr-sources" }, ...links)] : []), ...(offers.length ? [element("div", { className: "pr-offers" }, ...offers)] : []));
+    // Shown once it is whole, so the decision it offers is in view with it.
+    node.scrollIntoView({ block: "nearest" });
   }
   out.style.whiteSpace = "pre-line";
   out.style.minWidth = "0";
@@ -1463,8 +1406,8 @@ export default async function start({ app, reason, $ }) {
       const [{ answer }] = await Promise.all([import("./router/answer.mjs"), notesKept]);
       // A question is answered; anything else the person says is offered to keep, in its place and time.
       const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: true, meaning: haltedNow ? null : meaningRead() });
-      turn(prompt, said);
-      if (said.sentences.length) { say(said.sentences.join("\n"), "good"); $("pr-prompt").value = ""; }
+      drawn.replaceChildren();
+      if (said.sentences.length) { turn(prompt, said); say("", "idle"); $("pr-prompt").value = ""; }
       else if (haltedNow) say(WORDS.halted, "bad");
       else if (said.refused) say(WORDS["answer.asks"], "warn");
       else say(WORDS["answer.none"], "");

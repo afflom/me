@@ -171,11 +171,12 @@ test("the owner brings content in, every place shows it, Today and Ask answer fr
     assert.ok(people.includes(titleOf(CARD)), "the contact card is not in People");
 
     // Ask answers from what is kept, at once, without a model.
-    const ask = async (question, expect) => {
+    const ask = async (question, expect, status = false) => {
       await page.fill("#pr-prompt", question);
       await page.click("#pr-ask-go");
       await page.waitForFunction(() => !document.getElementById("pr-ask-go").disabled, null, { timeout: 15000 });
-      const said = await out();
+      // A reply is the newest turn of the conversation log; a refusal is the status line's.
+      const said = status ? await out() : await page.locator('.pr-chat[role="log"] .pr-turn:last-child .pr-said').innerText();
       assert.match(said, expect, `Ask "${question}" said: ${said}`);
     };
     const said = (title) => new RegExp(title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
@@ -188,7 +189,7 @@ test("the owner brings content in, every place shows it, Today and Ask answer fr
     // Halted, Ask shows nothing kept.
     await page.click('.pr-go[data-place="boundary"]');
     await page.check("#pr-halt");
-    await ask("What's on today?", /^Paused$/);
+    await ask("What's on today?", /^Paused$/, true);
     await page.uncheck("#pr-halt");
 
     assert.deepEqual(errors, [], `page errors: ${errors.join(" | ")}`);

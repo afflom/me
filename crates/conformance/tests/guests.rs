@@ -1,9 +1,9 @@
 //! The `guests` suite: every standalone decision guest is as current as the model.
 //!
-//! app/specs/guests/spec.json lists the core wasm guests the page's Node suites
+//! app/specs/guests/<facet>/<id>.json names each core wasm guest the page's Node suites
 //! open and the app modules each is built from. `tools/guests/build.sh` builds
 //! each in the locked SDK and `tools/guests/gen.py record` keeps the SHA-256 of
-//! its project and of its wasm in app/specs/guests/lock.json and in its pin.
+//! its project and of its wasm beside it, in <id>.lock.json, and in its pin.
 //! `GU-01` fails when a guest's modules, vectors or limits changed since it was
 //! built, when its wasm is not the one recorded, or when its pin says otherwise.
 

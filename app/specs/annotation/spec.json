@@ -1,0 +1,1318 @@
+{
+ "name": "annotation",
+ "comment": "The Prism's judge of Web Annotations (app/src/PrismAnnotation.lex.tex over the table app/src/PrismAnnotationTable.lex.tex) held to the web-platform-tests annotation-model suite, the W3C Web Annotation Working Group's tests of the Web Annotation Data Model (Recommendation, 23 February 2017). A request is a test's name, a newline and the JSON-LD document submitted to it; the answer is ok, or the names of the test's assertions whose result is not the one the suite expects, in the test's order, or invalid for a test the suite does not have, for text that is not JSON (RFC 8259) and for an object that repeats a name (JSON-LD keeps names unique). 'suite' pins the revision and, by SHA-256, the seven tests, every assertion and definition schema the table is compiled from, and the suite's own runner and validator. 'content' pins every document the vectors submit: the suite's own samples, the Working Group's correct and incorrect examples (w3c/web-annotation), and the Recommendation's collection and page examples (its markup removed and its character references decoded). 'examples' are the acceptance vectors: each answer is what the suite's runner (scripts/JSONtest.js) reports with the suite's validator (scripts/ajv.min.js) for that document, so the guest is held to the suite's reading, including where the suite is stricter than the Recommendation (see app/specs/oracle/spec.json gaps). An assertion is claimed in the standards register only when these vectors show it both holding and failing.",
+ "suite": {
+  "repository": "https://github.com/web-platform-tests/wpt",
+  "revision": "81999813d59bc596c8029aba931bb550ab9f5a28",
+  "base": "https://raw.githubusercontent.com/web-platform-tests/wpt/81999813d59bc596c8029aba931bb550ab9f5a28/annotation-model/",
+  "tests": [
+   {
+    "path": "annotations/annotationMusts.test",
+    "sha256": "7e93d89f1503ec62b6ea208946b9920f47c99c8fa6388b1313825d50da18b4c7"
+   },
+   {
+    "path": "annotations/annotationOptionals.test",
+    "sha256": "8ede6a0468df7f9b9bd4219d5150114a279fa1b087f24ff1b3f74cd1b829be23"
+   },
+   {
+    "path": "annotations/annotationsAgentOptionals.test",
+    "sha256": "78748212fc9979e0330d15049121e6da9709020a7b7ca8486944a70746a0197a"
+   },
+   {
+    "path": "collections/collectionMusts.test",
+    "sha256": "2029caf703b1d2d306694f5dae2dfde722a386152a9ceac33cb8b9e21edd8929"
+   },
+   {
+    "path": "collections/collectionOptionals.test",
+    "sha256": "e9c01c5e1a0567f19e4d1ee9f9722af1cc6b31990e0133c6686da20c0055f92f"
+   },
+   {
+    "path": "collections/pages/pageMusts.test",
+    "sha256": "1ec95bd06d2f1364f500a03c2ce5b58fb485839d85e77ac19e645ad7babc80e3"
+   },
+   {
+    "path": "collections/pages/pageOptionals.test",
+    "sha256": "2fb55531f921164ed54badb4a907f518e319dd886585642dfff995ffccd0910f"
+   }
+  ],
+  "runner": [
+   {
+    "path": "scripts/JSONtest.js",
+    "sha256": "84909024fc4437abf2bec831e2fdd06693dd8af3db823512531c91d720726811"
+   },
+   {
+    "path": "scripts/ajv.min.js",
+    "sha256": "3b0c517e22f5e2e229c2b8c4f42c97847fd63374994086c3bf9da430dd2d6918"
+   }
+  ],
+  "schemas": [
+   {
+    "path": "annotations/3.1-annotationContextValidated.json",
+    "sha256": "b265595283a135199842a85ffab1a0ccea3ef30458a6307c7a7876cee0f3ff14"
+   },
+   {
+    "path": "annotations/3.1-annotationIdValidated.json",
+    "sha256": "f7cc4e98fe3e6d7e1854cddf5845d1fc144f3be4982a5ce10cb5e3c052100f82"
+   },
+   {
+    "path": "annotations/3.1-annotationTypeValidated.json",
+    "sha256": "bbe23803180270747b7747089822b2ec35a6d942067aaee274337cf77bb3b952"
+   },
+   {
+    "path": "annotations/3.1-bodyKeyFound.json",
+    "sha256": "e07eab1f8649ba7174082ab73c3504c6d50c412167c9cf932dc09fc45d6d4123"
+   },
+   {
+    "path": "annotations/3.1-targetKeyFound.json",
+    "sha256": "3221e6eba11f28693f5509f70f2e8ce915a17ea4dec3c237a4a146975786e082"
+   },
+   {
+    "path": "annotations/3.2-bodyObjectsRecognized.json",
+    "sha256": "2f0b8289d618ebf36d901b34f3da2570ae25d8fb0e1d61f12c586f07052b7e73"
+   },
+   {
+    "path": "annotations/3.2-targetObjectsRecognized.json",
+    "sha256": "f2bd4968a06f2ea250d0dbe804a3c24a409a419a2488b1456426c3180b309195"
+   },
+   {
+    "path": "annotations/3.2.5-bodyValueImplemented.json",
+    "sha256": "0b33931def6d4d803b5e8e6e5a62f391c608432dc3ba7d6ee8c9b2add8d6f1c2"
+   },
+   {
+    "path": "annotations/3.2.5-bodyValueValidated.json",
+    "sha256": "9772be5633258cbfead48df915af581d843d5d20c20bfbad53b1be37367406b7"
+   },
+   {
+    "path": "annotations/3.2.5-notBodyBodyValue.json",
+    "sha256": "a387a0c13a777a0f80c27d736e761ed853aa265981d8c3adf115d49604b69982"
+   },
+   {
+    "path": "annotations/3.3.1-annotationCreatedImplemented.json",
+    "sha256": "7d25bb9f44c108e5de60e879009f438f66cb70ce707c700563a7f19c85688200"
+   },
+   {
+    "path": "annotations/3.3.1-annotationCreatedValidated.json",
+    "sha256": "690727568a9bb85d2c41d8f26486a1804d739591fae300a2abb494c2e1973498"
+   },
+   {
+    "path": "annotations/3.3.1-annotationCreatorImplemented.json",
+    "sha256": "415815298bf5e82fbfad674b24b8383c2dafe74e01eb92acc5b38a7373a736f3"
+   },
+   {
+    "path": "annotations/3.3.1-annotationGeneratedImplemented.json",
+    "sha256": "bdf9004dcb55c117e0c584621b18142e386ff35572ab08ef2af16c832280bfbd"
+   },
+   {
+    "path": "annotations/3.3.1-annotationGeneratedValidated.json",
+    "sha256": "bf8b934564de19fe0bf54a983b6c3f90a1d14d32872c939aa4cd635e236628b6"
+   },
+   {
+    "path": "annotations/3.3.1-annotationGeneratorImplemented.json",
+    "sha256": "1f86163209f0d7b060efda6b210fb237de9efe5539858ea5d20384e96fe87037"
+   },
+   {
+    "path": "annotations/3.3.1-annotationModifiedImplemented.json",
+    "sha256": "24b71276b6a75b6faa5d7ee4b7bf3d92dc5c11a1ad0ae4b6bd72192fae927f2a"
+   },
+   {
+    "path": "annotations/3.3.1-annotationModifiedValidated.json",
+    "sha256": "470a935447243e6df5851edd910f6d6c4291ec0b7d781cd489ce4236f5ae9e9c"
+   },
+   {
+    "path": "annotations/3.3.1-annotationSingleCreatorImplemented.json",
+    "sha256": "44d834f3721700106f4b9358b0ceb3a0698e652e0587a69d4d297babcd136d20"
+   },
+   {
+    "path": "annotations/3.3.1-singleAnnotationCreatorImplemented.json",
+    "sha256": "b17485d4945fc7035bc7311b6f295b09809d4fddc1c0de83fadd360e2257bf1f"
+   },
+   {
+    "path": "annotations/3.3.2-annotationCreatorAgentEmailImplemented.json",
+    "sha256": "02b10b1afc436e7c2cb3339abee187936131f960ca724538a7ad7b6d6a352765"
+   },
+   {
+    "path": "annotations/3.3.2-annotationCreatorAgentEmail_sha1Implemented.json",
+    "sha256": "655ea9d5ca44f4c0907d927829974065088f441760ca689dc20b70b6052a059c"
+   },
+   {
+    "path": "annotations/3.3.2-annotationCreatorAgentHomepageImplemented.json",
+    "sha256": "97ee9719a80c8d8996e66803af8b1c08d3f50ae521af05e59e1e55819007874e"
+   },
+   {
+    "path": "annotations/3.3.2-annotationCreatorAgentIdImplemented.json",
+    "sha256": "ffdfb20bebc02483bfdb8b8a3db7bbfca981790d1755c73145f374828993ca89"
+   },
+   {
+    "path": "annotations/3.3.2-annotationCreatorAgentNameImplemented.json",
+    "sha256": "fc3ffcc44065e9e119e7bfffc34d74f1b6e1386deb62699ac276bb3c55bef9a9"
+   },
+   {
+    "path": "annotations/3.3.2-annotationCreatorAgentNicknameImplemented.json",
+    "sha256": "ee003f9380f046e901fa380930838af3bee1e47858694d7cf6295da176f0aa84"
+   },
+   {
+    "path": "annotations/3.3.2-annotationCreatorAgentSingleNameImplemented.json",
+    "sha256": "a02a51b9fac9ef53ef1193384a0901ba3f932595501004d6a8f7f3007a9ab73c"
+   },
+   {
+    "path": "annotations/3.3.2-annotationCreatorAgentTypeImplemented.json",
+    "sha256": "98447f7972602642ee881ba7d3ab4e34dd99137d8269b2ef7098abd00c487e94"
+   },
+   {
+    "path": "annotations/3.3.2-annotationGeneratorAgentEmailImplemented.json",
+    "sha256": "4f63e40718cfc5c8b12e96bed6abb16de64b9f207986f5c4ab99bb6734aaf915"
+   },
+   {
+    "path": "annotations/3.3.2-annotationGeneratorAgentEmail_sha1Implemented.json",
+    "sha256": "e0909a99a6fdd26bb2413bbd58bf6194ce98feb0ff04687ea0ef05d42666ae6e"
+   },
+   {
+    "path": "annotations/3.3.2-annotationGeneratorAgentHomepageImplemented.json",
+    "sha256": "663c36603159b467d80e37e531585d54e7e5ad31365ee55f835e6c524b0970d4"
+   },
+   {
+    "path": "annotations/3.3.2-annotationGeneratorAgentIdImplemented.json",
+    "sha256": "75ab0cb6bf6c6f9f10727f643e5179e74c843ec9cbaa6ee71e7527edb202b2d6"
+   },
+   {
+    "path": "annotations/3.3.2-annotationGeneratorAgentNameImplemented.json",
+    "sha256": "c497f99abf0deaa8c3744fed58dbda1e711063da414f9022b5ac062336777d3d"
+   },
+   {
+    "path": "annotations/3.3.2-annotationGeneratorAgentNicknameImplemented.json",
+    "sha256": "0a6b9b939911e8b87a6fc3e47a0de5b9029f065e8e1233ccb71b7420292202cd"
+   },
+   {
+    "path": "annotations/3.3.2-annotationGeneratorAgentSingleNameImplemented.json",
+    "sha256": "639e34e2ec24457ad78eda0c1aad744a7642a82c75ad7ba0225dc0fcdd347bc2"
+   },
+   {
+    "path": "annotations/3.3.2-annotationGeneratorAgentTypeImplemented.json",
+    "sha256": "daab76fc30db0493274c4178d2a751655b32ba38313a68a37efaf8ecc2b80765"
+   },
+   {
+    "path": "annotations/3.3.3-annotationAudienceImplemented.json",
+    "sha256": "96a4d0ab7d611e536abf05b98d2635ab8ec92a62df2af0627d69bbb74d0546b9"
+   },
+   {
+    "path": "annotations/3.3.5-annotationMotivationImplemented.json",
+    "sha256": "b48024d095d766fb337bfc0766a632227492d748e0be180ead80feeb9db7d1ee"
+   },
+   {
+    "path": "annotations/3.3.5-annotationSingleMotivationImplemented.json",
+    "sha256": "3632184e92ec271357c06ef4575d762928ca0ef22e0f34d2b3af1ec1c70ae0f3"
+   },
+   {
+    "path": "annotations/3.3.6-annotationRightsImplemented.json",
+    "sha256": "978888a70f74dc2dd1720cfc5209fb67e3b8be1e82b0e48aaebf12ffb27d1029"
+   },
+   {
+    "path": "annotations/3.3.6-annotationRightsValidated.json",
+    "sha256": "de54ef7abb26e8c31a8217e72b09278afeb98b742f3f86d051dd3ac0dd0218a0"
+   },
+   {
+    "path": "annotations/3.3.7-annotationCanonicalImplemented.json",
+    "sha256": "654e75becfb0c46de1495673d1b7a4e999c6b02ea242906c4d75ba817518f347"
+   },
+   {
+    "path": "annotations/3.3.7-annotationCanonicalValidated.json",
+    "sha256": "4dbca458c3518fc14468517b4d808256db4ee06d15b03f9632666cec0c7b55d6"
+   },
+   {
+    "path": "annotations/3.3.7-annotationViaImplemented.json",
+    "sha256": "bee70e12e11f3cea5c2877a76efb0a366c1464e344b93d78a9ea32f1923ca499"
+   },
+   {
+    "path": "annotations/3.3.7-annotationViaValidated.json",
+    "sha256": "9c526da7eec9c94e7e3e9a777a5b052bb3b46e8fcd63ee39825292d21bad651e"
+   },
+   {
+    "path": "annotations/4.4-annotationStylesheetImplemented.json",
+    "sha256": "99aa18abb114bf9cd4ba4bfe8d070d8d6c01691e0d3319f2b6de5fb79c59a467"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.1-bodyEWR.json",
+    "sha256": "d426ce325fd37b7463b360913627b1f949771e013f1252b3a87e67c107f3d09e"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.1-bodyFormat.json",
+    "sha256": "11f6f48fcc523235a91d7b1144e24e3a76c3142b750ecc93955951bfe7673bbe"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.1-bodyLanguage.json",
+    "sha256": "63d7299702e5d7c226953c51a7e13293195ed0f88831ec31a7ff4b04bbc006f2"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.1-bodyProcessingLanguage.json",
+    "sha256": "c2b5fc5c8cded5dbf78aded8812a4a52979b9ee9f95def256c189b73f8a0687a"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.1-bodySingleFormat.json",
+    "sha256": "ceb1fa01a2df25d0bf882a85937dd3311f040c90376eec243891cd78b8a027da"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.1-bodySingleLanguage.json",
+    "sha256": "f8a4088b65fe59f7b6903bb6345b9ee79208490ca760a5992eb43d6bb4c6d120"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.1-bodyTextDirection.json",
+    "sha256": "d88f96dc87974725c58949ddb7ca6f0a6559c74ae3a99154a3b55c02ff93cc0d"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.1-bodyTextDirectionValidated.json",
+    "sha256": "3e16a2940ae99f726d31af4db87b6ddd1974bd81cc12b53a2a1b6dd6079c39c2"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.1-targEWR.json",
+    "sha256": "b3730fa020a23f9b920aa7aed55d5a440591dec5acdf52d66cc117debcff3028"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.1-targFormat.json",
+    "sha256": "0b3add3a44ca243f2816f2165573311d97e29d465b369c6018f3dafdddd7fb02"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.1-targLanguage.json",
+    "sha256": "0cd019ceff2ac6f1ff9d777eb4b26906ddf57ed2a91f0c01276d92104f5018cf"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.1-targProcessingLanguage.json",
+    "sha256": "02bfc04696c5e1fb5a512c95291d1dbda9a58b9b2bd641ed12e1d10af4a16a8d"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.1-targSingleFormat.json",
+    "sha256": "23fd39fb22d76b6bcd48a2bbf0893421f42630c0228843b3cc57183b5f51a1c1"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.1-targSingleLanguage.json",
+    "sha256": "509342f4d0adc8d92355520348237f29b2d22b35de29d21b9b3b90a4aadb8216"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.1-targTextDirection.json",
+    "sha256": "3d1bd59cbe80d741caa592e48c4152c239572860578dff8a0863e04cbb482e1d"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.1-targTextDirectionValidated.json",
+    "sha256": "ae773a03d96c4111eeefca6668a1b2bd705920a277e73888bda98b8dca947e5b"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.2-bodyType.json",
+    "sha256": "d75eb8d111954b1d6ccdb09eb46dcc6360f65ccb03d957bee2cdb03b675475a4"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.2-targType.json",
+    "sha256": "dae10f2f5ffa1d95f50f758926a7b3024e0e13e2b60aee31ac6848d20972eec8"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.4-bodyChoiceSetNoValue.json",
+    "sha256": "3d7f1f3cbd7c6b8362ec979a0a13391cc7c23bc2edb3b611ad01775b9160e2fa"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.4-bodyETB.json",
+    "sha256": "5c8da9cb9c58e254746aabbce046fd521d2ad68c0e68380c5fcfe935b2d01c74"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.4-bodyETBTypeText.json",
+    "sha256": "ab581d61e9fd32b7600b9748516b8c9b8b3f02532aa78ddeb0a94afa78d008e3"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.4-bodyETBTypeTextualBody.json",
+    "sha256": "64f76fb899ca8d5a4b405d2ff4e6c6308de775a49224bcca28e332405387c653"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.4-targChoiceSetNoValue.json",
+    "sha256": "24dd8ddeab2261770bfe177645fbd1997c4c5ee23f6faf1d6b5d709e7ba5a10b"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.4-targNoTypeTextualBody.json",
+    "sha256": "1c57aa2ee125b9b6aa4ea456a3b6ca8126f765ce54ea179fbbf6d1aad2c33e99"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.7-bodyChoice.json",
+    "sha256": "c5866b43f02dfbed8d85b0b453982ab5a58463c9c0ca98b7ca3dd032f7b23064"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.7-bodyEWRNoItems.json",
+    "sha256": "20124cf359bc5bdbd0824902599dc9d832ee68557f4b0ba2c452f1a98280fadc"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.7-bodyEmbeddedTextualNoItems.json",
+    "sha256": "cce5656a31945d941afc0dd2c6a51b31432939caeb41c465bc79e8c898ef4f1b"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.7-bodySpecificResourceNoItems.json",
+    "sha256": "3a870c304943002d8c98f86d17b709d59e984ff2a35bb543fc30866adc1c1d5f"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.7-targChoice.json",
+    "sha256": "7eeadac198f81fdae994007d1715ab31a21c348ec4844c93fac0cb6cabb342a4"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.7-targEWRNoItems.json",
+    "sha256": "ff6c5de734679f196f25c0c0fbb438963405ce41dd32edb55d14498a3fcba26f"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.2.7-targSpecificResourceNoItems.json",
+    "sha256": "ecf3920a0a5dc6d3c524339e6ef02456646764053c1565efa7a27634afce485d"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.1-bodyCreated.json",
+    "sha256": "7ad09009524b30778d65aa198da6f208a060eefd14184b6093e5e7e5c7b23ada"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.1-bodyCreatedValidated.json",
+    "sha256": "ca673b0edd5d9c299b35f4026f60cdb016aa6c316e44bc6028ca949cc19a9909"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.1-bodyCreator.json",
+    "sha256": "aaa4304e26775e781dcfad9b834776138ab3fccbd24eb7f081a3aa9555790ce0"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.1-bodyModified.json",
+    "sha256": "8d5333c78dd8a48f5f99f5e757934ccf7c1aa18dbd2215127586181144325b2c"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.1-bodyModifiedValidated.json",
+    "sha256": "8c2889ab4cb0ee61ba652dcc5c2c439c5018ad7ac93a3ee34880493966822f59"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.1-bodySingleCreator.json",
+    "sha256": "5a307086599282aebd759a6edea717db05031efaff58837383501dc7e59532f0"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.1-targCreated.json",
+    "sha256": "6848af7749dfa20a9242c651e77690bdd2ffa63f6ba55c08b806d50890ea2c00"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.1-targCreatedValidated.json",
+    "sha256": "ae5d2b9682c0899ec2259e21532b8cb8cd81cc213bea6fd7db712df81129c826"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.1-targCreator.json",
+    "sha256": "0259e4f6cfe29c152e0d0b295c9aaa566d17142fc8d13411c28a08475179a3e0"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.1-targModified.json",
+    "sha256": "6b4e859e9b80087a3f92d3198f0193c18d8882ef5d70e43c4b79531246bd8c90"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.1-targModifiedValidated.json",
+    "sha256": "5708a0408eaa0dc972f93e0344bae1fea0108092417ed31cc106a93dcae06c1b"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.1-targSingleCreator.json",
+    "sha256": "bf3eeb79dc4bb696743543ce578518803e286bc921ab41f0c1210b2b78ffefb2"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.2-bodyCreatorAgentEmailImplemented.json",
+    "sha256": "1e8b321abb0bb341e421046b9c11fa18559b5b3e668cacc976e8583f7df67b25"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.2-bodyCreatorAgentEmail_sha1Implemented.json",
+    "sha256": "6008d8652cef30f5774e57bdf1a1cb235a6277b97835dfcac2c7a1ad679cf7f5"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.2-bodyCreatorAgentHomepageImplemented.json",
+    "sha256": "8c4acf98c3a5dbfda1f2d4d9224f842a06f2a1b8590804a727da6afff6a1a052"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.2-bodyCreatorAgentIdImplemented.json",
+    "sha256": "be2f464500777d98aa9d9ddf939e5445251b0deccfe5af579e1b60e5baa2dfa7"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.2-bodyCreatorAgentNameImplemented.json",
+    "sha256": "6d2a39e1cf2e9712a9c1810e2d638fe2bd9b20b631f67382ed03daa07500f257"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.2-bodyCreatorAgentNicknameImplemented.json",
+    "sha256": "8c320a6da5b40f4c16fe2bfd61b341c924fce45af1e049e43b3360d0c251c693"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.2-bodyCreatorAgentSingleNameImplemented.json",
+    "sha256": "6ea0ce5282eea0e9f5a2d61f23d09d1102bcd92316e79678b953e6831ae3c8f0"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.2-bodyCreatorAgentTypeImplemented.json",
+    "sha256": "26dcc9e24309447d735937b32d26ef5927d98caf6e6dc337d4849ccfb199acfa"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.2-targCreatorAgentEmailImplemented.json",
+    "sha256": "6e16577c0b739ae3c7a2c656b9cb602389650bc2157196486d3d317971089174"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.2-targCreatorAgentEmail_sha1Implemented.json",
+    "sha256": "48db5ed6b474d2e81fdea2c00b3a7a1b28d98b03776b694a4b7c8b2cbda60380"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.2-targCreatorAgentHomepageImplemented.json",
+    "sha256": "cc3ae42d3f15be3d883d7671e9f550d141fd238af7ed8d51ee215aa0c79cbddb"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.2-targCreatorAgentIdImplemented.json",
+    "sha256": "ae40ba611eca4bff2737083fd8df85cc551e53dd34581a4d02050feed735fecf"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.2-targCreatorAgentNameImplemented.json",
+    "sha256": "ade509dc561dd8395ba88d7598e7503fc2d0e81922135e8db6ea91646313b5d1"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.2-targCreatorAgentNicknameImplemented.json",
+    "sha256": "8febbc143c8461c07bb5d560c1e08f8cc65417820d8eb0f6ffcf885bb7975c84"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.2-targCreatorAgentSingleNameImplemented.json",
+    "sha256": "125075c358ef0e4401e596a1461fbd16e2c10f41dee4bae561efef5de37d8657"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.2-targCreatorAgentTypeImplemented.json",
+    "sha256": "9138c3a4670b7bf6351034890a57726389fc1ae4234dd3812cd4553ab11cf80d"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.3-bodyAudience.json",
+    "sha256": "cbb31bc08c0c29aecd7f96602c4b419809d61e31f17bda94814cefab9f740ccb"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.3-targAudience.json",
+    "sha256": "9621006b4c15973a36dc98a1525231b47bbda3427db706c18be06387208d139c"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.4-bodyAccessibility.json",
+    "sha256": "bd80ff0890efceda934d209e05e6a9618989b8c285f1e3b3f3f6396ef9ecacb6"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.4-targAccessibility.json",
+    "sha256": "e62eaf49e578d177bfa4300aa5b00e7c87a34b5ed3128d5f57df16a67a5d1c22"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.5-bodyChoiceSetNoPurpose.json",
+    "sha256": "36af0b6b76146bac65534a59ccd64dde897c2644e8a1431a30fd41119b37dd87"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.5-bodyEWRNoPurpose.json",
+    "sha256": "f22859738bb2aebc80ae8789dd051bab96381d6bc4376f5268658946f284af1e"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.5-bodyPurpose.json",
+    "sha256": "16208f91a8a697c5b83805d08814580064ac0ce26fc53ace97a2749beab565ec"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.5-targChoiceSetNoPurpose.json",
+    "sha256": "6a9e278c70f1928d50ce608a8d25e70c9ae8c42b1bbbc57686c25c135e9d3bed"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.5-targEWRNoPurpose.json",
+    "sha256": "3f3effb7607ff976022eaf377cfafb4b8abf8e7875b5cc004af44751f3b81c20"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.5-targPurpose.json",
+    "sha256": "a8c7113def02cb63497597242e97727ebd0f0d8d19af2382a702bc9945933963"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.6-bodyRights.json",
+    "sha256": "2bfaa2682b4a18511e8ffe37a12a4278bcd6937fa7419734e2cdaea270bc21f8"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.6-bodyRightsValidated.json",
+    "sha256": "e14aaf84f34d6f8690dc815a9fcc55b444601281a5a5da50fd551f91e6811bcb"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.6-targRights.json",
+    "sha256": "97f355cd4596c5105a1b165cb927bfb0f83ee0fdca2b99b07b5940d89ef50dda"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.6-targRightsValidated.json",
+    "sha256": "7e60cc213271ef4706aa5e62268c8aea20325ace4768c44df7ac9ed16d9a2ef9"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.7-bodyCanonical.json",
+    "sha256": "165f5dc5b596a1347743b0bec57a68b9aa2983dddc63181f942cd001adf88289"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.7-bodyCanonicalValidated.json",
+    "sha256": "d57d54ccb03c81a20606ac53f73749bbc718ace553ff1c7891269a96e5a8aaf1"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.7-bodyVia.json",
+    "sha256": "e0f3ab51c431086bf2938ab9804bfff5246a11809f7b460fa1436db0408aec8f"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.7-bodyViaValidated.json",
+    "sha256": "87578a31a6d100975d7d20ebed3c7b9507c67520f948c2179ccfce7e4b0aa5e8"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.7-targCanonical.json",
+    "sha256": "9c6ffdc46b4148f3bfe1e2ecb905abb9b9844eca50bff46da1d3a76751c98397"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.7-targCanonicalValidated.json",
+    "sha256": "4c6b03a80b625ed2214cafd7ebc51a255bd30b758801ab205cf9b982c92d5642"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.7-targVia.json",
+    "sha256": "54e8bf14027de6067a52bfa135046880f23469d5d9a519e2324be1ec7fd2bb80"
+   },
+   {
+    "path": "annotations/bodiesTargets/3.3.7-targViaValidated.json",
+    "sha256": "c695962411b015cb2c0afbbed88c3d0a306ae6f61babfe0de79975a681432089"
+   },
+   {
+    "path": "annotations/bodiesTargets/4-bodyChoiceSetNoSource.json",
+    "sha256": "9e214afe0ce8ae54c9eb79551f3e6670e67c0b8fa3a13473c0de849d7062dda5"
+   },
+   {
+    "path": "annotations/bodiesTargets/4-bodyEmbeddedTextualNoSource.json",
+    "sha256": "f36e47eacd74d9a83c9b039d53db26894f4ec501e9047229f365b6a614fe3a28"
+   },
+   {
+    "path": "annotations/bodiesTargets/4-bodySpecificResource.json",
+    "sha256": "2246f81b8c33e54db69c0e644103e8fe04a45c100703cd1a31cc9ae702ed1e8f"
+   },
+   {
+    "path": "annotations/bodiesTargets/4-bodySpecificResourceNoValue.json",
+    "sha256": "a0bb205b6c1067838733997072dd2556a048729888b0f3a7331724c7176caa73"
+   },
+   {
+    "path": "annotations/bodiesTargets/4-targChoiceSetNoSource.json",
+    "sha256": "b311f4b6007beecb4fb82bf5327099358a4f6ed3317ed0e241dd15c236e49277"
+   },
+   {
+    "path": "annotations/bodiesTargets/4-targSpecificResource.json",
+    "sha256": "f75bb7f83cc51eea61b36d901369a0411a04012e9a2080efc17163a968de9824"
+   },
+   {
+    "path": "annotations/bodiesTargets/4-targSpecificResourceNoValue.json",
+    "sha256": "2b6524ec6828d6f5822d3c2127fd2b738649d22e8ba4a9aa81727e4d787db3b7"
+   },
+   {
+    "path": "annotations/bodiesTargets/4.4-bodyStyleClass.json",
+    "sha256": "f25a914c7b46b38cc8ba2f67fa3a7c1fcf001d5380de480e377c2f47a757a43f"
+   },
+   {
+    "path": "annotations/bodiesTargets/4.4-targStyleClass.json",
+    "sha256": "9570f450e63e693ee5ec68ad75cd73f9ff72b90310c7ff4e82e0d60b319e4ded"
+   },
+   {
+    "path": "annotations/bodiesTargets/4.5-bodyRenderedVia.json",
+    "sha256": "0d103853f3ee657b0f637ae872812e892fbd73fbcac66be8bbafb97c0a01ff6d"
+   },
+   {
+    "path": "annotations/bodiesTargets/4.5-targRenderedVia.json",
+    "sha256": "19909b35f2d376a3780c785f44fb13df32c0ed8d194960dcab8359ffc454133f"
+   },
+   {
+    "path": "annotations/specificResource/3.2.2-targType.json",
+    "sha256": "8485955137e4afba44d35eeca6bc4b167f62b964e10b11810b53043e90e920c8"
+   },
+   {
+    "path": "annotations/specificResource/3.3.3-targAudience.json",
+    "sha256": "1538324e101ab78b509f6ce5c3b972456f50134cc0ea4cb0e06d9429a5380410"
+   },
+   {
+    "path": "annotations/specificResource/4.2-TextDataPositionSelectorValid.json",
+    "sha256": "30024a884160bd78e1607fb0921eed5d39c316b5e5ae5cca778f323d5c96d0f2"
+   },
+   {
+    "path": "annotations/specificResource/4.2-fragmentCssXPathSelectorValid.json",
+    "sha256": "33ece027052ed42bef15fa91c2ee06ec2ba2167a92f558c323ab2bd0f0be4e2a"
+   },
+   {
+    "path": "annotations/specificResource/4.2-selectorFound.json",
+    "sha256": "98b5e4f54215fc2508a7f08267f070ba6c7426f32fa3b803ed9ebc6d34ad2f1f"
+   },
+   {
+    "path": "annotations/specificResource/4.2-selectorValidIfPresent.json",
+    "sha256": "859f7bed560dee5e14deeded8c01652a341a4e6ee08ce14860b760742f2000fc"
+   },
+   {
+    "path": "annotations/specificResource/4.2.1-conformsTo.json",
+    "sha256": "162874fb0c7537baca60fd07c3a2aa9028b3d5e4ca2ba4ac8bb7e3da0e8a66bb"
+   },
+   {
+    "path": "annotations/specificResource/4.2.1-fragmentSelector.json",
+    "sha256": "d6c13ae36375107d352918678af2e8b197380a86136e437b0fd707ab83b2dddb"
+   },
+   {
+    "path": "annotations/specificResource/4.2.2-cssSelector.json",
+    "sha256": "d275ff43d044bdf95b22ad3ad3747a1a2f18b2a2dd2c7fd0123a1f909a72f1ef"
+   },
+   {
+    "path": "annotations/specificResource/4.2.3-xpathSelector.json",
+    "sha256": "90ba80f7b7c163418d2047c4dea4d6529ae0e545c9b7be1e40cf4ed5fcd979d7"
+   },
+   {
+    "path": "annotations/specificResource/4.2.4-prefix.json",
+    "sha256": "6a15385269acdd2d750dfac2baba9c5c0aef1732e1d2419d8ccedd46ae210743"
+   },
+   {
+    "path": "annotations/specificResource/4.2.4-suffix.json",
+    "sha256": "184721003a4fa5864b84e1576cfde9defd25af71ae0af01c4e548cf5324b2166"
+   },
+   {
+    "path": "annotations/specificResource/4.2.4-textQuoteSelector.json",
+    "sha256": "a91cd0e9fd6805a04620b5ce4a1f1030da47111d0439c219adb585017ac14422"
+   },
+   {
+    "path": "annotations/specificResource/4.2.4-textQuoteSelectorValid.json",
+    "sha256": "4942799afdcae7b140333e64767e2e187633e2d02d46303f329f95560fe0d3e1"
+   },
+   {
+    "path": "annotations/specificResource/4.2.5-textPositionSelector.json",
+    "sha256": "fead0c609c7285c424335417925337be7081334f28e4c1726737ed95e0bb6205"
+   },
+   {
+    "path": "annotations/specificResource/4.2.6-dataPositionSelector.json",
+    "sha256": "4f412161884922a91b574de5794726d5517a6d701f22815d35e37a37051f7ce6"
+   },
+   {
+    "path": "annotations/specificResource/4.2.7-svgSelector.json",
+    "sha256": "010869370e17daf07a866d488cf507b2286340b9910dc0b9b6c4980ba677fe66"
+   },
+   {
+    "path": "annotations/specificResource/4.2.7-svgSelectorValid.json",
+    "sha256": "d5108aee899f5c74d954f22f4e4dc21332678c2fd4ed5442b0063fa7bb51fe6b"
+   },
+   {
+    "path": "annotations/specificResource/4.2.8-rangeSelector.json",
+    "sha256": "2474423a9cd04f355bdf55f3df003db91c4655cb820bb6f83da6964a4eeadd80"
+   },
+   {
+    "path": "annotations/specificResource/4.2.8-rangeSelectorValid.json",
+    "sha256": "c59f8ede678d657d1622c3b71432f9f62ebb8674e279a9fc595e7952dbbb7184"
+   },
+   {
+    "path": "annotations/specificResource/4.3-stateFound.json",
+    "sha256": "6a5648ce2e0c16366a493210d24018542d7abe8e1daaf14c169ca90f8fa81914"
+   },
+   {
+    "path": "annotations/specificResource/4.3-stateValidIfPresent.json",
+    "sha256": "468114bdebf27c1a4003ec653d43fead0da9334c46b6cd1d8657938984703c20"
+   },
+   {
+    "path": "annotations/specificResource/4.3.1-cached.json",
+    "sha256": "3df4d58d44a223bca5f66faa51a31794c295e4c4ca96a3c054d66f323256ed6e"
+   },
+   {
+    "path": "annotations/specificResource/4.3.1-timeState.json",
+    "sha256": "eae27d135cc010842cadc90236378c4f8a4fc524623d43114bc5853a485ea7a9"
+   },
+   {
+    "path": "annotations/specificResource/4.3.1-timeStateValid.json",
+    "sha256": "aa4908261f6694a13a5c0073271ee350633d4000ed010eb913734ff865ec0cf6"
+   },
+   {
+    "path": "annotations/specificResource/4.3.2-httpRequestStateValid.json",
+    "sha256": "1e08418d18321899209707eea7fa0c2ac66d332ab17db63d692d891357732889"
+   },
+   {
+    "path": "annotations/specificResource/4.3.2-requestHeaderState.json",
+    "sha256": "4abb7ec901e08f89b0aa285f8f0ad6c99647e5d87ff884a49cd9bebe88172d06"
+   },
+   {
+    "path": "annotations/specificResource/4.3.3-refinedBy.json",
+    "sha256": "87b4d414c3def6b52195e483bdc61df4b51bfe4f1d682765d026dd3ce3ed6437"
+   },
+   {
+    "path": "annotations/specificResource/4.3.3-refinedByValidated.json",
+    "sha256": "31612616529c4f4f48dff2d9c374da48973f760ddd7359bbc09e961d43f70883"
+   },
+   {
+    "path": "annotations/specificResource/4.4-styleClass.json",
+    "sha256": "71fdbb3679d0296feb4a523741121003ca4182ae2995451cf4c5dc37a27344d2"
+   },
+   {
+    "path": "annotations/specificResource/4.4-styleClassValidIfPresent.json",
+    "sha256": "c62b0766c7efbef6bff9e307abfb688a3be5285a6e3cb5cbdd82acd7c2789c57"
+   },
+   {
+    "path": "annotations/specificResource/4.5-renderedVia.json",
+    "sha256": "da9f0f8ac35553dce386de61db704e3cd0c09cdb0bc7f3a07a50b26dd75c2190"
+   },
+   {
+    "path": "annotations/specificResource/4.6-scope.json",
+    "sha256": "61acb54a7d59ada14f2ef2f5683cb706dbe64a0cf6df2ef03e867fba2e91d84c"
+   },
+   {
+    "path": "collections/3.3.1-collectionCreatedImplemented.json",
+    "sha256": "2af80267effa52f2cb327adb519514ca652769cca9128c5d5d28a6814ed4d87e"
+   },
+   {
+    "path": "collections/3.3.1-collectionCreatedValidated.json",
+    "sha256": "c4b58003a4b92abc8c0a8206317ad5ae38ec4c748b24406b26c950b52b680faf"
+   },
+   {
+    "path": "collections/3.3.1-collectionCreatorImplemented.json",
+    "sha256": "63f7e3636b84ccb713b2fec579ec779d81957015524500112f86a2cb0693d4c1"
+   },
+   {
+    "path": "collections/3.3.1-collectionModifiedImplemented.json",
+    "sha256": "6943675988197eeeaf1f9220f7e0034eeecd0e21faf74a7fbb00f782d5159fee"
+   },
+   {
+    "path": "collections/3.3.1-collectionModifiedValidated.json",
+    "sha256": "66f8fa158f806c78a15dd81da00d569d8620a6f9a4b1efdc2c19aa5e8d0bac11"
+   },
+   {
+    "path": "collections/3.3.2-collectionCreatorAgentEmailImplemented.json",
+    "sha256": "e1e9d05ff63fec3f2e15f483521440dddee0e09fcf6424d18434c06bdbde6afa"
+   },
+   {
+    "path": "collections/3.3.2-collectionCreatorAgentEmail_sha1Implemented.json",
+    "sha256": "05e2ba48c5686752802f78ef2c348cd6ef68bda675bc66234ba988f3c65d8b79"
+   },
+   {
+    "path": "collections/3.3.2-collectionCreatorAgentHomepageImplemented.json",
+    "sha256": "2febb75cce55f546bc39b071c11e9d157277e4740c688c39705b58f441bd40ea"
+   },
+   {
+    "path": "collections/3.3.2-collectionCreatorAgentIdImplemented.json",
+    "sha256": "1d2fe0d71b8e4c086fb6483ee60caaaea79b6c4b44c6111f86c938dfa656389b"
+   },
+   {
+    "path": "collections/3.3.2-collectionCreatorAgentNameImplemented.json",
+    "sha256": "6d7fb2ca267fbe8f54578e9021fdbd05d85b1bac17d6cd0cf6fc7615d1bd9ccd"
+   },
+   {
+    "path": "collections/3.3.2-collectionCreatorAgentNicknameImplemented.json",
+    "sha256": "7cf3931a96d5bcc52b3242529319a0cd0811901097cdf92286a75c68e7e00ba8"
+   },
+   {
+    "path": "collections/3.3.2-collectionCreatorAgentTypeImplemented.json",
+    "sha256": "4298edbfd59524f23017f120ebdd1e681caad75d2f8dbbb837f80fe1d26a8263"
+   },
+   {
+    "path": "collections/3.3.6-collectionRightsImplemented.json",
+    "sha256": "4216a07370e0eefd308c26782607e4fbce505e73e9767a5a1ff0f5c36ef4c038"
+   },
+   {
+    "path": "collections/3.3.6-collectionRightsValidated.json",
+    "sha256": "6429d08d88011d8b02c7ba27ea8784e91fda4caf3dc6e0255ecc0ce9f8445e57"
+   },
+   {
+    "path": "collections/5.1-collectionContextValidated.json",
+    "sha256": "ffb656feda6c9b2a26f819ba22cceb124bba9b34309d523816f929cb6fdb9988"
+   },
+   {
+    "path": "collections/5.1-collectionFirstImplemented.json",
+    "sha256": "122cf9598a553ab9482fff54df679e00f77fa77ea1734cd977eae260eb1d9354"
+   },
+   {
+    "path": "collections/5.1-collectionFirstValidated.json",
+    "sha256": "62e7838340c3cb0e3692365a70ff18af5310e5db8fa9128be95c812f20573f0a"
+   },
+   {
+    "path": "collections/5.1-collectionIdValidated.json",
+    "sha256": "b5b04d9b24a2629acb069be318f11d8661b5caea6e4b190a131601334ea9a898"
+   },
+   {
+    "path": "collections/5.1-collectionLabelImplemented.json",
+    "sha256": "1a3a30706760f7654d299ce088a081b43f7da81a8dcab0a2daee9b6519f24bb2"
+   },
+   {
+    "path": "collections/5.1-collectionLabelValidated.json",
+    "sha256": "154b26cfb1968f2d333f49e4ee172faba49cc74ae3fad75c26ecc8f3908a5781"
+   },
+   {
+    "path": "collections/5.1-collectionLastImplemented.json",
+    "sha256": "90cd94addc950577e3ed87ed9d859b4a47f41b1ba0b7c087aed85430ff48209b"
+   },
+   {
+    "path": "collections/5.1-collectionLastValidated.json",
+    "sha256": "7a64d999c155dfc398d3853d827b62eba6820c900ec090fb535a1d00a3f8e283"
+   },
+   {
+    "path": "collections/5.1-collectionTotalImplemented.json",
+    "sha256": "a836d8f53ecf9ded18f5dc803db93e66c5b547fe1501a464f4dbfbfcd4ac14b0"
+   },
+   {
+    "path": "collections/5.1-collectionTotalValidated.json",
+    "sha256": "f84f4d627aca9acba43d69035628a9de5f9a87226eecea81bd6aace9eadb4ce7"
+   },
+   {
+    "path": "collections/5.1-collectionTypeValidated.json",
+    "sha256": "f61d45a963a93efc90ba5e032266698ed34fb69759797d30866853b793af7460"
+   },
+   {
+    "path": "collections/pages/3.3.1-pageCreatedImplemented.json",
+    "sha256": "716e2732aac9fe2ae6d5061e543ebbc945b0008a7077959be816330f417ad179"
+   },
+   {
+    "path": "collections/pages/3.3.1-pageCreatedValidated.json",
+    "sha256": "04dce0d2c3536a01e728538ed432dba713d0d94feebddd4c7caa1043ea1c7660"
+   },
+   {
+    "path": "collections/pages/3.3.1-pageCreatorImplemented.json",
+    "sha256": "9d06ce731c92741c7480bcf948f702763bd46b2414d82067293b58addcd515c9"
+   },
+   {
+    "path": "collections/pages/3.3.1-pageModifiedImplemented.json",
+    "sha256": "8a872ec027293b3d8d22ee0e92aa47dc223ae983126296583ebc7944108aa1bb"
+   },
+   {
+    "path": "collections/pages/3.3.1-pageModifiedValidated.json",
+    "sha256": "333090ed02ec3cf85b4102c6b807e92fa4a74e85b7577ea8c7baa29df3b92a1c"
+   },
+   {
+    "path": "collections/pages/3.3.2-pageCreatorAgentEmailImplemented.json",
+    "sha256": "2c95aae6db9334c97481622f9de87274272595887d7aa34bc051db76492a27c7"
+   },
+   {
+    "path": "collections/pages/3.3.2-pageCreatorAgentEmail_sha1Implemented.json",
+    "sha256": "fcc18aab3ad06a72bbb888c9fc0e13e5d78230bb6bac9e88e725b172dd7cbe75"
+   },
+   {
+    "path": "collections/pages/3.3.2-pageCreatorAgentHomepageImplemented.json",
+    "sha256": "2ed0619169cf9a34c6d163661700ab59c88d21cbadf401c7d4a5222f344ba547"
+   },
+   {
+    "path": "collections/pages/3.3.2-pageCreatorAgentIdImplemented.json",
+    "sha256": "7ec57802f2217d838c731e71763b3f0cb6b307a934a80648a3ee0705d02ecb75"
+   },
+   {
+    "path": "collections/pages/3.3.2-pageCreatorAgentNameImplemented.json",
+    "sha256": "078d966c02c8415cf699b2112172e82f3afb0b0c36d32e85b7fcb9ec3aa13631"
+   },
+   {
+    "path": "collections/pages/3.3.2-pageCreatorAgentNicknameImplemented.json",
+    "sha256": "37f123566754e62abd39b4f605d0a4a500df8b1e17ea3c195976f24aec1461ac"
+   },
+   {
+    "path": "collections/pages/3.3.2-pageCreatorAgentTypeImplemented.json",
+    "sha256": "4561c9e98b5983a7bef465120aea2ff45966ff386c55d79c7fa40e2248bd8ac5"
+   },
+   {
+    "path": "collections/pages/3.3.6-pageRightsImplemented.json",
+    "sha256": "84c67df7a5abbed4486dbbd59ed399bd1c8b879a0fa0237d9ef1151b64095af1"
+   },
+   {
+    "path": "collections/pages/3.3.6-pageRightsValidated.json",
+    "sha256": "08217ac0fd08bb07ab53bc92f719b03d56d5c74f197abc2ceb8cfbf3f6b31840"
+   },
+   {
+    "path": "collections/pages/5.2-pageContextValidated.json",
+    "sha256": "26a50a67b34c3cf2d2e3d2c6513f0d97ba2b7aaff0658872452deb6388169a5e"
+   },
+   {
+    "path": "collections/pages/5.2-pageFirstImplemented.json",
+    "sha256": "4e44950a2894b0e98843b0e8f79c784d989b8a23c1cbcb5f650d232d40793ece"
+   },
+   {
+    "path": "collections/pages/5.2-pageFirstValidated.json",
+    "sha256": "f75cbb2d2b42ea4de0de6726618a3a9ae3fa69cb23c762184fa60e37da494cf6"
+   },
+   {
+    "path": "collections/pages/5.2-pageIdValidated.json",
+    "sha256": "71a0095f51ab97eaf26200c3ce3c7256093ad9cc3ee50bb3f4bf7974fec8a659"
+   },
+   {
+    "path": "collections/pages/5.2-pageItemsValidated.json",
+    "sha256": "3e9b55450433c917d55a6bc8f9dd58305414be169220e1d68a711535c40b57f4"
+   },
+   {
+    "path": "collections/pages/5.2-pageLabelImplemented.json",
+    "sha256": "5bc87edab52ee2ca320f02093fc868803faa380ad4149569546ac1c7dc9ec27d"
+   },
+   {
+    "path": "collections/pages/5.2-pageLabelValidated.json",
+    "sha256": "9c88a0fdbed5af48da4cfc8d974675e1b9c3cb470545ba2b92ceeb9202991172"
+   },
+   {
+    "path": "collections/pages/5.2-pageLastImplemented.json",
+    "sha256": "4f9983f95e90147f88282a21c69b6ff0b442e3be42d6a420100a07e86b757bf5"
+   },
+   {
+    "path": "collections/pages/5.2-pageLastValidated.json",
+    "sha256": "65430c46df0a196357e45decdd1133a3c349019e4574ed88802ae7fe6ac33657"
+   },
+   {
+    "path": "collections/pages/5.2-pageNextImplemented.json",
+    "sha256": "501e1a71d51e157aa6b33d2a87b4194f02b24d20eef0b1aade6f07fe226d36bc"
+   },
+   {
+    "path": "collections/pages/5.2-pageNextValidated.json",
+    "sha256": "5c3399701026d6d14f69403258720c08654b836a9f4f748bed0b6a2cff96738d"
+   },
+   {
+    "path": "collections/pages/5.2-pagePartOfImplemented.json",
+    "sha256": "49e61c27a5c65b97af9924ffdc9e17013a2035e4c029e6384fb302bf8eb28f6f"
+   },
+   {
+    "path": "collections/pages/5.2-pagePartOfValidated.json",
+    "sha256": "0a4aa8b366fcc969e16eb0ac82f4572ff2facf99e976903c1de3ff91fcdad533"
+   },
+   {
+    "path": "collections/pages/5.2-pagePrevImplemented.json",
+    "sha256": "3bbb66907107af35c40b1d106da2092da39e2666f5229f82d9fd704504a4538c"
+   },
+   {
+    "path": "collections/pages/5.2-pagePrevValidated.json",
+    "sha256": "3e6643772ff05a9c476935e625a73473c0d89645bcc75f611e5fa9c3983ceb05"
+   },
+   {
+    "path": "collections/pages/5.2-pageStartIndexImplemented.json",
+    "sha256": "9e9e99a405bfef710923acb10ee71ba1648f9027a2162cd7ef52abdc7adcc291"
+   },
+   {
+    "path": "collections/pages/5.2-pageStartIndexValidated.json",
+    "sha256": "6da3a98098361fa896ea1f1ebba59c2a78f6565ba087da55ba43f88633e65d05"
+   },
+   {
+    "path": "collections/pages/5.2-pageTotalImplemented.json",
+    "sha256": "3e2470515e97a3610af1d28ca30715020c723fe149b8474cc17bc77a64debc45"
+   },
+   {
+    "path": "collections/pages/5.2-pageTotalValidated.json",
+    "sha256": "5666eea9cfd68aa25ed3903810e48d5b4055ee1be05f00177e5b4302051ce007"
+   },
+   {
+    "path": "collections/pages/5.2-pageTypeValidated.json",
+    "sha256": "4119038ca0a272decf303cb56f8ab1ad8dd2eaca348cc3e50e833fe7b5d053d4"
+   },
+   {
+    "path": "definitions/annotations.json",
+    "sha256": "530a5c60b3bed13fbc209f3be2546ab17e49f682962959e51cdeef6bcb537700"
+   },
+   {
+    "path": "definitions/bodyTarget.json",
+    "sha256": "e2e793f07db9c8ed658662b554e3dcbf9e7358c74a22b659ddab715569ca5438"
+   },
+   {
+    "path": "definitions/choiceSet.json",
+    "sha256": "2910cb6560ada7c38211c45e828523611d566a3d2898e227b85c57680271d393"
+   },
+   {
+    "path": "definitions/collections.json",
+    "sha256": "e02213ae371d5b9f412ffadfff92d09282d4c6bbb4571008fda7532889ef421e"
+   },
+   {
+    "path": "definitions/id.json",
+    "sha256": "82c7dbb1c70fe59a63c52b2077131a6c42925ab79f8b92803d3f29b0c666fffb"
+   },
+   {
+    "path": "definitions/otherProperties.json",
+    "sha256": "c3f2a9f6477f1f630c8f984a96c92c1e03b0a7da28a255b8e166c49388314c37"
+   },
+   {
+    "path": "definitions/specificResource.json",
+    "sha256": "1d951b027cfa0375e297078694ed3af746cf7f2303c3c73d69deb7b17b782d4f"
+   }
+  ],
+  "table": {
+   "module": "app/src/PrismAnnotationTable.lex.tex",
+   "sha256": "ee2763eb2339963895c1af8edda1ed2d6d67a49d51a976a4293710c53eb568b5",
+   "bytes": 19909
+  }
+ },
+ "examplesSource": {
+  "repository": "https://github.com/w3c/web-annotation",
+  "revision": "74992e5d3ca3ac10b3289f6c855c876cc9b024a1",
+  "base": "https://raw.githubusercontent.com/w3c/web-annotation/74992e5d3ca3ac10b3289f6c855c876cc9b024a1/"
+ },
+ "recommendation": {
+  "url": "https://www.w3.org/TR/2017/REC-annotation-model-20170223/",
+  "sha256": "a7513e022f56c0a6f4e99ac11aec03f3451d1ff1ce14054780b3ccfb38fa7980"
+ },
+ "content": [
+  {
+   "from": "suite",
+   "path": "tools/samples/example15.json",
+   "sha256": "902604ad81dbc6998caae5a22ca95502535a5ceb2c838b753d6e9efa56206289"
+  },
+  {
+   "from": "suite",
+   "path": "tools/samples/example8.json",
+   "sha256": "aa45bcadadea88f229e525258a69a9c422d8b7d47aa2886e73fbca471d1ae659"
+  },
+  {
+   "from": "examples",
+   "path": "model/wd2/examples/correct/anno11.json",
+   "sha256": "cb6c30f8ae8b10ee3a072f536dd04427920ee7706384b13b60253753c4ea40b9"
+  },
+  {
+   "from": "examples",
+   "path": "model/wd2/examples/correct/anno38.json",
+   "sha256": "c8e70f205781699f27953812990affb6353e311a4977f76e526349403b160b92"
+  },
+  {
+   "from": "examples",
+   "path": "model/wd2/examples/incorrect/anno1.json",
+   "sha256": "5d2f9a2d1fed2742c527f2ebe668b6c98ab1fba3caf8d4148f81716493b1e72d"
+  },
+  {
+   "from": "examples",
+   "path": "model/wd2/examples/incorrect/anno11.json",
+   "sha256": "9e0ded8de356bcbc2a76ff017235050ffe77d4561c8d4257e4a992f9a205c79c"
+  },
+  {
+   "from": "examples",
+   "path": "model/wd2/examples/incorrect/anno2.json",
+   "sha256": "8eb95bcbc154530931e15fc418c8b1fe991095671409552099ea1aa596999ede"
+  },
+  {
+   "from": "examples",
+   "path": "model/wd2/examples/incorrect/anno28.json",
+   "sha256": "db38fa7d059b9c573740be762fc84b02a5cca11a8a425e573d47b5bcbb096a3c"
+  },
+  {
+   "from": "examples",
+   "path": "model/wd2/examples/incorrect/anno29.json",
+   "sha256": "ab66bdbfd2fc1e11077e7fcb1fe982084fa69fcddbe001f48e010446f2933694"
+  },
+  {
+   "from": "examples",
+   "path": "model/wd2/examples/incorrect/anno30.json",
+   "sha256": "ea36d5abc45c2ccc2133c7270758ec5aa52b86e61ae09cab5c2886eef814390f"
+  },
+  {
+   "from": "examples",
+   "path": "model/wd2/examples/incorrect/anno34.json",
+   "sha256": "6bf1a273f6b16a138b852454c745e88d5c6fb47404a27e3407dfec518a3e62ad"
+  },
+  {
+   "from": "examples",
+   "path": "model/wd2/examples/incorrect/anno35.json",
+   "sha256": "76eefd1b5944e11d689d6260e9e59fc0116ea4cd47feaad8be8b86a562115f21"
+  },
+  {
+   "from": "examples",
+   "path": "model/wd2/examples/incorrect/anno36.json",
+   "sha256": "bdb889c36853f0e8a1ec2893f0429008c97f1ae4cb9b37da08d9fea022238d63"
+  },
+  {
+   "from": "recommendation",
+   "example": 38,
+   "sha256": "b1f7ee8aa32771c9fc9df0e844dc8d014c8d0f4d2a0f5bbcf0c2739aa032dacd"
+  },
+  {
+   "from": "recommendation",
+   "example": 39,
+   "sha256": "bd460ad9053cf14d6919063ae9c744fad285d28c13b485029c6f126329fd907f"
+  }
+ ],
+ "vectors": [
+  {
+   "test": "annotationMusts",
+   "content": "model/wd2/examples/incorrect/anno1.json"
+  },
+  {
+   "test": "annotationMusts",
+   "content": "tools/samples/example8.json"
+  },
+  {
+   "test": "collectionMusts",
+   "content": "model/wd2/examples/incorrect/anno2.json"
+  },
+  {
+   "test": "pageMusts",
+   "content": "model/wd2/examples/incorrect/anno2.json"
+  },
+  {
+   "test": "annotationMusts",
+   "content": "model/wd2/examples/incorrect/anno2.json"
+  },
+  {
+   "test": "annotationOptionals",
+   "content": "model/wd2/examples/incorrect/anno2.json"
+  },
+  {
+   "test": "annotationMusts",
+   "content": "model/wd2/examples/incorrect/anno11.json"
+  },
+  {
+   "test": "collectionOptionals",
+   "content": "model/wd2/examples/incorrect/anno2.json"
+  },
+  {
+   "test": "pageMusts",
+   "content": "Example 39"
+  },
+  {
+   "test": "collectionMusts",
+   "content": "tools/samples/example8.json"
+  },
+  {
+   "test": "annotationsAgentOptionals",
+   "content": "tools/samples/example15.json"
+  },
+  {
+   "test": "annotationOptionals",
+   "content": "model/wd2/examples/correct/anno38.json"
+  },
+  {
+   "test": "annotationsAgentOptionals",
+   "content": "model/wd2/examples/incorrect/anno2.json"
+  },
+  {
+   "test": "pageOptionals",
+   "content": "model/wd2/examples/incorrect/anno2.json"
+  },
+  {
+   "test": "collectionOptionals",
+   "content": "tools/samples/example15.json"
+  },
+  {
+   "test": "collectionOptionals",
+   "content": "Example 38"
+  },
+  {
+   "test": "pageOptionals",
+   "content": "Example 39"
+  },
+  {
+   "test": "collectionMusts",
+   "content": "Example 38"
+  },
+  {
+   "test": "annotationMusts",
+   "content": "model/wd2/examples/incorrect/anno35.json"
+  },
+  {
+   "test": "annotationMusts",
+   "content": "model/wd2/examples/incorrect/anno34.json"
+  },
+  {
+   "test": "annotationMusts",
+   "content": "model/wd2/examples/incorrect/anno30.json"
+  },
+  {
+   "test": "annotationMusts",
+   "content": "model/wd2/examples/incorrect/anno28.json"
+  },
+  {
+   "test": "annotationMusts",
+   "content": "model/wd2/examples/incorrect/anno29.json"
+  },
+  {
+   "test": "annotationMusts",
+   "content": "model/wd2/examples/incorrect/anno36.json"
+  },
+  {
+   "test": "collectionMusts",
+   "content": "model/wd2/examples/incorrect/anno34.json"
+  },
+  {
+   "test": "collectionMusts",
+   "content": "model/wd2/examples/incorrect/anno28.json"
+  },
+  {
+   "test": "collectionMusts",
+   "content": "model/wd2/examples/incorrect/anno29.json"
+  },
+  {
+   "test": "collectionOptionals",
+   "content": "model/wd2/examples/correct/anno11.json"
+  }
+ ],
+ "examples": [
+  [
+   "annotationMusts\nthis is not json",
+   "invalid"
+  ],
+  [
+   "annotationMusts\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/anno8\",\n  \"type\": \"Annotation\",\n  \"target\": \"http://example.org/ebook1\"\n}",
+   "ok"
+  ],
+  [
+   "collectionMusts\n{\n}",
+   "5.1-collectionContextValidated 5.1-collectionIdValidated 5.1-collectionTypeValidated"
+  ],
+  [
+   "pageMusts\n{\n}",
+   "5.2-pageContextValidated 5.2-pageIdValidated 5.2-pageTypeValidated 5.2-pageItemsValidated 5.2-pageStartIndexValidated 5.2-pagePartOfValidated 5.2-pageNextValidated 5.2-pagePrevValidated"
+  ],
+  [
+   "annotationMusts\n{\n}",
+   "3.1-annotationContextValidated 3.1-annotationIdValidated 3.1-annotationTypeValidated 3.1-targetKeyFound 3.2-targetObjectsRecognized"
+  ],
+  [
+   "annotationOptionals\n{\n}",
+   "3.3.1-annotationSingleCreatorImplemented 3.3.1-annotationCreatedImplemented 3.3.5-annotationSingleMotivationImplemented 3.2.5-bodyValueImplemented 3.3.1-annotationGeneratedImplemented 3.3.1-annotationModifiedImplemented 3.3.3-annotationAudienceImplemented 3.3.5-annotationMotivationImplemented 3.3.6-annotationRightsImplemented 3.3.7-annotationCanonicalImplemented 3.3.7-annotationViaImplemented 4.4-annotationStylesheetImplemented 3.1-bodyKeyFound 3.2.1-bodySingleFormat 3.2.1-bodySingleLanguage 3.3.1-bodySingleCreator 3.3.1-bodyCreated 3.2.1-bodyFormat 3.2.1-bodyLanguage 3.2.2-bodyType 3.2.1-bodyProcessingLanguage 3.2.1-bodyTextDirection 3.3.1-bodyModified 3.3.3-bodyAudience 3.3.4-bodyAccessibility 3.3.5-bodyPurpose 3.3.6-bodyRights 3.3.7-bodyCanonical 3.3.7-bodyVia 3.2.1-bodyEWR 3.2.4-bodyETB 3.2.4-bodyETBTypeTextualBody 3.2.4-bodyETBTypeText 3.2.7-bodyChoice 3.2.1-targSingleFormat 3.2.1-targSingleLanguage 3.3.1-targSingleCreator 3.3.1-targCreated 3.2.1-targFormat 3.2.1-targLanguage 3.2.2-targType 3.2.1-targProcessingLanguage 3.2.1-targTextDirection 3.3.1-targModified 3.3.3-targAudience 3.3.4-targAccessibility 3.3.5-targPurpose 3.3.6-targRights 3.3.7-targCanonical 3.3.7-targVia 3.2.1-targEWR 3.2.7-targChoice 4-bodySpecificResource 4-targSpecificResource 4.3.3-refinedBy 4.4-styleClass 4.5-renderedVia 4.6-scope 4.2-selectorFound 4.2.1-fragmentSelector 4.2.1-conformsTo 4.2.2-cssSelector 4.2.3-xpathSelector 4.2.4-textQuoteSelector 4.2.4-prefix 4.2.4-suffix 4.2.5-textPositionSelector 4.2.6-dataPositionSelector 4.2.7-svgSelector 4.2.8-rangeSelector 4.3-stateFound 4.3.1-timeState 4.3.2-requestHeaderState 4.3.1-cached"
+  ],
+  [
+   "annotationMusts\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": [\"http://example.org/1\", \"http://example.org/2\"],\n  \"type\": \"Annotation\",\n  \"label\": \"bad target\",\n  \"body\": \"http://example.org/post1\",\n  \"target\": 9\n}",
+   "3.1-annotationIdValidated 3.2-targetObjectsRecognized 3.2.1-targTextDirectionValidated 3.3.1-targCreatedValidated 3.3.1-targModifiedValidated 3.3.6-targRightsValidated 3.3.7-targCanonicalValidated 3.3.7-targViaValidated 4.2-selectorValidIfPresent 4.3-stateValidIfPresent 4.3.3-refinedByValidated 4.2-fragmentCssXPathSelectorValid 4.2.4-textQuoteSelectorValid 4.2-TextDataPositionSelectorValid 4.2.7-svgSelectorValid 4.2.8-rangeSelectorValid 4.3.1-timeStateValid 4.3.2-httpRequestStateValid"
+  ],
+  [
+   "collectionOptionals\n{\n}",
+   "5.1-collectionLabelImplemented 5.1-collectionLastImplemented 5.1-collectionTotalImplemented 5.1-collectionFirstImplemented 3.3.1-collectionModifiedImplemented 3.3.1-collectionCreatorImplemented 3.3.1-collectionCreatedImplemented 3.3.6-collectionRightsImplemented 3.3.2-collectionCreatorAgentEmail_sha1Implemented 3.3.2-collectionCreatorAgentEmailImplemented 3.3.2-collectionCreatorAgentHomepageImplemented 3.3.2-collectionCreatorAgentIdImplemented 3.3.2-collectionCreatorAgentNameImplemented 3.3.2-collectionCreatorAgentNicknameImplemented 3.3.2-collectionCreatorAgentTypeImplemented"
+  ],
+  [
+   "pageMusts\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/page1\",\n  \"type\": \"AnnotationPage\",\n  \"partOf\": {\n    \"id\": \"http://example.org/collection1\",\n    \"label\": \"Steampunk Annotations\",\n    \"total\": 42023\n  },\n  \"next\": \"http://example.org/page2\",\n  \"startIndex\": 0,\n  \"items\": [\n    {\n      \"id\": \"http://example.org/anno1\",\n      \"type\": \"Annotation\",\n      \"body\": \"http://example.net/comment1\",\n      \"target\": \"http://example.com/book/chapter1\"\n    },\n    {\n      \"id\": \"http://example.org/anno2\",\n      \"type\": \"Annotation\",\n      \"body\": \"http://example.net/comment2\",\n      \"target\": \"http://example.com/book/chapter2\"\n    }\n  ]\n}",
+   "ok"
+  ],
+  [
+   "collectionMusts\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/anno8\",\n  \"type\": \"Annotation\",\n  \"target\": \"http://example.org/ebook1\"\n}",
+   "5.1-collectionTypeValidated"
+  ],
+  [
+   "annotationsAgentOptionals\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/anno15\",\n  \"type\": \"Annotation\",\n  \"creator\": {\n    \"id\": \"http://example.org/user1\",\n    \"type\": \"Person\",\n    \"name\": \"My Pseudonym\",\n    \"nickname\": \"pseudo\",\n    \"email_sha1\": \"58bad08927902ff9307b621c54716dcc5083e339\"\n  },\n  \"generator\": {\n    \"id\": \"http://example.org/client1\",\n    \"type\": \"Software\",\n    \"name\": \"Code v2.1\",\n    \"homepage\": \"http://example.org/client1/homepage1\"\n  },\n  \"body\": \"http://example.net/review1\",\n  \"target\": \"http://example.com/restaurant1\"\n}",
+   "3.3.2-annotationCreatorAgentEmailImplemented 3.3.2-annotationCreatorAgentHomepageImplemented 3.3.2-annotationGeneratorAgentNicknameImplemented 3.3.2-annotationGeneratorAgentEmailImplemented 3.3.2-annotationGeneratorAgentEmail_sha1Implemented 3.3.1-bodyCreator 3.3.2-bodyCreatorAgentIdImplemented 3.3.2-bodyCreatorAgentTypeImplemented 3.3.2-bodyCreatorAgentNicknameImplemented 3.3.2-bodyCreatorAgentSingleNameImplemented 3.3.2-bodyCreatorAgentNameImplemented 3.3.2-bodyCreatorAgentEmailImplemented 3.3.2-bodyCreatorAgentEmail_sha1Implemented 3.3.2-bodyCreatorAgentHomepageImplemented 3.3.1-targCreator 3.3.2-targCreatorAgentIdImplemented 3.3.2-targCreatorAgentTypeImplemented 3.3.2-targCreatorAgentNicknameImplemented 3.3.2-targCreatorAgentSingleNameImplemented 3.3.2-targCreatorAgentNameImplemented 3.3.2-targCreatorAgentEmailImplemented 3.3.2-targCreatorAgentEmail_sha1Implemented 3.3.2-targCreatorAgentHomepageImplemented"
+  ],
+  [
+   "annotationOptionals\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/anno38\",\n  \"type\": \"Annotation\",\n  \"motivation\": \"commenting\",\n  \"creator\": {\n    \"id\": \"http://example.org/user1\",\n    \"type\": \"Person\",\n    \"name\": \"A. Person\",\n    \"nickname\": \"user1\"\n  },\n  \"created\": \"2015-10-13T13:00:00Z\",\n  \"generator\": {\n    \"id\": \"http://example.org/client1\",\n    \"type\": \"Software\",\n    \"name\": \"Code v2.1\",\n    \"homepage\": \"http://example.org/homepage1\"\n  },\n  \"generated\": \"2015-10-14T15:13:28Z\",\n  \"stylesheet\": {\n    \"id\": \"http://example.org/stylesheet1\",\n    \"type\": \"CssStylesheet\"\n  },\n  \"body\": [\n    {\n      \"type\": \"TextualBody\",\n      \"purpose\": \"tagging\",\n      \"value\": \"love\"\n    },\n    {\n      \"type\": \"Choice\",\n      \"items\": [\n        {\n          \"type\": \"TextualBody\",\n          \"purpose\": \"describing\",\n          \"value\": \"I really love this particular bit of text in this XML. No really.\",\n          \"format\": \"text/plain\",\n          \"language\": \"en\",\n          \"creator\": \"http://example.org/user1\"\n        },\n        {\n          \"type\": \"SpecificResource\",\n          \"purpose\": \"describing\",\n          \"source\": {\n            \"id\": \"http://example.org/comment1\",\n            \"type\": \"Audio\",\n            \"format\": \"audio/mpeg\",\n            \"language\": \"de\",\n            \"creator\": {\n              \"id\": \"http://example.org/user2\",\n              \"type\": \"Person\"\n            }\n          }\n        }\n      ]\n    }\n  ],\n  \"target\": {\n    \"type\": \"SpecificResource\",\n    \"styleClass\": \"mystyle\",\n    \"source\": \"http://example.com/document1\",\n    \"state\": [\n      {\n        \"type\": \"HttpRequestState\",\n        \"value\": \"Accept: application/xml\",\n        \"refinedBy\": {\n          \"type\": \"TimeState\",\n          \"sourceDate\": \"2015-09-25T12:00:00Z\"\n        }\n      }\n    ],\n    \"selector\": {\n      \"type\": \"FragmentSelector\",\n      \"value\": \"xpointer(/doc/body/section[2]/para[1])\",\n      \"refinedBy\": {\n        \"type\": \"TextPositionSelector\",\n        \"start\": 6,\n        \"end\": 27\n      }\n    }\n  }\n}",
+   "3.2.5-bodyValueImplemented 3.3.1-annotationModifiedImplemented 3.3.3-annotationAudienceImplemented 3.3.6-annotationRightsImplemented 3.3.7-annotationCanonicalImplemented 3.3.7-annotationViaImplemented 3.3.1-bodyCreated 3.2.2-bodyType 3.2.1-bodyProcessingLanguage 3.2.1-bodyTextDirection 3.3.1-bodyModified 3.3.3-bodyAudience 3.3.4-bodyAccessibility 3.3.6-bodyRights 3.3.7-bodyCanonical 3.3.7-bodyVia 3.2.4-bodyETBTypeText 3.2.1-targSingleFormat 3.2.1-targSingleLanguage 3.3.1-targSingleCreator 3.3.1-targCreated 3.2.1-targFormat 3.2.1-targLanguage 3.2.2-targType 3.2.1-targProcessingLanguage 3.2.1-targTextDirection 3.3.1-targModified 3.3.3-targAudience 3.3.4-targAccessibility 3.3.5-targPurpose 3.3.6-targRights 3.3.7-targCanonical 3.3.7-targVia 3.2.7-targChoice 4.5-renderedVia 4.6-scope 4.2.1-conformsTo 4.2.2-cssSelector 4.2.3-xpathSelector 4.2.4-textQuoteSelector 4.2.4-prefix 4.2.4-suffix 4.2.5-textPositionSelector 4.2.6-dataPositionSelector 4.2.7-svgSelector 4.2.8-rangeSelector 4.3.1-timeState 4.3.1-cached"
+  ],
+  [
+   "annotationsAgentOptionals\n{\n}",
+   "3.3.1-annotationCreatorImplemented 3.3.2-annotationCreatorAgentIdImplemented 3.3.2-annotationCreatorAgentTypeImplemented 3.3.2-annotationCreatorAgentNicknameImplemented 3.3.2-annotationCreatorAgentSingleNameImplemented 3.3.2-annotationCreatorAgentNameImplemented 3.3.2-annotationCreatorAgentEmailImplemented 3.3.2-annotationCreatorAgentEmail_sha1Implemented 3.3.2-annotationCreatorAgentHomepageImplemented 3.3.1-annotationGeneratorImplemented 3.3.2-annotationGeneratorAgentIdImplemented 3.3.2-annotationGeneratorAgentTypeImplemented 3.3.2-annotationGeneratorAgentNicknameImplemented 3.3.2-annotationGeneratorAgentSingleNameImplemented 3.3.2-annotationGeneratorAgentNameImplemented 3.3.2-annotationGeneratorAgentEmailImplemented 3.3.2-annotationGeneratorAgentEmail_sha1Implemented 3.3.2-annotationGeneratorAgentHomepageImplemented 3.3.1-bodyCreator 3.3.2-bodyCreatorAgentIdImplemented 3.3.2-bodyCreatorAgentTypeImplemented 3.3.2-bodyCreatorAgentNicknameImplemented 3.3.2-bodyCreatorAgentSingleNameImplemented 3.3.2-bodyCreatorAgentNameImplemented 3.3.2-bodyCreatorAgentEmailImplemented 3.3.2-bodyCreatorAgentEmail_sha1Implemented 3.3.2-bodyCreatorAgentHomepageImplemented 3.3.1-targCreator 3.3.2-targCreatorAgentIdImplemented 3.3.2-targCreatorAgentTypeImplemented 3.3.2-targCreatorAgentNicknameImplemented 3.3.2-targCreatorAgentSingleNameImplemented 3.3.2-targCreatorAgentNameImplemented 3.3.2-targCreatorAgentEmailImplemented 3.3.2-targCreatorAgentEmail_sha1Implemented 3.3.2-targCreatorAgentHomepageImplemented"
+  ],
+  [
+   "pageOptionals\n{\n}",
+   "5.2-pagePartOfImplemented 5.2-pageStartIndexImplemented 5.2-pageNextImplemented 5.2-pagePrevImplemented 5.2-pageLabelImplemented 5.2-pageLastImplemented 5.2-pageTotalImplemented 5.2-pageFirstImplemented 3.3.1-pageModifiedImplemented 3.3.1-pageCreatorImplemented 3.3.1-pageCreatedImplemented 3.3.6-pageRightsImplemented 3.3.2-pageCreatorAgentEmail_sha1Implemented 3.3.2-pageCreatorAgentEmailImplemented 3.3.2-pageCreatorAgentHomepageImplemented 3.3.2-pageCreatorAgentIdImplemented 3.3.2-pageCreatorAgentNameImplemented 3.3.2-pageCreatorAgentNicknameImplemented 3.3.2-pageCreatorAgentTypeImplemented"
+  ],
+  [
+   "collectionOptionals\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/anno15\",\n  \"type\": \"Annotation\",\n  \"creator\": {\n    \"id\": \"http://example.org/user1\",\n    \"type\": \"Person\",\n    \"name\": \"My Pseudonym\",\n    \"nickname\": \"pseudo\",\n    \"email_sha1\": \"58bad08927902ff9307b621c54716dcc5083e339\"\n  },\n  \"generator\": {\n    \"id\": \"http://example.org/client1\",\n    \"type\": \"Software\",\n    \"name\": \"Code v2.1\",\n    \"homepage\": \"http://example.org/client1/homepage1\"\n  },\n  \"body\": \"http://example.net/review1\",\n  \"target\": \"http://example.com/restaurant1\"\n}",
+   "5.1-collectionLabelImplemented 5.1-collectionLastImplemented 5.1-collectionTotalImplemented 5.1-collectionFirstImplemented 3.3.1-collectionModifiedImplemented 3.3.1-collectionCreatedImplemented 3.3.6-collectionRightsImplemented 3.3.2-collectionCreatorAgentEmailImplemented 3.3.2-collectionCreatorAgentHomepageImplemented"
+  ],
+  [
+   "collectionOptionals\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/collection1\",\n  \"type\": \"AnnotationCollection\",\n  \"label\": \"Steampunk Annotations\",\n  \"creator\": \"http://example.com/publisher\",\n  \"total\": 42023,\n  \"first\": \"http://example.org/page1\",\n  \"last\": \"http://example.org/page42\"\n}",
+   "3.3.1-collectionModifiedImplemented 3.3.1-collectionCreatedImplemented 3.3.6-collectionRightsImplemented 3.3.2-collectionCreatorAgentEmail_sha1Implemented 3.3.2-collectionCreatorAgentEmailImplemented 3.3.2-collectionCreatorAgentHomepageImplemented 3.3.2-collectionCreatorAgentIdImplemented 3.3.2-collectionCreatorAgentNameImplemented 3.3.2-collectionCreatorAgentNicknameImplemented 3.3.2-collectionCreatorAgentTypeImplemented"
+  ],
+  [
+   "pageOptionals\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/page1\",\n  \"type\": \"AnnotationPage\",\n  \"partOf\": {\n    \"id\": \"http://example.org/collection1\",\n    \"label\": \"Steampunk Annotations\",\n    \"total\": 42023\n  },\n  \"next\": \"http://example.org/page2\",\n  \"startIndex\": 0,\n  \"items\": [\n    {\n      \"id\": \"http://example.org/anno1\",\n      \"type\": \"Annotation\",\n      \"body\": \"http://example.net/comment1\",\n      \"target\": \"http://example.com/book/chapter1\"\n    },\n    {\n      \"id\": \"http://example.org/anno2\",\n      \"type\": \"Annotation\",\n      \"body\": \"http://example.net/comment2\",\n      \"target\": \"http://example.com/book/chapter2\"\n    }\n  ]\n}",
+   "5.2-pagePrevImplemented 5.2-pageLastImplemented 5.2-pageFirstImplemented 3.3.1-pageModifiedImplemented 3.3.1-pageCreatorImplemented 3.3.1-pageCreatedImplemented 3.3.6-pageRightsImplemented 3.3.2-pageCreatorAgentEmail_sha1Implemented 3.3.2-pageCreatorAgentEmailImplemented 3.3.2-pageCreatorAgentHomepageImplemented 3.3.2-pageCreatorAgentIdImplemented 3.3.2-pageCreatorAgentNameImplemented 3.3.2-pageCreatorAgentNicknameImplemented 3.3.2-pageCreatorAgentTypeImplemented"
+  ],
+  [
+   "collectionMusts\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/collection1\",\n  \"type\": \"AnnotationCollection\",\n  \"label\": \"Steampunk Annotations\",\n  \"creator\": \"http://example.com/publisher\",\n  \"total\": 42023,\n  \"first\": \"http://example.org/page1\",\n  \"last\": \"http://example.org/page42\"\n}",
+   "ok"
+  ],
+  [
+   "annotationMusts\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": [\"http://example.org/1\", \"http://example.org/2\"],\n  \"type\": \"Annotation\",\n  \"label\": \"bad via\",\n  \"via\": \"not a uri\",\n  \"body\": \"http://example.org/post1\",\n  \"target\": \"http://example.com/page1\"\n}",
+   "3.1-annotationIdValidated 3.3.7-annotationViaValidated"
+  ],
+  [
+   "annotationMusts\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": [\"http://example.org/1\", \"http://example.org/2\"],\n  \"type\": \"Annotation\",\n  \"label\": \"bad rights\",\n  \"rights\": \"not a uri\",\n  \"body\": \"http://example.org/post1\",\n  \"target\": \"http://example.com/page1\"\n}",
+   "3.1-annotationIdValidated 3.3.6-annotationRightsValidated"
+  ],
+  [
+   "annotationMusts\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": [\"http://example.org/1\", \"http://example.org/2\"],\n  \"type\": \"Annotation\",\n  \"label\": \"bad created\",\n  \"generated\": \"now\",\n  \"body\": \"http://example.org/post1\",\n  \"target\": \"http://example.com/page1\"\n}",
+   "3.1-annotationIdValidated 3.3.1-annotationGeneratedValidated"
+  ],
+  [
+   "annotationMusts\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": [\"http://example.org/1\", \"http://example.org/2\"],\n  \"type\": \"Annotation\",\n  \"label\": \"bad created\",\n  \"created\": \"yesterday\",\n  \"body\": \"http://example.org/post1\",\n  \"target\": \"http://example.com/page1\"\n}",
+   "3.1-annotationIdValidated 3.3.1-annotationCreatedValidated"
+  ],
+  [
+   "annotationMusts\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": [\"http://example.org/1\", \"http://example.org/2\"],\n  \"type\": \"Annotation\",\n  \"label\": \"bad created\",\n  \"modified\": \"an hour ago\",\n  \"body\": \"http://example.org/post1\",\n  \"target\": \"http://example.com/page1\"\n}",
+   "3.1-annotationIdValidated 3.3.1-annotationModifiedValidated"
+  ],
+  [
+   "annotationMusts\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": [\"http://example.org/1\", \"http://example.org/2\"],\n  \"type\": \"Annotation\",\n  \"label\": \"bad canonical\",\n  \"canonical\": \"not a uri\",\n  \"body\": \"http://example.org/post1\",\n  \"target\": \"http://example.com/page1\"\n}",
+   "3.1-annotationIdValidated 3.3.7-annotationCanonicalValidated"
+  ],
+  [
+   "collectionMusts\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": [\"http://example.org/1\", \"http://example.org/2\"],\n  \"type\": \"Annotation\",\n  \"label\": \"bad rights\",\n  \"rights\": \"not a uri\",\n  \"body\": \"http://example.org/post1\",\n  \"target\": \"http://example.com/page1\"\n}",
+   "5.1-collectionIdValidated 5.1-collectionTypeValidated 3.3.6-collectionRightsValidated"
+  ],
+  [
+   "collectionMusts\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": [\"http://example.org/1\", \"http://example.org/2\"],\n  \"type\": \"Annotation\",\n  \"label\": \"bad created\",\n  \"created\": \"yesterday\",\n  \"body\": \"http://example.org/post1\",\n  \"target\": \"http://example.com/page1\"\n}",
+   "5.1-collectionIdValidated 5.1-collectionTypeValidated 3.3.1-collectionCreatedValidated"
+  ],
+  [
+   "collectionMusts\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": [\"http://example.org/1\", \"http://example.org/2\"],\n  \"type\": \"Annotation\",\n  \"label\": \"bad created\",\n  \"modified\": \"an hour ago\",\n  \"body\": \"http://example.org/post1\",\n  \"target\": \"http://example.com/page1\"\n}",
+   "5.1-collectionIdValidated 5.1-collectionTypeValidated 3.3.1-collectionModifiedValidated"
+  ],
+  [
+   "collectionOptionals\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/anno11\",\n  \"type\": \"Annotation\",\n  \"creator\": \"http://example.org/user1\",\n  \"created\": \"2015-01-28T12:00:00Z\",\n  \"modified\": \"2015-01-29T09:00:00Z\",\n  \"generator\": \"http://example.org/client1\",\n  \"generated\": \"2015-02-04T12:00:00Z\",\n  \"body\": {\n    \"id\": \"http://example.net/review1\",\n    \"creator\": \"http://example.net/user2\",\n    \"created\": \"2014-06-02T17:00:00Z\"\n  },\n  \"target\": \"http://example.com/restaurant1\"\n}",
+   "5.1-collectionLabelImplemented 5.1-collectionLastImplemented 5.1-collectionTotalImplemented 5.1-collectionFirstImplemented 3.3.6-collectionRightsImplemented 3.3.2-collectionCreatorAgentEmail_sha1Implemented 3.3.2-collectionCreatorAgentEmailImplemented 3.3.2-collectionCreatorAgentHomepageImplemented 3.3.2-collectionCreatorAgentIdImplemented 3.3.2-collectionCreatorAgentNameImplemented 3.3.2-collectionCreatorAgentNicknameImplemented 3.3.2-collectionCreatorAgentTypeImplemented"
+  ]
+ ]
+}

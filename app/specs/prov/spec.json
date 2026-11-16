@@ -1,0 +1,1490 @@
+{
+ "name": "prov",
+ "comment": "The Prism's provenance checker (app/src/PrismProv.lex.tex, the guest 'prov') held to W3C's Constraints of the PROV Data Model (PROV-CONSTRAINTS, Recommendation 30 April 2013), reading the PROV-N notation (Recommendation 30 April 2013). The request is 'check', a newline and a PROV-N document; the answer is 'valid', 'invalid' and the numbers of the constraints that do not hold, 'malformed' when the text is not a PROV-N document, or 'unjudged' when normalization would pass the guest's bounds (4,000 statements or 30,000 existential variables in one instance). 'tests' is every PROV-N case of the PROV working group's constraints test suite, as the 'suite' page lists them and as W3C serves them under 'base', each pinned by SHA-256 and kept at app/specs/standards/texts/<sha256>. A case's file name is W3C's verdict: PASS is a valid document, FAIL is not, and the c numbers are the constraints the case is about; DM marks a case that is not a document of the data model, which this reader refuses as malformed. 'answer' is the guest's answer: W3C gives the verdict, and the numbers in an 'invalid' answer are the checker's own reading, each one among the file name's c numbers except in type-f4-FAIL-c53, where Inference 15 gives the generation and the usage that share an identifier two influences with that identifier, so Constraint 23 fails beside 53. 'examples' carries the PASS cases byte for byte as the guest's acceptance vectors after the verb line, and app/specs/prov/invalid/spec.json carries the FAIL cases the same way for the guest 'prov-invalid' (the same module: one guest build carries at most about 110 vectors); cases W3C serves under two names with the same bytes are one vector; nothing else is an acceptance vector. 'shown' names, for each numbered inference or constraint, the cases whose verdict changes when that one rule is switched off in the checker: those are the rules this suite shows enforced. The suite cannot show the others (its ordering cases outside 42 and 45 are all PASS cases, and no case turns on Inferences 5 to 18, 20 and 21 or Constraints 22, 50, 51 and 53 alone), so they stay in ST-01's debt, and a document with a repeated bundle identifier (section 7.2, answered 'invalid 7.2') has no case at all.",
+ "standard": {
+  "url": "https://www.w3.org/TR/2013/REC-prov-constraints-20130430/",
+  "sha256": "0e65d02339347af6f6e5744cb69a99cf56430e8fd9dd904ac476541634361287"
+ },
+ "notation": {
+  "url": "https://www.w3.org/TR/2013/REC-prov-n-20130430/",
+  "sha256": "c7320ed45cc643eca0819b0616835529dfb35dc819eaf50deaf209ee1e974e49"
+ },
+ "suite": {
+  "url": "https://dvcs.w3.org/hg/prov/raw-file/default/testcases/process.html",
+  "sha256": "5a8dd5d121b55cb505f32094ae719ddcda77069486fbe4229ddae087039553ea"
+ },
+ "base": "https://dvcs.w3.org/hg/prov/raw-file/default/testcases/constraints/",
+ "tests": [
+  {
+   "file": "ordering-activity1-PASS-c30.provn",
+   "sha256": "1612cee39bcb61f4f831256a33f95d38089e035113e770a6d6bea6c7149739b5",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-activity2-PASS-c33.provn",
+   "sha256": "58707b1db5ec9e93ae8da7713c0f0afe8c9963c94119bc44206050bfcd89c87a",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-activity3-PASS-c34.provn",
+   "sha256": "c75b835e5fcf3578e40525b1737fa7fac803f0d67a5e7dea8b8fc12fa19d7f52",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-activity4-PASS-c31.provn",
+   "sha256": "9fc4a453d5ac211c1d84124a45cb94f499066af8e35c48ed7388915943a2969d",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-activity5-PASS-c32.provn",
+   "sha256": "7d65b2d3ce0031b21df15d523d8b9289d0738b7cb94383c19b1e2bf978c012be",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-association1-PASS-c47.provn",
+   "sha256": "ee9f4185a41f2dacd8a849e20d9504e86c096bbb9775a568bdaa24d14e43bb95",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-association2-PASS-c47.provn",
+   "sha256": "2fee73a4f493a4c63af97adac9729f76abd9842683abbd5fbc8ac526ca9039f4",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-attribution1-PASS-c48.provn",
+   "sha256": "522b87cef83194166add122afefce5fd92eb58c04fcbe8d9836eaa65a3d03397",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-attribution2-PASS-c48.provn",
+   "sha256": "1186acd22d39798e821fa259149f517d2c5cf3b9321c4386841fc8ace7a5c7ed",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-communication-PASS-c35.provn",
+   "sha256": "5472d513ae0db82c2bfd0af969547ff5a959637b43f5561951578c50ae4c3d35",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-delegation1-PASS-c49.provn",
+   "sha256": "6dcc1d4c48a8439c30852ac4de0a09004b22cb46daa193fff861b9b559fe95cf",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-delegation2-PASS-c49.provn",
+   "sha256": "2b239635e4fb903b271cf9ee24a628312f7b586b4417cbb29007ae63ecaa432b",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-derivation1-PASS-c42.provn",
+   "sha256": "ff6ea34b8e4d4945b6353cacd90c8256f65bd0aac98b05d55722e45e5b8b1aea",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-derivation2-FAIL-c42.provn",
+   "sha256": "4a2d8fcfb41da49f608c99f53894f9ab7b1f5f135b7bace08f794eaed1010341",
+   "verdict": "FAIL",
+   "answer": "invalid 42"
+  },
+  {
+   "file": "ordering-derivation3-PASS-c41-c42.provn",
+   "sha256": "3a4f6ad74a4b7e0e5912b799efe274c1645cecfbbc5988c25cf92b53867b4aa4",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-ends1-PASS-c44.provn",
+   "sha256": "ac27e8e8e07bf8784e9075bd2c19e6726ee1380b2ebe36a706e9cec9a19fd456",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-entity1-PASS-c36-c37-c38.provn",
+   "sha256": "fc7878e9c52596932f8f781c2f1b6a0bf64244fa00226df869c17f6585678e1f",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-entity2-PASS-c36.provn",
+   "sha256": "cbedef529a44d67b418cec15a7942948dbeca7c8e7084b7377a47b81ffbcaf61",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-entity3-PASS-c39.provn",
+   "sha256": "9df13cfa38ea166249d17938ec799cdef17c7357ebf31d763793057bbaf602be",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-entity4-PASS-c40.provn",
+   "sha256": "ddc25ef9066d239990bc14312194a6b809ad2d6db6843cdf75439ca00ad0f446",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-specialization1-PASS-c45.provn",
+   "sha256": "d77ff8316daf1f19ee7db1ff57704794411c528bfccf566572f3a2e706df52c2",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-specialization2-PASS-c46.provn",
+   "sha256": "25611268bbae6f00d1b4d5b2a3f46acc7b1adea064963732e40d2c0bb783995e",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-specialization3-PASS-c42-c45.provn",
+   "sha256": "aab23ed9bcd7907000e1a576653e603ef0f05df561062047eaecb1beb7782bb1",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "ordering-specialization4-FAIL-c42-c45.provn",
+   "sha256": "90df6a1b2d11ee777add7deff5fecf2e3fda7171ac2e02e3c607fad0e3032522",
+   "verdict": "FAIL",
+   "answer": "invalid 42 45"
+  },
+  {
+   "file": "ordering-starts1-PASS-c43.provn",
+   "sha256": "c11a4d3ceaad5ef8f0c22eaa1d9e2fe4aabeed3653b1a3e84ff5af2fc6b65399",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "prov-o-property-hadGeneration-FAIL-c51-DM.provn",
+   "sha256": "714ac0371bf32afb9b729a36f49c05a4ca8d04a6c35f92cb505eab71164c60ef",
+   "verdict": "FAIL",
+   "answer": "malformed"
+  },
+  {
+   "file": "prov-o-property-hadUsage-FAIL-c51-DM.provn",
+   "sha256": "ece2212f6d22a526cd3e33849aec97e3f3b85e0eb8d2c04748f875b8b6fb6b1b",
+   "verdict": "FAIL",
+   "answer": "malformed"
+  },
+  {
+   "file": "type-collection-FAIL-c56.provn",
+   "sha256": "5e487fbeea147d0f86de7079bce5a2ca249049470deb0ff696b562e6326112d8",
+   "verdict": "FAIL",
+   "answer": "invalid 56"
+  },
+  {
+   "file": "type-f1-FAIL-c50-c55.provn",
+   "sha256": "fbc7ae4626c042dec6844858429c47fd94c7754b495d92e0907f2fbe71ca12bd",
+   "verdict": "FAIL",
+   "answer": "invalid 55"
+  },
+  {
+   "file": "type-f2-FAIL-c50-c55.provn",
+   "sha256": "4064f5bef5da086202ae9a5fa4f6d54f6c38ffe936429c1df8d4b205816cf92d",
+   "verdict": "FAIL",
+   "answer": "invalid 55"
+  },
+  {
+   "file": "type-f3-FAIL-c54.provn",
+   "sha256": "318ae3b5897a8eac3be0a7acef8d1a681727e468b3ce6e36411daf8ed45a5577",
+   "verdict": "FAIL",
+   "answer": "invalid 54"
+  },
+  {
+   "file": "type-f4-FAIL-c53.provn",
+   "sha256": "0883902b41118c4f22e818f68280285ca0ba9a662ef482c05874198e37b471fd",
+   "verdict": "FAIL",
+   "answer": "invalid 23 53"
+  },
+  {
+   "file": "type-s1-PASS-c50-c55.provn",
+   "sha256": "092f06030f0ac34bfa4e2a86ca9f5870341749c6b50296222051ff09ecfea127",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "type-s2-PASS-c50-c55.provn",
+   "sha256": "c480a25f475331dc624788801fb216ec431179f93d38dced9911a73c30bd4a18",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-activity-end-f1-FAIL-c29.provn",
+   "sha256": "b7983b8e207c91af262e6408337ff123073babda46cb06241e7c5b2b4c2e26cc",
+   "verdict": "FAIL",
+   "answer": "invalid 29"
+  },
+  {
+   "file": "unification-activity-end-s1-PASS-c29.provn",
+   "sha256": "c6a34dc06a6446a589ed46f871b81972b003b779469904bd23644fc5cfec052f",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-activity-s1-PASS-c22.provn",
+   "sha256": "7b5744ef3e0ccb44a354897e3af426f8107b3b59bd8527c9c3d6e765a27dde17",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-activity-s2-PASS-c22.provn",
+   "sha256": "5cd9187cc95f96857990a11e2305ecbb1395277adfb68921aab05822f7c7a6ae",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-activity-s3-PASS-c22.provn",
+   "sha256": "b820ef751453bb7e4720d36d08f798c7b01f0bf03abda92277932fe2e9b4001f",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-activity-s4-PASS-c22.provn",
+   "sha256": "b11949051e4f09caa8343a3947c171a6f9f041a0bdf3fb7298ead2e109b88a9f",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-activity-start-f1-FAIL-c28.provn",
+   "sha256": "286e2e87f774edd00106822c16461590b7f54959f7b629d3521e93234452ea65",
+   "verdict": "FAIL",
+   "answer": "invalid 28"
+  },
+  {
+   "file": "unification-activity-start-s1-PASS-c28.provn",
+   "sha256": "4997cfc625642dfa70b1482a07a0977cfd6502e0c74e2ed374868a70161c9228",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-association-f1-FAIL-c23.provn",
+   "sha256": "8a94e38c200ca15ef8c8ae08966c952ef7d75e04cd22ef5fab18c0c891407fea",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-association-f2-FAIL-c23.provn",
+   "sha256": "18e33158ac4929fc8032312ffea7e8e259d763e735c323e02b7400e1d45a0a7f",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-association-f3-FAIL-c23.provn",
+   "sha256": "d332b9f131cdef7f1ca464a1a160fd7a8d22d24b0e4be20c804a3b09fd00d468",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-association-f4-FAIL-c23.provn",
+   "sha256": "e4f9e83af53ca681281d53383ab3da025b73c58ba2c01e33eb4f19708b9fd7c1",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-association-f5-FAIL-c23.provn",
+   "sha256": "8684b343c888b8de2d72f8d6d0467338dca3b92720d5a255410aff4661bb8c11",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-association-f6-FAIL-DM.provn",
+   "sha256": "93bc3f4ee29074927490d6ac9d05d40733ec72fcdbe7c15e2e2561df9095e0f6",
+   "verdict": "FAIL",
+   "answer": "malformed"
+  },
+  {
+   "file": "unification-association-s1-PASS-c23.provn",
+   "sha256": "d1f834c050400d233c963b9e4bf92dd767f8e49379a2a9566ebea575c2bf8886",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-association-s2-PASS-c23.provn",
+   "sha256": "58d3f37965d94833e17033aa7497fee63f95d69907273239555769a56c35af38",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-association-s3-PASS-c23.provn",
+   "sha256": "786fca9c9a2d6ab9199dd2ab8351cd64106350de9fd67d6e8ad449f1fe9f6b17",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-association-s4-PASS-c23.provn",
+   "sha256": "786fca9c9a2d6ab9199dd2ab8351cd64106350de9fd67d6e8ad449f1fe9f6b17",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-association-s5-PASS-c23.provn",
+   "sha256": "e8905e9d6cf642a1669d9967a33abf38ce0270ff1384c03b28c460222f48a3d9",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-attributes-activity-s1-PASS-c22.provn",
+   "sha256": "5504d694f2ce5d7e6b9f068acd7d599b752cdf0184f3afeddd45017c4ddb41a7",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-attributes-end-s1-PASS-c23.provn",
+   "sha256": "d16e054420d708f81e5eb0d7ddd9057aa4ec899c37ca7f53bd098fa59853bddb",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-attributes-end-s2-PASS-c23.provn",
+   "sha256": "b5ac3b13040273dc900b3c8295697e9bbe093b416268e1af06f777cf82e57a5e",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-attributes-entity-s1-PASS-c22.provn",
+   "sha256": "1803e5e900a47113591e0918a965c5fca3f81d1a9078986da639d73937757177",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-attributes-start-s1-PASS-c23.provn",
+   "sha256": "beb4cde4e009efaf3a32f15a2ab98d1e7fab8b264a43fe7c0c819f742a82cea4",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-attributes-start-s2-PASS-c23.provn",
+   "sha256": "9d62962259a9a894590fe4393dc8f83355af51e156331ef1c8363aad17767221",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-attribution-f1-FAIL-DM.provn",
+   "sha256": "c3d71bf1157efdeb0cd8e09853fe8c326e6638ea50a5d2891d2018d8b5704476",
+   "verdict": "FAIL",
+   "answer": "malformed"
+  },
+  {
+   "file": "unification-attribution-f2-FAIL-DM.provn",
+   "sha256": "464e7e59554659a12d7a41ed16ed5a523e433b86cf45eca3aab84e398e787f9f",
+   "verdict": "FAIL",
+   "answer": "malformed"
+  },
+  {
+   "file": "unification-attribution-s1-PASS-c23.provn",
+   "sha256": "03f898ae016d4448bbb89b35328e8817786d119758a947a11af229ebcd129963",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-attribution-s2-PASS-c23.provn",
+   "sha256": "51d41d02654fc81a7e4090f774658521087b2915e426dab3f0373b3d01a6157e",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-attribution-s3-PASS-c23.provn",
+   "sha256": "e4c6fcd30f9763a16c0cb7552f2298c326e2e41b24a9e8a112f9fb7fb7f7f752",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-attribution-s4-PASS-c23.provn",
+   "sha256": "de2b097e6602e7ca17eab78743c88aac9da554882679a2bcdb0d9f9b0b938e1a",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-bundle-f1-FAIL-c55-c56.provn",
+   "sha256": "0f58c6644058f015321626fe788d90840e2e68d31a5fd0d17b52279ed9193d6b",
+   "verdict": "FAIL",
+   "answer": "invalid 55 56"
+  },
+  {
+   "file": "unification-communication-f1-FAIL-DM.provn",
+   "sha256": "bf58bc4d9c54162ac8611ca8f59a28158693318f6386e94f632ec5ee9f347492",
+   "verdict": "FAIL",
+   "answer": "malformed"
+  },
+  {
+   "file": "unification-communication-f2-FAIL-DM.provn",
+   "sha256": "1d20f122f14c8b2095e237831dc3ba43ade39e0f1c90370af546724ca796df1d",
+   "verdict": "FAIL",
+   "answer": "malformed"
+  },
+  {
+   "file": "unification-communication-s1-PASS-c23.provn",
+   "sha256": "db8a8f4d8006860070c7ba1150982d55555c8eb10072369a45785909bbfb8145",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-communication-s2-PASS-c23.provn",
+   "sha256": "bda78db0dd65cd838c381b49bc5a256ddf24d6d96bb120528fd235a44780be8c",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-communication-s3-PASS-c23.provn",
+   "sha256": "b84583875d331ed8b823bae8166ddda4914739fb9e48f7c4ca2e26dae82e1ebe",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-communication-s4-PASS-c23.provn",
+   "sha256": "4d24db589b5595b08edbe03de7678da55addfc013ab20f0bca6f14ff02461718",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-delegation-f1-FAIL-c23.provn",
+   "sha256": "10d29e4444ccbfbed2ae5335a19e00f4ba69b7c8c081a2b4f21cf10d8f9a8277",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-delegation-f2-FAIL-c23.provn",
+   "sha256": "7eb7d52d901ad4e8560b3ecbc69148dfd9b9d7589ed4e7db25a0cf66668e841b",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-delegation-f3-FAIL-c23.provn",
+   "sha256": "4fd4a9ca7de15605d0e54d49776e4a55abbe2c2336809c9d94dd0dc06f113282",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-delegation-f6-FAIL-DM.provn",
+   "sha256": "eb72569a97a68aedc6f68c28a0878121316f773365f97bc0fbd2da9b15e04a80",
+   "verdict": "FAIL",
+   "answer": "malformed"
+  },
+  {
+   "file": "unification-delegation-s1-PASS-c23.provn",
+   "sha256": "9d1722a9fc8dcff0e7f98a5aabe117f70a48f969f7e83f6c1f6755f174ba671d",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-delegation-s2-PASS-c23.provn",
+   "sha256": "dfa30539071ca49283b770da97896acce158bbce322cfc10977a38a09c24f48a",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-delegation-s3-PASS-c23.provn",
+   "sha256": "f7de0050dadcd95746368050e198b24c65489bd83a3d058d01af5894bd2fc124",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-delegation-s4-PASS-c23.provn",
+   "sha256": "f7de0050dadcd95746368050e198b24c65489bd83a3d058d01af5894bd2fc124",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-delegation-s5-PASS-c23.provn",
+   "sha256": "6d7a172ff3e3005efa5467304da09a117bfd90544eb23cc0cc263f4cc3e9e80b",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-derivation-f1-FAIL-c23.provn",
+   "sha256": "81079667ac7711ed39b5931d152bda1c80637fc1b2f096a5d6012c7c393a878a",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-derivation-f2-FAIL-c23.provn",
+   "sha256": "b2e39720a2c26b3a710057201ea49b9fd7548703fd78ae90b2b802fa61b63e89",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-derivation-f3-FAIL-c23.provn",
+   "sha256": "65309533dce5dc8644df38fef08c2dcb144c87661db3e0f83ffb1fd55176afba",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-derivation-f4-FAIL-c23.provn",
+   "sha256": "cd05ff844edde1c254f4339f0d7a867b621c2407014ffd9afb43496d5e247c98",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-derivation-s1-PASS-c23.provn",
+   "sha256": "1556b8170d66016a8be6b1444aa7f5ca35f59043a534967c5b51468a87fcd7f1",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-derivation-s2-PASS-c23.provn",
+   "sha256": "90b2b6ecb858c8dd5e79a90b7f2edb40adf61d56c7ada0853ecb5a7c573a1c8d",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-derivation-s3-PASS-c23.provn",
+   "sha256": "073de11239b5166e58cc4dc9a4612f698e3b946059f942a8900cf7521274dcfb",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-derivation-s4-PASS-c23.provn",
+   "sha256": "ad8f5edc67a66b28f5e614c1fd1e1c9231e86f18faa36c0b34798477c866d300",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-derivation-s5-PASS-c23.provn",
+   "sha256": "e1c54c4d67553b725e3ae87f6ff5b000c339d8b905c969308b21eb712bb054e3",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-end-f1-FAIL-c23.provn",
+   "sha256": "be5308551f2e46cee2b3d2bcccb30e94c97a18f77a06d97bc032c8714f9b25f4",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-end-f2-FAIL-c23.provn",
+   "sha256": "cc15c763caf1d92f51205671d92e3b06d0dd61487192cf55111c8351989f6313",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-end-f3-FAIL-c23.provn",
+   "sha256": "0852a56aedc5b7366f3cee1cd7f879b0596a2789374f57d519cb1062628afd03",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-end-f4-FAIL-c27.provn",
+   "sha256": "0f18b22510e50dda46922aba29bb149e65067ff3885362b03ddf2fb2c561c812",
+   "verdict": "FAIL",
+   "answer": "invalid 27"
+  },
+  {
+   "file": "unification-end-f5-FAIL-c23.provn",
+   "sha256": "77a1708e792eae8392d2f15e8b9bc06c1709f80806c84765073b27b0c76fa13c",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-end-s1-PASS-c27.provn",
+   "sha256": "2c1271ecb3493f332b0d3b9a440c3a78c184e1688ad4a185ee72b2dc779247f8",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-end-s2-PASS-c27.provn",
+   "sha256": "059f177584a2f32b5aff4be1766e172ab138f07792ae042676f1a2f403d7588d",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-end-s3-PASS-c27.provn",
+   "sha256": "c842c46d15cdf7e89ee7a310326dcb752484c2596a97b4d130b2ab037e65cf7c",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-end-s4-PASS-c27.provn",
+   "sha256": "5688383394621a2c7fbb6d9654a9e5d7636aa891bcd38c1fd62e909bee0dc4f2",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-end-s5-PASS-c23-c27.provn",
+   "sha256": "ec5bcb0b29e491fd99a26aa3e9215f68e3a7e3d9ad6f4b361a8932cfc25dde58",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-end-s6-PASS-c23-c27.provn",
+   "sha256": "82f8e413b9411e0d4f07a3a2258bd8b930d066fd7e66b87f521bfca94a37f9fe",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-generation-f1-FAIL-c24.provn",
+   "sha256": "c3d5ee966e605dd6e2fc131f1c2fa2af35ea657d9cc238dc365f8c639b93ffd7",
+   "verdict": "FAIL",
+   "answer": "invalid 24"
+  },
+  {
+   "file": "unification-generation-f2-FAIL-c23.provn",
+   "sha256": "f09ca1ce9a9ac6c57f9c932777ccc7e4de60e0c0f821902dad0fc2c96889a947",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-generation-f3-FAIL-c23.provn",
+   "sha256": "7767ea6bacaee9ae4f638650d46ed28a63b63796a4382255b6a6800422dc3cd9",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-generation-f4-FAIL-c23.provn",
+   "sha256": "d26bba26f5bb9ef42bc942b2a4b3a2e3434748e4a750fbf18a5c10aecf4d1354",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-generation-f5-FAIL-c23.provn",
+   "sha256": "43dd267bbf13154078fe7cbb1ee94216ac0bba07f0562d16e550db7544b2e4bb",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-generation-f6-FAIL-c23.provn",
+   "sha256": "520b2b2414108b69a27f1ab6c434b51ecb3d241d0a1dc2eefdeb1512436bfc37",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-generation-f7-FAIL-c23.provn",
+   "sha256": "d5e96e7294465996cbc7b7a16208c795df7d944af6b5f1fa8a69ab7635c4a65c",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-generation-s1-PASS-c23.provn",
+   "sha256": "de24f9e04c366d1e1e2935ff227291074cede65fb73d986e79801ad69209527b",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-generation-s2-PASS-c23.provn",
+   "sha256": "7a9ace2b6ffced439e843d204f5c2b0e74648d76dab120d0ec66ebef41987465",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-generation-s3-PASS-c24.provn",
+   "sha256": "0b04de38466363205645928ee17b8ec9d55c1dc45d53678da738af324cfc1991",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-generation-s5-PASS-c23.provn",
+   "sha256": "d25d05f739e5dcbbfc60a09e3e5ebfb63b287236a6a462a09b256bfe09e55e1f",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-generation-s6-PASS-c23.provn",
+   "sha256": "bfaafebcb206c3333eb3ebc6de95ec38aec89b20b3bc139892b5cdbedf15d34b",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-generation-s7-PASS-c23-c24.provn",
+   "sha256": "4183792a919d233a95fcfadef2f38b3143c1260722bfcc23e6eb688ae1d71521",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-generation-s8-PASS-c23-c24.provn",
+   "sha256": "8de237f0da8ab091ae0fcf62c6d0d0bdac84a2a821173541b970d3c160bd9766",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-influence-f1-FAIL-DM.provn",
+   "sha256": "b5936a35463d2b14cbb1d5f8c835fd2252d36ecd8a76c8a4ad9ee6b76af18596",
+   "verdict": "FAIL",
+   "answer": "malformed"
+  },
+  {
+   "file": "unification-influence-f2-FAIL-DM.provn",
+   "sha256": "cc20fb3639530a193e83436c763b11addbda1acdcfa0146a3ca5f648dce8ae88",
+   "verdict": "FAIL",
+   "answer": "malformed"
+  },
+  {
+   "file": "unification-influence-s1-PASS-c23.provn",
+   "sha256": "76382982f3d11b0fa78edd193ec5b5f10926dd39e53b5e05885b201bedd8b3f7",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-invalidation-f1-FAIL-c25.provn",
+   "sha256": "803f2ff7a266e8ed00967a412d9586c919a8f4cb9b7691877c8f47488a36783b",
+   "verdict": "FAIL",
+   "answer": "invalid 25"
+  },
+  {
+   "file": "unification-invalidation-f2-FAIL-c23.provn",
+   "sha256": "ddfac868d8040c349bd2e7742774a6b700cee3ae4d423803c09b0318139d9f73",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-invalidation-f3-FAIL-c23.provn",
+   "sha256": "db3235aa9529006383e4b4918c6cd92deca1e582d247d7bda56088fa1ca554cc",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-invalidation-f4-FAIL-c23.provn",
+   "sha256": "f8a30421d35a5ea18195b6905e8d622314594f90994ad305c35c2b98c87b8efb",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-invalidation-f5-FAIL-c23-c25.provn",
+   "sha256": "420f1d1419283f4aa2635e18bca31b359945bd2cedf9977e04551f45d12089c5",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-invalidation-f6-FAIL-c23-c25.provn",
+   "sha256": "e4ce2797f747ab3d6ff898c7bfa3a2625cb6017d1b899e9db64c21e5c077f128",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-invalidation-f7-FAIL-c23-c25.provn",
+   "sha256": "70e0cd4aee38b8025986e97c8b2a2086386d5653e50fa99acf8ad151245c58b9",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-invalidation-s1-PASS-c23.provn",
+   "sha256": "5ea5f005160cda1bf90b729109a4ac1f81c6c5b708dc98a9d41dafc36176a708",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-invalidation-s2-PASS-c23.provn",
+   "sha256": "b6eac938535ade57951740df3916c49424dd1950d953c27bac93b89989da0f4c",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-invalidation-s3-PASS-c25.provn",
+   "sha256": "048ff4aa6b33866e470341d143d038131e327d8143677b3efaaebba643bceb78",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-invalidation-s5-PASS-c23.provn",
+   "sha256": "c73e23899d09d8e3cfb5cfc6956ac7db62a4228eb5dad4f3cb01b49dfadffc16",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-invalidation-s6-PASS-c23.provn",
+   "sha256": "377d278f043dca46eb2b5ad5339fc13c2d3f3ecc62a8546089e4821809b607de",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-invalidation-s7-PASS-c23-c25.provn",
+   "sha256": "49453489b7643110fad47780d3d787baa6d47c505e32fc0e034b16a179a892d8",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-invalidation-s8-PASS-c23-c25.provn",
+   "sha256": "9039c2f631b61c6a661f0142d312071d0fb851aa592bded117581c77d5982759",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-membership-f1-FAIL-DM.provn",
+   "sha256": "c5fa436c297351fedb361f7424d48fd2ea2fcbbadf1b723ca985005bdb21a7b4",
+   "verdict": "FAIL",
+   "answer": "malformed"
+  },
+  {
+   "file": "unification-specialization-f1-FAIL-DM.provn",
+   "sha256": "0cac3b693198e0a84ce4d56c3dc5298224cd9346c13357bc4faf6099727734f8",
+   "verdict": "FAIL",
+   "answer": "malformed"
+  },
+  {
+   "file": "unification-specialization-f2-FAIL-DM.provn",
+   "sha256": "628b999e213c9a2620f7c327f7d6347d8d7242953d00612653755685af42665b",
+   "verdict": "FAIL",
+   "answer": "malformed"
+  },
+  {
+   "file": "unification-specialization-f3-FAIL-c52.provn",
+   "sha256": "539dc9845af7148620117e878341e9557d06b551ee0dbd92bbb892ddfcb0b233",
+   "verdict": "FAIL",
+   "answer": "invalid 52"
+  },
+  {
+   "file": "unification-specialization-f4-FAIL-c52.provn",
+   "sha256": "24ebb0508edd8565fe1bf01062144ecc644f9be39f9d5adaa7f700efa000b3f1",
+   "verdict": "FAIL",
+   "answer": "invalid 52"
+  },
+  {
+   "file": "unification-start-f1-FAIL-c23.provn",
+   "sha256": "9531653f4033b180fc2dfc9ce1a667ffa063c70113964f88859eaecb45fa5989",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-start-f2-FAIL-c23.provn",
+   "sha256": "424787e3ed7a5cad070c9ade19dbb214218d1ffbe086d1e3c53d2e446277b20c",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-start-f3-FAIL-c23.provn",
+   "sha256": "94ac9ec8520a712c40083335106d8548e8c24c8c596afbfa25918b33f673275d",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-start-f4-FAIL-c26.provn",
+   "sha256": "a01349e1c95b7fd95088d0291e9f8dfba108a05835c33bf37517d152ea5c8a9e",
+   "verdict": "FAIL",
+   "answer": "invalid 26"
+  },
+  {
+   "file": "unification-start-f5-FAIL-c23.provn",
+   "sha256": "03ff772f946adc4282e2300f37cbd1940563af0fef6888c3635209c192e53bab",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-start-f6-FAIL-c23.provn",
+   "sha256": "713b52bfe482226f919b14e976a563ab6499e58e84b104c914d79cb191919fab",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-start-f7-FAIL-c23.provn",
+   "sha256": "d83a53c9ba33df698ce44c1c5398aed7cb71eafa11b05d812910e12c00358486",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-start-f8-FAIL-c23.provn",
+   "sha256": "bce6029c4a0b52a39783bc46c735e99f27eafaa932f0527f44eaeccfe2b8562b",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-start-s1-PASS-c26.provn",
+   "sha256": "da88a2f01a67acb0be2ea0c1a16bf4c6e92bd14aa049d9b3a32fb983f38ce24e",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-start-s2-PASS-c26.provn",
+   "sha256": "7375154366f35db1cb2dc705f2bfcc0977725ddd1c20a8b19841cb2a90884788",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-start-s3-PASS-c26.provn",
+   "sha256": "3c01db6567eecd22602bec5707ab0415e21253ddee503908d3ba1fa0aa464c98",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-start-s4-PASS-c26.provn",
+   "sha256": "0bfa4b471c297d2a4dedad019476cd404950d478e5260c2c22b788eb5a66d5e5",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-start-s5-PASS-c23-c26.provn",
+   "sha256": "09be3b492d7f223b97a837ca004ea91606ac9bde013eba0505dfefb87742ab66",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-start-s6-PASS-c23-c26.provn",
+   "sha256": "479f0e73c107c8fdfe8d594cdcd2e96b6fcfbe5d86812f2e975c99ed71db8045",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-start-s7-PASS-c23-c26.provn",
+   "sha256": "6dc05db5c3c94f16663d78d9bb973c3bfabe15cc8413ef6deda5db2606dd9f93",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-start-s8-PASS-c23-c26.provn",
+   "sha256": "5c22358902f6811ae943937a786250dcb1f57b90698966c924d219f2438d7b35",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-start-s9-PASS-c23-c26.provn",
+   "sha256": "3a0752099ce970b08fc53991661dc524042a1b3a953fb423df46e4864d4e46ea",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-usage-f2-FAIL-c23.provn",
+   "sha256": "faee3bd15f5e9c6b86c642eef76ba01a36bc07cf0d8019fea0aa678fc54c2772",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-usage-f3-FAIL-c23.provn",
+   "sha256": "8749f19bf5900dac2fd36aec55e10729abefa2448c0e905a7d47ba41d769425e",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-usage-f4-FAIL-c23.provn",
+   "sha256": "6e779e38f102b7b67c3a0005a4454dd644ff1a29552ff4845520014ce5d0bd46",
+   "verdict": "FAIL",
+   "answer": "invalid 23"
+  },
+  {
+   "file": "unification-usage-f5-PASS-c23.provn",
+   "sha256": "d3ae171d3b3a2b1930c85666a31acf11cdc231cf6d4ef8e5147711bf4c6cf792",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-usage-f6-PASS-c23.provn",
+   "sha256": "b3a14b852871c4290e5e7b4b6d35be2617b82dafda0b854360ae0c06e17e9333",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-usage-f7-PASS-c23.provn",
+   "sha256": "b3faf08bc997eeb05307a9bc266bd1749cdc3b664495be048ec5336a11c09b1e",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-usage-s1-PASS-c23.provn",
+   "sha256": "b22a88a102952d7781d0fb1f1f85170d7bbd13aa19b8baf520fc47997442fa2e",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-usage-s2-PASS-c23.provn",
+   "sha256": "9e7fc76b61875389f73c008c6fadaf762ce2bb2980e482a7319e8950b4fc7ff2",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-usage-s5-PASS-c23.provn",
+   "sha256": "e24e1476227303166c005daa6e658f35693e1da6a678e57626ef7f85e9b28fb6",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-usage-s6-PASS-c23.provn",
+   "sha256": "43643c2c1f3b8e981d2eea40ece0005cadadb4a9e07f639c692c6a975973c9bf",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-usage-s7-PASS-c23.provn",
+   "sha256": "94845a6fd369fe4a8aada8b5eac8acf58817dd94261585a109d82916b5ae6a58",
+   "verdict": "PASS",
+   "answer": "valid"
+  },
+  {
+   "file": "unification-usage-s8-PASS-c23.provn",
+   "sha256": "40354557ff9986b00e0f2536a7fd8a957a7c44b50c080e3d39ffb29c14449a61",
+   "verdict": "PASS",
+   "answer": "valid"
+  }
+ ],
+ "shown": {
+  "19": [
+   "unification-specialization-f4-FAIL-c52"
+  ],
+  "23": [
+   "unification-association-f1-FAIL-c23",
+   "unification-association-f2-FAIL-c23",
+   "unification-association-f3-FAIL-c23",
+   "unification-association-f4-FAIL-c23",
+   "unification-association-f5-FAIL-c23",
+   "unification-delegation-f1-FAIL-c23",
+   "unification-delegation-f2-FAIL-c23",
+   "unification-delegation-f3-FAIL-c23",
+   "unification-derivation-f1-FAIL-c23",
+   "unification-derivation-f2-FAIL-c23",
+   "unification-derivation-f3-FAIL-c23",
+   "unification-derivation-f4-FAIL-c23",
+   "unification-end-f1-FAIL-c23",
+   "unification-end-f2-FAIL-c23",
+   "unification-end-f3-FAIL-c23",
+   "unification-generation-f2-FAIL-c23",
+   "unification-generation-f3-FAIL-c23",
+   "unification-generation-f4-FAIL-c23",
+   "unification-generation-f5-FAIL-c23",
+   "unification-generation-f6-FAIL-c23",
+   "unification-generation-f7-FAIL-c23",
+   "unification-invalidation-f2-FAIL-c23",
+   "unification-invalidation-f3-FAIL-c23",
+   "unification-invalidation-f4-FAIL-c23",
+   "unification-invalidation-f5-FAIL-c23-c25",
+   "unification-invalidation-f6-FAIL-c23-c25",
+   "unification-invalidation-f7-FAIL-c23-c25",
+   "unification-start-f1-FAIL-c23",
+   "unification-start-f2-FAIL-c23",
+   "unification-start-f3-FAIL-c23",
+   "unification-usage-f2-FAIL-c23",
+   "unification-usage-f3-FAIL-c23",
+   "unification-usage-f4-FAIL-c23"
+  ],
+  "24": [
+   "unification-generation-f1-FAIL-c24",
+   "unification-generation-f5-FAIL-c23",
+   "unification-generation-f6-FAIL-c23",
+   "unification-generation-f7-FAIL-c23"
+  ],
+  "25": [
+   "unification-invalidation-f1-FAIL-c25",
+   "unification-invalidation-f5-FAIL-c23-c25",
+   "unification-invalidation-f6-FAIL-c23-c25",
+   "unification-invalidation-f7-FAIL-c23-c25"
+  ],
+  "26": [
+   "unification-start-f4-FAIL-c26"
+  ],
+  "27": [
+   "unification-end-f4-FAIL-c27"
+  ],
+  "28": [
+   "unification-activity-start-f1-FAIL-c28"
+  ],
+  "29": [
+   "unification-activity-end-f1-FAIL-c29"
+  ],
+  "42": [
+   "ordering-derivation2-FAIL-c42",
+   "ordering-specialization4-FAIL-c42-c45"
+  ],
+  "45": [
+   "ordering-specialization4-FAIL-c42-c45"
+  ],
+  "52": [
+   "unification-specialization-f3-FAIL-c52",
+   "unification-specialization-f4-FAIL-c52"
+  ],
+  "54": [
+   "type-f3-FAIL-c54"
+  ],
+  "55": [
+   "type-f1-FAIL-c50-c55",
+   "type-f2-FAIL-c50-c55"
+  ],
+  "56": [
+   "type-collection-FAIL-c56"
+  ]
+ },
+ "examples": [
+  [
+   "check\ndocument\n  prefix ex <http://example.org/>\n\n  activity(ex:a1,-,-)\n  wasStartedBy(ex:start1;ex:a1,-,-,-)\n  wasEndedBy(ex:end1;ex:a1,-,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\n  prefix ex <http://example.org/>\n\n  activity(ex:a1,-,-)\n  entity(ex:e1)\n\n  wasStartedBy(ex:start1;ex:a1,-,-,-)\n  used(ex:use1;ex:a1,ex:e1,-)\n  wasEndedBy(ex:end1;ex:a1,-,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\n  prefix ex <http://example.org/>\n\n  activity(ex:a1,-,-)\n  entity(ex:e1)\n  wasStartedBy(ex:start1;ex:a1,-,-,-)\n  wasGeneratedBy(ex:gen1;ex:e1,ex:a1,-)\n  wasEndedBy(ex:end1;ex:a1,-,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,-,-)\nentity(ex:e1)\nentity(ex:e2)\nwasStartedBy(ex:start1;ex:a1,ex:e1,-,-)\nwasStartedBy(ex:start2;ex:a1,ex:e2,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,-,-)\nentity(ex:e1)\nentity(ex:e2)\nwasEndedBy(ex:end1;ex:a1,ex:e1,-,-)\nwasEndedBy(ex:end2;ex:a1,ex:e2,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a,-,-)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nentity(ex:ag)\nagent(ex:ag)\nentity(ex:e1)\nentity(ex:e2)\nwasAssociatedWith(ex:assoc;ex:a,ex:ag,-)\nwasStartedBy(ex:start1;ex:a,ex:e1,-,-)\nwasGeneratedBy(ex:gen1;ex:ag,ex:a1,-)\nwasInvalidatedBy(ex:inv1;ex:ag,ex:a2,-)\nwasEndedBy(ex:end1;ex:a,ex:e2,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\n  prefix ex <http://example.org/>\n\n  activity(ex:a,-,-)\n  activity(ex:ag)\n\n  agent(ex:ag)\n  entity(ex:e1)\n  entity(ex:e2)\n  entity(ex:e3)\n  entity(ex:e4)\n\n  wasAssociatedWith(ex:assoc;ex:a,ex:ag,-)\n  wasStartedBy(ex:start1;ex:a,ex:e1,-,-)\n  wasStartedBy(ex:start2;ex:ag,ex:e3,-,-)\n  wasEndedBy(ex:end2;ex:ag,ex:e4,-,-)\n  wasEndedBy(ex:end1;ex:a,ex:e2,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nentity(ex:ag)\nagent(ex:ag)\nentity(ex:e)\nwasAttributedTo(ex:attr;ex:e, ex:ag)\nwasGeneratedBy(ex:gen1;ex:ag,ex:a1,-)\nwasGeneratedBy(ex:gen2;ex:e,ex:a2,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nactivity(ex:ag,-,-)\nagent(ex:ag)\nentity(ex:e)\nwasAttributedTo(ex:attr;ex:e, ex:ag)\nwasStartedBy(ex:start1;ex:ag,-,ex:a1,-)\nwasGeneratedBy(ex:gen2;ex:e,ex:a2,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\n  prefix ex <http://example.org/>\n\n  activity(ex:a1,-,-)\n  activity(ex:a2,-,-)\n  wasInformedBy(ex:inf1; ex:a1, ex:a2)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:ag1)\nagent(ex:ag1)\nentity(ex:ag2)\nagent(ex:ag2)\nactedOnBehalfOf(ex:del;ex:ag2,ex:ag1,-)\nwasGeneratedBy(ex:gen1;ex:ag1,-,-)\nwasInvalidatedBy(ex:inv2;ex:ag2,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:ag1,-,-)\nagent(ex:ag1)\nactivity(ex:ag2,-,-)\nagent(ex:ag2)\nactedOnBehalfOf(ex:del;ex:ag2,ex:ag1,-)\nwasStartedBy(ex:start1;ex:ag1,-,-,-)\nwasEndedBy(ex:end2;ex:ag2,-,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nwasGeneratedBy(ex:gen1;ex:e1,-,-)\nwasGeneratedBy(ex:gen2;ex:e2,-,-)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nactivity(ex:a1,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,-,-)\nwasGeneratedBy(ex:gen2;ex:e2,-,-)\nused(ex:use1;ex:a1,ex:e1,-)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1, ex:a1, ex:gen2, ex:use1)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nactivity(ex:a3,-,-)\nactivity(ex:a4,-,-)\nwasGeneratedBy(ex:gen2;ex:e2,ex:a3,-)\nwasEndedBy(ex:end2;ex:a2,ex:e2,-,-)\nwasEndedBy(ex:end1;ex:a1,ex:e1,-,-)\nwasInvalidatedBy(ex:inv1;ex:e1,ex:a4,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nactivity(ex:a3,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,-)\nused(ex:use1;ex:a2,ex:e1,-)\nwasInvalidatedBy(ex:inv1;ex:e1,ex:a3,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nactivity(ex:a3,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,-)\nwasInvalidatedBy(ex:inv1;ex:e1,ex:a3,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,-)\nwasGeneratedBy(ex:gen2;ex:e1,ex:a2,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasInvalidatedBy(ex:inv1;ex:e1,ex:a1,-)\nwasInvalidatedBy(ex:inv2;ex:e1,ex:a2,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nspecializationOf(ex:e2,ex:e1)\nwasGeneratedBy(ex:gen2;ex:e2,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nspecializationOf(ex:e2,ex:e1)\nwasInvalidatedBy(ex:inv2;ex:e2,-,-)\nwasInvalidatedBy(ex:inv1;ex:e1,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nspecializationOf(ex:e2,ex:e1)\nwasGeneratedBy(ex:gen2;ex:e2,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,-,-)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nactivity(ex:a3,-,-)\nactivity(ex:a4,-,-)\nwasGeneratedBy(ex:gen2;ex:e2,ex:a3,-)\nwasStartedBy(ex:start2;ex:a2,ex:e2,-,-)\nwasStartedBy(ex:start1;ex:a1,ex:e1,-,-)\nwasInvalidatedBy(ex:inv1;ex:e1,ex:a4,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\n  prefix ex <http://example.org/>\n\n  entity(ex:e1, [prov:type='ex:test1'])\n  activity(ex:a1, -, -, [prov:type='ex:test2'])\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\n  prefix ex <http://example.org/>\n\n  entity(ex:e1, [prov:type='ex:test1', prov:type='prov:Bundle'])\n  agent(ex:e1, [prov:type='ex:test2', prov:type='prov:SoftwareAgent', prov:type=\"http://www.w3.org/ns/prov#Person\" %% xsd:anyURI, prov:type=\"http://openprovenance.org/validation/type/Organization\" %% xsd:anyURI, prov:type=\"prov:Activity\" %% xsd:string])\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,2012-11-16T16:05:00,-)\nactivity(ex:a1,-,2012-11-16T17:05:00)\nwasEndedBy(ex:end1;ex:a1,-,-,2012-11-16T17:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\n  prefix ex <http://example.org/>\n\n  activity(ex:a1,-,-)\n  activity(ex:a1,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,2012-11-16T16:05:00,-)\nactivity(ex:a1,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,-,2012-11-16T17:05:00)\nactivity(ex:a1,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,2012-11-16T16:05:00,-)\nactivity(ex:a1,-,2012-11-16T17:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,2012-11-16T16:05:00,-)\nactivity(ex:a1,-,2012-11-16T17:05:00)\nwasStartedBy(ex:start1;ex:a1,-,-,2012-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1,[prov:type='prov:Plan'])\nactivity(ex:a1,-,-)\nagent(ex:ag1)\nwasAssociatedWith(ex:assoc1;ex:a1,ex:ag1,ex:e1)\nwasAssociatedWith(ex:assoc1;ex:a1,ex:ag1,ex:e1)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1,[prov:type='prov:Plan'])\nactivity(ex:a1,-,-)\nagent(ex:ag1)\nwasAssociatedWith(ex:assoc1;ex:a1,ex:ag1,ex:e1)\nwasAssociatedWith(ex:assoc2;ex:a1,ex:ag1,ex:e1)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1,[prov:type='prov:Plan'])\nactivity(ex:a1,-,-)\nagent(ex:ag1)\nwasAssociatedWith(ex:assoc1;ex:a1,ex:ag1,ex:e1)\nwasAssociatedWith(ex:assoc1;ex:a1,-,ex:e1)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1,[prov:type='prov:Plan'])\nactivity(ex:a1,-,-)\nagent(ex:ag1)\nwasAssociatedWith(ex:a1,ex:ag1,ex:e1)\nwasAssociatedWith(ex:a1,ex:ag1,ex:e1)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-,[prov:type='ex:test1'])\nactivity(ex:a1,-,-,[prov:type='ex:test2'])\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasEndedBy(ex:end1;ex:a1,ex:e1,ex:a2,-,[prov:type='ex:test1'])\nwasEndedBy(ex:a1,ex:e1,ex:a2,-,[prov:type='ex:test2'])\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasEndedBy(ex:end1;ex:a1,-,-,2011-11-16T16:05:00,[prov:type='ex:test1'])\nwasEndedBy(ex:a1,ex:e1,ex:a2,-,[prov:type=\"ex:test1\" %% xsd:string])\nwasEndedBy(ex:end1;ex:a1,-,ex:a2,-,[prov:type=\"1\" %% xsd:int])\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1,[prov:type='ex:test1'])\nentity(ex:e1,[prov:type='ex:test2'])\nactivity(ex:a1,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,ex:e1,ex:a2,-,[prov:type='ex:test1'])\nwasStartedBy(ex:a1,ex:e1,ex:a2,-,[prov:type='ex:test2'])\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,-,-,2011-11-16T16:05:00,[prov:type='ex:test1'])\nwasStartedBy(ex:a1,ex:e1,ex:a2,-,[prov:type=\"ex:test1\" %% xsd:string])\nwasStartedBy(ex:start1;ex:a1,-,ex:a2,-,[prov:type=\"1\" %% xsd:int])\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nagent(ex:ag2)\nwasAttributedTo(ex:del1;ex:e1, ex:ag2)\nwasAttributedTo(ex:del1;ex:e1, ex:ag2)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nagent(ex:ag2)\nwasAttributedTo(ex:del1;ex:e1, ex:ag2)\nwasAttributedTo(ex:del2;ex:e1, ex:ag2)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nagent(ex:ag2)\nwasAttributedTo(ex:e1, ex:ag2)\nwasAttributedTo(ex:del2;ex:e1, ex:ag2)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nagent(ex:ag2)\nwasAttributedTo(ex:e1, ex:ag2)\nwasAttributedTo(ex:e1, ex:ag2)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasInformedBy(ex:inf1;ex:a1,ex:a2)\nwasInformedBy(ex:inf1;ex:a1,ex:a2)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasInformedBy(ex:inf1;ex:a1,ex:a2)\nwasInformedBy(ex:inf2;ex:a1,ex:a2)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasInformedBy(ex:a1,ex:a2)\nwasInformedBy(ex:inf2;ex:a1,ex:a2)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasInformedBy(ex:a1,ex:a2)\nwasInformedBy(ex:a1,ex:a2)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a2,-,-)\nagent(ex:ag2)\nagent(ex:ag1)\nactedOnBehalfOf(ex:del1;ex:ag2,ex:ag1,ex:a2)\nactedOnBehalfOf(ex:del1;ex:ag2,ex:ag1,ex:a2)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a2,-,-)\nagent(ex:ag2)\nagent(ex:ag1)\nactedOnBehalfOf(ex:del1;ex:ag2,ex:ag1,ex:a2)\nactedOnBehalfOf(ex:del2;ex:ag2,ex:ag1,ex:a2)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a2,-,-)\nagent(ex:ag2)\nagent(ex:ag1)\nactedOnBehalfOf(ex:del1;ex:ag2,ex:ag1,ex:a2)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a2,-,-)\nagent(ex:ag2)\nagent(ex:ag1)\nactedOnBehalfOf(ex:ag2,ex:ag1,ex:a2)\nactedOnBehalfOf(ex:ag2,ex:ag1,ex:a2)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1, ex:a, -, -)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1, ex:a, -, -)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1, ex:a, ex:gen, -)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1, ex:a, -, -)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1, ex:a, -, ex:use)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1, ex:a, -, -)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1, ex:a, ex:gen, ex:use)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1, ex:a, ex:gen, ex:use)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasEndedBy(ex:end1;ex:a1,ex:e1,ex:a2,-)\nwasEndedBy(ex:a1,ex:e1,ex:a2,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasEndedBy(ex:end1;ex:a1,ex:e1,ex:a2,-)\nwasEndedBy(ex:a1,-,ex:a2,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasEndedBy(ex:end1;ex:a1,ex:e1,ex:a2,-)\nwasEndedBy(ex:a1,-,ex:a2,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasEndedBy(ex:a1,-,ex:a2,-)\nwasEndedBy(ex:end1;ex:a1,ex:e1,ex:a2,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasEndedBy(ex:end1;ex:a1,-,ex:a2,-)\nwasEndedBy(ex:end1;ex:a1,-,-,2011-11-16T16:05:00)\nwasEndedBy(ex:a1,ex:e1,ex:a2,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasEndedBy(ex:end1;ex:a1,-,-,2011-11-16T16:05:00)\nwasEndedBy(ex:a1,ex:e1,ex:a2,-)\nwasEndedBy(ex:end1;ex:a1,-,ex:a2,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,-)\nwasGeneratedBy(ex:gen1;ex:e1,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,-)\nwasGeneratedBy(ex:e1,ex:a1,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,2011-11-16T16:05:00)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,2011-11-16T16:05:00)\nwasGeneratedBy(ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,-)\nwasGeneratedBy(ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\n\n  prefix ex <http://example.org/>\n\n  wasInfluencedBy(ex:infl1;ex:x1, ex:x2)\n  wasInfluencedBy(ex:infl1;ex:x1, ex:x2)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,-)\nwasInvalidatedBy(ex:gen1;ex:e1,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,-)\nwasInvalidatedBy(ex:e1,ex:a1,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,2011-11-16T16:05:00)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,2011-11-16T16:05:00)\nwasInvalidatedBy(ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,-)\nwasInvalidatedBy(ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,ex:e1,ex:a2,-)\nwasStartedBy(ex:a1,ex:e1,ex:a2,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,ex:e1,ex:a2,-)\nwasStartedBy(ex:a1,-,ex:a2,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,ex:e1,ex:a2,-)\nwasStartedBy(ex:a1,-,ex:a2,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:a1,-,ex:a2,-)\nwasStartedBy(ex:start1;ex:a1,ex:e1,ex:a2,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,-,ex:a2,-)\nwasStartedBy(ex:start1;ex:a1,-,-,2011-11-16T16:05:00)\nwasStartedBy(ex:a1,ex:e1,ex:a2,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,-,-,2011-11-16T16:05:00)\nwasStartedBy(ex:a1,ex:e1,ex:a2,-)\nwasStartedBy(ex:start1;ex:a1,-,ex:a2,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,-,-,2011-11-16T16:05:00)\nwasStartedBy(ex:a1,ex:e1,ex:a2,2011-11-16T16:05:00)\nwasStartedBy(ex:start1;ex:a1,-,ex:a2,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,-,-,2011-11-16T16:05:00)\nwasStartedBy(ex:a1,ex:e1,ex:a2,-)\nwasStartedBy(ex:start1;ex:a1,-,ex:a2,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,-,-,-)\nwasStartedBy(ex:a1,ex:e1,ex:a2,2011-11-16T16:05:00)\nwasStartedBy(ex:start1;ex:a1,-,ex:a2,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:e1,-,-)\nentity(ex:a1)\nused(ex:e1,ex:a1,2012-11-16T16:05:00)\nused(ex:use1;ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:e1,-,-)\nentity(ex:a1)\nused(ex:e1,ex:a1,2012-11-16T16:05:00)\nused(ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:e1,-,-)\nentity(ex:a1)\nused(ex:use1;ex:e1,ex:a1,-)\nused(ex:use1;ex:e1,ex:a1,2012-11-16T16:05:00)\nused(ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:e1,-,-)\nentity(ex:a1)\nused(ex:use1;ex:e1,ex:a1,-)\nused(ex:use1;ex:e1,ex:a1,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:e1,-,-)\nentity(ex:a1)\nused(ex:use1;ex:e1,ex:a1,-)\nused(ex:use1;ex:e1,-,-)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:e1,-,-)\nentity(ex:a1)\nused(ex:use1;ex:e1,ex:a1,2011-11-16T16:05:00)\nused(ex:use1;ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:e1,-,-)\nentity(ex:a1)\nused(ex:use1;ex:e1,ex:a1,-)\nused(ex:use1;ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:e1,-,-)\nentity(ex:a1)\nused(ex:use1;ex:e1,ex:a1,-)\nused(ex:use1;ex:e1,ex:a1,2011-11-16T16:05:00)\nused(ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:e1,-,-)\nentity(ex:a1)\nused(ex:use1;ex:e1,ex:a1,-)\nused(ex:use1;ex:e1,ex:a1,-)\nused(ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "valid"
+  ]
+ ]
+}

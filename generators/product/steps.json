@@ -1,0 +1,154 @@
+{
+  "comment": "The steps of the product program (generators/product/), run in order by tools/generators/run.sh. A step reads repository files and the .gen/ outputs of this program's earlier steps only.",
+  "steps": [
+    {
+      "generator": "pdsurface",
+      "inputs": [
+        "app/specs/product/spec.json",
+        "app/specs/surface/spec.json"
+      ],
+      "output": ".gen/pd-surface"
+    },
+    {
+      "generator": "pdwalks",
+      "inputs": [
+        "test/product/journeys.mjs"
+      ],
+      "output": ".gen/pd-walks"
+    },
+    {
+      "generator": "pdjourneyfact",
+      "glob": [
+        "app/specs/product/journeys/*.json"
+      ],
+      "output": ".gen/pd-journeys"
+    },
+    {
+      "generator": "pdjourney",
+      "glob": [
+        "app/specs/product/journeys/*.json"
+      ],
+      "inputs": [
+        ".gen/pd-walks"
+      ],
+      "output": ".gen/pd-journey-check"
+    },
+    {
+      "generator": "pdorphans",
+      "inputs": [
+        ".gen/pd-walks",
+        ".gen/pd-journeys"
+      ],
+      "output": ".gen/pd-orphans"
+    },
+    {
+      "generator": "stem",
+      "glob": [
+        "app/specs/coherence/facets/*.json"
+      ],
+      "output": ".gen/pd-coherence"
+    },
+    {
+      "generator": "stem",
+      "glob": [
+        "app/specs/product/facets/*.json"
+      ],
+      "output": ".gen/pd-facets"
+    },
+    {
+      "generator": "pdfacet",
+      "glob": [
+        "app/specs/product/facets/*.json"
+      ],
+      "inputs": [
+        ".gen/pd-coherence",
+        ".gen/pd-journeys"
+      ],
+      "output": ".gen/pd-facet-check"
+    },
+    {
+      "generator": "pdfacetsmissing",
+      "inputs": [
+        ".gen/pd-coherence",
+        ".gen/pd-facets"
+      ],
+      "output": ".gen/pd-facets-missing"
+    },
+    {
+      "generator": "pdrefs",
+      "glob": [
+        "app/specs/product/features/*.json"
+      ],
+      "output": ".gen/pd-refs"
+    },
+    {
+      "generator": "pdindex",
+      "glob": [
+        "site/*.mjs",
+        "test/*.mjs",
+        ":(exclude)site/vendor/*"
+      ],
+      "inputs": [
+        ".gen/pd-refs"
+      ],
+      "output": ".gen/pd-index"
+    },
+    {
+      "generator": "stem",
+      "glob": [
+        "app/specs/product/quality/*.json"
+      ],
+      "output": ".gen/pd-quality"
+    },
+    {
+      "generator": "pdheld",
+      "glob": [
+        "app/specs/product/features/*.json"
+      ],
+      "output": ".gen/pd-held"
+    },
+    {
+      "generator": "pdfeature",
+      "glob": [
+        "app/specs/product/features/*.json"
+      ],
+      "inputs": [
+        ".gen/pd-journeys",
+        ".gen/pd-index",
+        ".gen/pd-quality"
+      ],
+      "output": ".gen/pd-feature-check"
+    },
+    {
+      "generator": "pdmeasures",
+      "glob": [
+        "app/specs/product/quality/*.json"
+      ],
+      "output": ".gen/pd-measures"
+    },
+    {
+      "generator": "pdhits",
+      "glob": [
+        "site/*.mjs",
+        "test/*.mjs",
+        ":(exclude)site/vendor/*"
+      ],
+      "inputs": [
+        ".gen/pd-measures"
+      ],
+      "output": ".gen/pd-hits"
+    },
+    {
+      "generator": "pdquality",
+      "glob": [
+        "app/specs/product/quality/*.json"
+      ],
+      "inputs": [
+        "app/specs/product/spec.json",
+        ".gen/pd-held",
+        ".gen/pd-hits"
+      ],
+      "output": ".gen/pd-quality-check"
+    }
+  ]
+}

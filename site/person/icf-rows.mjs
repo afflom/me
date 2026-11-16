@@ -6,6 +6,7 @@
 // Each row: foundation id (null for a residual category), linearization id, code,
 // block id, title, its level in the tabulation, kind, depth in kind, residual,
 // leaf, parent's foundation id (null for a root), coding note.
+export const VERSION = "2026 Jan 17 - 05:30 UTC";
 export const ROWS = [];
 ROWS.push(["619527855", "619527855", "", "", "ICF Category", 0, "chapter", 1, false, false, null, ""]);
 ROWS.push(["567313968", "567313968", "", "BlockL1-b11", "Body functions", 1, "block", 1, false, false, "619527855", ""]);

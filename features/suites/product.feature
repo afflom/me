@@ -21,11 +21,11 @@ Feature: product
   @PD-03 @build
   Scenario: The product record places every part the Prism has: every surface entry in the person's or the system view, every root facet in the system view serving at least one journey, every journey with its goal, done-state, usability measure, status and walk, and every setting in the person's view one the Prism requires of the person; the gate refuses a record that leaves any part unplaced
     Given app/specs/product/spec.json, the surface, the coherence registry and the walks
-    When test/product/gate.test.mjs runs tools/product/gate.py on the committed record and on each planted defect
+    When tools/generators/run.sh runs the LexLean program generators/product over them, and GN-01 replays each planted defect in generators/product/cases
     Then the committed record passes and every planted defect is refused with its reason
 
   @PT-01 @build
   Scenario: Every part of the Prism, each module of its page and of its model, answers what it is, why it is there, who acts in it, where it runs, when it acts and how it is checked, each answer derived from the record and grounded in a stratum of app/specs/parts/spec.json after verdant's W5H certificate; why traces each part through the features, facets and journeys it serves to the stakeholder concerns they answer, and the gate refuses an ungrounded part, an unanswered question, a concern no journey answers or a working journey no part serves, beyond a debt that only shrinks
     Given every tracked module of the page and of the model, the parts record, the product record and the coherence registry
-    When test/parts/gate.test.mjs runs tools/parts/gate.py on the committed record and on each planted defect
+    When tools/generators/run.sh runs the LexLean program generators/parts over them (test/parts/parts.txt, test/parts/reach.txt and its checks), and GN-01 replays each planted defect in generators/parts/cases
     Then the committed record passes and every planted defect is refused with its reason
