@@ -204,8 +204,7 @@ def generated_claims(files):
     # The same files under the same producers give the same answer: a run in which
     # every producer passed is kept under target/ by what it read, so the base of an
     # unchanged tree, and each planted-defect test's base, is not produced again.
-    read = json.dumps([SPEC["producers"], SPEC["built"], [[p, blob((ROOT / p).read_bytes())] for p in files]])
-    kept = (ROOT / "target").resolve() / f"handwritten-claims-{blob(read.encode())}.json"
+    kept = (ROOT / "target").resolve() / ("handwritten-claims-%s.json" % blob(json.dumps([SPEC["producers"], SPEC["built"], [[p, blob((ROOT / p).read_bytes())] for p in files]]).encode()))
     if kept.exists():
         return json.loads(kept.read_text())
     # One fixed scratch path under target/: a producer built once (xtask)
