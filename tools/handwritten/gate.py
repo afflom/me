@@ -201,6 +201,13 @@ def upstream_claims(files):
 def generated_claims(files):
     """{path: producer} by running every producer in a scratch copy."""
     claims = {}
+    # The same files under the same producers give the same answer: a run in which
+    # every producer passed is kept under target/ by what it read, so the base of an
+    # unchanged tree, and each planted-defect test's base, is not produced again.
+    read = json.dumps([SPEC["producers"], SPEC["built"], [[p, blob((ROOT / p).read_bytes())] for p in files]])
+    kept = (ROOT / "target").resolve() / f"handwritten-claims-{blob(read.encode())}.json"
+    if kept.exists():
+        return json.loads(kept.read_text())
     # One fixed scratch path under target/: a producer built once (xtask)
     # keeps the path it was built in, so the copy must always be at the same place.
     work = (ROOT / "target").resolve() / "handwritten-producers"
@@ -224,6 +231,7 @@ def generated_claims(files):
             env = dict(os.environ, **{k: v.replace("@root", str(ROOT)) for k, v in prod.get("env", {}).items()})
             r = subprocess.run(prod["run"], cwd=work, capture_output=True, env=env)
             if r.returncode != 0 and TOLERANT:
+                kept = None
                 continue
             if r.returncode != 0:
                 fail([f"producer {prod['id']} ({' '.join(prod['run'])}) failed:", r.stderr.decode(errors="replace")[-2000:]])
@@ -236,6 +244,8 @@ def generated_claims(files):
         for p in files:
             if matches(p, b["paths"]):
                 claims.setdefault(p, b["id"])
+    if kept:
+        kept.write_text(json.dumps(claims))
     return claims
 
 
