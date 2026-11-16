@@ -125,7 +125,7 @@ def generated(standard, inv, refusals):
     if not vendored.exists() or hashlib.sha256(vendored.read_bytes()).hexdigest() != source["sha256"]:
         refusals.append(f"{key}: {inv['vendored']} is not {source['url']} at the pinned {source['sha256']}")
         return []
-    steps = [step for f in sorted(ROOT.glob("generators/*/steps.json")) for step in load(f)["steps"]]
+    steps = [step for pattern in ("generators/*/steps.json", "generators/*/steps/*.json") for f in sorted(ROOT.glob(pattern)) for step in load(f)["steps"]]
     if not any(step["output"] == inv["generated"] for step in steps):
         refusals.append(f"{key}: no step of a generators/<program>/steps.json writes {inv['generated']}")
         return []
