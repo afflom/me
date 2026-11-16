@@ -60,9 +60,9 @@ def fetch(source, headers={}):
 
 source = {s["key"]: s for s in SPEC["sources"]}
 rfc = SPEC["sources"][0]
-pinned = next((s for s in ORACLE["sources"] if s["key"] == rfc["key"]), None)
+pinned = next((json.loads(p.read_text(encoding="utf-8")) for p in (ROOT / "app/specs/oracle/sources").glob(rfc["key"] + ".json")), None)
 if not pinned or pinned["sha256"] != rfc["sha256"]:
-    refuse(f"{rfc['key']} must be the source app/specs/oracle/spec.json pins, at the same sha256")
+    refuse(f"{rfc['key']} must be the source app/specs/oracle/sources/ pins, at the same sha256")
 text = abnf.unpaginate(fetch(rfc), examples=True)
 registry = ET.fromstring(fetch(source["iana-vcard"]))
 NS = "{http://www.iana.org/assignments}"
