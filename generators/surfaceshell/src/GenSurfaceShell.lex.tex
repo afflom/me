@@ -1,0 +1,490 @@
+\begin{lexlean}{GenSurfaceShell}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\title{Surface shell generator}
+\begin{semanticmodule}
+definition{
+  name: sshU,
+  parameters: [value : String],
+  result: Bytes,
+  body: (Foundation.Utf8::encode value)
+}
+
+definition{
+  name: sshCat,
+  parameters: [parts : (List Bytes)],
+  result: Bytes,
+  body: (match parts
+    | List.nil => 0x
+    | List.cons head rest => (Foundation.Bytes::appendBytes head (sshCat rest))),
+  recursive_argument: parts
+}
+
+definition{
+  name: sshSep,
+  parameters: [acc : Bytes, sep : Bytes, item : Bytes],
+  result: Bytes,
+  body: (if ((Foundation.Bytes::byteLength item) =? 0) then acc else (if ((Foundation.Bytes::byteLength acc) =? 0) then item else (sshCat (cons acc (cons sep (cons item (nil Bytes)))))))
+}
+
+definition{
+  name: sshAdd,
+  parameters: [acc : Bytes, reason : Bytes],
+  result: Bytes,
+  body: (sshSep acc 0x3b20 reason)
+}
+
+definition{
+  name: sshKnown,
+  parameters: [value : (Option Nat)],
+  result: Bool,
+  body: (match value | Option.none => false | Option.some v => true)
+}
+
+definition{
+  name: sshRaw,
+  parameters: [s : Bytes, pos : (Option Nat)],
+  result: Bytes,
+  body: (match pos
+    | Option.none => 0x
+    | Option.some i => (Foundation.Json::span s i (Foundation.Json::valueEnd s i))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshFile,
+  parameters: [archive : Bytes, path : String],
+  result: Bytes,
+  body: (match (Foundation.Tar::find archive (sshU path)) | Option.none => 0x | Option.some f => f),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshKeyIndexFrom,
+  parameters: [s : Bytes, arr : (Option Nat), wanted : Bytes, n : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (if (Foundation.Tar::sameBytes (Foundation.Json::textAt s (Foundation.Json::memberAt s e (sshU "key"))) wanted) then (ctor Option.some [Nat] n) else (sshKeyIndexFrom s arr wanted (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshKeyIndex,
+  parameters: [s : Bytes, arr : (Option Nat), wanted : Bytes],
+  result: (Option Nat),
+  body: (sshKeyIndexFrom s arr wanted 0 (Foundation.Json::countAt s arr)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshFirstWhereFrom,
+  parameters: [s : Bytes, arr : (Option Nat), field : String, wanted : Bytes, n : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (if (Foundation.Tar::sameBytes (Foundation.Json::textAt s (Foundation.Json::memberAt s e (sshU field))) wanted) then e else (sshFirstWhereFrom s arr field wanted (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshFirstWhere,
+  parameters: [s : Bytes, arr : (Option Nat), field : String, wanted : Bytes],
+  result: (Option Nat),
+  body: (sshFirstWhereFrom s arr field wanted 0 (Foundation.Json::countAt s arr)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshCountWhereFrom,
+  parameters: [
+    s : Bytes,
+    arr : (Option Nat),
+    field : String,
+    wanted : Bytes,
+    acc : Nat,
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (sshCountWhereFrom s arr field wanted (if (Foundation.Tar::sameBytes (Foundation.Json::textAt s (Foundation.Json::memberAt s e (sshU field))) wanted) then (acc + 1) else acc) (n + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshCountWhere,
+  parameters: [s : Bytes, arr : (Option Nat), field : String, wanted : Bytes],
+  result: Nat,
+  body: (sshCountWhereFrom s arr field wanted 0 0 (Foundation.Json::countAt s arr)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshNameByte,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((((96 <? b) && (b <? 123)) || ((64 <? b) && (b <? 91))) || (((47 <? b) && (b <? 58)) || ((b =? 45) || (b =? 95))))
+}
+
+definition{
+  name: sshWholeFrom,
+  parameters: [hay : Bytes, needle : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength hay) <? (i + (Foundation.Bytes::byteLength needle))) then false else (if ((Foundation.Tar::sameBytes (Foundation.Json::span hay i (i + (Foundation.Bytes::byteLength needle))) needle) && (not (sshNameByte (Foundation.Tar::byteOr hay (i + (Foundation.Bytes::byteLength needle)))))) then true else (sshWholeFrom hay needle (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshWhole,
+  parameters: [hay : Bytes, needle : Bytes],
+  result: Bool,
+  body: (sshWholeFrom hay needle 0 ((Foundation.Bytes::byteLength hay) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshLineFrom,
+  parameters: [t : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((Foundation.Bytes::byteLength t) <=? i) || ((Foundation.Tar::byteOr t i) =? 10)) then i else (sshLineFrom t (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshLineOfFrom,
+  parameters: [t : Bytes, wanted : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength t) <=? i) then false else (let e : Nat := (sshLineFrom t i ((Foundation.Bytes::byteLength t) + 1)); (if (Foundation.Tar::sameBytes (Foundation.Json::span t i e) wanted) then true else (sshLineOfFrom t wanted (e + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshLineOf,
+  parameters: [t : Bytes, wanted : Bytes],
+  result: Bool,
+  body: (sshLineOfFrom t wanted 0 ((Foundation.Bytes::byteLength t) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshNameStart,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((((96 <? b) && (b <? 123)) || ((64 <? b) && (b <? 91))) || ((b =? 45) || (b =? 95)))
+}
+
+definition{
+  name: sshNameEnd,
+  parameters: [t : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((Foundation.Bytes::byteLength t) <=? i) || (not (sshNameByte (Foundation.Tar::byteOr t i)))) then i else (sshNameEnd t (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshClassesFrom,
+  parameters: [css : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength css) <=? i) then acc else (if (((Foundation.Tar::byteOr css i) =? 46) && ((not ((0 <? i) && (sshNameByte (Foundation.Tar::byteOr css (prim subtract i 1 : Nat))))) && (sshNameStart (Foundation.Tar::byteOr css (i + 1))))) then (let e : Nat := (sshNameEnd css (i + 1) (Foundation.Bytes::byteLength css)); (let name : Bytes := (Foundation.Json::span css (i + 1) e); (sshClassesFrom css e (if (sshLineOf acc name) then acc else (sshCat (cons acc (cons name (cons 0x0a (nil Bytes)))))) rest))) else (sshClassesFrom css (i + 1) acc rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshClassesGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (let css : Bytes := (sshFile archive "site/card.css"); (if ((Foundation.Bytes::byteLength css) =? 0) then (ctor Option.none [Bytes]) else (ctor Option.some [Bytes] (sshClassesFrom css 0 0x ((Foundation.Bytes::byteLength css) + 1))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshClassesReason,
+  parameters: [classes : Bytes, names : (List String), acc : Bytes],
+  result: Bytes,
+  body: (match names
+    | List.nil => acc
+    | List.cons head rest => (sshClassesReason classes rest (if (sshLineOf classes (sshU head)) then acc else (sshAdd acc (sshCat (cons 0x74686520636c61737320 (cons (sshU head) (cons 0x20686173206e6f2072756c6520696e20736974652f636172642e637373 (nil Bytes))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: names
+}
+
+definition{
+  name: sshIdsReason,
+  parameters: [html : Bytes, names : (List String), acc : Bytes],
+  result: Bytes,
+  body: (match names
+    | List.nil => acc
+    | List.cons head rest => (sshIdsReason html rest (if (sshWhole html (sshCat (cons 0x69643d22 (cons (sshU head) (cons 0x22 (nil Bytes)))))) then acc else (sshAdd acc (sshCat (cons 0x6e6f20656c656d656e74206f6620736974652f636172642e68746d6c206861732074686520696420 (cons (sshU head) (nil Bytes)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: names
+}
+
+definition{
+  name: sshWordsReason,
+  parameters: [s : Bytes, words : (Option Nat), names : (List String), acc : Bytes],
+  result: Bytes,
+  body: (match names
+    | List.nil => acc
+    | List.cons head rest => (sshWordsReason s words rest (if (sshKnown (Foundation.Json::memberAt s words (sshU head))) then acc else (sshAdd acc (sshCat (cons 0x73657420757020736179732074686520776f726420 (cons (sshU head) (cons 0x2c20776869636820746865207375726661636520646f6573206e6f742068617665 (nil Bytes))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: names
+}
+
+definition{
+  name: sshStepsReasonFrom,
+  parameters: [s : Bytes, top : (Option Nat), arr : (Option Nat), acc : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let key : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (sshU "key"))); (let sect : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s e (sshU "section"))); (let a1 : Bytes := (if (sshKnown (sshKeyIndex s (Foundation.Json::memberAt s top (sshU "sections")) sect)) then acc else (sshAdd acc (sshCat (cons (sshCat (cons 0x746865207365747570207374657020 (cons key (cons 0x206f70656e7320 (cons sect (nil Bytes)))))) (cons 0x2c207768696368206973206e6f7420612073656374696f6e (nil Bytes)))))); (sshStepsReasonFrom s top arr (if (sshKnown (Foundation.Json::memberAt s (Foundation.Json::memberAt s top (sshU "words")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (sshU "word"))))) then a1 else (sshAdd a1 (sshCat (cons (sshCat (cons 0x746865207365747570207374657020 (cons key (cons 0x207361797320 (cons (Foundation.Json::textAt s (Foundation.Json::memberAt s e (sshU "word"))) (nil Bytes)))))) (cons 0x2c207768696368206973206e6f74206120776f7264 (nil Bytes)))))) (n + 1) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshStepsFrom,
+  parameters: [s : Bytes, top : (Option Nat), arr : (Option Nat), acc : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (sshStepsFrom s top arr (sshSep acc 0x2c20 (sshCat (cons (sshCat (cons 0x7b226b6579223a20 (cons (sshRaw s (Foundation.Json::memberAt s e (sshU "key"))) (cons 0x2c202273656374696f6e223a20 (cons (sshRaw s (Foundation.Json::memberAt s e (sshU "section"))) (nil Bytes)))))) (cons (sshCat (cons 0x2c202274657874223a20 (cons (sshRaw s (Foundation.Json::memberAt s (Foundation.Json::memberAt s top (sshU "words")) (Foundation.Json::textAt s (Foundation.Json::memberAt s e (sshU "word"))))) (cons 0x7d (nil Bytes))))) (nil Bytes))))) (n + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshReasons,
+  parameters: [s : Bytes, css : Bytes, html : Bytes],
+  result: Bytes,
+  body: (let top : (Option Nat) := (Foundation.Json::root s); (let places : (Option Nat) := (Foundation.Json::memberAt s top (sshU "places")); (let setup : (Option Nat) := (Foundation.Json::memberAt s top (sshU "setup")); (let a1 : Bytes := (if ((sshCountWhere s places "host" 0x686f6d65) =? 1) then 0x else 0x736574207570206e656564732065786163746c79206f6e6520706c61636520617420686f6d65); (let a2 : Bytes := (if ((sshCountWhere s places "show" 0x73657474696e6773) =? 1) then a1 else (sshAdd a1 0x736574207570206e656564732065786163746c79206f6e6520706c61636520746861742073686f7773207468652073657474696e6773)); (let sheet : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s (sshFirstWhere s places "show" 0x73657474696e6773) (sshU "host"))); (let a3 : Bytes := (if ((Foundation.Tar::sameBytes sheet 0x6e6f6e65) || (Foundation.Tar::sameBytes sheet 0x636f6d706f736572)) then (sshAdd a2 0x7468652073657474696e677320617265206f6e206e6f20686f7374206f66207468652070616765) else a2); (let a4 : Bytes := (if (0 <? (Foundation.Json::countAt s setup)) then a3 else (sshAdd a3 0x73657420757020686173206e6f207374657073)); (sshIdsReason html (cons "pr-setup" (cons "pr-setup-title" (cons "pr-settings" (cons "pr-title" (cons "pr-count" (nil String)))))) (sshClassesReason css (cons "pr-steps" (cons "pr-step" (cons "pr-step-done" (cons "pr-step-next" (cons "pr-setup-go" (cons "pr-setup-top" (cons "pr-count" (cons "pr-setup-head" (cons "pr-setup-bar" (cons "pr-setup-right" (cons "pr-setup-on" (cons "pr-set" (nil String))))))))))))) (sshWordsReason s (Foundation.Json::memberAt s top (sshU "words")) (cons "setup" (cons "setup.continue" (cons "setup.of" (cons "setup.back" (cons "setup.later" (cons "setup.next" (cons "done" (nil String)))))))) (sshStepsReasonFrom s top setup a4 0 (Foundation.Bytes::byteLength s))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshL0,
+  parameters: [],
+  result: Bytes,
+  body: (sshU "// Generated by GenSurfaceShell (generators/surfaceshell) from app/specs/surface/spec.json, site/card.css and site/card.html. Do not edit.\n// Set up: the few sections a person meets first (PrismSurface's setup), in\n// order. Until each is d")
+}
+
+definition{
+  name: sshL1,
+  parameters: [],
+  result: Bytes,
+  body: (sshU "one Today leads with one card naming the steps, the\n// next marked as the current step (WAI-ARIA 1.2, aria-current); Continue opens\n// that step alone in Settings, numbered, with Back, Later and Next.\n\nexport const STEPS = [")
+}
+
+definition{name: sshL2, parameters: [], result: Bytes, body: (sshU "];\nconst HOME = ")}
+
+definition{name: sshL3, parameters: [], result: Bytes, body: (sshU ";\nconst SETTINGS = ")}
+
+definition{name: sshL4, parameters: [], result: Bytes, body: (sshU ";\nconst WORDS = { title: ")}
+
+definition{name: sshL5, parameters: [], result: Bytes, body: (sshU ", continue: ")}
+
+definition{name: sshL6, parameters: [], result: Bytes, body: (sshU ", of: ")}
+
+definition{name: sshL7, parameters: [], result: Bytes, body: (sshU ", back: ")}
+
+definition{name: sshL8, parameters: [], result: Bytes, body: (sshU ", later: ")}
+
+definition{name: sshL9, parameters: [], result: Bytes, body: (sshU ", next: ")}
+
+definition{name: sshL10, parameters: [], result: Bytes, body: (sshU ", done: ")}
+
+definition{
+  name: sshL11,
+  parameters: [],
+  result: Bytes,
+  body: (sshU " };\n\n// done holds, for each step's section, whether what it asks is done.\nexport function makeSetup({ $, element, go, here, done }) {\n  for (const step of STEPS) if (typeof done[step.section] !== 'function') throw new Error(`set up: nothin")
+}
+
+definition{
+  name: sshL12,
+  parameters: [],
+  result: Bytes,
+  body: (sshU "g says when ${step.section} is done`);\n  const stepDone = (step) => Boolean(done[step.section]());\n  const left = () => STEPS.filter((step) => !stepDone(step));\n  const card = $('pr-setup');\n  let at = -1;\n  function paint() {\n    const res")
+}
+
+definition{
+  name: sshL13,
+  parameters: [],
+  result: Bytes,
+  body: (sshU "t = left();\n    const shown = here().key === HOME && rest.length > 0;\n    card.hidden = !shown;\n    if (!shown) return false;\n    const next = rest[0];\n    const steps = element('ol', { className: 'pr-steps' }, ...STEPS.map((step) => {\n    ")
+}
+
+definition{
+  name: sshL14,
+  parameters: [],
+  result: Bytes,
+  body: (sshU "  const item = element('li', { className: stepDone(step) ? 'pr-step pr-step-done' : step === next ? 'pr-step pr-step-next' : 'pr-step', textContent: step.text });\n      if (step === next) item.setAttribute('aria-current', 'step');\n      ret")
+}
+
+definition{
+  name: sshL15,
+  parameters: [],
+  result: Bytes,
+  body: (sshU "urn item;\n    }));\n    const button = element('button', { type: 'button', className: 'pr-setup-go', textContent: WORDS.continue });\n    button.addEventListener('click', () => open(STEPS.indexOf(next)));\n    card.replaceChildren(\n      eleme")
+}
+
+definition{
+  name: sshL16,
+  parameters: [],
+  result: Bytes,
+  body: (sshU "nt('header', { className: 'pr-setup-top' },\n        element('h3', { id: 'pr-setup-title', textContent: WORDS.title }),\n        element('span', { className: 'pr-count', textContent: `${STEPS.length - rest.length + 1} ${WORDS.of} ${STEPS.leng")
+}
+
+definition{
+  name: sshL17,
+  parameters: [],
+  result: Bytes,
+  body: (sshU "th}` })),\n      steps, button);\n    return true;\n  }\n  // One step of set up, alone in the settings panel; past the last, home.\n  function open(index) {\n    if (index < 0 || index >= STEPS.length) { go(HOME, true); return; }\n    go(SETTINGS")
+}
+
+definition{
+  name: sshL18,
+  parameters: [],
+  result: Bytes,
+  body: (sshU ", false, index);\n  }\n  function paintStep() {\n    const panel = $('pr-settings');\n    panel.querySelector('.pr-setup-bar')?.remove();\n    panel.querySelector('.pr-setup-head')?.remove();\n    const step = STEPS[at];\n    for (const node of pa")
+}
+
+definition{
+  name: sshL19,
+  parameters: [],
+  result: Bytes,
+  body: (sshU "nel.querySelectorAll('.pr-set')) node.hidden = Boolean(step) && node.dataset.section !== step.section;\n    panel.classList.toggle('pr-setup-on', Boolean(step));\n    if (!step) return;\n    $('pr-title').textContent = WORDS.title;\n    $('pr-c")
+}
+
+definition{
+  name: sshL20,
+  parameters: [],
+  result: Bytes,
+  body: (sshU "ount').hidden = false;\n    $('pr-count').textContent = `${at + 1} ${WORDS.of} ${STEPS.length}`;\n    panel.prepend(element('h3', { id: 'pr-setup-head', className: 'pr-setup-head', textContent: step.text }));\n    const button = (word, to, pri")
+}
+
+definition{
+  name: sshL21,
+  parameters: [],
+  result: Bytes,
+  body: (sshU "mary = false) => {\n      const b = element('button', { type: 'button', className: primary ? 'pr-setup-go' : '', textContent: word });\n      b.addEventListener('click', () => open(to));\n      return b;\n    };\n    const last = at === STEPS.le")
+}
+
+definition{
+  name: sshL22,
+  parameters: [],
+  result: Bytes,
+  body: (sshU "ngth - 1;\n    // Named by its step, so it is told apart from the page's own navigation.\n    const bar = element('nav', { className: 'pr-setup-bar' },\n      at > 0 ? button(WORDS.back, at - 1) : element('span'),\n      element('span', { class")
+}
+
+definition{
+  name: sshL23,
+  parameters: [],
+  result: Bytes,
+  body: (sshU "Name: 'pr-setup-right' },\n        last ? element('span') : button(WORDS.later, STEPS.length),\n        button(last ? WORDS.done : WORDS.next, at + 1, true)));\n    bar.setAttribute('aria-labelledby', 'pr-setup-head');\n    panel.append(bar);\n ")
+}
+
+definition{
+  name: sshL24,
+  parameters: [],
+  result: Bytes,
+  body: (sshU " }\n  return {\n    paint,\n    open,\n    openKey: (key) => open(STEPS.findIndex((step) => step.key === key)),\n    paintStep,\n    select: (index) => { at = index; },\n  };\n}\n")
+}
+
+definition{
+  name: sshModule0,
+  parameters: [s : Bytes, top : (Option Nat)],
+  result: Bytes,
+  body: (sshCat (cons (sshCat (cons (sshL0) (cons (sshL1) (cons (sshStepsFrom s top (Foundation.Json::memberAt s top (sshU "setup")) 0x 0 (Foundation.Bytes::byteLength s)) (cons (sshL2) (nil Bytes)))))) (cons (sshCat (cons (sshRaw s (Foundation.Json::memberAt s (sshFirstWhere s (Foundation.Json::memberAt s top (sshU "places")) "host" 0x686f6d65) (sshU "key"))) (cons (sshL3) (cons (sshRaw s (Foundation.Json::memberAt s (sshFirstWhere s (Foundation.Json::memberAt s top (sshU "places")) "show" 0x73657474696e6773) (sshU "key"))) (cons (sshL4) (nil Bytes)))))) (nil Bytes)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshModule1,
+  parameters: [s : Bytes, top : (Option Nat)],
+  result: Bytes,
+  body: (sshCat (cons (sshCat (cons (sshRaw s (Foundation.Json::memberAt s (Foundation.Json::memberAt s top (sshU "words")) (sshU "setup"))) (cons (sshL5) (cons (sshRaw s (Foundation.Json::memberAt s (Foundation.Json::memberAt s top (sshU "words")) (sshU "setup.continue"))) (cons (sshL6) (nil Bytes)))))) (cons (sshCat (cons (sshRaw s (Foundation.Json::memberAt s (Foundation.Json::memberAt s top (sshU "words")) (sshU "setup.of"))) (cons (sshL7) (cons (sshRaw s (Foundation.Json::memberAt s (Foundation.Json::memberAt s top (sshU "words")) (sshU "setup.back"))) (cons (sshL8) (nil Bytes)))))) (nil Bytes)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshModule2,
+  parameters: [s : Bytes, top : (Option Nat)],
+  result: Bytes,
+  body: (sshCat (cons (sshCat (cons (sshRaw s (Foundation.Json::memberAt s (Foundation.Json::memberAt s top (sshU "words")) (sshU "setup.later"))) (cons (sshL9) (cons (sshRaw s (Foundation.Json::memberAt s (Foundation.Json::memberAt s top (sshU "words")) (sshU "setup.next"))) (cons (sshL10) (nil Bytes)))))) (cons (sshCat (cons (sshRaw s (Foundation.Json::memberAt s (Foundation.Json::memberAt s top (sshU "words")) (sshU "done"))) (cons (sshL11) (cons (sshL12) (cons (sshL13) (nil Bytes)))))) (nil Bytes)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshModule3,
+  parameters: [s : Bytes, top : (Option Nat)],
+  result: Bytes,
+  body: (sshCat (cons (sshCat (cons (sshL14) (cons (sshL15) (cons (sshL16) (cons (sshL17) (nil Bytes)))))) (cons (sshCat (cons (sshL18) (cons (sshL19) (cons (sshL20) (cons (sshL21) (nil Bytes)))))) (nil Bytes))))
+}
+
+definition{
+  name: sshModule4,
+  parameters: [s : Bytes, top : (Option Nat)],
+  result: Bytes,
+  body: (sshCat (cons (sshL22) (cons (sshL23) (cons (sshL24) (nil Bytes)))))
+}
+
+definition{
+  name: sshModule,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let top : (Option Nat) := (Foundation.Json::root s); (sshCat (cons (sshCat (cons (sshModule0 s top) (cons (sshModule1 s top) (cons (sshModule2 s top) (cons (sshModule3 s top) (nil Bytes)))))) (cons (sshModule4 s top) (nil Bytes))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshRefusal,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (sshFile archive "app/specs/surface/spec.json"); (let css : Bytes := (sshFile archive ".gen/shell-classes"); (let html : Bytes := (sshFile archive "site/card.html"); (if ((not ((sshKnown (Foundation.Json::memberAt s (Foundation.Json::root s) (sshU "places"))) && ((sshKnown (Foundation.Json::memberAt s (Foundation.Json::root s) (sshU "setup"))) && ((sshKnown (Foundation.Json::memberAt s (Foundation.Json::root s) (sshU "sections"))) && (sshKnown (Foundation.Json::memberAt s (Foundation.Json::root s) (sshU "words"))))))) || (((Foundation.Bytes::byteLength css) =? 0) || ((Foundation.Bytes::byteLength html) =? 0))) then (sshCat (cons 0x6e65656473206170702f73706563732f737572666163652f737065632e6a736f6e20776974682069747320706c616365732c2073657475702c2073656374696f6e7320616e6420776f7264732c20 (cons 0x2e67656e2f7368656c6c2d636c617373657320616e6420736974652f636172642e68746d6c (nil Bytes)))) else (sshReasons s css html))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshGenerate,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (sshModule (sshFile archive "app/specs/surface/spec.json")),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
