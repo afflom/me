@@ -5,8 +5,8 @@
 // bytes whose SHA-256 is not the pinned one are refused before they compile.
 
 export const GUESTS = {
-  message: { path: 'guest/message.wasm', sha256: 'ac7c15750106d23bf6f3ccf0f2ea0be62e9c21fad2b1e31c5d67987ff4ee0513' },
   rules: { path: 'guest/message.wasm', sha256: 'ac7c15750106d23bf6f3ccf0f2ea0be62e9c21fad2b1e31c5d67987ff4ee0513' },
+  message: { path: 'guest/message.wasm', sha256: 'ac7c15750106d23bf6f3ccf0f2ea0be62e9c21fad2b1e31c5d67987ff4ee0513' },
 };
 
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
