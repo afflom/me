@@ -1,0 +1,1584 @@
+\begin{lexlean}{PrismMessage}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: mfLen, parameters: [s : Bytes], result: Nat, body: (prim length s : Nat)}
+
+definition{
+  name: mfAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => 0
+    | Option.some b => (prim to_nat b : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfCut,
+  parameters: [s : Bytes, start : Nat, stop : Nat],
+  result: Bytes,
+  body: (let e : Nat := (if ((prim length s : Nat) <? stop) then (prim length s : Nat) else stop); (match (prim slice s start (prim subtract e start : Nat) : (Option Bytes))
+    | Option.none => 0x
+    | Option.some b => b))
+}
+
+definition{
+  name: mfSame,
+  parameters: [left : Bytes, right : Bytes],
+  result: Bool,
+  body: (prim equal (prim compare_bytes left right : Ordering) (prim compare_bytes 0x00 0x00 : Ordering) : Bool),
+  axioms: [propext]
+}
+
+definition{
+  name: mfOctets,
+  parameters: [],
+  result: Bytes,
+  body: 0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff
+}
+
+definition{
+  name: mfByte,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (mfCut (mfOctets) (prim remainder n 256 0 : Nat) ((prim remainder n 256 0 : Nat) + 1))
+}
+
+definition{
+  name: mfU16,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (prim append (mfByte (prim quotient n 256 0 : Nat)) (mfByte n) : Bytes)
+}
+
+definition{
+  name: mfG16,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: ((prim multiply (mfAt s i) 256 : Nat) + (mfAt s (i + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfF,
+  parameters: [x : Bytes],
+  result: Bytes,
+  body: (prim append (mfU16 (mfLen x)) x : Bytes)
+}
+
+definition{
+  name: mfFAt,
+  parameters: [r : Bytes, i : Nat, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (k =? 0) then i else (mfFAt r (i + (2 + (mfG16 r i))) (prim subtract k 1 : Nat) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfGet,
+  parameters: [r : Bytes, k : Nat],
+  result: Bytes,
+  body: (let i : Nat := (mfFAt r 0 k k); (mfCut r (i + 2) (i + (2 + (mfG16 r i))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfKw,
+  parameters: [s : Bytes, i : Nat, k : Bytes],
+  result: Bool,
+  body: (mfSame (mfCut s i (i + (mfLen k))) k),
+  axioms: [propext]
+}
+
+definition{
+  name: mfCpLen,
+  parameters: [b : Nat],
+  result: Nat,
+  body: (if (b <? 128) then 1 else (if (b <? 224) then 2 else (if (b <? 240) then 3 else 4)))
+}
+
+definition{
+  name: mfCp,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (mfAt s i); (if (b <? 128) then b else (if (b <? 224) then ((prim multiply (prim subtract b 192 : Nat) 64 : Nat) + (prim subtract (mfAt s (i + 1)) 128 : Nat)) else (if (b <? 240) then ((prim multiply (prim subtract b 224 : Nat) 4096 : Nat) + ((prim multiply (prim subtract (mfAt s (i + 1)) 128 : Nat) 64 : Nat) + (prim subtract (mfAt s (i + 2)) 128 : Nat))) else ((prim multiply (prim subtract b 240 : Nat) 262144 : Nat) + ((prim multiply (prim subtract (mfAt s (i + 1)) 128 : Nat) 4096 : Nat) + ((prim multiply (prim subtract (mfAt s (i + 2)) 128 : Nat) 64 : Nat) + (prim subtract (mfAt s (i + 3)) 128 : Nat)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfUtf8,
+  parameters: [c : Nat],
+  result: Bytes,
+  body: (if (c <? 128) then (mfByte c) else (if (c <? 2048) then (prim append (mfByte (192 + (prim quotient c 64 0 : Nat))) (mfByte (128 + (prim remainder c 64 0 : Nat))) : Bytes) else (if (c <? 65536) then (prim append (mfByte (224 + (prim quotient c 4096 0 : Nat))) (prim append (mfByte (128 + (prim remainder (prim quotient c 64 0 : Nat) 64 0 : Nat))) (mfByte (128 + (prim remainder c 64 0 : Nat))) : Bytes) : Bytes) else (prim append (mfByte (240 + (prim quotient c 262144 0 : Nat))) (prim append (mfByte (128 + (prim remainder (prim quotient c 4096 0 : Nat) 64 0 : Nat))) (prim append (mfByte (128 + (prim remainder (prim quotient c 64 0 : Nat) 64 0 : Nat))) (mfByte (128 + (prim remainder c 64 0 : Nat))) : Bytes) : Bytes) : Bytes))))
+}
+
+definition{
+  name: mfJWs,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 32) || ((b =? 10) || ((b =? 13) || (b =? 9))))
+}
+
+definition{
+  name: mfJSkip,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((i <? (mfLen s)) && (mfJWs (mfAt s i))) then (mfJSkip s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfJStrEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((mfLen s) <? (i + 1)) then i else (if ((mfAt s i) =? 92) then (mfJStrEnd s (i + 2) rest) else (if ((mfAt s i) =? 34) then (i + 1) else (mfJStrEnd s (i + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfJNest,
+  parameters: [s : Bytes, i : Nat, depth : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((mfLen s) <? (i + 1)) then i else (let b : Nat := (mfAt s i); (if (b =? 34) then (mfJNest s (mfJStrEnd s (i + 1) (mfLen s)) depth rest) else (if ((b =? 123) || (b =? 91)) then (mfJNest s (i + 1) (depth + 1) rest) else (if ((b =? 125) || (b =? 93)) then (if (depth <? (1 + 1)) then (i + 1) else (mfJNest s (i + 1) (prim subtract depth 1 : Nat) rest)) else (mfJNest s (i + 1) depth rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfJScalarEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((mfLen s) <? (i + 1)) then i else (let b : Nat := (mfAt s i); (if ((b =? 44) || ((b =? 125) || ((b =? 93) || (mfJWs b)))) then i else (mfJScalarEnd s (i + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfJEnd,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (mfAt s i); (if (b =? 34) then (mfJStrEnd s (i + 1) (mfLen s)) else (if ((b =? 123) || (b =? 91)) then (mfJNest s i 0 (mfLen s)) else (mfJScalarEnd s i (mfLen s))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfJMember,
+  parameters: [s : Bytes, i : Nat, key : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (let a : Nat := (mfJSkip s i (mfLen s)); (if (not ((mfAt s a) =? 34)) then 0 else (let e : Nat := (mfJStrEnd s (a + 1) (mfLen s)); (let c : Nat := (mfJSkip s e (mfLen s)); (let v : Nat := (mfJSkip s (c + 1) (mfLen s)); (let n : Nat := (mfJSkip s (mfJEnd s v) (mfLen s)); (if (mfSame (mfCut s (a + 1) (prim subtract e 1 : Nat)) key) then (v + 1) else (if ((mfAt s n) =? 44) then (mfJMember s (n + 1) key rest) else 0))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfJGet,
+  parameters: [s : Bytes, obj : Nat, key : Bytes],
+  result: Nat,
+  body: (if ((mfAt s obj) =? 123) then (mfJMember s (obj + 1) key (mfLen s)) else 0),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfHex,
+  parameters: [b : Nat],
+  result: Nat,
+  body: (if (b <? 58) then (prim subtract b 48 : Nat) else (if (b <? 71) then (prim subtract b 55 : Nat) else (prim subtract b 87 : Nat)))
+}
+
+definition{
+  name: mfHex4,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: ((prim multiply (mfHex (mfAt s i)) 4096 : Nat) + ((prim multiply (mfHex (mfAt s (i + 1))) 256 : Nat) + ((prim multiply (mfHex (mfAt s (i + 2))) 16 : Nat) + (mfHex (mfAt s (i + 3)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfJPlain,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((mfLen s) <? (i + 1)) || (((mfAt s i) =? 34) || ((mfAt s i) =? 92))) then i else (mfJPlain s (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfJEscape,
+  parameters: [s : Bytes, i : Nat, n : Nat],
+  result: Bytes,
+  body: (if (n =? 110) then 0x0a else (if (n =? 116) then 0x09 else (if (n =? 114) then 0x0d else (if (n =? 98) then 0x08 else (if (n =? 102) then 0x0c else (mfCut s i (i + 1)))))))
+}
+
+definition{
+  name: mfJText,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((mfLen s) <? (i + 1)) then acc else (let b : Nat := (mfAt s i); (if (b =? 34) then acc else (if (not (b =? 92)) then (let e : Nat := (mfJPlain s i (mfLen s)); (mfJText s e (prim append acc (mfCut s i e) : Bytes) rest)) else (let n : Nat := (mfAt s (i + 1)); (if (not (n =? 117)) then (mfJText s (i + 2) (prim append acc (mfJEscape s (i + 1) n) : Bytes) rest) else (let u : Nat := (mfHex4 s (i + 2)); (if ((55296 <? (u + 1)) && ((u <? 56320) && (((mfAt s (i + 6)) =? 92) && ((mfAt s (i + 7)) =? 117)))) then (mfJText s (i + 12) (prim append acc (mfUtf8 (65536 + ((prim multiply (prim subtract u 55296 : Nat) 1024 : Nat) + (prim subtract (mfHex4 s (i + 8)) 56320 : Nat)))) : Bytes) rest) else (mfJText s (i + 6) (prim append acc (mfUtf8 u) : Bytes) rest)))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfJString,
+  parameters: [s : Bytes, v : Nat],
+  result: Bytes,
+  body: (if ((0 <? v) && ((mfAt s (prim subtract v 1 : Nat)) =? 34)) then (mfJText s v 0x (mfLen s)) else 0x),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfIsWs,
+  parameters: [c : Nat],
+  result: Bool,
+  body: ((c =? 32) || ((c =? 9) || ((c =? 13) || ((c =? 10) || (c =? 12288)))))
+}
+
+definition{
+  name: mfIsBidi,
+  parameters: [c : Nat],
+  result: Bool,
+  body: ((c =? 1564) || ((c =? 8206) || ((c =? 8207) || ((8294 <? (c + 1)) && (c <? (8297 + 1))))))
+}
+
+definition{
+  name: mfSkipO,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((i <? (mfLen s)) && ((mfIsWs (mfCp s i)) || (mfIsBidi (mfCp s i)))) then (mfSkipO s (i + (mfCpLen (mfAt s i))) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfSkipBidi,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((i <? (mfLen s)) && (mfIsBidi (mfCp s i))) then (mfSkipBidi s (i + (mfCpLen (mfAt s i))) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfReqS,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let j : Nat := (mfSkipBidi s i (mfLen s)); (if ((j <? (mfLen s)) && (mfIsWs (mfCp s j))) then ((mfSkipO s j (mfLen s)) + 1) else 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfNameStart,
+  parameters: [c : Nat],
+  result: Bool,
+  body: (((65 <? (c + 1)) && (c <? (90 + 1))) || (((97 <? (c + 1)) && (c <? (122 + 1))) || ((c =? 43) || ((c =? 95) || (((161 <? (c + 1)) && (c <? (1563 + 1))) || (((1565 <? (c + 1)) && (c <? (5759 + 1))) || (((5761 <? (c + 1)) && (c <? (8191 + 1))) || (((8203 <? (c + 1)) && (c <? (8205 + 1))) || (((8208 <? (c + 1)) && (c <? (8231 + 1))) || (((8240 <? (c + 1)) && (c <? (8286 + 1))) || (((8288 <? (c + 1)) && (c <? (8293 + 1))) || (((8298 <? (c + 1)) && (c <? (12287 + 1))) || (((12289 <? (c + 1)) && (c <? (55295 + 1))) || (((57344 <? (c + 1)) && (c <? (64975 + 1))) || (((65008 <? (c + 1)) && (c <? (65533 + 1))) || ((65536 <? (c + 1)) && ((c <? (1114109 + 1)) && ((prim remainder c 65536 0 : Nat) <? 65534))))))))))))))))))
+}
+
+definition{
+  name: mfNameChar,
+  parameters: [c : Nat],
+  result: Bool,
+  body: ((mfNameStart c) || (((48 <? (c + 1)) && (c <? (57 + 1))) || ((c =? 45) || (c =? 46))))
+}
+
+definition{
+  name: mfNameChars,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((i <? (mfLen s)) && (mfNameChar (mfCp s i))) then (mfNameChars s (i + (mfCpLen (mfAt s i))) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfBidi1,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (if ((i <? (mfLen s)) && (mfIsBidi (mfCp s i))) then (i + (mfCpLen (mfAt s i))) else i),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfName,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let a : Nat := (mfBidi1 s i); (if ((a <? (mfLen s)) && (mfNameStart (mfCp s a))) then ((mfBidi1 s (mfNameChars s a (mfLen s))) + 1) else 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfNameText,
+  parameters: [s : Bytes, i : Nat],
+  result: Bytes,
+  body: (let a : Nat := (mfBidi1 s i); (mfCut s a (mfNameChars s a (mfLen s)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfIdent,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let a : Nat := (mfName s i); (if (a =? 0) then 0 else (if ((mfAt s (prim subtract a 1 : Nat)) =? 58) then (mfName s a) else a))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfIdentText,
+  parameters: [s : Bytes, i : Nat],
+  result: Bytes,
+  body: (let a : Nat := (mfName s i); (if ((0 <? a) && ((mfAt s (prim subtract a 1 : Nat)) =? 58)) then (prim append (mfNameText s i) (prim append 0x3a (mfNameText s a) : Bytes) : Bytes) else (mfNameText s i))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfEscapable,
+  parameters: [n : Nat],
+  result: Bool,
+  body: ((n =? 92) || ((n =? 123) || ((n =? 124) || (n =? 125))))
+}
+
+definition{
+  name: mfQuotedEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if ((mfLen s) <? (i + 1)) then 0 else (let b : Nat := (mfAt s i); (if (b =? 124) then (i + 2) else (if (b =? 92) then (if (mfEscapable (mfAt s (i + 1))) then (mfQuotedEnd s (i + 2) rest) else 0) else (if (b =? 0) then 0 else (mfQuotedEnd s (i + 1) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfLiteral,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (if ((mfAt s i) =? 124) then (mfQuotedEnd s (i + 1) (mfLen s)) else (let e : Nat := (mfNameChars s i (mfLen s)); (if (i <? e) then (e + 1) else 0))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfUnesc,
+  parameters: [s : Bytes, i : Nat, stop : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (if ((mfAt s i) =? 92) then (mfUnesc s (i + 2) stop (prim append acc (mfCut s (i + 1) (i + 2)) : Bytes) rest) else (mfUnesc s (i + 1) stop (prim append acc (mfCut s i (i + 1)) : Bytes) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfLitValue,
+  parameters: [s : Bytes, i : Nat],
+  result: Bytes,
+  body: (if ((mfAt s i) =? 124) then (mfUnesc s (i + 1) (prim subtract (mfLiteral s i) 2 : Nat) 0x (mfLen s)) else (mfCut s i (mfNameChars s i (mfLen s)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfVar,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (if ((mfAt s i) =? 36) then (mfName s (i + 1)) else 0),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfOption,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let a : Nat := (mfIdent s i); (if (a =? 0) then 0 else (let e : Nat := (mfSkipO s (prim subtract a 1 : Nat) (mfLen s)); (if (not ((mfAt s e) =? 61)) then 0 else (let v : Nat := (mfSkipO s (e + 1) (mfLen s)); (if ((mfAt s v) =? 36) then (mfVar s v) else (mfLiteral s v))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfAttr,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (if (not ((mfAt s i) =? 64)) then 0 else (let a : Nat := (mfIdent s (i + 1)); (if (a =? 0) then 0 else (let e : Nat := (mfSkipO s (prim subtract a 1 : Nat) (mfLen s)); (if ((mfAt s e) =? 61) then (mfLiteral s (mfSkipO s (e + 1) (mfLen s))) else a))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfOptions,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let j : Nat := (mfReqS s i); (if (j =? 0) then i else (let o : Nat := (mfOption s (prim subtract j 1 : Nat)); (if (o =? 0) then i else (mfOptions s (prim subtract o 1 : Nat) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfAttrs,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let j : Nat := (mfReqS s i); (if (j =? 0) then i else (let o : Nat := (mfAttr s (prim subtract j 1 : Nat)); (if (o =? 0) then i else (mfAttrs s (prim subtract o 1 : Nat) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfFunc,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let a : Nat := (mfIdent s (i + 1)); (if (a =? 0) then 0 else ((mfOptions s (prim subtract a 1 : Nat) (mfLen s)) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfTail,
+  parameters: [s : Bytes, i : Nat, slash : Bool],
+  result: Nat,
+  body: (let a : Nat := (mfSkipO s (mfAttrs s i (mfLen s)) (mfLen s)); (let b : Nat := (if (slash && ((mfAt s a) =? 47)) then (a + 1) else a); (if ((b <? (mfLen s)) && ((mfAt s b) =? 125)) then (b + 2) else 0))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfAfterOperand,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let j : Nat := (mfReqS s i); (if ((0 <? j) && ((mfAt s (prim subtract j 1 : Nat)) =? 58)) then (let f : Nat := (mfFunc s (prim subtract j 1 : Nat)); (if (f =? 0) then 0 else (mfTail s (prim subtract f 1 : Nat) false))) else (mfTail s i false))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfPlaceholder,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let a : Nat := (mfSkipO s (i + 1) (mfLen s)); (let b : Nat := (mfAt s a); (if (b =? 36) then (let v : Nat := (mfVar s a); (if (v =? 0) then 0 else (mfAfterOperand s (prim subtract v 1 : Nat)))) else (if (b =? 58) then (let f : Nat := (mfFunc s a); (if (f =? 0) then 0 else (mfTail s (prim subtract f 1 : Nat) false))) else (if ((b =? 35) || (b =? 47)) then (let d : Nat := (mfIdent s (a + 1)); (if (d =? 0) then 0 else (mfTail s (mfOptions s (prim subtract d 1 : Nat) (mfLen s)) (b =? 35)))) else (let l : Nat := (mfLiteral s a); (if (l =? 0) then 0 else (mfAfterOperand s (prim subtract l 1 : Nat))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfPattern,
+  parameters: [s : Bytes, i : Nat, quoted : Bool, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if ((mfLen s) <? (i + 1)) then (if (quoted && true) then 0 else (i + 1)) else (let b : Nat := (mfAt s i); (if (b =? 125) then (if (quoted && true) then (i + 1) else 0) else (if (b =? 123) then (let p : Nat := (mfPlaceholder s i); (if (p =? 0) then 0 else (mfPattern s (prim subtract p 1 : Nat) quoted rest))) else (if (b =? 92) then (if (mfEscapable (mfAt s (i + 1))) then (mfPattern s (i + 2) quoted rest) else 0) else (if (b =? 0) then 0 else (mfPattern s (i + 1) quoted rest)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfQuoted,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (if (((mfAt s i) =? 123) && ((mfAt s (i + 1)) =? 123)) then (let e : Nat := (mfPattern s (i + 2) true (mfLen s)); (if ((0 <? e) && ((mfAt s e) =? 125)) then (e + 2) else 0)) else 0),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfDecl,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (if (mfKw s i 0x2e696e707574) then (let a : Nat := (mfSkipO s (i + 6) (mfLen s)); (if (((mfAt s a) =? 123) && ((mfAt s (mfSkipO s (a + 1) (mfLen s))) =? 36)) then (mfPlaceholder s a) else 0)) else (if (mfKw s i 0x2e6c6f63616c) then (let j : Nat := (mfReqS s (i + 6)); (if (j =? 0) then 0 else (let v : Nat := (mfVar s (prim subtract j 1 : Nat)); (if (v =? 0) then 0 else (let e : Nat := (mfSkipO s (prim subtract v 1 : Nat) (mfLen s)); (if (not ((mfAt s e) =? 61)) then 0 else (let x : Nat := (mfSkipO s (e + 1) (mfLen s)); (let b : Nat := (mfAt s (mfSkipO s (x + 1) (mfLen s))); (if (((mfAt s x) =? 123) && ((not (b =? 35)) && (not (b =? 47)))) then (mfPlaceholder s x) else 0))))))))) else 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfDecls,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let d : Nat := (mfDecl s i); (if (d =? 0) then i else (mfDecls s (mfSkipO s (prim subtract d 1 : Nat) (mfLen s)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfSelectors,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let j : Nat := (mfReqS s i); (if ((j =? 0) || (not ((mfAt s (prim subtract j 1 : Nat)) =? 36))) then i else (let v : Nat := (mfVar s (prim subtract j 1 : Nat)); (if (v =? 0) then i else (mfSelectors s (prim subtract v 1 : Nat) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfKey,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (if ((mfAt s i) =? 42) then (i + 2) else (mfLiteral s i)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfKeys,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let j : Nat := (mfReqS s i); (if (j =? 0) then i else (let k : Nat := (mfKey s (prim subtract j 1 : Nat)); (if (k =? 0) then i else (mfKeys s (prim subtract k 1 : Nat) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfVariant,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let k : Nat := (mfKey s i); (if (k =? 0) then 0 else (mfQuoted s (mfSkipO s (mfKeys s (prim subtract k 1 : Nat) (mfLen s)) (mfLen s))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfVariants,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let v : Nat := (mfVariant s (mfSkipO s i (mfLen s))); (if (v =? 0) then i else (mfVariants s (prim subtract v 1 : Nat) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfBody,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (if (mfKw s i 0x2e6d61746368) then (let e : Nat := (mfSelectors s (i + 6) (mfLen s)); (let j : Nat := (mfReqS s e); (if ((e =? (i + 6)) || (j =? 0)) then 0 else (let v : Nat := (mfVariant s (prim subtract j 1 : Nat)); (if (v =? 0) then 0 else ((mfVariants s (prim subtract v 1 : Nat) (mfLen s)) + 1)))))) else (mfQuoted s i)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfIsComplex,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: (let a : Nat := (mfSkipO s 0 (mfLen s)); (((mfAt s a) =? 46) || (((mfAt s a) =? 123) && ((mfAt s (a + 1)) =? 123)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfBodyAt,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (mfDecls s (mfSkipO s 0 (mfLen s)) (mfLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfWellFormed,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: (if (mfIsComplex s) then (let b : Nat := (mfBody s (mfBodyAt s)); ((0 <? b) && ((mfSkipO s (prim subtract b 1 : Nat) (mfLen s)) =? (mfLen s)))) else (0 <? (mfPattern s 0 false ((mfLen s) + 1)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfDeclExpr,
+  parameters: [s : Bytes, d : Nat],
+  result: Nat,
+  body: (if (mfKw s d 0x2e696e707574) then (mfSkipO s (d + 6) (mfLen s)) else (let v : Nat := (mfVar s (prim subtract (mfReqS s (d + 6)) 1 : Nat)); (let e : Nat := (mfSkipO s (prim subtract v 1 : Nat) (mfLen s)); (mfSkipO s (e + 1) (mfLen s))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfDeclVar,
+  parameters: [s : Bytes, d : Nat],
+  result: Nat,
+  body: (if (mfKw s d 0x2e696e707574) then ((mfSkipO s ((mfDeclExpr s d) + 1) (mfLen s)) + 1) else (mfReqS s (d + 6))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfOperandEnd,
+  parameters: [s : Bytes, a : Nat],
+  result: Nat,
+  body: (if ((mfAt s a) =? 36) then (prim subtract (mfVar s a) 1 : Nat) else (if ((mfAt s a) =? 58) then a else (prim subtract (mfLiteral s a) 1 : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfFuncAt,
+  parameters: [s : Bytes, x : Nat],
+  result: Nat,
+  body: (let a : Nat := (mfSkipO s (x + 1) (mfLen s)); (if ((mfAt s a) =? 58) then (a + 1) else (let j : Nat := (mfReqS s (mfOperandEnd s a)); (if ((0 <? j) && ((mfAt s (prim subtract j 1 : Nat)) =? 58)) then j else 0)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfIsMarkup,
+  parameters: [s : Bytes, x : Nat],
+  result: Bool,
+  body: (let a : Nat := (mfSkipO s (x + 1) (mfLen s)); (((mfAt s a) =? 35) || ((mfAt s a) =? 47))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfOptsStart,
+  parameters: [s : Bytes, x : Nat],
+  result: Nat,
+  body: (if (mfIsMarkup s x) then (mfIdent s ((mfSkipO s (x + 1) (mfLen s)) + 1)) else (let f : Nat := (mfFuncAt s x); (if (f =? 0) then 0 else (mfIdent s f)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfNextOpt,
+  parameters: [s : Bytes, p : Nat],
+  result: Nat,
+  body: (let j : Nat := (mfReqS s p); (if ((0 <? j) && (0 <? (mfOption s (prim subtract j 1 : Nat)))) then j else 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfOptValue,
+  parameters: [s : Bytes, o : Nat],
+  result: Nat,
+  body: (let e : Nat := (mfSkipO s (prim subtract (mfIdent s o) 1 : Nat) (mfLen s)); (mfSkipO s (e + 1) (mfLen s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfNextVariant,
+  parameters: [s : Bytes, v : Nat],
+  result: Nat,
+  body: (let n : Nat := (mfSkipO s (prim subtract (mfVariant s v) 1 : Nat) (mfLen s)); (if (0 <? (mfVariant s n)) then (n + 1) else 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfVariantPat,
+  parameters: [s : Bytes, v : Nat],
+  result: Nat,
+  body: (mfSkipO s (mfKeys s (prim subtract (mfKey s v) 1 : Nat) (mfLen s)) (mfLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfVar1,
+  parameters: [s : Bytes, m : Nat],
+  result: Nat,
+  body: (prim subtract (mfReqS s (mfSelectors s (m + 6) (mfLen s))) 1 : Nat),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfCountSel,
+  parameters: [s : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (let j : Nat := (mfReqS s i); (if ((j =? 0) || (not ((mfAt s (prim subtract j 1 : Nat)) =? 36))) then n else (mfCountSel s (prim subtract (mfVar s (prim subtract j 1 : Nat)) 1 : Nat) (n + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfCountKeys,
+  parameters: [s : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (let j : Nat := (mfReqS s i); (if (j =? 0) then n else (let k : Nat := (mfKey s (prim subtract j 1 : Nat)); (if (k =? 0) then n else (mfCountKeys s (prim subtract k 1 : Nat) (n + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfNKeys,
+  parameters: [s : Bytes, v : Nat],
+  result: Nat,
+  body: (mfCountKeys s (prim subtract (mfKey s v) 1 : Nat) 1 (mfLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfKeyAt,
+  parameters: [s : Bytes, i : Nat, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (k =? 0) then i else (mfKeyAt s (prim subtract (mfReqS s (prim subtract (mfKey s i) 1 : Nat)) 1 : Nat) (prim subtract k 1 : Nat) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfKeyIsStar,
+  parameters: [s : Bytes, k : Nat],
+  result: Bool,
+  body: ((mfAt s k) =? 42),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfKeySame,
+  parameters: [s : Bytes, a : Nat, b : Nat],
+  result: Bool,
+  body: (if ((mfKeyIsStar s a) || (mfKeyIsStar s b)) then ((mfKeyIsStar s a) && (mfKeyIsStar s b)) else (mfSame (mfLitValue s a) (mfLitValue s b))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfKeysSame,
+  parameters: [s : Bytes, va : Nat, vb : Nat, k : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if (n <? (k + 1)) then true else (if (mfKeySame s (mfKeyAt s va k k) (mfKeyAt s vb k k)) then (mfKeysSame s va vb (k + 1) n rest) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfAllStar,
+  parameters: [s : Bytes, v : Nat, k : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if (n <? (k + 1)) then true else (if (mfKeyIsStar s (mfKeyAt s v k k)) then (mfAllStar s v (k + 1) n rest) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfMismatch,
+  parameters: [s : Bytes, v : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if (not ((mfNKeys s v) =? n)) then true else (let x : Nat := (mfNextVariant s v); (if (x =? 0) then false else (mfMismatch s (prim subtract x 1 : Nat) n rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfHasFallback,
+  parameters: [s : Bytes, v : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if (mfAllStar s v 0 n n) then true else (let x : Nat := (mfNextVariant s v); (if (x =? 0) then false else (mfHasFallback s (prim subtract x 1 : Nat) n rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfEarlierSame,
+  parameters: [s : Bytes, u : Nat, v : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if (v <? (u + 1)) then false else (if (mfKeysSame s u v 0 n n) then true else (let x : Nat := (mfNextVariant s u); (if (x =? 0) then false else (mfEarlierSame s (prim subtract x 1 : Nat) v n rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfDupVariant,
+  parameters: [s : Bytes, head : Nat, v : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if (mfEarlierSame s head v n (mfLen s)) then true else (let x : Nat := (mfNextVariant s v); (if (x =? 0) then false else (mfDupVariant s head (prim subtract x 1 : Nat) n rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfFindDecl,
+  parameters: [s : Bytes, d : Nat, name : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (let e : Nat := (mfDecl s d); (if (e =? 0) then 0 else (if (mfSame (mfNameText s (mfDeclVar s d)) name) then (d + 1) else (mfFindDecl s (mfSkipO s (prim subtract e 1 : Nat) (mfLen s)) name rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfDeclOf,
+  parameters: [s : Bytes, name : Bytes],
+  result: Nat,
+  body: (if (mfIsComplex s) then (mfFindDecl s (mfSkipO s 0 (mfLen s)) name (mfLen s)) else 0),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfAnnotated,
+  parameters: [s : Bytes, name : Bytes, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (let d : Nat := (mfDeclOf s name); (if (d =? 0) then false else (let x : Nat := (mfDeclExpr s (prim subtract d 1 : Nat)); (let a : Nat := (mfSkipO s (x + 1) (mfLen s)); (if (0 <? (mfFuncAt s x)) then true else (if (((mfAt s a) =? 36) && (mfKw s (prim subtract d 1 : Nat) 0x2e6c6f63616c)) then (mfAnnotated s (mfNameText s (a + 1)) rest) else false))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfSelsAnnotated,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (let j : Nat := (mfReqS s i); (if ((j =? 0) || (not ((mfAt s (prim subtract j 1 : Nat)) =? 36))) then true else (if (mfAnnotated s (mfNameText s j) (mfLen s)) then (mfSelsAnnotated s (prim subtract (mfVar s (prim subtract j 1 : Nat)) 1 : Nat) rest) else false)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfOptRefs,
+  parameters: [s : Bytes, p : Nat, name : Bytes, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (let o : Nat := (mfNextOpt s p); (if (o =? 0) then false else (let v : Nat := (mfOptValue s (prim subtract o 1 : Nat)); (if (((mfAt s v) =? 36) && (mfSame (mfNameText s (v + 1)) name)) then true else (mfOptRefs s (prim subtract (mfOption s (prim subtract o 1 : Nat)) 1 : Nat) name rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfExprRefs,
+  parameters: [s : Bytes, x : Nat, name : Bytes, operand : Bool],
+  result: Bool,
+  body: (let a : Nat := (mfSkipO s (x + 1) (mfLen s)); (let st : Nat := (mfOptsStart s x); ((operand && (((mfAt s a) =? 36) && (mfSame (mfNameText s (a + 1)) name))) || ((0 <? st) && (mfOptRefs s (prim subtract st 1 : Nat) name (mfLen s)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfSeenBefore,
+  parameters: [s : Bytes, d : Nat, stop : Nat, name : Bytes, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if (stop <? (d + 1)) then false else (if ((mfSame (mfNameText s (mfDeclVar s d)) name) || (mfExprRefs s (mfDeclExpr s d) name true)) then true else (mfSeenBefore s (mfSkipO s (prim subtract (mfDecl s d) 1 : Nat) (mfLen s)) stop name rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfDupDecl,
+  parameters: [s : Bytes, head : Nat, d : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (let e : Nat := (mfDecl s d); (let name : Bytes := (mfNameText s (mfDeclVar s d)); (if (e =? 0) then false else (if ((mfSeenBefore s head d name (mfLen s)) || (mfExprRefs s (mfDeclExpr s d) name (mfKw s d 0x2e6c6f63616c))) then true else (mfDupDecl s head (mfSkipO s (prim subtract e 1 : Nat) (mfLen s)) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfOptSeen,
+  parameters: [s : Bytes, p : Nat, stop : Nat, name : Bytes, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (let o : Nat := (mfNextOpt s p); (if ((o =? 0) || (stop <? ((prim subtract o 1 : Nat) + 1))) then false else (if (mfSame (mfIdentText s (prim subtract o 1 : Nat)) name) then true else (mfOptSeen s (prim subtract (mfOption s (prim subtract o 1 : Nat)) 1 : Nat) stop name rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfDupOpt,
+  parameters: [s : Bytes, head : Nat, p : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (let o : Nat := (mfNextOpt s p); (if (o =? 0) then false else (if (mfOptSeen s head (prim subtract o 1 : Nat) (mfIdentText s (prim subtract o 1 : Nat)) (mfLen s)) then true else (mfDupOpt s head (prim subtract (mfOption s (prim subtract o 1 : Nat)) 1 : Nat) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfPhDup,
+  parameters: [s : Bytes, x : Nat],
+  result: Bool,
+  body: (let st : Nat := (mfOptsStart s x); ((0 <? st) && (mfDupOpt s (prim subtract st 1 : Nat) (prim subtract st 1 : Nat) (mfLen s)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfPatDup,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((mfLen s) <? (i + 1)) then false else (let b : Nat := (mfAt s i); (if (b =? 125) then false else (if (b =? 123) then (if (mfPhDup s i) then true else (mfPatDup s (prim subtract (mfPlaceholder s i) 1 : Nat) rest)) else (if (b =? 92) then (mfPatDup s (i + 2) rest) else (mfPatDup s (i + 1) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfDeclsDup,
+  parameters: [s : Bytes, d : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (let e : Nat := (mfDecl s d); (if (e =? 0) then false else (if (mfPhDup s (mfDeclExpr s d)) then true else (mfDeclsDup s (mfSkipO s (prim subtract e 1 : Nat) (mfLen s)) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfVariantsDup,
+  parameters: [s : Bytes, v : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if (mfPatDup s ((mfVariantPat s v) + 2) (mfLen s)) then true else (let x : Nat := (mfNextVariant s v); (if (x =? 0) then false else (mfVariantsDup s (prim subtract x 1 : Nat) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfMatchError,
+  parameters: [s : Bytes, m : Nat],
+  result: Bytes,
+  body: (let n : Nat := (mfCountSel s (m + 6) 0 (mfLen s)); (let v : Nat := (mfVar1 s m); (if (mfMismatch s v n (mfLen s)) then 0x76617269616e742d6b65792d6d69736d61746368 else (if (not (mfHasFallback s v n (mfLen s))) then 0x6d697373696e672d66616c6c6261636b2d76617269616e74 else (if (not (mfSelsAnnotated s (m + 6) (mfLen s))) then 0x6d697373696e672d73656c6563746f722d616e6e6f746174696f6e else (if (mfDupVariant s v v n (mfLen s)) then 0x6475706c69636174652d76617269616e74 else (if (mfVariantsDup s v (mfLen s)) then 0x6475706c69636174652d6f7074696f6e2d6e616d65 else 0x))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfDataError,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (if (not (mfIsComplex s)) then (if (mfPatDup s 0 (mfLen s)) then 0x6475706c69636174652d6f7074696f6e2d6e616d65 else 0x) else (let d0 : Nat := (mfSkipO s 0 (mfLen s)); (let m : Nat := (mfBodyAt s); (if (mfDupDecl s d0 d0 (mfLen s)) then 0x6475706c69636174652d6465636c61726174696f6e else (if (mfDeclsDup s d0 (mfLen s)) then 0x6475706c69636174652d6f7074696f6e2d6e616d65 else (if (mfKw s m 0x2e6d61746368) then (mfMatchError s m) else (if (mfPatDup s (m + 2) (mfLen s)) then 0x6475706c69636174652d6f7074696f6e2d6e616d65 else 0x))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfVal,
+  parameters: [
+    kind : Nat,
+    dir : Nat,
+    iso : Nat,
+    dp : Nat,
+    ff : Nat,
+    fs : Nat,
+    source : Bytes,
+    str : Bytes
+  ],
+  result: Bytes,
+  body: (prim append (mfF (prim append (mfByte kind) (prim append (mfByte dir) (prim append (mfByte iso) (prim append (mfByte dp) (prim append (mfByte ff) (mfByte fs) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes)) (prim append (mfF source) (mfF str) : Bytes) : Bytes)
+}
+
+definition{
+  name: mfFlag,
+  parameters: [v : Bytes, k : Nat],
+  result: Nat,
+  body: (mfAt v (2 + k)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfKind,
+  parameters: [v : Bytes],
+  result: Nat,
+  body: (mfFlag v 0),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfFallback,
+  parameters: [source : Bytes],
+  result: Bytes,
+  body: (mfVal 0 0 0 0 0 0 source 0x)
+}
+
+definition{
+  name: mfSourced,
+  parameters: [v : Bytes, source : Bytes],
+  result: Bytes,
+  body: (prim append (mfF (mfGet v 0)) (prim append (mfF source) (mfF (mfGet v 2)) : Bytes) : Bytes),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfSt,
+  parameters: [errs : Bytes, memo : Bytes, val : Bytes, opts : Bytes, operand : Bytes],
+  result: Bytes,
+  body: (prim append (mfF errs) (prim append (mfF memo) (prim append (mfF val) (prim append (mfF opts) (mfF operand) : Bytes) : Bytes) : Bytes) : Bytes)
+}
+
+definition{
+  name: mfErr,
+  parameters: [st : Bytes, name : Bytes],
+  result: Bytes,
+  body: (mfSt (if ((mfLen (mfGet st 0)) =? 0) then name else (prim append (mfGet st 0) (prim append 0x20 name : Bytes) : Bytes)) (mfGet st 1) (mfGet st 2) (mfGet st 3) (mfGet st 4)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfSetVal,
+  parameters: [st : Bytes, v : Bytes],
+  result: Bytes,
+  body: (mfSt (mfGet st 0) (mfGet st 1) v (mfGet st 3) (mfGet st 4)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfSetMemo,
+  parameters: [st : Bytes, m : Bytes],
+  result: Bytes,
+  body: (mfSt (mfGet st 0) m (mfGet st 2) (mfGet st 3) (mfGet st 4)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfSetCall,
+  parameters: [st : Bytes, opts : Bytes, operand : Bytes],
+  result: Bytes,
+  body: (mfSt (mfGet st 0) (mfGet st 1) (mfGet st 2) opts operand),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfMemoAt,
+  parameters: [m : Bytes, i : Nat, name : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if ((mfLen m) <? (i + 1)) then 0 else (let v : Nat := (i + (2 + (mfG16 m i))); (if (mfSame (mfCut m (i + 2) v) name) then (v + 1) else (mfMemoAt m (v + (2 + (mfG16 m v))) name rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfOpt,
+  parameters: [opts : Bytes, name : Bytes],
+  result: Nat,
+  body: (mfMemoAt opts 0 name (mfLen opts)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfOptText,
+  parameters: [opts : Bytes, name : Bytes],
+  result: Bytes,
+  body: (let o : Nat := (mfOpt opts name); (if (o =? 0) then 0x else (mfCut opts (o + 1) (o + (1 + (mfG16 opts (prim subtract o 1 : Nat))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfEscLit,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((mfLen s) <? (i + 1)) then acc else (mfEscLit s (i + 1) (prim append acc (prim append (if (((mfAt s i) =? 92) || ((mfAt s i) =? 124)) then 0x5c else 0x) (mfCut s i (i + 1)) : Bytes) : Bytes) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfDigits,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((i <? (mfLen s)) && ((48 <? ((mfAt s i) + 1)) && ((mfAt s i) <? (57 + 1)))) then (mfDigits s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfNumInt,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (if ((mfAt s 0) =? 45) then 1 else 0),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfNumFrac,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (mfDigits s (mfNumInt s) (mfLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfNumExp,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (let a : Nat := (mfNumFrac s); (if ((mfAt s a) =? 46) then (mfDigits s (a + 1) (mfLen s)) else a)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfIsNumber,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: (let i : Nat := (mfNumInt s); (let a : Nat := (mfNumFrac s); (let e : Nat := (mfNumExp s); ((i <? a) && (((a =? (i + 1)) || (not ((mfAt s i) =? 48))) && (((not ((mfAt s a) =? 46)) || ((a + 1) <? e)) && (if (e =? (mfLen s)) then true else ((((mfAt s e) =? 101) || ((mfAt s e) =? 69)) && (let x : Nat := (if (((mfAt s (e + 1)) =? 45) || ((mfAt s (e + 1)) =? 43)) then (e + 2) else (e + 1)); ((x <? (mfLen s)) && ((mfDigits s x (mfLen s)) =? (mfLen s)))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfParseNat,
+  parameters: [s : Bytes, i : Nat, stop : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (mfParseNat s (i + 1) stop ((prim multiply acc 10 : Nat) + (prim subtract (mfAt s i) 48 : Nat)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfZeros,
+  parameters: [n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (n =? 0) then acc else (mfZeros (prim subtract n 1 : Nat) (prim append acc 0x30 : Bytes) rest))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfTrimLead,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((i + 1) <? (mfLen s)) && ((mfAt s i) =? 48)) then (mfTrimLead s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfTrimTrail,
+  parameters: [s : Bytes, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if ((0 <? n) && ((mfAt s (prim subtract n 1 : Nat)) =? 48)) then (mfTrimTrail s (prim subtract n 1 : Nat) rest) else n)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfDecimal,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let i : Nat := (mfNumInt s); (let a : Nat := (mfNumFrac s); (let e : Nat := (mfNumExp s); (let ip : Bytes := (mfCut s i a); (let fp : Bytes := (if ((mfAt s a) =? 46) then (mfCut s (a + 1) e) else 0x); (let neg : Bool := ((mfAt s (e + 1)) =? 45); (let x : Nat := (if (e =? (mfLen s)) then 0 else (mfParseNat s (if (neg || ((mfAt s (e + 1)) =? 43)) then (e + 2) else (e + 1)) (mfLen s) 0 (mfLen s))); (let ip2 : Bytes := (if (neg && true) then (if ((mfLen ip) <? (x + 1)) then 0x30 else (mfCut ip 0 (prim subtract (mfLen ip) x : Nat))) else (prim append ip (prim append (mfCut fp 0 x) (mfZeros (prim subtract x (mfLen fp) : Nat) 0x x) : Bytes) : Bytes)); (let fp2 : Bytes := (if (neg && true) then (prim append (mfZeros (prim subtract x (mfLen ip) : Nat) 0x x) (prim append (mfCut ip (prim subtract (mfLen ip) x : Nat) (mfLen ip)) fp : Bytes) : Bytes) else (mfCut fp x (mfLen fp))); (let ip3 : Bytes := (mfCut ip2 (mfTrimLead ip2 0 (mfLen ip2)) (mfLen ip2)); (let fp3 : Bytes := (mfCut fp2 0 (mfTrimTrail fp2 (mfLen fp2) (mfLen fp2))); (let zero : Bool := ((mfSame ip3 0x30) && ((mfLen fp3) =? 0)); (prim append (if ((i =? 1) && (not zero)) then 0x2d else 0x) (prim append ip3 (if ((mfLen fp3) =? 0) then 0x else (prim append 0x2e fp3 : Bytes)) : Bytes) : Bytes))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfIsTest,
+  parameters: [fid : Bytes],
+  result: Bool,
+  body: ((mfSame fid 0x746573743a66756e6374696f6e) || ((mfSame fid 0x746573743a73656c656374) || (mfSame fid 0x746573743a666f726d6174))),
+  axioms: [propext]
+}
+
+definition{
+  name: mfKnown,
+  parameters: [fid : Bytes],
+  result: Bool,
+  body: ((mfSame fid 0x737472696e67) || (mfIsTest fid)),
+  axioms: [propext]
+}
+
+definition{
+  name: mfDirOf,
+  parameters: [d : Bytes],
+  result: Nat,
+  body: (if (mfSame d 0x6c7472) then 1 else (if (mfSame d 0x72746c) then 2 else 0)),
+  axioms: [propext]
+}
+
+definition{
+  name: mfDirOk,
+  parameters: [d : Bytes],
+  result: Bool,
+  body: ((mfSame d 0x6c7472) || ((mfSame d 0x72746c) || ((mfSame d 0x6175746f) || (mfSame d 0x696e6865726974)))),
+  axioms: [propext]
+}
+
+definition{
+  name: mfString,
+  parameters: [st : Bytes, source : Bytes],
+  result: Bytes,
+  body: (let o : Bytes := (mfGet st 4); (let opts : Bytes := (mfGet st 3); (let d : Bytes := (mfOptText opts 0x753a646972); (let has : Bool := (0 <? (mfOpt opts 0x753a646972)); (let good : Bool := (mfDirOk d); (let keep : Bool := ((not has) || ((not good) || (mfSame d 0x696e6865726974))); (let v : Bytes := (mfVal 3 (if (keep && true) then (mfFlag o 1) else (mfDirOf d)) (if (keep && true) then (mfFlag o 2) else 1) 0 0 0 source (mfGet o 2)); (mfSetVal (if (has && (not good)) then (mfErr st 0x6261642d6f7074696f6e) else st) v)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfTestInput,
+  parameters: [o : Bytes],
+  result: Bytes,
+  body: (let k : Nat := (mfKind o); (if ((4 <? (k + 1)) && (k <? (6 + 1))) then (mfGet o 2) else (if ((1 <? (k + 1)) && ((k <? (3 + 1)) && (mfIsNumber (mfGet o 2)))) then (mfDecimal (mfGet o 2)) else 0x))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfTest,
+  parameters: [st : Bytes, source : Bytes, kind : Nat],
+  result: Bytes,
+  body: (let o : Bytes := (mfGet st 4); (let opts : Bytes := (mfGet st 3); (let input : Bytes := (mfTestInput o); (let inherit : Bool := (4 <? ((mfKind o) + 1)); (let dp : Bytes := (mfOptText opts 0x646563696d616c506c61636573); (let hasDp : Bool := (0 <? (mfOpt opts 0x646563696d616c506c61636573)); (let fl : Bytes := (mfOptText opts 0x6661696c73); (let hasFl : Bool := (0 <? (mfOpt opts 0x6661696c73)); (if ((mfLen input) =? 0) then (mfSetVal (mfErr st 0x6261642d6f706572616e64) (mfFallback source)) else (if (hasDp && (not ((mfSame dp 0x30) || (mfSame dp 0x31)))) then (mfSetVal (mfErr st 0x6261642d6f7074696f6e) (mfFallback source)) else (let badFl : Bool := (hasFl && (not ((mfSame fl 0x616c77617973) || ((mfSame fl 0x666f726d6174) || ((mfSame fl 0x73656c656374) || (mfSame fl 0x6e65766572)))))); (let ff : Nat := (if ((mfSame fl 0x616c77617973) || (mfSame fl 0x666f726d6174)) then 1 else (if (inherit && true) then (mfFlag o 4) else 0)); (let fs : Nat := (if ((mfSame fl 0x616c77617973) || (mfSame fl 0x73656c656374)) then 1 else (if (inherit && true) then (mfFlag o 5) else 0)); (let places : Nat := (if (hasDp && true) then (prim subtract (mfAt dp 0) 48 : Nat) else (if (inherit && true) then (mfFlag o 3) else 0)); (mfSetVal (if (badFl && true) then (mfErr st 0x6261642d6f7074696f6e) else st) (mfVal kind 0 0 places ff fs source input)))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfApply,
+  parameters: [st : Bytes, fid : Bytes, source : Bytes],
+  result: Bytes,
+  body: (if (mfSame fid 0x737472696e67) then (mfString st source) else (mfTest st source (if (mfSame fid 0x746573743a66756e6374696f6e) then 4 else (if (mfSame fid 0x746573743a73656c656374) then 5 else 6)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfParam,
+  parameters: [p : Bytes, i : Nat, name : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (let a : Nat := (mfJSkip p i (mfLen p)); (if (not ((mfAt p a) =? 123)) then 0 else (let v : Nat := (mfJGet p a 0x76616c7565); (let e : Nat := (mfJSkip p (mfJEnd p a) (mfLen p)); (if ((0 <? v) && (mfSame (mfJString p (mfJGet p a 0x6e616d65)) name)) then v else (if ((mfAt p e) =? 44) then (mfParam p (e + 1) name rest) else 0))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfGiven,
+  parameters: [p : Bytes, pa : Nat, name : Bytes, st : Bytes],
+  result: Bytes,
+  body: (let v : Nat := (if (pa =? 0) then 0 else (mfParam p pa name (mfLen p))); (let source : Bytes := (prim append 0x24 name : Bytes); (if (v =? 0) then (mfSetVal (mfErr st 0x756e7265736f6c7665642d7661726961626c65) (mfFallback source)) else (if ((mfAt p (prim subtract v 1 : Nat)) =? 34) then (mfSetVal st (mfVal 1 0 0 0 0 0 source (mfJString p v))) else (mfSetVal st (mfVal 2 0 0 0 0 0 source (mfCut p (prim subtract v 1 : Nat) (mfJEnd p (prim subtract v 1 : Nat))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfMemo,
+  parameters: [st : Bytes, name : Bytes],
+  result: Bytes,
+  body: (mfSetMemo st (prim append (mfGet st 1) (prim append (mfF name) (mfF (mfGet st 2)) : Bytes) : Bytes)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfFnSource,
+  parameters: [s : Bytes, x : Nat, f : Nat, st : Bytes],
+  result: Bytes,
+  body: (if ((mfAt s (mfSkipO s (x + 1) (mfLen s))) =? 58) then (prim append 0x3a (mfIdentText s f) : Bytes) else (mfGet (mfGet st 2) 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfEv,
+  parameters: [s : Bytes, p : Bytes, pa : Nat, mode : Nat, x : Nat, st : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => st
+    | Nat.succ rest => (if (mode =? 1) then (let name : Bytes := (mfNameText s x); (let source : Bytes := (prim append 0x24 name : Bytes); (let m : Nat := (mfMemoAt (mfGet st 1) 0 name (mfLen st)); (if (0 <? m) then (mfSetVal st (mfSourced (mfCut (mfGet st 1) (m + 1) (m + (1 + (mfG16 (mfGet st 1) (prim subtract m 1 : Nat))))) source)) else (let d : Nat := (mfDeclOf s name); (if (d =? 0) then (mfGiven p pa name st) else (let r : Bytes := (mfEv s p pa (if (mfKw s (prim subtract d 1 : Nat) 0x2e696e707574) then 2 else 0) (mfDeclExpr s (prim subtract d 1 : Nat)) st rest); (let r2 : Bytes := (mfSetVal r (mfSourced (mfGet r 2) source)); (mfMemo r2 name))))))))) else (if (mode =? 3) then (let o : Nat := (mfNextOpt s x); (if (o =? 0) then st else (let v : Nat := (mfOptValue s (prim subtract o 1 : Nat)); (let name : Bytes := (mfIdentText s (prim subtract o 1 : Nat)); (let next : Nat := (prim subtract (mfOption s (prim subtract o 1 : Nat)) 1 : Nat); (if ((mfAt s v) =? 36) then (let r : Bytes := (mfEv s p pa 1 (v + 1) (mfSetVal st 0x) rest); (let got : Bytes := (mfGet r 2); (let back : Bytes := (mfSt (mfGet r 0) (mfGet r 1) (mfGet st 2) (mfGet st 3) (mfGet st 4)); (if ((mfKind got) =? 0) then (mfEv s p pa 3 next (mfErr back 0x6261642d6f7074696f6e) rest) else (mfEv s p pa 3 next (mfSetCall back (prim append (mfGet back 3) (prim append (mfF name) (mfF (mfGet got 2)) : Bytes) : Bytes) (mfGet back 4)) rest))))) else (mfEv s p pa 3 next (mfSetCall st (prim append (mfGet st 3) (prim append (mfF name) (mfF (mfLitValue s v)) : Bytes) : Bytes) (mfGet st 4)) rest))))))) else (let a : Nat := (mfSkipO s (x + 1) (mfLen s)); (let f : Nat := (mfFuncAt s x); (let st1 : Bytes := (if ((mfAt s a) =? 36) then (if (mode =? 2) then (mfGiven p pa (mfNameText s (a + 1)) st) else (mfEv s p pa 1 (a + 1) st rest)) else (if ((mfAt s a) =? 58) then (mfSetVal st 0x) else (mfSetVal st (mfVal 1 0 0 0 0 0 (prim append 0x7c (prim append (mfEscLit (mfLitValue s a) 0 0x (mfLen s)) 0x7c : Bytes) : Bytes) (mfLitValue s a))))); (if (f =? 0) then st1 else (let fid : Bytes := (mfIdentText s f); (let source : Bytes := (mfFnSource s x f st1); (if (not (mfKnown fid)) then (mfSetVal (mfErr st1 0x756e6b6e6f776e2d66756e6374696f6e) (mfFallback source)) else (let st2 : Bytes := (mfEv s p pa 3 (prim subtract (mfIdent s f) 1 : Nat) (mfSetCall st1 0x (mfGet st1 2)) rest); (mfApply st2 fid source)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfFuel,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: ((prim multiply (mfLen s) 2 : Nat) + 16)
+}
+
+definition{
+  name: mfSelectable,
+  parameters: [v : Bytes],
+  result: Bool,
+  body: (let k : Nat := (mfKind v); ((k =? 3) || (((k =? 4) || (k =? 5)) && ((mfFlag v 5) =? 0)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfKeyMatch,
+  parameters: [v : Bytes, key : Bytes],
+  result: Bool,
+  body: (let k : Nat := (mfKind v); (if (k =? 3) then (mfSame (mfGet v 2) key) else (if ((k =? 4) || (k =? 5)) then ((mfSame (mfGet v 2) 0x31) && ((mfSame key 0x31) || (((mfFlag v 3) =? 1) && (mfSame key 0x312e30)))) else false))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfKeyBetter,
+  parameters: [v : Bytes, k1 : Bytes],
+  result: Bool,
+  body: ((((mfKind v) =? 4) || ((mfKind v) =? 5)) && (mfSame k1 0x312e30)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfSelMatch,
+  parameters: [s : Bytes, sels : Bytes, v : Nat, k : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if (n <? (k + 1)) then true else (let key : Nat := (mfKeyAt s v k k); (if ((mfKeyIsStar s key) || (mfKeyMatch (mfGet sels k) (mfLitValue s key))) then (mfSelMatch s sels v (k + 1) n rest) else false)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfSelBetter,
+  parameters: [s : Bytes, sels : Bytes, v1 : Nat, v2 : Nat, k : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if (n <? (k + 1)) then false else (let a : Nat := (mfKeyAt s v1 k k); (let b : Nat := (mfKeyAt s v2 k k); (if ((mfKeyIsStar s a) && (not (mfKeyIsStar s b))) then false else (if ((not (mfKeyIsStar s a)) && (mfKeyIsStar s b)) then true else (if (mfKeySame s a b) then (mfSelBetter s sels v1 v2 (k + 1) n rest) else (mfKeyBetter (mfGet sels k) (mfLitValue s a))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfBest,
+  parameters: [s : Bytes, sels : Bytes, v : Nat, best : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => best
+    | Nat.succ rest => (let nb : Nat := (if (mfSelMatch s sels v 0 n n) then (if (best =? 0) then (v + 1) else (if (mfSelBetter s sels v (prim subtract best 1 : Nat) 0 n n) then (v + 1) else best)) else best); (let x : Nat := (mfNextVariant s v); (if (x =? 0) then nb else (mfBest s sels (prim subtract x 1 : Nat) nb n rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfResolveSels,
+  parameters: [s : Bytes, p : Bytes, pa : Nat, i : Nat, st : Bytes, sels : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (prim append (mfF st) (mfF sels) : Bytes)
+    | Nat.succ rest => (let j : Nat := (mfReqS s i); (if ((j =? 0) || (not ((mfAt s (prim subtract j 1 : Nat)) =? 36))) then (prim append (mfF st) (mfF sels) : Bytes) else (let r : Bytes := (mfEv s p pa 1 j st (mfFuel s)); (let v : Bytes := (mfGet r 2); (let ok : Bool := (mfSelectable v); (mfResolveSels s p pa (prim subtract (mfVar s (prim subtract j 1 : Nat)) 1 : Nat) (if (ok && true) then r else (mfErr r 0x6261642d73656c6563746f72)) (prim append sels (mfF (if (ok && true) then v else 0x)) : Bytes) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfTestText,
+  parameters: [v : Bytes],
+  result: Bytes,
+  body: (let t : Bytes := (mfGet v 2); (let i : Nat := (mfNumInt t); (let a : Nat := (mfNumFrac t); (prim append (mfCut t 0 a) (if ((mfFlag v 3) =? 1) then (prim append 0x2e (if ((mfAt t a) =? 46) then (mfCut t (a + 1) (a + 2)) else 0x30) : Bytes) else 0x) : Bytes)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfCanFormat,
+  parameters: [v : Bytes],
+  result: Bool,
+  body: (let k : Nat := (mfKind v); (not ((k =? 5) || (((k =? 4) || (k =? 6)) && ((mfFlag v 4) =? 1))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfText,
+  parameters: [v : Bytes],
+  result: Bytes,
+  body: (let k : Nat := (mfKind v); (if ((k =? 0) || (not (mfCanFormat v))) then (prim append 0x7b (prim append (mfGet v 1) 0x7d : Bytes) : Bytes) else (if ((k =? 4) || (k =? 6)) then (mfTestText v) else (mfGet v 2)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfIsolate,
+  parameters: [bidi : Nat, msgdir : Nat, v : Bytes, text : Bytes],
+  result: Bytes,
+  body: (if (bidi =? 0) then text else (let dir : Nat := (if ((0 <? (mfKind v)) && (mfCanFormat v)) then (mfFlag v 1) else 0); (if (dir =? 1) then (if ((msgdir =? 1) && ((mfFlag v 2) =? 0)) then text else (prim append 0xe281a6 (prim append text 0xe281a9 : Bytes) : Bytes)) else (if (dir =? 2) then (prim append 0xe281a7 (prim append text 0xe281a9 : Bytes) : Bytes) else (prim append 0xe281a8 (prim append text 0xe281a9 : Bytes) : Bytes))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfMarkup,
+  parameters: [s : Bytes, p : Bytes, pa : Nat, x : Nat, st : Bytes],
+  result: Bytes,
+  body: (let r : Bytes := (mfEv s p pa 3 (prim subtract (mfOptsStart s x) 1 : Nat) (mfSetCall st 0x 0x) (mfFuel s)); (if (0 <? (mfOpt (mfGet r 3) 0x753a646972)) then (mfErr r 0x6261642d6f7074696f6e) else r)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfTextEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((mfLen s) <? (i + 1)) || (((mfAt s i) =? 125) || (((mfAt s i) =? 123) || ((mfAt s i) =? 92)))) then i else (mfTextEnd s (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfNatFrom,
+  parameters: [n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let d : Bytes := (prim append (mfByte (48 + (prim remainder n 10 0 : Nat))) acc : Bytes); (if (n <? 10) then d else (mfNatFrom (prim quotient n 10 0 : Nat) d rest)))),
+  recursive_argument: fuel
+}
+
+definition{name: mfNat, parameters: [n : Nat], result: Bytes, body: (mfNatFrom n 0x 20)}
+
+definition{
+  name: mfCpCount,
+  parameters: [s : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if ((mfLen s) <? (i + 1)) then n else (mfCpCount s (i + 1) (if ((128 <? ((mfAt s i) + 1)) && ((mfAt s i) <? 192)) then n else (n + 1)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfCps,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (mfCpCount s 0 0 (mfLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfFmt,
+  parameters: [
+    s : Bytes,
+    p : Bytes,
+    pa : Nat,
+    bidi : Nat,
+    msgdir : Nat,
+    i : Nat,
+    st : Bytes,
+    out : Bytes,
+    parts : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (prim append (mfF st) (prim append (mfF out) (mfF parts) : Bytes) : Bytes)
+    | Nat.succ rest => (if (((mfLen s) <? (i + 1)) || ((mfAt s i) =? 125)) then (prim append (mfF st) (prim append (mfF out) (mfF parts) : Bytes) : Bytes) else (if ((mfAt s i) =? 92) then (mfFmt s p pa bidi msgdir (i + 2) st (prim append out (mfCut s (i + 1) (i + 2)) : Bytes) parts rest) else (if ((mfAt s i) =? 123) then (let e : Nat := (prim subtract (mfPlaceholder s i) 1 : Nat); (if (mfIsMarkup s i) then (mfFmt s p pa bidi msgdir e (mfMarkup s p pa i st) out parts rest) else (let r : Bytes := (mfEv s p pa 0 i st (mfFuel s)); (let v : Bytes := (mfGet r 2); (let r2 : Bytes := (if ((0 <? (mfKind v)) && (not (mfCanFormat v))) then (mfErr r (if ((mfKind v) =? 5) then 0x6e6f742d666f726d61747461626c65 else 0x6261642d6f7074696f6e)) else r); (let seg : Bytes := (mfIsolate bidi msgdir v (mfText v)); (let at0 : Nat := (mfCps out); (mfFmt s p pa bidi msgdir e r2 (prim append out seg : Bytes) (prim append parts (prim append (mfNat at0) (prim append 0x20 (prim append (mfNat (at0 + (mfCps seg))) (prim append 0x20 (prim append (mfGet v 1) 0x0a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) rest)))))))) else (let e : Nat := (mfTextEnd s i (mfLen s)); (mfFmt s p pa bidi msgdir e st (prim append out (mfCut s i e) : Bytes) parts rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfOut,
+  parameters: [r : Bytes],
+  result: Bytes,
+  body: (prim append (mfF (mfGet (mfGet r 0) 0)) (prim append (mfF (mfGet r 1)) (mfF (mfGet r 2)) : Bytes) : Bytes),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfBad,
+  parameters: [name : Bytes],
+  result: Bytes,
+  body: (prim append (mfF name) (prim append (mfF 0x7befbfbd7d) (mfF 0x) : Bytes) : Bytes)
+}
+
+definition{name: mfSt0, parameters: [], result: Bytes, body: (mfSt 0x 0x 0x 0x 0x)}
+
+definition{
+  name: mfMatch,
+  parameters: [s : Bytes, p : Bytes, pa : Nat, bidi : Nat, msgdir : Nat, m : Nat],
+  result: Bytes,
+  body: (let rs : Bytes := (mfResolveSels s p pa (m + 6) (mfSt0) 0x (mfLen s)); (let n : Nat := (mfCountSel s (m + 6) 0 (mfLen s)); (let best : Nat := (mfBest s (mfGet rs 1) (mfVar1 s m) 0 n (mfLen s)); (mfOut (mfFmt s p pa bidi msgdir ((mfVariantPat s (prim subtract best 1 : Nat)) + 2) (mfGet rs 0) 0x 0x (mfLen s)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfRun,
+  parameters: [s : Bytes, p : Bytes, pa : Nat, bidi : Nat, msgdir : Nat],
+  result: Bytes,
+  body: (if (not (mfWellFormed s)) then (mfBad 0x73796e7461782d6572726f72) else (let de : Bytes := (mfDataError s); (if (0 <? (mfLen de)) then (mfBad de) else (if (not (mfIsComplex s)) then (mfOut (mfFmt s p pa bidi msgdir 0 (mfSt0) 0x 0x (mfLen s))) else (let m : Nat := (mfBodyAt s); (if (mfKw s m 0x2e6d61746368) then (mfMatch s p pa bidi msgdir m) else (mfOut (mfFmt s p pa bidi msgdir (m + 2) (mfSt0) 0x 0x (mfLen s))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfProp,
+  parameters: [p : Bytes, d : Nat, t : Nat, key : Bytes],
+  result: Nat,
+  body: (let v : Nat := (mfJGet p t key); (if (0 <? v) then v else (if (d =? t) then 0 else (mfJGet p d key)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfRtl,
+  parameters: [l : Bytes],
+  result: Bool,
+  body: (let a : Bytes := (mfCut l 0 2); (let two : Bool := (((mfLen l) =? 2) || ((mfAt l 2) =? 45)); (two && ((mfSame a 0x6172) || ((mfSame a 0x6865) || ((mfSame a 0x6661) || ((mfSame a 0x7572) || ((mfSame a 0x7073) || ((mfSame a 0x7364) || ((mfSame a 0x7567) || ((mfSame a 0x7969) || (mfSame a 0x6476)))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfRunJson,
+  parameters: [p : Bytes, d : Nat, t : Nat],
+  result: Bytes,
+  body: (let src : Bytes := (mfJString p (mfJGet p t 0x737263)); (let pa : Nat := (mfProp p d t 0x706172616d73); (let bidi : Nat := (if (mfSame (mfJString p (mfProp p d t 0x6269646949736f6c6174696f6e)) 0x6e6f6e65) then 0 else 1); (let msgdir : Nat := (if (mfRtl (mfJString p (mfProp p d t 0x6c6f63616c65))) then 2 else 1); (mfRun src p (if ((0 <? pa) && ((mfAt p (prim subtract pa 1 : Nat)) =? 91)) then pa else 0) bidi msgdir))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfTypes,
+  parameters: [p : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let a : Nat := (mfJSkip p i (mfLen p)); (if (not ((mfAt p a) =? 123)) then acc else (let nm : Bytes := (mfJString p (mfJGet p a 0x74797065)); (let e : Nat := (mfJSkip p (mfJEnd p a) (mfLen p)); (mfTypes p (e + 1) (if ((mfLen acc) =? 0) then nm else (prim append acc (prim append 0x20 nm : Bytes) : Bytes)) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfCheck1,
+  parameters: [p : Bytes, d : Nat, t : Nat],
+  result: Bytes,
+  body: (let got : Bytes := (mfRunJson p d t); (let errs : Bytes := (mfGet got 0); (let text : Bytes := (mfGet got 1); (let exp : Nat := (mfProp p d t 0x657870); (let ee : Nat := (mfProp p d t 0x6578704572726f7273); (let want : Bytes := (if ((0 <? ee) && ((mfAt p (prim subtract ee 1 : Nat)) =? 91)) then (mfTypes p ee 0x (mfLen p)) else 0x); (let errsOk : Bool := (if (ee =? 0) then ((mfLen errs) =? 0) else (if ((mfAt p (prim subtract ee 1 : Nat)) =? 91) then (mfSame errs want) else (if ((mfAt p (prim subtract ee 1 : Nat)) =? 116) then (0 <? (mfLen errs)) else ((mfLen errs) =? 0)))); (let textOk : Bool := ((exp =? 0) || (mfSame (mfJString p exp) text)); (if (errsOk && textOk) then 0x else (prim append errs (prim append 0x0a text : Bytes) : Bytes)))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfCheckAll,
+  parameters: [p : Bytes, d : Nat, t : Nat, k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x696e76616c6964
+    | Nat.succ rest => (if (not ((mfAt p t) =? 123)) then (if (0 <? k) then 0x70617373 else 0x696e76616c6964) else (let r : Bytes := (mfCheck1 p d t); (if (0 <? (mfLen r)) then (prim append 0x6661696c20 (prim append (mfNat k) (prim append 0x0a r : Bytes) : Bytes) : Bytes) else (mfCheckAll p d (mfJSkip p (mfJEnd p t) (mfLen p)) (k + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfCheck,
+  parameters: [p : Bytes, d : Nat],
+  result: Bytes,
+  body: (if ((mfAt p d) =? 123) then (mfCheckAll p d (mfJSkip p (mfJEnd p d) (mfLen p)) 0 (mfLen p)) else 0x696e76616c6964),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (mfKw value 0 0x636865636b0a) then (mfCheck value 6) else (if ((mfKw value 0 0x666f726d61740a) && ((mfAt value 7) =? 123)) then (let r : Bytes := (mfRunJson value 7 7); (prim append (mfGet r 0) (prim append 0x0a (mfGet r 1) : Bytes) : Bytes)) else (if ((mfKw value 0 0x70617274730a) && ((mfAt value 6) =? 123)) then (let r : Bytes := (mfRunJson value 6 6); (prim append (mfGet r 0) (prim append 0x0a (prim append (mfGet r 2) (prim append 0x0a (mfGet r 1) : Bytes) : Bytes) : Bytes) : Bytes)) else 0x696e76616c6964))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
