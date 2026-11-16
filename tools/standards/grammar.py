@@ -10,6 +10,7 @@ refuses unless every out module is current.
 """
 import email
 import email.policy
+import functools
 import hashlib
 import json
 import pathlib
@@ -46,8 +47,7 @@ def fetch(text, headers={}):
 
 def opening(node):
     """The literal a rule opens with, if it opens with one."""
-    while node[0] == "seq":
-        node = node[1]
+    while node[0] == "seq": node = node[1]
     return node[1] if node[0] == "lit" else None
 
 
@@ -57,16 +57,10 @@ def fields_of(rules):
     out = {}
     for name, node in rules.items():
         lit = opening(node)
-        if not lit or not re.fullmatch(r"[A-Za-z][A-Za-z0-9-]*:?", lit):
-            continue
         # A field's rule opens with its whole name (not a prefix such as RFC 2045's "Content-"), then its colon.
-        if node[0] != "seq" or lit.endswith("-"):
-            continue
-        if not lit.endswith(":") and not any(n[0] == "lit" and n[1] == ":" for n in node[1:]):
-            continue
-        out.setdefault(lit.rstrip(":").lower(), []).append(name)
-    for names in out.values():
-        names.sort(key=lambda n: n.startswith("obs-"))
+        if lit and re.fullmatch(r"[A-Za-z][A-Za-z0-9-]*:?", lit) and node[0] == "seq" and not lit.endswith("-") and (lit.endswith(":") or any(n[0] == "lit" and n[1] == ":" for n in node[1:])):
+            out.setdefault(lit.rstrip(":").lower(), []).append(name)
+    for names in out.values(): names.sort(key=lambda n: n.startswith("obs-"))
     return dict(sorted(out.items()))
 
 
@@ -96,16 +90,12 @@ for g in SPEC["grammars"]:
         own = {n for n, o in table["from"].items() if o.split(" ")[0] not in lent}
         reach, todo = set(own), list(own)
         while todo:
-            for r in abnf.refs(table["rules"][todo.pop()]):
-                if r not in reach:
-                    reach.add(r)
-                    todo.append(r)
+            todo += (new := set(abnf.refs(table["rules"][todo.pop()])) - reach)
+            reach |= new
         table = {k: {n: v for n, v in table[k].items() if n in reach} for k in table}
     data = {"key": g["key"], "texts": [{k: t[k] for k in ("key", "url", "sha256")} for t in g["texts"]], **table}
-    if g.get("headers"):
-        data["fields"] = fields_of(table["rules"])
-    if g.get("zones"):
-        data["zones"] = zones_of(texts[g["zones"]])
+    if g.get("headers"): data["fields"] = fields_of(table["rules"])
+    if g.get("zones"): data["zones"] = zones_of(texts[g["zones"]])
     # Each rule's witness: the shortest field (or message) its grammar derives through it, and where it lies there.
     if g.get("witnesses"):
         short = abnf.shortest(table["rules"])
@@ -170,10 +160,21 @@ for g in SPEC["grammars"]:
             elif k == "range": p = u(n[1], 3) + u(n[2], 3)
             elif k in ("alt", "seq"): p = u(len(n) - 1, 2) + b"".join(node(x) for x in n[1:])
             elif k == "rep": p = u(n[1], 2) + u(n[2] or 0, 2) + u(n[2] is not None, 1) + node(n[3])
-            return u(8 if k == "alt" and single(n) else ["ref", "lit", "cs", "range", "alt", "seq", "rep", "prose"].index(k), 1) + u(4 + len(p), 3) + p
+            return u(8 if k == "alt" and single(n) else 9 if k == "rep" and single(n[3]) else ["ref", "lit", "cs", "range", "alt", "seq", "rep", "prose"].index(k), 1) + u(4 + len(p), 3) + p
         bodies = [node(data["rules"][n]) for n in index]
-        at = [2 + 3 * len(bodies) + sum(map(len, bodies[:i])) for i in range(len(bodies))]
-        t = u(len(bodies), 2) + b"".join(u(a, 3) for a in at) + b"".join(bodies)
+        # After the nodes, what each rule can start with: eight bit masks, then per rule a flag (1 it can start beyond ASCII, 2 it can match
+        # nothing) and a bit per ASCII code, found as rule number count. Abnf does not enter a rule the next character cannot start.
+        fs = dict.fromkeys(index, 0)
+        def first(n):
+            k = n[0]
+            if k == "ref": return fs[n[1]]
+            if k in ("lit", "cs"): return functools.reduce(int.__or__, (1 << min(ord(c), 128) for c in (n[1][0] if k == "cs" else n[1][0].lower() + n[1][0].upper())))
+            if k == "range": return sum(1 << c for c in range(n[1], min(n[2], 127) + 1)) | (n[2] > 127) << 128
+            if k == "rep": return first(n[3]) | (n[1] == 0) << 129
+            return functools.reduce(lambda a, x: a | first(x) if k == "alt" else a ^ 1 << 129 | first(x) if a >> 129 else a, n[1:], (k == "seq") << 129)
+        while fs != (fs := {r: first(data["rules"][r]) for r in index}): pass
+        at = [5 + 3 * len(bodies) + sum(map(len, bodies[:i])) for i in range(len(bodies) + 1)]
+        t = u(len(bodies), 2) + b"".join(u(a, 3) for a in at) + b"".join(bodies) + bytes([1, 2, 4, 8, 16, 32, 64, 128]) + b"".join(u(f, 17) for f in fs.values())
         name = pathlib.Path(g["module"]).name.removesuffix(".lex.tex"); low = name[0].lower() + name[1:]
         def joined(lo, hi):
             return f"({low}Chunk{lo})" if hi - lo == 1 else f"(prim append {joined(lo, (lo + hi) // 2)} {joined((lo + hi) // 2, hi)} : Bytes)"
