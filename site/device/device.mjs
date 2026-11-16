@@ -111,8 +111,7 @@ export function formatOfText(text) {
   // line is a field and one of them a field RFC 5322 3.6 or RFC 2045 names.
   if (mboxSeparator(head.split('\n', 1)[0])) return 'mbox';
   const fields = /\r?\n\r?\n/.test(head) ? headerLines(head).map(readField) : [];
-  if (fields.every(Boolean) && fields.some((f) => f.rule && !/optional/.test(f.rule))) return 'eml';
-  return 'other';
+  return fields.every(Boolean) && fields.some((f) => f.rule && !/optional/.test(f.rule)) ? 'eml' : 'other';
 }
 
 // The contact picker's answer, as vCards: one the vcard guest writes per
