@@ -1,0 +1,1544 @@
+\begin{lexlean}{PrismEmma}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\title{Text application model}
+\begin{semanticmodule}
+structure{name: EmSrc, type_parameters: [], parameters: [], fields: [{name: b, type: Bytes}]}
+
+definition{
+  name: emAt,
+  parameters: [d : EmSrc, i : Nat],
+  result: Nat,
+  body: (match (prim index (project d b) i : (Option UInt8))
+    | Option.none => 0
+    | Option.some x => (prim to_nat x : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emLen,
+  parameters: [d : EmSrc],
+  result: Nat,
+  body: (prim length (project d b) : Nat)
+}
+
+definition{
+  name: emTAt,
+  parameters: [t : Bytes, i : Nat],
+  result: Nat,
+  body: (match (prim index t i : (Option UInt8))
+    | Option.none => 0
+    | Option.some x => (prim to_nat x : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{name: emTLen, parameters: [t : Bytes], result: Nat, body: (prim length t : Nat)}
+
+definition{
+  name: emCut,
+  parameters: [t : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice t start count : (Option Bytes)) | Option.none => 0x | Option.some x => x)
+}
+
+definition{
+  name: emByte,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (emCut 0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff (prim remainder n 256 0 : Nat) 1)
+}
+
+definition{
+  name: emU16,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (prim append (emByte (prim quotient n 256 0 : Nat)) (emByte n) : Bytes)
+}
+
+definition{
+  name: emG16,
+  parameters: [t : Bytes, k : Nat],
+  result: Nat,
+  body: ((prim multiply (emTAt t k) 256 : Nat) + (emTAt t (k + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emPut16,
+  parameters: [t : Bytes, k : Nat, n : Nat],
+  result: Bytes,
+  body: (prim append (emCut t 0 k) (prim append (emU16 n) (emCut t (k + 2) (prim subtract (emTLen t) (k + 2) : Nat)) : Bytes) : Bytes)
+}
+
+definition{
+  name: emSameBytes,
+  parameters: [x : Bytes, y : Bytes],
+  result: Bool,
+  body: (prim equal (prim compare_bytes x y : Ordering) (prim compare_bytes 0x00 0x00 : Ordering) : Bool),
+  axioms: [propext]
+}
+
+definition{
+  name: emDecFrom,
+  parameters: [n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let digits : Bytes := (prim append (emByte (48 + (prim remainder n 10 0 : Nat))) acc : Bytes); (if (n <? 10) then digits else (emDecFrom (prim quotient n 10 0 : Nat) digits rest)))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: emRow,
+  parameters: [kind : Nat, parent : Nat, stop : Nat, ts : Nat, te : Nat, close : Nat, self : Nat],
+  result: Bytes,
+  body: (prim append (emByte kind) (prim append (emU16 parent) (prim append (emU16 stop) (prim append (emU16 ts) (prim append (emU16 te) (prim append (emU16 close) (emByte self) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes)
+}
+
+definition{
+  name: emCount,
+  parameters: [t : Bytes],
+  result: Nat,
+  body: (prim quotient (emTLen t) 12 0 : Nat)
+}
+
+definition{
+  name: emKind,
+  parameters: [t : Bytes, e : Nat],
+  result: Nat,
+  body: (emTAt t (prim multiply e 12 : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emPar,
+  parameters: [t : Bytes, e : Nat],
+  result: Nat,
+  body: (emG16 t ((prim multiply e 12 : Nat) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emEnd,
+  parameters: [t : Bytes, e : Nat],
+  result: Nat,
+  body: (emG16 t ((prim multiply e 12 : Nat) + 3)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emTs,
+  parameters: [t : Bytes, e : Nat],
+  result: Nat,
+  body: (emG16 t ((prim multiply e 12 : Nat) + 5)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emTe,
+  parameters: [t : Bytes, e : Nat],
+  result: Nat,
+  body: (emG16 t ((prim multiply e 12 : Nat) + 7)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emClose,
+  parameters: [t : Bytes, e : Nat],
+  result: Nat,
+  body: (emG16 t ((prim multiply e 12 : Nat) + 9)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emSelf,
+  parameters: [t : Bytes, e : Nat],
+  result: Nat,
+  body: (emTAt t ((prim multiply e 12 : Nat) + 11)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emIsWs,
+  parameters: [c : Nat],
+  result: Bool,
+  body: ((c =? 32) || ((c =? 10) || ((c =? 13) || (c =? 9))))
+}
+
+definition{
+  name: emIsNameStart,
+  parameters: [c : Nat],
+  result: Bool,
+  body: (((64 <? c) && (c <? 91)) || (((96 <? c) && (c <? 123)) || ((c =? 95) || ((c =? 58) || (127 <? c)))))
+}
+
+definition{name: emIsDigit, parameters: [c : Nat], result: Bool, body: ((47 <? c) && (c <? 58))}
+
+definition{
+  name: emIsName,
+  parameters: [c : Nat],
+  result: Bool,
+  body: ((emIsNameStart c) || ((emIsDigit c) || ((c =? 45) || (c =? 46))))
+}
+
+definition{
+  name: emSkipWs,
+  parameters: [d : EmSrc, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (emIsWs (emAt d i)) then (emSkipWs d (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emWs,
+  parameters: [d : EmSrc, i : Nat],
+  result: Nat,
+  body: (emSkipWs d i (emLen d)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emNameStop,
+  parameters: [d : EmSrc, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (emIsName (emAt d i)) then (emNameStop d (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emNameEnd,
+  parameters: [d : EmSrc, i : Nat],
+  result: Nat,
+  body: (emNameStop d i (emLen d)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emFindByteFrom,
+  parameters: [d : EmSrc, i : Nat, c : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (emLen d)
+    | Nat.succ rest => (if ((emLen d) <? (i + 1)) then (emLen d) else (if ((emAt d i) =? c) then i else (emFindByteFrom d (i + 1) c rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emFindByte,
+  parameters: [d : EmSrc, i : Nat, c : Nat],
+  result: Nat,
+  body: (emFindByteFrom d i c (emLen d)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emEqAt,
+  parameters: [d : EmSrc, i : Nat, p : Bytes, k : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((emTLen p) <? (k + 1)) then true else (if ((emAt d (i + k)) =? (emTAt p k)) then (emEqAt d i p (k + 1) rest) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emStarts,
+  parameters: [d : EmSrc, i : Nat, p : Bytes],
+  result: Bool,
+  body: (((i + (emTLen p)) <? ((emLen d) + 1)) && (emEqAt d i p 0 (emTLen p))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emFindFrom,
+  parameters: [d : EmSrc, i : Nat, p : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (emLen d)
+    | Nat.succ rest => (if ((emLen d) <? (i + 1)) then (emLen d) else (if (emStarts d i p) then i else (emFindFrom d (i + 1) p rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emFind,
+  parameters: [d : EmSrc, i : Nat, p : Bytes],
+  result: Nat,
+  body: (emFindFrom d i p (emLen d)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emRangeLit,
+  parameters: [d : EmSrc, a : Nat, z : Nat, p : Bytes],
+  result: Bool,
+  body: ((a <? (z + 1)) && (((prim subtract z a : Nat) =? (emTLen p)) && (emStarts d a p))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emSameFrom,
+  parameters: [d : EmSrc, a : Nat, c : Nat, k : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((emAt d (a + k)) =? (emAt d (c + k))) then (emSameFrom d a c (k + 1) rest) else false)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emRangeEq,
+  parameters: [d : EmSrc, a : Nat, z : Nat, c : Nat, y : Nat],
+  result: Bool,
+  body: ((a <? (z + 1)) && ((c <? (y + 1)) && (((prim subtract z a : Nat) =? (prim subtract y c : Nat)) && ((z <? ((emLen d) + 1)) && ((y <? ((emLen d) + 1)) && (emSameFrom d a c 0 (prim subtract z a : Nat))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emColonFrom,
+  parameters: [d : EmSrc, i : Nat, stop : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => stop
+    | Nat.succ rest => (if (stop <? (i + 1)) then stop else (if ((emAt d i) =? 58) then i else (emColonFrom d (i + 1) stop rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emColon,
+  parameters: [d : EmSrc, a : Nat, stop : Nat],
+  result: Nat,
+  body: (emColonFrom d a stop (emLen d)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emAllWs,
+  parameters: [d : EmSrc, i : Nat, stop : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if (stop <? (i + 1)) then true else (if (emIsWs (emAt d i)) then (emAllWs d (i + 1) stop rest) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emNatFrom,
+  parameters: [d : EmSrc, i : Nat, stop : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((stop <? (i + 1)) || (not (emIsDigit (emAt d i)))) then acc else (emNatFrom d (i + 1) stop ((prim multiply acc 10 : Nat) + (prim subtract (emAt d i) 48 : Nat)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emNat,
+  parameters: [d : EmSrc, a : Nat, stop : Nat],
+  result: Nat,
+  body: (let i : Nat := (emWs d a); (emNatFrom d i stop 0 15)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emDigitsEnd,
+  parameters: [d : EmSrc, i : Nat, stop : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((stop <? (i + 1)) || (not (emIsDigit (emAt d i)))) then i else (emDigitsEnd d (i + 1) stop rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emFracFrom,
+  parameters: [d : EmSrc, i : Nat, stop : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let digit : Nat := (if ((i <? stop) && (emIsDigit (emAt d i))) then (prim subtract (emAt d i) 48 : Nat) else 0); (emFracFrom d (i + 1) stop ((prim multiply acc 10 : Nat) + digit) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emDec6,
+  parameters: [d : EmSrc, a : Nat, stop : Nat],
+  result: Nat,
+  body: (let i : Nat := (emWs d a); (let p : Nat := (emDigitsEnd d i stop 9); ((prim multiply (emNatFrom d i stop 0 9) 1000000 : Nat) + (if ((p <? stop) && ((emAt d p) =? 46)) then (emFracFrom d (p + 1) stop 0 6) else 0)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emValStop,
+  parameters: [d : EmSrc, i : Nat, q : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (emLen d)
+    | Nat.succ rest => (if ((emLen d) <? (i + 1)) then (emLen d) else (let c : Nat := (emAt d i); (if (c =? q) then i else (if (c =? 60) then (emLen d) else (emValStop d (i + 1) q rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emTagScan,
+  parameters: [d : EmSrc, j : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (emLen d)
+    | Nat.succ rest => (let a : Nat := (emWs d j); (let c : Nat := (emAt d a); (if ((emLen d) <? (a + 1)) then (emLen d) else (if (c =? 62) then a else (if (c =? 47) then (if ((emAt d (a + 1)) =? 62) then (a + 1) else (emLen d)) else (if ((a =? j) || (not (emIsNameStart c))) then (emLen d) else (let eq : Nat := (emWs d (emNameEnd d a)); (if (not ((emAt d eq) =? 61)) then (emLen d) else (let vs : Nat := (emWs d (eq + 1)); (let q : Nat := (emAt d vs); (if (not ((q =? 34) || (q =? 39))) then (emLen d) else (let ve : Nat := (emValStop d (vs + 1) q (emLen d)); (if ((emLen d) <? (ve + 1)) then (emLen d) else (emTagScan d (ve + 1) rest))))))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emDeclLoop,
+  parameters: [d : EmSrc, ps : Nat, pe : Nat, i : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (let a : Nat := (emWs d i); (let c : Nat := (emAt d a); (if (((emLen d) <? (a + 1)) || ((c =? 47) || (c =? 62))) then (ctor Option.none [Nat]) else (let ne : Nat := (emNameEnd d a); (let vs : Nat := (emWs d ((emWs d ne) + 1)); (let ve : Nat := (emFindByte d (vs + 1) (emAt d vs)); (if (if (ps =? pe) then (emRangeLit d a ne (prim utf8_encode "xmlns" : Bytes)) else (((prim subtract ne a : Nat) =? (6 + (prim subtract pe ps : Nat))) && ((emStarts d a (prim utf8_encode "xmlns:" : Bytes)) && (emSameFrom d (a + 6) ps 0 (prim subtract pe ps : Nat))))) then (ctor Option.some [Nat] ((prim multiply (vs + 1) 65536 : Nat) + ve)) else (emDeclLoop d ps pe (ve + 1) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emAttrsAt,
+  parameters: [d : EmSrc, t : Bytes, e : Nat],
+  result: Nat,
+  body: (emNameEnd d ((emTs t e) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emBind,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, ps : Nat, pe : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (match (emDeclLoop d ps pe (emAttrsAt d t e) (emLen d))
+      | Option.none => (if ((emPar t e) =? 0) then (ctor Option.none [Nat]) else (emBind d t (prim subtract (emPar t e) 1 : Nat) ps pe rest))
+      | Option.some p => (ctor Option.some [Nat] p))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emIsEmma,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, ps : Nat, pe : Nat],
+  result: Bool,
+  body: (match (emBind d t e ps pe ((emCount t) + 1))
+    | Option.none => false
+    | Option.some p => (emRangeLit d (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat) (prim utf8_encode "http://www.w3.org/2003/04/emma" : Bytes))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emBound,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, ps : Nat, pe : Nat],
+  result: Bool,
+  body: ((emRangeLit d ps pe (prim utf8_encode "xml" : Bytes)) || (match (emBind d t e ps pe ((emCount t) + 1))
+    | Option.none => false
+    | Option.some p => true)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emAttrLoop,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, name : Bytes, ns : Bool, i : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (let a : Nat := (emWs d i); (let c : Nat := (emAt d a); (if (((emLen d) <? (a + 1)) || ((c =? 47) || (c =? 62))) then (ctor Option.none [Nat]) else (let ne : Nat := (emNameEnd d a); (let vs : Nat := (emWs d ((emWs d ne) + 1)); (let ve : Nat := (emFindByte d (vs + 1) (emAt d vs)); (let colon : Nat := (emColon d a ne); (if (if ns then ((colon <? ne) && ((emRangeLit d (colon + 1) ne name) && (emIsEmma d t e a colon))) else (emRangeLit d a ne name)) then (ctor Option.some [Nat] ((prim multiply (vs + 1) 65536 : Nat) + ve)) else (emAttrLoop d t e name ns (ve + 1) rest)))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emAttr,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, name : Bytes, ns : Bool],
+  result: (Option Nat),
+  body: (emAttrLoop d t e name ns (emAttrsAt d t e) (emLen d)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emHasAttr,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, name : Bytes, ns : Bool],
+  result: Bool,
+  body: (match (emAttr d t e name ns) | Option.none => false | Option.some p => true),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emAttrIs,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, name : Bytes, ns : Bool, value : Bytes],
+  result: Bool,
+  body: (match (emAttr d t e name ns)
+    | Option.none => false
+    | Option.some p => (emRangeLit d (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat) value)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emAttrAgain,
+  parameters: [d : EmSrc, a : Nat, z : Nat, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (let c : Nat := (emWs d i); (let x : Nat := (emAt d c); (if (((emLen d) <? (c + 1)) || ((x =? 47) || (x =? 62))) then false else (let ne : Nat := (emNameEnd d c); (let vs : Nat := (emWs d ((emWs d ne) + 1)); (let ve : Nat := (emFindByte d (vs + 1) (emAt d vs)); ((emRangeEq d a z c ne) || (emAttrAgain d a z (ve + 1) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emAttrsBound,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (let a : Nat := (emWs d i); (let c : Nat := (emAt d a); (if (((emLen d) <? (a + 1)) || ((c =? 47) || (c =? 62))) then true else (let ne : Nat := (emNameEnd d a); (let vs : Nat := (emWs d ((emWs d ne) + 1)); (let ve : Nat := (emFindByte d (vs + 1) (emAt d vs)); (let colon : Nat := (emColon d a ne); (if (((ne <? (colon + 1)) || ((emRangeLit d a colon (prim utf8_encode "xmlns" : Bytes)) || (emBound d t e a colon))) && (not (emAttrAgain d a ne (ve + 1) (emLen d)))) then (emAttrsBound d t e (ve + 1) rest) else false))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emKindOf,
+  parameters: [d : EmSrc, a : Nat, z : Nat],
+  result: Nat,
+  body: (if (emRangeLit d a z (prim utf8_encode "emma" : Bytes)) then 1 else (if (emRangeLit d a z (prim utf8_encode "interpretation" : Bytes)) then 2 else (if (emRangeLit d a z (prim utf8_encode "one-of" : Bytes)) then 3 else (if (emRangeLit d a z (prim utf8_encode "group" : Bytes)) then 4 else (if (emRangeLit d a z (prim utf8_encode "group-info" : Bytes)) then 5 else (if (emRangeLit d a z (prim utf8_encode "sequence" : Bytes)) then 6 else (if (emRangeLit d a z (prim utf8_encode "lattice" : Bytes)) then 7 else (if (emRangeLit d a z (prim utf8_encode "arc" : Bytes)) then 8 else (if (emRangeLit d a z (prim utf8_encode "node" : Bytes)) then 9 else (if (emRangeLit d a z (prim utf8_encode "literal" : Bytes)) then 10 else (if (emRangeLit d a z (prim utf8_encode "model" : Bytes)) then 11 else (if (emRangeLit d a z (prim utf8_encode "derived-from" : Bytes)) then 12 else (if (emRangeLit d a z (prim utf8_encode "derivation" : Bytes)) then 13 else (if (emRangeLit d a z (prim utf8_encode "grammar" : Bytes)) then 14 else (if (emRangeLit d a z (prim utf8_encode "info" : Bytes)) then 15 else (if (emRangeLit d a z (prim utf8_encode "endpoint-info" : Bytes)) then 16 else (if (emRangeLit d a z (prim utf8_encode "endpoint" : Bytes)) then 17 else 0))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emElemKind,
+  parameters: [d : EmSrc, t : Bytes, e : Nat],
+  result: Nat,
+  body: (let a : Nat := ((emTs t e) + 1); (let ne : Nat := (emNameEnd d a); (let colon : Nat := (emColon d a ne); (if (colon <? ne) then (if (emIsEmma d t e a colon) then (emKindOf d (colon + 1) ne) else 0) else (if (emIsEmma d t e a a) then (emKindOf d a ne) else 0))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emElemOk,
+  parameters: [d : EmSrc, t : Bytes, e : Nat],
+  result: Bool,
+  body: (let a : Nat := ((emTs t e) + 1); (let ne : Nat := (emNameEnd d a); (let colon : Nat := (emColon d a ne); (((ne <? (colon + 1)) || (emBound d t e a colon)) && (emAttrsBound d t e ne (emLen d)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emTop,
+  parameters: [stack : Bytes],
+  result: Nat,
+  body: (emG16 stack (prim subtract (emTLen stack) 2 : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emPop,
+  parameters: [stack : Bytes],
+  result: Bytes,
+  body: (emCut stack 0 (prim subtract (emTLen stack) 2 : Nat))
+}
+
+definition{
+  name: emScan,
+  parameters: [d : EmSrc, i : Nat, stack : Bytes, t : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0xff
+    | Nat.succ rest => (if ((emLen d) <? (i + 1)) then (if (((emTLen stack) =? 0) && (0 <? (emCount t))) then t else 0xff) else (if (emStarts d i (prim utf8_encode "<!--" : Bytes)) then (let j : Nat := (emFind d (i + 4) (prim utf8_encode "-->" : Bytes)); (if ((emLen d) <? (j + 1)) then 0xff else (emScan d (j + 3) stack t rest))) else (if (emStarts d i (prim utf8_encode "<![CDATA[" : Bytes)) then (if ((emTLen stack) =? 0) then 0xff else (let j : Nat := (emFind d (i + 9) (prim utf8_encode "]]>" : Bytes)); (if ((emLen d) <? (j + 1)) then 0xff else (emScan d (j + 3) stack t rest)))) else (if (emStarts d i (prim utf8_encode "<?" : Bytes)) then (let j : Nat := (emFind d (i + 2) (prim utf8_encode "?>" : Bytes)); (if ((emLen d) <? (j + 1)) then 0xff else (emScan d (j + 2) stack t rest))) else (if (emStarts d i (prim utf8_encode "<!" : Bytes)) then (let j : Nat := (emFind d (i + 2) (prim utf8_encode ">" : Bytes)); (if ((emLen d) <? (j + 1)) then 0xff else (emScan d (j + 1) stack t rest))) else (if (emStarts d i (prim utf8_encode "</" : Bytes)) then (if ((emTLen stack) =? 0) then 0xff else (let top : Nat := (emTop stack); (let ne : Nat := (emNameEnd d (i + 2)); (let g : Nat := (emWs d ne); (let ts : Nat := (emTs t top); (if (((emAt d g) =? 62) && (emRangeEq d (i + 2) ne (ts + 1) (emNameEnd d (ts + 1)))) then (emScan d (g + 1) (emPop stack) (emPut16 (emPut16 t ((prim multiply top 12 : Nat) + 3) (emCount t)) ((prim multiply top 12 : Nat) + 9) i) rest) else 0xff)))))) else (if ((emAt d i) =? 60) then (let ne : Nat := (emNameEnd d (i + 1)); (let te : Nat := (emTagScan d ne (emLen d)); (if ((((emTLen stack) =? 0) && (0 <? (emCount t))) || ((not (emIsNameStart (emAt d (i + 1)))) || ((emLen d) <? (te + 1)))) then 0xff else (let self : Nat := (if ((emAt d (prim subtract te 1 : Nat)) =? 47) then 1 else 0); (let me : Nat := (emCount t); (let parent : Nat := (if ((emTLen stack) =? 0) then 0 else ((emTop stack) + 1)); (let draft : Bytes := (prim append t (emRow 0 parent (me + 1) i te (te + 1) self) : Bytes); (if (not (emElemOk d draft me)) then 0xff else (let next : Bytes := (prim append t (emRow (emElemKind d draft me) parent (me + 1) i te (te + 1) self) : Bytes); (if (self =? 1) then (emScan d (te + 1) stack next rest) else (emScan d (te + 1) (prim append stack (emU16 me) : Bytes) next rest))))))))))) else (let j : Nat := (emFindByte d i 60); (if (((emTLen stack) =? 0) && (not (emAllWs d i j (emLen d)))) then 0xff else (emScan d j stack t rest))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emIsCont,
+  parameters: [k : Nat],
+  result: Bool,
+  body: ((k =? 2) || ((k =? 3) || ((k =? 4) || (k =? 6))))
+}
+
+definition{
+  name: emKidKind,
+  parameters: [t : Bytes, e : Nat, k : Nat, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emEnd t e) <? (j + 1)) then false else (((emKind t j) =? k) || (emKidKind t e k (emEnd t j) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emKidCount,
+  parameters: [t : Bytes, e : Nat, k : Nat, j : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if ((emEnd t e) <? (j + 1)) then 0 else ((if ((emKind t j) =? k) then 1 else 0) + (emKidCount t e k (emEnd t j) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emKidCont,
+  parameters: [t : Bytes, e : Nat, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emEnd t e) <? (j + 1)) then false else ((emIsCont (emKind t j)) || (emKidCont t e (emEnd t j) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emAfter,
+  parameters: [d : EmSrc, t : Bytes, e : Nat],
+  result: Nat,
+  body: (if ((emSelf t e) =? 1) then ((emTe t e) + 1) else ((emFindByte d (emClose t e) 62) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emTextLoop,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, j : Nat, pos : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emEnd t e) <? (j + 1)) then (not (emAllWs d pos (emClose t e) (emLen d))) else ((not (emAllWs d pos (emTs t j) (emLen d))) || (emTextLoop d t e (emEnd t j) (emAfter d t j) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emHasText,
+  parameters: [d : EmSrc, t : Bytes, e : Nat],
+  result: Bool,
+  body: (((emSelf t e) =? 0) && (emTextLoop d t e (e + 1) ((emTe t e) + 1) (emCount t))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emConfLack,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emEnd t e) <? (j + 1)) then false else (((emIsCont (emKind t j)) && (not (emHasAttr d t j (prim utf8_encode "confidence" : Bytes) true))) || (emConfLack d t e (emEnd t j) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emConfRise,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, j : Nat, prev : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emEnd t e) <? (j + 1)) then false else (match (emAttr d t j (prim utf8_encode "confidence" : Bytes) true)
+      | Option.none => (emConfRise d t e (emEnd t j) prev rest)
+      | Option.some p => (if (emIsCont (emKind t j)) then (let v : Nat := (emDec6 d (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat)); ((prev <? v) || (emConfRise d t e (emEnd t j) v rest))) else (emConfRise d t e (emEnd t j) prev rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emArcHas,
+  parameters: [d : EmSrc, t : Bytes, la : Nat, name : Bytes, v : Nat, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emEnd t la) <? (j + 1)) then false else ((((emKind t j) =? 8) && (match (emAttr d t j name false)
+      | Option.none => false
+      | Option.some p => ((emNat d (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat)) =? v))) || (emArcHas d t la name v (emEnd t j) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emTokEnd,
+  parameters: [d : EmSrc, i : Nat, stop : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => stop
+    | Nat.succ rest => (if ((stop <? (i + 1)) || (emIsWs (emAt d i))) then i else (emTokEnd d (i + 1) stop rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emListHas,
+  parameters: [d : EmSrc, i : Nat, stop : Nat, v : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (let a : Nat := (emWs d i); (if (stop <? (a + 1)) then false else (let z : Nat := (emTokEnd d a stop (emLen d)); (((emNat d a z) =? v) || (emListHas d z stop v rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emFinalHas,
+  parameters: [d : EmSrc, t : Bytes, la : Nat, v : Nat],
+  result: Bool,
+  body: (match (emAttr d t la (prim utf8_encode "final" : Bytes) false)
+    | Option.none => false
+    | Option.some p => (emListHas d (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat) v (emLen d))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emInitialIs,
+  parameters: [d : EmSrc, t : Bytes, la : Nat, v : Nat],
+  result: Bool,
+  body: (match (emAttr d t la (prim utf8_encode "initial" : Bytes) false)
+    | Option.none => false
+    | Option.some p => ((emNat d (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat)) =? v)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emFinalBad,
+  parameters: [d : EmSrc, t : Bytes, la : Nat, i : Nat, stop : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (let a : Nat := (emWs d i); (if (stop <? (a + 1)) then false else (let z : Nat := (emTokEnd d a stop (emLen d)); ((not (emArcHas d t la (prim utf8_encode "to" : Bytes) (emNat d a z) (la + 1) (emCount t))) || (emFinalBad d t la z stop rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emNodeHas,
+  parameters: [d : EmSrc, t : Bytes, la : Nat, v : Nat, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emEnd t la) <? (j + 1)) then false else ((((emKind t j) =? 9) && (match (emAttr d t j (prim utf8_encode "node-number" : Bytes) false)
+      | Option.none => false
+      | Option.some p => ((emNat d (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat)) =? v))) || (emNodeHas d t la v (emEnd t j) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emArcEmmaKid,
+  parameters: [t : Bytes, a : Nat, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emEnd t a) <? (j + 1)) then false else (((not ((emKind t j) =? 0)) && (not ((emKind t j) =? 15))) || (emArcEmmaKid t a (emEnd t j) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emLatKid,
+  parameters: [d : EmSrc, t : Bytes, la : Nat, which : Nat, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emEnd t la) <? (j + 1)) then false else ((if (which =? 604) then (((emKind t j) =? 8) && (match (emAttr d t j (prim utf8_encode "to" : Bytes) false)
+      | Option.none => true
+      | Option.some p => (let v : Nat := (emNat d (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat)); (not ((emArcHas d t la (prim utf8_encode "from" : Bytes) v (la + 1) (emCount t)) || (emFinalHas d t la v)))))) else (if (which =? 605) then (((emKind t j) =? 8) && (match (emAttr d t j (prim utf8_encode "from" : Bytes) false)
+      | Option.none => true
+      | Option.some p => (let v : Nat := (emNat d (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat)); (not ((emArcHas d t la (prim utf8_encode "to" : Bytes) v (la + 1) (emCount t)) || (emInitialIs d t la v)))))) else (if (which =? 607) then (((emKind t j) =? 8) && (let others : Nat := (emKidCount t j 0 (j + 1) (emCount t)); ((emArcEmmaKid t j (j + 1) (emCount t)) || ((1 <? others) || ((others =? 1) && (emHasText d t j)))))) else (if (which =? 608) then (((emKind t j) =? 9) && (match (emAttr d t j (prim utf8_encode "node-number" : Bytes) false)
+      | Option.none => false
+      | Option.some p => (emNodeHas d t la (emNat d (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat)) (emEnd t j) (emCount t)))) else (((emKind t j) =? 9) && (match (emAttr d t j (prim utf8_encode "node-number" : Bytes) false)
+      | Option.none => false
+      | Option.some p => (let v : Nat := (emNat d (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat)); (not ((emArcHas d t la (prim utf8_encode "from" : Bytes) v (la + 1) (emCount t)) || (emArcHas d t la (prim utf8_encode "to" : Bytes) v (la + 1) (emCount t))))))))))) || (emLatKid d t la which (emEnd t j) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emRefEq,
+  parameters: [d : EmSrc, rs : Nat, re : Nat, is : Nat, ie : Nat],
+  result: Bool,
+  body: ((emRangeEq d rs re is ie) || (((emAt d rs) =? 35) && (emRangeEq d (rs + 1) re is ie))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emAnyRef,
+  parameters: [d : EmSrc, t : Bytes, name : Bytes, is : Nat, ie : Nat, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emCount t) <? (j + 1)) then false else (((((emKind t j) =? 2) || ((emKind t j) =? 3)) && (match (emAttr d t j name true)
+      | Option.none => false
+      | Option.some r => (emRefEq d (prim quotient r 65536 0 : Nat) (prim remainder r 65536 0 : Nat) is ie))) || (emAnyRef d t name is ie (j + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emAnyDef,
+  parameters: [d : EmSrc, t : Bytes, k : Nat, rs : Nat, re : Nat, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emEnd t 0) <? (j + 1)) then false else ((((emKind t j) =? k) && (match (emAttr d t j (prim utf8_encode "id" : Bytes) false)
+      | Option.none => false
+      | Option.some p => (emRefEq d rs re (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat)))) || (emAnyDef d t k rs re (emEnd t j) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emDefBad,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, k : Nat, name : Bytes],
+  result: Bool,
+  body: (((emKind t e) =? k) && (((emPar t e) =? 1) && (match (emAttr d t e (prim utf8_encode "id" : Bytes) false)
+    | Option.none => true
+    | Option.some p => (not (emAnyRef d t name (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat) 0 (emCount t)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emRefBad,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, k : Nat, name : Bytes],
+  result: Bool,
+  body: (match (emAttr d t e name true)
+    | Option.none => false
+    | Option.some r => (not (emAnyDef d t k (prim quotient r 65536 0 : Nat) (prim remainder r 65536 0 : Nat) 1 (emCount t)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emDfLoose,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emEnd t e) <? (j + 1)) then false else ((((emKind t j) =? 12) && (not (emAttrIs d t j (prim utf8_encode "composite" : Bytes) false (prim utf8_encode "true" : Bytes)))) || (emDfLoose d t e (emEnd t j) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emById,
+  parameters: [d : EmSrc, t : Bytes, is : Nat, ie : Nat, j : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (if ((emCount t) <? (j + 1)) then (ctor Option.none [Nat]) else (if (match (emAttr d t j (prim utf8_encode "id" : Bytes) false)
+      | Option.none => false
+      | Option.some p => (emRangeEq d is ie (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat))) then (ctor Option.some [Nat] j) else (emById d t is ie (j + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emTarget,
+  parameters: [d : EmSrc, t : Bytes, df : Nat],
+  result: (Option Nat),
+  body: (match (emAttr d t df (prim utf8_encode "resource" : Bytes) false)
+    | Option.none => (ctor Option.none [Nat])
+    | Option.some p => (let rs : Nat := (prim quotient p 65536 0 : Nat); (if ((emAt d rs) =? 35) then (emById d t (rs + 1) (prim remainder p 65536 0 : Nat) 0 (emCount t)) else (ctor Option.none [Nat])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emDfHas,
+  parameters: [d : EmSrc, t : Bytes, has : Bytes, e : Nat, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emEnd t e) <? (j + 1)) then false else ((((emKind t j) =? 12) && (match (emTarget d t j)
+      | Option.none => false
+      | Option.some x => ((emTAt has x) =? 1))) || (emDfHas d t has e (emEnd t j) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emEffRound,
+  parameters: [d : EmSrc, t : Bytes, name : Bytes, has : Bytes, j : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((emCount t) <? (j + 1)) then acc else (let hit : Bool := ((emHasAttr d t j name true) || (((not ((emPar t j) =? 0)) && ((emTAt has (prim subtract (emPar t j) 1 : Nat)) =? 1)) || (emDfHas d t has j (j + 1) (emCount t)))); (emEffRound d t name has (j + 1) (prim append acc (if hit then 0x01 else 0x00) : Bytes) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emEffFix,
+  parameters: [d : EmSrc, t : Bytes, name : Bytes, has : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => has
+    | Nat.succ rest => (let next : Bytes := (emEffRound d t name has 0 0x (emCount t)); (if (emSameBytes next has) then has else (emEffFix d t name next rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emNear,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, name : Bytes, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (match (emAttr d t e name true)
+      | Option.none => (if ((emPar t e) =? 0) then (ctor Option.none [Nat]) else (emNear d t (prim subtract (emPar t e) 1 : Nat) name rest))
+      | Option.some p => (ctor Option.some [Nat] p))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emTokIn,
+  parameters: [d : EmSrc, a : Nat, z : Nat, i : Nat, stop : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (let c : Nat := (emWs d i); (if (stop <? (c + 1)) then false else (let y : Nat := (emTokEnd d c stop (emLen d)); ((emRangeEq d a z c y) || (emTokIn d a z y stop rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emTokSub,
+  parameters: [d : EmSrc, i : Nat, stop : Nat, bs : Nat, be : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (let a : Nat := (emWs d i); (if (stop <? (a + 1)) then true else (let z : Nat := (emTokEnd d a stop (emLen d)); ((emTokIn d a z bs be (emLen d)) && (emTokSub d z stop bs be rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emSrcBad,
+  parameters: [
+    d : EmSrc,
+    t : Bytes,
+    e : Nat,
+    name : Bytes,
+    rs : Nat,
+    re : Nat,
+    j : Nat,
+    fuel : Nat
+  ],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emEnd t e) <? (j + 1)) then false else ((((emKind t j) =? 12) && (match (emTarget d t j)
+      | Option.none => false
+      | Option.some x => (match (emNear d t x name (emCount t))
+        | Option.none => false
+        | Option.some p => (not (emTokSub d (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat) rs re (emLen d)))))) || (emSrcBad d t e name rs re (emEnd t j) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emSrcTok,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, name : Bytes, a : Nat, z : Nat, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emEnd t e) <? (j + 1)) then false else ((((emKind t j) =? 12) && (match (emTarget d t j)
+      | Option.none => true
+      | Option.some x => (match (emNear d t x name (emCount t))
+        | Option.none => true
+        | Option.some p => (emTokIn d a z (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat) (emLen d))))) || (emSrcTok d t e name a z (emEnd t j) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emResBad,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, name : Bytes, i : Nat, stop : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (let a : Nat := (emWs d i); (if (stop <? (a + 1)) then false else (let z : Nat := (emTokEnd d a stop (emLen d)); ((not (emSrcTok d t e name a z (e + 1) (emCount t))) || (emResBad d t e name z stop rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emCompBad,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, name : Bytes],
+  result: Bool,
+  body: ((((emKind t e) =? 2) || ((emKind t e) =? 3)) && ((1 <? (emKidCount t e 12 (e + 1) (emCount t))) && ((not (emDfLoose d t e (e + 1) (emCount t))) && (match (emNear d t e name (emCount t))
+    | Option.none => true
+    | Option.some p => (let rs : Nat := (prim quotient p 65536 0 : Nat); (let re : Nat := (prim remainder p 65536 0 : Nat); ((emSrcBad d t e name rs re (e + 1) (emCount t)) || (emResBad d t e name rs re (emLen d))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emBreaks,
+  parameters: [d : EmSrc, t : Bytes, medium : Bytes, mode : Bytes, c : Nat, e : Nat],
+  result: Bool,
+  body: (if (c =? 0) then ((e =? 0) && (not ((emKind t e) =? 1))) else (if (c =? 1) then (((emKind t e) =? 0) && ((not ((emPar t e) =? 0)) && (let pk : Nat := (emKind t (prim subtract (emPar t e) 1 : Nat)); ((pk =? 1) || ((pk =? 3) || ((pk =? 4) || ((pk =? 6) || (pk =? 13)))))))) else (if (c =? 2) then (((emKind t e) =? 2) && (((emEnd t e) =? (e + 1)) && ((not (emHasText d t e)) && ((not (emAttrIs d t e (prim utf8_encode "uninterpreted" : Bytes) true (prim utf8_encode "true" : Bytes))) && (not (emAttrIs d t e (prim utf8_encode "no-input" : Bytes) true (prim utf8_encode "true" : Bytes))))))) else (if (c =? 3) then (((emKind t e) =? 3) && ((not (emConfLack d t e (e + 1) (emCount t))) && (emConfRise d t e (e + 1) 1099511627776 (emCount t)))) else (if (c =? 4) then (((emKind t e) =? 3) && ((emKidKind t e 3 (e + 1) (emCount t)) && (not (emHasAttr d t e (prim utf8_encode "disjunction-type" : Bytes) false)))) else (if (c =? 5) then (((emKind t e) =? 7) && (match (emAttr d t e (prim utf8_encode "initial" : Bytes) false)
+    | Option.none => true
+    | Option.some p => (not (emArcHas d t e (prim utf8_encode "from" : Bytes) (emNat d (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat)) (e + 1) (emCount t))))) else (if (c =? 6) then (((emKind t e) =? 7) && (match (emAttr d t e (prim utf8_encode "final" : Bytes) false)
+    | Option.none => true
+    | Option.some p => (emFinalBad d t e (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat) (emLen d)))) else (if (c =? 7) then (((emKind t e) =? 7) && (emLatKid d t e 604 (e + 1) (emCount t))) else (if (c =? 8) then (((emKind t e) =? 7) && (emLatKid d t e 605 (e + 1) (emCount t))) else (if (c =? 9) then (((emKind t e) =? 7) && (emLatKid d t e 607 (e + 1) (emCount t))) else (if (c =? 10) then (((emKind t e) =? 7) && (emLatKid d t e 608 (e + 1) (emCount t))) else (if (c =? 11) then (((emKind t e) =? 7) && (emLatKid d t e 609 (e + 1) (emCount t))) else (if (c =? 12) then (emDefBad d t e 11 (prim utf8_encode "model-ref" : Bytes)) else (if (c =? 13) then (emRefBad d t e 11 (prim utf8_encode "model-ref" : Bytes)) else (if (c =? 14) then ((((emKind t e) =? 2) || ((emKind t e) =? 3)) && ((1 <? (emKidCount t e 12 (e + 1) (emCount t))) && (emDfLoose d t e (e + 1) (emCount t)))) else (if (c =? 15) then ((e =? 0) && (((emKind t e) =? 1) && (not (emKidCont t 0 1 (emCount t))))) else (if (c =? 16) then (emRefBad d t e 14 (prim utf8_encode "grammar-ref" : Bytes)) else (if (c =? 17) then (emDefBad d t e 14 (prim utf8_encode "grammar-ref" : Bytes)) else (if (c =? 18) then ((emHasAttr d t e (prim utf8_encode "time-ref-anchor-point" : Bytes) true) && ((not (emAttrIs d t e (prim utf8_encode "time-ref-anchor-point" : Bytes) true (prim utf8_encode "start" : Bytes))) && (not (emAttrIs d t e (prim utf8_encode "time-ref-anchor-point" : Bytes) true (prim utf8_encode "end" : Bytes))))) else (if (c =? 19) then (((emKind t e) =? 2) && ((emTAt medium e) =? 0)) else (if (c =? 20) then (emCompBad d t e (prim utf8_encode "medium" : Bytes)) else (if (c =? 21) then (((emKind t e) =? 2) && ((emTAt mode e) =? 0)) else (if (c =? 22) then (emCompBad d t e (prim utf8_encode "mode" : Bytes)) else false))))))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emShows,
+  parameters: [d : EmSrc, t : Bytes, c : Nat, e : Nat],
+  result: Bool,
+  body: (if (c =? 0) then ((e =? 0) && ((emKind t e) =? 1)) else (if (c =? 1) then ((emKind t e) =? 2) else (if (c =? 2) then ((emKind t e) =? 3) else (if (c =? 3) then ((emKind t e) =? 4) else (if (c =? 4) then ((emKind t e) =? 5) else (if (c =? 5) then ((emKind t e) =? 6) else (if (c =? 6) then ((emKind t e) =? 7) else (if (c =? 7) then ((emKind t e) =? 10) else (if (c =? 8) then ((emKind t e) =? 11) else (if (c =? 9) then ((emKind t e) =? 12) else (if (c =? 10) then ((e =? 0) && (((emKind t e) =? 1) && (emKidCont t 0 1 (emCount t)))) else (if (c =? 11) then ((emKind t e) =? 13) else (if (c =? 12) then ((emKind t e) =? 14) else (if (c =? 13) then ((emKind t e) =? 15) else (if (c =? 14) then (emHasAttr d t e (prim utf8_encode "tokens" : Bytes) true) else (if (c =? 15) then (emHasAttr d t e (prim utf8_encode "process" : Bytes) true) else (if (c =? 16) then (emHasAttr d t e (prim utf8_encode "no-input" : Bytes) true) else (if (c =? 17) then (emHasAttr d t e (prim utf8_encode "uninterpreted" : Bytes) true) else (if (c =? 18) then (emHasAttr d t e (prim utf8_encode "lang" : Bytes) true) else (if (c =? 19) then (emHasAttr d t e (prim utf8_encode "signal" : Bytes) true) else (if (c =? 20) then (emHasAttr d t e (prim utf8_encode "signal-size" : Bytes) true) else (if (c =? 21) then (emHasAttr d t e (prim utf8_encode "media-type" : Bytes) true) else (if (c =? 22) then (emHasAttr d t e (prim utf8_encode "confidence" : Bytes) true) else (if (c =? 23) then (emHasAttr d t e (prim utf8_encode "source" : Bytes) true) else (if (c =? 24) then (emHasAttr d t e (prim utf8_encode "start" : Bytes) true) else (if (c =? 25) then (emHasAttr d t e (prim utf8_encode "end" : Bytes) true) else (if (c =? 26) then (emHasAttr d t e (prim utf8_encode "time-ref-uri" : Bytes) true) else (if (c =? 27) then (emHasAttr d t e (prim utf8_encode "time-ref-anchor-point" : Bytes) true) else (if (c =? 28) then (emHasAttr d t e (prim utf8_encode "offset-to-start" : Bytes) true) else (if (c =? 29) then (emHasAttr d t e (prim utf8_encode "duration" : Bytes) true) else (if (c =? 30) then (emHasAttr d t e (prim utf8_encode "medium" : Bytes) true) else (if (c =? 31) then (emHasAttr d t e (prim utf8_encode "mode" : Bytes) true) else (if (c =? 32) then (emHasAttr d t e (prim utf8_encode "function" : Bytes) true) else (if (c =? 33) then (emHasAttr d t e (prim utf8_encode "verbal" : Bytes) true) else (if (c =? 34) then (emHasAttr d t e (prim utf8_encode "hook" : Bytes) true) else (if (c =? 35) then (emHasAttr d t e (prim utf8_encode "cost" : Bytes) true) else (if (c =? 36) then (emHasAttr d t e (prim utf8_encode "dialog-turn" : Bytes) true) else (if (c =? 37) then ((emKind t e) =? 16) else (if (c =? 38) then ((emKind t e) =? 17) else (if (c =? 39) then (emHasAttr d t e (prim utf8_encode "endpoint-role" : Bytes) true) else (if (c =? 40) then (emHasAttr d t e (prim utf8_encode "endpoint-address" : Bytes) true) else (if (c =? 41) then (emHasAttr d t e (prim utf8_encode "port-type" : Bytes) true) else (if (c =? 42) then (emHasAttr d t e (prim utf8_encode "port-num" : Bytes) true) else (if (c =? 43) then (emHasAttr d t e (prim utf8_encode "message-id" : Bytes) true) else (if (c =? 44) then (emHasAttr d t e (prim utf8_encode "service-name" : Bytes) true) else (if (c =? 45) then (emHasAttr d t e (prim utf8_encode "endpoint-pair-ref" : Bytes) true) else (if (c =? 46) then (emHasAttr d t e (prim utf8_encode "endpoint-info-ref" : Bytes) true) else false))))))))))))))))))))))))))))))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emAnyBreak,
+  parameters: [d : EmSrc, t : Bytes, medium : Bytes, mode : Bytes, c : Nat, e : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emCount t) <? (e + 1)) then false else ((emBreaks d t medium mode c e) || (emAnyBreak d t medium mode c (e + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emAnyShow,
+  parameters: [d : EmSrc, t : Bytes, c : Nat, e : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emCount t) <? (e + 1)) then false else ((emShows d t c e) || (emAnyShow d t c (e + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emBreakMask,
+  parameters: [d : EmSrc, t : Bytes, medium : Bytes, mode : Bytes, c : Nat, bit : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => ((if (emAnyBreak d t medium mode c 0 (emCount t)) then bit else 0) + (emBreakMask d t medium mode (c + 1) (prim multiply bit 2 : Nat) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emShowMask,
+  parameters: [d : EmSrc, t : Bytes, c : Nat, bit : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => ((if (emAnyShow d t c 0 (emCount t)) then bit else 0) + (emShowMask d t (c + 1) (prim multiply bit 2 : Nat) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emIds,
+  parameters: [ids : Bytes, mask : Nat, c : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((prim remainder mask 2 0 : Nat) =? 1) then (emIds ids (prim quotient mask 2 0 : Nat) (c + 1) (prim append acc (prim append 0x20 (emDecFrom (emG16 ids (prim multiply c 2 : Nat)) 0x 5) : Bytes) : Bytes) rest) else (emIds ids (prim quotient mask 2 0 : Nat) (c + 1) acc rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emReport,
+  parameters: [breaks : Nat, shows : Nat],
+  result: Bytes,
+  body: (prim append (if (breaks =? 0) then (prim utf8_encode "conforms" : Bytes) else (emIds 0x006400c800c9012d0136025a025b025c025d025f02600261032a032b0388038e03e903ea089a08fc08fd09060907 breaks 0 (prim utf8_encode "violates" : Bytes) 23)) (emIds 0x006400c8012c0190019201f4025802bc03200385038e038f03e8044c04b10514057805dc064006a406a50708076c07d0083408350899089a089b089c08fc09060910091a096109c409ce0a8c0a8d0a960a970a990a9a0a9b0a9c0a9d0a9e shows 0 0x3b 47) : Bytes),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emCheck,
+  parameters: [d : EmSrc, i : Nat],
+  result: Bytes,
+  body: (let t : Bytes := (emScan d i 0x 0x ((emLen d) + 2)); (if (not ((prim remainder (emTLen t) 12 0 : Nat) =? 0)) then (prim utf8_encode "malformed" : Bytes) else (let medium : Bytes := (emEffFix d t (prim utf8_encode "medium" : Bytes) 0x ((emCount t) + 2)); (let mode : Bytes := (emEffFix d t (prim utf8_encode "mode" : Bytes) 0x ((emCount t) + 2)); (emReport (emBreakMask d t medium mode 0 1 23) (emShowMask d t 0 1 47)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emSpan,
+  parameters: [d : EmSrc, a : Nat, z : Nat],
+  result: Bytes,
+  body: (match (prim slice (project d b) a (prim subtract z a : Nat) : (Option Bytes))
+    | Option.none => 0x
+    | Option.some x => x)
+}
+
+definition{
+  name: emAnnName,
+  parameters: [d : EmSrc, a : Nat, z : Nat],
+  result: Bool,
+  body: ((emRangeLit d a z (prim utf8_encode "confidence" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "cost" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "dialog-turn" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "duration" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "end" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "endpoint-address" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "endpoint-info-ref" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "endpoint-pair-ref" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "endpoint-role" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "function" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "grammar-ref" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "hook" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "lang" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "media-type" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "medium" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "message-id" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "mode" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "model-ref" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "no-input" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "offset-to-start" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "port-num" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "port-type" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "process" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "service-name" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "signal" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "signal-size" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "source" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "start" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "time-ref-anchor-point" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "time-ref-uri" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "tokens" : Bytes)) || ((emRangeLit d a z (prim utf8_encode "uninterpreted" : Bytes)) || (emRangeLit d a z (prim utf8_encode "verbal" : Bytes)))))))))))))))))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emIsDecl,
+  parameters: [d : EmSrc, a : Nat, z : Nat],
+  result: Bool,
+  body: ((emRangeLit d a z (prim utf8_encode "xmlns" : Bytes)) || (emStarts d a (prim utf8_encode "xmlns:" : Bytes))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emIsHex,
+  parameters: [c : Nat],
+  result: Bool,
+  body: ((emIsDigit c) || (((64 <? c) && (c <? 71)) || ((96 <? c) && (c <? 103))))
+}
+
+definition{
+  name: emHexEnd,
+  parameters: [d : EmSrc, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (emIsHex (emAt d i)) then (emHexEnd d (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emHexFrom,
+  parameters: [d : EmSrc, i : Nat, stop : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (let c : Nat := (emAt d i); (emHexFrom d (i + 1) stop ((prim multiply acc 16 : Nat) + (if (emIsDigit c) then (prim subtract c 48 : Nat) else (if (c <? 71) then (prim subtract c 55 : Nat) else (prim subtract c 87 : Nat)))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emRefLen,
+  parameters: [d : EmSrc, i : Nat],
+  result: Nat,
+  body: (if (emStarts d i (prim utf8_encode "&lt;" : Bytes)) then 4 else (if (emStarts d i (prim utf8_encode "&gt;" : Bytes)) then 4 else (if (emStarts d i (prim utf8_encode "&amp;" : Bytes)) then 5 else (if (emStarts d i (prim utf8_encode "&quot;" : Bytes)) then 6 else (if (emStarts d i (prim utf8_encode "&apos;" : Bytes)) then 6 else (if (emStarts d i (prim utf8_encode "&#x" : Bytes)) then (let z : Nat := (emHexEnd d (i + 3) 7); (if (((i + 3) <? z) && ((emAt d z) =? 59)) then (prim subtract (z + 1) i : Nat) else 0)) else (if (emStarts d i (prim utf8_encode "&#" : Bytes)) then (let z : Nat := (emDigitsEnd d (i + 2) (i + 9) 8); (if (((i + 2) <? z) && ((emAt d z) =? 59)) then (prim subtract (z + 1) i : Nat) else 0)) else 0))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emRefCode,
+  parameters: [d : EmSrc, i : Nat],
+  result: Nat,
+  body: (if (emStarts d i (prim utf8_encode "&lt;" : Bytes)) then 60 else (if (emStarts d i (prim utf8_encode "&gt;" : Bytes)) then 62 else (if (emStarts d i (prim utf8_encode "&amp;" : Bytes)) then 38 else (if (emStarts d i (prim utf8_encode "&quot;" : Bytes)) then 34 else (if (emStarts d i (prim utf8_encode "&apos;" : Bytes)) then 39 else (if (emStarts d i (prim utf8_encode "&#x" : Bytes)) then (emHexFrom d (i + 3) (emHexEnd d (i + 3) 7) 0 7) else (emNatFrom d (i + 2) (i + 9) 0 8))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emPlain,
+  parameters: [d : EmSrc, i : Nat, stop : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if (stop <? (i + 1)) then true else (let c : Nat := (emAt d i); (if (c =? 60) then false else (if (c =? 38) then (let n : Nat := (emRefLen d i); ((0 <? n) && (emPlain d (i + n) stop rest))) else (emPlain d (i + 1) stop rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emUtf8,
+  parameters: [c : Nat],
+  result: Bytes,
+  body: (if (c <? 128) then (emByte c) else (if (c <? 2048) then (prim append (emByte (192 + (prim quotient c 64 0 : Nat))) (emByte (128 + (prim remainder c 64 0 : Nat))) : Bytes) else (if (c <? 65536) then (prim append (emByte (224 + (prim quotient c 4096 0 : Nat))) (prim append (emByte (128 + (prim remainder (prim quotient c 64 0 : Nat) 64 0 : Nat))) (emByte (128 + (prim remainder c 64 0 : Nat))) : Bytes) : Bytes) else (prim append (emByte (240 + (prim quotient c 262144 0 : Nat))) (prim append (emByte (128 + (prim remainder (prim quotient c 4096 0 : Nat) 64 0 : Nat))) (prim append (emByte (128 + (prim remainder (prim quotient c 64 0 : Nat) 64 0 : Nat))) (emByte (128 + (prim remainder c 64 0 : Nat))) : Bytes) : Bytes) : Bytes))))
+}
+
+definition{
+  name: emLineChar,
+  parameters: [c : Nat],
+  result: Bytes,
+  body: (if (c =? 92) then 0x5c5c else (if (c =? 10) then 0x5c6e else (if (c =? 13) then 0x5c72 else (if (c =? 9) then 0x5c74 else (emUtf8 c)))))
+}
+
+definition{
+  name: emOrdinary,
+  parameters: [c : Nat],
+  result: Bool,
+  body: (not ((c =? 38) || ((c =? 92) || ((c =? 10) || ((c =? 13) || (c =? 9))))))
+}
+
+definition{
+  name: emRunEnd,
+  parameters: [d : EmSrc, i : Nat, stop : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((i <? stop) && (emOrdinary (emAt d i))) then (emRunEnd d (i + 1) stop rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emValue,
+  parameters: [d : EmSrc, i : Nat, stop : Nat, attr : Bool, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (let c : Nat := (emAt d i); (if (c =? 38) then (emValue d (i + (emRefLen d i)) stop attr (prim append acc (emLineChar (emRefCode d i)) : Bytes) rest) else (if (c =? 13) then (emValue d (i + 1) stop attr (prim append acc (if ((emAt d (i + 1)) =? 10) then 0x else (if attr then 0x20 else 0x5c6e)) : Bytes) rest) else (if ((c =? 10) || (c =? 9)) then (emValue d (i + 1) stop attr (prim append acc (if attr then 0x20 else (emLineChar c)) : Bytes) rest) else (if (c =? 92) then (emValue d (i + 1) stop attr (prim append acc 0x5c5c : Bytes) rest) else (let z : Nat := (emRunEnd d i stop (emLen d)); (emValue d z stop attr (prim append acc (emSpan d i z) : Bytes) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emContentAt,
+  parameters: [t : Bytes, e : Nat],
+  result: Nat,
+  body: ((emTe t e) + 1),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emContentEnd,
+  parameters: [t : Bytes, e : Nat],
+  result: Nat,
+  body: (if ((emSelf t e) =? 1) then ((emTe t e) + 1) else (emClose t e)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emAttrsShape,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, mode : Nat, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (let a : Nat := (emWs d i); (let c : Nat := (emAt d a); (if (((emLen d) <? (a + 1)) || ((c =? 47) || (c =? 62))) then true else (let ne : Nat := (emNameEnd d a); (let vs : Nat := (emWs d ((emWs d ne) + 1)); (let ve : Nat := (emFindByte d (vs + 1) (emAt d vs)); (let colon : Nat := (emColon d a ne); (((emIsDecl d a ne) || (((0 <? mode) && ((mode <? 3) && ((emRangeLit d a ne (prim utf8_encode "id" : Bytes)) || (((colon <? ne) && ((emIsEmma d t e a colon) && (emAnnName d (colon + 1) ne))) || ((mode =? 2) && (emRangeLit d a ne (prim utf8_encode "disjunction-type" : Bytes))))))) || (((mode =? 3) && ((emRangeLit d a ne (prim utf8_encode "resource" : Bytes)) || (emRangeLit d a ne (prim utf8_encode "composite" : Bytes)))) || ((mode =? 4) && ((ne <? (colon + 1)) || ((emRangeLit d a colon (prim utf8_encode "xml" : Bytes)) || ((emIsEmma d t e a colon) && (emAnnName d (colon + 1) ne)))))))) && ((emPlain d (vs + 1) ve (emLen d)) && (emAttrsShape d t e mode (ve + 1) rest))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emElNs,
+  parameters: [d : EmSrc, t : Bytes, e : Nat],
+  result: (Option Nat),
+  body: (let a : Nat := ((emTs t e) + 1); (let ne : Nat := (emNameEnd d a); (let colon : Nat := (emColon d a ne); (if (colon <? ne) then (emBind d t e a colon ((emCount t) + 1)) else (emBind d t e a a ((emCount t) + 1)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emLocalAt,
+  parameters: [d : EmSrc, t : Bytes, e : Nat],
+  result: Nat,
+  body: (let a : Nat := ((emTs t e) + 1); (let ne : Nat := (emNameEnd d a); (let colon : Nat := (emColon d a ne); (if (colon <? ne) then (colon + 1) else a)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emFirstField,
+  parameters: [t : Bytes, j : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Nat])
+    | Nat.succ rest => (if ((emCount t) <? (j + 1)) then (ctor Option.none [Nat]) else (if (((emKind t j) =? 0) && ((not ((emPar t j) =? 0)) && ((emKind t (prim subtract (emPar t j) 1 : Nat)) =? 2))) then (ctor Option.some [Nat] j) else (emFirstField t (j + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emKidsShape,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, ns1 : Nat, ns2 : Nat, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emEnd t e) <? (j + 1)) then true else ((if ((emKind t j) =? 12) then (((emEnd t j) =? (j + 1)) && ((emAttrsShape d t j 3 (emAttrsAt d t j) (emLen d)) && ((emAllWs d (emContentAt t j) (emContentEnd t j) (emLen d)) && (match (emAttr d t j (prim utf8_encode "resource" : Bytes) false)
+      | Option.none => false
+      | Option.some p => ((emAt d (prim quotient p 65536 0 : Nat)) =? 35))))) else (if ((emKind t j) =? 10) then (((emEnd t j) =? (j + 1)) && ((emAttrsShape d t j 0 (emAttrsAt d t j) (emLen d)) && (emPlain d (emContentAt t j) (emContentEnd t j) (emLen d)))) else (if ((emKind t j) =? 0) then (((emEnd t j) =? (j + 1)) && ((emAttrsShape d t j 4 (emAttrsAt d t j) (emLen d)) && ((emPlain d (emContentAt t j) (emContentEnd t j) (emLen d)) && (match (emElNs d t j)
+      | Option.none => false
+      | Option.some p => (let ps : Nat := (prim quotient p 65536 0 : Nat); (let pe : Nat := (prim remainder p 65536 0 : Nat); ((ps <? pe) && ((not (emRangeLit d ps pe (prim utf8_encode "http://www.w3.org/2003/04/emma" : Bytes))) && (ns1 <? ns2))))))))) else false))) && (emKidsShape d t e ns1 ns2 (emEnd t j) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emInterpShape,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, ns1 : Nat, ns2 : Nat],
+  result: Bool,
+  body: (((emKind t e) =? 2) && ((emHasAttr d t e (prim utf8_encode "id" : Bytes) false) && ((emAttrsShape d t e 1 (emAttrsAt d t e) (emLen d)) && ((not (emHasText d t e)) && (emKidsShape d t e ns1 ns2 (e + 1) (emCount t)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emAllInterp,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, ns1 : Nat, ns2 : Nat, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((emEnd t e) <? (j + 1)) then true else ((emInterpShape d t j ns1 ns2) && (emAllInterp d t e ns1 ns2 (emEnd t j) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emTopOf,
+  parameters: [t : Bytes],
+  result: Nat,
+  body: (if ((emKind t 1) =? 13) then (emEnd t 1) else 1),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emShapeWith,
+  parameters: [d : EmSrc, t : Bytes, ns1 : Nat, ns2 : Nat],
+  result: Bool,
+  body: (((emKind t 0) =? 1) && ((1 <? (emCount t)) && ((not (emHasText d t 0)) && (((not ((emKind t 1) =? 13)) || ((emAttrsShape d t 1 0 (emAttrsAt d t 1) (emLen d)) && ((not (emHasText d t 1)) && (emAllInterp d t 1 ns1 ns2 2 (emCount t))))) && (let top : Nat := (emTopOf t); ((top <? (emCount t)) && (((emEnd t top) =? (emCount t)) && (if ((emKind t top) =? 3) then ((emHasAttr d t top (prim utf8_encode "id" : Bytes) false) && ((emAttrsShape d t top 2 (emAttrsAt d t top) (emLen d)) && ((not (emHasText d t top)) && (((top + 1) <? (emEnd t top)) && (emAllInterp d t top ns1 ns2 (top + 1) (emCount t)))))) else (emInterpShape d t top ns1 ns2))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emNsOf,
+  parameters: [d : EmSrc, t : Bytes],
+  result: Nat,
+  body: (match (emFirstField t 0 (emCount t))
+    | Option.none => 0
+    | Option.some f => (match (emElNs d t f) | Option.none => 0 | Option.some p => p)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emShape,
+  parameters: [d : EmSrc, t : Bytes],
+  result: Bool,
+  body: (let p : Nat := (emNsOf d t); (emShapeWith d t (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emSameNs,
+  parameters: [d : EmSrc, t : Bytes, j : Nat],
+  result: Bool,
+  body: (let p : Nat := (emNsOf d t); (match (emElNs d t j)
+    | Option.none => false
+    | Option.some q => (emRangeEq d (prim quotient q 65536 0 : Nat) (prim remainder q 65536 0 : Nat) (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emAttrLines,
+  parameters: [d : EmSrc, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let a : Nat := (emWs d i); (let c : Nat := (emAt d a); (if (((emLen d) <? (a + 1)) || ((c =? 47) || (c =? 62))) then acc else (let ne : Nat := (emNameEnd d a); (let vs : Nat := (emWs d ((emWs d ne) + 1)); (let ve : Nat := (emFindByte d (vs + 1) (emAt d vs)); (let colon : Nat := (emColon d a ne); (emAttrLines d (ve + 1) (if (emIsDecl d a ne) then acc else (if ((ne <? (colon + 1)) || (emRangeLit d a colon (prim utf8_encode "xml" : Bytes))) then (prim append acc (prim append (prim utf8_encode "attr " : Bytes) (prim append (emSpan d a ne) (prim append 0x20 (prim append (emValue d (vs + 1) ve true 0x (emLen d)) 0x0a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) else (prim append acc (prim append (prim utf8_encode "set " : Bytes) (prim append (emSpan d (colon + 1) ne) (prim append 0x20 (prim append (emValue d (vs + 1) ve true 0x (emLen d)) 0x0a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes))) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emSets,
+  parameters: [d : EmSrc, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let a : Nat := (emWs d i); (let c : Nat := (emAt d a); (if (((emLen d) <? (a + 1)) || ((c =? 47) || (c =? 62))) then acc else (let ne : Nat := (emNameEnd d a); (let vs : Nat := (emWs d ((emWs d ne) + 1)); (let ve : Nat := (emFindByte d (vs + 1) (emAt d vs)); (let colon : Nat := (emColon d a ne); (emSets d (ve + 1) (if ((emIsDecl d a ne) || (emRangeLit d a ne (prim utf8_encode "id" : Bytes))) then acc else (prim append acc (prim append (prim utf8_encode "set " : Bytes) (prim append (emSpan d (if (colon <? ne) then (colon + 1) else a) ne) (prim append 0x20 (prim append (emValue d (vs + 1) ve true 0x (emLen d)) 0x0a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes)) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emKidLines,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, j : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((emEnd t e) <? (j + 1)) then acc else (emKidLines d t e (emEnd t j) (prim append acc (if ((emKind t j) =? 12) then (prim append (prim utf8_encode "from " : Bytes) (prim append (match (emAttr d t j (prim utf8_encode "resource" : Bytes) false)
+      | Option.none => 0x
+      | Option.some p => (emValue d ((prim quotient p 65536 0 : Nat) + 1) (prim remainder p 65536 0 : Nat) true 0x (emLen d))) (prim append (match (emAttr d t j (prim utf8_encode "composite" : Bytes) false)
+      | Option.none => 0x
+      | Option.some q => (prim append 0x20 (emValue d (prim quotient q 65536 0 : Nat) (prim remainder q 65536 0 : Nat) true 0x (emLen d)) : Bytes)) 0x0a : Bytes) : Bytes) : Bytes) else (if ((emKind t j) =? 10) then (prim append (prim utf8_encode "literal " : Bytes) (prim append (emValue d (emContentAt t j) (emContentEnd t j) false 0x (emLen d)) 0x0a : Bytes) : Bytes) else (emAttrLines d (emAttrsAt d t j) (prim append (prim utf8_encode "field " : Bytes) (prim append (emSpan d (emLocalAt d t j) (emNameEnd d ((emTs t j) + 1))) (prim append 0x20 (prim append (emValue d (emContentAt t j) (emContentEnd t j) false 0x (emLen d)) (prim append 0x0a (if (emSameNs d t j) then 0x else (prim append (prim utf8_encode "attr xmlns " : Bytes) (prim append (match (emElNs d t j)
+      | Option.none => 0x
+      | Option.some q => (emValue d (prim quotient q 65536 0 : Nat) (prim remainder q 65536 0 : Nat) true 0x (emLen d))) 0x0a : Bytes) : Bytes)) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) (emLen d)))) : Bytes) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emHeadLine,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, word : Bytes],
+  result: Bytes,
+  body: (emSets d (emAttrsAt d t e) (prim append word (prim append (match (emAttr d t e (prim utf8_encode "id" : Bytes) false)
+    | Option.none => 0x
+    | Option.some p => (emValue d ((prim quotient p 65536 0 : Nat) + 0) (prim remainder p 65536 0 : Nat) true 0x (emLen d))) 0x0a : Bytes) : Bytes) (emLen d)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emInterpLines,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, word : Bytes],
+  result: Bytes,
+  body: (emKidLines d t e (e + 1) (emHeadLine d t e word) (emCount t)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emMemberLines,
+  parameters: [d : EmSrc, t : Bytes, e : Nat, word : Bytes, j : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((emEnd t e) <? (j + 1)) then acc else (emMemberLines d t e word (emEnd t j) (prim append acc (emInterpLines d t j word) : Bytes) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emLines,
+  parameters: [d : EmSrc, t : Bytes],
+  result: Bytes,
+  body: (let top : Nat := (emTopOf t); (prim append (let p : Nat := (emNsOf d t); (if (p =? 0) then 0x else (prim append (prim utf8_encode "ns " : Bytes) (prim append (emValue d (prim quotient p 65536 0 : Nat) (prim remainder p 65536 0 : Nat) true 0x (emLen d)) 0x0a : Bytes) : Bytes))) (prim append (if ((emKind t 1) =? 13) then (emMemberLines d t 1 (prim utf8_encode "stage " : Bytes) 2 0x (emCount t)) else 0x) (if ((emKind t top) =? 3) then (emMemberLines d t top (prim utf8_encode "best " : Bytes) (top + 1) (emHeadLine d t top (prim utf8_encode "choice " : Bytes)) (emCount t)) else (emInterpLines d t top (prim utf8_encode "best " : Bytes))) : Bytes) : Bytes)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emRead,
+  parameters: [d : EmSrc, i : Nat],
+  result: Bytes,
+  body: (let t : Bytes := (emScan d i 0x 0x ((emLen d) + 2)); (if (not ((prim remainder (emTLen t) 12 0 : Nat) =? 0)) then (prim utf8_encode "malformed" : Bytes) else (if (not (emShape d t)) then (prim utf8_encode "other" : Bytes) else (let lines : Bytes := (emLines d t); (emCut lines 0 (prim subtract (emTLen lines) 1 : Nat)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emSpaceFrom,
+  parameters: [d : EmSrc, i : Nat, stop : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => stop
+    | Nat.succ rest => (if (stop <? (i + 1)) then stop else (if ((emAt d i) =? 32) then i else (emSpaceFrom d (i + 1) stop rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emWordEnd,
+  parameters: [d : EmSrc, i : Nat, stop : Nat],
+  result: Nat,
+  body: (emSpaceFrom d i stop (emLen d)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emNcFrom,
+  parameters: [d : EmSrc, i : Nat, stop : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if (stop <? (i + 1)) then true else ((emIsName (emAt d i)) && ((not ((emAt d i) =? 58)) && (emNcFrom d (i + 1) stop rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emNcName,
+  parameters: [d : EmSrc, a : Nat, z : Nat],
+  result: Bool,
+  body: ((a <? z) && ((emIsNameStart (emAt d a)) && (emNcFrom d a z (emLen d)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emXmlChar,
+  parameters: [c : Nat, attr : Bool],
+  result: Bytes,
+  body: (if (c =? 38) then (prim utf8_encode "&amp;" : Bytes) else (if (c =? 60) then (prim utf8_encode "&lt;" : Bytes) else (if (c =? 62) then (prim utf8_encode "&gt;" : Bytes) else (if (c =? 13) then (prim utf8_encode "&#13;" : Bytes) else (if (attr && (c =? 34)) then (prim utf8_encode "&quot;" : Bytes) else (if (attr && (c =? 10)) then (prim utf8_encode "&#10;" : Bytes) else (if (attr && (c =? 9)) then (prim utf8_encode "&#9;" : Bytes) else (emByte c))))))))
+}
+
+definition{
+  name: emSafe,
+  parameters: [c : Nat],
+  result: Bool,
+  body: (not ((c =? 38) || ((c =? 60) || ((c =? 62) || ((c =? 13) || ((c =? 34) || ((c =? 10) || ((c =? 9) || (c =? 92)))))))))
+}
+
+definition{
+  name: emSafeEnd,
+  parameters: [d : EmSrc, i : Nat, stop : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((i <? stop) && (emSafe (emAt d i))) then (emSafeEnd d (i + 1) stop rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emXml,
+  parameters: [d : EmSrc, i : Nat, stop : Nat, attr : Bool, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (let c : Nat := (emAt d i); (if (c =? 92) then (let n : Nat := (emAt d (i + 1)); (if (((i + 1) <? stop) && ((n =? 110) || ((n =? 114) || ((n =? 116) || (n =? 92))))) then (emXml d (i + 2) stop attr (prim append acc (emXmlChar (if (n =? 110) then 10 else (if (n =? 114) then 13 else (if (n =? 116) then 9 else 92))) attr) : Bytes) rest) else (emXml d (i + 1) stop attr (prim append acc 0x5c : Bytes) rest))) else (if (emSafe c) then (let z : Nat := (emSafeEnd d i stop (emLen d)); (emXml d z stop attr (prim append acc (emSpan d i z) : Bytes) rest)) else (emXml d (i + 1) stop attr (prim append acc (emXmlChar c attr) : Bytes) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emFix,
+  parameters: [d : EmSrc, pend : Nat, pl : Nat],
+  result: Bytes,
+  body: (if (pend =? 1) then 0x3e else (if (pend =? 2) then (let le : Nat := (emFindByte d pl 10); (let w : Nat := (emWordEnd d pl le); (let w2 : Nat := (emWordEnd d (w + 1) le); (prim append 0x3e (prim append (emXml d (w2 + 1) le false 0x (emLen d)) (prim append (prim utf8_encode "</" : Bytes) (prim append (emSpan d (w + 1) w2) 0x3e : Bytes) : Bytes) : Bytes) : Bytes)))) else 0x)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emWrite,
+  parameters: [
+    d : EmSrc,
+    i : Nat,
+    phase : Nat,
+    pend : Nat,
+    pl : Nat,
+    ns : Bool,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((emLen d) <? (i + 1)) then (if (phase =? 2) then (prim append acc (prim append (emFix d pend pl) (prim append (prim utf8_encode "</emma:interpretation>" : Bytes) (prim utf8_encode "</emma:emma>" : Bytes) : Bytes) : Bytes) : Bytes) else (if (phase =? 4) then (prim append acc (prim append (emFix d pend pl) (prim append (prim utf8_encode "</emma:interpretation>" : Bytes) (prim utf8_encode "</emma:one-of></emma:emma>" : Bytes) : Bytes) : Bytes) : Bytes) else 0x)) else (let le : Nat := (emFindByte d i 10); (let w : Nat := (emWordEnd d i le); (if (emRangeLit d i w (prim utf8_encode "stage" : Bytes)) then (if ((emNcName d (w + 1) le) && ((phase =? 0) || (phase =? 1))) then (emWrite d (le + 1) 1 1 pl ns (prim append acc (prim append (if (phase =? 0) then (prim utf8_encode "<emma:derivation>" : Bytes) else (prim append (emFix d pend pl) (prim utf8_encode "</emma:interpretation>" : Bytes) : Bytes)) (prim append 0x3c656d6d613a696e746572707265746174696f6e2069643d22 (prim append (emXml d (w + 1) le true 0x (emLen d)) 0x22 : Bytes) : Bytes) : Bytes) : Bytes) rest) else 0x) else (if (emRangeLit d i w (prim utf8_encode "best" : Bytes)) then (if (not (emNcName d (w + 1) le)) then 0x else (if (phase =? 0) then (emWrite d (le + 1) 2 1 pl ns (prim append acc (prim append 0x (prim append 0x3c656d6d613a696e746572707265746174696f6e2069643d22 (prim append (emXml d (w + 1) le true 0x (emLen d)) 0x22 : Bytes) : Bytes) : Bytes) : Bytes) rest) else (if (phase =? 1) then (emWrite d (le + 1) 2 1 pl ns (prim append acc (prim append (prim append (emFix d pend pl) (prim append (prim utf8_encode "</emma:interpretation>" : Bytes) (prim utf8_encode "</emma:derivation>" : Bytes) : Bytes) : Bytes) (prim append 0x3c656d6d613a696e746572707265746174696f6e2069643d22 (prim append (emXml d (w + 1) le true 0x (emLen d)) 0x22 : Bytes) : Bytes) : Bytes) : Bytes) rest) else (if (phase =? 3) then (emWrite d (le + 1) 4 1 pl ns (prim append acc (prim append (emFix d pend pl) (prim append 0x3c656d6d613a696e746572707265746174696f6e2069643d22 (prim append (emXml d (w + 1) le true 0x (emLen d)) 0x22 : Bytes) : Bytes) : Bytes) : Bytes) rest) else (if (phase =? 4) then (emWrite d (le + 1) 4 1 pl ns (prim append acc (prim append (prim append (emFix d pend pl) (prim utf8_encode "</emma:interpretation>" : Bytes) : Bytes) (prim append 0x3c656d6d613a696e746572707265746174696f6e2069643d22 (prim append (emXml d (w + 1) le true 0x (emLen d)) 0x22 : Bytes) : Bytes) : Bytes) : Bytes) rest) else 0x))))) else (if (emRangeLit d i w (prim utf8_encode "choice" : Bytes)) then (if ((emNcName d (w + 1) le) && ((phase =? 0) || (phase =? 1))) then (emWrite d (le + 1) 3 1 pl ns (prim append acc (prim append (if (phase =? 1) then (prim append (emFix d pend pl) (prim append (prim utf8_encode "</emma:interpretation>" : Bytes) (prim utf8_encode "</emma:derivation>" : Bytes) : Bytes) : Bytes) else 0x) (prim append 0x3c656d6d613a6f6e652d6f662069643d22 (prim append (emXml d (w + 1) le true 0x (emLen d)) 0x22 : Bytes) : Bytes) : Bytes) : Bytes) rest) else 0x) else (if (emRangeLit d i w (prim utf8_encode "set" : Bytes)) then (let w2 : Nat := (emWordEnd d (w + 1) le); (if ((0 <? pend) && (w2 <? le)) then (if (emAnnName d (w + 1) w2) then (emWrite d (le + 1) phase pend pl ns (prim append acc (prim append (prim utf8_encode " emma:" : Bytes) (prim append (emSpan d (w + 1) w2) (prim append 0x3d22 (prim append (emXml d (w2 + 1) le true 0x (emLen d)) 0x22 : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) rest) else (if ((phase =? 3) && ((pend =? 1) && (emRangeLit d (w + 1) w2 (prim utf8_encode "disjunction-type" : Bytes)))) then (emWrite d (le + 1) phase 1 pl ns (prim append acc (prim append 0x206469736a756e6374696f6e2d747970653d22 (prim append (emXml d (w2 + 1) le true 0x (emLen d)) 0x22 : Bytes) : Bytes) : Bytes) rest) else 0x)) else 0x)) else (if (emRangeLit d i w (prim utf8_encode "from" : Bytes)) then (let w2 : Nat := (emWordEnd d (w + 1) le); (if (((phase =? 1) || ((phase =? 2) || (phase =? 4))) && (emNcName d (w + 1) w2)) then (emWrite d (le + 1) phase 0 pl ns (prim append acc (prim append (emFix d pend pl) (prim append 0x3c656d6d613a646572697665642d66726f6d207265736f757263653d2223 (prim append (emSpan d (w + 1) w2) (prim append 0x22 (prim append (if (w2 <? le) then (prim append 0x20636f6d706f736974653d22 (prim append (emXml d (w2 + 1) le true 0x (emLen d)) 0x22 : Bytes) : Bytes) else 0x) (prim utf8_encode "/>" : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) rest) else 0x)) else (if (emRangeLit d i w (prim utf8_encode "field" : Bytes)) then (let w2 : Nat := (emWordEnd d (w + 1) le); (if (((phase =? 1) || ((phase =? 2) || (phase =? 4))) && (ns && (emNcName d (w + 1) w2))) then (emWrite d (le + 1) phase 2 i ns (prim append acc (prim append (emFix d pend pl) (prim append 0x3c (emSpan d (w + 1) w2) : Bytes) : Bytes) : Bytes) rest) else 0x)) else (if (emRangeLit d i w (prim utf8_encode "attr" : Bytes)) then (let w2 : Nat := (emWordEnd d (w + 1) le); (if ((pend =? 2) && ((w2 <? le) && ((emNcName d (w + 1) w2) || ((emStarts d (w + 1) (prim utf8_encode "xml:" : Bytes)) && (emNcName d (w + 5) w2))))) then (emWrite d (le + 1) phase 2 pl ns (prim append acc (prim append 0x20 (prim append (emSpan d (w + 1) w2) (prim append 0x3d22 (prim append (emXml d (w2 + 1) le true 0x (emLen d)) 0x22 : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) rest) else 0x)) else (if (emRangeLit d i w (prim utf8_encode "literal" : Bytes)) then (if ((phase =? 1) || ((phase =? 2) || (phase =? 4))) then (emWrite d (le + 1) phase 0 pl ns (prim append acc (prim append (emFix d pend pl) (prim append (prim utf8_encode "<emma:literal>" : Bytes) (prim append (emXml d (w + 1) le false 0x (emLen d)) (prim utf8_encode "</emma:literal>" : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) rest) else 0x) else 0x)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: emDocument,
+  parameters: [d : EmSrc, i : Nat],
+  result: Bytes,
+  body: (let le : Nat := (emFindByte d i 10); (if (emStarts d i (prim utf8_encode "ns " : Bytes)) then (if ((i + 3) <? le) then (emWrite d (le + 1) 0 0 0 true (prim append 0x3c656d6d613a656d6d612076657273696f6e3d22312e302220786d6c6e733a656d6d613d22687474703a2f2f7777772e77332e6f72672f323030332f30342f656d6d6122 (prim append 0x20786d6c6e733d22 (prim append (emXml d (i + 3) le true 0x (emLen d)) 0x223e : Bytes) : Bytes) : Bytes) (emLen d)) else 0x) else (emWrite d i 0 0 0 false (prim append 0x3c656d6d613a656d6d612076657273696f6e3d22312e302220786d6c6e733a656d6d613d22687474703a2f2f7777772e77332e6f72672f323030332f30342f656d6d6122 0x3e : Bytes) (emLen d)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: emInput,
+  parameters: [d : EmSrc, i : Nat],
+  result: Bytes,
+  body: (let doc : Bytes := (emDocument d i); (if ((emTLen doc) =? 0) then (prim utf8_encode "invalid" : Bytes) else (let report : Bytes := (emCheck (record EmSrc {b := doc}) 0); (if (emSameBytes (emCut report 0 8) (prim utf8_encode "conforms" : Bytes)) then doc else (prim append (prim utf8_encode "refused " : Bytes) report : Bytes))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismEmmaDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (let d : EmSrc := (record EmSrc {b := value}); (if (not ((emLen d) <? 65536)) then (prim utf8_encode "invalid" : Bytes) else (if ((emStarts d 0 (prim utf8_encode "check" : Bytes)) && ((emAt d 5) =? 10)) then (emCheck d 6) else (if ((emStarts d 0 (prim utf8_encode "read" : Bytes)) && ((emAt d 4) =? 10)) then (emRead d 5) else (if ((emStarts d 0 (prim utf8_encode "input" : Bytes)) && ((emAt d 5) =? 10)) then (emInput d 6) else (prim utf8_encode "invalid" : Bytes)))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
