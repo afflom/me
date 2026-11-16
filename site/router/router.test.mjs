@@ -82,7 +82,7 @@ console.log(`router: ${asked.length} decisions, all held`);
 
 // The chat's answers: a question is answered in a sentence from what is held,
 // under the Boundary; anything else is offered to keep with its confirmation.
-const { answer } = await import("./answer.mjs");
+const { answer, recordOf } = await import("./answer.mjs");
 const boundaryLine = async (text) => (text.startsWith("boundary") ? (text.trim().endsWith(" yes") ? "deny" : "allow") : text.startsWith("ask ") ? askDecide(text.slice(4)).outcome : line(text));
 const flight = { address: "f", media: "calendar", title: "Flight to Lisbon", who: "Airport", where: "Airport", body: "", label: "confidential", at: new Date(2026, 10, 16, 8).getTime(), domains: [5] };
 const mail = { address: "m", media: "message", title: "Lunch on Thursday?", who: "Robin Example", body: "Are you free?", label: "confidential", at: new Date(2026, 10, 12, 9).getTime(), domains: [4] };
@@ -133,6 +133,13 @@ const said = await named("what did Joel say?");
 // A message is told by what its sender says first, and a question keeps its own mark.
 const asking = { ...reply, address: "j2", labels: { kind: "person", parties: [], topics: [], lead: "Can we move the review to 4?" } };
 const told = await answer("what did Joel say?", { items: [asking, review], line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
+// The turn is turned as its record: what was said as EMMA, the turn as PROV naming what the reply drew on and
+// the turn before, and the turn guest accepts it when it is read back.
+const turned = recordOf("what did Joel say?", told, WEDNESDAY, WEDNESDAY - 60000);
+assert.match(turned, /^<emma:emma [^]*emma:tokens="what did Joel say\?"[^]*<\/emma:emma>\ndocument\n[^]*wasInformedBy\(/u);
+for (const item of told.cited) assert.ok(turned.includes(`wasDerivedFrom(me:reply-${WEDNESDAY}, me:${item.address})`), `the record does not name ${item.address}`);
+assert.equal((await (await import("../turn/guest.mjs")).opened((await import("../turn/guest.mjs")).GUEST))(`check\n${turned}`), "accepted");
+assert.equal(recordOf("a\u0001", told, WEDNESDAY), null, "a prompt EMMA cannot hold has no record");
 assert.match(told.sentences[0], /^Joël Example wrote “Re: Proposal draft for the grant” on .+: Can we move the review to 4\?$/u, told.sentences[0]);
 assert.match(said.sentences[0], /^Joël Example wrote “Re: Proposal draft for the grant” on /u, "what someone said is their mail");
 assert.equal(said.sentences.length, 1, said.sentences.join(" "));

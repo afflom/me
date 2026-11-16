@@ -15,11 +15,10 @@
 // "rule,start,end,depth" in UTF-8 octets, in order; that is the tree here.
 //   const g = abnf(table); const tree = g.match("orig-date", "Date: ...\r\n");
 //   tree = { rule, start, end, text, kids: [trees of named rules] }
-import { GUESTS, openGuestSync } from "./guest.mjs";
+import { GUESTS, opened } from "./guest.mjs";
 
 const encoder = new TextEncoder();
-const url = new URL(GUESTS.mail.path, import.meta.url);
-const ask = await openGuestSync(url.protocol === "file:" ? await (await import("node:fs/promises")).readFile(url) : new Uint8Array(await (await fetch(url)).arrayBuffer()), GUESTS.mail.sha256);
+const ask = await opened(GUESTS.mail);
 
 export function abnf({ rules }) {
   const names = Object.keys(rules).sort();
