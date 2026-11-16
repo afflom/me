@@ -11314,6 +11314,748 @@
    "text": "collections/pages/5.2-pageTypeValidated.json"
   }
  ],
+ "w3c-emma-1.0": [
+  {
+   "id": "w3c-emma-1.0-100",
+   "kind": "must",
+   "ref": "3.1",
+   "text": "EMMA documents MUST have emma:emma as the root element."
+  },
+  {
+   "id": "w3c-emma-1.0-1000",
+   "kind": "may",
+   "ref": "4.1.3",
+   "text": "The grammar used MAY be referenced using an emma:grammar element within emma:emma."
+  },
+  {
+   "id": "w3c-emma-1.0-1001",
+   "kind": "must",
+   "ref": "4.2.15",
+   "text": "SUB CONSTRAINT: If an emma:interpretation or emma:one-of is annotated with the emma:grammar-ref attribute, then the value of the emma:grammar-ref MUST reference the id of an emma:grammar element child of emma:emma in the same document."
+  },
+  {
+   "id": "w3c-emma-1.0-1002",
+   "kind": "must",
+   "ref": "4.2.15",
+   "text": "SUB CONSTRAINT: If an emma:grammar element appears as a child of emma:emma, then there MUST be an emma:interpretation or emma:one-of element dominated by that emma:emma, whose emma:grammar-ref attribute references the id of the emma:grammar element."
+  },
+  {
+   "id": "w3c-emma-1.0-1100",
+   "kind": "may",
+   "ref": "4.1.4",
+   "text": "Application and vendor specific annotations SHOULD appear within emma:info."
+  },
+  {
+   "id": "w3c-emma-1.0-1201",
+   "kind": "may",
+   "ref": "4.2.1",
+   "text": "emma:tokens MAY be used to indicate the sequence of tokens recognized in the input by the recognizer."
+  },
+  {
+   "id": "w3c-emma-1.0-1300",
+   "kind": "may",
+   "ref": "4.2.2",
+   "text": "emma:process MAY be used to identify the process used to assign the interpretation."
+  },
+  {
+   "id": "w3c-emma-1.0-1400",
+   "kind": "must",
+   "ref": "4.2.3",
+   "text": "emma:no-input=\"true\" MUST be used to designate lack of expected input."
+  },
+  {
+   "id": "w3c-emma-1.0-1500",
+   "kind": "must",
+   "ref": "4.2.4",
+   "text": "Input for which the processor is unable to assign an interpretation MUST be marked as emma:uninterpreted=\"true\"."
+  },
+  {
+   "id": "w3c-emma-1.0-1600",
+   "kind": "may",
+   "ref": "4.2.5",
+   "text": "emma:lang MAY be used to designate the human language of input"
+  },
+  {
+   "id": "w3c-emma-1.0-1700",
+   "kind": "may",
+   "ref": "4.2.6",
+   "text": "emma:signal (with a URI value) MAY be used to designate the location of the signal processed by an EMMA processor."
+  },
+  {
+   "id": "w3c-emma-1.0-1701",
+   "kind": "may",
+   "ref": "4.2.6",
+   "text": "emma:signal-size MAY be used to indicate the file size in 8-bit octets of the input signal."
+  },
+  {
+   "id": "w3c-emma-1.0-1800",
+   "kind": "may",
+   "ref": "4.2.7",
+   "text": "emma:media-type MAY be used to designate the MIME type of the processed signal."
+  },
+  {
+   "id": "w3c-emma-1.0-1900",
+   "kind": "may",
+   "ref": "4.2.8",
+   "text": "emma:confidence MAY be used to designate the confidence score of an input."
+  },
+  {
+   "id": "w3c-emma-1.0-200",
+   "kind": "must",
+   "ref": "3.2",
+   "text": "Application namespace markup representing the interpretation of inputs MUST be contained within the emma:interpretation element."
+  },
+  {
+   "id": "w3c-emma-1.0-2000",
+   "kind": "may",
+   "ref": "4.2.9",
+   "text": "emma:source (with a URI value) MAY be used to designate the source device."
+  },
+  {
+   "id": "w3c-emma-1.0-201",
+   "kind": "must",
+   "ref": "3.2",
+   "text": "SUB CONSTRAINT: If the emma:interpretation element is empty, then it MUST be annotated as emma:uninterpreted=\"true' or emma:no-input=\"true\"."
+  },
+  {
+   "id": "w3c-emma-1.0-2100",
+   "kind": "may",
+   "ref": "4.2.10.1",
+   "text": "emma:start with a millisecond value MAY be used to indicate the absolute start time of an input."
+  },
+  {
+   "id": "w3c-emma-1.0-2101",
+   "kind": "may",
+   "ref": "4.2.10.1",
+   "text": "emma:end with a millisecond value MAY be used to indicate the absolute end time of an input."
+  },
+  {
+   "id": "w3c-emma-1.0-2201",
+   "kind": "may",
+   "ref": "4.2.10.2",
+   "text": "The emma:time-ref-uri attribute MAY be used to indicate the URI used as a reference point for relative timestamps."
+  },
+  {
+   "id": "w3c-emma-1.0-2202",
+   "kind": "must",
+   "ref": "4.2.10.2",
+   "text": "SUB CONSTRAINT: If the emma:time-ref-uri points to an interval, emma:time-ref-anchor MUST appear on the interpretation with a value of start or end, indicating whether to use the start or end of that interval as the reference point."
+  },
+  {
+   "id": "w3c-emma-1.0-2203",
+   "kind": "may",
+   "ref": "4.2.10.2",
+   "text": "The value of emma:offset-to-start MAY be used to indicate the number of milliseconds from the reference point to the start of the current input in a relative timestamp."
+  },
+  {
+   "id": "w3c-emma-1.0-2204",
+   "kind": "may",
+   "ref": "4.2.10.3",
+   "text": "The emma:duration attribute value MAY be used to indicate the duration in milliseconds of the current input."
+  },
+  {
+   "id": "w3c-emma-1.0-2300",
+   "kind": "must",
+   "ref": "4.2.11",
+   "text": "emma:medium MUST be included on all EMMA inputs, indicating the medium of input."
+  },
+  {
+   "id": "w3c-emma-1.0-2301",
+   "kind": "must",
+   "ref": "4.1.2",
+   "text": "SUBCONSTRAINT: When EMMA inputs from different modes are combined to make a composite input, if the combining inputs have different values for emma:medium, then the value on the result MUST be a space separated list of the emma:medium values from the combining modes."
+  },
+  {
+   "id": "w3c-emma-1.0-2310",
+   "kind": "must",
+   "ref": "4.2.11",
+   "text": "emma:mode MUST be included on all EMMA inputs, indicating the mode of input."
+  },
+  {
+   "id": "w3c-emma-1.0-2311",
+   "kind": "must",
+   "ref": "4.1.2",
+   "text": "SUBCONSTRAINT: When EMMA inputs from different modes are combined to make a composite input, the value of emma:mode on the result MUST be a space separated list of the values on the combining inputs."
+  },
+  {
+   "id": "w3c-emma-1.0-2320",
+   "kind": "may",
+   "ref": "4.2.11",
+   "text": "emma:function MAY be included on EMMA inputs, providing a classification of the function of the input."
+  },
+  {
+   "id": "w3c-emma-1.0-2330",
+   "kind": "may",
+   "ref": "4.2.11",
+   "text": "emma:verbal MAY be included on EMMA inputs, indicating whether the input is verbal or non-verbal."
+  },
+  {
+   "id": "w3c-emma-1.0-2401",
+   "kind": "may",
+   "ref": "4.2.12",
+   "text": "emma:hook MAY be used on application namespace markup to indicate where content from another mode needs to be integrated."
+  },
+  {
+   "id": "w3c-emma-1.0-2500",
+   "kind": "may",
+   "ref": "4.2.13",
+   "text": "emma:cost MAY be used to indicate the cost or weight of an interpretation or lattice arc."
+  },
+  {
+   "id": "w3c-emma-1.0-2510",
+   "kind": "may",
+   "ref": "4.2.17",
+   "text": "emma:dialog-turn MAY be used to indicate an identifier for the current dialog turn."
+  },
+  {
+   "id": "w3c-emma-1.0-2600",
+   "kind": "must",
+   "ref": "3.3.1",
+   "text": "EMMA annotations appearing on emma:one-of MUST be true of all of the container elements (emma:one-of,emma:interpretation,emma:sequence,emma:group) within the emma:one-of."
+  },
+  {
+   "id": "w3c-emma-1.0-2601",
+   "kind": "must",
+   "ref": "4.3",
+   "text": "Each EMMA annotation from the previous stage of a sequential derivation (indicated using emma:derived-from) MUST be true of the interpretations in the current stage of the derivation, unless the annotation is explicitly re-stated."
+  },
+  {
+   "id": "w3c-emma-1.0-2700",
+   "kind": "may",
+   "ref": "4.1.5",
+   "text": "The emma:endpoint-info element MAY be used to contain emma:endpoint elements describing the characteristics of the endpoints."
+  },
+  {
+   "id": "w3c-emma-1.0-2701",
+   "kind": "may",
+   "ref": "4.1.5",
+   "text": "The emma:endpoint element MAY be used to provide annotations regarding a communication endpoint."
+  },
+  {
+   "id": "w3c-emma-1.0-2710",
+   "kind": "may",
+   "ref": "4.2.14",
+   "text": "The emma:endpoint-role attribute MAY be used to indicate the role of an endpoint."
+  },
+  {
+   "id": "w3c-emma-1.0-2711",
+   "kind": "may",
+   "ref": "4.2.14",
+   "text": "The emma:endpoint-address attribute MAY be used to indicate the address of an endpoint."
+  },
+  {
+   "id": "w3c-emma-1.0-2713",
+   "kind": "may",
+   "ref": "4.2.14",
+   "text": "The emma:port-type attribute MAY be used to indicate the type of port of an endpoint."
+  },
+  {
+   "id": "w3c-emma-1.0-2714",
+   "kind": "may",
+   "ref": "4.2.14",
+   "text": "The emma:port-num attribute MAY be used to indicate the port number of an endpoint."
+  },
+  {
+   "id": "w3c-emma-1.0-2715",
+   "kind": "may",
+   "ref": "4.2.14",
+   "text": "The emma:message-id attribute MAY be used to indicate the message id of an endpoint."
+  },
+  {
+   "id": "w3c-emma-1.0-2716",
+   "kind": "may",
+   "ref": "4.2.14",
+   "text": "The emma:service-name attribute MAY be used to indicate name of service that the system provides."
+  },
+  {
+   "id": "w3c-emma-1.0-2717",
+   "kind": "may",
+   "ref": "4.2.14",
+   "text": "The emma:endpoint-pair-ref attribute MAY be used to indicate the pairing between sink and source endpoints."
+  },
+  {
+   "id": "w3c-emma-1.0-2718",
+   "kind": "may",
+   "ref": "4.2.14",
+   "text": "The emma:endpoint-info-ref attribute MAY be used to reference the endpoint-info element associated with an interpretation."
+  },
+  {
+   "id": "w3c-emma-1.0-300",
+   "kind": "must",
+   "ref": "3.3.1",
+   "text": "EMMA N-best interpretations MUST be contained within an emma:one-of element."
+  },
+  {
+   "id": "w3c-emma-1.0-301",
+   "kind": "must",
+   "ref": "3.3.1",
+   "text": "SUB CONSTRAINT: EMMA N-best interpretations contained within an emma:one-of element MUST be ordered best-first in document order where the measure is emma:confidence if present, otherwise the quality metric is platform specific."
+  },
+  {
+   "id": "w3c-emma-1.0-310",
+   "kind": "must",
+   "ref": "3.3.1",
+   "text": "SUB CONSTRAINT: If an emma:one-of element contains other emma:one-of elements, (embedded one-of), emma:one-of elements MUST contain a disjunction-type attribute indicating the reason for the multiple interpretations."
+  },
+  {
+   "id": "w3c-emma-1.0-400",
+   "kind": "may",
+   "ref": "3.3.2",
+   "text": "Interpretations of distinct inputs MAY be represented in a single EMMA document within the emma:group element."
+  },
+  {
+   "id": "w3c-emma-1.0-402",
+   "kind": "may",
+   "ref": "3.3.2.1",
+   "text": "Information describing the criteria used in determining the grouping of interpretations within an emma:group MAY be indicated within an emma:group-info child element within emma:group."
+  },
+  {
+   "id": "w3c-emma-1.0-500",
+   "kind": "may",
+   "ref": "3.3.3",
+   "text": "A temporally ordered sequence of distinct inputs MAY be contained within an emma:sequence element with document order corresponding to temporal order."
+  },
+  {
+   "id": "w3c-emma-1.0-600",
+   "kind": "may",
+   "ref": "3.4",
+   "text": "Lattices SHOULD be represented as an emma:lattice element containing a series of emma:arc and emma:node elements."
+  },
+  {
+   "id": "w3c-emma-1.0-602",
+   "kind": "must",
+   "ref": "3.4.1",
+   "text": "SUB CONSTRAINT: The value of the initial attribute on emma:lattice MUST be the value of the from attribute on at least one of the emma:arc elements that it contains."
+  },
+  {
+   "id": "w3c-emma-1.0-603",
+   "kind": "must",
+   "ref": "3.4.1",
+   "text": "SUB CONSTRAINT: The value of each space separated number within the final attribute on emma:lattice MUST be the value of the to attribute on at least one of the emma:arc elements that it contains."
+  },
+  {
+   "id": "w3c-emma-1.0-604",
+   "kind": "must",
+   "ref": "3.4.1",
+   "text": "SUB CONSTRAINT: The value of a to attribute on emma:arc MUST be the value of a from attribute on at least one of its emma:arc siblings or be one of the final values on the parent emma:lattice element."
+  },
+  {
+   "id": "w3c-emma-1.0-605",
+   "kind": "must",
+   "ref": "3.4.1",
+   "text": "SUB CONSTRAINT: The value of a from attribute on emma:arc MUST be the value of a to attribute on at least one of its emma:arc siblings or be the initial value on the parent emma:lattice element."
+  },
+  {
+   "id": "w3c-emma-1.0-606",
+   "kind": "must",
+   "ref": "3.4.1",
+   "text": "SUB CONSTRAINT: Any epsilon transitions in the lattice MUST be represented as emma:arc elements with no content other than emma:info."
+  },
+  {
+   "id": "w3c-emma-1.0-607",
+   "kind": "must",
+   "ref": "3.4.1",
+   "text": "SUB CONSTRAINT: The content of the emma:arc element MUST be either an application namespace XML element, well-formed character content, an application namespace element and an emma:info element, or well-formed character content and an emma:info element."
+  },
+  {
+   "id": "w3c-emma-1.0-608",
+   "kind": "must",
+   "ref": "3.4.1",
+   "text": "SUB CONSTRAINT: There MUST be no more than one emma:node specification for each numbered node in the lattice."
+  },
+  {
+   "id": "w3c-emma-1.0-609",
+   "kind": "must",
+   "ref": "3.4.1",
+   "text": "SUB CONSTRAINT: For each emma:node specification, the value of the node-number attribute MUST appear as the value of at some from or to attribute in one of the sibling emma:arc elements."
+  },
+  {
+   "id": "w3c-emma-1.0-700",
+   "kind": "must",
+   "ref": "3.5",
+   "text": "String literal semantic interpretations MUST be wrapped with the tag emma:literal."
+  },
+  {
+   "id": "w3c-emma-1.0-800",
+   "kind": "may",
+   "ref": "4.1.1",
+   "text": "The data model of the application semantic markup MAY appear within the emma:model element."
+  },
+  {
+   "id": "w3c-emma-1.0-810",
+   "kind": "must",
+   "ref": "4.2.16",
+   "text": "SUB CONSTRAINT: If emma:model appears as a child of emma:emma, there MUST be emma:one-of or emma:interpretation elements within emma:emma with emma:model-ref attributes that refer to the id of the emma:model child of emma:emma."
+  },
+  {
+   "id": "w3c-emma-1.0-811",
+   "kind": "must",
+   "ref": "4.2.16",
+   "text": "SUB CONSTRAINT: If emma:model-ref appears on an emma:interpretation or emma:one-of, there MUST be an emma:model child of the dominating emma:emma whose id value equals the value of the emma:model-ref attribute."
+  },
+  {
+   "id": "w3c-emma-1.0-901",
+   "kind": "may",
+   "ref": "4.1.2",
+   "text": "The interpretation of all but the first stage of processing MAY contain an emma:derived-from element with an attribute resource which refers to the interpretation from which that interpretation was derived."
+  },
+  {
+   "id": "w3c-emma-1.0-904",
+   "kind": "must",
+   "ref": "4.1.2",
+   "text": "SUB CONSTRAINT:If there is more than one emma:derived-from within an emma:interpretation or emma:one-of, then all of the emma:derived-from elements MUST have the attribute composite=\"true\"."
+  },
+  {
+   "id": "w3c-emma-1.0-910",
+   "kind": "must",
+   "ref": "4.1.2",
+   "text": "The interpretation resulting of the most recent processing step MUST appear as a child of emma:emma."
+  },
+  {
+   "id": "w3c-emma-1.0-911",
+   "kind": "may",
+   "ref": "4.1.2",
+   "text": "If interpretations resulting from earlier processing steps are included they SHOULD appear as children of a single emma:derivation element within emma:emma."
+  }
+ ],
+ "w3c-prov-constraints": [
+  {
+   "id": "w3c-prov-constraints-1",
+   "kind": "definition",
+   "ref": "#optional-identifiers",
+   "text": "Definition 1 (optional-identifiers)"
+  },
+  {
+   "id": "w3c-prov-constraints-10",
+   "kind": "inference",
+   "ref": "#wasEndedBy-inference",
+   "text": "Inference 10 (wasEndedBy-inference)"
+  },
+  {
+   "id": "w3c-prov-constraints-11",
+   "kind": "inference",
+   "ref": "#derivation-generation-use-inference",
+   "text": "Inference 11 (derivation-generation-use-inference)"
+  },
+  {
+   "id": "w3c-prov-constraints-12",
+   "kind": "inference",
+   "ref": "#revision-is-alternate-inference",
+   "text": "Inference 12 (revision-is-alternate-inference)"
+  },
+  {
+   "id": "w3c-prov-constraints-13",
+   "kind": "inference",
+   "ref": "#attribution-inference",
+   "text": "Inference 13 (attribution-inference)"
+  },
+  {
+   "id": "w3c-prov-constraints-14",
+   "kind": "inference",
+   "ref": "#delegation-inference",
+   "text": "Inference 14 (delegation-inference)"
+  },
+  {
+   "id": "w3c-prov-constraints-15",
+   "kind": "inference",
+   "ref": "#influence-inference",
+   "text": "Inference 15 (influence-inference)"
+  },
+  {
+   "id": "w3c-prov-constraints-16",
+   "kind": "inference",
+   "ref": "#alternate-reflexive",
+   "text": "Inference 16 (alternate-reflexive)"
+  },
+  {
+   "id": "w3c-prov-constraints-17",
+   "kind": "inference",
+   "ref": "#alternate-transitive",
+   "text": "Inference 17 (alternate-transitive)"
+  },
+  {
+   "id": "w3c-prov-constraints-18",
+   "kind": "inference",
+   "ref": "#alternate-symmetric",
+   "text": "Inference 18 (alternate-symmetric)"
+  },
+  {
+   "id": "w3c-prov-constraints-19",
+   "kind": "inference",
+   "ref": "#specialization-transitive",
+   "text": "Inference 19 (specialization-transitive)"
+  },
+  {
+   "id": "w3c-prov-constraints-2",
+   "kind": "definition",
+   "ref": "#optional-attributes",
+   "text": "Definition 2 (optional-attributes)"
+  },
+  {
+   "id": "w3c-prov-constraints-20",
+   "kind": "inference",
+   "ref": "#specialization-alternate-inference",
+   "text": "Inference 20 (specialization-alternate-inference)"
+  },
+  {
+   "id": "w3c-prov-constraints-21",
+   "kind": "inference",
+   "ref": "#specialization-attributes-inference",
+   "text": "Inference 21 (specialization-attributes-inference)"
+  },
+  {
+   "id": "w3c-prov-constraints-22",
+   "kind": "constraint",
+   "ref": "#key-object",
+   "text": "Constraint 22 (key-object)"
+  },
+  {
+   "id": "w3c-prov-constraints-23",
+   "kind": "constraint",
+   "ref": "#key-properties",
+   "text": "Constraint 23 (key-properties)"
+  },
+  {
+   "id": "w3c-prov-constraints-24",
+   "kind": "constraint",
+   "ref": "#unique-generation",
+   "text": "Constraint 24 (unique-generation)"
+  },
+  {
+   "id": "w3c-prov-constraints-25",
+   "kind": "constraint",
+   "ref": "#unique-invalidation",
+   "text": "Constraint 25 (unique-invalidation)"
+  },
+  {
+   "id": "w3c-prov-constraints-26",
+   "kind": "constraint",
+   "ref": "#unique-wasStartedBy",
+   "text": "Constraint 26 (unique-wasStartedBy)"
+  },
+  {
+   "id": "w3c-prov-constraints-27",
+   "kind": "constraint",
+   "ref": "#unique-wasEndedBy",
+   "text": "Constraint 27 (unique-wasEndedBy)"
+  },
+  {
+   "id": "w3c-prov-constraints-28",
+   "kind": "constraint",
+   "ref": "#unique-startTime",
+   "text": "Constraint 28 (unique-startTime)"
+  },
+  {
+   "id": "w3c-prov-constraints-29",
+   "kind": "constraint",
+   "ref": "#unique-endTime",
+   "text": "Constraint 29 (unique-endTime)"
+  },
+  {
+   "id": "w3c-prov-constraints-3",
+   "kind": "definition",
+   "ref": "#definition-short-forms",
+   "text": "Definition 3 (definition-short-forms)"
+  },
+  {
+   "id": "w3c-prov-constraints-30",
+   "kind": "constraint",
+   "ref": "#start-precedes-end",
+   "text": "Constraint 30 (start-precedes-end)"
+  },
+  {
+   "id": "w3c-prov-constraints-31",
+   "kind": "constraint",
+   "ref": "#start-start-ordering",
+   "text": "Constraint 31 (start-start-ordering)"
+  },
+  {
+   "id": "w3c-prov-constraints-32",
+   "kind": "constraint",
+   "ref": "#end-end-ordering",
+   "text": "Constraint 32 (end-end-ordering)"
+  },
+  {
+   "id": "w3c-prov-constraints-33",
+   "kind": "constraint",
+   "ref": "#usage-within-activity",
+   "text": "Constraint 33 (usage-within-activity)"
+  },
+  {
+   "id": "w3c-prov-constraints-34",
+   "kind": "constraint",
+   "ref": "#generation-within-activity",
+   "text": "Constraint 34 (generation-within-activity)"
+  },
+  {
+   "id": "w3c-prov-constraints-35",
+   "kind": "constraint",
+   "ref": "#wasInformedBy-ordering",
+   "text": "Constraint 35 (wasInformedBy-ordering)"
+  },
+  {
+   "id": "w3c-prov-constraints-36",
+   "kind": "constraint",
+   "ref": "#generation-precedes-invalidation",
+   "text": "Constraint 36 (generation-precedes-invalidation)"
+  },
+  {
+   "id": "w3c-prov-constraints-37",
+   "kind": "constraint",
+   "ref": "#generation-precedes-usage",
+   "text": "Constraint 37 (generation-precedes-usage)"
+  },
+  {
+   "id": "w3c-prov-constraints-38",
+   "kind": "constraint",
+   "ref": "#usage-precedes-invalidation",
+   "text": "Constraint 38 (usage-precedes-invalidation)"
+  },
+  {
+   "id": "w3c-prov-constraints-39",
+   "kind": "constraint",
+   "ref": "#generation-generation-ordering",
+   "text": "Constraint 39 (generation-generation-ordering)"
+  },
+  {
+   "id": "w3c-prov-constraints-4",
+   "kind": "definition",
+   "ref": "#optional-placeholders",
+   "text": "Definition 4 (optional-placeholders)"
+  },
+  {
+   "id": "w3c-prov-constraints-40",
+   "kind": "constraint",
+   "ref": "#invalidation-invalidation-ordering",
+   "text": "Constraint 40 (invalidation-invalidation-ordering)"
+  },
+  {
+   "id": "w3c-prov-constraints-41",
+   "kind": "constraint",
+   "ref": "#derivation-usage-generation-ordering",
+   "text": "Constraint 41 (derivation-usage-generation-ordering)"
+  },
+  {
+   "id": "w3c-prov-constraints-42",
+   "kind": "constraint",
+   "ref": "#derivation-generation-generation-ordering",
+   "text": "Constraint 42 (derivation-generation-generation-ordering)"
+  },
+  {
+   "id": "w3c-prov-constraints-43",
+   "kind": "constraint",
+   "ref": "#wasStartedBy-ordering",
+   "text": "Constraint 43 (wasStartedBy-ordering)"
+  },
+  {
+   "id": "w3c-prov-constraints-44",
+   "kind": "constraint",
+   "ref": "#wasEndedBy-ordering",
+   "text": "Constraint 44 (wasEndedBy-ordering)"
+  },
+  {
+   "id": "w3c-prov-constraints-45",
+   "kind": "constraint",
+   "ref": "#specialization-generation-ordering",
+   "text": "Constraint 45 (specialization-generation-ordering)"
+  },
+  {
+   "id": "w3c-prov-constraints-46",
+   "kind": "constraint",
+   "ref": "#specialization-invalidation-ordering",
+   "text": "Constraint 46 (specialization-invalidation-ordering)"
+  },
+  {
+   "id": "w3c-prov-constraints-47",
+   "kind": "constraint",
+   "ref": "#wasAssociatedWith-ordering",
+   "text": "Constraint 47 (wasAssociatedWith-ordering)"
+  },
+  {
+   "id": "w3c-prov-constraints-48",
+   "kind": "constraint",
+   "ref": "#wasAttributedTo-ordering",
+   "text": "Constraint 48 (wasAttributedTo-ordering)"
+  },
+  {
+   "id": "w3c-prov-constraints-49",
+   "kind": "constraint",
+   "ref": "#actedOnBehalfOf-ordering",
+   "text": "Constraint 49 (actedOnBehalfOf-ordering)"
+  },
+  {
+   "id": "w3c-prov-constraints-5",
+   "kind": "inference",
+   "ref": "#communication-generation-use-inference",
+   "text": "Inference 5 (communication-generation-use-inference)"
+  },
+  {
+   "id": "w3c-prov-constraints-50",
+   "kind": "constraint",
+   "ref": "#typing",
+   "text": "Constraint 50 (typing)"
+  },
+  {
+   "id": "w3c-prov-constraints-51",
+   "kind": "constraint",
+   "ref": "#impossible-unspecified-derivation-generation-use",
+   "text": "Constraint 51 (impossible-unspecified-derivation-generation-use)"
+  },
+  {
+   "id": "w3c-prov-constraints-52",
+   "kind": "constraint",
+   "ref": "#impossible-specialization-reflexive",
+   "text": "Constraint 52 (impossible-specialization-reflexive)"
+  },
+  {
+   "id": "w3c-prov-constraints-53",
+   "kind": "constraint",
+   "ref": "#impossible-property-overlap",
+   "text": "Constraint 53 (impossible-property-overlap)"
+  },
+  {
+   "id": "w3c-prov-constraints-54",
+   "kind": "constraint",
+   "ref": "#impossible-object-property-overlap",
+   "text": "Constraint 54 (impossible-object-property-overlap)"
+  },
+  {
+   "id": "w3c-prov-constraints-55",
+   "kind": "constraint",
+   "ref": "#entity-activity-disjoint",
+   "text": "Constraint 55 (entity-activity-disjoint)"
+  },
+  {
+   "id": "w3c-prov-constraints-56",
+   "kind": "constraint",
+   "ref": "#membership-empty-collection",
+   "text": "Constraint 56 (membership-empty-collection)"
+  },
+  {
+   "id": "w3c-prov-constraints-6",
+   "kind": "inference",
+   "ref": "#generation-use-communication-inference",
+   "text": "Inference 6 (generation-use-communication-inference)"
+  },
+  {
+   "id": "w3c-prov-constraints-7",
+   "kind": "inference",
+   "ref": "#entity-generation-invalidation-inference",
+   "text": "Inference 7 (entity-generation-invalidation-inference)"
+  },
+  {
+   "id": "w3c-prov-constraints-8",
+   "kind": "inference",
+   "ref": "#activity-start-end-inference",
+   "text": "Inference 8 (activity-start-end-inference)"
+  },
+  {
+   "id": "w3c-prov-constraints-9",
+   "kind": "inference",
+   "ref": "#wasStartedBy-inference",
+   "text": "Inference 9 (wasStartedBy-inference)"
+  }
+ ],
  "w3c-scxml-1.0": [
   {
    "id": "w3c-scxml-1.0-144",

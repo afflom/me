@@ -141,8 +141,6 @@ jobs:
               node bootstrap/frame-sync.mjs --check &&
               python3 -I tools/realize/gate.py --check &&
               python3 -I tools/standards/gate.py --check --base "$main" &&
-              { [[ ! -f tools/parts/gate.py ]] || python3 -I tools/parts/gate.py; } &&
-              { [[ ! -f tools/product/gate.py ]] || python3 -I tools/product/gate.py; } &&
               python3 -I tools/guests/gen.py check &&
               sh tools/generators/run.sh --check &&
               python3 -I tools/handwritten/gate.py --check --base "$main" &&
@@ -207,7 +205,12 @@ jobs:
               runners=(test/*/run.mjs)
               suites=(test/**/*.test.mjs)
               for runner in "${runners[@]}"; do node "$runner"; done
-              node --test "${suites[@]}"
+              # The gates of the product record's time behaviour measures, one at a time and apart from the rest (as the page check runs them).
+              mapfile -t timed < <(node --input-type=module -e 'import { load } from "./tools/specs/record.mjs"; console.log([...new Set(load("app/specs/product/spec.json").quality.filter((q) => q.subcharacteristic === "time behaviour").flatMap((q) => q.measures.map((m) => m.gate)))].join("\n"))')
+              rest=()
+              for suite in "${suites[@]}"; do [[ " ${timed[*]} " == *" $suite "* ]] || rest+=("$suite"); done
+              node --test --test-concurrency=1 "${timed[@]}"
+              node --test "${rest[@]}"
             )
           }
           ready=()
@@ -232,10 +235,18 @@ jobs:
             python3 -m venv "$RUNNER_TEMP/draw"
             "$RUNNER_TEMP/draw/bin/pip" install --quiet --no-deps --only-binary :all: --require-hashes -r bootstrap/draw-requirements.txt
           fi
-          # The browser acceptances take about a quarter of an hour, so the train runs
-          # them once, on all the pull requests that board together, and one by one only
-          # when that tree fails, to find which of them it refuses.
-          board() { # board batch|each: merge each of the queue that passes the fast gates (each: and the browser acceptances) onto HEAD
+          # The fast gates and the browser acceptances take about forty minutes, so the
+          # train runs them once, on the tree of all the pull requests that merge onto
+          # main together, and one by one only when that tree fails, to find which of
+          # them it refuses. What is tested is still exactly the tree that merges.
+          gates() { # gates LOG: the fast gates and the browser acceptances on HEAD; the pull requests' own code runs without the token
+            (unset GH_TOKEN; fast_gates && bash -euo pipefail -c "$(declare -f acceptances); acceptances") >"$1" 2>&1
+          }
+          said() { # said LOG: what refused, in the log's own words, on one line
+            tail -n 40 "$1" >&2
+            grep -E '^ *not ok |^gate failed|^[A-Z][A-Z0-9]-[0-9]+: ' "$1" | sed 's/^ *//' | tr -d '@`' | head -n 8 | paste -sd ';' | cut -c1-900
+          }
+          board() { # board together|each: merge each of the queue onto HEAD (each: where it passes the gates there)
             local entry number head before
             boarded=()
             for entry in "${queue[@]}"; do
@@ -248,25 +259,28 @@ jobs:
                 printf '%s %s %s\n' "$number" "$head" "it conflicts with main ($main) and the pull requests the train takes before it" >>"$RUNNER_TEMP/refused"
                 continue
               fi
-              # The pull request's own code runs without the token.
-              if (unset GH_TOKEN; fast_gates && { [[ $1 == batch ]] || bash -euo pipefail -c "$(declare -f acceptances); acceptances"; }) >"$RUNNER_TEMP/gates-$number.log" 2>&1; then
+              if [[ $1 == together ]] || gates "$RUNNER_TEMP/gates-$number.log"; then
                 boarded+=("$entry")
-                echo "#$number $head: passes on main and the train before it ($1)"
+                echo "#$number $head: boards on main and the train before it ($1)"
               else
-                tail -n 40 "$RUNNER_TEMP/gates-$number.log"
-                printf '%s %s %s\n' "$number" "$head" "the fast gates or the browser acceptances refuse it merged with main ($main) and the pull requests the train takes before it; see run $GITHUB_RUN_ID" >>"$RUNNER_TEMP/refused"
+                printf '%s %s %s\n' "$number" "$head" "the fast gates or the browser acceptances refuse it merged with main ($main) and the pull requests the train takes before it; see run $GITHUB_RUN_ID. They say: $(said "$RUNNER_TEMP/gates-$number.log")" >>"$RUNNER_TEMP/refused"
                 git reset -q --hard "$before"
               fi
             done
           }
           queue=("${ready[@]}")
-          board batch
-          if [[ ${#boarded[@]} -gt 0 ]] && ! (unset GH_TOKEN; bash -euo pipefail -c "$(declare -f acceptances); acceptances") >"$RUNNER_TEMP/gates-train.log" 2>&1; then
-            tail -n 40 "$RUNNER_TEMP/gates-train.log"
-            echo "the browser acceptances refuse ${boarded[*]} together: taking them one by one"
+          board together
+          if [[ ${#boarded[@]} -gt 0 ]] && ! gates "$RUNNER_TEMP/gates-train.log"; then
+            why=$(said "$RUNNER_TEMP/gates-train.log")
+            echo "the gates refuse ${boarded[*]} together ($why)"
             git reset -q --hard "$main"
-            queue=("${boarded[@]}")
-            board each
+            if [[ ${#boarded[@]} -eq 1 ]]; then
+              printf '%s %s %s\n' "${boarded[0]%%:*}" "${boarded[0]#*:}" "the fast gates or the browser acceptances refuse it merged with main ($main); see run $GITHUB_RUN_ID. They say: $why" >>"$RUNNER_TEMP/refused"
+              boarded=()
+            else
+              queue=("${boarded[@]}")
+              board each
+            fi
           fi
           accepted=("${boarded[@]}")
           echo "accepted=${accepted[*]:-}" >>"$GITHUB_OUTPUT"

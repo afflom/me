@@ -1,0 +1,274 @@
+{
+ "name": "prov-invalid",
+ "comment": "The FAIL cases of app/specs/prov/spec.json ('tests' there pins each one), byte for byte as W3C serves them, with the answers that file gives: the acceptance vectors of the guest 'prov-invalid', which is the same module as 'prov'. One guest build carries at most about 110 vectors, so the PASS cases are the vectors of 'prov' and the FAIL cases are this guest's.",
+ "examples": [
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nwasGeneratedBy(ex:gen1;ex:e1,-,-)\nwasGeneratedBy(ex:gen2;ex:e2,-,-)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1)\nwasDerivedFrom(ex:der2;ex:e1, ex:e2)\nendDocument\n",
+   "invalid 42"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nspecializationOf(ex:e2,ex:e1)\nwasGeneratedBy(ex:gen2;ex:e2,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,-,-)\nwasDerivedFrom(ex:der1;ex:e1, ex:e2)\nendDocument\n",
+   "invalid 42 45"
+  ],
+  [
+   "check\ndocument\n  default <http://example.com/>\n  prefix ex <http://example.com/vocab#>\n\n  activity(def:illustrationActivity,2012-04-03T00:00:00Z,2012-04-03T00:00:25Z)\n  entity(def:bar_chart,[prov:type='ex:Chart'])\n  wasDerivedFrom(def:bar_chart, def:aggregatedByRegions, -, def:illustration, -)\n  wasGeneratedBy(def:illustration;-,def:illustrationActivity,2012-04-03T00:00:11Z,[prov:type='prov:InstantaneousEvent'])\nendDocument\n",
+   "malformed"
+  ],
+  [
+   "check\ndocument\n  default <http://example.com/>\n\n  entity(proteinSample)\n  entity(digestedProteinSample1)\n  wasDerivedFrom(digestedProteinSample1, proteinSample, -, u1, -)\n  used(u1; -, Trypsin, -,[prov:role='treatmentEnzyme'])\nendDocument\n",
+   "malformed"
+  ],
+  [
+   "check\ndocument\n\nprefix ex <http://example.org/>\n\nentity(ex:e1)\nentity(ex:e2,[prov:type='prov:EmptyCollection'])\nhadMember(ex:e2,ex:e1)\n\nendDocument\n",
+   "invalid 56"
+  ],
+  [
+   "check\ndocument\n  prefix ex <http://example.org/>\n\n  entity(ex:e1, [prov:type='ex:test1'])\n  activity(ex:e1, -, -, [prov:type='ex:test2'])\nendDocument\n",
+   "invalid 55"
+  ],
+  [
+   "check\ndocument\n  prefix ex <http://example.org/>\n\n  entity(ex:e1, [prov:type='ex:test1'])\n  entity(ex:e2, [prov:type='ex:test2'])\n  wasGeneratedBy(ex:gen1; ex:e1, ex:e2, -)\nendDocument\n",
+   "invalid 55"
+  ],
+  [
+   "check\ndocument\n  prefix ex <http://example.org/>\n\n  entity(ex:e1, [prov:type='ex:test1'])\n  entity(ex:e2, [prov:type='ex:test2'])\n  wasGeneratedBy(ex:e1; ex:e3, ex:a4, -)\nendDocument\n",
+   "invalid 54"
+  ],
+  [
+   "check\ndocument\n  prefix ex <http://example.org/>\n\n  wasGeneratedBy(ex:gen; ex:e3, ex:a4, -)\n  used(ex:gen; ex:a4, ex:e5, -)\nendDocument\n",
+   "invalid 23 53"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,2012-11-16T16:05:00,-)\nactivity(ex:a1,-,2012-11-16T17:05:00)\nwasEndedBy(ex:end1;ex:a1,-,-,2111-11-11T11:11:11)\nendDocument\n",
+   "invalid 29"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,2012-11-16T16:05:00,-)\nactivity(ex:a1,-,2012-11-16T17:05:00)\nwasStartedBy(ex:start1;ex:a1,-,-,2111-11-11T11:11:11)\nendDocument\n",
+   "invalid 28"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1,[prov:type='prov:Plan'])\nactivity(ex:a1,-,-)\nagent(ex:ag1)\nwasAssociatedWith(ex:assoc1;ex:a1,ex:ag1,ex:e1)\nwasAssociatedWith(ex:assoc1;ex:a1,ex:ag1-other,ex:e1)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1,[prov:type='prov:Plan'])\nactivity(ex:a1,-,-)\nagent(ex:ag1)\nwasAssociatedWith(ex:assoc1;ex:a1,ex:ag1,ex:e1)\nwasAssociatedWith(ex:assoc1;ex:a1-other,ex:ag1,ex:e1)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1,[prov:type='prov:Plan'])\nactivity(ex:a1,-,-)\nagent(ex:ag1)\nwasAssociatedWith(ex:assoc1;ex:a1,ex:ag1,ex:e1)\nwasAssociatedWith(ex:assoc1;ex:a1,ex:ag1,ex:e1-other)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1,[prov:type='prov:Plan'])\nactivity(ex:a1,-,-)\nagent(ex:ag1)\nwasAssociatedWith(ex:assoc1;ex:a1,ex:ag1,ex:e1)\nwasAssociatedWith(ex:assoc1;ex:a1,ex:ag1,-)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1,[prov:type='prov:Plan'])\nactivity(ex:a1,-,-)\nagent(ex:ag1)\nwasAssociatedWith(ex:assoc1;ex:a1,ex:ag1,ex:e1)\nwasAssociatedWith(ex:assoc1;ex:a1,-,-)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1,[prov:type='prov:Plan'])\nactivity(ex:a1,-,-)\nagent(ex:ag1)\nwasAssociatedWith(ex:assoc1;-,ex:ag1,ex:e1)\nendDocument\n",
+   "malformed"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nagent(ex:ag2)\nwasAttributedTo(ex:del1;ex:e1, -)\nendDocument\n",
+   "malformed"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nagent(ex:ag2)\nwasAttributedTo(ex:del1;-, ex:e1)\nendDocument\n",
+   "malformed"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\n\nentity(ex:e2)\n\nbundle ex:bundle1\n  activity(ex:e1,-,-)\n  entity(ex:e1)\nendBundle\n\nbundle ex:bundle2\n  entity(ex:e1,[prov:type='prov:EmptyCollection'])\n  hadMember(ex:e1,ex:e2)\nendBundle\n\nendDocument\n",
+   "invalid 55 56"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasInformedBy(ex:inf1;ex:a1,-)\nendDocument\n",
+   "malformed"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasInformedBy(ex:inf1;-,ex:a1)\nendDocument\n",
+   "malformed"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a2,-,-)\nagent(ex:ag2)\nagent(ex:ag1)\nactedOnBehalfOf(ex:del1;ex:ag2,ex:ag1,ex:a2)\nactedOnBehalfOf(ex:del1;ex:ag2,ex:ag1-other,ex:a2)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a2,-,-)\nagent(ex:ag2)\nagent(ex:ag1)\nactedOnBehalfOf(ex:del1;ex:ag2,ex:ag1,ex:a2)\nactedOnBehalfOf(ex:del1;ex:ag2-other,ex:ag1,ex:a2)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a2,-,-)\nagent(ex:ag2)\nagent(ex:ag1)\nactedOnBehalfOf(ex:del1;ex:ag2,ex:ag1,ex:a2)\nactedOnBehalfOf(ex:del1;ex:ag2,ex:ag1,ex:a2-other)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:a2,-,-)\nagent(ex:ag2)\nagent(ex:ag1)\nactedOnBehalfOf(ex:del1;-,ex:ag1,ex:a2)\nendDocument\n",
+   "malformed"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1, ex:a, ex:gen, ex:use)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1, ex:a, -, -)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1, ex:a, ex:gen, -)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1, ex:a, -, ex:use)\nwasDerivedFrom(ex:der1;ex:e2, ex:e1)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasEndedBy(ex:end1;ex:a1,ex:e1,ex:a2,-)\nwasEndedBy(ex:end1;ex:a1-other,ex:e1,ex:a2,-)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasEndedBy(ex:end1;ex:a1,ex:e1,ex:a2,-)\nwasEndedBy(ex:end1;ex:a1,ex:e1-other,ex:a2,-)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasEndedBy(ex:end1;ex:a1,ex:e1,ex:a2,-)\nwasEndedBy(ex:end1;ex:a1,ex:e1,ex:a2-other,-)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasEndedBy(ex:end1;ex:a1,ex:e1,ex:a2,-)\nwasEndedBy(ex:end1-other;ex:a1,ex:e1,ex:a2,-)\nendDocument\n",
+   "invalid 27"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasEndedBy(ex:end1;ex:a1,ex:e1,ex:a2,2012-11-16T16:05:00)\nwasEndedBy(ex:end1;ex:a1,ex:e1,ex:a2,2011-11-16T16:05:00)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,-)\nwasGeneratedBy(ex:gen1-other;ex:e1,ex:a1,-)\nendDocument\n",
+   "invalid 24"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,-)\nwasGeneratedBy(ex:gen1;ex:e1-other,ex:a1,-)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1-other,-)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,2012-11-16T16:05:00)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasGeneratedBy(ex:e1,ex:a1,2012-11-16T16:05:00)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasGeneratedBy(ex:e1,ex:a1,2012-11-16T16:05:00)\nwasGeneratedBy(ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,-)\nwasGeneratedBy(ex:gen1;ex:e1,ex:a1,2012-11-16T16:05:00)\nwasGeneratedBy(ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\n  prefix ex <http://example.org/>\n  \n  wasInfluencedBy(ex:infl1; ex:x1, -)\nendDocument\n",
+   "malformed"
+  ],
+  [
+   "check\ndocument\n  prefix ex <http://example.org/>\n\n  wasInfluencedBy(ex:infl1;-, ex:x1)\nendDocument\n",
+   "malformed"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,-)\nwasInvalidatedBy(ex:gen1-other;ex:e1,ex:a1,-)\nendDocument\n",
+   "invalid 25"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,-)\nwasInvalidatedBy(ex:gen1;ex:e1-other,ex:a1,-)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1-other,-)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,2012-11-16T16:05:00)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasInvalidatedBy(ex:e1,ex:a1,2012-11-16T16:05:00)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasInvalidatedBy(ex:e1,ex:a1,2012-11-16T16:05:00)\nwasInvalidatedBy(ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,-)\nwasInvalidatedBy(ex:gen1;ex:e1,ex:a1,2012-11-16T16:05:00)\nwasInvalidatedBy(ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\n\nprefix ex <http://example.org/>\n\nentity(ex:e1)\nentity(ex:e2)\n\nhadMember(ex:e2, -)\n\nendDocument\n",
+   "malformed"
+  ],
+  [
+   "check\ndocument\n\nprefix ex <http://example.org/>\n\nentity(ex:e1)\nentity(ex:e2)\n\nspecializationOf(ex:e2, -)\n\nendDocument\n",
+   "malformed"
+  ],
+  [
+   "check\ndocument\n\nprefix ex <http://example.org/>\n\nentity(ex:e1)\nentity(ex:e2)\n\nspecializationOf(-, ex:e1)\n\nendDocument\n",
+   "malformed"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nspecializationOf(ex:e1,ex:e1)\nendDocument\n",
+   "invalid 52"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nentity(ex:e2)\nspecializationOf(ex:e2,ex:e1)\nspecializationOf(ex:e1,ex:e2)\nendDocument\n",
+   "invalid 52"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,ex:e1,ex:a2,-)\nwasStartedBy(ex:start1;ex:a1-other,ex:e1,ex:a2,-)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,ex:e1,ex:a2,-)\nwasStartedBy(ex:start1;ex:a1,ex:e1-other,ex:a2,-)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,ex:e1,ex:a2,-)\nwasStartedBy(ex:start1;ex:a1,ex:e1,ex:a2-other,-)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,ex:e1,ex:a2,-)\nwasStartedBy(ex:start1-other;ex:a1,ex:e1,ex:a2,-)\nendDocument\n",
+   "invalid 26"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,ex:e1,ex:a2,2012-11-16T16:05:00)\nwasStartedBy(ex:start1;ex:a1,ex:e1,ex:a2,2011-11-16T16:05:00)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,-,ex:a2,2012-11-16T16:05:00)\nwasStartedBy(ex:start1;ex:a1,-,-,2011-11-16T16:05:00)\nwasStartedBy(ex:a1,ex:e1,ex:a2,-)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,-,ex:a2,-)\nwasStartedBy(ex:start1;ex:a1,-,-,2011-11-16T16:05:00)\nwasStartedBy(ex:a1,ex:e1,ex:a2,2012-11-16T16:05:00)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nentity(ex:e1)\nactivity(ex:a1,-,-)\nactivity(ex:a2,-,-)\nwasStartedBy(ex:start1;ex:a1,-,ex:a2,2013-11-16T16:05:00)\nwasStartedBy(ex:start1;ex:a1,-,-,2011-11-16T16:05:00)\nwasStartedBy(ex:a1,ex:e1,ex:a2,2012-11-16T16:05:00)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:e1,-,-)\nentity(ex:a1)\nused(ex:use1;ex:e1,ex:a1,-)\nused(ex:use1;ex:e1-other,ex:a1,-)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:e1,-,-)\nentity(ex:a1)\nused(ex:use1;ex:e1,ex:a1,-)\nused(ex:use1;ex:e1,ex:a1-other,-)\nendDocument\n",
+   "invalid 23"
+  ],
+  [
+   "check\ndocument\nprefix ex <http://example.org/>\nactivity(ex:e1,-,-)\nentity(ex:a1)\nused(ex:use1;ex:e1,ex:a1,2012-11-16T16:05:00)\nused(ex:use1;ex:e1,ex:a1,2011-11-16T16:05:00)\nendDocument\n",
+   "invalid 23"
+  ]
+ ]
+}
