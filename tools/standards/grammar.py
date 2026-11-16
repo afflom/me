@@ -1,6 +1,6 @@
 """Writes the grammars the Prism reads by (app/specs/grammar/spec.json).
 
-    python3 -I tools/standards/grammar.py [--check] [--cache DIR]
+    python3 -I tools/standards/grammar.py [--check] [--fetch]
 
 Each grammar is its specifications' own ABNF, taken from their text at its
 pinned SHA-256 (tools/standards/abnf.py), and written as data to its out
@@ -25,26 +25,22 @@ SPEC = json.loads((ROOT / "app/specs/grammar/spec.json").read_text(encoding="utf
 RESERVED = json.loads((ROOT / "app/specs/oracle/spec.json").read_text(encoding="utf-8"))["reserved"]
 ADDRESS = re.compile(r"[A-Za-z0-9._%+!$&*=^`{|}~'-]+@([A-Za-z0-9.-]+)")
 args = sys.argv[1:]
-cache = pathlib.Path(args[args.index("--cache") + 1]) if "--cache" in args else None
+TEXTS = ROOT / "app/specs/standards/texts"
 
 
 def refuse(why):
     sys.exit(f"grammar: {why}")
 
 
-def fetch(text):
-    path = cache / f"{text['key']}.txt" if cache else None
-    if path and path.exists():
-        data = path.read_bytes()
-    else:
-        with urllib.request.urlopen(text["url"], timeout=60) as response:
-            data = response.read()
-        if path:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(data)
-    digest = hashlib.sha256(data).hexdigest()
-    if digest != text["sha256"]:
-        refuse(f"{text['key']} at {text['url']} is {digest}, not the pinned {text['sha256']}")
+def fetch(text, headers={}):
+    url, sha256 = text["url"], text["sha256"]
+    path = TEXTS / sha256
+    if not path.exists() and "--fetch" not in args:
+        refuse(f"{url} is not kept at {path.relative_to(ROOT)}: run this with --fetch")
+    data = path.read_bytes() if path.exists() else urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=120).read()
+    if hashlib.sha256(data).hexdigest() != sha256:
+        refuse(f"{url} is {hashlib.sha256(data).hexdigest()}, not the pinned {sha256}")
+    path.exists() or path.write_bytes(data)
     return data.decode("utf-8")
 
 

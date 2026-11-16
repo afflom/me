@@ -1,6 +1,6 @@
 """ST-01: every part of the Prism fully implements the standards it answers to.
 
-    python3 -I tools/standards/gate.py [--check | --write] [--base REF] [--seed KEY]
+    python3 -I tools/standards/gate.py [--check | --write [--fetch]] [--base REF] [--seed KEY]
 
 The register, app/specs/standards/spec.json, names each standard a part of the
 Prism answers to, the part paths it governs, and where its own normative text
@@ -13,7 +13,7 @@ The requirements are kept in test/standards/requirements.json.
 
 Every pinned text and inventory source is kept in the repository at
 app/specs/standards/texts/<sha256>, so the gate (and the LexLean extractors that replace
-these Python ones) reads no network: --write fetches a pin that is not kept yet
+these Python ones) reads no network: --write --fetch fetches a pin that is not kept yet
 and keeps it, and --check refuses one that is missing. The bytes are public
 upstream text fixed by their hash; PV-01 skips exactly those files.
 
@@ -81,10 +81,11 @@ TEXTS = ROOT / "app/specs/standards/texts"
 
 
 def fetch(pin, write, refusals, what):
+    write = "--fetch" in sys.argv
     path = TEXTS / pin["sha256"]
     try:
         if not (path.exists() or write):
-            raise OSError(f"it is not kept at {path.relative_to(ROOT)}: run python3 -I tools/standards/gate.py --write")
+            raise OSError(f"it is not kept at {path.relative_to(ROOT)}: run python3 -I tools/standards/gate.py --write --fetch")
         data = path.read_bytes() if path.exists() else urllib.request.urlopen(pin["url"], timeout=60).read()
     except OSError as error:
         refusals.append(f"{what}: {pin['url']} could not be read: {error}")
@@ -131,7 +132,7 @@ def generated(standard, inv, refusals):
     if not path.exists():
         refusals.append(f"{key}: {inv['generated']} is missing: run tools/generators/run.sh")
         return []
-    got = load(path)
+    got = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()] if path.suffix == ".jsonl" else load(path)
     for r in got:
         if not r["id"].startswith(f"{key}-"):
             refusals.append(f"{key}: {inv['generated']} has requirement {r['id']}, not one of {key}")
