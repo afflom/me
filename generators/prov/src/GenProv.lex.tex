@@ -8,7 +8,9 @@ definition{
   name: prAt,
   parameters: [s : Bytes, i : Nat],
   result: Nat,
-  body: (match (prim index s i : (Option UInt8)) | Option.none => 0 | Option.some octet => (prim to_nat octet : Nat)),
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => 0
+    | Option.some octet => (prim to_nat octet : Nat)),
   axioms: [Quot.sound, propext]
 }
 
@@ -49,7 +51,9 @@ definition{
   name: prSpan,
   parameters: [s : Bytes, a : Nat, e : Nat],
   result: Bytes,
-  body: (match (prim slice s a (prim subtract e a : Nat) : (Option Bytes)) | Option.none => 0x | Option.some part => part)
+  body: (match (prim slice s a (prim subtract e a : Nat) : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
 }
 
 definition{
@@ -128,6 +132,5 @@ definition{
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
-
 \end{semanticmodule}
 \end{lexlean}
