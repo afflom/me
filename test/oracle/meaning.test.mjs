@@ -122,7 +122,7 @@ test("Ask finds a kept caption from its pair where their words alone miss each o
         await say(p.expect.b);
         // Found by what it means: the answer names it, and does not say nothing matched
         // (the overview of everything held would list it either way).
-        const said = await page.locator("#pr-out").innerText();
+        const said = await page.locator(".pr-chat .pr-turn:last-child .pr-said").innerText().catch(() => "");
         found = said.includes(p.expect.a) && !said.includes(UNMATCHED);
         if (!found) await page.waitForTimeout(2000);
       }
