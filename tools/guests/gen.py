@@ -153,8 +153,7 @@ def pin_line(g):
     sys.exit(f"{g['pin']} pins no {base}")
 
 
-def lock():
-    return {gid: FILES[p] for gid, p in LOCKS.items() if p in FILES}
+HELD = {gid: FILES[p] for gid, p in LOCKS.items() if p in FILES}
 
 
 def problems(gid, held):
@@ -184,11 +183,9 @@ def main(argv):
         LOCKS[argv[1]].write_text(json.dumps({"source": source(argv[1]), "wasm": digest}, indent=2) + "\n")
         print(f"{argv[1]}: {digest}")
     elif argv == ["stale"]:
-        held = lock()
-        print(" ".join(gid for gid in GUESTS if problems(gid, held)))
+        print(" ".join(gid for gid in GUESTS if problems(gid, HELD)))
     elif argv == ["check"]:
-        held = lock()
-        bad = {gid: p for gid in GUESTS if (p := problems(gid, held))}
+        bad = {gid: p for gid in GUESTS if (p := problems(gid, HELD))}
         for gid, p in bad.items():
             print(f"{gid}: {'; '.join(p)}")
         if bad:
