@@ -1,0 +1,280 @@
+{
+ "key": "w3c-emma-1.0",
+ "title": "W3C EMMA: Extensible MultiModal Annotation markup language, Recommendation 10 February 2009",
+ "issuer": "W3C",
+ "text": {
+  "url": "https://www.w3.org/TR/2009/REC-emma-20090210/",
+  "sha256": "1d53ab2af1fb23d2be28e5916715ee6208819b8b623e28749584abda7aa51129"
+ },
+ "inventories": [
+  {
+   "generated": "test/standards/generated/w3c-emma-1.0.json",
+   "vendored": "app/specs/standards/texts/ce9766f3c28a4eed8cf036426824f8ce8d06bf31fac0ad487814ad17368ed0ce",
+   "source": {
+    "url": "https://www.w3.org/2002/mmi/2007/emma-irp/",
+    "sha256": "ce9766f3c28a4eed8cf036426824f8ce8d06bf31fac0ad487814ad17368ed0ce"
+   }
+  }
+ ],
+ "governs": [
+  "app/src/PrismEmma.lex.tex",
+  "site/emma/guest.mjs"
+ ],
+ "realizedBy": [
+  "ST-01"
+ ],
+ "enforcedBy": {
+  "w3c-emma-1.0-100": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that the root element is emma:emma in the EMMA namespace: Recommendation example 0 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-200": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that no application-namespace element sits directly under emma:emma, emma:one-of, emma:group, emma:sequence or emma:derivation: Recommendation example 0 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-201": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that an empty emma:interpretation carries emma:uninterpreted or emma:no-input as true: Recommendation example 36 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-300": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 0 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 300 among the features read"
+  },
+  "w3c-emma-1.0-301": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that the interpretations of an emma:one-of that all carry emma:confidence are in falling order: Recommendation example 0 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-310": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that an emma:one-of holding an emma:one-of carries disjunction-type: Recommendation example 5 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-400": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 7 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 400 among the features read"
+  },
+  "w3c-emma-1.0-402": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 8 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 402 among the features read"
+  },
+  "w3c-emma-1.0-500": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 10 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 500 among the features read"
+  },
+  "w3c-emma-1.0-600": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 13 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 600 among the features read"
+  },
+  "w3c-emma-1.0-602": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that initial is the from of an arc: Recommendation example 13 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-603": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that each final is the to of an arc: Recommendation example 13 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it; example 17, which W3C publishes with the part elided, is answered as breaking 603"
+  },
+  "w3c-emma-1.0-604": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that each arc's to is the from of an arc or a final: Recommendation example 13 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it; example 17, which W3C publishes with the part elided, is answered as breaking 604"
+  },
+  "w3c-emma-1.0-605": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that each arc's from is the to of an arc or the initial: Recommendation example 13 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-607": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that an arc holds one application-namespace element or character content, and emma:info: Recommendation example 13 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-608": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that no two emma:node name the same node-number: Recommendation example 18 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-609": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that each emma:node's node-number is the from or to of an arc: Recommendation example 15 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it; example 18, which W3C publishes with the part elided, is answered as breaking 609"
+  },
+  "w3c-emma-1.0-700": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 20 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 700 among the features read"
+  },
+  "w3c-emma-1.0-800": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 22 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 800 among the features read"
+  },
+  "w3c-emma-1.0-810": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that each emma:model under emma:emma is named by an emma:model-ref: Recommendation example 22 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-811": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that each emma:model-ref names an emma:model under emma:emma: Recommendation example 22 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-901": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 26 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 901 among the features read"
+  },
+  "w3c-emma-1.0-904": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that where an interpretation has several emma:derived-from, each is composite: Recommendation example 75 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-910": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that emma:emma has an interpretation, one-of, group or sequence as a child: Recommendation example 0 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it; example 1, which W3C publishes with the part elided, is answered as breaking 910"
+  },
+  "w3c-emma-1.0-911": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 26 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 911 among the features read"
+  },
+  "w3c-emma-1.0-1000": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 30 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 1000 among the features read"
+  },
+  "w3c-emma-1.0-1001": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that each emma:grammar-ref names an emma:grammar under emma:emma: Recommendation example 30 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-1002": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that each emma:grammar under emma:emma is named by an emma:grammar-ref: Recommendation example 30 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-1100": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 31 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 1100 among the features read"
+  },
+  "w3c-emma-1.0-1201": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 0 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 1201 among the features read"
+  },
+  "w3c-emma-1.0-1300": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 35 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 1300 among the features read"
+  },
+  "w3c-emma-1.0-1400": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 36 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 1400 among the features read"
+  },
+  "w3c-emma-1.0-1500": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 37 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 1500 among the features read"
+  },
+  "w3c-emma-1.0-1600": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 39 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 1600 among the features read"
+  },
+  "w3c-emma-1.0-1700": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 45 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 1700 among the features read"
+  },
+  "w3c-emma-1.0-1701": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 46 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 1701 among the features read"
+  },
+  "w3c-emma-1.0-1800": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 32 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 1800 among the features read"
+  },
+  "w3c-emma-1.0-1900": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 0 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 1900 among the features read"
+  },
+  "w3c-emma-1.0-2000": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 50 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2000 among the features read"
+  },
+  "w3c-emma-1.0-2100": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 0 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2100 among the features read"
+  },
+  "w3c-emma-1.0-2101": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 0 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2101 among the features read"
+  },
+  "w3c-emma-1.0-2201": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 19 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2201 among the features read"
+  },
+  "w3c-emma-1.0-2202": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that emma:time-ref-anchor-point is start or end; whether a time-ref-uri denotes an interval is not in the document, so its absence is not judged: Recommendation example 19 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-2203": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 19 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2203 among the features read"
+  },
+  "w3c-emma-1.0-2204": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 46 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2204 among the features read"
+  },
+  "w3c-emma-1.0-2300": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that every emma:interpretation has emma:medium, its own, its container's, or that of the interpretation it derives from: Recommendation example 26 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-2301": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that a composite interpretation's emma:medium lists exactly the media of the inputs it combines: Recommendation example 75 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-2310": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that every emma:interpretation has emma:mode, its own, its container's, or that of the interpretation it derives from: Recommendation example 26 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-2311": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "the guest holds that a composite interpretation's emma:mode lists exactly the modes of the inputs it combines: Recommendation example 75 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, answered as keeping it"
+  },
+  "w3c-emma-1.0-2320": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 46 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2320 among the features read"
+  },
+  "w3c-emma-1.0-2330": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 58 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2330 among the features read"
+  },
+  "w3c-emma-1.0-2401": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 60 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2401 among the features read"
+  },
+  "w3c-emma-1.0-2500": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 61 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2500 among the features read"
+  },
+  "w3c-emma-1.0-2700": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 32 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2700 among the features read"
+  },
+  "w3c-emma-1.0-2701": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 32 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2701 among the features read"
+  },
+  "w3c-emma-1.0-2710": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 32 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2710 among the features read"
+  },
+  "w3c-emma-1.0-2711": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 32 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2711 among the features read"
+  },
+  "w3c-emma-1.0-2713": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 32 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2713 among the features read"
+  },
+  "w3c-emma-1.0-2714": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 32 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2714 among the features read"
+  },
+  "w3c-emma-1.0-2715": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 62 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2715 among the features read"
+  },
+  "w3c-emma-1.0-2716": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 32 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2716 among the features read"
+  },
+  "w3c-emma-1.0-2717": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 32 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2717 among the features read"
+  },
+  "w3c-emma-1.0-2718": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "Recommendation example 32 (app/specs/emma/spec.json and app/specs/emma-annotations/spec.json), byte for byte from the pinned Recommendation, is an acceptance vector of the emma guest; prismpm build runs it and GU-01 holds the pinned wasm to those vectors, and its answer names 2718 among the features read"
+  }
+ }
+}
