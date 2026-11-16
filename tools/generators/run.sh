@@ -11,7 +11,8 @@
 # and must fit the request bound. A step with "split" runs once per piece of that
 # file, cut at line ends (only before a line matching its "breakBefore", where it has one), each piece
 # staged with the step's other inputs and kept that much smaller; a step with "each" runs once per element of a JSON array;
-# either way its output is the outputs joined in order. Outputs under .gen/ are
+# either way its output is the outputs joined in order, after the .gen/ file its
+# "after" names, if any. Outputs under .gen/ are
 # intermediate and never committed; a step reads only the .gen/ outputs of its
 # own program's earlier steps, so programs never depend on each other's order.
 set -eu
@@ -68,12 +69,12 @@ for steps_file in generators/*/steps.json; do
 program=$(basename "$(dirname "$steps_file")")
 : > "$work/made"
 js .steps < "$steps_file" | while read -r step; do
-  gen=$(echo "$step" | js .generator); out=$(echo "$step" | js .output); ins=$(echo "$step" | js .inputs)
-  for f in $ins; do
+  gen=$(echo "$step" | js .generator); out=$(echo "$step" | js .output); ins=$(echo "$step" | js .inputs); after=$(echo "$step" | js .after)
+  for f in $ins $after; do
     case $f in .gen/*) grep -qxF "$f" "$work/made" || {
       echo "GN-01: $program $gen reads $f, which no earlier step of $steps_file writes" >&2; exit 1; } ;; esac
   done
-  : > "$work/out"
+  if [ -n "$after" ]; then cp "$after" "$work/out"; else : > "$work/out"; fi
   split_path=$(echo "$step" | js .split)
   each_path=$(echo "$step" | js .each.file)
   if [ -n "$each_path" ]; then
