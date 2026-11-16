@@ -44,7 +44,7 @@ test("the committed tree passes against itself (HW-01)", () => {
   rmSync(dir, { recursive: true, force: true });
 });
 
-test("refuses a new hand-written part, growth, and upstream bytes edited in place", () => {
+test("refuses a new hand-written part, growth, upstream bytes edited in place, and a declaration that would hide hand-written code", () => {
   const dir = scratch();
   const hand = files.find((e) => e.is === "hand" && e.lines > 0 && /^site\/.*\.mjs$/.test(e.path)).path;
   const up = files.find((e) => e.is === "upstream" && /\.mjs$/.test(e.path) && e.path !== hand).path;
@@ -52,21 +52,14 @@ test("refuses a new hand-written part, growth, and upstream bytes edited in plac
   assert.equal(run("git", ["add", "tools/glue.mjs"], dir).status, 0);
   appendFileSync(join(dir, hand), "export const grown = [1, 2, 3];\nexport const more = 4;\n");
   appendFileSync(join(dir, up), "export const edited = 1;\n");
-  const r = gate(dir);
-  assert.notEqual(r.status, 0);
-  assert.match(r.stderr, /tools\/glue\.mjs: a new hand-written part/);
-  assert.match(r.stderr, new RegExp(`${up.replace(/[.]/g, "\\.")}: a new hand-written part \\(it was upstream`));
-  assert.match(r.stderr, /hand-written lines grew/);
-  rmSync(dir, { recursive: true, force: true });
-});
-
-test("refuses a declaration that would hide hand-written code", () => {
-  const dir = scratch();
   const spec = JSON.parse(readFileSync(join(dir, SPEC), "utf8"));
-  spec.model.push("site/");
+  spec.model.push("test/person/");
   writeFileSync(join(dir, SPEC), `${JSON.stringify(spec, null, 2)}\n`);
   const r = gate(dir);
   assert.notEqual(r.status, 0);
-  assert.match(r.stderr, /model gained \['site\/'\]/);
+  assert.match(r.stderr, /model gained \['test\/person\/'\]/);
+  assert.match(r.stderr, /tools\/glue\.mjs: a new hand-written part/);
+  assert.match(r.stderr, new RegExp(`${up.replace(/[.]/g, "\\.")}: a new hand-written part \\(it was upstream`));
+  assert.match(r.stderr, /hand-written lines grew/);
   rmSync(dir, { recursive: true, force: true });
 });

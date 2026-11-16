@@ -111,7 +111,7 @@ sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "standards"
 import abnf  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
-SPEC = json.loads((ROOT / "app/specs/oracle/spec.json").read_text(encoding="utf-8"))
+SPEC = {**json.loads((ROOT / "app/specs/oracle/spec.json").read_text(encoding="utf-8")), "sources": [json.loads(p.read_text(encoding="utf-8")) for p in sorted((ROOT / "app/specs/oracle/sources").glob("*.json"))]}
 OUT = ROOT / "test/oracle/corpus.json"
 AUTHORITIES = ROOT / "model/authorities.toml"
 args = sys.argv[1:]
