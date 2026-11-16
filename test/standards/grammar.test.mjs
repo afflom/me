@@ -55,6 +55,22 @@ for (const g of spec.grammars) {
     assert.deepEqual(missed, []);
   });
 
+  // RFC 5234 section 2.3: a quoted string matches in any case, so a field's name does too.
+  if (g.headers) test(`${g.key}: each field's witness is read by its own rule whatever the case of its name`, () => {
+    const missed = [];
+    const swap = (s) => s.replace(/[A-Za-z]/g, (c) => (c === c.toLowerCase() ? c.toUpperCase() : c.toLowerCase()));
+    for (const [name, rules] of Object.entries(table.fields)) {
+      for (const rule of rules) {
+        const text = witnesses[rule].text;
+        const colon = text.indexOf(":");
+        const varied = swap(text.slice(0, colon)) + text.slice(colon);
+        const field = readField(varied);
+        if (field?.name !== name || !rules.includes(field.rule)) missed.push(`${name}: ${JSON.stringify(varied)} read as ${field?.rule}`);
+      }
+    }
+    assert.deepEqual(missed, []);
+  });
+
   if (g.headers) test(`${g.key}: each published example's fields are read by their own rules`, () => {
     const examples = corpus.filter((c) => c.kind === "message");
     assert.ok(examples.length > 20);

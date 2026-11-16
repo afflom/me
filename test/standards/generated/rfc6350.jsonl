@@ -1,0 +1,105 @@
+{"id": "rfc6350-3.2-b65ee5d9", "kind": "should", "ref": "RFC 6350 3.2", "text": "Content lines SHOULD be folded to a maximum width of 75 octets, excluding the line break."}
+{"id": "rfc6350-3.2-1c130c64", "kind": "must", "ref": "RFC 6350 3.2", "text": "Multi-octet characters MUST remain contiguous."}
+{"id": "rfc6350-3.2-48bbfd31", "kind": "may", "ref": "RFC 6350 3.2", "text": "A logical line MAY be continued on the next physical line anywhere between two characters by inserting a CRLF immediately followed by a single white space character (space (U+0020) or horizontal tab (U+0009))."}
+{"id": "rfc6350-3.2-7948247f", "kind": "must", "ref": "RFC 6350 3.2", "text": "The folded line MUST contain at least one character."}
+{"id": "rfc6350-3.2-5d66c05e", "kind": "should", "ref": "RFC 6350 3.2", "text": "For this reason, implementations SHOULD unfold lines in such a way as to properly restore the original sequence."}
+{"id": "rfc6350-3.3-2f6342f6", "kind": "must", "ref": "RFC 6350 3.3", "text": "A vCard object MUST include the VERSION and FN properties. ;"}
+{"id": "rfc6350-3.3-7faf865e", "kind": "must", "ref": "RFC 6350 3.3", "text": "VERSION MUST come immediately after BEGIN:VCARD."}
+{"id": "rfc6350-3.3-9bcbdc44", "kind": "should", "ref": "RFC 6350 3.3", "text": "When generating a content line, lines longer than 75 ; characters SHOULD be folded according to the folding ; procedure described in Section 3.2."}
+{"id": "rfc6350-3.3-6ae75405", "kind": "may", "ref": "RFC 6350 3.3", "text": "Parameter values MAY be case-sensitive or case-insensitive, depending on their definition."}
+{"id": "rfc6350-3.3-fc0d99cb", "kind": "should", "ref": "RFC 6350 3.3", "text": "Based on experience with vCard 3 interoperability, it is RECOMMENDED that property and parameter names be upper-case on output."}
+{"id": "rfc6350-3.3-5e04acbe", "kind": "should", "ref": "RFC 6350 3.3", "text": "The group name is a syntactic convention used to indicate that all property names prefaced with the same group name SHOULD be grouped together when displayed by an application."}
+{"id": "rfc6350-3.3-1a2b3b1d", "kind": "may", "ref": "RFC 6350 3.3", "text": "Implementations that do not understand or support grouping MAY simply strip off any text before a \".\" to the left of the type name and present the types and values as normal."}
+{"id": "rfc6350-3.3-c0cc0252", "kind": "must", "ref": "RFC 6350 3.3", "text": "+-------------+--------------------------------------------------+ | Cardinality | Meaning | +-------------+--------------------------------------------------+ | 1 | Exactly one instance per vCard MUST be present. | | *1 | Exactly one instance per vCard MAY be present. | | 1* | One or more instances per vCard MUST be present. | | * | One or more instances per vCard MAY be present. | +-------------+--------------------------------------------------+"}
+{"id": "rfc6350-3.4-c6031fbe", "kind": "must", "ref": "RFC 6350 3.4", "text": "Therefore, a COMMA character in a value MUST be escaped with a BACKSLASH character (U+005C), even for properties that don't allow multiple instances (for consistency)."}
+{"id": "rfc6350-3.4-9c1378ca", "kind": "must", "ref": "RFC 6350 3.4", "text": "Therefore, a SEMICOLON in a field of such a \"compound\" property MUST be escaped with a BACKSLASH character."}
+{"id": "rfc6350-3.4-42626d2a", "kind": "may", "ref": "RFC 6350 3.4", "text": "SEMICOLON characters in non-compound properties MAY be escaped."}
+{"id": "rfc6350-3.4-bf5dce74", "kind": "must", "ref": "RFC 6350 3.4", "text": "Therefore, a COMMA character in one of a field's values MUST be escaped with a BACKSLASH character, even for fields that don't allow multiple values (for consistency)."}
+{"id": "rfc6350-3.4-03332445", "kind": "must", "ref": "RFC 6350 3.4", "text": "Compound properties allowing multiple instances MUST NOT be encoded in a single content line."}
+{"id": "rfc6350-3.4-1efc15a5", "kind": "must", "ref": "RFC 6350 3.4", "text": "Finally, BACKSLASH characters in values MUST be escaped with a BACKSLASH character."}
+{"id": "rfc6350-3.4-31673087", "kind": "must", "ref": "RFC 6350 3.4", "text": "NEWLINE (U+000A) characters in values MUST be encoded by two characters: a BACKSLASH followed by either an 'n' (U+006E) or an 'N' (U+004E)."}
+{"id": "rfc6350-3.4-f05430af", "kind": "must", "ref": "RFC 6350 3.4", "text": "In all other cases, escaping MUST NOT be used."}
+{"id": "rfc6350-4.1-79d45a2b", "kind": "must", "ref": "RFC 6350 4.1", "text": "A formatted text line break in a text value type MUST be represented as the character sequence backslash (U+005C) followed by a Latin small letter n (U+006E) or a Latin capital letter N (U+004E), that is, \"\\n\" or \"\\N\"."}
+{"id": "rfc6350-4.6-f2c5417f", "kind": "must", "ref": "RFC 6350 4.6", "text": "Implementations MUST support a precision equal or better than that of the IEEE \"binary64\" format [IEEE.754.2008]."}
+{"id": "rfc6350-4.7-68cfcc4d", "kind": "must", "ref": "RFC 6350 4.7", "text": "The basic format for ISO 8601 UTC offsets MUST be used."}
+{"id": "rfc6350-5-a75af057", "kind": "must", "ref": "RFC 6350 5", "text": "Property parameter value elements that contain the COLON (U+003A), SEMICOLON (U+003B), or COMMA (U+002C) character separators MUST be specified as quoted-string text values."}
+{"id": "rfc6350-5-f0753e93", "kind": "must", "ref": "RFC 6350 5", "text": "Property parameter values MUST NOT contain the DQUOTE (U+0022) character."}
+{"id": "rfc6350-5-f018994e", "kind": "must", "ref": "RFC 6350 5", "text": "Applications MUST ignore x-param and iana-param values they don't recognize."}
+{"id": "rfc6350-5.2-c92782b4", "kind": "may", "ref": "RFC 6350 5.2", "text": "The VALUE parameter is OPTIONAL, used to identify the value type (data type) and format of the value."}
+{"id": "rfc6350-5.2-e2785bec", "kind": "must", "ref": "RFC 6350 5.2", "text": "predefined data type values MUST NOT be repeated in COMMA-separated value lists except within the N, NICKNAME, ADR, and CATEGORIES properties."}
+{"id": "rfc6350-5.3-6555e6c4", "kind": "may", "ref": "RFC 6350 5.3", "text": "The PREF parameter is OPTIONAL and is used to indicate that the corresponding instance of a property is preferred by the vCard author."}
+{"id": "rfc6350-5.3-ded8e7cf", "kind": "must", "ref": "RFC 6350 5.3", "text": "Its value MUST be an integer between 1 and 100 that quantifies the level of preference."}
+{"id": "rfc6350-5.3-800dcb8c", "kind": "must", "ref": "RFC 6350 5.3", "text": "When the parameter is absent, the default MUST be to interpret the property instance as being least preferred."}
+{"id": "rfc6350-5.3-c0ab5768", "kind": "must", "ref": "RFC 6350 5.3", "text": "A given value, or the absence of a value, MUST NOT be interpreted on its own."}
+{"id": "rfc6350-5.3-5e495db1", "kind": "may", "ref": "RFC 6350 5.3", "text": "This parameter MAY be applied to any property that allows multiple instances."}
+{"id": "rfc6350-5.4-41950010", "kind": "must", "ref": "RFC 6350 5.4", "text": "Property instances without the ALTID parameter MUST NOT be considered an alternative representation of any other property instance."}
+{"id": "rfc6350-5.4-1e7dd358", "kind": "may", "ref": "RFC 6350 5.4", "text": "Values for the ALTID parameter are not globally unique: they MAY be reused for different property names."}
+{"id": "rfc6350-5.4-7c3cc2e9", "kind": "may", "ref": "RFC 6350 5.4", "text": "The ALTID property MAY also be used in may contexts other than with the LANGUAGE parameter."}
+{"id": "rfc6350-5.5-b881bd2e", "kind": "may", "ref": "RFC 6350 5.5", "text": "It MAY appear more than once in a given property."}
+{"id": "rfc6350-5.5-d78a1c67", "kind": "must", "ref": "RFC 6350 5.5", "text": "It MUST NOT appear on properties that may have only one instance per vCard."}
+{"id": "rfc6350-5.6-6bd25671", "kind": "must", "ref": "RFC 6350 5.6", "text": "The TYPE parameter MUST NOT be applied on other properties defined in this document."}
+{"id": "rfc6350-5.7-967dd823", "kind": "may", "ref": "RFC 6350 5.7", "text": "Its use is OPTIONAL."}
+{"id": "rfc6350-5.8-23fd2742", "kind": "must", "ref": "RFC 6350 5.8", "text": "A vCard implementation MUST ignore properties with a CALSCALE parameter value that it does not understand."}
+{"id": "rfc6350-5.9-89acf103", "kind": "must", "ref": "RFC 6350 5.9", "text": "This parameter's value is a comma-separated list that MUST have as many or fewer elements as the corresponding property value has components."}
+{"id": "rfc6350-6.1.1-6cc2adc4", "kind": "must", "ref": "RFC 6350 6.1.1", "text": "The content entity MUST begin with the BEGIN property with a value of \"VCARD\"."}
+{"id": "rfc6350-6.1.2-cde4c3ed", "kind": "must", "ref": "RFC 6350 6.1.2", "text": "The content entity MUST end with the END type with a value of \"VCARD\"."}
+{"id": "rfc6350-6.1.4-2668c6e5", "kind": "must", "ref": "RFC 6350 6.1.4", "text": "An organization vCard will not (in fact, MUST NOT) contain MEMBER properties, and so these are something of a cross between \"individual\" and \"group\"."}
+{"id": "rfc6350-6.1.4-40f8f6a6", "kind": "may", "ref": "RFC 6350 6.1.4", "text": "An x-name. vCards MAY include private or experimental values for KIND."}
+{"id": "rfc6350-6.1.4-ee9188c1", "kind": "must", "ref": "RFC 6350 6.1.4", "text": "A new value's specification document MUST specify which properties make sense for that new kind of vCard and which do not."}
+{"id": "rfc6350-6.1.4-cad00480", "kind": "must", "ref": "RFC 6350 6.1.4", "text": "Implementations MUST support the specific string values defined above."}
+{"id": "rfc6350-6.1.4-355fb2a5", "kind": "must", "ref": "RFC 6350 6.1.4", "text": "If this property is absent, \"individual\" MUST be assumed as the default."}
+{"id": "rfc6350-6.1.4-19e32951", "kind": "should", "ref": "RFC 6350 6.1.4", "text": "If this property is present but the implementation does not understand its value (the value is an x-name or iana-token that the implementation does not support), the implementation SHOULD act in a neutral way, which usually means treating the vCard as though its kind were \"individual\"."}
+{"id": "rfc6350-6.1.4-f41e526d", "kind": "may", "ref": "RFC 6350 6.1.4", "text": "The presence of MEMBER properties MAY, however, be taken as an indication that the unknown kind is an extension of \"group\"."}
+{"id": "rfc6350-6.1.5-2ce6ee5f", "kind": "must", "ref": "RFC 6350 6.1.5", "text": "The content of this property is a single XML 1.0 [W3C.REC-xml-20081126] element whose namespace MUST be explicitly specified using the xmlns attribute and MUST NOT be the vCard 4"}
+{"id": "rfc6350-6.1.5-7bc89045", "kind": "may", "ref": "RFC 6350 6.1.5", "text": "Support for this property is OPTIONAL, but implementations of this specification MUST preserve instances of this property when propagating vCards."}
+{"id": "rfc6350-6.2.1-0721652b", "kind": "must", "ref": "RFC 6350 6.2.1", "text": "The property MUST be present in the vCard object."}
+{"id": "rfc6350-6.2.2-d63e3c07", "kind": "should", "ref": "RFC 6350 6.2.2", "text": "The property SHOULD be present in the vCard object when the name of the object the vCard represents follows the X.520 model."}
+{"id": "rfc6350-6.2.2-495cdb35", "kind": "may", "ref": "RFC 6350 6.2.2", "text": "The SORT-AS parameter MAY be applied to this property."}
+{"id": "rfc6350-6.2.5-a7d056a5", "kind": "must", "ref": "RFC 6350 6.2.5", "text": "Value and parameter MUST match."}
+{"id": "rfc6350-6.2.6-a7d056a5", "kind": "must", "ref": "RFC 6350 6.2.6", "text": "Value and parameter MUST match."}
+{"id": "rfc6350-6.3.1-2cda4f6c", "kind": "must", "ref": "RFC 6350 6.3.1", "text": "The component values MUST be specified in their corresponding position."}
+{"id": "rfc6350-6.3.1-7e0e1004", "kind": "must", "ref": "RFC 6350 6.3.1", "text": "When a component value is missing, the associated component separator MUST still be specified."}
+{"id": "rfc6350-6.3.1-6dfba6de", "kind": "should", "ref": "RFC 6350 6.3.1", "text": "To ensure maximal interoperability, their values SHOULD be empty."}
+{"id": "rfc6350-6.3.1-812f1a3b", "kind": "may", "ref": "RFC 6350 6.3.1", "text": "The GEO and TZ parameters MAY be used with this property."}
+{"id": "rfc6350-6.4.1-83969538", "kind": "should", "ref": "RFC 6350 6.4.1", "text": "By default, it is a single free-form text value (for backward compatibility with vCard 3), but it SHOULD be reset to a URI value."}
+{"id": "rfc6350-6.4.1-26eab53a", "kind": "may", "ref": "RFC 6350 6.4.1", "text": "It is expected that the URI scheme will be \"tel\", as specified in [RFC3966], but other schemes MAY be used."}
+{"id": "rfc6350-6.4.1-29f31b63", "kind": "should", "ref": "RFC 6350 6.4.1", "text": "If this property's value is a URI that can also be used for instant messaging, the IMPP (Section 6.4.3) property SHOULD be used in addition to this property."}
+{"id": "rfc6350-6.4.1-a7d056a5", "kind": "must", "ref": "RFC 6350 6.4.1", "text": "Value and parameter MUST match."}
+{"id": "rfc6350-6.4.1-a7f4c832", "kind": "must", "ref": "RFC 6350 6.4.1", "text": "type-param-tel = \"text\" / \"voice\" / \"fax\" / \"cell\" / \"video\" / \"pager\" / \"textphone\" / iana-token / x-name ; type-param-tel MUST NOT be used with a property other than TEL."}
+{"id": "rfc6350-6.4.3-468cca51", "kind": "should", "ref": "RFC 6350 6.4.3", "text": "If this property's value is a URI that can be used for voice and/or video, the TEL property (Section 6.4.1) SHOULD be used in addition to this property."}
+{"id": "rfc6350-6.5.1-149c19dc", "kind": "should", "ref": "RFC 6350 6.5.1", "text": "Note that utc-offset values SHOULD NOT be used because the UTC offset varies with time -- not just because of the usual daylight saving time shifts that occur in may regions, but often entire regions will \"re-base\" their overall offset."}
+{"id": "rfc6350-6.5.1-a7d056a5", "kind": "must", "ref": "RFC 6350 6.5.1", "text": "Value and parameter MUST match."}
+{"id": "rfc6350-6.5.1-5ed98408", "kind": "should", "ref": "RFC 6350 6.5.1", "text": "Note: utc-offset format is NOT RECOMMENDED."}
+{"id": "rfc6350-6.5.2-e57eb7ae", "kind": "may", "ref": "RFC 6350 6.5.2", "text": "The \"geo\" URI scheme [RFC5870] is particularly well suited for this property, but other schemes MAY be used."}
+{"id": "rfc6350-6.6.4-495cdb35", "kind": "may", "ref": "RFC 6350 6.6.4", "text": "The SORT-AS parameter MAY be applied to this property."}
+{"id": "rfc6350-6.6.5-f91d921d", "kind": "may", "ref": "RFC 6350 6.6.5", "text": "It MAY refer to something other than a vCard object."}
+{"id": "rfc6350-6.6.5-bd66b2b7", "kind": "must", "ref": "RFC 6350 6.6.5", "text": "This property MUST NOT be present unless the value of the KIND property is \"group\"."}
+{"id": "rfc6350-6.6.6-d206a6bb", "kind": "may", "ref": "RFC 6350 6.6.6", "text": "The TYPE parameter MAY be used to characterize the related entity."}
+{"id": "rfc6350-6.6.6-4457a161", "kind": "must", "ref": "RFC 6350 6.6.6", "text": "Parameter and value MUST match."}
+{"id": "rfc6350-6.6.6-5497e173", "kind": "must", "ref": "RFC 6350 6.6.6", "text": "type-param-related = related-type-value *(\",\" related-type-value) ; type-param-related MUST NOT be used with a property other than ;"}
+{"id": "rfc6350-6.7.3-cb8d4639", "kind": "should", "ref": "RFC 6350 6.7.3", "text": "Implementations SHOULD use a method such as that specified for Formal Public Identifiers in [ISO9070] or for Universal Resource Names in [RFC3406] to ensure that the text value is unique."}
+{"id": "rfc6350-6.7.6-15f71175", "kind": "may", "ref": "RFC 6350 6.7.6", "text": "It MAY also be reset to free-form text."}
+{"id": "rfc6350-6.7.6-ba25d711", "kind": "may", "ref": "RFC 6350 6.7.6", "text": "The \"uuid\" URN namespace defined in [RFC4122] is particularly well suited to this task, but other URI schemes MAY be used."}
+{"id": "rfc6350-6.7.6-a40536ff", "kind": "may", "ref": "RFC 6350 6.7.6", "text": "Free-form text MAY also be used."}
+{"id": "rfc6350-6.7.6-a7d056a5", "kind": "must", "ref": "RFC 6350 6.7.6", "text": "Value and parameter MUST match."}
+{"id": "rfc6350-6.7.7-ba25d711", "kind": "may", "ref": "RFC 6350 6.7.7", "text": "The \"uuid\" URN namespace defined in [RFC4122] is particularly well suited to this task, but other URI schemes MAY be used."}
+{"id": "rfc6350-6.7.7-960f0480", "kind": "must", "ref": "RFC 6350 6.7.7", "text": "Each distinct source identifier present in a vCard MUST have an associated CLIENTPIDMAP."}
+{"id": "rfc6350-6.7.7-802d1372", "kind": "must", "ref": "RFC 6350 6.7.7", "text": "PID source identifiers MUST be strictly positive."}
+{"id": "rfc6350-6.7.7-e8745317", "kind": "must", "ref": "RFC 6350 6.7.7", "text": "As a special exception, the PID parameter MUST NOT be applied to this property."}
+{"id": "rfc6350-6.7.9-9b5e3799", "kind": "must", "ref": "RFC 6350 6.7.9", "text": "This property MUST be present in the vCard object, and it must appear immediately after BEGIN:VCARD."}
+{"id": "rfc6350-6.7.9-66e4277d", "kind": "must", "ref": "RFC 6350 6.7.9", "text": "The value MUST be \"4.0\" if the vCard corresponds to this specification."}
+{"id": "rfc6350-6.8.1-a7d056a5", "kind": "must", "ref": "RFC 6350 6.8.1", "text": "Value and parameter MUST match."}
+{"id": "rfc6350-7.1.1-4069f8ea", "kind": "must", "ref": "RFC 6350 7.1.1", "text": "vCard instances for which the UID properties (Section 6.7.6) are equivalent MUST be matched."}
+{"id": "rfc6350-7.1.1-bf5d7d98", "kind": "may", "ref": "RFC 6350 7.1.1", "text": "In all other cases, vCard instances MAY be matched at the discretion of the synchronization engine."}
+{"id": "rfc6350-7.1.2-35218bf4", "kind": "must", "ref": "RFC 6350 7.1.2", "text": "Property instances belonging to unmatched vCards MUST NOT be matched."}
+{"id": "rfc6350-7.1.2-18f040f4", "kind": "must", "ref": "RFC 6350 7.1.2", "text": "Property instances whose name (e.g., EMAIL, TEL, etc.) is not the same MUST NOT be matched."}
+{"id": "rfc6350-7.1.2-50f43abb", "kind": "must", "ref": "RFC 6350 7.1.2", "text": "Property instances whose name is CLIENTPIDMAP are handled separately and MUST NOT be matched."}
+{"id": "rfc6350-7.1.2-a1c501b1", "kind": "must", "ref": "RFC 6350 7.1.2", "text": "The synchronization MUST ensure that there is consistency of CLIENTPIDMAPs among matched vCard instances."}
+{"id": "rfc6350-7.1.2-787311e2", "kind": "must", "ref": "RFC 6350 7.1.2", "text": "Property instances belonging to matched vCards, whose name is the same, and whose maximum cardinality is 1, MUST be matched."}
+{"id": "rfc6350-7.1.2-88c88f91", "kind": "must", "ref": "RFC 6350 7.1.2", "text": "Property instances belonging to matched vCards, whose name is the same, and whose PID parameters match, MUST be matched."}
+{"id": "rfc6350-7.1.2-55f00883", "kind": "may", "ref": "RFC 6350 7.1.2", "text": "In all other cases, property instances MAY be matched at the discretion of the synchronization engine."}
+{"id": "rfc6350-7.1.3-00d24b0a", "kind": "must", "ref": "RFC 6350 7.1.3", "text": "PID parameters for which at least one pair of their values represent the same global value MUST be matched."}
+{"id": "rfc6350-7.1.3-2c348711", "kind": "may", "ref": "RFC 6350 7.1.3", "text": "In all other cases, PID parameters MAY be matched at the discretion of the synchronization engine."}
+{"id": "rfc6350-7.2.4-e2a4a65d", "kind": "may", "ref": "RFC 6350 7.2.4", "text": "Note that in this case, the rules of Section 7.1.2 state that two properties MAY be matched at the discretion of the synchronization engine."}
+{"id": "rfc6350-9-8b9671de", "kind": "should", "ref": "RFC 6350 9", "text": "In cases where the confidentiality or authenticity of information contained in vCard is a concern, the vCard SHOULD be transported using one of these secure mechanisms."}
+{"id": "rfc6350-9-86c493ee", "kind": "should", "ref": "RFC 6350 9", "text": "In cases where the vitality of data is important to an originator of a vCard, the SOURCE property (Section 6.1.3) SHOULD be specified."}
