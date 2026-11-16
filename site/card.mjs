@@ -333,8 +333,14 @@ export default async function start({ app, reason, $ }) {
     return;
   }
 
-  // The root guest: "<facet> <rest>" in, the facet's answer out.
-  const line = async (text) => decoder.decode(await app.dispatch(encoder.encode(text))).trim();
+  // The root guest: "<facet> <rest>" in, the facet's answer out. The guest takes
+  // no imports and each request runs alone, so the same line has the same
+  // answer: it is asked once and remembered. The runtime starts an instance for
+  // every request, and the browser can refuse one more before it has let the
+  // earlier ones go; a line refused so is asked again a moment later.
+  const ask = async (text, tries = 4) => { try { return decoder.decode(await app.dispatch(encoder.encode(text))).trim(); } catch (error) { if (tries < 2 || !/out of memory/i.test(String(error?.message ?? error))) throw error; await new Promise((again) => setTimeout(again, 250)); return ask(text, tries - 1); } };
+  const asked = new Map();
+  const line = (text) => asked.get(text) ?? (asked.size > 4096 && asked.clear(), asked.set(text, ask(text).catch((error) => { asked.delete(text); throw error; })).get(text));
 
   // The vault: kept in this browser, every keep and read decided by the app.
   let vault = null;
