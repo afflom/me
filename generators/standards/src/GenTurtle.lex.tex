@@ -1,0 +1,53 @@
+\begin{lexlean}{GenTurtle}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{GenWcag}
+\importmodule{GenIrp}
+\importmodule{GenSosa}
+\title{Turtle test inventory generator}
+\begin{semanticmodule}
+definition{
+  name: ttlQuoteEnd,
+  parameters: [s : Bytes, j : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => j
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr s j); (if (((Foundation.Bytes::byteLength s) <? (j + 1)) || (b =? 34)) then j else (if (b =? 92) then (ttlQuoteEnd s (j + 2) rest) else (ttlQuoteEnd s (j + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ttlRow,
+  parameters: [s : Bytes, i : Nat, stop : Nat],
+  result: Bytes,
+  body: (let k : Nat := (GenIrp::irpFind s i 0x726466743a54657374 (Foundation.Bytes::byteLength s)); (let c : Nat := ((GenIrp::irpFind s i 0x726466733a636f6d6d656e742022 (Foundation.Bytes::byteLength s)) + 14); (let a : Nat := ((GenIrp::irpFind s (GenIrp::irpFind s i 0x6d663a616374696f6e (Foundation.Bytes::byteLength s)) 0x3c (Foundation.Bytes::byteLength s)) + 1); (if (((stop <? (k + 1)) || (stop <? (c + 1))) || (stop <? (a + 1))) then 0x else (GenWcag::cat (cons 0x7b226964223a20227733632d747572746c652d312e312d (cons (Foundation.Json::span s (i + 2) (GenIrp::irpFind s i 0x3e (Foundation.Bytes::byteLength s))) (cons 0x222c20226b696e64223a2022 (cons (Foundation.Json::span s (k + 5) (GenSosa::sosaNameEnd s (k + 5) (Foundation.Bytes::byteLength s))) (cons 0x222c2022726566223a2022 (cons (Foundation.Json::span s a (GenIrp::irpFind s a 0x3e (Foundation.Bytes::byteLength s))) (cons 0x222c202274657874223a2022 (cons (Foundation.Json::span s c (ttlQuoteEnd s c (Foundation.Bytes::byteLength s))) (cons 0x227d0a (nil Bytes))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ttlRowsFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then acc else (let e : Nat := (GenIrp::irpFind s i 0x0a3c23 (Foundation.Bytes::byteLength s)); (let stop : Nat := (if (e <? (Foundation.Bytes::byteLength s)) then (e + 1) else (Foundation.Bytes::byteLength s)); (ttlRowsFrom s stop (if (GenWcag::startsAt s i 0x3c23) then (Foundation.Bytes::appendBytes acc (ttlRow s i stop)) else acc) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ttlGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (GenWcag::u "app/specs/standards/upstream/turtle-manifest.ttl"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (ctor Option.some [Bytes] (ttlRowsFrom s 0 0x (Foundation.Bytes::byteLength s)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
