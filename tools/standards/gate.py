@@ -141,7 +141,7 @@ def generated(standard, inv, refusals):
 
 
 def derive(spec, write, refusals):
-    oracle = {s["key"]: s for s in load(ORACLE)["sources"]}
+    oracle = {s["key"]: s for s in __import__("record").load(ORACLE)["sources"]}
     out = {}
     for standard in spec["standards"]:
         key = standard["key"]
@@ -326,8 +326,7 @@ def main(argv):
     refusals += [f"debt names {key}, which is no measured standard" for key in sorted(set(debt) - set(requirements))]
 
     if base:
-        whole = base_json(base, DEBT.with_suffix(".json")) or {}
-        old_debt = {key: base_json(base, DEBT / f"{key}.json") or whole.get(key, []) for key in debt}
+        old_debt = {key: base_json(base, DEBT / f"{key}.json") or [] for key in debt}
         old_reqs = base_json(base, REQUIREMENTS) or {}
         old_spec = base_json(base, SPEC) or {}
         for key, ids in debt.items():
