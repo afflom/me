@@ -162,7 +162,7 @@ export const walks = {
     await ask.fill("When is my flight?");
     await ask.press("Enter");
     await page.waitForTimeout(3000);
-    const answer = app(page).locator("[aria-live], output, #pr-out").filter({ hasText: "Lisbon" }).first();
+    const answer = app(page).locator("[role=log], [aria-live], output, #pr-out").filter({ hasText: "Lisbon" }).first();
     assert.ok(await answer.count(), "the answer does not name the flight");
     const said = await answer.innerText();
     assert.match(said, /\b(is|leaves|departs|on)\b.*\b(Mon|Tue|Wed|Thu|Fri|Sat|Sun|\d{1,2})/i, `the answer is not a sentence with the flight's day: "${said}"`);
@@ -176,7 +176,7 @@ export const walks = {
     await ask.fill("What is going on with Robin?");
     await ask.press("Enter");
     await page.waitForTimeout(3000);
-    const answer = app(page).locator("[aria-live], output, #pr-out").filter({ hasText: /Robin|Lunch|Design review/ }).first();
+    const answer = app(page).locator("[role=log], [aria-live], output, #pr-out").filter({ hasText: /Robin|Lunch|Design review/ }).first();
     assert.ok(await answer.count(), "the answer does not draw on Robin's items");
     const said = (await answer.innerText()).trim();
     assert.match(said, /\b(is|are|asked|asks|wrote|meets|meeting|has|wants)\b[^·]*[.?!]/i, `the answer is not a sentence: "${said}"`);

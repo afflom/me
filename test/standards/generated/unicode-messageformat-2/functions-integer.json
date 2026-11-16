@@ -1,0 +1,15 @@
+[
+  {"id": "unicode-messageformat-2-functions-integer-0", "ref": "test/tests/functions/integer.json#/tests/0", "text": "hello {4.2 :integer}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-integer-1", "ref": "test/tests/functions/integer.json#/tests/1", "text": "hello {-4.20 :integer}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-integer-2", "ref": "test/tests/functions/integer.json#/tests/2", "text": "hello {0.42 :integer}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-integer-3", "ref": "test/tests/functions/integer.json#/tests/3", "text": "hello {|0.42e+1| :integer}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-integer-4", "ref": "test/tests/functions/integer.json#/tests/4", "text": ".input {$foo :integer} .match $foo 1 {{=1}} * {{other}}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-integer-5", "ref": "test/tests/functions/integer.json#/tests/5", "text": ".input {$foo :integer} .match $foo 1 {{=1}} one {{one}} * {{other}}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-integer-6", "ref": "test/tests/functions/integer.json#/tests/6", "text": ".local $x = {1.25 :integer} .local $y = {$x :number} {{{$y}}}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-integer-7", "ref": "test/tests/functions/integer.json#/tests/7", "text": "literal select {1 :integer select=exact}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-integer-8", "ref": "test/tests/functions/integer.json#/tests/8", "text": ".local $bad = {exact} {{variable select {1 :integer select=$bad}}}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-integer-9", "ref": "test/tests/functions/integer.json#/tests/9", "text": "variable select {1 :integer select=$bad}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-integer-10", "ref": "test/tests/functions/integer.json#/tests/10", "text": ".local $sel = {1 :integer select=exact} .match $sel 1 {{literal select {$sel}}} * {{OTHER}}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-integer-11", "ref": "test/tests/functions/integer.json#/tests/11", "text": ".local $sel = {1 :integer select=exact} .local $bad = {$sel :integer} .match $bad 1 {{ONE}} * {{operand select {$bad}}}", "kind": "test"},
+  {"id": "unicode-messageformat-2-functions-integer-12", "ref": "test/tests/functions/integer.json#/tests/12", "text": ".local $sel = {1 :integer select=$bad} .match $sel 1 {{ONE}} * {{variable select {$sel}}}", "kind": "test"}
+]

@@ -35,6 +35,12 @@ examples are taken out mechanically:
     naming a person is left out, and a speaker whose named entities it has not
     annotated is left out whole, so no participant's name enters the
     repository;
+  - "diaml": each dialogue act of each DiAML file of a source published as
+    separate files (DialogBank's gold ISO 24617-2 annotations), with the acts it
+    depends on; the source is "held": its publisher states no licence to
+    republish it, so it is never kept in the tree and no gate reads it: with
+    --fetch its pinned files are downloaded (--held writes their examples
+    outside the repository) and only their count and SHA-256 are committed;
   - "pairs": each sentence pair of a graded semantic-similarity benchmark in
     the genre the source names (the STS Benchmark's image and video captions,
     Cer et al., SemEval-2017 Task 1), with the similarity its annotators gave it
@@ -80,7 +86,7 @@ held to schema.org's own files: the release's whole graph and attic, the
 JSON-LD context, and every example of the release (the "schemaorg" source). --check refuses either if stale. Every source is read from
 app/specs/standards/texts/<sha256>, never from the network; --fetch keeps a pin that is not kept yet.
 
-usage: python3 -I tools/oracle/gen.py [--check] [--fetch] [--fit-acts OUT]
+usage: python3 -I tools/oracle/gen.py [--check] [--fetch] [--fit-acts OUT] [--held OUT]
 """
 import base64
 import csv as csvlib
@@ -97,10 +103,12 @@ import pathlib
 import re
 import sys
 import urllib.parse
-import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
 import zoneinfo
+
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "standards"))
+import abnf  # noqa: E402
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SPEC = json.loads((ROOT / "app/specs/oracle/spec.json").read_text(encoding="utf-8"))
@@ -114,18 +122,19 @@ def refuse(why):
     sys.exit(f"oracle: {why}")
 
 
-def kept_text(url, sha256, headers={}):
-    path = TEXTS / sha256
-    if not path.exists() and "--fetch" not in args:
-        refuse(f"{url} is not kept at {path.relative_to(ROOT)}: run this with --fetch")
-    data = path.read_bytes() if path.exists() else urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=120).read()
-    if hashlib.sha256(data).hexdigest() != sha256:
-        refuse(f"{url} is {hashlib.sha256(data).hexdigest()}, not the pinned {sha256}")
-    path.exists() or path.write_bytes(data)
-    return data
+def kept_text(url, sha256, headers={}, keep=True):
+    return abnf.kept_bytes(url, sha256, TEXTS, refuse, "--fetch" in args, headers, keep)
 
 
 def fetch(source):
+    key = source["key"]
+    # A source published as separate files: each pinned by its own SHA-256, the
+    # source's by the SHA-256 of theirs in order. One JSON object, name to text.
+    # A held source is never kept in the tree: it is read only with --fetch.
+    if "files" in source:
+        if hashlib.sha256("".join(source["files"].values()).encode()).hexdigest() != source["sha256"]:
+            refuse(f"{key}'s files together are not the pinned {source['sha256']}")
+        return json.dumps({url.rsplit("/", 1)[1]: kept_text(url, pin, keep="held" not in source).decode("utf-8") for url, pin in source["files"].items()}, ensure_ascii=False)
     data = kept_text(source["url"], source["sha256"])
     # A benchmark published compressed (gzip, RFC 1952) is pinned as published and read uncompressed.
     if source["url"].endswith(".gz"):
@@ -142,37 +151,6 @@ def fetch(source):
             }
         return json.dumps(held, ensure_ascii=False)
     return data.decode("utf-8")
-
-
-PAGE_FOOT = re.compile(r"\[Page \d+\]\s*$")
-
-
-def unpaginate(text):
-    """The RFC's text without its page breaks: footer, form feed, header and the padding around them."""
-    lines = text.replace("\r\n", "\n").split("\n")
-    out = []
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        if line.startswith("\f"):
-            while out and not out[-1].strip():
-                out.pop()
-            if out and PAGE_FOOT.search(out[-1]):
-                out.pop()
-            while out and not out[-1].strip():
-                out.pop()
-            i += 1
-            if i < len(lines) and lines[i].startswith("RFC "):
-                i += 1
-            while i < len(lines) and not lines[i].strip():
-                i += 1
-            # A break between two lines of one indented example joins them; elsewhere it is a paragraph break.
-            if not (out and i < len(lines) and out[-1].startswith("   ") and lines[i].startswith("   ")):
-                out.append("")
-            continue
-        out.append(line)
-        i += 1
-    return "\n".join(out)
 
 
 def dedent(block):
@@ -1452,6 +1430,56 @@ def act_examples(text, source, meetings=None, unnamed=False):
                 yield json.dumps({"text": said.strip(), "act": names[kind], "intent": intents[kind], "meeting": m.group(2)}, ensure_ascii=False)
 
 
+XML_ID = "{http://www.w3.org/XML/1998/namespace}id"
+
+
+def dialogue_examples(text, source):
+    """Each dialogue act of each DiAML file (ISO 24617-2 section 10, the Dialogue
+    Act Markup Language in its TEI-based form): its sender, its dimension and
+    communicative function, the words of the functional segment it is about, and
+    the acts it depends on, functionally (an answer on its question) and as
+    feedback (the acts it reports on). A file that is not well-formed XML as
+    published is read only if the source lists it so, and then not at all; an act
+    whose segment names a word its file does not have is left unread: nothing is
+    repaired."""
+    ref = lambda v: [r.lstrip("#") for r in (v or "").split()]
+    for name, body in sorted(json.loads(text).items()):
+        try:
+            root = ET.fromstring(body.encode("utf-8"))
+        except ET.ParseError:
+            root = None
+        if (root is None) != (name in source["malformed"]):
+            refuse(f"{source['key']} {name}: whether it is well-formed XML is not what the source's malformed list says")
+        by = {}
+        for e in root.iter() if root is not None else ():
+            by.setdefault(e.tag.rsplit("}", 1)[-1], []).append(e)
+        words = {w.get(XML_ID): w.text or "" for w in by.get("w", [])}
+        # When a word is said: its start on the file's timeline, or its place among the words of a file with none.
+        said = {w.get(XML_ID): {t.get(XML_ID): float(t.get("interval") or 0) for t in by.get("when", [])}.get((w.get("start") or "").lstrip("#"), n) for n, w in enumerate(by.get("w", []))}
+        spans = {g.get(XML_ID): [w for span in g for w in ref(span.get("from"))] for g in by.get("spanGrp", [])}
+        segments = {fs.get(XML_ID): spans.get(ref(f.get("fVal"))[0], []) for fs in by.get("fs", []) for f in fs if f.get("name") == "verbalComponent"}
+        say = lambda tokens: " ".join(words.get(w, "") for w in tokens).strip()
+        rows = []
+        for act in by.get("dialogueAct", []):
+            function, tokens = act.get("communicativeFunction"), segments.get(ref(act.get("target"))[0], [])
+            if not function or not tokens or not all(w in words for w in tokens):
+                continue
+            # Feedback depends on an act, or on a stretch of the dialogue marked as a segment of its own: then its words.
+            about = ref(act.get("feedbackDependence"))
+            row = {"dialogue": name.rsplit(".", 1)[0], "id": act.get(XML_ID), "at": said[tokens[0]], "sender": ref(act.get("sender"))[0], "dimension": act.get("dimension"), "function": function, "text": say(tokens), "dependsOn": ref(act.get("functionalDependence")), "feedbackOn": [t for t in about if t not in segments], "feedbackText": [say(segments[t]) for t in about if t in segments]}
+            if row["dimension"] == "task" and function in source["acts"]:
+                row["intent"] = source["acts"][function]
+            rows.append(row)
+        yield from (json.dumps(row, ensure_ascii=False) for row in sorted(rows, key=lambda r: r["at"]))
+
+
+def read_held(rows):
+    """What a source held out of the repository gave: how much, and its SHA-256."""
+    acts = [json.loads(r) for r in rows]
+    count = lambda key: sum(bool(a.get(key)) for a in acts)
+    return {"acts": len(acts), "dialogues": len({a["dialogue"] for a in acts}), "intents": count("intent"), "functionalDependence": count("dependsOn"), "feedbackDependence": sum(bool(a["feedbackOn"] or a["feedbackText"]) for a in acts), "sha256": hashlib.sha256(("\n".join(rows) + "\n").encode("utf-8")).hexdigest()}
+
+
 def read_act(raw):
     act = json.loads(raw)
     return {"text": act["text"], "act": act["act"], "intent": act["intent"]}
@@ -1471,9 +1499,27 @@ if "--fit-acts" in args:
     print(f"oracle: {len(rows)} training acts to {out}")
     sys.exit(0)
 
+# --held OUT: the examples of every source held out of the repository (its
+# publisher states no licence to republish them), one JSON object a line, for
+# the tests that read them (test/oracle/intent.test.mjs); written outside it.
+# They are downloaded, so it needs --fetch.
+if "--held" in args:
+    out = pathlib.Path(args[args.index("--held") + 1])
+    rows = [row for source in SPEC["sources"] if source.get("held") for row in dialogue_examples(fetch(source), source)]
+    out.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    print(f"oracle: {len(rows)} held examples to {out}")
+    sys.exit(0)
+
 corpus, texts = [], {}
 for source in SPEC["sources"]:
-    text = unpaginate(fetch(source))
+    # A held source's examples never enter the repository: the corpus carries
+    # only how many it gave and their SHA-256, which --held must reproduce.
+    # It is opened only with --fetch; without, the committed record is carried forward.
+    if source.get("held"):
+        kept = [e for e in json.loads(OUT.read_text(encoding="utf-8"))["corpus"] if e["source"] == source["key"]] if "--fetch" not in args else []
+        corpus += kept or [{"id": f"{source['key']}-held", "source": source["key"], "kind": "held", "raw": "", "expect": read_held(list(dialogue_examples(fetch(source), source)))}]
+        continue
+    text = abnf.unpaginate(fetch(source), examples=True)
     # A verified erratum (the RFC Editor's errata) corrects the published text: what it says it says, once.
     for erratum in source.get("errata", []):
         if erratum["status"] != "Verified" or text.count(erratum["says"]) != 1:
