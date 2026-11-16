@@ -95,7 +95,7 @@ jobs:
   test:
     name: test the train against main
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 240
     outputs:
       accepted: ${{ steps.train.outputs.accepted }}
       main: ${{ steps.train.outputs.main }}
@@ -133,6 +133,7 @@ jobs:
           image=$(sed -n 's/.*"sdk_image":"\([^"]*\)".*/\1/p' prismpm.lock)
           [[ $image =~ ^[a-z0-9.-]+(:[0-9]{1,5})?/[a-z0-9./_-]+@sha256:[0-9a-f]{64}$ ]]
           scratch=$(mktemp -d)
+          export scratch image
           trap 'rm -rf "$scratch"' EXIT
           fast_gates() {
             node bootstrap/brand-sync.mjs --check &&
@@ -155,6 +156,60 @@ jobs:
                 --env SDK_IMAGE="$image" \
                 "$image" bash -c 'set -euo pipefail; mkdir -p "$HOME"; just fmt-check model template-check lint test'
           }
+          # The browser acceptances on the merged tree, as the page job runs them on a
+          # pull request alone (CO-01 and the timing budgets failed on main after #145 and
+          # #161 were each green): a holo built from this tree, without the proof that
+          # main's own run binds, the page assembled around it, then every runner and
+          # every suite once. In a worktree of its own (the gates' own tests need git), so the train's tree stays what it merges, and in a
+          # shell of its own, because bash ignores errexit inside an if.
+          acceptances() {
+            local copy=$RUNNER_TEMP/accept
+            git worktree remove --force "$copy" 2>/dev/null || rm -rf "$copy"
+            git worktree add -q --detach "$copy" HEAD
+            mkdir -p "$scratch/prismpm-home/.docker"
+            printf '{}\n' >"$scratch/prismpm-home/.docker/config.json"
+            (
+              cd "$copy"
+              shopt -s nullglob globstar
+              docker run --rm \
+                --user "$(id -u):$(id -g)" \
+                --group-add "$(stat -c '%g' /var/run/docker.sock)" \
+                --volume "$scratch:/tmp" \
+                --volume "$PWD:$PWD" \
+                --volume /var/run/docker.sock:/var/run/docker.sock \
+                --workdir "$PWD" \
+                --env DOCKER_CONFIG=/tmp/prismpm-home/.docker \
+                --env BUILDX_CONFIG=/tmp/prismpm-buildx \
+                --env HOME=/tmp/prismpm-home \
+                --env PRISMPM_EPHEMERAL_HOME=1 \
+                --env SDK_IMAGE="$image" \
+                "$image" bash -c 'set -euo pipefail; prismpm --project app build --no-provenance'
+              holos=(app/.prism/build/*/*.holo)
+              [[ ${#holos[@]} -eq 1 ]]
+              fingerprint=$(node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).archive_fingerprint)' "$(dirname "${holos[0]}")/application/holo-identities.json")
+              "$RUNNER_TEMP/draw/bin/python" -I bootstrap/og.py
+              "$RUNNER_TEMP/draw/bin/python" -I bootstrap/icons.py
+              cp "${holos[0]}" site/app.holo
+              cp -r try/vendor site/vendor
+              rm -rf site/vendor/prism-code/fixtures site/vault/test
+              node -e '
+                const { readFileSync, writeFileSync } = require("node:fs");
+                const [id, url] = process.argv.slice(1);
+                const app = JSON.parse(readFileSync("site/app.json", "utf8"));
+                app.attestations ??= {};
+                app.attestations.build = { id, url };
+                writeFileSync("site/app.json", `${JSON.stringify(app, null, 2)}\n`);
+              ' "$fingerprint" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+              node bootstrap/page.mjs site
+              for objects in bootstrap/*-objects.mjs; do node "$objects" site; done
+              node bootstrap/precache.mjs site
+              export NODE_PATH="$(npm root --global)"
+              runners=(test/*/run.mjs)
+              suites=(test/**/*.test.mjs)
+              for runner in "${runners[@]}"; do node "$runner"; done
+              node --test "${suites[@]}"
+            )
+          }
           ready=()
           : >"$RUNNER_TEMP/refused"
           while read -r number head draft fork; do
@@ -170,6 +225,13 @@ jobs:
           done < <(gh api "repos/$REPO/pulls?state=open&base=main&sort=created&direction=asc&per_page=50" \
             --jq '.[] | "\(.number) \(.head.sha) \(.draft) \(.head.repo.full_name != .base.repo.full_name)"')
           echo "ready: ${ready[*]:-none}"
+          # What the acceptances need on the runner, installed once and before any pull request's code runs.
+          if [[ ${#ready[@]} -gt 0 ]]; then
+            npm install --no-audit --no-fund --global playwright@1.56.1
+            playwright install --with-deps chromium
+            python3 -m venv "$RUNNER_TEMP/draw"
+            "$RUNNER_TEMP/draw/bin/pip" install --quiet --no-deps --only-binary :all: --require-hashes -r bootstrap/draw-requirements.txt
+          fi
           accepted=()
           for entry in "${ready[@]}"; do
             number=${entry%%:*}
@@ -182,12 +244,12 @@ jobs:
               continue
             fi
             # The pull request's own code runs without the token.
-            if (unset GH_TOKEN; fast_gates) >"$RUNNER_TEMP/gates-$number.log" 2>&1; then
+            if (unset GH_TOKEN; fast_gates && bash -euo pipefail -c "$(declare -f acceptances); acceptances") >"$RUNNER_TEMP/gates-$number.log" 2>&1; then
               accepted+=("$number:$head")
-              echo "#$number $head: the fast gates pass on main and the train before it"
+              echo "#$number $head: the fast gates and the browser acceptances pass on main and the train before it"
             else
               tail -n 40 "$RUNNER_TEMP/gates-$number.log"
-              printf '%s %s %s\n' "$number" "$head" "the fast gates refuse it merged with main ($main) and the pull requests the train takes before it; see run $GITHUB_RUN_ID" >>"$RUNNER_TEMP/refused"
+              printf '%s %s %s\n' "$number" "$head" "the fast gates or the browser acceptances refuse it merged with main ($main) and the pull requests the train takes before it; see run $GITHUB_RUN_ID" >>"$RUNNER_TEMP/refused"
               git reset -q --hard "$before"
             fi
           done
