@@ -139,13 +139,17 @@ export async function answer(prompt, options) {
   // Asked only words the readers pass over (a kind, a weekday, "should"), those words are what is sought.
   const bare = wordsOf(text);
   const sought = named.length ? named : bare.length && bare.every((w) => !S.greet.includes(w) && !S.overview.includes(w)) ? bare : [];
-  const found = sought.length || mapped.meaning ? held.filter((item) => (!kind || !named.length || ofKind(item)) && ((sought.length && mentions(item, sought)) || close(item) >= near)).sort((a, b) => (b.at ?? 0) - (a.at ?? 0)) : [];
+  // What names the asked words comes before what is only near in meaning, then newest first, then by address: an order that does not depend on how the items came in.
+  const says = (item) => Number(sought.length > 0 && mentions(item, sought));
+  const found = sought.length || mapped.meaning ? held.filter((item) => (!kind || !named.length || ofKind(item)) && ((sought.length && mentions(item, sought)) || close(item) >= near)).sort((a, b) => says(b) - says(a) || (b.at ?? 0) - (a.at ?? 0) || (a.address < b.address ? -1 : 1)) : [];
   const offers = told.flatMap((item) => {
     const k = S.offers[item.media === "message" ? "message" : item.media === "plainText" ? "note" : ""];
     return k ? [{ kind: k, item }] : [];
   });
   const rest = found.filter((item) => !told.includes(item));
-  return { sentences, sources: rest.length ? [...told, ...rest].slice(0, S.find) : used.slice(0, S.most), cited: told, offers, mapped };
+  // More found than a list holds: the list is cut after the best, and the reply says how many it left out.
+  const cut = Math.max(0, told.length + rest.length - S.find);
+  return { sentences: cut ? [...sentences, end(fill("more", { count: cut }))] : sentences, sources: rest.length ? [...told, ...rest].slice(0, S.find) : used.slice(0, S.most), cited: told, cut, offers, mapped };
 }
 
 // Events still ahead come first, soonest first; past ones after, latest first.

@@ -695,7 +695,8 @@ export const SPEC = {
         "now": "It is {$when}",
         "unmatched": "Nothing you hold mentions “{$what}”",
         "empty": "Nothing has arrived yet: connect your mail and calendar, or keep a note, and ask again",
-        "help": "Ask about your day, a person, your mail, your calendar or your notes"
+        "help": "Ask about your day, a person, your mail, your calendar or your notes",
+        "more": "{$count} more are not listed"
       },
       "now": {
         "words": [
