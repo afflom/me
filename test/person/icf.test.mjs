@@ -1,7 +1,7 @@
 // WP-01: the whole-person model is the whole ICF, as WHO publishes it.
-// tools/person/gen.py re-derives site/person/icf.mjs from the release pinned in
-// app/specs/oracle/spec.json (both of its forms, field by field) and refuses a
-// stale model; the LexLean program generators/person refuses the structure's
+// tools/person/gen.py checks the release pinned in app/specs/oracle/spec.json
+// (both of its forms, field by field) against the rows; the LexLean program
+// generators/person writes site/person/icf.mjs and refuses the structure's
 // defects; each check refuses the defect it is for, planted in the pinned
 // release itself; and the page's module keeps every entity's code, title and
 // URI, as the licence requires.

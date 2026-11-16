@@ -5,14 +5,14 @@
 // bytes whose SHA-256 is not the pinned one are refused before they compile.
 
 export const GUESTS = {
-  emma: { path: 'guest/emma.wasm', sha256: '2fd2e84515e93bf4fd2b32fe9b681f44d9d5ce316b5491cd024d3747cf421d3d' },
   annotations: { path: 'guest/emma.wasm', sha256: '2fd2e84515e93bf4fd2b32fe9b681f44d9d5ce316b5491cd024d3747cf421d3d' },
-  read: { path: 'guest/emma.wasm', sha256: '2fd2e84515e93bf4fd2b32fe9b681f44d9d5ce316b5491cd024d3747cf421d3d' },
   input: { path: 'guest/emma.wasm', sha256: '2fd2e84515e93bf4fd2b32fe9b681f44d9d5ce316b5491cd024d3747cf421d3d' },
-  written: { path: 'guest/emma.wasm', sha256: '2fd2e84515e93bf4fd2b32fe9b681f44d9d5ce316b5491cd024d3747cf421d3d' },
-  writtenCheck: { path: 'guest/emma.wasm', sha256: '2fd2e84515e93bf4fd2b32fe9b681f44d9d5ce316b5491cd024d3747cf421d3d' },
-  other: { path: 'guest/emma.wasm', sha256: '2fd2e84515e93bf4fd2b32fe9b681f44d9d5ce316b5491cd024d3747cf421d3d' },
   otherAnnotations: { path: 'guest/emma.wasm', sha256: '2fd2e84515e93bf4fd2b32fe9b681f44d9d5ce316b5491cd024d3747cf421d3d' },
+  other: { path: 'guest/emma.wasm', sha256: '2fd2e84515e93bf4fd2b32fe9b681f44d9d5ce316b5491cd024d3747cf421d3d' },
+  read: { path: 'guest/emma.wasm', sha256: '2fd2e84515e93bf4fd2b32fe9b681f44d9d5ce316b5491cd024d3747cf421d3d' },
+  writtenCheck: { path: 'guest/emma.wasm', sha256: '2fd2e84515e93bf4fd2b32fe9b681f44d9d5ce316b5491cd024d3747cf421d3d' },
+  written: { path: 'guest/emma.wasm', sha256: '2fd2e84515e93bf4fd2b32fe9b681f44d9d5ce316b5491cd024d3747cf421d3d' },
+  emma: { path: 'guest/emma.wasm', sha256: '2fd2e84515e93bf4fd2b32fe9b681f44d9d5ce316b5491cd024d3747cf421d3d' },
 };
 
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
