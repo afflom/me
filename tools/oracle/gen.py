@@ -77,10 +77,10 @@ site/vocab/register.json and its Lean modules (Foundation.Vocab.V1.SchemaOrg,
 every term of eleven other schemas read from their own registries and
 ontologies, each pinned and cited (RT-01). Before it writes, the register is
 held to schema.org's own files: the release's whole graph and attic, the
-JSON-LD context, and every example of the release (the "schemaorg" source). --check refuses either if stale. --cache DIR reads
-and keeps the fetched sources there.
+JSON-LD context, and every example of the release (the "schemaorg" source). --check refuses either if stale. Every source is read from
+app/specs/standards/texts/<sha256>, never from the network; --fetch keeps a pin that is not kept yet.
 
-usage: python3 -I tools/oracle/gen.py [--check] [--cache DIR] [--fit-acts OUT]
+usage: python3 -I tools/oracle/gen.py [--check] [--fetch] [--fit-acts OUT]
 """
 import base64
 import csv as csvlib
@@ -107,26 +107,26 @@ SPEC = json.loads((ROOT / "app/specs/oracle/spec.json").read_text(encoding="utf-
 OUT = ROOT / "test/oracle/corpus.json"
 AUTHORITIES = ROOT / "model/authorities.toml"
 args = sys.argv[1:]
-cache = pathlib.Path(args[args.index("--cache") + 1]) if "--cache" in args else None
+TEXTS = ROOT / "app/specs/standards/texts"
 
 
 def refuse(why):
     sys.exit(f"oracle: {why}")
 
 
+def kept_text(url, sha256, headers={}):
+    path = TEXTS / sha256
+    if not path.exists() and "--fetch" not in args:
+        refuse(f"{url} is not kept at {path.relative_to(ROOT)}: run this with --fetch")
+    data = path.read_bytes() if path.exists() else urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=120).read()
+    if hashlib.sha256(data).hexdigest() != sha256:
+        refuse(f"{url} is {hashlib.sha256(data).hexdigest()}, not the pinned {sha256}")
+    path.exists() or path.write_bytes(data)
+    return data
+
+
 def fetch(source):
-    path = cache / f"{source['key']}.txt" if cache else None
-    if path and path.exists():
-        data = path.read_bytes()
-    else:
-        with urllib.request.urlopen(source["url"], timeout=60) as response:
-            data = response.read()
-        if path:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(data)
-    digest = hashlib.sha256(data).hexdigest()
-    if digest != source["sha256"]:
-        refuse(f"{source['key']} at {source['url']} is {digest}, not the pinned {source['sha256']}")
+    data = kept_text(source["url"], source["sha256"])
     # A benchmark published compressed (gzip, RFC 1952) is pinned as published and read uncompressed.
     if source["url"].endswith(".gz"):
         data = gzip.decompress(data)
@@ -755,20 +755,7 @@ PROPERTY_TYPES = {RDF_NS + "Property", OWL + "ObjectProperty", OWL + "DatatypePr
 
 
 def fetch_pin(pin):
-    path = cache / "vocab" / pin["file"] if cache else None
-    if path and path.exists():
-        data = path.read_bytes()
-    else:
-        request = urllib.request.Request(pin["url"], headers={"Accept": "text/turtle, application/rdf+xml;q=0.9, */*;q=0.5", "User-Agent": "prism-oracle/1"})
-        with urllib.request.urlopen(request, timeout=60) as response:
-            data = response.read()
-        if path:
-            path.parent.mkdir(parents=True, exist_ok=True)
-            path.write_bytes(data)
-    digest = hashlib.sha256(data).hexdigest()
-    if digest != pin["sha256"]:
-        refuse(f"{pin['file']} at {pin['url']} is {digest}, not the pinned {pin['sha256']}")
-    return data
+    return kept_text(pin["url"], pin["sha256"], {"Accept": "text/turtle, application/rdf+xml;q=0.9, */*;q=0.5", "User-Agent": "prism-oracle/1"})
 
 
 def resolve(base, ref):

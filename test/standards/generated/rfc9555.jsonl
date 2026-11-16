@@ -1,0 +1,48 @@
+{"id": "rfc9555-2.1.1-5b8ff21f", "kind": "must", "ref": "RFC 9555 2.1.1", "text": "Implementations that convert a vCard without a UID property MUST generate a unique identifier as value for the uid property."}
+{"id": "rfc9555-2.1.1-c21b04dd", "kind": "should", "ref": "RFC 9555 2.1.1", "text": "This value SHOULD be the same when converting the same vCard multiple times, but how to achieve this is implementation- specific."}
+{"id": "rfc9555-2.1.2-522f4f3c", "kind": "must", "ref": "RFC 9555 2.1.2", "text": "Whatever identifier generation scheme implementations use, they MUST generate values that are valid according to the definition of the Id type in [RFC9553]."}
+{"id": "rfc9555-2.2.5-1170b314", "kind": "must", "ref": "RFC 9555 2.2.5", "text": "The value MUST be a language tag as defined in [RFC5646]."}
+{"id": "rfc9555-2.2.7-89a72665", "kind": "must", "ref": "RFC 9555 2.2.7", "text": "The value MUST be a URI as defined in Section 3 of [RFC3986]"}
+{"id": "rfc9555-2.3.7-739c7452", "kind": "may", "ref": "RFC 9555 2.3.7", "text": "If the DERIVED parameter is set to \"true\" on a vCard property, then implementations MAY choose not to convert that property."}
+{"id": "rfc9555-2.3.9-4d500408", "kind": "must", "ref": "RFC 9555 2.3.9", "text": "It exclusively is for use in jCard and MUST NOT be set in a vCard."}
+{"id": "rfc9555-2.3.9-f834b3b8", "kind": "may", "ref": "RFC 9555 2.3.9", "text": "Implementations that still wish to preserve the exact property group name of a vCard property MAY set the jCard \"group\" parameter in the JSContact properties vCardProps or vCardParams as defined in Section 2.15."}
+{"id": "rfc9555-2.3.13-c820bd7b", "kind": "must", "ref": "RFC 9555 2.3.13", "text": "In all other cases, the values convert verbatim, but lowercase MUST be used for the JSContact value."}
+{"id": "rfc9555-2.5.5-e4ead202", "kind": "must", "ref": "RFC 9555 2.5.5", "text": "The order in the components property MUST adhere to the order of the JSCOMPS parameter value."}
+{"id": "rfc9555-2.5.5-95cbb42a", "kind": "must", "ref": "RFC 9555 2.5.5", "text": "If the JSCOMPS parameter is not set, then the Name object's isOrdered property value is \"false\", and the defaultSeparator property MUST NOT be set."}
+{"id": "rfc9555-2.5.5-07bb0539", "kind": "must", "ref": "RFC 9555 2.5.5", "text": "The order in the components property MUST follow the order of values in the N structured value when read from left to right."}
+{"id": "rfc9555-2.6.1-4ebfa758", "kind": "should", "ref": "RFC 9555 2.6.1", "text": "Implementations SHOULD set these new components, even if all their values are the empty string."}
+{"id": "rfc9555-2.6.1-e4ead202", "kind": "must", "ref": "RFC 9555 2.6.1", "text": "The order in the components property MUST adhere to the order of the JSCOMPS parameter value."}
+{"id": "rfc9555-2.6.1-0d678c1e", "kind": "must", "ref": "RFC 9555 2.6.1", "text": "If the JSCOMPS parameter is not set, then the Address object's isOrdered property value is \"false\", and the defaultSeparator property MUST NOT be set."}
+{"id": "rfc9555-2.6.1-fd2fd358", "kind": "must", "ref": "RFC 9555 2.6.1", "text": "The order in the components property MUST follow the order of values in the ADR structured value when read from left to right."}
+{"id": "rfc9555-2.7.6-bfd9c4c0", "kind": "should", "ref": "RFC 9555 2.7.6", "text": "Accordingly, an implementation SHOULD only set the Phone object's features property if the TEL property actually has a TEL-specific TYPE parameter set."}
+{"id": "rfc9555-2.8.3-75336180", "kind": "must", "ref": "RFC 9555 2.8.3", "text": "That being said, implementations MUST convert the properties to the _same_ address for the following cases:"}
+{"id": "rfc9555-2.9.4-742f86b3", "kind": "may", "ref": "RFC 9555 2.9.4", "text": "Implementations MAY allow representation of organizational units without the organizational name."}
+{"id": "rfc9555-2.9.4-ab52dab2", "kind": "must", "ref": "RFC 9555 2.9.4", "text": "In this case, the first component of the ORG value MUST be an empty string (e.g., ORG:;DepartmentA)."}
+{"id": "rfc9555-2.11.1-b1890c60", "kind": "may", "ref": "RFC 9555 2.11.1", "text": "In this case, the PREF parameter does not have a JSContact counterpart; however, the implementors MAY insert the entries by order of preference."}
+{"id": "rfc9555-2.15-5c169719", "kind": "may", "ref": "RFC 9555 2.15", "text": "This section defines JSContact properties by which such vCard properties and parameters MAY be represented in JSContact."}
+{"id": "rfc9555-2.15-24eb0717", "kind": "may", "ref": "RFC 9555 2.15", "text": "Implementations MAY choose to convert differently if they deem that more appropriate."}
+{"id": "rfc9555-2.15.2-e4e48495", "kind": "must", "ref": "RFC 9555 2.15.2", "text": "The value MUST be a JSON object containing vCard property parameters as defined in Section 3.3 of [RFC7095]."}
+{"id": "rfc9555-2.15.3-5a96ba55", "kind": "must", "ref": "RFC 9555 2.15.3", "text": "The case- insensitive value MUST be valid according to the \"name\" ABNF defined in Section 3.3 of [RFC6350]."}
+{"id": "rfc9555-3.1-db549839", "kind": "must", "ref": "RFC 9555 3.1", "text": "* Multivalued JSContact properties convert to separate instances of their equivalent vCard property, and each of the PROP-ID parameters MUST be set to the Id-typed key of the converted value (see Section 2.3.18)."}
+{"id": "rfc9555-3.1-b768a29f", "kind": "must", "ref": "RFC 9555 3.1", "text": "- If the Name object's full property is set, then implementations MUST use its value for the vCard FN property."}
+{"id": "rfc9555-3.1-1007918e", "kind": "should", "ref": "RFC 9555 3.1", "text": "- If the Name object's full property is not set, then implementations SHOULD derive the full name from the Name object's components property values."}
+{"id": "rfc9555-3.1-7860f6e0", "kind": "must", "ref": "RFC 9555 3.1", "text": "Implementations MUST set the DERIVED parameter on the FN property."}
+{"id": "rfc9555-3.1-ecb86919", "kind": "must", "ref": "RFC 9555 3.1", "text": "- Otherwise, the FN property MUST be set to the empty value."}
+{"id": "rfc9555-3.1.1-146c2fff", "kind": "may", "ref": "RFC 9555 3.1.1", "text": "This specification defines the new JSPROP (Section 3.2.1) vCard property and JSPTR (Section 3.3.2) vCard parameter by which such JSContact properties MAY be represented in vCard."}
+{"id": "rfc9555-3.1.1-24eb0717", "kind": "may", "ref": "RFC 9555 3.1.1", "text": "Implementations MAY choose to convert differently if they deem that more appropriate."}
+{"id": "rfc9555-3.2.1-63a8c6f5", "kind": "must", "ref": "RFC 9555 3.2.1", "text": "The JSPTR parameter MUST be set for this property."}
+{"id": "rfc9555-3.2.1-ec11f6bb", "kind": "must", "ref": "RFC 9555 3.2.1", "text": "The format of the JSON value MUST be compact, e.g., without insignificant whitespace as defined in Section 2 of [RFC8259]."}
+{"id": "rfc9555-3.2.1-4b65873a", "kind": "must", "ref": "RFC 9555 3.2.1", "text": "The pointer MUST NOT reference into an array."}
+{"id": "rfc9555-3.2.1-aee8c304", "kind": "must", "ref": "RFC 9555 3.2.1", "text": "When converting from vCard to JSContact, the PatchObject MUST only be applied after all other vCard properties have already been converted."}
+{"id": "rfc9555-3.2.1-9f3c8f42", "kind": "must", "ref": "RFC 9555 3.2.1", "text": "The PatchObject MUST be valid, including the restriction that an invalid PatchObject MUST NOT be applied."}
+{"id": "rfc9555-3.2.1-e69cb24f", "kind": "must", "ref": "RFC 9555 3.2.1", "text": "The following are REQUIRED and MUST NOT ; occur more than once ( \";\" jsptr-param ) / ; see next section ( \";\" \"VALUE\" \"=\" \"TEXT\") ; ;"}
+{"id": "rfc9555-3.2.1-30db1434", "kind": "may", "ref": "RFC 9555 3.2.1", "text": "The following is OPTIONAL ; and MAY occur more than once. ;"}
+{"id": "rfc9555-3.3.1-02c6acb8", "kind": "must", "ref": "RFC 9555 3.3.1", "text": "If this parameter is set and its value is valid (see later), then implementations MUST set the isOrdered property of the Name or Address object to \"true\"."}
+{"id": "rfc9555-3.3.1-a9ecb234", "kind": "must", "ref": "RFC 9555 3.3.1", "text": "Otherwise, they MUST set the isOrdered property value to \"false\"."}
+{"id": "rfc9555-3.3.1-ae3b2f27", "kind": "must", "ref": "RFC 9555 3.3.1", "text": "Its value MUST be quoted."}
+{"id": "rfc9555-3.3.1-b4c424a2", "kind": "must", "ref": "RFC 9555 3.3.1", "text": "Otherwise, the first entry MUST be a separator entry."}
+{"id": "rfc9555-3.3.1-6324cc38", "kind": "must", "ref": "RFC 9555 3.3.1", "text": "All following entries processed in order result in an ordered list of JSContact components and MUST be one of the following two kinds:"}
+{"id": "rfc9555-3.3.1-260eaca2", "kind": "must", "ref": "RFC 9555 3.3.1", "text": "The second index is zero by default, in which case it MUST be omitted (as well as the leading COMMA)."}
+{"id": "rfc9555-3.3.1-8475d40c", "kind": "must", "ref": "RFC 9555 3.3.1", "text": "It starts with the LATIN SMALL LETTER S (U+0073) character, followed by the COMMA (U+002C) character, followed by zero or more \"param-value\" characters (see Section 3.3 of [RFC6350]), where the COMMA (U+002C) and SEMICOLON (U+003B) characters MUST be escaped according to the rules defined in Section 3.4 of [RFC6350]."}
+{"id": "rfc9555-3.3.2-3a6c4ecb", "kind": "must", "ref": "RFC 9555 3.3.2", "text": "This parameter has a single value that MUST be a valid JSON pointer as defined in [RFC6901]."}
+{"id": "rfc9555-3.3.2-10f71668", "kind": "must", "ref": "RFC 9555 3.3.2", "text": "Note that the value MUST be quoted according to the \"param-value\" ABNF in [RFC6350]."}
