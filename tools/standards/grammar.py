@@ -161,6 +161,8 @@ for g in SPEC["grammars"]:
         # Literals over a few KB break the guest export (PP5004), so the table is 256-byte chunks joined by append.
         index = {n: i for i, n in enumerate(sorted(data["rules"]))}
         u = lambda v, w: v.to_bytes(w, "big")
+        # Whether a node matches one character whatever it is: Abnf reads an alternation of such nodes (tag 8) in one step.
+        single = lambda n, seen=(): n[0] == "range" or (n[0] in ("lit", "cs") and len(n[1]) == 1) or (n[0] == "ref" and n[1] not in seen and single(data["rules"][n[1]], (*seen, n[1]))) or (n[0] == "alt" and all(single(x, seen) for x in n[1:]))
         def node(n):
             k, p = n[0], b""
             if k == "ref": p = u(index[n[1]], 2)
@@ -168,7 +170,7 @@ for g in SPEC["grammars"]:
             elif k == "range": p = u(n[1], 3) + u(n[2], 3)
             elif k in ("alt", "seq"): p = u(len(n) - 1, 2) + b"".join(node(x) for x in n[1:])
             elif k == "rep": p = u(n[1], 2) + u(n[2] or 0, 2) + u(n[2] is not None, 1) + node(n[3])
-            return u(["ref", "lit", "cs", "range", "alt", "seq", "rep", "prose"].index(k), 1) + u(4 + len(p), 3) + p
+            return u(8 if k == "alt" and single(n) else ["ref", "lit", "cs", "range", "alt", "seq", "rep", "prose"].index(k), 1) + u(4 + len(p), 3) + p
         bodies = [node(data["rules"][n]) for n in index]
         at = [2 + 3 * len(bodies) + sum(map(len, bodies[:i])) for i in range(len(bodies))]
         t = u(len(bodies), 2) + b"".join(u(a, 3) for a in at) + b"".join(bodies)

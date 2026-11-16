@@ -46,9 +46,8 @@ export function abnf({ rules }) {
     },
     // Every rule a derivation went through, by name.
     rulesOf(tree, out = new Set()) {
-      if (!tree) return out;
-      out.add(tree.rule);
-      for (const kid of tree.kids) this.rulesOf(kid, out);
+      if (tree) out.add(tree.rule);
+      for (const kid of tree?.kids ?? []) this.rulesOf(kid, out);
       return out;
     },
   };
@@ -56,11 +55,7 @@ export function abnf({ rules }) {
 
 // The named rules found under a tree, depth first, as written.
 export function all(tree, rule, out = []) {
-  if (!tree) return out;
-  for (const kid of tree.kids) {
-    if (kid.rule === rule) out.push(kid);
-    else all(kid, rule, out);
-  }
+  for (const kid of tree?.kids ?? []) kid.rule === rule ? out.push(kid) : all(kid, rule, out);
   return out;
 }
 export const first = (tree, rule) => all(tree, rule)[0] ?? null;

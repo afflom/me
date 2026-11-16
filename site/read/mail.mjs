@@ -41,8 +41,7 @@ function readOnce(line) {
   const name = /^([!-9;-~]+)[ \t]*:/.exec(line)?.[1]?.toLowerCase();
   if (!name) return null;
   // A field is read by its grammar when it is first asked for: a header has many fields, and who reads it asks for few.
-  let got = null;
-  const read = () => (got ??= byRule(name, line));
+  let got = null, read = () => (got ??= byRule(name, line));
   return { name, get rule() { return read().rule; }, get tree() { return read().tree; }, get raw() { return read().raw; } };
 }
 function byRule(name, line) {
