@@ -231,6 +231,46 @@
         131072,
         8192
       ]
+    },
+    {
+      "id": "prov",
+      "wasm": "site/prov/guest/prov.wasm",
+      "pin": "site/prov/guest.mjs",
+      "as": "prov",
+      "modules": [
+        "PrismProv"
+      ],
+      "dispatch": "PrismProv::prismProvDispatch",
+      "vectors": "spec:prov",
+      "limits": [
+        4096,
+        128,
+        8192
+      ],
+      "memory": [
+        16384,
+        1048576
+      ]
+    },
+    {
+      "id": "prov-invalid",
+      "wasm": "site/prov/guest/prov-invalid.wasm",
+      "pin": "site/prov/guest.mjs",
+      "as": "invalid",
+      "modules": [
+        "PrismProv"
+      ],
+      "dispatch": "PrismProv::prismProvDispatch",
+      "vectors": "spec:prov/invalid",
+      "limits": [
+        4096,
+        128,
+        8192
+      ],
+      "memory": [
+        16384,
+        1048576
+      ]
     }
   ]
 }

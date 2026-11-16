@@ -1,0 +1,1803 @@
+\begin{lexlean}{PrismProv}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\title{Text application model}
+\begin{semanticmodule}
+structure{
+  name: PvCtx,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: d, type: Bytes}]
+}
+
+structure{
+  name: PvPState,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: ph, type: Nat}, {name: pos, type: Nat}, {name: scope, type: Nat}, {name: nb, type: Nat}, {name: bid, type: Nat}, {name: nv, type: Nat}, {name: ns, type: Bytes}, {name: terms, type: Bytes}, {name: rows, type: Bytes}, {name: cur, type: Bytes}]
+}
+
+structure{
+  name: PvCState,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: rows, type: Bytes}, {name: par, type: Bytes}, {name: nv, type: Nat}, {name: bad, type: Nat}]
+}
+
+structure{
+  name: PvEState,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: edges, type: Bytes}]
+}
+
+structure{
+  name: PvMState,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: marks, type: Bytes}]
+}
+
+definition{
+  name: pvAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (prim index s i : (Option UInt8)) | Option.none => 0 | Option.some octet => (prim to_nat octet : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvG16,
+  parameters: [s : Bytes, k : Nat],
+  result: Nat,
+  body: ((prim multiply (pvAt s k) 256 : Nat) + (pvAt s (k + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvByte,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (match (prim slice 0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff (prim remainder n 256 0 : Nat) 1 : (Option Bytes)) | Option.none => 0x | Option.some part => part)
+}
+
+definition{
+  name: pvU16,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (prim append (pvByte (prim quotient n 256 0 : Nat)) (pvByte n) : Bytes)
+}
+
+definition{
+  name: pvIn,
+  parameters: [b : Nat, lo : Nat, hi : Nat],
+  result: Bool,
+  body: ((lo <? (b + 1)) && (b <? (hi + 1)))
+}
+
+definition{
+  name: pvCont,
+  parameters: [b : Nat],
+  result: Bool,
+  body: (pvIn b 128 191)
+}
+
+definition{
+  name: pvU8Len,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (pvAt d i); (let n : Nat := (pvAt d (i + 1)); (if (b <? 128) then (if (i <? (prim length d : Nat)) then 1 else 0) else (if (pvIn b 194 223) then (if (pvCont n) then 2 else 0) else (if (pvIn b 224 239) then (if ((pvIn n (if (b =? 224) then 160 else 128) (if (b =? 237) then 159 else 191)) && (pvCont (pvAt d (i + 2)))) then 3 else 0) else (if (pvIn b 240 244) then (if ((pvIn n (if (b =? 240) then 144 else 128) (if (b =? 244) then 143 else 191)) && ((pvCont (pvAt d (i + 2))) && (pvCont (pvAt d (i + 3))))) then 4 else 0) else 0)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvU8Ok,
+  parameters: [d : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if ((prim length d : Nat) <? (i + 1)) then true else (if ((pvU8Len d i) =? 0) then false else (pvU8Ok d (i + (pvU8Len d i)) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvCp,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (pvAt d i); (if (b <? 128) then b else (if (b <? 224) then ((prim multiply (prim subtract b 192 : Nat) 64 : Nat) + (prim subtract (pvAt d (i + 1)) 128 : Nat)) else (if (b <? 240) then ((prim multiply ((prim multiply (prim subtract b 224 : Nat) 64 : Nat) + (prim subtract (pvAt d (i + 1)) 128 : Nat)) 64 : Nat) + (prim subtract (pvAt d (i + 2)) 128 : Nat)) else ((prim multiply ((prim multiply ((prim multiply (prim subtract b 240 : Nat) 64 : Nat) + (prim subtract (pvAt d (i + 1)) 128 : Nat)) 64 : Nat) + (prim subtract (pvAt d (i + 2)) 128 : Nat)) 64 : Nat) + (prim subtract (pvAt d (i + 3)) 128 : Nat)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvBaseHi,
+  parameters: [c : Nat],
+  result: Bool,
+  body: (if ((pvIn c 192 214) || (pvIn c 216 246)) then true else (if ((pvIn c 248 767) || (pvIn c 880 893)) then true else (if ((pvIn c 895 8191) || (pvIn c 8204 8205)) then true else (if ((pvIn c 8304 8591) || (pvIn c 11264 12271)) then true else (if ((pvIn c 12289 55295) || (pvIn c 63744 64975)) then true else ((pvIn c 65008 65533) || (pvIn c 65536 983039)))))))
+}
+
+definition{
+  name: pvBase,
+  parameters: [c : Nat],
+  result: Bool,
+  body: (if ((pvIn c 65 90) || (pvIn c 97 122)) then true else (if (c <? 128) then false else (pvBaseHi c)))
+}
+
+definition{
+  name: pvDigit,
+  parameters: [b : Nat],
+  result: Bool,
+  body: (pvIn b 48 57)
+}
+
+definition{
+  name: pvCharsU,
+  parameters: [c : Nat],
+  result: Bool,
+  body: ((pvBase c) || ((c =? 95) || (pvDigit c)))
+}
+
+definition{
+  name: pvChars,
+  parameters: [c : Nat],
+  result: Bool,
+  body: (if ((pvCharsU c) || (c =? 45)) then true else (if (c =? 183) then true else ((pvIn c 768 879) || (pvIn c 8255 8256))))
+}
+
+definition{
+  name: pvHex,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((pvDigit b) || ((pvIn b 65 70) || (pvIn b 97 102)))
+}
+
+definition{
+  name: pvOther,
+  parameters: [b : Nat],
+  result: Bool,
+  body: (if ((b =? 47) || (b =? 64)) then true else (if ((b =? 126) || (b =? 38)) then true else (if ((b =? 43) || (b =? 42)) then true else (if ((b =? 63) || (b =? 35)) then true else ((b =? 36) || (b =? 33))))))
+}
+
+definition{
+  name: pvEsc,
+  parameters: [b : Nat],
+  result: Bool,
+  body: (if ((b =? 61) || (b =? 39)) then true else (if ((b =? 40) || (b =? 41)) then true else (if ((b =? 44) || (b =? 45)) then true else (if ((b =? 58) || (b =? 59)) then true else (if ((b =? 91) || (b =? 93)) then true else (b =? 46))))))
+}
+
+definition{
+  name: pvCmt,
+  parameters: [d : Bytes, i : Nat],
+  result: Bool,
+  body: (((pvAt d i) =? 47) && (((pvAt d (i + 1)) =? 47) || ((pvAt d (i + 1)) =? 42))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvOtherLen,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (pvAt d i); (if (pvCmt d i) then 0 else (if (b =? 37) then (if ((pvHex (pvAt d (i + 1))) && (pvHex (pvAt d (i + 2)))) then 3 else 0) else (if (b =? 92) then (if (pvEsc (pvAt d (i + 1))) then 2 else 0) else (if (pvOther b) then 1 else 0))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvLocLen,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (let o : Nat := (pvOtherLen d i); (if (0 <? o) then o else (if (pvCmt d i) then 0 else (if ((pvAt d i) =? 46) then 1 else (if ((pvU8Len d i) =? 0) then 0 else (if (pvChars (pvCp d i)) then (pvU8Len d i) else 0)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvLocStart,
+  parameters: [d : Bytes, i : Nat],
+  result: Bool,
+  body: (if (0 <? (pvOtherLen d i)) then true else (if (pvCmt d i) then false else (if ((pvU8Len d i) =? 0) then false else (pvCharsU (pvCp d i))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvRun,
+  parameters: [d : Bytes, i : Nat, last : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => last
+    | Nat.succ more => (let n : Nat := (pvLocLen d i); (if (n =? 0) then last else (if ((pvAt d i) =? 46) then (pvRun d (i + 1) last more) else (pvRun d (i + n) (i + n) more))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvPfxBody,
+  parameters: [d : Bytes, i : Nat, e : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if (e <? (i + 1)) then true else (if ((pvAt d i) =? 46) then (pvPfxBody d (i + 1) e more) else (if ((pvU8Len d i) =? 0) then false else (if (pvChars (pvCp d i)) then (pvPfxBody d (i + (pvU8Len d i)) e more) else false))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvPfxOk,
+  parameters: [d : Bytes, i : Nat, e : Nat],
+  result: Bool,
+  body: (if (e <? (i + 1)) then false else (if ((pvU8Len d i) =? 0) then false else (if (pvBase (pvCp d i)) then (pvPfxBody d i e 65536) else false))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvNameEnd,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (let r : Nat := (pvRun d i i 65536); (if ((pvAt d r) =? 58) then (if (pvPfxOk d i r) then (if (pvLocStart d (r + 1)) then (pvRun d (r + 1) (r + 1) 65536) else (r + 1)) else 0) else (if (r =? i) then 0 else (if (pvLocStart d i) then r else 0)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvColon,
+  parameters: [d : Bytes, i : Nat, e : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => e
+    | Nat.succ more => (if (e <? (i + 1)) then e else (if ((pvAt d i) =? 92) then (pvColon d (i + 2) e more) else (if ((pvAt d i) =? 58) then i else (pvColon d (i + 1) e more))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvIsWs,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 32) || ((b =? 10) || ((b =? 13) || (b =? 9))))
+}
+
+definition{
+  name: pvEol,
+  parameters: [d : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ more => (if ((prim length d : Nat) <? (i + 1)) then i else (if (((pvAt d i) =? 10) || ((pvAt d i) =? 13)) then i else (pvEol d (i + 1) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvBlock,
+  parameters: [d : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if ((prim length d : Nat) <? (i + 1)) then 0 else (if (((pvAt d i) =? 42) && ((pvAt d (i + 1)) =? 47)) then (i + 2) else (pvBlock d (i + 1) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvWsFrom,
+  parameters: [d : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ more => (if (pvIsWs (pvAt d i)) then (pvWsFrom d (i + 1) more) else (if ((pvAt d i) =? 47) then (if ((pvAt d (i + 1)) =? 47) then (pvWsFrom d (pvEol d (i + 2) 65536) more) else (if ((pvAt d (i + 1)) =? 42) then (if ((pvBlock d (i + 2) 65536) =? 0) then i else (pvWsFrom d (pvBlock d (i + 2) 65536) more)) else i)) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvWs,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (pvWsFrom d i 65536),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvEqAt,
+  parameters: [d : Bytes, i : Nat, k : Bytes, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if ((prim length k : Nat) <? (j + 1)) then true else (if ((pvAt d i) =? (pvAt k j)) then (pvEqAt d (i + 1) k (j + 1) more) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvIs,
+  parameters: [d : Bytes, i : Nat, e : Nat, k : Bytes],
+  result: Bool,
+  body: (if ((prim subtract e i : Nat) =? (prim length k : Nat)) then (pvEqAt d i k 0 64) else false),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvIriBody,
+  parameters: [d : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (let b : Nat := (pvAt d i); (if (b =? 62) then (i + 1) else (if (b <? 33) then 0 else (if ((b =? 60) || (b =? 34)) then 0 else (if ((b =? 123) || (b =? 125)) then 0 else (if ((b =? 124) || (b =? 94)) then 0 else (if ((b =? 96) || (b =? 92)) then 0 else (pvIriBody d (i + 1) more))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvIriEnd,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (if ((pvAt d i) =? 60) then (pvIriBody d (i + 1) 65536) else 0),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvEchar,
+  parameters: [b : Nat],
+  result: Bool,
+  body: (if ((b =? 116) || (b =? 98)) then true else (if ((b =? 110) || (b =? 114)) then true else (if ((b =? 102) || (b =? 92)) then true else ((b =? 34) || (b =? 39)))))
+}
+
+definition{
+  name: pvStr1,
+  parameters: [d : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if ((prim length d : Nat) <? (i + 1)) then 0 else (let b : Nat := (pvAt d i); (if (b =? 34) then (i + 1) else (if ((b =? 10) || (b =? 13)) then 0 else (if (b =? 92) then (if (pvEchar (pvAt d (i + 1))) then (pvStr1 d (i + 2) more) else 0) else (pvStr1 d (i + 1) more))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvStr3,
+  parameters: [d : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if ((prim length d : Nat) <? (i + 1)) then 0 else (let b : Nat := (pvAt d i); (if (b =? 34) then (if (((pvAt d (i + 1)) =? 34) && ((pvAt d (i + 2)) =? 34)) then (i + 3) else (pvStr3 d (i + 1) more)) else (if (b =? 92) then (if (pvEchar (pvAt d (i + 1))) then (pvStr3 d (i + 2) more) else 0) else (pvStr3 d (i + 1) more)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvLong,
+  parameters: [d : Bytes, i : Nat],
+  result: Bool,
+  body: (((pvAt d i) =? 34) && (((pvAt d (i + 1)) =? 34) && ((pvAt d (i + 2)) =? 34))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvStrEnd,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (if (pvLong d i) then (pvStr3 d (i + 3) 65536) else (if ((pvAt d i) =? 34) then (pvStr1 d (i + 1) 65536) else 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvDigEnd,
+  parameters: [d : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ more => (if (pvDigit (pvAt d i)) then (pvDigEnd d (i + 1) more) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvAlpha,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((pvIn b 65 90) || (pvIn b 97 122))
+}
+
+definition{
+  name: pvAlphaEnd,
+  parameters: [d : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ more => (if (pvAlpha (pvAt d i)) then (pvAlphaEnd d (i + 1) more) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvAlnumEnd,
+  parameters: [d : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ more => (if ((pvAlpha (pvAt d i)) || (pvDigit (pvAt d i))) then (pvAlnumEnd d (i + 1) more) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvLangTail,
+  parameters: [d : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if ((pvAt d i) =? 45) then (if ((pvAlnumEnd d (i + 1) 65536) =? (i + 1)) then 0 else (pvLangTail d (pvAlnumEnd d (i + 1) 65536) more)) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvLangEnd,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (let a : Nat := (pvAlphaEnd d (i + 1) 65536); (if (a =? (i + 1)) then 0 else (pvLangTail d a 65536))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvIntEnd,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (let s : Nat := (if ((pvAt d i) =? 45) then (i + 1) else i); (let e : Nat := (pvDigEnd d s 65536); (if (e =? s) then 0 else e))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvDg,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (if (pvDigit (pvAt d i)) then (prim subtract (pvAt d i) 48 : Nat) else 10),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvN2,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (if (((pvDg d i) =? 10) || ((pvDg d (i + 1)) =? 10)) then 100 else ((prim multiply (pvDg d i) 10 : Nat) + (pvDg d (i + 1)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvNum,
+  parameters: [d : Bytes, i : Nat, e : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ more => (if (e <? (i + 1)) then acc else (pvNum d (i + 1) e ((prim multiply acc 10 : Nat) + (pvDg d i)) more))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvYs,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (if ((pvAt d i) =? 45) then (i + 1) else i),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvYe,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (pvDigEnd d (pvYs d i) 16),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvLeap,
+  parameters: [y : Nat],
+  result: Bool,
+  body: (((prim remainder y 4 0 : Nat) =? 0) && ((not ((prim remainder y 100 0 : Nat) =? 0)) || ((prim remainder y 400 0 : Nat) =? 0)))
+}
+
+definition{
+  name: pvMDays,
+  parameters: [y : Nat, m : Nat],
+  result: Nat,
+  body: (if (m =? 2) then (if (pvLeap y) then 29 else 28) else (if ((m =? 4) || (m =? 6)) then 30 else (if ((m =? 9) || (m =? 11)) then 30 else 31)))
+}
+
+definition{
+  name: pvZeros,
+  parameters: [d : Bytes, i : Nat, e : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if (e <? (i + 1)) then true else (if ((pvAt d i) =? 48) then (pvZeros d (i + 1) e more) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvTimeFe,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (let s : Nat := (pvYs d i); (let y : Nat := (pvYe d i); (let nd : Nat := (prim subtract y s : Nat); (if ((nd <? 4) || (9 <? nd)) then 0 else (if ((4 <? nd) && ((pvAt d s) =? 48)) then 0 else (if ((not ((pvAt d y) =? 45)) || (not ((pvAt d (y + 3)) =? 45))) then 0 else (let mo : Nat := (pvN2 d (y + 1)); (if ((mo <? 1) || (12 <? mo)) then 0 else (let dd : Nat := (pvN2 d (y + 4)); (if ((dd <? 1) || ((pvMDays (pvNum d s y 0 16) mo) <? dd)) then 0 else (if (not ((pvAt d (y + 6)) =? 84)) then 0 else (if ((not ((pvAt d (y + 9)) =? 58)) || (not ((pvAt d (y + 12)) =? 58))) then 0 else (let hh : Nat := (pvN2 d (y + 7)); (let mi : Nat := (pvN2 d (y + 10)); (let ss : Nat := (pvN2 d (y + 13)); (if ((24 <? hh) || ((59 <? mi) || (59 <? ss))) then 0 else (let fe : Nat := (if ((pvAt d (y + 15)) =? 46) then (pvDigEnd d (y + 16) 65536) else (y + 15)); (if (((pvAt d (y + 15)) =? 46) && (fe =? (y + 16))) then 0 else (if (hh =? 24) then (if ((not (mi =? 0)) || (not (ss =? 0))) then 0 else (if (pvZeros d (y + 16) fe 65536) then fe else 0)) else fe))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvTzMin,
+  parameters: [d : Bytes, f : Nat],
+  result: Nat,
+  body: (let th : Nat := (pvN2 d (f + 1)); (let tm : Nat := (pvN2 d (f + 4)); (if (not ((pvAt d (f + 3)) =? 58)) then 9999 else (if ((14 <? th) || (59 <? tm)) then 9999 else (if ((th =? 14) && (not (tm =? 0))) then 9999 else ((prim multiply th 60 : Nat) + tm)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvTimeEnd,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (let f : Nat := (pvTimeFe d i); (if (f =? 0) then 0 else (if ((pvAt d f) =? 90) then (f + 1) else (if (((pvAt d f) =? 43) || ((pvAt d f) =? 45)) then (if ((pvTzMin d f) =? 9999) then 0 else (f + 6)) else f)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvZoned,
+  parameters: [d : Bytes, i : Nat],
+  result: Bool,
+  body: (let f : Nat := (pvTimeFe d i); (((pvAt d f) =? 90) || (((pvAt d f) =? 43) || ((pvAt d f) =? 45)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvSecs,
+  parameters: [d : Bytes, i : Nat],
+  result: Nat,
+  body: (let s : Nat := (pvYs d i); (let y : Nat := (pvYe d i); (let yr : Nat := (pvNum d s y 0 16); (let mo : Nat := (pvN2 d (y + 1)); (let yy : Nat := (if ((pvAt d i) =? 45) then (prim subtract 1000000000 yr : Nat) else (1000000000 + yr)); (let yc : Nat := (if (mo <? 3) then (prim subtract yy 1 : Nat) else yy); (let era : Nat := (prim quotient yc 400 0 : Nat); (let yoe : Nat := (prim remainder yc 400 0 : Nat); (let doy : Nat := ((prim quotient ((prim multiply 153 (if (mo <? 3) then (mo + 9) else (prim subtract mo 3 : Nat)) : Nat) + 2) 5 0 : Nat) + (prim subtract (pvN2 d (y + 4)) 1 : Nat)); (let days : Nat := ((prim multiply era 146097 : Nat) + (prim subtract (((prim multiply yoe 365 : Nat) + (prim quotient yoe 4 0 : Nat)) + doy) (prim quotient yoe 100 0 : Nat) : Nat)); (let f : Nat := (pvTimeFe d i); (let local : Nat := (((((prim multiply days 86400 : Nat) + (prim multiply (pvN2 d (y + 7)) 3600 : Nat)) + (prim multiply (pvN2 d (y + 10)) 60 : Nat)) + (pvN2 d (y + 13))) + 86400); (if ((pvAt d f) =? 43) then (prim subtract local (prim multiply (pvTzMin d f) 60 : Nat) : Nat) else (if ((pvAt d f) =? 45) then (local + (prim multiply (pvTzMin d f) 60 : Nat)) else local)))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvFracEnd,
+  parameters: [d : Bytes, s : Nat, e : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => e
+    | Nat.succ more => (if (e <? (s + 1)) then s else (if ((pvAt d (prim subtract e 1 : Nat)) =? 48) then (pvFracEnd d s (prim subtract e 1 : Nat) more) else e))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvEqRange,
+  parameters: [d : Bytes, a : Nat, b : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if (n =? 0) then true else (if ((pvAt d a) =? (pvAt d b)) then (pvEqRange d (a + 1) (b + 1) (prim subtract n 1 : Nat) more) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvTimeSame,
+  parameters: [d : Bytes, a : Nat, b : Nat],
+  result: Bool,
+  body: (let fa : Nat := ((pvYe d a) + 16); (let fb : Nat := ((pvYe d b) + 16); (let ea : Nat := (pvFracEnd d fa (pvTimeFe d a) 65536); (let eb : Nat := (pvFracEnd d fb (pvTimeFe d b) 65536); (if ((pvZoned d a) && (not (pvZoned d b))) then false else (if ((pvZoned d b) && (not (pvZoned d a))) then false else (if (not ((pvSecs d a) =? (pvSecs d b))) then false else (if (not ((prim subtract ea fa : Nat) =? (prim subtract eb fb : Nat))) then false else (pvEqRange d fa fb (prim subtract ea fa : Nat) 65536))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvNsFind,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, ps : Nat, pe : Nat, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (let o : Nat := (prim multiply k 9 : Nat); (if ((prim length ns : Nat) <? (o + 1)) then 0 else (if (((pvAt ns o) =? scope) && ((prim subtract pe ps : Nat) =? (prim subtract (pvG16 ns (o + 3)) (pvG16 ns (o + 1)) : Nat))) then (if (pvEqRange d ps (pvG16 ns (o + 1)) (prim subtract pe ps : Nat) 65536) then (o + 1) else (pvNsFind d ns scope ps pe (k + 1) more)) else (pvNsFind d ns scope ps pe (k + 1) more))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvNsOf,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, i : Nat, e : Nat],
+  result: Nat,
+  body: (let c : Nat := (pvColon d i e 65536); (let pe : Nat := (if (c <? e) then c else i); (let f : Nat := (pvNsFind d ns scope i pe 0 65536); (if (0 <? f) then f else (let g : Nat := (pvNsFind d ns 0 i pe 0 65536); (if (0 <? g) then g else (if (c <? e) then 0 else 65535))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvNsS,
+  parameters: [ns : Bytes, f : Nat],
+  result: Nat,
+  body: (if (f =? 65535) then 0 else (pvG16 ns (f + 4))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvNsE,
+  parameters: [ns : Bytes, f : Nat],
+  result: Nat,
+  body: (if (f =? 65535) then 0 else (pvG16 ns (f + 6))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvLocS,
+  parameters: [d : Bytes, i : Nat, e : Nat],
+  result: Nat,
+  body: (let c : Nat := (pvColon d i e 65536); (if (c <? e) then (c + 1) else i)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvName,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, i : Nat],
+  result: Nat,
+  body: (let e : Nat := (pvNameEnd d i); (if (e =? 0) then 0 else (if ((pvNsOf d ns scope i e) =? 0) then 0 else e))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvNorm,
+  parameters: [d : Bytes, p : Nat, le : Nat],
+  result: Nat,
+  body: (if ((p <? le) && ((pvAt d p) =? 92)) then (p + 1) else p),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvC0,
+  parameters: [d : Bytes, nS : Nat, nE : Nat, ls : Nat, le : Nat],
+  result: Nat,
+  body: (if (nS <? nE) then nS else (65536 + (pvNorm d ls le))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvCN,
+  parameters: [d : Bytes, cur : Nat, nE : Nat, ls : Nat, le : Nat],
+  result: Nat,
+  body: (if (cur <? 65536) then (if ((cur + 1) <? nE) then (cur + 1) else (65536 + (pvNorm d ls le))) else (65536 + (pvNorm d ((prim subtract cur 65536 : Nat) + 1) le))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvVEq,
+  parameters: [d : Bytes, ca : Nat, aE : Nat, aLs : Nat, aLe : Nat, cb : Nat, bE : Nat, bLs : Nat, bLe : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if (ca =? (65536 + aLe)) then (cb =? (65536 + bLe)) else (if (cb =? (65536 + bLe)) then false else (if ((pvAt d (prim remainder ca 65536 0 : Nat)) =? (pvAt d (prim remainder cb 65536 0 : Nat))) then (pvVEq d (pvCN d ca aE aLs aLe) aE aLs aLe (pvCN d cb bE bLs bLe) bE bLs bLe more) else false)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvVLit,
+  parameters: [d : Bytes, ca : Nat, aE : Nat, aLs : Nat, aLe : Nat, k : Bytes, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if (ca =? (65536 + aLe)) then (j =? (prim length k : Nat)) else (if ((prim length k : Nat) <? (j + 1)) then false else (if ((pvAt d (prim remainder ca 65536 0 : Nat)) =? (pvAt k j)) then (pvVLit d (pvCN d ca aE aLs aLe) aE aLs aLe k (j + 1) more) else false)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvQIs,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, i : Nat, e : Nat, k : Bytes],
+  result: Bool,
+  body: (let f : Nat := (pvNsOf d ns scope i e); (if (f =? 0) then false else (pvVLit d (pvC0 d (pvNsS ns f) (pvNsE ns f) (pvLocS d i e) e) (pvNsE ns f) (pvLocS d i e) e k 0 65536))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvLitEnd,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (pvAt d i); (if (b =? 34) then (let se : Nat := (pvStrEnd d i); (if (se =? 0) then 0 else (let r : Nat := (pvWs d se); (if ((pvAt d r) =? 64) then (pvLangEnd d r) else (if (((pvAt d r) =? 37) && ((pvAt d (r + 1)) =? 37)) then (pvName d ns scope (pvWs d (r + 2))) else se))))) else (if (b =? 39) then (let ne : Nat := (pvName d ns scope (i + 1)); (if (ne =? 0) then 0 else (if ((pvAt d ne) =? 39) then (ne + 1) else 0))) else (pvIntEnd d i)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvAttrLoop,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, p : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (let n : Nat := (pvName d ns scope p); (if (n =? 0) then 0 else (let q : Nat := (pvWs d n); (if (not ((pvAt d q) =? 61)) then 0 else (let le : Nat := (pvLitEnd d ns scope (pvWs d (q + 1))); (if (le =? 0) then 0 else (let r : Nat := (pvWs d le); (if ((pvAt d r) =? 44) then (pvAttrLoop d ns scope (pvWs d (r + 1)) more) else (if ((pvAt d r) =? 93) then (r + 1) else 0)))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvAttrsEnd,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, i : Nat],
+  result: Nat,
+  body: (let p : Nat := (pvWs d (i + 1)); (if (not ((pvAt d i) =? 91)) then 0 else (if ((pvAt d p) =? 93) then (p + 1) else (pvAttrLoop d ns scope p 65536)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvValIs,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, v : Nat, k : Bytes],
+  result: Bool,
+  body: (if ((pvAt d v) =? 39) then (pvQIs d ns scope (v + 1) (pvNameEnd d (v + 1)) k) else (if (not ((pvAt d v) =? 34)) then false else (let se : Nat := (pvStrEnd d v); (let r : Nat := (pvWs d se); (let t : Nat := (pvWs d (r + 2)); (let cs : Nat := (if (pvLong d v) then (v + 3) else (v + 1)); (let ce : Nat := (if (pvLong d v) then (prim subtract se 3 : Nat) else (prim subtract se 1 : Nat)); (if ((not ((pvAt d r) =? 37)) || (not ((pvAt d (r + 1)) =? 37))) then false else (if (pvQIs d ns scope t (pvNameEnd d t) (prim utf8_encode "http://www.w3.org/ns/prov#QUALIFIED_NAME" : Bytes)) then (if ((pvNameEnd d cs) =? ce) then (pvQIs d ns scope cs ce k) else false) else false))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvAttrHas,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, p : Nat, k : Bytes, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if ((pvAt d p) =? 93) then false else (let n : Nat := (pvNameEnd d p); (let v : Nat := (pvWs d ((pvWs d n) + 1)); (let r : Nat := (pvWs d (pvLitEnd d ns scope v)); (if (pvQIs d ns scope p n (prim utf8_encode "http://www.w3.org/ns/prov#type" : Bytes)) then (if (pvValIs d ns scope v k) then true else (if ((pvAt d r) =? 44) then (pvAttrHas d ns scope (pvWs d (r + 1)) k more) else false)) else (if ((pvAt d r) =? 44) then (pvAttrHas d ns scope (pvWs d (r + 1)) k more) else false))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvKw,
+  parameters: [d : Bytes, i : Nat, n : Nat],
+  result: Nat,
+  body: (if (pvIs d i n (prim utf8_encode "entity" : Bytes)) then 1 else (if (pvIs d i n (prim utf8_encode "activity" : Bytes)) then 2 else (if (pvIs d i n (prim utf8_encode "agent" : Bytes)) then 3 else (if (pvIs d i n (prim utf8_encode "wasGeneratedBy" : Bytes)) then 4 else (if (pvIs d i n (prim utf8_encode "used" : Bytes)) then 5 else (if (pvIs d i n (prim utf8_encode "wasInformedBy" : Bytes)) then 6 else (if (pvIs d i n (prim utf8_encode "wasStartedBy" : Bytes)) then 7 else (if (pvIs d i n (prim utf8_encode "wasEndedBy" : Bytes)) then 8 else (if (pvIs d i n (prim utf8_encode "wasInvalidatedBy" : Bytes)) then 9 else (if (pvIs d i n (prim utf8_encode "wasDerivedFrom" : Bytes)) then 10 else (if (pvIs d i n (prim utf8_encode "wasAttributedTo" : Bytes)) then 11 else (if (pvIs d i n (prim utf8_encode "wasAssociatedWith" : Bytes)) then 12 else (if (pvIs d i n (prim utf8_encode "actedOnBehalfOf" : Bytes)) then 13 else (if (pvIs d i n (prim utf8_encode "wasInfluencedBy" : Bytes)) then 14 else (if (pvIs d i n (prim utf8_encode "alternateOf" : Bytes)) then 15 else (if (pvIs d i n (prim utf8_encode "specializationOf" : Bytes)) then 16 else (if (pvIs d i n (prim utf8_encode "hadMember" : Bytes)) then 17 else 0))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvKinds,
+  parameters: [kw : Nat],
+  result: Nat,
+  body: (if (kw =? 2) then 61 else (if ((kw =? 4) || (kw =? 5)) then 57 else (if (kw =? 9) then 57 else (if ((kw =? 7) || (kw =? 8)) then 233 else (if (kw =? 10) then 677 else (if (kw =? 12) then 41 else (if (kw =? 13) then 37 else (if ((kw =? 1) || (kw =? 3)) then 1 else 5))))))))
+}
+
+definition{
+  name: pvPow4,
+  parameters: [k : Nat],
+  result: Nat,
+  body: (if (k =? 0) then 1 else (if (k =? 1) then 4 else (if (k =? 2) then 16 else (if (k =? 3) then 64 else 256))))
+}
+
+definition{
+  name: pvKind,
+  parameters: [kw : Nat, k : Nat],
+  result: Nat,
+  body: (prim remainder (prim quotient (pvKinds kw) (pvPow4 k) 0 : Nat) 4 0 : Nat)
+}
+
+definition{
+  name: pvReq,
+  parameters: [kw : Nat],
+  result: Nat,
+  body: (if (kw <? 6) then 1 else (if ((kw =? 7) || (kw =? 8)) then 1 else (if ((kw =? 9) || (kw =? 12)) then 1 else 2)))
+}
+
+definition{
+  name: pvOpt,
+  parameters: [kw : Nat],
+  result: Nat,
+  body: (if ((kw =? 2) || (kw =? 4)) then 2 else (if ((kw =? 5) || (kw =? 9)) then 2 else (if (kw =? 12) then 2 else (if ((kw =? 7) || (kw =? 8)) then 3 else (if (kw =? 10) then 3 else (if (kw =? 13) then 1 else 0))))))
+}
+
+definition{
+  name: pvHasId,
+  parameters: [kw : Nat],
+  result: Bool,
+  body: (pvIn kw 4 14)
+}
+
+definition{
+  name: pvArgEnd,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, kind : Nat, p : Nat],
+  result: Nat,
+  body: (if (kind =? 1) then (pvName d ns scope p) else (if (kind =? 2) then (if ((pvAt d p) =? 45) then (p + 1) else (pvName d ns scope p)) else (if ((pvAt d p) =? 45) then (if (pvDigit (pvAt d (p + 1))) then (pvTimeEnd d p) else (p + 1)) else (pvTimeEnd d p)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvArgs,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, kw : Nat, k : Nat, p : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (let q : Nat := (pvArgEnd d ns scope (pvKind kw k) p); (if (q =? 0) then 0 else (let r : Nat := (pvWs d q); (let s : Nat := (pvWs d (r + 1)); (let whole : Bool := (((k + 1) =? (pvReq kw)) || ((k + 1) =? ((pvReq kw) + (pvOpt kw)))); (if ((pvAt d r) =? 41) then (if (whole && true) then (r + 1) else 0) else (if (not ((pvAt d r) =? 44)) then 0 else (if ((pvAt d s) =? 91) then (if ((whole && true) && (kw <? 15)) then (if ((pvAttrsEnd d ns scope s) =? 0) then 0 else (if ((pvAt d (pvWs d (pvAttrsEnd d ns scope s))) =? 41) then ((pvWs d (pvAttrsEnd d ns scope s)) + 1) else 0)) else 0) else (if (((pvReq kw) + (pvOpt kw)) <? ((k + 1) + 1)) then 0 else (pvArgs d ns scope kw (k + 1) s more))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvArg0,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, kw : Nat, j : Nat],
+  result: Nat,
+  body: (let p : Nat := (pvWs d (j + 1)); (let q : Nat := (pvArgEnd d ns scope 2 p); (if ((pvHasId kw) && (0 <? q)) then (if ((pvAt d (pvWs d q)) =? 59) then (pvWs d ((pvWs d q) + 1)) else p) else p))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvG24,
+  parameters: [b : Bytes],
+  result: Nat,
+  body: ((prim multiply (pvAt b 0) 65536 : Nat) + (pvG16 b 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvU24,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (prim append (pvByte (prim quotient n 65536 0 : Nat)) (pvU16 n) : Bytes)
+}
+
+definition{
+  name: pvExt,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, p : Nat, st : Bytes, mode : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (pvU24 0)
+    | Nat.succ more => (let b : Nat := (pvAt d p); (let top : Nat := (pvAt st (prim subtract (prim length st : Nat) 1 : Nat)); (let after : Nat := (if (mode =? 0) then 3 else 2); (if (mode <? 2) then (if (b =? 123) then (pvExt d ns scope (pvWs d (p + 1)) (prim append st (pvByte 3) : Bytes) 1 more) else (if (b =? 40) then (pvExt d ns scope (pvWs d (p + 1)) (prim append st (pvByte 2) : Bytes) 1 more) else (if ((b =? 34) || (b =? 39)) then (if ((pvLitEnd d ns scope p) =? 0) then (pvU24 0) else (pvExt d ns scope (pvWs d (pvLitEnd d ns scope p)) st 2 more)) else (if ((b =? 45) && (not (pvDigit (pvAt d (p + 1))))) then (pvExt d ns scope (pvWs d (p + 1)) st after more) else (if (0 <? (pvTimeEnd d p)) then (pvExt d ns scope (pvWs d (pvTimeEnd d p)) st 2 more) else (if ((0 <? (pvIntEnd d p)) && ((pvNameEnd d p) <? ((pvIntEnd d p) + 1))) then (pvExt d ns scope (pvWs d (pvIntEnd d p)) st 2 more) else (let nn : Nat := (pvName d ns scope p); (if (nn =? 0) then (pvU24 0) else (if ((pvAt d (pvWs d nn)) =? 40) then (if ((pvColon d p nn 65536) =? nn) then (pvU24 0) else (pvExt d ns scope (pvWs d ((pvWs d nn) + 1)) (prim append st (pvByte 1) : Bytes) 0 more)) else (pvExt d ns scope (pvWs d nn) st after more)))))))))) else (if (b =? 59) then (if (mode =? 3) then (pvExt d ns scope (pvWs d (p + 1)) st 1 more) else (pvU24 0)) else (if (b =? 44) then (let q : Nat := (pvWs d (p + 1)); (if ((pvAt d q) =? 91) then (if (not (top =? 1)) then (pvU24 0) else (if ((pvAttrsEnd d ns scope q) =? 0) then (pvU24 0) else (let r : Nat := (pvWs d (pvAttrsEnd d ns scope q)); (if (not ((pvAt d r) =? 41)) then (pvU24 0) else (if ((prim length st : Nat) =? 1) then (pvU24 (r + 1)) else (pvExt d ns scope (pvWs d (r + 1)) (match (prim slice st 0 (prim subtract (prim length st : Nat) 1 : Nat) : (Option Bytes)) | Option.none => 0x | Option.some part => part) 2 more)))))) else (pvExt d ns scope q st 1 more))) else (if (b =? 41) then (if (top =? 3) then (pvU24 0) else (if ((prim length st : Nat) =? 1) then (pvU24 (p + 1)) else (pvExt d ns scope (pvWs d (p + 1)) (match (prim slice st 0 (prim subtract (prim length st : Nat) 1 : Nat) : (Option Bytes)) | Option.none => 0x | Option.some part => part) 2 more))) else (if (b =? 125) then (if (not (top =? 3)) then (pvU24 0) else (pvExt d ns scope (pvWs d (p + 1)) (match (prim slice st 0 (prim subtract (prim length st : Nat) 1 : Nat) : (Option Bytes)) | Option.none => 0x | Option.some part => part) 2 more)) else (pvU24 0)))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvStmtEnd,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, kw : Nat, i : Nat, n : Nat, j : Nat],
+  result: Nat,
+  body: (if (kw =? 0) then (if ((pvColon d i n 65536) =? n) then 0 else (if ((pvNsOf d ns scope i n) =? 0) then 0 else (pvG24 (pvExt d ns scope (pvWs d (j + 1)) (pvByte 1) 0 1000000)))) else (pvArgs d ns scope kw 0 (pvArg0 d ns scope kw j) 16)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvTokFrom,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, kw : Nat, k : Nat, m : Nat, p : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if (m =? k) then p else (let r : Nat := (pvWs d (pvArgEnd d ns scope (pvKind kw m) p)); (if (not ((pvAt d r) =? 44)) then 0 else (if ((pvAt d (pvWs d (r + 1))) =? 91) then 0 else (pvTokFrom d ns scope kw k (m + 1) (pvWs d (r + 1)) more)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvTok,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, kw : Nat, j : Nat, k : Nat],
+  result: Nat,
+  body: (pvTokFrom d ns scope kw k 0 (pvArg0 d ns scope kw j) 16),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvIdTok,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, kw : Nat, j : Nat],
+  result: Nat,
+  body: (if ((pvArg0 d ns scope kw j) =? (pvWs d (j + 1))) then 0 else (pvWs d (j + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvAttrsAt,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, kw : Nat, m : Nat, p : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (let r : Nat := (pvWs d (pvArgEnd d ns scope (pvKind kw m) p)); (if (not ((pvAt d r) =? 44)) then 0 else (if ((pvAt d (pvWs d (r + 1))) =? 91) then (pvWs d (r + 1)) else (pvAttrsAt d ns scope kw (m + 1) (pvWs d (r + 1)) more))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvFlags,
+  parameters: [d : Bytes, ns : Bytes, scope : Nat, kw : Nat, j : Nat],
+  result: Nat,
+  body: (let a : Nat := (pvAttrsAt d ns scope kw 0 (pvArg0 d ns scope kw j) 16); (if (a =? 0) then 0 else (if (kw =? 1) then (if (pvAttrHas d ns scope (pvWs d (a + 1)) (prim utf8_encode "http://www.w3.org/ns/prov#EmptyCollection" : Bytes) 65536) then 1 else 0) else (if (kw =? 10) then (if (pvAttrHas d ns scope (pvWs d (a + 1)) (prim utf8_encode "http://www.w3.org/ns/prov#Revision" : Bytes) 65536) then 1 else 0) else 0)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvTermSame,
+  parameters: [d : Bytes, terms : Bytes, k : Nat, kind : Nat, a : Nat, b : Nat, c : Nat, e : Nat],
+  result: Bool,
+  body: (let o : Nat := (prim multiply k 9 : Nat); (if (not ((pvAt terms o) =? kind)) then false else (if (kind =? 2) then (pvTimeSame d (pvG16 terms (o + 1)) a) else (pvVEq d (pvC0 d a b c e) b c e (pvC0 d (pvG16 terms (o + 1)) (pvG16 terms (o + 3)) (pvG16 terms (o + 5)) (pvG16 terms (o + 7))) (pvG16 terms (o + 3)) (pvG16 terms (o + 5)) (pvG16 terms (o + 7)) 65536)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvTermFind,
+  parameters: [d : Bytes, terms : Bytes, kind : Nat, a : Nat, b : Nat, c : Nat, e : Nat, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if ((prim length terms : Nat) <? ((prim multiply k 9 : Nat) + 1)) then 0 else (if (pvTermSame d terms k kind a b c e) then (k + 1) else (pvTermFind d terms kind a b c e (k + 1) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvEntry,
+  parameters: [kind : Nat, a : Nat, b : Nat, c : Nat, e : Nat],
+  result: Bytes,
+  body: (prim append (prim append (pvByte kind) (prim append (pvU16 a) (pvU16 b) : Bytes) : Bytes) (prim append (pvU16 c) (pvU16 e) : Bytes) : Bytes)
+}
+
+definition{
+  name: pvMove,
+  parameters: [st : PvPState, ph : Nat, pos : Nat],
+  result: PvPState,
+  body: (record PvPState {ph := ph, pos := pos, scope := (project st scope), nb := (project st nb), bid := (project st bid), nv := (project st nv), ns := (project st ns), terms := (project st terms), rows := (project st rows), cur := (project st cur)})
+}
+
+definition{
+  name: pvFail,
+  parameters: [st : PvPState],
+  result: PvPState,
+  body: (pvMove st 0 0)
+}
+
+definition{
+  name: pvCurAdd,
+  parameters: [st : PvPState, v : Nat],
+  result: PvPState,
+  body: (record PvPState {ph := (project st ph), pos := (project st pos), scope := (project st scope), nb := (project st nb), bid := (project st bid), nv := (project st nv), ns := (project st ns), terms := (project st terms), rows := (project st rows), cur := (prim append (project st cur) (pvU16 v) : Bytes)})
+}
+
+definition{
+  name: pvFreshAdd,
+  parameters: [st : PvPState],
+  result: PvPState,
+  body: (record PvPState {ph := (project st ph), pos := (project st pos), scope := (project st scope), nb := (project st nb), bid := (project st bid), nv := ((project st nv) + 1), ns := (project st ns), terms := (project st terms), rows := (project st rows), cur := (prim append (project st cur) (pvU16 (32768 + (project st nv))) : Bytes)})
+}
+
+definition{
+  name: pvTermAdd,
+  parameters: [st : PvPState, kind : Nat, a : Nat, b : Nat, c : Nat, e : Nat],
+  result: PvPState,
+  body: (record PvPState {ph := (project st ph), pos := (project st pos), scope := (project st scope), nb := (project st nb), bid := (project st bid), nv := (project st nv), ns := (project st ns), terms := (prim append (project st terms) (pvEntry kind a b c e) : Bytes), rows := (project st rows), cur := (prim append (project st cur) (pvU16 ((prim quotient (prim length (project st terms) : Nat) 9 0 : Nat) + 1)) : Bytes)})
+}
+
+definition{
+  name: pvRowAdd,
+  parameters: [st : PvPState, kw : Nat, fl : Nat],
+  result: PvPState,
+  body: (record PvPState {ph := (project st ph), pos := (project st pos), scope := (project st scope), nb := (project st nb), bid := (project st bid), nv := (project st nv), ns := (project st ns), terms := (project st terms), rows := (prim append (project st rows) (prim append (prim append (prim append (pvByte kw) (pvByte fl) : Bytes) (prim append (pvByte (project st scope)) (pvByte 0) : Bytes) : Bytes) (project st cur) : Bytes) : Bytes), cur := 0x})
+}
+
+definition{
+  name: pvNsAdd,
+  parameters: [st : PvPState, ps : Nat, pe : Nat, s : Nat, e : Nat, ph : Nat, pos : Nat],
+  result: PvPState,
+  body: (record PvPState {ph := ph, pos := pos, scope := (project st scope), nb := (project st nb), bid := (project st bid), nv := (project st nv), ns := (prim append (project st ns) (prim append (pvByte (project st scope)) (prim append (prim append (pvU16 ps) (pvU16 pe) : Bytes) (prim append (pvU16 s) (pvU16 e) : Bytes) : Bytes) : Bytes) : Bytes), terms := (project st terms), rows := (project st rows), cur := (project st cur)})
+}
+
+definition{
+  name: pvPushName,
+  parameters: [c : PvCtx, st : PvPState, tok : Nat],
+  result: PvPState,
+  body: (let e : Nat := (pvNameEnd (project c d) tok); (let f : Nat := (pvNsOf (project c d) (project st ns) (project st scope) tok e); (let ls : Nat := (pvLocS (project c d) tok e); (let t : Nat := (pvTermFind (project c d) (project st terms) 1 (pvNsS (project st ns) f) (pvNsE (project st ns) f) ls e 0 65536); (if (0 <? t) then (pvCurAdd st t) else (pvTermAdd st 1 (pvNsS (project st ns) f) (pvNsE (project st ns) f) ls e)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvPushTime,
+  parameters: [c : PvCtx, st : PvPState, tok : Nat],
+  result: PvPState,
+  body: (let t : Nat := (pvTermFind (project c d) (project st terms) 2 tok (pvTimeEnd (project c d) tok) 0 0 0 65536); (if (0 <? t) then (pvCurAdd st t) else (pvTermAdd st 2 tok (pvTimeEnd (project c d) tok) 0 0))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvExpand,
+  parameters: [kw : Nat, sl : Nat, a3 : Nat],
+  result: Bool,
+  body: (if (sl =? 0) then (pvHasId kw) else (if (kw =? 10) then (if (sl =? 3) then false else (not (a3 =? 0))) else (if (kw =? 12) then (sl =? 2) else true)))
+}
+
+definition{
+  name: pvPush,
+  parameters: [c : PvCtx, st : PvPState, kw : Nat, sl : Nat, tok : Nat, kind : Nat],
+  result: PvPState,
+  body: (let dash : Bool := (((pvAt (project c d) tok) =? 45) && ((not (kind =? 3)) || (not (pvDigit (pvAt (project c d) (tok + 1)))))); (if ((tok =? 0) || (dash && true)) then (if (pvExpand kw sl (pvG16 (project st cur) 6)) then (pvFreshAdd st) else (pvCurAdd st 0)) else (if (kind =? 3) then (pvPushTime c st tok) else (pvPushName c st tok)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvSlot,
+  parameters: [c : PvCtx, st : PvPState, kw : Nat, j : Nat, sl : Nat],
+  result: PvPState,
+  body: (let k : Nat := (if (kw <? 4) then sl else (prim subtract sl 1 : Nat)); (if (((pvReq kw) + (pvOpt kw)) <? (k + 1)) then (pvCurAdd st 0) else (pvPush c st kw sl (pvTok (project c d) (project st ns) (project st scope) kw j k) (pvKind kw k)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvSlot0,
+  parameters: [c : PvCtx, st : PvPState, kw : Nat, j : Nat],
+  result: PvPState,
+  body: (if (kw <? 4) then (pvPush c st kw 0 (pvTok (project c d) (project st ns) (project st scope) kw j 0) 1) else (if (kw <? 15) then (pvPush c st kw 0 (pvIdTok (project c d) (project st ns) (project st scope) kw j) 2) else (pvCurAdd st 0))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvStmtRow,
+  parameters: [c : PvCtx, st : PvPState, kw : Nat, j : Nat],
+  result: PvPState,
+  body: (let fl : Nat := (pvFlags (project c d) (project st ns) (project st scope) kw j); (let s0 : PvPState := (pvSlot0 c st kw j); (let s1 : PvPState := (pvSlot c s0 kw j 1); (let s2 : PvPState := (pvSlot c s1 kw j 2); (let s3 : PvPState := (pvSlot c s2 kw j 3); (let s4 : PvPState := (pvSlot c s3 kw j 4); (let s5 : PvPState := (pvSlot c s4 kw j 5); (pvRowAdd s5 kw fl)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvStmt,
+  parameters: [c : PvCtx, st : PvPState, i : Nat, n : Nat, j : Nat, base : Nat],
+  result: PvPState,
+  body: (let kw : Nat := (pvKw (project c d) i n); (let e : Nat := (pvStmtEnd (project c d) (project st ns) (project st scope) kw i n j); (if (e =? 0) then (pvFail st) else (if (kw =? 0) then (pvMove st base (pvWs (project c d) e)) else (pvMove (pvStmtRow c st kw j) base (pvWs (project c d) e)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvDefault,
+  parameters: [c : PvCtx, st : PvPState, i : Nat, j : Nat, base : Nat],
+  result: PvPState,
+  body: (let e : Nat := (pvIriEnd (project c d) j); (if (e =? 0) then (pvFail st) else (pvNsAdd st i i (j + 1) (prim subtract e 1 : Nat) (base + 4) (pvWs (project c d) e)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvPrefix,
+  parameters: [c : PvCtx, st : PvPState, j : Nat, base : Nat],
+  result: PvPState,
+  body: (let pe : Nat := (pvRun (project c d) j j 65536); (let k : Nat := (pvWs (project c d) pe); (let e : Nat := (pvIriEnd (project c d) k); (if (e =? 0) then (pvFail st) else (if ((pvIs (project c d) j pe (prim utf8_encode "prov" : Bytes)) || (pvIs (project c d) j pe (prim utf8_encode "xsd" : Bytes))) then (pvFail st) else (if (0 <? (pvNsFind (project c d) (project st ns) (project st scope) j pe 0 65536)) then (pvFail st) else (if (pvPfxOk (project c d) j pe) then (pvNsAdd st j pe (k + 1) (prim subtract e 1 : Nat) (base + 4) (pvWs (project c d) e)) else (pvFail st)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvBundle,
+  parameters: [c : PvCtx, st : PvPState, j : Nat],
+  result: PvPState,
+  body: (let e : Nat := (pvNameEnd (project c d) j); (if (e =? 0) then (pvFail st) else (record PvPState {ph := 10, pos := (pvWs (project c d) e), scope := ((project st nb) + 1), nb := ((project st nb) + 1), bid := j, nv := (project st nv), ns := (project st ns), terms := (project st terms), rows := (project st rows), cur := (project st cur)}))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvEndBundle,
+  parameters: [c : PvCtx, st : PvPState, n : Nat],
+  result: PvPState,
+  body: (if ((pvNsOf (project c d) (project st ns) (project st scope) (project st bid) (pvNameEnd (project c d) (project st bid))) =? 0) then (pvFail st) else (let r : PvPState := (pvRowAdd (pvCurAdd (pvCurAdd (pvCurAdd (pvCurAdd (pvCurAdd (pvPushName c st (project st bid)) 0) 0) 0) 0) 0) 18 0); (record PvPState {ph := 3, pos := (pvWs (project c d) n), scope := 0, nb := (project r nb), bid := 0, nv := (project r nv), ns := (project r ns), terms := (project r terms), rows := (project r rows), cur := (project r cur)}))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvWalkStep,
+  parameters: [c : PvCtx, st : PvPState],
+  result: PvPState,
+  body: (if (((project st ph) =? 0) || ((project st ph) =? 64)) then st else (let i : Nat := (project st pos); (let n : Nat := (pvNameEnd (project c d) i); (let j : Nat := (pvWs (project c d) n); (let base : Nat := (prim remainder (project st ph) 4 0 : Nat); (let decl : Nat := (prim quotient (project st ph) 4 0 : Nat); (if (n =? 0) then (pvFail st) else (if ((pvAt (project c d) j) =? 40) then (if (base =? 3) then (pvFail st) else (pvStmt c st i n j base)) else (if (pvIs (project c d) i n (prim utf8_encode "default" : Bytes)) then (if (decl =? 2) then (pvDefault c st i j base) else (pvFail st)) else (if (pvIs (project c d) i n (prim utf8_encode "prefix" : Bytes)) then (if (0 <? decl) then (pvPrefix c st j base) else (pvFail st)) else (if (pvIs (project c d) i n (prim utf8_encode "bundle" : Bytes)) then (if (base =? 2) then (pvFail st) else (pvBundle c st j)) else (if (pvIs (project c d) i n (prim utf8_encode "endBundle" : Bytes)) then (if (base =? 2) then (pvEndBundle c st n) else (pvFail st)) else (if (pvIs (project c d) i n (prim utf8_encode "endDocument" : Bytes)) then (if ((not (base =? 2)) && (j =? (prim length (project c d) : Nat))) then (pvMove st 64 n) else (pvFail st)) else (pvFail st)))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvWalk,
+  parameters: [c : PvCtx, st : PvPState, fuel : Nat],
+  result: PvPState,
+  body: (match fuel
+    | Nat.zero => (pvWalkStep c st)
+    | Nat.succ more => (let a : PvPState := (pvWalk c st more); (if (((project a ph) =? 0) || ((project a ph) =? 64)) then a else (pvWalk c a more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvRead,
+  parameters: [c : PvCtx],
+  result: PvPState,
+  body: (let i : Nat := (pvWs (project c d) 66); (let n : Nat := (pvNameEnd (project c d) i); (if (pvIs (project c d) i n (prim utf8_encode "document" : Bytes)) then (pvWalk c (record PvPState {ph := 9, pos := (pvWs (project c d) n), scope := 0, nb := 0, bid := 0, nv := 0, ns := 0x000000000400070021000004000700210042, terms := 0x, rows := 0x, cur := 0x}) 24) else (record PvPState {ph := 0, pos := 0, scope := 0, nb := 0, bid := 0, nv := 0, ns := 0x, terms := 0x, rows := 0x, cur := 0x})))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvRel,
+  parameters: [rows : Bytes, i : Nat],
+  result: Nat,
+  body: (pvAt rows (prim multiply i 16 : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvFl,
+  parameters: [rows : Bytes, i : Nat],
+  result: Nat,
+  body: (pvAt rows ((prim multiply i 16 : Nat) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvRaw,
+  parameters: [rows : Bytes, i : Nat, sl : Nat],
+  result: Nat,
+  body: (pvG16 rows (((prim multiply i 16 : Nat) + 4) + (prim multiply 2 sl : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvRes,
+  parameters: [par : Bytes, t : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => t
+    | Nat.succ more => (if (t <? 32768) then t else (if ((pvG16 par (prim multiply (prim subtract t 32768 : Nat) 2 : Nat)) =? 65535) then t else (pvRes par (pvG16 par (prim multiply (prim subtract t 32768 : Nat) 2 : Nat)) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvA,
+  parameters: [rows : Bytes, par : Bytes, i : Nat, sl : Nat],
+  result: Nat,
+  body: (pvRes par (pvRaw rows i sl) 65536),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvM,
+  parameters: [rows : Bytes, par : Bytes, k : Nat, s : Nat, v : Nat],
+  result: Bool,
+  body: (if (5 <? s) then true else ((pvA rows par k s) =? v)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvScan,
+  parameters: [rows : Bytes, par : Bytes, rel : Nat, sa : Nat, va : Nat, sb : Nat, vb : Nat, sc : Nat, vc : Nat, k : Nat, lim : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if (lim <? (k + 1)) then 0 else (if ((pvRel rows k) =? rel) then (if ((pvM rows par k sa va) && ((pvM rows par k sb vb) && (pvM rows par k sc vc))) then (k + 1) else (pvScan rows par rel sa va sb vb sc vc (k + 1) lim more)) else (pvScan rows par rel sa va sb vb sc vc (k + 1) lim more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvScanN,
+  parameters: [rows : Bytes, par : Bytes, rel : Nat, sa : Nat, va : Nat, sb : Nat, vb : Nat, sn : Nat, vn : Nat, k : Nat, lim : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if (lim <? (k + 1)) then 0 else (if ((pvRel rows k) =? rel) then (if ((pvM rows par k sa va) && ((pvM rows par k sb vb) && (not ((pvA rows par k sn) =? vn)))) then (k + 1) else (pvScanN rows par rel sa va sb vb sn vn (k + 1) lim more)) else (pvScanN rows par rel sa va sb vb sn vn (k + 1) lim more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvGenUse,
+  parameters: [rows : Bytes, par : Bytes, a1 : Nat, a2 : Nat, k : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ more => (if (n <? (k + 1)) then false else (if (((pvRel rows k) =? 4) && ((pvA rows par k 2) =? a1)) then (if (0 <? (pvScan rows par 5 1 a2 2 (pvA rows par k 1) 9 0 0 n 1000000)) then true else (pvGenUse rows par a1 a2 (k + 1) n more)) else (pvGenUse rows par a1 a2 (k + 1) n more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvGenAssoc,
+  parameters: [rows : Bytes, par : Bytes, e : Nat, ag : Nat, k : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ more => (if (n <? (k + 1)) then false else (if (((pvRel rows k) =? 4) && ((pvA rows par k 1) =? e)) then (if (0 <? (pvScan rows par 12 1 (pvA rows par k 2) 2 ag 9 0 0 n 1000000)) then true else (pvGenAssoc rows par e ag (k + 1) n more)) else (pvGenAssoc rows par e ag (k + 1) n more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvUseOf,
+  parameters: [rows : Bytes, par : Bytes, e : Nat, a1 : Nat, k : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if (n <? (k + 1)) then 0 else (if (((pvRel rows k) =? 5) && ((pvA rows par k 2) =? e)) then (if ((pvScan rows par 6 1 (pvA rows par k 1) 2 a1 9 0 0 n 1000000) =? 0) then (k + 1) else (pvUseOf rows par e a1 (k + 1) n more)) else (pvUseOf rows par e a1 (k + 1) n more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvTrans,
+  parameters: [rows : Bytes, par : Bytes, rel : Nat, x : Nat, y : Nat, k : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if (n <? (k + 1)) then 0 else (if (((pvRel rows k) =? rel) && ((pvA rows par k 1) =? y)) then (if ((pvScan rows par rel 1 x 2 (pvA rows par k 2) 9 0 0 n 1000000) =? 0) then (k + 1) else (pvTrans rows par rel x y (k + 1) n more)) else (pvTrans rows par rel x y (k + 1) n more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvEntHas,
+  parameters: [rows : Bytes, par : Bytes, e : Nat, fl : Nat, k : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ more => (if (n <? (k + 1)) then false else (if (((pvRel rows k) =? 1) && ((pvA rows par k 0) =? e)) then (if ((fl =? 0) || ((pvFl rows k) =? 1)) then true else (pvEntHas rows par e fl (k + 1) n more)) else (pvEntHas rows par e fl (k + 1) n more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvSpecOf,
+  parameters: [rows : Bytes, par : Bytes, e1 : Nat, fl : Nat, k : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if (n <? (k + 1)) then 0 else (if (((pvRel rows k) =? 16) && ((pvA rows par k 2) =? e1)) then (if (pvEntHas rows par (pvA rows par k 1) fl 0 n 1000000) then (pvSpecOf rows par e1 fl (k + 1) n more) else (k + 1)) else (pvSpecOf rows par e1 fl (k + 1) n more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvSame5,
+  parameters: [rows : Bytes, par : Bytes, i : Nat, k : Nat],
+  result: Bool,
+  body: (if (not ((pvA rows par i 1) =? (pvA rows par k 1))) then false else (if (not ((pvA rows par i 2) =? (pvA rows par k 2))) then false else (if (not ((pvA rows par i 3) =? (pvA rows par k 3))) then false else (if (not ((pvA rows par i 4) =? (pvA rows par k 4))) then false else ((pvA rows par i 5) =? (pvA rows par k 5)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvKey,
+  parameters: [rows : Bytes, par : Bytes, i : Nat, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if (i <? (k + 1)) then 0 else (if (((pvRel rows k) =? (pvRel rows i)) && ((pvA rows par k 0) =? (pvA rows par i 0))) then (if (pvSame5 rows par i k) then (pvKey rows par i (k + 1) more) else (k + 1)) else (pvKey rows par i (k + 1) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvNeedA,
+  parameters: [rows : Bytes, par : Bytes, r : Nat, i : Nat, n : Nat],
+  result: Nat,
+  body: (let rel : Nat := (pvRel rows i); (let a0 : Nat := (pvA rows par i 0); (let a1 : Nat := (pvA rows par i 1); (let a2 : Nat := (pvA rows par i 2); (let a3 : Nat := (pvA rows par i 3); (if (r =? 1) then (if (rel =? 6) then (if (pvGenUse rows par a2 a1 0 n 1000000) then 0 else 1) else 0) else (if (r =? 2) then (if (rel =? 4) then (pvUseOf rows par a1 a2 0 n 1000000) else 0) else (if (r =? 3) then (if ((rel =? 1) && ((pvScan rows par 4 1 a0 9 0 9 0 0 n 1000000) =? 0)) then 1 else 0) else (if (r =? 4) then (if ((rel =? 1) && ((pvScan rows par 9 1 a0 9 0 9 0 0 n 1000000) =? 0)) then 1 else 0) else (if (r =? 5) then (if ((rel =? 2) && ((pvScan rows par 7 1 a0 4 a1 9 0 0 n 1000000) =? 0)) then 1 else 0) else (if (r =? 6) then (if ((rel =? 2) && ((pvScan rows par 8 1 a0 4 a2 9 0 0 n 1000000) =? 0)) then 1 else 0) else (if (r =? 7) then (if ((rel =? 7) && ((pvScan rows par 4 1 a2 2 a3 9 0 0 n 1000000) =? 0)) then 1 else 0) else (if (r =? 8) then (if ((rel =? 8) && ((pvScan rows par 4 1 a2 2 a3 9 0 0 n 1000000) =? 0)) then 1 else 0) else 0))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvNeedB,
+  parameters: [rows : Bytes, par : Bytes, r : Nat, i : Nat, n : Nat],
+  result: Nat,
+  body: (let rel : Nat := (pvRel rows i); (let a0 : Nat := (pvA rows par i 0); (let a1 : Nat := (pvA rows par i 1); (let a2 : Nat := (pvA rows par i 2); (let a3 : Nat := (pvA rows par i 3); (let a4 : Nat := (pvA rows par i 4); (let a5 : Nat := (pvA rows par i 5); (if (r =? 9) then (if ((rel =? 10) && ((not (a3 =? 0)) && ((not (a4 =? 0)) && (not (a5 =? 0))))) then (if ((pvScan rows par 5 0 a5 1 a3 2 a2 0 n 1000000) =? 0) then 1 else 0) else 0) else (if (r =? 10) then (if ((rel =? 10) && ((not (a3 =? 0)) && ((not (a4 =? 0)) && (not (a5 =? 0))))) then (if ((pvScan rows par 4 0 a4 1 a1 2 a3 0 n 1000000) =? 0) then 1 else 0) else 0) else (if (r =? 11) then (if ((rel =? 10) && ((pvFl rows i) =? 1)) then (if ((pvScan rows par 15 1 a1 2 a2 9 0 0 n 1000000) =? 0) then 1 else 0) else 0) else (if (r =? 12) then (if (rel =? 11) then (if (pvGenAssoc rows par a1 a2 0 n 1000000) then 0 else 1) else 0) else (if (r =? 13) then (if ((rel =? 13) && ((pvScan rows par 12 1 a3 2 a1 9 0 0 n 1000000) =? 0)) then 1 else 0) else (if (r =? 14) then (if ((rel =? 13) && ((pvScan rows par 12 1 a3 2 a2 9 0 0 n 1000000) =? 0)) then 1 else 0) else (if (r =? 15) then (if ((pvIn rel 4 13) && ((pvScan rows par 14 0 a0 1 a1 2 a2 0 n 1000000) =? 0)) then 1 else 0) else 0)))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvNeedC,
+  parameters: [rows : Bytes, par : Bytes, r : Nat, i : Nat, n : Nat],
+  result: Nat,
+  body: (let rel : Nat := (pvRel rows i); (let a0 : Nat := (pvA rows par i 0); (let a1 : Nat := (pvA rows par i 1); (let a2 : Nat := (pvA rows par i 2); (if (r =? 16) then (if ((rel =? 1) && ((pvScan rows par 15 1 a0 2 a0 9 0 0 n 1000000) =? 0)) then 1 else 0) else (if (r =? 17) then (if (rel =? 15) then (pvTrans rows par 15 a1 a2 0 n 1000000) else 0) else (if (r =? 18) then (if ((rel =? 15) && ((pvScan rows par 15 1 a2 2 a1 9 0 0 n 1000000) =? 0)) then 1 else 0) else (if (r =? 19) then (if (rel =? 16) then (pvTrans rows par 16 a1 a2 0 n 1000000) else 0) else (if (r =? 20) then (if ((rel =? 16) && ((pvScan rows par 15 1 a1 2 a2 9 0 0 n 1000000) =? 0)) then 1 else 0) else (if (r =? 21) then (if (rel =? 1) then (pvSpecOf rows par a0 (pvFl rows i) 0 n 1000000) else 0) else 0)))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvNeedD,
+  parameters: [rows : Bytes, par : Bytes, r : Nat, i : Nat, n : Nat],
+  result: Nat,
+  body: (let rel : Nat := (pvRel rows i); (let a0 : Nat := (pvA rows par i 0); (let a1 : Nat := (pvA rows par i 1); (let a2 : Nat := (pvA rows par i 2); (let a3 : Nat := (pvA rows par i 3); (if (r =? 22) then (if ((rel =? 2) || (pvIn rel 4 14)) then (pvKey rows par i 0 1000000) else 0) else (if (r =? 23) then (if (rel =? 4) then (pvScanN rows par 4 1 a1 2 a2 0 a0 0 i 1000000) else 0) else (if (r =? 24) then (if (rel =? 9) then (pvScanN rows par 9 1 a1 2 a2 0 a0 0 i 1000000) else 0) else (if (r =? 25) then (if (rel =? 7) then (pvScanN rows par 7 1 a1 3 a3 0 a0 0 i 1000000) else 0) else (if (r =? 26) then (if (rel =? 8) then (pvScanN rows par 8 1 a1 3 a3 0 a0 0 i 1000000) else 0) else (if (r =? 27) then (if (rel =? 2) then (pvScanN rows par 7 1 a0 9 0 4 a1 0 n 1000000) else 0) else (if (rel =? 2) then (pvScanN rows par 8 1 a0 9 0 4 a2 0 n 1000000) else 0)))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvNeed,
+  parameters: [rows : Bytes, par : Bytes, r : Nat, i : Nat, n : Nat],
+  result: Nat,
+  body: (if (r <? 9) then (pvNeedA rows par r i n) else (if (r <? 16) then (pvNeedB rows par r i n) else (if (r <? 22) then (pvNeedC rows par r i n) else (pvNeedD rows par r i n)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvRow,
+  parameters: [rel : Nat, fl : Nat, t0 : Nat, t1 : Nat, t2 : Nat, t3 : Nat, t4 : Nat, t5 : Nat],
+  result: Bytes,
+  body: (prim append (prim append (prim append (pvByte rel) (pvByte fl) : Bytes) (prim append (pvU16 0) (pvU16 t0) : Bytes) : Bytes) (prim append (prim append (pvU16 t1) (pvU16 t2) : Bytes) (prim append (prim append (pvU16 t3) (pvU16 t4) : Bytes) (pvU16 t5) : Bytes) : Bytes) : Bytes)
+}
+
+definition{
+  name: pvBind,
+  parameters: [par : Bytes, v : Nat, t : Nat],
+  result: Bytes,
+  body: (prim append (match (prim slice par 0 (prim multiply (prim subtract v 32768 : Nat) 2 : Nat) : (Option Bytes)) | Option.none => 0x | Option.some part => part) (prim append (pvU16 t) (match (prim slice par ((prim multiply (prim subtract v 32768 : Nat) 2 : Nat) + 2) (prim subtract (prim length par : Nat) ((prim multiply (prim subtract v 32768 : Nat) 2 : Nat) + 2) : Nat) : (Option Bytes)) | Option.none => 0x | Option.some part => part) : Bytes) : Bytes)
+}
+
+definition{
+  name: pvDeltaA,
+  parameters: [r : Nat, v : Nat, a0 : Nat, a1 : Nat, a2 : Nat, a3 : Nat, a4 : Nat, a5 : Nat, b1 : Nat, b2 : Nat, fl : Nat],
+  result: Bytes,
+  body: (if (r =? 1) then (prim append (pvRow 4 0 v (v + 1) a2 (v + 2) 0 0) (pvRow 5 0 (v + 3) a1 (v + 1) (v + 4) 0 0) : Bytes) else (if (r =? 2) then (pvRow 6 0 v b1 a2 0 0 0) else (if (r =? 3) then (pvRow 4 0 v a0 (v + 1) (v + 2) 0 0) else (if (r =? 4) then (pvRow 9 0 v a0 (v + 1) (v + 2) 0 0) else (if (r =? 5) then (pvRow 7 0 v a0 (v + 1) (v + 2) a1 0) else (if (r =? 6) then (pvRow 8 0 v a0 (v + 1) (v + 2) a2 0) else (pvRow 4 0 v a2 a3 (v + 1) 0 0)))))))
+}
+
+definition{
+  name: pvNewA,
+  parameters: [r : Nat],
+  result: Nat,
+  body: (if (r =? 1) then 5 else (if (r =? 2) then 1 else (if (r =? 3) then 3 else (if (r =? 4) then 3 else (if (r =? 5) then 3 else (if (r =? 6) then 3 else 2))))))
+}
+
+definition{
+  name: pvDeltaB,
+  parameters: [r : Nat, v : Nat, a0 : Nat, a1 : Nat, a2 : Nat, a3 : Nat, a4 : Nat, a5 : Nat, b1 : Nat, b2 : Nat, fl : Nat],
+  result: Bytes,
+  body: (if (r =? 9) then (pvRow 5 0 a5 a3 a2 v 0 0) else (if (r =? 10) then (pvRow 4 0 a4 a1 a3 v 0 0) else (if (r =? 11) then (pvRow 15 0 0 a1 a2 0 0 0) else (if (r =? 12) then (prim append (pvRow 4 0 v a1 (v + 1) (v + 2) 0 0) (pvRow 12 0 (v + 3) (v + 1) a2 (v + 4) 0 0) : Bytes) else (if (r =? 13) then (pvRow 12 0 v a3 a1 (v + 1) 0 0) else (if (r =? 14) then (pvRow 12 0 v a3 a2 (v + 1) 0 0) else (pvRow 14 0 a0 a1 a2 0 0 0)))))))
+}
+
+definition{
+  name: pvNewB,
+  parameters: [r : Nat],
+  result: Nat,
+  body: (if (r =? 9) then 1 else (if (r =? 10) then 1 else (if (r =? 11) then 0 else (if (r =? 12) then 5 else (if (r =? 13) then 2 else (if (r =? 14) then 2 else 0))))))
+}
+
+definition{
+  name: pvDeltaC,
+  parameters: [r : Nat, v : Nat, a0 : Nat, a1 : Nat, a2 : Nat, a3 : Nat, a4 : Nat, a5 : Nat, b1 : Nat, b2 : Nat, fl : Nat],
+  result: Bytes,
+  body: (if (r =? 16) then (pvRow 15 0 0 a0 a0 0 0 0) else (if (r =? 17) then (pvRow 15 0 0 a1 b2 0 0 0) else (if (r =? 18) then (pvRow 15 0 0 a2 a1 0 0 0) else (if (r =? 19) then (pvRow 16 0 0 a1 b2 0 0 0) else (if (r =? 20) then (pvRow 15 0 0 a1 a2 0 0 0) else (pvRow 1 fl b1 0 0 0 0 0))))))
+}
+
+definition{
+  name: pvNewC,
+  parameters: [r : Nat],
+  result: Nat,
+  body: (if (r =? 16) then 0 else (if (r =? 17) then 0 else (if (r =? 18) then 0 else (if (r =? 19) then 0 else (if (r =? 20) then 0 else 0)))))
+}
+
+definition{
+  name: pvDelta,
+  parameters: [r : Nat, v : Nat, a0 : Nat, a1 : Nat, a2 : Nat, a3 : Nat, a4 : Nat, a5 : Nat, b1 : Nat, b2 : Nat, fl : Nat],
+  result: Bytes,
+  body: (if (r <? 9) then (pvDeltaA r v a0 a1 a2 a3 a4 a5 b1 b2 fl) else (if (r <? 16) then (pvDeltaB r v a0 a1 a2 a3 a4 a5 b1 b2 fl) else (pvDeltaC r v a0 a1 a2 a3 a4 a5 b1 b2 fl)))
+}
+
+definition{
+  name: pvNew,
+  parameters: [r : Nat],
+  result: Nat,
+  body: (if (r <? 9) then (pvNewA r) else (if (r <? 16) then (pvNewB r) else (pvNewC r)))
+}
+
+definition{
+  name: pvMergePair,
+  parameters: [rows : Bytes, par : Bytes, i : Nat, j : Nat, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if (5 <? k) then 0 else (if (not ((pvRes par (pvRaw rows i k) 65536) =? (pvRes par (pvRaw rows j k) 65536))) then ((prim multiply (pvRes par (pvRaw rows i k) 65536) 65536 : Nat) + (pvRes par (pvRaw rows j k) 65536)) else (pvMergePair rows par i j (k + 1) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvUniPair,
+  parameters: [rows : Bytes, par : Bytes, r : Nat, i : Nat, j : Nat],
+  result: Nat,
+  body: (if (r =? 22) then (pvMergePair rows par i j 1 8) else (if (r <? 27) then ((prim multiply (pvRes par (pvRaw rows i 0) 65536) 65536 : Nat) + (pvRes par (pvRaw rows j 0) 65536)) else (if (r =? 27) then ((prim multiply (pvRes par (pvRaw rows i 1) 65536) 65536 : Nat) + (pvRes par (pvRaw rows j 4) 65536)) else ((prim multiply (pvRes par (pvRaw rows i 2) 65536) 65536 : Nat) + (pvRes par (pvRaw rows j 4) 65536))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvCn,
+  parameters: [rows : Bytes, r : Nat, i : Nat],
+  result: Nat,
+  body: (if (r =? 22) then (if ((pvRel rows i) =? 2) then 22 else 23) else (r + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvBindIf,
+  parameters: [par : Bytes, ra : Nat, rb : Nat],
+  result: Bytes,
+  body: (if (ra =? rb) then par else (if (32768 <? (ra + 1)) then (pvBind par ra rb) else (if (32768 <? (rb + 1)) then (pvBind par rb ra) else par)))
+}
+
+definition{
+  name: pvBadIf,
+  parameters: [ra : Nat, rb : Nat, cn : Nat],
+  result: Nat,
+  body: (if (ra =? rb) then 1 else (if ((32768 <? (ra + 1)) || (32768 <? (rb + 1))) then 0 else cn))
+}
+
+definition{
+  name: pvPack,
+  parameters: [rows : Bytes, par : Bytes, nv : Nat, bad : Nat],
+  result: Bytes,
+  body: (prim append (prim append (prim append (pvU16 nv) (pvByte bad) : Bytes) (prim append (pvByte (prim quotient (prim length rows : Nat) 65536 0 : Nat)) (pvU16 (prim length rows : Nat)) : Bytes) : Bytes) (prim append rows par : Bytes) : Bytes)
+}
+
+definition{
+  name: pvChaseNext,
+  parameters: [rows : Bytes, par : Bytes, r : Nat, i : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (prim multiply 30 65536 : Nat)
+    | Nat.succ more => (if (28 <? r) then (prim multiply 29 65536 : Nat) else (if (n <? (i + 1)) then (pvChaseNext rows par (r + 1) 0 n more) else (if (not ((pvNeed rows par r i n) =? 0)) then ((prim multiply r 65536 : Nat) + i) else (pvChaseNext rows par r (i + 1) n more))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvChase,
+  parameters: [rows : Bytes, par : Bytes, nv : Nat, bad : Nat, r : Nat, i : Nat, dirty : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (pvPack rows par nv 1)
+    | Nat.succ more => (let n : Nat := (prim quotient (prim length rows : Nat) 16 0 : Nat); (let nx : Nat := (pvChaseNext rows par r i n 1000000000000); (let r2 : Nat := (prim quotient nx 65536 0 : Nat); (let i2 : Nat := (prim remainder nx 65536 0 : Nat); (if (not (bad =? 0)) then (pvPack rows par nv bad) else (if (((30000 <? nv) || (4000 <? n)) || (r2 =? 30)) then (pvPack rows par nv 1) else (if (r2 =? 29) then (if (dirty =? 1) then (pvChase rows par nv bad 1 0 0 more) else (pvPack rows par nv 0)) else (let j : Nat := (prim subtract (pvNeed rows par r2 i2 n) 1 : Nat); (let u : Nat := (pvUniPair rows par r2 i2 j); (if (22 <? r2) then (pvChase rows (pvBindIf par (prim quotient u 65536 0 : Nat) (prim remainder u 65536 0 : Nat)) nv (pvBadIf (prim quotient u 65536 0 : Nat) (prim remainder u 65536 0 : Nat) (pvCn rows r2 i2)) 22 0 1 more) else (if (r2 =? 22) then (pvChase rows (pvBindIf par (prim quotient u 65536 0 : Nat) (prim remainder u 65536 0 : Nat)) nv (pvBadIf (prim quotient u 65536 0 : Nat) (prim remainder u 65536 0 : Nat) (pvCn rows r2 i2)) 22 i2 1 more) else (pvChase (prim append rows (pvDelta r2 (32768 + nv) (pvA rows par i2 0) (pvA rows par i2 1) (pvA rows par i2 2) (pvA rows par i2 3) (pvA rows par i2 4) (pvA rows par i2 5) (pvA rows par j 1) (pvA rows par j 2) (pvFl rows i2)) : Bytes) (prim append par (match (prim slice 0xffffffffffffffffffff 0 (prim multiply 2 (pvNew r2) : Nat) : (Option Bytes)) | Option.none => 0x | Option.some part => part) : Bytes) (nv + (pvNew r2)) bad r2 i2 1 more))))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvPow2,
+  parameters: [n : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ more => (if (n =? 0) then acc else (pvPow2 (prim subtract n 1 : Nat) (prim multiply acc 2 : Nat) more))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvHas,
+  parameters: [mask : Nat, n : Nat],
+  result: Bool,
+  body: ((prim remainder (prim quotient mask (pvPow2 n 1 64) 0 : Nat) 2 0 : Nat) =? 1)
+}
+
+definition{
+  name: pvSet,
+  parameters: [mask : Nat, n : Nat],
+  result: Nat,
+  body: (if (pvHas mask n) then mask else (mask + (pvPow2 n 1 64)))
+}
+
+definition{
+  name: pvOr,
+  parameters: [a : Nat, b : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => a
+    | Nat.succ more => (if (56 <? n) then a else (if (pvHas b n) then (pvOr (pvSet a n) b (n + 1) more) else (pvOr a b (n + 1) more)))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvTy,
+  parameters: [rel : Nat, sl : Nat, v : Nat],
+  result: Nat,
+  body: (if ((v =? 0) || (3 <? sl)) then 0 else (if ((rel =? 1) && (sl =? 0)) then 1 else (if ((rel =? 2) && (sl =? 0)) then 2 else (if (sl =? 0) then 0 else (if ((rel =? 4) || (rel =? 9)) then (if (sl =? 1) then 1 else (if (sl =? 2) then 2 else 0)) else (if (rel =? 5) then (if (sl =? 1) then 2 else (if (sl =? 2) then 1 else 0)) else (if (rel =? 6) then (if (sl <? 3) then 2 else 0) else (if ((rel =? 7) || (rel =? 8)) then (if (sl =? 2) then 1 else 2) else (if (rel =? 10) then (if (sl =? 3) then 2 else 1) else (if (rel =? 11) then (if (sl =? 1) then 1 else 0) else (if (rel =? 12) then (if (sl =? 1) then 2 else (if (sl =? 3) then 1 else 0)) else (if (rel =? 13) then (if (sl =? 3) then 2 else 0) else (if (pvIn rel 15 17) then (if (sl <? 3) then 1 else 0) else 0)))))))))))))
+}
+
+definition{
+  name: pvSlotIs,
+  parameters: [rows : Bytes, par : Bytes, k : Nat, sl : Nat, t : Nat, ty : Nat],
+  result: Bool,
+  body: (if ((pvA rows par k sl) =? t) then ((pvTy (pvRel rows k) sl t) =? ty) else false),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvTyped,
+  parameters: [rows : Bytes, par : Bytes, t : Nat, ty : Nat, k : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ more => (if (n <? (k + 1)) then false else (if ((pvSlotIs rows par k 0 t ty) || (pvSlotIs rows par k 1 t ty)) then true else (if ((pvSlotIs rows par k 2 t ty) || (pvSlotIs rows par k 3 t ty)) then true else (pvTyped rows par t ty (k + 1) n more))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvClash,
+  parameters: [rows : Bytes, par : Bytes, i : Nat, sl : Nat, n : Nat],
+  result: Bool,
+  body: (if ((pvTy (pvRel rows i) sl (pvA rows par i sl)) =? 1) then (pvTyped rows par (pvA rows par i sl) 2 0 n 1000000) else false),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvProp,
+  parameters: [rel : Nat],
+  result: Bool,
+  body: ((pvIn rel 4 9) || (pvIn rel 11 13))
+}
+
+definition{
+  name: pvOther53,
+  parameters: [rows : Bytes, par : Bytes, rel : Nat, t : Nat, k : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ more => (if (n <? (k + 1)) then false else (if ((pvProp (pvRel rows k)) && (not ((pvRel rows k) =? rel))) then (if ((pvA rows par k 0) =? t) then true else (pvOther53 rows par rel t (k + 1) n more)) else (pvOther53 rows par rel t (k + 1) n more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvRelId,
+  parameters: [rows : Bytes, par : Bytes, t : Nat, k : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ more => (if (n <? (k + 1)) then false else (if (pvIn (pvRel rows k) 4 14) then (if ((pvA rows par k 0) =? t) then true else (pvRelId rows par t (k + 1) n more)) else (pvRelId rows par t (k + 1) n more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvRowChk,
+  parameters: [rows : Bytes, par : Bytes, i : Nat, n : Nat, mask : Nat],
+  result: Nat,
+  body: (let rel : Nat := (pvRel rows i); (let a0 : Nat := (pvA rows par i 0); (let a1 : Nat := (pvA rows par i 1); (let a2 : Nat := (pvA rows par i 2); (let m1 : Nat := (if ((rel =? 10) && (((pvA rows par i 3) =? 0) && ((not ((pvA rows par i 4) =? 0)) || (not ((pvA rows par i 5) =? 0))))) then (pvSet mask 51) else mask); (let m2 : Nat := (if ((rel =? 16) && (a1 =? a2)) then (pvSet m1 52) else m1); (let m3 : Nat := (if ((pvProp rel) && (pvOther53 rows par rel a0 0 n 1000000)) then (pvSet m2 53) else m2); (let m4 : Nat := (if ((pvIn rel 1 3) && (pvRelId rows par a0 0 n 1000000)) then (pvSet m3 54) else m3); (let m5 : Nat := (if (((pvClash rows par i 0 n) || (pvClash rows par i 1 n)) || ((pvClash rows par i 2 n) || (pvClash rows par i 3 n))) then (pvSet m4 55) else m4); (if ((rel =? 17) && (pvEntHas rows par a1 1 0 n 1000000)) then (pvSet m5 56) else m5)))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvChecks,
+  parameters: [rows : Bytes, par : Bytes, i : Nat, n : Nat, mask : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 2
+    | Nat.succ more => (if (n <? (i + 1)) then mask else (pvChecks rows par (i + 1) n (pvRowChk rows par i n mask) more))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvEvent,
+  parameters: [rel : Nat],
+  result: Bool,
+  body: (if ((rel =? 4) || (rel =? 5)) then true else (pvIn rel 7 9))
+}
+
+definition{
+  name: pvEdgeA,
+  parameters: [rows : Bytes, par : Bytes, i : Nat, j : Nat, cs : Nat, n : Nat],
+  result: Nat,
+  body: (let ri : Nat := (pvRel rows i); (let rj : Nat := (pvRel rows j); (let i1 : Nat := (pvA rows par i 1); (let j1 : Nat := (pvA rows par j 1); (if (cs =? 1) then (if (((ri =? 7) && (rj =? 8)) && (i1 =? j1)) then 30 else 0) else (if (cs =? 2) then (if (((ri =? 7) && (rj =? 7)) && (i1 =? j1)) then 31 else 0) else (if (cs =? 3) then (if (((ri =? 8) && (rj =? 8)) && (i1 =? j1)) then 32 else 0) else (if (cs =? 4) then (if (((ri =? 7) && (rj =? 5)) && (i1 =? j1)) then 33 else 0) else (if (cs =? 5) then (if (((ri =? 5) && (rj =? 8)) && (i1 =? j1)) then 33 else 0) else (if (cs =? 6) then (if (((ri =? 7) && (rj =? 4)) && (i1 =? (pvA rows par j 2))) then 34 else 0) else (if (cs =? 7) then (if (((ri =? 4) && (rj =? 8)) && ((pvA rows par i 2) =? j1)) then 34 else 0) else (if (cs =? 8) then (if (((ri =? 7) && (rj =? 8)) && (0 <? (pvScan rows par 6 1 j1 2 i1 9 0 0 n 1000000))) then 35 else 0) else (if (cs =? 9) then (if (((ri =? 4) && (rj =? 9)) && (i1 =? j1)) then 36 else 0) else (if (cs =? 10) then (if (((ri =? 4) && (rj =? 5)) && (i1 =? (pvA rows par j 2))) then 37 else 0) else (if (cs =? 11) then (if (((ri =? 5) && (rj =? 9)) && ((pvA rows par i 2) =? j1)) then 38 else 0) else (if (cs =? 12) then (if (((ri =? 4) && (rj =? 4)) && (i1 =? j1)) then 39 else 0) else (if (cs =? 13) then (if (((ri =? 9) && (rj =? 9)) && (i1 =? j1)) then 40 else 0) else (if (((ri =? 10) && (i =? j)) && ((not ((pvA rows par i 3) =? 0)) && ((not ((pvA rows par i 4) =? 0)) && (not ((pvA rows par i 5) =? 0))))) then 41 else 0)))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvEdgeB,
+  parameters: [rows : Bytes, par : Bytes, i : Nat, j : Nat, cs : Nat, n : Nat],
+  result: Nat,
+  body: (let ri : Nat := (pvRel rows i); (let rj : Nat := (pvRel rows j); (let i1 : Nat := (pvA rows par i 1); (let j1 : Nat := (pvA rows par j 1); (if (cs =? 15) then (if (((ri =? 4) && (rj =? 4)) && (0 <? (pvScan rows par 10 1 j1 2 i1 9 0 0 n 1000000))) then 42 else 0) else (if (cs =? 16) then (if (((ri =? 4) && (rj =? 7)) && (i1 =? (pvA rows par j 2))) then 43 else 0) else (if (cs =? 17) then (if (((ri =? 7) && (rj =? 9)) && ((pvA rows par i 2) =? j1)) then 43 else 0) else (if (cs =? 18) then (if (((ri =? 4) && (rj =? 8)) && (i1 =? (pvA rows par j 2))) then 44 else 0) else (if (cs =? 19) then (if (((ri =? 8) && (rj =? 9)) && ((pvA rows par i 2) =? j1)) then 44 else 0) else (if (cs =? 20) then (if (((ri =? 4) && (rj =? 4)) && (0 <? (pvScan rows par 16 1 j1 2 i1 9 0 0 n 1000000))) then 45 else 0) else (if (cs =? 21) then (if (((ri =? 9) && (rj =? 9)) && (0 <? (pvScan rows par 16 1 i1 2 j1 9 0 0 n 1000000))) then 46 else 0) else (if (cs =? 22) then (if (((ri =? 7) && (rj =? 9)) && (0 <? (pvScan rows par 12 1 i1 2 j1 9 0 0 n 1000000))) then 47 else 0) else (if (cs =? 23) then (if (((ri =? 4) && (rj =? 8)) && (0 <? (pvScan rows par 12 1 j1 2 i1 9 0 0 n 1000000))) then 47 else 0) else (if (cs =? 24) then (if (((ri =? 7) && (rj =? 8)) && (0 <? (pvScan rows par 12 1 i1 2 j1 9 0 0 n 1000000))) then 47 else 0) else (if (cs =? 25) then (if (((ri =? 7) && (rj =? 8)) && (0 <? (pvScan rows par 12 1 j1 2 i1 9 0 0 n 1000000))) then 47 else 0) else (if (cs =? 26) then (if (((ri =? 4) && (rj =? 4)) && (0 <? (pvScan rows par 11 1 j1 2 i1 9 0 0 n 1000000))) then 48 else 0) else (if (cs =? 27) then (if (((ri =? 7) && (rj =? 4)) && (0 <? (pvScan rows par 11 1 j1 2 i1 9 0 0 n 1000000))) then 48 else 0) else (if (cs =? 28) then (if (((ri =? 4) && (rj =? 9)) && (0 <? (pvScan rows par 13 1 j1 2 i1 9 0 0 n 1000000))) then 49 else 0) else (if (((ri =? 7) && (rj =? 8)) && (0 <? (pvScan rows par 13 1 j1 2 i1 9 0 0 n 1000000))) then 49 else 0))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvEdgeCn,
+  parameters: [rows : Bytes, par : Bytes, i : Nat, j : Nat, cs : Nat, n : Nat],
+  result: Nat,
+  body: (if (cs <? 15) then (pvEdgeA rows par i j cs n) else (pvEdgeB rows par i j cs n)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvEdgeU,
+  parameters: [rows : Bytes, par : Bytes, i : Nat, cs : Nat],
+  result: Nat,
+  body: (pvA rows par i (if (cs =? 14) then 5 else 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvEdgeV,
+  parameters: [rows : Bytes, par : Bytes, j : Nat, cs : Nat],
+  result: Nat,
+  body: (pvA rows par j (if (cs =? 14) then 4 else 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvEdgeNext,
+  parameters: [rows : Bytes, par : Bytes, cur : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (prim multiply (prim multiply n n : Nat) 32 : Nat)
+    | Nat.succ more => (let i : Nat := (prim quotient cur (prim multiply n 32 : Nat) 0 : Nat); (let j : Nat := (prim remainder (prim quotient cur 32 0 : Nat) n 0 : Nat); (let cs : Nat := (prim remainder cur 32 0 : Nat); (let cn : Nat := (pvEdgeCn rows par i j cs n); (if (n <? (i + 1)) then (prim multiply (prim multiply n n : Nat) 32 : Nat) else (if ((not (pvEvent (pvRel rows i))) && (not ((pvRel rows i) =? 10))) then (pvEdgeNext rows par ((prim multiply (prim multiply (i + 1) n : Nat) 32 : Nat) + 1) n more) else (if ((29 <? cs) || ((not (pvEvent (pvRel rows j))) && (not (i =? j)))) then (pvEdgeNext rows par ((prim multiply (((prim multiply i n : Nat) + j) + 1) 32 : Nat) + 1) n more) else (if (cn =? 42) then cur else (if ((not (cn =? 0)) && (not ((pvEdgeU rows par i cs) =? (pvEdgeV rows par j cs)))) then cur else (pvEdgeNext rows par (cur + 1) n more))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvEdges,
+  parameters: [s : PvCState, edges : Bytes, cur : Nat, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => edges
+    | Nat.succ more => (if (n =? 0) then edges else (let nx : Nat := (pvEdgeNext (project s rows) (project s par) cur n 1000000000000); (let i : Nat := (prim quotient nx (prim multiply n 32 : Nat) 0 : Nat); (let j : Nat := (prim remainder (prim quotient nx 32 0 : Nat) n 0 : Nat); (let cs : Nat := (prim remainder nx 32 0 : Nat); (if ((prim multiply (prim multiply n n : Nat) 32 : Nat) <? (nx + 1)) then edges else (pvEdges s (prim append edges (prim append (prim append (pvU16 (pvEdgeU (project s rows) (project s par) i cs)) (pvU16 (pvEdgeV (project s rows) (project s par) j cs)) : Bytes) (pvByte (pvEdgeCn (project s rows) (project s par) i j cs n)) : Bytes) : Bytes) (nx + 1) n more)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvNode,
+  parameters: [t : Nat, k1 : Nat],
+  result: Nat,
+  body: (if (t <? 32768) then t else (k1 + (prim subtract t 32768 : Nat)))
+}
+
+definition{
+  name: pvMark,
+  parameters: [marks : Bytes, t : Nat, k1 : Nat],
+  result: Nat,
+  body: (pvG16 marks (prim multiply (pvNode t k1) 2 : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvReachNext,
+  parameters: [edges : Bytes, marks : Bytes, k : Nat, ne : Nat, k1 : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => ne
+    | Nat.succ more => (if (ne <? (k + 1)) then ne else (if ((not ((pvMark marks (pvG16 edges (prim multiply k 5 : Nat)) k1) =? 0)) && ((pvMark marks (pvG16 edges ((prim multiply k 5 : Nat) + 2)) k1) =? 0)) then k else (pvReachNext edges marks (k + 1) ne k1 more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvMarkSet,
+  parameters: [marks : Bytes, o : Nat, v : Nat],
+  result: Bytes,
+  body: (prim append (match (prim slice marks 0 o : (Option Bytes)) | Option.none => 0x | Option.some part => part) (prim append (pvU16 v) (match (prim slice marks (o + 2) (prim subtract (prim length marks : Nat) (o + 2) : Nat) : (Option Bytes)) | Option.none => 0x | Option.some part => part) : Bytes) : Bytes)
+}
+
+definition{
+  name: pvReach,
+  parameters: [e : PvEState, marks : Bytes, k : Nat, ne : Nat, k1 : Nat, dirty : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => marks
+    | Nat.succ more => (let nx : Nat := (pvReachNext (project e edges) marks k ne k1 1000000000); (if (ne <? (nx + 1)) then (if (dirty =? 1) then (pvReach e marks 0 ne k1 0 more) else marks) else (pvReach e (pvMarkSet marks (prim multiply (pvNode (pvG16 (project e edges) ((prim multiply nx 5 : Nat) + 2)) k1) 2 : Nat) (nx + 1)) (nx + 1) ne k1 1 more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvPath,
+  parameters: [edges : Bytes, marks : Bytes, x : Nat, v : Nat, k1 : Nat, mask : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => mask
+    | Nat.succ more => (if (x =? v) then mask else (if (((pvMark marks x k1) =? 0) || ((pvMark marks x k1) =? 65535)) then mask else (pvPath edges marks (pvG16 edges (prim multiply (prim subtract (pvMark marks x k1) 1 : Nat) 5 : Nat)) v k1 (pvSet mask (pvAt edges ((prim multiply (prim subtract (pvMark marks x k1) 1 : Nat) 5 : Nat) + 4))) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvCycle,
+  parameters: [e : PvEState, z : PvMState, k : Nat, ne : Nat, k1 : Nat, mask : Nat],
+  result: Nat,
+  body: (let u : Nat := (pvG16 (project e edges) (prim multiply k 5 : Nat)); (let v : Nat := (pvG16 (project e edges) ((prim multiply k 5 : Nat) + 2)); (let m : PvMState := (record PvMState {marks := (pvReach e (pvMarkSet (project z marks) (prim multiply (pvNode v k1) 2 : Nat) 65535) 0 ne k1 0 1000000000)}); (if (u =? v) then (pvSet mask 42) else (if ((pvMark (project m marks) u k1) =? 0) then mask else (pvPath (project e edges) (project m marks) u v k1 (pvSet mask 42) 100000)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvCycles,
+  parameters: [e : PvEState, z : PvMState, k : Nat, ne : Nat, k1 : Nat, mask : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 2
+    | Nat.succ more => (if (ne <? (k + 1)) then mask else (if ((pvAt (project e edges) ((prim multiply k 5 : Nat) + 4)) =? 42) then (pvCycles e z (k + 1) ne k1 (pvCycle e z k ne k1 mask) more) else (pvCycles e z (k + 1) ne k1 mask more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvRep,
+  parameters: [b : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ more => (if (n =? 0) then 0x else (if (n =? 1) then b else (let h : Bytes := (pvRep b (prim quotient n 2 0 : Nat) more); (if ((prim remainder n 2 0 : Nat) =? 1) then (prim append (prim append h h : Bytes) b : Bytes) else (prim append h h : Bytes)))))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvFirst,
+  parameters: [rows : Bytes, k : Nat, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ more => (if ((prim length rows : Nat) <? ((prim multiply i 16 : Nat) + 1)) then i else (if ((pvAt rows ((prim multiply i 16 : Nat) + 2)) =? k) then i else (pvFirst rows k (i + 1) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvLast,
+  parameters: [rows : Bytes, k : Nat, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ more => (if ((prim length rows : Nat) <? ((prim multiply i 16 : Nat) + 1)) then i else (if ((pvAt rows ((prim multiply i 16 : Nat) + 2)) =? k) then (pvLast rows k (i + 1) more) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvOrder,
+  parameters: [s : PvCState, k1 : Nat, mask : Nat],
+  result: Nat,
+  body: (let e : PvEState := (record PvEState {edges := (pvEdges s 0x 1 (prim quotient (prim length (project s rows) : Nat) 16 0 : Nat) 1000000000)}); (let z : PvMState := (record PvMState {marks := (pvRep 0x0000 (k1 + (project s nv)) 64)}); (if (300000 <? (prim length (project e edges) : Nat)) then 2 else (pvCycles e z 0 (prim quotient (prim length (project e edges) : Nat) 5 0 : Nat) k1 mask 1000000000)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvInst,
+  parameters: [p : PvPState, k : Nat],
+  result: Nat,
+  body: (let lo : Nat := (pvFirst (project p rows) k 0 1000000); (let hi : Nat := (pvLast (project p rows) k lo 1000000); (let pk : Bytes := (pvChase (match (prim slice (project p rows) (prim multiply lo 16 : Nat) (prim multiply (prim subtract hi lo : Nat) 16 : Nat) : (Option Bytes)) | Option.none => 0x | Option.some part => part) (pvRep 0xffff (project p nv) 64) (project p nv) 0 1 0 0 1000000000000); (let ln : Nat := ((prim multiply (pvAt pk 3) 65536 : Nat) + (pvG16 pk 4)); (let s : PvCState := (record PvCState {rows := (match (prim slice pk 6 ln : (Option Bytes)) | Option.none => 0x | Option.some part => part), par := (match (prim slice pk (6 + ln) (prim subtract (prim length pk : Nat) (6 + ln) : Nat) : (Option Bytes)) | Option.none => 0x | Option.some part => part), nv := (pvG16 pk 0), bad := (pvAt pk 2)}); (if ((project s bad) =? 1) then 2 else (pvOrder s ((prim quotient (prim length (project p terms) : Nat) 9 0 : Nat) + 1) (pvChecks (project s rows) (project s par) 0 (prim quotient (prim length (project s rows) : Nat) 16 0 : Nat) (if ((project s bad) =? 0) then 0 else (pvPow2 (project s bad) 1 64)) 1000000)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: pvInsts,
+  parameters: [p : PvPState, k : Nat, mask : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 2
+    | Nat.succ more => (if ((project p nb) <? k) then mask else (pvInsts p (k + 1) (pvOr mask (pvInst p k) 0 64) more))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvDupFrom,
+  parameters: [rows : Bytes, i : Nat, k : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ more => (if (i <? (k + 1)) then false else (if (((pvRel rows k) =? 18) && ((pvRaw rows k 0) =? (pvRaw rows i 0))) then true else (pvDupFrom rows i (k + 1) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvDup,
+  parameters: [rows : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ more => (if ((prim length rows : Nat) <? ((prim multiply i 16 : Nat) + 1)) then false else (if (((pvRel rows i) =? 18) && (pvDupFrom rows i 0 1000000)) then true else (pvDup rows (i + 1) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvNums,
+  parameters: [mask : Nat, n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ more => (if (56 <? n) then acc else (if (pvHas mask n) then (pvNums mask (n + 1) (prim append acc (prim append (prim utf8_encode " " : Bytes) (prim append (pvByte (48 + (prim quotient n 10 0 : Nat))) (pvByte (48 + (prim remainder n 10 0 : Nat))) : Bytes) : Bytes) : Bytes) more) else (pvNums mask (n + 1) acc more)))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: pvOut,
+  parameters: [mask : Nat],
+  result: Bytes,
+  body: (if (pvHas mask 1) then (prim utf8_encode "unjudged" : Bytes) else (if (mask =? 0) then (prim utf8_encode "valid" : Bytes) else (if (pvHas mask 0) then (pvNums mask 22 (prim utf8_encode "invalid 7.2" : Bytes) 64) else (pvNums mask 22 (prim utf8_encode "invalid" : Bytes) 64))))
+}
+
+definition{
+  name: pvCheck,
+  parameters: [c : PvCtx],
+  result: Bytes,
+  body: (let p : PvPState := (pvRead c); (if (30000 <? (prim length (project c d) : Nat)) then (prim utf8_encode "unjudged" : Bytes) else (if (pvU8Ok (project c d) 66 65536) then (if (not ((project p ph) =? 64)) then (prim utf8_encode "malformed" : Bytes) else (pvOut (pvInsts p 0 (if (pvDup (project p rows) 0 1000000) then 1 else 0) 100000))) else (prim utf8_encode "malformed" : Bytes)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismProvDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if ((6 <? ((prim length value : Nat) + 1)) && (pvEqAt value 0 (prim utf8_encode "check\n" : Bytes) 0 8)) then (pvCheck (record PvCtx {d := (prim append (prim utf8_encode "provxsdhttp://www.w3.org/ns/prov#http://www.w3.org/2001/XMLSchema#" : Bytes) (match (prim slice value 6 (prim subtract (prim length value : Nat) 6 : Nat) : (Option Bytes)) | Option.none => 0x | Option.some part => part) : Bytes)})) else (prim utf8_encode "invalid" : Bytes)),
+  axioms: [Quot.sound, propext]
+}
+
+\end{semanticmodule}
+\end{lexlean}

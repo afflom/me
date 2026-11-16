@@ -1,0 +1,133 @@
+\begin{lexlean}{GenProv}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: prAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (prim index s i : (Option UInt8)) | Option.none => 0 | Option.some octet => (prim to_nat octet : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prStarts,
+  parameters: [s : Bytes, i : Nat, k : Bytes, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if ((prim length k : Nat) <? (j + 1)) then true else (if (((i + j) <? (prim length s : Nat)) && ((prAt s (i + j)) =? (prAt k j))) then (prStarts s i k (j + 1) more) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: prFind,
+  parameters: [s : Bytes, i : Nat, k : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (prim length s : Nat)
+    | Nat.succ more => (if ((prim length s : Nat) <? (i + 1)) then (prim length s : Nat) else (if (prStarts s i k 0 64) then i else (prFind s (i + 1) k more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: prPlain,
+  parameters: [s : Bytes, i : Nat, e : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if (e <? (i + 1)) then true else (if (((prAt s i) <? 32) || ((prAt s i) =? 34)) then false else (if (((prAt s i) =? 92) || ((prAt s i) =? 60)) then false else (prPlain s (i + 1) e more))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: prSpan,
+  parameters: [s : Bytes, a : Nat, e : Nat],
+  result: Bytes,
+  body: (match (prim slice s a (prim subtract e a : Nat) : (Option Bytes)) | Option.none => 0x | Option.some part => part)
+}
+
+definition{
+  name: prNumEnd,
+  parameters: [s : Bytes, m : Nat],
+  result: Nat,
+  body: (prFind s (m + 30) (prim utf8_encode "\"" : Bytes) 65536),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prRef,
+  parameters: [s : Bytes, m : Nat],
+  result: Nat,
+  body: ((prFind s (prNumEnd s m) (prim utf8_encode "href=\"" : Bytes) 65536) + 6),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prRefEnd,
+  parameters: [s : Bytes, m : Nat],
+  result: Nat,
+  body: (prFind s (prRef s m) (prim utf8_encode "\"" : Bytes) 65536),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prTextEnd,
+  parameters: [s : Bytes, m : Nat],
+  result: Nat,
+  body: (prFind s ((prRefEnd s m) + 2) (prim utf8_encode "</a>" : Bytes) 65536),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prKind,
+  parameters: [b : Nat],
+  result: Bytes,
+  body: (if (b =? 68) then (prim utf8_encode "definition" : Bytes) else (if (b =? 73) then (prim utf8_encode "inference" : Bytes) else (prim utf8_encode "constraint" : Bytes)))
+}
+
+definition{
+  name: prOk,
+  parameters: [s : Bytes, m : Nat],
+  result: Bool,
+  body: (let t : Nat := ((prRefEnd s m) + 2); (if ((prim length s : Nat) <? ((prTextEnd s m) + 1)) then false else (if (((prAt s t) =? 68) || (((prAt s t) =? 73) || ((prAt s t) =? 67))) then ((prPlain s (m + 30) (prNumEnd s m) 64) && ((prPlain s (prRef s m) (prRefEnd s m) 256) && (prPlain s t (prTextEnd s m) 256))) else false))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prEntry,
+  parameters: [s : Bytes, m : Nat],
+  result: Bytes,
+  body: (let t : Nat := ((prRefEnd s m) + 2); (prim append (prim append (prim append (prim utf8_encode "{\"id\": \"w3c-prov-constraints-" : Bytes) (prSpan s (m + 30) (prNumEnd s m)) : Bytes) (prim append (prim append (prim utf8_encode "\", \"kind\": \"" : Bytes) (prKind (prAt s t)) : Bytes) (prim append (prim utf8_encode "\", \"ref\": \"" : Bytes) (prSpan s (prRef s m) (prRefEnd s m)) : Bytes) : Bytes) : Bytes) (prim append (prim append (prim utf8_encode "\", \"text\": \"" : Bytes) (prSpan s t (prTextEnd s m)) : Bytes) (prim utf8_encode "\"}\n" : Bytes) : Bytes) : Bytes)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prAllOk,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if ((prim length s : Nat) <? ((prFind s i (prim utf8_encode "<div class=\"ruleTitle\"><a id=\"" : Bytes) 65536) + 1)) then true else (if (prOk s (prFind s i (prim utf8_encode "<div class=\"ruleTitle\"><a id=\"" : Bytes) 65536)) then (prAllOk s ((prFind s i (prim utf8_encode "<div class=\"ruleTitle\"><a id=\"" : Bytes) 65536) + 30) more) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: prLines,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ more => (if ((prim length s : Nat) <? ((prFind s i (prim utf8_encode "<div class=\"ruleTitle\"><a id=\"" : Bytes) 65536) + 1)) then acc else (prLines s ((prFind s i (prim utf8_encode "<div class=\"ruleTitle\"><a id=\"" : Bytes) 65536) + 30) (prim append acc (prEntry s (prFind s i (prim utf8_encode "<div class=\"ruleTitle\"><a id=\"" : Bytes) 65536)) : Bytes) more))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+\end{semanticmodule}
+\end{lexlean}
