@@ -7,6 +7,7 @@
 \importmodule{GenAria}
 \importmodule{GenIrp}
 \importmodule{GenSosa}
+\importmodule{GenSenses}
 \importmodule{Foundation.Tar}
 \importmodule{Foundation.View.Text.V1.Model}
 \importmodule{Foundation.View.Text.V3.Model}
@@ -82,7 +83,11 @@ definition{
     | Option.none => (refused 0x6e65656473206170702f73706563732f7374616e64617264732f757073747265616d2f736f73612e74746c206465636c6172696e6720736f73613a207465726d73)
     | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x736f73617461626c65) then (match (GenSosa::sosaGenerate archive false)
     | Option.none => (refused 0x6e65656473206170702f73706563732f7374616e64617264732f757073747265616d2f736f73612e74746c206465636c6172696e6720736f73613a207465726d73)
-    | Option.some file => (written file)) else 0x696e76616c6964))))))))))))))),
+    | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x73656e7365736576656e7473) then (match (GenSenses::senEvents archive)
+    | Option.none => (refused 0x6e65656473205246432035353435206174206974732070696e6e6564206279746573)
+    | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x73656e7365736361736573) then (match (GenSenses::senGenerate archive)
+    | Option.none => (refused 0x6e65656473206170702f73706563732f73656e7365732f636c6f636b732e6a736f6e20776974682061206261736520616e6420636c6f636b732c20616e64202e67656e2f73656e7365732d6576656e7473207769746820616e206576656e7420756e64657220776179206f7220746f20636f6d65206174206561636820636c6f636b)
+    | Option.some file => (written file)) else 0x696e76616c6964))))))))))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

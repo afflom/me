@@ -1,0 +1,7 @@
+{
+  "comment": "Written by generators/standards (sensescases) from RFC 5545 at its pinned bytes and app/specs/senses/clocks.json: do not edit. Each example is a 'flat' request of the senses guest and its answer at one pinned clock. The time zone is the TZID of the RFC's VTIMEZONE example; the event under way and the next one are chosen among the VEVENTs of the RFC's iCalendar objects that give DTSTART and DTEND in UTC, with their UID, start and end as the RFC prints them, written as RFC 3339.",
+  "examples": [
+    ["flat\nbase https://example.com/me/\nnow 1996-09-18T15:00:00Z\nzone America/New_York\nevent 1996-09-18T14:30:00Z 1996-09-20T22:00:00Z uid1@example.com\nnext 1997-03-24T12:30:00Z 1997-03-24T21:00:00Z uid3@example.com\n", "timeZone America/New_York\nscheduleNow 1996-09-18T14:30:00Z/1996-09-20T22:00:00Z uid1@example.com\nscheduleNext 1997-03-24T12:30:00Z/1997-03-24T21:00:00Z uid3@example.com\n"],
+    ["flat\nbase https://example.com/me/\nnow 1997-07-14T16:00:00Z\nzone America/New_York\nnext 1997-07-14T17:00:00Z 1997-07-15T04:00:00Z 19970610T172345Z-AF23B2@example.com\n", "timeZone America/New_York\nscheduleNext 1997-07-14T17:00:00Z/1997-07-15T04:00:00Z 19970610T172345Z-AF23B2@example.com\n"]
+  ]
+}

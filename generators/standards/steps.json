@@ -43,6 +43,20 @@
         "app/specs/standards/upstream/sosa.ttl"
       ],
       "output": "app/src/PrismSosaTable.lex.tex"
+    },
+    {
+      "generator": "sensesevents",
+      "split": "app/specs/standards/texts/c256f809479d98aa23d71bbd1658b3800ea9f13f41ca56e59c8d2de1b31cbfcb",
+      "breakBefore": "^[0-9]+[.][0-9.]*[.]? ",
+      "output": ".gen/senses-events"
+    },
+    {
+      "generator": "sensescases",
+      "inputs": [
+        ".gen/senses-events",
+        "app/specs/senses/clocks.json"
+      ],
+      "output": "app/specs/senses/observed/spec.json"
     }
   ]
 }
