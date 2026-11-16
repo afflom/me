@@ -11,5 +11,5 @@ Feature: oracle
   @VC-01 @build
   Scenario: vCard is read as RFC 6350 defines it: the page's property table is derived from the RFC's own ABNF, every entry of IANA's vCard Elements registry is implemented and exercised by an example line its RFC gives (or one derived from an RFC's own example of a property it applies to), RFC 6350 and each RFC extending it being pinned, the Prism reads each example line as a reference reader written to RFC 6350 sections 3.3 and 3.4 reads it, and an entry neither met nor in a debt that only shrinks fails the build
     Given RFC 6350 and IANA's vCard Elements registry, pinned by SHA-256 in app/specs/oracle/vcard.json
-    When tools/oracle/vcard.py --check re-derives site/read/vcard.table.mjs and test/oracle/vcard.json, and test/oracle/vcard.test.mjs reads every example line through site/read/vcard.mjs
+    When tools/oracle/vcard.py --check re-derives site/read/vcard.table.mjs and test/oracle/vcard.json, and test/oracle/vcard.test.mjs reads every example line through the vcard guest (site/read/read.mjs)
     Then every registry entry is implemented and exercised or in the debt with a reason, and every line reads as the reference reader reads it; a planted blind reader and a planted dropped property are refused

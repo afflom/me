@@ -5,20 +5,62 @@ in BCP 14 key words (RFC 4180 section 2 defines the CSV format in seven rules
 in lower case), each item of that list in the section the register names
 ("section") is one requirement. An id is <key>-<section>-rule-<n>.
 """
-import importlib.util
-import pathlib
 import re
 
-_spec = importlib.util.spec_from_file_location("bcp14", pathlib.Path(__file__).with_name("bcp14.py"))
-bcp14 = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(bcp14)
+FOOT = re.compile(r"\[Page \d+\]\s*$")
+HEADING = re.compile(r"^((?:\d+(?:\.\d+)*)|Appendix [A-Z](?:\.\d+)*)\.?\s+(\S.*)$")
+
+
+def lines_of(text):
+    """The RFC's lines without its page breaks (footer, form feed and running header)."""
+    out = []
+    for line in text.replace("\r\n", "\n").split("\n"):
+        if line.startswith("\f"):
+            while out and not out[-1].strip():
+                out.pop()
+            if out and FOOT.search(out[-1]):
+                out.pop()
+            out.append(None)
+            continue
+        if out and out[-1] is None:
+            if line.startswith("RFC ") or not line.strip():
+                continue
+            out.pop()
+        out.append(line)
+    return [line for line in out if line is not None]
+
+
+def sections(text):
+    """(section, title, paragraphs) for each heading at the left margin."""
+    out, sec, title, para, paras = [], None, None, [], []
+    for line in lines_of(text):
+        m = HEADING.match(line)
+        if m and not line.startswith(" ") and "...." not in line:
+            if para:
+                paras.append(para)
+            if sec is not None:
+                out.append((sec, title, paras))
+            sec, title, para, paras = m.group(1).replace("Appendix ", ""), m.group(2).strip(), [], []
+            continue
+        if not line.strip():
+            if para:
+                paras.append(para)
+            para = []
+            continue
+        para.append(line.strip())
+    if para:
+        paras.append(para)
+    if sec is not None:
+        out.append((sec, title, paras))
+    return out
+
 
 ITEM = re.compile(r"^(\d+)\.\s+(.*)$")
 
 
 def requirements(data, standard, inv):
     out = []
-    for sec, _title, paras in bcp14.sections(data.decode("utf-8", "replace")):
+    for sec, _title, paras in sections(data.decode("utf-8", "replace")):
         if sec != inv["section"]:
             continue
         current = None
