@@ -685,24 +685,17 @@ export const SPEC = {
       "model": "prism-sentence-composer",
       "maps": "answer",
       "frames": {
-        "event": "{what} is on {when}",
-        "place": ", at {who}",
-        "message": "{who} wrote “{what}” on {when}",
-        "contact": "{what}: {who}",
-        "note": "You noted “{what}” on {when}",
-        "kept": "{what}, {when}",
-        "keptUntimed": "{what}",
+        "item": ".input {$kind :string}\n.input {$where :string}\n.input {$earlier :string}\n.match $kind $where $earlier\nmessage * * {{{$who} wrote “{$what}” on {$when}{$turn}{$after}{$lead}{$rhythm}}}\ncontactCard * * {{{$what}: {$who}}}\ncalendar || || {{{$what} is on {$when}}}\ncalendar || * {{{$what} is on {$when}, an earlier version of it}}\ncalendar * || {{{$what} is on {$when}, at {$where}}}\ncalendar * * {{{$what} is on {$when}, at {$where}, an earlier version of it}}\n* * * {{You noted “{$what}” on {$when}}}",
+        "turn": ", {$turn} of {$of} in its conversation",
+        "after": ", {$after} after the message it answers",
+        "lead": ": {$lead}",
+        "rhythm": ".input {$per :string}\n.match $per\n1 {{; they write about every {$every}}}\n* {{; they write about {$per} times every {$every}}}",
+        "when": ".input {$time :string}\n.input {$ago :string}\n.match $time $ago\n|| || {{{$day}}}\n|| * {{{$day} ({$ago})}}\n* || {{{$day} at {$time}}}\n* * {{{$day} at {$time} ({$ago})}}",
+        "kept": ".input {$when :string}\n.match $when\n|| {{{$what}}}\n* {{{$what}, {$when}}}",
+        "now": "It is {$when}",
+        "unmatched": "Nothing you hold mentions “{$what}”",
         "empty": "Nothing has arrived yet: connect your mail and calendar, or keep a note, and ask again",
-        "unmatched": "Nothing you hold mentions “{what}”",
-        "help": "Ask about your day, a person, your mail, your calendar or your notes",
-        "lead": ": {lead}",
-        "ago": " ({ago})",
-        "turn": ", {turn} of {of} in its conversation",
-        "after": ", {after} after the message it answers",
-        "earlier": ", an earlier version of it",
-        "rhythm": "; they write about every {every}",
-        "rhythmMany": "; they write about {per} times every {every}",
-        "now": "It is {when}"
+        "help": "Ask about your day, a person, your mail, your calendar or your notes"
       },
       "now": {
         "words": [
@@ -717,7 +710,6 @@ export const SPEC = {
           "what time it is"
         ]
       },
-      "clock": " at ",
       "most": 3,
       "find": 1000,
       "lead": 160,
