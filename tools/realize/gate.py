@@ -3,8 +3,11 @@
     python3 -I tools/realize/gate.py           check, then write the model
     python3 -I tools/realize/gate.py --check   check, and refuse any drift
 
-It reads app/specs/realizability/spec.json and every facet spec named there,
-and refuses the Prism unless:
+It reads app/specs/realizability/spec.json, every facet spec named there, and
+test/realize/<facet>.txt: what the LexLean program generators/realize answers
+over each spec's whole request space (its witness pairs, the rules or leaves
+that change an answer, the answers outside the outcomes, and the examples).
+It refuses the Prism unless:
 
   sensitivity  every field of every spec changes some answer: there is a
                pair of requests that differ in that field alone and get
@@ -38,12 +41,10 @@ import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-sys.path.insert(0, str(HERE))
-from spec_eval import Spec  # noqa: E402
-
 SPECS = ROOT / "app/specs"
 SRC = ROOT / "app/src"
 MOD = "PrismRealizability"
+FACTS = ROOT / "test/realize"
 ELEMENTS = ["identity", "vocabulary", "capability", "interfaceSpec", "composition", "dynamics",
             "fidelity", "resources", "authority", "evidence", "projection"]
 
@@ -83,51 +84,34 @@ FACETS, REQ_MAX = root_facets()
 KEYWORD_MODULE = {k: deciding(m) for k, m in FACETS}
 
 
+class Spec:
+    """A facet's decision spec, and what generators/realize answers over its
+    whole request space (test/realize/<facet>.txt, held by GN-01)."""
+
+    def __init__(self, d, keyword):
+        self.dir, self.keyword, self.module = d, keyword, KEYWORD_MODULE.get(keyword)
+        self.raw = json.loads((SPECS / d / "spec.json").read_text(encoding="utf-8"))
+        self.fields = self.raw["fields"]
+        self.names = [f["name"] for f in self.fields]
+        self.outcomes = self.raw["outcomes"]
+        self.shape = "rules" if "rules" in self.raw else "tree"
+        path = FACTS / f"{d}.txt"
+        self.facts = path.read_text(encoding="utf-8").splitlines() if path.exists() else None
+
+    def is_number(self, f):
+        return f.get("kind") == "number"
+
+    def told(self, word):
+        """The facts of one kind, each split at its tabs."""
+        head = f"{self.dir} {word} "
+        return [line[len(head):].split("\t") for line in self.facts if line.startswith(head)]
+
+    def point(self, line):
+        return tuple(int(v) if self.is_number(f) else v for f, v in zip(self.fields, line.split(" ")))
+
+
 def load():
-    out = {}
-    for d, keyword in MODEL["facets"].items():
-        out[d] = Spec(str(SPECS / d / "spec.json"))
-        out[d].dir, out[d].keyword, out[d].module = d, keyword, KEYWORD_MODULE.get(keyword)
-    return out
-
-
-def flip(x, i, v):
-    return x[:i] + (v,) + x[i + 1:]
-
-
-def witness(s, i, points):
-    """The first pair of requests that differ in field i alone and get
-    different answers, searching from the spec's own examples first."""
-    dom = s.domain(s.fields[i])
-    starts = [x for x in (s.parse(q) for q, _ in s.examples()) if x is not None]
-    for x in starts + points:
-        a = s.answer(x)
-        for v in dom:
-            if v != x[i]:
-                y = flip(x, i, v)
-                if s.answer(y) != a:
-                    return x, y
-    return None
-
-
-def live_rules(s, points):
-    """The rules (or leaves) that change some answer, and the unreached
-    branches. A rule changes an answer when removing it would."""
-    hit = {s.decide(x)[1] for x in points}
-    if s.shape == "tree":
-        leaves = s.branches()
-        return [b for b in leaves if b in hit], [b for b in leaves if b not in hit]
-    base = [s.answer(x) for x in points]
-    rules = s.raw["rules"]
-    live = []
-    for k, r in enumerate(rules):
-        s.raw["rules"] = rules[:k] + rules[k + 1:]
-        if [s.answer(x) for x in points] != base:
-            live.append(r["id"])
-        s.raw["rules"] = rules
-    # An unreached `otherwise` is left alone: the rules then cover every
-    # request, and it is the judge's totality, never a stub.
-    return live, [r["id"] for r in rules if r["id"] not in live]
+    return {d: Spec(d, keyword) for d, keyword in MODEL["facets"].items()}
 
 
 def coherence_facets():
@@ -209,39 +193,36 @@ def audit():
         if s.module is None:
             fail.append(f"{where}: keyword `{s.keyword}` is not routed by tools/prism_root.py")
             continue
-        points = list(s.space())
-        answers = [s.answer(x) for x in points]
-        total = sum(1 for a in answers if a in s.outcomes)
-        if total != len(points):
-            bad = next(x for x, a in zip(points, answers) if a not in s.outcomes)
-            fail.append(f"{where}: `{s.line(bad)}` answers {s.answer(bad)!r}, not an outcome")
-        reached = [o for o in s.outcomes if o in set(answers)]
-        for o in s.outcomes:
-            if o not in reached:
-                fail.append(f"{where}: outcome `{o}` is never answered")
+        if s.facts is None:
+            fail.append(f"{where}: test/realize/{d}.txt is missing: give it a step in generators/realize/steps.json and run tools/generators/run.sh")
+            continue
+        (counts,), = s.told("points")
+        points, _, longest_line = counts.split(" ")
+        points, longest_line = int(points), int(longest_line)
+        for line, a in s.told("bad"):
+            fail.append(f"{where}: `{line}` answers {a!r}, not an outcome")
+        never = [o for (o,) in s.told("unanswered")]
+        reached = [o for o in s.outcomes if o not in never]
+        for o in never:
+            fail.append(f"{where}: outcome `{o}` is never answered")
         witnesses = []
-        for i, f in enumerate(s.fields):
-            w = witness(s, i, points)
-            if w is None:
-                fail.append(f"{where}: field `{f['name']}` changes no answer")
+        found = {name: (s.point(x), s.point(y), a, b) for name, x, y, a, b in s.told("witness")}
+        for f in s.fields:
+            if f["name"] in found:
+                witnesses.append((f["name"], found[f["name"]]))
             else:
-                witnesses.append((f["name"], w))
-        live, dead = live_rules(s, points)
-        for b in dead:
+                fail.append(f"{where}: field `{f['name']}` changes no answer")
+        live = [b for (b,) in s.told("live")]
+        for (b,) in s.told("dead"):
             fail.append(f"{where}: {'rule' if s.shape == 'rules' else 'leaf'} {b} changes no answer")
-        branches = len(s.raw["rules"]) if s.shape == "rules" else len(s.branches())
-        # A spec with `read` derives its fields from the request (kappa reads
-        # them from the label), so its examples are not field lines: the
-        # root's acceptance vectors replay them in the guest instead.
-        lines = not s.raw.get("read")
-        valid = [(q, r) for q, r in s.examples() if lines and s.parse(q) is not None]
-        agree = [(q, r) for q, r in valid if s.answer(s.parse(q)) == r]
-        for q, r in valid:
-            if (q, r) not in agree:
-                fail.append(f"{where}: example `{q}` says {r!r}, the spec answers {s.answer(s.parse(q))!r}")
-        for q, r in s.examples():
-            if lines and s.parse(q) is None and r != "invalid":
-                fail.append(f"{where}: example `{q}` is not a request of this spec, yet says {r!r}")
+        branches = len(live) + len(s.told("dead"))
+        (counts,), = s.told("agree")
+        agree, _, valid = counts.split(" ")
+        agree, valid = int(agree), int(valid)
+        for q, r, a in s.told("wrong"):
+            fail.append(f"{where}: example `{q}` says {r!r}, the spec answers {a!r}")
+        for q, r in s.told("stray"):
+            fail.append(f"{where}: example `{q}` is not a request of this spec, yet says {r!r}")
         meanings = s.raw.get("meanings", {})
         means = sum(1 for f in s.fields if f.get("means")) + sum(1 for o in s.outcomes if meanings.get(o))
         reads = MODEL.get("reads", {}).get(d, {})
@@ -269,7 +250,7 @@ def audit():
         else:
             why_need += 1
             why_have += 1 if s.raw.get("otherwiseWhy") else 0
-        longest = max(len(f"{s.keyword} {s.line(x)}".encode()) for x in points)
+        longest = len(s.keyword.encode()) + 1 + longest_line
         names, faults = projection(s)
         fail += [f"{where}: {m}" for m in faults]
         projected = len(witnesses) if names else 0
@@ -282,7 +263,7 @@ def audit():
             "interfaceSpec": (len(witnesses), len(s.fields)),
             "composition": (composed_have, composed_need),
             "dynamics": (len(live), branches),
-            "fidelity": (len(agree), len(valid)),
+            "fidelity": (agree, valid),
             "resources": (REQ_MAX, longest),
             "authority": (why_have, why_need),
             "evidence": (theorem_count(s.module), len(guards)),
@@ -296,7 +277,7 @@ def audit():
             fail.append(f"{where}: {s.module}Proofs proves {desc['evidence'][0]} theorems for {desc['evidence'][1]} guarantees")
         if longest > REQ_MAX:
             fail.append(f"{where}: a request of {longest} bytes exceeds the root's maximum {REQ_MAX}")
-        out[d] = {"spec": s, "desc": desc, "digest": digest, "witnesses": witnesses, "points": len(points), "names": names}
+        out[d] = {"spec": s, "desc": desc, "digest": digest, "witnesses": witnesses, "points": points, "names": names}
     # Settings: the coherence registry says which facets a setting drives;
     # this model says which of their fields. Every field bound must be a
     # sensitive field of a facet the registry has the setting drive, and
@@ -382,8 +363,7 @@ def lean(out, settings):
                 parts.append(f"{lean} := {v}" if s.is_number(f) else f"{lean} := ({m}::{names['values'][(f['name'], v)]})")
             return "(record %s::%s {%s})" % (m, names["struct"], ", ".join(parts))
 
-        for field, (x, y) in r["witnesses"]:
-            a, b = s.answer(x), s.answer(y)
+        for field, (x, y, a, b) in r["witnesses"]:
             p.append("theorem{\n  name: realizability%s%sMatters,\n  parameters: [],\n  statement: ((((%s::%s %s) =? (%s::%s)) && ((%s::%s %s) =? (%s::%s))) = true),\n  proof: reflexivity{},\n  axioms: []\n}\n\n"
                      % (camel(d), cap(field), m, names["judge"], term(x), m, names["answers"][a], m, names["judge"], term(y), m, names["answers"][b]))
     p.append("theorem{\n  name: realizabilityEverySettingBound,\n  parameters: [],\n  statement: (((%s::realizabilitySettingsCount) <=? (%s::realizabilitySettingsBound)) = true),\n  proof: reflexivity{},\n  axioms: []\n}\n" % (MOD, MOD))
