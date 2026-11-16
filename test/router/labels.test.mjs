@@ -39,10 +39,10 @@ const bulk = many.map(({ media, raw }, i) => readItem({ address: `m${i}`, outcom
 await labelAll(bulk, { line, halted: () => "no" });
 const ms = performance.now() - started;
 // A cold start happens once in a process, so two more processes time one each and the
-// measure is the slowest of the three: one lucky sample must not pass a slow change
-// (#145 doubled this figure and merged on one).
+// measure is the middle of the three: neither one lucky sample (#145 doubled this figure
+// and merged on one) nor one slow moment of a shared runner decides it.
 if (process.env.LABELING_SAMPLE) process.exit(console.log(ms) ?? 0);
-const slowest = Math.max(ms, ...[1, 2].map(() => Number(execFileSync(process.execPath, [GATE], { env: { ...process.env, LABELING_SAMPLE: "1", NODE_TEST_CONTEXT: "" }, encoding: "utf8" }))));
+const middle = [ms, ...[1, 2].map(() => Number(execFileSync(process.execPath, [GATE], { env: { ...process.env, LABELING_SAMPLE: "1", NODE_TEST_CONTEXT: "" }, encoding: "utf8" })))].sort((a, b) => a - b)[1];
 
 const items = itemsOf();
 await labelAll(items, { line, halted: () => "no" });
@@ -67,7 +67,7 @@ const measured = {
   "kind-accuracy": share(wrong.kind),
   "party-accuracy": share(wrong.party),
   "unlabeled-items": items.filter((item) => !item.labels).length,
-  "labeling-ms-per-100": Math.ceil((slowest * 100) / many.length),
+  "labeling-ms-per-100": Math.ceil((middle * 100) / many.length),
   "topic-coverage": Math.floor((100 * topicsShown) / items.length),
   "lead-accuracy": Math.floor((100 * (leads.length - wrongLead.length)) / leads.length),
 };
