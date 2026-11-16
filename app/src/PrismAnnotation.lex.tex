@@ -1,0 +1,682 @@
+\begin{lexlean}{PrismAnnotation}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismAnnotationTable}
+\title{Text application model}
+\begin{semanticmodule}
+structure{
+  name: AnCtx,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: tab, type: Bytes}, {name: doc, type: Bytes}]
+}
+
+definition{
+  name: anB,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => 0
+    | Option.some octet => (prim to_nat octet : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anT,
+  parameters: [c : AnCtx, p : Nat],
+  result: Nat,
+  body: (anB (project c tab) p),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anD,
+  parameters: [c : AnCtx, i : Nat],
+  result: Nat,
+  body: (anB (project c doc) i),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anU16,
+  parameters: [c : AnCtx, p : Nat],
+  result: Nat,
+  body: ((prim multiply (anT c p) 256 : Nat) + (anT c (p + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anLen,
+  parameters: [c : AnCtx],
+  result: Nat,
+  body: (prim length (project c doc) : Nat)
+}
+
+definition{
+  name: anFuel,
+  parameters: [c : AnCtx],
+  result: Nat,
+  body: ((prim multiply (anLen c) 4 : Nat) + 64)
+}
+
+definition{
+  name: anIsWs,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 32) || ((b =? 10) || ((b =? 13) || (b =? 9))))
+}
+
+definition{
+  name: anWsFrom,
+  parameters: [c : AnCtx, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ more => (if (anIsWs (anD c i)) then (anWsFrom c (i + 1) more) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anWs,
+  parameters: [c : AnCtx, i : Nat],
+  result: Nat,
+  body: (anWsFrom c i (anFuel c)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anIn,
+  parameters: [b : Nat, lo : Nat, hi : Nat],
+  result: Bool,
+  body: ((lo <? (b + 1)) && (b <? (hi + 1)))
+}
+
+definition{
+  name: anHex,
+  parameters: [b : Nat],
+  result: Nat,
+  body: (if (anIn b 48 57) then (prim subtract b 48 : Nat) else (if (anIn b 97 102) then (prim subtract b 87 : Nat) else (if (anIn b 65 70) then (prim subtract b 55 : Nat) else 16)))
+}
+
+definition{
+  name: anHex4,
+  parameters: [c : AnCtx, i : Nat],
+  result: Nat,
+  body: (let h0 : Nat := (anHex (anD c i)); (let h1 : Nat := (anHex (anD c (i + 1))); (let h2 : Nat := (anHex (anD c (i + 2))); (let h3 : Nat := (anHex (anD c (i + 3))); (if ((h0 =? 16) || ((h1 =? 16) || ((h2 =? 16) || (h3 =? 16)))) then 65536 else ((prim multiply ((prim multiply ((prim multiply h0 16 : Nat) + h1) 16 : Nat) + h2) 16 : Nat) + h3)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{name: anCont, parameters: [b : Nat], result: Bool, body: (anIn b 128 191)}
+
+definition{
+  name: anIsPair,
+  parameters: [c : AnCtx, i : Nat],
+  result: Bool,
+  body: (let hi : Nat := (anHex4 c (i + 2)); (let lo : Nat := (anHex4 c (i + 8)); ((anIn hi 55296 56319) && ((((anD c (i + 6)) =? 92) && ((anD c (i + 7)) =? 117)) && (anIn lo 56320 57343))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anEscLen,
+  parameters: [c : AnCtx, i : Nat],
+  result: Nat,
+  body: (let e : Nat := (anD c (i + 1)); (if (e =? 117) then (if ((anHex4 c (i + 2)) =? 65536) then 0 else (if (anIsPair c i) then 12 else 6)) else (if (((e =? 34) || ((e =? 92) || (e =? 47))) || (((e =? 98) || (e =? 102)) || ((e =? 110) || ((e =? 114) || (e =? 116))))) then 2 else 0))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anUtfLen,
+  parameters: [c : AnCtx, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (anD c i); (let n : Nat := (anD c (i + 1)); (if (anIn b 194 223) then (if (anCont n) then 2 else 0) else (if (anIn b 224 239) then (if ((anIn n (if (b =? 224) then 160 else 128) (if (b =? 237) then 159 else 191)) && (anCont (anD c (i + 2)))) then 3 else 0) else (if (anIn b 240 244) then (if ((anIn n (if (b =? 240) then 144 else 128) (if (b =? 244) then 143 else 191)) && ((anCont (anD c (i + 2))) && (anCont (anD c (i + 3))))) then 4 else 0) else 0))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anChLen,
+  parameters: [c : AnCtx, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (anD c i); (if (b =? 92) then (anEscLen c i) else (if ((b <? 32) || (b =? 34)) then 0 else (if (b <? 128) then 1 else (anUtfLen c i))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anEscCp,
+  parameters: [c : AnCtx, i : Nat],
+  result: Nat,
+  body: (let e : Nat := (anD c (i + 1)); (if (e =? 117) then (if (anIsPair c i) then (65536 + ((prim multiply (prim subtract (anHex4 c (i + 2)) 55296 : Nat) 1024 : Nat) + (prim subtract (anHex4 c (i + 8)) 56320 : Nat))) else (anHex4 c (i + 2))) else (if (e =? 98) then 8 else (if (e =? 102) then 12 else (if (e =? 110) then 10 else (if (e =? 114) then 13 else (if (e =? 116) then 9 else e))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anChCp,
+  parameters: [c : AnCtx, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (anD c i); (if (b =? 92) then (anEscCp c i) else (if (b <? 128) then b else (if (b <? 224) then ((prim multiply (prim subtract b 192 : Nat) 64 : Nat) + (prim subtract (anD c (i + 1)) 128 : Nat)) else (if (b <? 240) then ((prim multiply ((prim multiply (prim subtract b 224 : Nat) 64 : Nat) + (prim subtract (anD c (i + 1)) 128 : Nat)) 64 : Nat) + (prim subtract (anD c (i + 2)) 128 : Nat)) else ((prim multiply ((prim multiply ((prim multiply (prim subtract b 240 : Nat) 64 : Nat) + (prim subtract (anD c (i + 1)) 128 : Nat)) 64 : Nat) + (prim subtract (anD c (i + 2)) 128 : Nat)) 64 : Nat) + (prim subtract (anD c (i + 3)) 128 : Nat))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anStrEnd,
+  parameters: [c : AnCtx, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if ((anD c i) =? 34) then (i + 1) else (if ((anChLen c i) =? 0) then 0 else (anStrEnd c (i + (anChLen c i)) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anDigits,
+  parameters: [c : AnCtx, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ more => (if (anIn (anD c i) 48 57) then (anDigits c (i + 1) more) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anNumExp,
+  parameters: [c : AnCtx, i : Nat],
+  result: Nat,
+  body: (if (((anD c i) =? 101) || ((anD c i) =? 69)) then (let j : Nat := (if (((anD c (i + 1)) =? 43) || ((anD c (i + 1)) =? 45)) then (i + 2) else (i + 1)); (let k : Nat := (anDigits c j (anFuel c)); (if (k =? j) then 0 else k))) else i),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anNumFrac,
+  parameters: [c : AnCtx, i : Nat],
+  result: Nat,
+  body: (if ((anD c i) =? 46) then (let j : Nat := (anDigits c (i + 1) (anFuel c)); (if (j =? (i + 1)) then 0 else (anNumExp c j))) else (anNumExp c i)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anNumEnd,
+  parameters: [c : AnCtx, i : Nat],
+  result: Nat,
+  body: (let j : Nat := (if ((anD c i) =? 45) then (i + 1) else i); (if ((anD c j) =? 48) then (anNumFrac c (j + 1)) else (if (anIn (anD c j) 49 57) then (anNumFrac c (anDigits c j (anFuel c))) else 0))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anLit,
+  parameters: [c : AnCtx, i : Nat, b1 : Nat, b2 : Nat, b3 : Nat],
+  result: Nat,
+  body: (if (((anD c (i + 1)) =? b1) && (((anD c (i + 2)) =? b2) && ((anD c (i + 3)) =? b3))) then (i + 4) else 0),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anVal,
+  parameters: [c : AnCtx, mode : Nat, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (let b : Nat := (anD c i); (if (mode =? 0) then (if (b =? 34) then (anStrEnd c (i + 1) (anFuel c)) else (if (b =? 123) then (if ((anD c (anWs c (i + 1))) =? 125) then ((anWs c (i + 1)) + 1) else (anVal c 1 (anWs c (i + 1)) more)) else (if (b =? 91) then (if ((anD c (anWs c (i + 1))) =? 93) then ((anWs c (i + 1)) + 1) else (anVal c 2 (anWs c (i + 1)) more)) else (if (b =? 116) then (anLit c i 114 117 101) else (if (b =? 110) then (anLit c i 117 108 108) else (if (b =? 102) then (let j : Nat := (i + 1); (if (((anD c j) =? 97) && (not ((anLit c j 108 115 101) =? 0))) then (i + 5) else 0)) else (anNumEnd c i))))))) else (if (mode =? 1) then (if (not (b =? 34)) then 0 else (let k : Nat := (anStrEnd c (i + 1) (anFuel c)); (if (k =? 0) then 0 else (if (not ((anD c (anWs c k)) =? 58)) then 0 else (let v : Nat := (anVal c 0 (anWs c ((anWs c k) + 1)) more); (if (v =? 0) then 0 else (let j : Nat := (anWs c v); (if ((anD c j) =? 125) then (j + 1) else (if (not ((anD c j) =? 44)) then 0 else (anVal c 1 (anWs c (j + 1)) more)))))))))) else (let v : Nat := (anVal c 0 i more); (if (v =? 0) then 0 else (let j : Nat := (anWs c v); (if ((anD c j) =? 93) then (j + 1) else (if (not ((anD c j) =? 44)) then 0 else (anVal c 2 (anWs c (j + 1)) more)))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anSkip,
+  parameters: [c : AnCtx, i : Nat],
+  result: Nat,
+  body: (anVal c 0 i (anFuel c)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anFirstMember,
+  parameters: [c : AnCtx, i : Nat],
+  result: Nat,
+  body: (if ((anD c (anWs c (i + 1))) =? 34) then (anWs c (i + 1)) else 0),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anMemberValue,
+  parameters: [c : AnCtx, m : Nat],
+  result: Nat,
+  body: (anWs c ((anWs c (anStrEnd c (m + 1) (anFuel c))) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anNextMember,
+  parameters: [c : AnCtx, m : Nat],
+  result: Nat,
+  body: (let j : Nat := (anWs c (anSkip c (anMemberValue c m))); (if ((anD c j) =? 44) then (anWs c (j + 1)) else 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anFirstItem,
+  parameters: [c : AnCtx, i : Nat],
+  result: Nat,
+  body: (if ((anD c (anWs c (i + 1))) =? 93) then 0 else (anWs c (i + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anNextItem,
+  parameters: [c : AnCtx, e : Nat],
+  result: Nat,
+  body: (let j : Nat := (anWs c (anSkip c e)); (if ((anD c j) =? 44) then (anWs c (j + 1)) else 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anCount,
+  parameters: [c : AnCtx, e : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ more => (if (e =? 0) then n else (anCount c (anNextItem c e) (n + 1) more))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anItems,
+  parameters: [c : AnCtx, i : Nat],
+  result: Nat,
+  body: (anCount c (anFirstItem c i) 0 (anFuel c)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anKeyEq,
+  parameters: [c : AnCtx, a : Nat, b : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if (((anD c a) =? 34) || ((anD c b) =? 34)) then (((anD c a) =? 34) && ((anD c b) =? 34)) else (if (not ((anChCp c a) =? (anChCp c b))) then false else (anKeyEq c (a + (anChLen c a)) (b + (anChLen c b)) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anTabEq,
+  parameters: [c : AnCtx, s : Nat, i : Nat, k : Nat, pre : Bool, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if ((anT c s) <? (k + 1)) then (pre || ((anD c i) =? 34)) else (if ((anD c i) =? 34) then false else (if (not ((anChCp c i) =? (anT c ((s + 1) + k)))) then false else (anTabEq c s (i + (anChLen c i)) (k + 1) pre more))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anAnyEq,
+  parameters: [c : AnCtx, q : Nat, k : Nat, i : Nat, pre : Bool, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if (k =? 0) then false else (if (anTabEq c (anU16 c q) i 0 pre 256) then true else (anAnyEq c (q + 2) (prim subtract k 1 : Nat) i pre more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anMemberFrom,
+  parameters: [c : AnCtx, s : Nat, m : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if (m =? 0) then 0 else (if (anTabEq c s (m + 1) 0 false 256) then (anMemberValue c m) else (anMemberFrom c s (anNextMember c m) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anMember,
+  parameters: [c : AnCtx, s : Nat, i : Nat],
+  result: Nat,
+  body: (if (not ((anD c i) =? 123)) then 0 else (anMemberFrom c s (anFirstMember c i) (anFuel c))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anDupFrom,
+  parameters: [c : AnCtx, m : Nat, o : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ more => (if (o =? 0) then false else (if (anKeyEq c (m + 1) (o + 1) (anFuel c)) then true else (anDupFrom c m (anNextMember c o) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anUnique,
+  parameters: [c : AnCtx, mode : Nat, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if (mode =? 0) then (if ((anD c i) =? 123) then (anUnique c 1 (anFirstMember c i) more) else (if ((anD c i) =? 91) then (anUnique c 2 (anFirstItem c i) more) else true)) else (if (i =? 0) then true else (if (mode =? 1) then (if (anDupFrom c i (anNextMember c i) (anFuel c)) then false else (if (anUnique c 0 (anMemberValue c i) more) then (anUnique c 1 (anNextMember c i) more) else false)) else (if (anUnique c 0 i more) then (anUnique c 2 (anNextItem c i) more) else false))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anNumZero,
+  parameters: [c : AnCtx, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ more => (if (anIn (anD c i) 49 57) then false else (if ((((anD c i) =? 48) || ((anD c i) =? 46)) || ((anD c i) =? 45)) then (anNumZero c (i + 1) more) else true))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anTrail,
+  parameters: [c : AnCtx, lo : Nat, j : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ more => (if (j <? (lo + 1)) then n else (if (not ((anD c (prim subtract j 1 : Nat)) =? 48)) then n else (anTrail c lo (prim subtract j 1 : Nat) (n + 1) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anExpVal,
+  parameters: [c : AnCtx, j : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ more => (if (anIn (anD c j) 48 57) then (anExpVal c (j + 1) (if (10000 <? acc) then 100000 else ((prim multiply acc 10 : Nat) + (prim subtract (anD c j) 48 : Nat))) more) else acc)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anNumInt,
+  parameters: [c : AnCtx, i : Nat],
+  result: Bool,
+  body: (if (anNumZero c i (anFuel c)) then true else (let s : Nat := (if ((anD c i) =? 45) then (i + 1) else i); (let ie : Nat := (anDigits c s (anFuel c)); (let tz : Nat := (anTrail c s ie 0 (anFuel c)); (let fe : Nat := (if ((anD c ie) =? 46) then (anDigits c (ie + 1) (anFuel c)) else ie); (let f : Nat := (if ((anD c ie) =? 46) then (prim subtract (prim subtract fe (ie + 1) : Nat) (anTrail c (ie + 1) fe 0 (anFuel c)) : Nat) else 0); (let hasE : Bool := (((anD c fe) =? 101) || ((anD c fe) =? 69)); (let sign : Nat := (anD c (fe + 1)); (let ex : Nat := (if (hasE && true) then (anExpVal c (if ((sign =? 43) || (sign =? 45)) then (fe + 2) else (fe + 1)) 0 (anFuel c)) else 0); (if ((hasE && (sign =? 45)) && (0 <? ex)) then ((f =? 0) && (ex <? (tz + 1))) else (f <? (ex + 1)))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anIsSpace,
+  parameters: [p : Nat],
+  result: Bool,
+  body: ((((anIn p 9 13) || (p =? 32)) || ((p =? 160) || (p =? 5760))) || (((anIn p 8192 8202) || ((p =? 8232) || (p =? 8233))) || (((p =? 8239) || (p =? 8287)) || ((p =? 12288) || (p =? 65279)))))
+}
+
+definition{
+  name: anLower,
+  parameters: [p : Nat],
+  result: Nat,
+  body: (if (anIn p 65 90) then (p + 32) else p)
+}
+
+definition{name: anIsAlpha, parameters: [p : Nat], result: Bool, body: (anIn (anLower p) 97 122)}
+
+definition{name: anIsDigit, parameters: [p : Nat], result: Bool, body: (anIn p 48 57)}
+
+definition{
+  name: anSchemeEnd,
+  parameters: [c : AnCtx, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ more => (if ((anD c i) =? 34) then i else (if (((anIsAlpha (anChCp c i)) || (anIsDigit (anChCp c i))) || (anIn (anChCp c i) 43 46)) then (anSchemeEnd c (i + (anChLen c i)) more) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anNoSpace,
+  parameters: [c : AnCtx, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if ((anD c i) =? 34) then true else (if (anIsSpace (anChCp c i)) then false else (anNoSpace c (i + (anChLen c i)) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anFmtUri,
+  parameters: [c : AnCtx, i : Nat],
+  result: Bool,
+  body: (let j : Nat := (if ((not ((anD c i) =? 34)) && (anIsAlpha (anChCp c i))) then (anSchemeEnd c (i + (anChLen c i)) (anFuel c)) else i); (if ((anD c j) =? 34) then false else (if ((not ((anChCp c j) =? 58)) && (not ((anChCp c j) =? 47))) then false else (anNoSpace c j (anFuel c))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anDtOk,
+  parameters: [k : Nat, p : Nat],
+  result: Bool,
+  body: (if ((k =? 4) || (k =? 7)) then (p =? 45) else (if ((k =? 13) || (k =? 16)) then (p =? 58) else (if (k =? 5) then (anIn p 48 49) else (if (k =? 8) then (anIn p 48 51) else (if (k =? 10) then (((anLower p) =? 116) || (anIsSpace p)) else (if (k =? 11) then (anIn p 48 50) else (if ((k =? 14) || (k =? 17)) then (anIn p 48 53) else (anIsDigit p))))))))
+}
+
+definition{
+  name: anDtHead,
+  parameters: [c : AnCtx, i : Nat, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if (k =? 19) then i else (if ((anD c i) =? 34) then 0 else (if (anDtOk k (anChCp c i)) then (anDtHead c (i + (anChLen c i)) (k + 1) more) else 0)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anCpDigits,
+  parameters: [c : AnCtx, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ more => (if ((not ((anD c i) =? 34)) && (anIsDigit (anChCp c i))) then (anCpDigits c (i + (anChLen c i)) more) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anDtZone,
+  parameters: [c : AnCtx, i : Nat, k : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if (k =? 5) then ((anD c i) =? 34) else (if ((anD c i) =? 34) then false else (if (if (k =? 2) then ((anChCp c i) =? 58) else (anIsDigit (anChCp c i))) then (anDtZone c (i + (anChLen c i)) (k + 1) more) else false)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anDtTail,
+  parameters: [c : AnCtx, j : Nat],
+  result: Bool,
+  body: (if ((anD c j) =? 34) then false else (let z : Nat := (anChCp c j); (let k : Nat := (j + (anChLen c j)); (if ((anLower z) =? 122) then ((anD c k) =? 34) else (if ((not (z =? 43)) && (not (z =? 45))) then false else (anDtZone c k 0 8)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anFmtDate,
+  parameters: [c : AnCtx, i : Nat],
+  result: Bool,
+  body: (let h : Nat := (anDtHead c i 0 32); (if (h =? 0) then false else (if ((not ((anD c h) =? 34)) && ((anChCp c h) =? 46)) then (let j : Nat := (anCpDigits c (h + (anChLen c h)) (anFuel c)); (if (j =? (h + (anChLen c h))) then false else (anDtTail c j))) else (anDtTail c h)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anLowEnd,
+  parameters: [c : AnCtx, i : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ more => (if (n =? 0) then i else (if ((not ((anD c i) =? 34)) && (anIn (anChCp c i) 97 122)) then (anLowEnd c (i + (anChLen c i)) (prim subtract n 1 : Nat) more) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anLowCount,
+  parameters: [c : AnCtx, i : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ more => (if (n =? 4) then n else (if ((not ((anD c i) =? 34)) && (anIn (anChCp c i) 97 122)) then (anLowCount c (i + (anChLen c i)) (n + 1) more) else n))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anHyphenAt,
+  parameters: [c : AnCtx, i : Nat],
+  result: Bool,
+  body: ((not ((anD c i) =? 34)) && ((anChCp c i) =? 45)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anPattern,
+  parameters: [c : AnCtx, p : Nat, i : Nat],
+  result: Bool,
+  body: (let n : Nat := (anLowCount c i 0 8); (if ((anT c (p + 1)) =? 0) then (anAnyEq c (p + 3) (anT c (p + 2)) i true 16) else (if ((anT c (p + 1)) =? 1) then (((n =? 2) || (n =? 3)) && ((anD c (anLowEnd c i 3 8)) =? 34)) else (((2 <? (n + 1)) && (anHyphenAt c (anLowEnd c i 2 8))) || ((3 <? (n + 1)) && (anHyphenAt c (anLowEnd c i 3 8))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anTypeBit,
+  parameters: [c : AnCtx, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (anD c i); (if (b =? 123) then 1 else (if (b =? 91) then 2 else (if (b =? 34) then 4 else (if ((b =? 45) || (anIn b 48 57)) then (if (anNumInt c i) then 8 else 16) else 32))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{name: anIsNum, parameters: [b : Nat], result: Bool, body: ((b =? 45) || (anIn b 48 57))}
+
+definition{
+  name: anKeysOk,
+  parameters: [c : AnCtx, p : Nat, m : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if (m =? 0) then true else (let k : Nat := (anT c (p + 1)); (if ((anAnyEq c (p + 2) k (m + 1) false 64) || (anAnyEq c ((p + 3) + (prim multiply 2 k : Nat)) (anT c ((p + 2) + (prim multiply 2 k : Nat))) (m + 1) true 64)) then (anKeysOk c p (anNextMember c m) more) else false)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anSize,
+  parameters: [c : AnCtx, p : Nat],
+  result: Nat,
+  body: (let op : Nat := (anT c p); (if (op =? 0) then 1 else (if ((((op =? 1) || (op =? 9)) || ((op =? 10) || (op =? 12))) || (op =? 14)) then 2 else (if (((op =? 2) || (op =? 3)) || ((op =? 7) || (op =? 8))) then 3 else (if ((op =? 6) || (op =? 16)) then 5 else (if (((op =? 4) || (op =? 5)) || (op =? 11)) then (2 + (prim multiply 2 (anT c (p + 1)) : Nat)) else (if (op =? 13) then (3 + (prim multiply 2 (anT c (p + 2)) : Nat)) else (if (op =? 15) then (5 + (prim multiply 2 (anT c (p + 2)) : Nat)) else ((3 + (prim multiply 2 (anT c (p + 1)) : Nat)) + (prim multiply 2 (anT c ((p + 2) + (prim multiply 2 (anT c (p + 1)) : Nat))) : Nat)))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anLeaf,
+  parameters: [c : AnCtx, p : Nat, i : Nat],
+  result: Bool,
+  body: (let op : Nat := (anT c p); (let b : Nat := (anD c i); (if (op =? 1) then ((prim remainder (prim quotient (anT c (p + 1)) (anTypeBit c i) 0 : Nat) 2 0 : Nat) =? 1) else (if (op =? 7) then ((not (b =? 123)) || (not ((anMember c (anU16 c (p + 1)) i) =? 0))) else (if (op =? 9) then ((not (b =? 91)) || ((anT c (p + 1)) <? ((anItems c i) + 1))) else (if (op =? 10) then ((not (b =? 91)) || ((anItems c i) <? ((anT c (p + 1)) + 1))) else (if (op =? 11) then ((b =? 34) && (anAnyEq c (p + 2) (anT c (p + 1)) (i + 1) false 64)) else (if (op =? 12) then ((not (b =? 34)) || (if ((anT c (p + 1)) =? 1) then (anFmtUri c (i + 1)) else (anFmtDate c (i + 1)))) else (if (op =? 13) then ((not (b =? 34)) || (anPattern c p (i + 1))) else (if (op =? 14) then (if (anIsNum b) then (if (anNumZero c i (anFuel c)) then ((anT c (p + 1)) =? 0) else (not (b =? 45))) else true) else (if (op =? 16) then (((not (b =? 123)) || ((anMember c (anU16 c (p + 1)) i) =? 0)) || (not ((anMember c (anU16 c (p + 3)) i) =? 0))) else (if (op =? 17) then ((not (b =? 123)) || (anKeysOk c p (anFirstMember c i) (anFuel c))) else false)))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anRun,
+  parameters: [c : AnCtx, mode : Nat, p : Nat, i : Nat, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (let op : Nat := (anT c p); (if (mode =? 1) then (if (k =? 0) then 0 else ((anRun c 0 (anU16 c p) i 0 more) + (anRun c 1 (p + 2) i (prim subtract k 1 : Nat) more))) else (if (mode =? 2) then (if (i =? 0) then 1 else (if ((anRun c 0 p i 0 more) =? 0) then 0 else (anRun c 2 p (anNextItem c i) 0 more))) else (if (mode =? 3) then (if (i =? 0) then 1 else (if ((anAnyEq c (p + 3) (anT c (p + 2)) (i + 1) true 64) && ((anRun c 0 (anU16 c ((p + 3) + (prim multiply 2 (anT c (p + 2)) : Nat))) (anMemberValue c i) 0 more) =? 0)) then 0 else (anRun c 3 p (anNextMember c i) 0 more))) else (if (op =? 0) then 1 else (if (op =? 2) then (if ((anRun c 0 (anU16 c (p + 1)) i 0 more) =? 0) then 0 else (anRun c 0 (p + 3) i 0 more)) else (if (op =? 3) then (if ((anRun c 0 (anU16 c (p + 1)) i 0 more) =? 1) then 0 else (anRun c 0 (p + 3) i 0 more)) else (if (op =? 4) then (if ((anRun c 1 (p + 2) i (anT c (p + 1)) more) =? 0) then 0 else (anRun c 0 (p + (anSize c p)) i 0 more)) else (if (op =? 5) then (if (not ((anRun c 1 (p + 2) i (anT c (p + 1)) more) =? 1)) then 0 else (anRun c 0 (p + (anSize c p)) i 0 more)) else (if (op =? 6) then (if ((not ((anMember c (anU16 c (p + 1)) i) =? 0)) && ((anRun c 0 (anU16 c (p + 3)) (anMember c (anU16 c (p + 1)) i) 0 more) =? 0)) then 0 else (anRun c 0 (p + 5) i 0 more)) else (if (op =? 8) then (if (((anD c i) =? 91) && ((anRun c 2 (anU16 c (p + 1)) (anFirstItem c i) 0 more) =? 0)) then 0 else (anRun c 0 (p + 3) i 0 more)) else (if (op =? 15) then (if (((anD c i) =? 123) && ((anRun c 3 p (anFirstMember c i) 0 more) =? 0)) then 0 else (anRun c 0 (p + (anSize c p)) i 0 more)) else (if (anLeaf c p i) then (anRun c 0 (p + (anSize c p)) i 0 more) else 0)))))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anNl,
+  parameters: [c : AnCtx, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ more => (if ((anLen c) <? (i + 1)) then i else (if ((anD c i) =? 10) then i else (anNl c (i + 1) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anNameEq,
+  parameters: [c : AnCtx, s : Nat, k : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if ((anT c s) <? (k + 1)) then true else (if (not ((anD c k) =? (anT c ((s + 1) + k)))) then false else (anNameEq c s (k + 1) more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anTest,
+  parameters: [c : AnCtx, j : Nat, nl : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ more => (if ((anT c 0) <? (j + 1)) then 0 else (if (((anT c (anU16 c (1 + (prim multiply 4 j : Nat)))) =? nl) && (anNameEq c (anU16 c (1 + (prim multiply 4 j : Nat))) 0 256)) then (anU16 c (3 + (prim multiply 4 j : Nat))) else (anTest c (j + 1) nl more)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anName,
+  parameters: [c : AnCtx, s : Nat],
+  result: Bytes,
+  body: (match (prim slice (project c tab) (s + 1) (anT c s) : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: anAdd,
+  parameters: [acc : Bytes, name : Bytes],
+  result: Bytes,
+  body: (if ((prim length acc : Nat) =? 0) then name else (prim append acc (prim append 0x20 name : Bytes) : Bytes))
+}
+
+definition{
+  name: anReport,
+  parameters: [c : AnCtx, tp : Nat, j : Nat, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ more => (if ((anT c tp) <? (j + 1)) then acc else (let q : Nat := ((tp + 1) + (prim multiply 5 j : Nat)); (if ((anRun c 0 (anU16 c (q + 2)) i 0 1000000) =? (anT c (q + 4))) then (anReport c tp (j + 1) i (anAdd acc (anName c (anU16 c q))) more) else (anReport c tp (j + 1) i acc more))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: anOk,
+  parameters: [out : Bytes],
+  result: Bytes,
+  body: (if ((prim length out : Nat) =? 0) then (prim utf8_encode "ok" : Bytes) else out)
+}
+
+definition{
+  name: anAnswer,
+  parameters: [c : AnCtx],
+  result: Bytes,
+  body: (let nl : Nat := (anNl c 0 (anFuel c)); (let tp : Nat := (anTest c 0 nl 16); (let i : Nat := (anWs c (nl + 1)); (let e : Nat := (anVal c 0 i (anFuel c)); (if ((((anLen c) <? (nl + 1)) || (tp =? 0)) || ((e =? 0) || (not ((anWs c e) =? (anLen c))))) then (prim utf8_encode "invalid" : Bytes) else (if (anUnique c 0 i (anFuel c)) then (anOk (anReport c tp 0 i 0x 256)) else (prim utf8_encode "invalid" : Bytes))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismAnnotationDispatch,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (if (65535 <? (prim length s : Nat)) then (prim utf8_encode "invalid" : Bytes) else (anAnswer (record AnCtx {tab := (PrismAnnotationTable::anTab), doc := s}))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

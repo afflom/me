@@ -1,0 +1,54 @@
+{
+  "comment": "The steps of the annotation program (generators/annotation/), run in order by tools/generators/run.sh: each lists the assertions of one test of the web-platform-tests annotation-model suite, vendored at its pinned bytes, as the requirements ST-01 holds the Prism's Web Annotation part to. A step reads repository files only.",
+  "steps": [
+    {
+      "generator": "annotests",
+      "inputs": [
+        "app/specs/standards/upstream/annotation-model/annotationMusts.test"
+      ],
+      "output": "test/standards/generated/w3c-annotation-model-annotationMusts.json"
+    },
+    {
+      "generator": "annotests",
+      "inputs": [
+        "app/specs/standards/upstream/annotation-model/annotationOptionals.test"
+      ],
+      "output": "test/standards/generated/w3c-annotation-model-annotationOptionals.json"
+    },
+    {
+      "generator": "annotests",
+      "inputs": [
+        "app/specs/standards/upstream/annotation-model/annotationsAgentOptionals.test"
+      ],
+      "output": "test/standards/generated/w3c-annotation-model-annotationsAgentOptionals.json"
+    },
+    {
+      "generator": "annotests",
+      "inputs": [
+        "app/specs/standards/upstream/annotation-model/collectionMusts.test"
+      ],
+      "output": "test/standards/generated/w3c-annotation-model-collectionMusts.json"
+    },
+    {
+      "generator": "annotests",
+      "inputs": [
+        "app/specs/standards/upstream/annotation-model/collectionOptionals.test"
+      ],
+      "output": "test/standards/generated/w3c-annotation-model-collectionOptionals.json"
+    },
+    {
+      "generator": "annotests",
+      "inputs": [
+        "app/specs/standards/upstream/annotation-model/pageMusts.test"
+      ],
+      "output": "test/standards/generated/w3c-annotation-model-pageMusts.json"
+    },
+    {
+      "generator": "annotests",
+      "inputs": [
+        "app/specs/standards/upstream/annotation-model/pageOptionals.test"
+      ],
+      "output": "test/standards/generated/w3c-annotation-model-pageOptionals.json"
+    }
+  ]
+}
