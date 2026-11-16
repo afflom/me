@@ -123,7 +123,8 @@ test("the chat answers from now: the time, how long ago, and a message's turn", 
   for (const question of ["What time is it?", "what's the date", "What day is it today?"]) {
     const said = await ask(question);
     const full = new Intl.DateTimeFormat(undefined, { dateStyle: "full", timeStyle: "short" }).format(new Date(now));
-    assert.deepEqual(said.sentences, [`It is ${full}.`], question);
+    // CLDR puts a narrow no-break space before AM and PM; V8 writes a plain one.
+    assert.deepEqual(said.sentences.map((s) => s.replace(/\u202f/gu, " ")), [`It is ${full}.`], question);
     assert.deepEqual(said.sources, [], "the time draws on nothing held");
   }
   const item = read(reply);
