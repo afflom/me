@@ -18,7 +18,8 @@
 # way; with "head": true only its first piece), with its "inputs" beside it;
 # a step with "lines" runs once per line of that file, beside its "inputs" (those
 # it lists under "own" hold only the lines whose first word is that line);
-# its output is the outputs joined in order. Outputs under .gen/ are
+# its output is the outputs joined in order, after the .gen/ file its
+# "after" names, if any. Outputs under .gen/ are
 # intermediate and never committed; a step reads only the .gen/ outputs of its
 # own program's earlier steps, so programs never depend on each other's order.
 set -eu
@@ -84,12 +85,12 @@ for lock in generators/*/lock.json; do
 program=$(basename "$(dirname "$lock")"); steps_file="generators/$program/steps.json"
 : > "$work/made"
 for f in "$steps_file" "generators/$program"/steps/*.json; do [ ! -e "$f" ] || js .steps < "$f"; done | while read -r step; do
-  gen=$(echo "$step" | js .generator); out=$(echo "$step" | js .output); ins=$(echo "$step" | js .inputs)
-  for f in $ins; do
+  gen=$(echo "$step" | js .generator); out=$(echo "$step" | js .output); ins=$(echo "$step" | js .inputs); after=$(echo "$step" | js .after)
+  for f in $ins $after; do
     case $f in .gen/*) grep -qxF "$f" "$work/made" || {
       echo "GN-01: $program $gen reads $f, which no earlier step of $steps_file writes" >&2; exit 1; } ;; esac
   done
-  : > "$work/out"
+  if [ -n "$after" ]; then cp "$after" "$work/out"; else : > "$work/out"; fi
   split_path=$(echo "$step" | js .split)
   each_path=$(echo "$step" | js .each.file)
   globs=$(echo "$step" | js .glob); head=$(echo "$step" | js .head)

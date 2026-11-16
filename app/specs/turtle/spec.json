@@ -1,0 +1,2330 @@
+{
+ "name": "turtle",
+ "comment": "The Prism's Turtle reader (app/src/PrismSenses.lex.tex, prismTurtleDispatch) held to the W3C RDF Working Group's Turtle test suite. 'suite' pins the suite's archive as W3C serves it; 'tests' lists all 291 tests of its manifest, each file pinned by SHA-256, with the verdict the suite gives it: a positive syntax test is accepted, a negative syntax or negative evaluation test is refused, and an evaluation test reads into the same graph as its N-Triples result. A request is 'suite', a line break, the suite's home IRI, a line break, then tests in the manifest's order: each a line of the suite's verdict, the file's name and the lengths of its Turtle and of its N-Triples result (0 when it has none), then those files' bytes. The reader reads each file against its retrieval IRI (the home and the file's name: RFC 3986 section 5.1.3, as the suite's README says) and answers 'pass' and the number of tests, or 'fail', the index of the first test whose verdict differs, its file and what the reader found. Two graphs are the same when one naming of their blank nodes makes their triples equal; the reader tries the naming by order met, forwards and backwards, which settles every graph of the suite. 'examples' here hold the 159 syntax and negative evaluation tests, the acceptance vectors of the guest 'turtle'; eval/spec.json and eval2/spec.json carry the 132 evaluation tests as the vectors of 'turtle-eval' and 'turtle-eval-2', built from the same module, because one build holds about 30 KB of vectors. The examples were written from the archive by a tool kept outside the repository (project files, nervous/turtle-tool/mkspec.py); a LexLean generator that reads the archive is not written yet.",
+ "suite": {
+  "url": "https://www.w3.org/2013/TurtleTests/TESTS.tar.gz",
+  "sha256": "f565c46321844897488bde4a8bf34fc1b711d563bc6cf7635d6c357081759b3a",
+  "home": "http://www.w3.org/2013/TurtleTests/"
+ },
+ "tests": [
+  {
+   "id": "IRI_subject",
+   "kind": "TestTurtleEval",
+   "action": "IRI_subject.ttl",
+   "sha256": "9b59264ba4ee34a59449374914f0bd160b086cc777f5bd331779c9edac64de25",
+   "result": "IRI_spo.nt",
+   "resultSha256": "9b59264ba4ee34a59449374914f0bd160b086cc777f5bd331779c9edac64de25",
+   "answer": "same"
+  },
+  {
+   "id": "IRI_with_four_digit_numeric_escape",
+   "kind": "TestTurtleEval",
+   "action": "IRI_with_four_digit_numeric_escape.ttl",
+   "sha256": "27b5dc9e7432a9df53e1ac05b885680ac15e819d8003c0d012c3f4a4e4ef7175",
+   "result": "IRI_spo.nt",
+   "resultSha256": "9b59264ba4ee34a59449374914f0bd160b086cc777f5bd331779c9edac64de25",
+   "answer": "same"
+  },
+  {
+   "id": "IRI_with_eight_digit_numeric_escape",
+   "kind": "TestTurtleEval",
+   "action": "IRI_with_eight_digit_numeric_escape.ttl",
+   "sha256": "cce9227458eb75e797d933524d84b0a7ad8f9015d92bfe2965b36cbadd53b57a",
+   "result": "IRI_spo.nt",
+   "resultSha256": "9b59264ba4ee34a59449374914f0bd160b086cc777f5bd331779c9edac64de25",
+   "answer": "same"
+  },
+  {
+   "id": "IRI_with_all_punctuation",
+   "kind": "TestTurtleEval",
+   "action": "IRI_with_all_punctuation.ttl",
+   "sha256": "ab4b4ca5d5a577639cfd4acc1de43c8ce26e2c18e7db3691412b842f98b99a63",
+   "result": "IRI_with_all_punctuation.nt",
+   "resultSha256": "ab4b4ca5d5a577639cfd4acc1de43c8ce26e2c18e7db3691412b842f98b99a63",
+   "answer": "same"
+  },
+  {
+   "id": "bareword_a_predicate",
+   "kind": "TestTurtleEval",
+   "action": "bareword_a_predicate.ttl",
+   "sha256": "949df5f89e1fb3179b79a86952f5af53cd5d10d17d2e88db88f95025dcc2f658",
+   "result": "bareword_a_predicate.nt",
+   "resultSha256": "cad0c577de72e79fb8d083ead90f7324bf9e856b3802168869d71b58f16cbd14",
+   "answer": "same"
+  },
+  {
+   "id": "old_style_prefix",
+   "kind": "TestTurtleEval",
+   "action": "old_style_prefix.ttl",
+   "sha256": "a7612a1acc43558bee51ec4bffd0dc75966509db041a3d8883563d7af2ae04b4",
+   "result": "IRI_spo.nt",
+   "resultSha256": "9b59264ba4ee34a59449374914f0bd160b086cc777f5bd331779c9edac64de25",
+   "answer": "same"
+  },
+  {
+   "id": "SPARQL_style_prefix",
+   "kind": "TestTurtleEval",
+   "action": "SPARQL_style_prefix.ttl",
+   "sha256": "2b6248ff2a4255eba0e2566d2a68644c06fed3f030884be9aec1f29484e72816",
+   "result": "IRI_spo.nt",
+   "resultSha256": "9b59264ba4ee34a59449374914f0bd160b086cc777f5bd331779c9edac64de25",
+   "answer": "same"
+  },
+  {
+   "id": "prefixed_IRI_predicate",
+   "kind": "TestTurtleEval",
+   "action": "prefixed_IRI_predicate.ttl",
+   "sha256": "309db1e7df29f44a451899ea32ddfd9320c5afbfe833de6e23784f7e40e4181d",
+   "result": "IRI_spo.nt",
+   "resultSha256": "9b59264ba4ee34a59449374914f0bd160b086cc777f5bd331779c9edac64de25",
+   "answer": "same"
+  },
+  {
+   "id": "prefixed_IRI_object",
+   "kind": "TestTurtleEval",
+   "action": "prefixed_IRI_object.ttl",
+   "sha256": "4e08f196fe9984101e1820e1aa0580de3ac3ef6e7a6169fa280bb36c518ee65e",
+   "result": "IRI_spo.nt",
+   "resultSha256": "9b59264ba4ee34a59449374914f0bd160b086cc777f5bd331779c9edac64de25",
+   "answer": "same"
+  },
+  {
+   "id": "prefix_only_IRI",
+   "kind": "TestTurtleEval",
+   "action": "prefix_only_IRI.ttl",
+   "sha256": "2f2f15f65cfd106db2259844f9da4e3cbceebd575a594a1a8674df93acfc1012",
+   "result": "IRI_spo.nt",
+   "resultSha256": "9b59264ba4ee34a59449374914f0bd160b086cc777f5bd331779c9edac64de25",
+   "answer": "same"
+  },
+  {
+   "id": "prefix_with_PN_CHARS_BASE_character_boundaries",
+   "kind": "TestTurtleEval",
+   "action": "prefix_with_PN_CHARS_BASE_character_boundaries.ttl",
+   "sha256": "4a8d00163cabad0cb711c8b165331355ed69d1f5eb1dbb76479a9c774e35b1ea",
+   "result": "IRI_spo.nt",
+   "resultSha256": "9b59264ba4ee34a59449374914f0bd160b086cc777f5bd331779c9edac64de25",
+   "answer": "same"
+  },
+  {
+   "id": "prefix_with_non_leading_extras",
+   "kind": "TestTurtleEval",
+   "action": "prefix_with_non_leading_extras.ttl",
+   "sha256": "7dcb80390ac43fb5dd37052b56f37b3e518918699ff54a12cadd451cb604d08f",
+   "result": "IRI_spo.nt",
+   "resultSha256": "9b59264ba4ee34a59449374914f0bd160b086cc777f5bd331779c9edac64de25",
+   "answer": "same"
+  },
+  {
+   "id": "localName_with_assigned_nfc_bmp_PN_CHARS_BASE_character_boundaries",
+   "kind": "TestTurtleEval",
+   "action": "localName_with_assigned_nfc_bmp_PN_CHARS_BASE_character_boundaries.ttl",
+   "sha256": "a3b69675c6f8de9b372aabca429e5d6172d8ee27e2efcea10af42ccd41a65276",
+   "result": "localName_with_assigned_nfc_bmp_PN_CHARS_BASE_character_boundaries.nt",
+   "resultSha256": "50e2013f3c307657bd9524f6b46cbc4fa479f80649f52ec541289ff3113a1bb9",
+   "answer": "same"
+  },
+  {
+   "id": "localName_with_assigned_nfc_PN_CHARS_BASE_character_boundaries",
+   "kind": "TestTurtleEval",
+   "action": "localName_with_assigned_nfc_PN_CHARS_BASE_character_boundaries.ttl",
+   "sha256": "64714aaea110da30e3b1bcbfe2f0cf4e85bc1bd604d0c7312ed50b12253800f6",
+   "result": "localName_with_assigned_nfc_PN_CHARS_BASE_character_boundaries.nt",
+   "resultSha256": "5c50ac6dafc84432bcb8c88f664ffd47c38b2cbcfdca1731aac18586c9f90c62",
+   "answer": "same"
+  },
+  {
+   "id": "localName_with_nfc_PN_CHARS_BASE_character_boundaries",
+   "kind": "TestTurtleEval",
+   "action": "localName_with_nfc_PN_CHARS_BASE_character_boundaries.ttl",
+   "sha256": "e04a0f868a80662b33c507884bafb62331f66727e257d2cbdd3b298a99537b99",
+   "result": "localName_with_nfc_PN_CHARS_BASE_character_boundaries.nt",
+   "resultSha256": "4e1196b22bfccb4743dbbef233afa0c96510720bdb8274ff5e864b778c4054c8",
+   "answer": "same"
+  },
+  {
+   "id": "default_namespace_IRI",
+   "kind": "TestTurtleEval",
+   "action": "default_namespace_IRI.ttl",
+   "sha256": "2197e06aacf4f40c50c6de262f7d722b6d706f7a25544643e48ad6943e2e5b14",
+   "result": "IRI_spo.nt",
+   "resultSha256": "9b59264ba4ee34a59449374914f0bd160b086cc777f5bd331779c9edac64de25",
+   "answer": "same"
+  },
+  {
+   "id": "prefix_reassigned_and_used",
+   "kind": "TestTurtleEval",
+   "action": "prefix_reassigned_and_used.ttl",
+   "sha256": "b04dfb43bad4d8da8ede1cfcd88d9bf5ff85f80e5d5b8c9cd86222a957446205",
+   "result": "prefix_reassigned_and_used.nt",
+   "resultSha256": "9a43216f82fbc9d77dfb167c40cd5fa2f21a24acd9386d6c93cd933dafe31017",
+   "answer": "same"
+  },
+  {
+   "id": "reserved_escaped_localName",
+   "kind": "TestTurtleEval",
+   "action": "reserved_escaped_localName.ttl",
+   "sha256": "c32e2517044ed8043302d4e0aaa225c834f0b98174bab62a1ca632d7a6009232",
+   "result": "reserved_escaped_localName.nt",
+   "resultSha256": "a0e0baf61d9905c032fed239d0175229073f47706098f542526c264eb697912e",
+   "answer": "same"
+  },
+  {
+   "id": "percent_escaped_localName",
+   "kind": "TestTurtleEval",
+   "action": "percent_escaped_localName.ttl",
+   "sha256": "4969f1be4adf1b01008ce5a2598640e1fed3aa18a5113a4c289fbd44bc3f0b01",
+   "result": "percent_escaped_localName.nt",
+   "resultSha256": "ca356109f50978834e2885b09ee308a2cf5a4feb486b25c7c8d0c77f853089f9",
+   "answer": "same"
+  },
+  {
+   "id": "HYPHEN_MINUS_in_localName",
+   "kind": "TestTurtleEval",
+   "action": "HYPHEN_MINUS_in_localName.ttl",
+   "sha256": "4941cc23feeb06a220914a43df2bfeb35dfe38375f81df7e4ee29da76db8c04e",
+   "result": "HYPHEN_MINUS_in_localName.nt",
+   "resultSha256": "98fa040cb3c470496bb3765185e909a0aac6ae61e3a2780e414d290c0206e55b",
+   "answer": "same"
+  },
+  {
+   "id": "underscore_in_localName",
+   "kind": "TestTurtleEval",
+   "action": "underscore_in_localName.ttl",
+   "sha256": "783d90fdd34fe361d355cdfcfe0fb3dcf0c84bafb66412f51f22b5f7065d42c8",
+   "result": "underscore_in_localName.nt",
+   "resultSha256": "2925eabdbc25dc4a4a3b4cb2c5303d593a4fa19328750f6357f238213098fc9b",
+   "answer": "same"
+  },
+  {
+   "id": "localname_with_COLON",
+   "kind": "TestTurtleEval",
+   "action": "localname_with_COLON.ttl",
+   "sha256": "32734cd97c29c44292b4994cf8a5bd29eb513f6a3c581fed80479d4dc44523fd",
+   "result": "localname_with_COLON.nt",
+   "resultSha256": "260bd80e8655594b0d25ccc2e37aca7bf437a27c3ab9e82c559df084d2cac742",
+   "answer": "same"
+  },
+  {
+   "id": "localName_with_leading_underscore",
+   "kind": "TestTurtleEval",
+   "action": "localName_with_leading_underscore.ttl",
+   "sha256": "3c6deb8346e850e433ce3ea2108c3b1c93d4d36a1fe40eae72e74b34257cba53",
+   "result": "localName_with_leading_underscore.nt",
+   "resultSha256": "5f37fc54e10284c54569b8f38b25e7fc29cf9858e687834d38db5ebff08c133b",
+   "answer": "same"
+  },
+  {
+   "id": "localName_with_leading_digit",
+   "kind": "TestTurtleEval",
+   "action": "localName_with_leading_digit.ttl",
+   "sha256": "df6c721f2d79a4262efabb6c734761fc795a827947fa1292ff9002813e9d7052",
+   "result": "localName_with_leading_digit.nt",
+   "resultSha256": "e77c1789b9bc947a129bf97030b2424d144039bf04f6b929f166e20beb880ad5",
+   "answer": "same"
+  },
+  {
+   "id": "localName_with_non_leading_extras",
+   "kind": "TestTurtleEval",
+   "action": "localName_with_non_leading_extras.ttl",
+   "sha256": "70a1efa8fe7ce93a1db281a547442dd4227254376411cded316e4ea4e5a1d88d",
+   "result": "localName_with_non_leading_extras.nt",
+   "resultSha256": "34cff2bb8bf65c6f2a3da9bd3d2cd137a584ac30731bd078d6cdd251f5ec0237",
+   "answer": "same"
+  },
+  {
+   "id": "old_style_base",
+   "kind": "TestTurtleEval",
+   "action": "old_style_base.ttl",
+   "sha256": "d451bffc04f1e1c41e74b1afd3e5a26f01a4eea11e444e1b79d56278a943f89c",
+   "result": "IRI_spo.nt",
+   "resultSha256": "9b59264ba4ee34a59449374914f0bd160b086cc777f5bd331779c9edac64de25",
+   "answer": "same"
+  },
+  {
+   "id": "SPARQL_style_base",
+   "kind": "TestTurtleEval",
+   "action": "SPARQL_style_base.ttl",
+   "sha256": "e31293b7a7b9c8f3d16c7bff33aeee77377097ccbfb3359b2e7b0f1a2c6f788d",
+   "result": "IRI_spo.nt",
+   "resultSha256": "9b59264ba4ee34a59449374914f0bd160b086cc777f5bd331779c9edac64de25",
+   "answer": "same"
+  },
+  {
+   "id": "labeled_blank_node_subject",
+   "kind": "TestTurtleEval",
+   "action": "labeled_blank_node_subject.ttl",
+   "sha256": "d8192137a1023d4f9d5191a8212df64147c57e6186bee052c3266db517c8c718",
+   "result": "labeled_blank_node_subject.nt",
+   "resultSha256": "6a5add09cc53ddd0909fb761cfa8ce3893df58a1ff772541aeccd432708c805b",
+   "answer": "same"
+  },
+  {
+   "id": "labeled_blank_node_object",
+   "kind": "TestTurtleEval",
+   "action": "labeled_blank_node_object.ttl",
+   "sha256": "9aacf955a4646a2c3a9091c2e81d257c7ddbc1a4cced9c6989dbbe09091a1db9",
+   "result": "labeled_blank_node_object.nt",
+   "resultSha256": "7d1dc1432a0b1fb8fe418e917613aaad01a04780d3a476482da4083c925d7314",
+   "answer": "same"
+  },
+  {
+   "id": "labeled_blank_node_with_PN_CHARS_BASE_character_boundaries",
+   "kind": "TestTurtleEval",
+   "action": "labeled_blank_node_with_PN_CHARS_BASE_character_boundaries.ttl",
+   "sha256": "64a9f2ff0fe3a610633a69e2890c206cfe52325d83e389d4c60226de694e9c5c",
+   "result": "labeled_blank_node_object.nt",
+   "resultSha256": "7d1dc1432a0b1fb8fe418e917613aaad01a04780d3a476482da4083c925d7314",
+   "answer": "same"
+  },
+  {
+   "id": "labeled_blank_node_with_leading_underscore",
+   "kind": "TestTurtleEval",
+   "action": "labeled_blank_node_with_leading_underscore.ttl",
+   "sha256": "161912f1df383cc8a8188aec3b87415b556ea9dc2e324c4f05501c2a86c396e1",
+   "result": "labeled_blank_node_object.nt",
+   "resultSha256": "7d1dc1432a0b1fb8fe418e917613aaad01a04780d3a476482da4083c925d7314",
+   "answer": "same"
+  },
+  {
+   "id": "labeled_blank_node_with_leading_digit",
+   "kind": "TestTurtleEval",
+   "action": "labeled_blank_node_with_leading_digit.ttl",
+   "sha256": "67a2b438836bea8af110bb7845dd3bbc5254a906074a1c49c55940fa3d204322",
+   "result": "labeled_blank_node_object.nt",
+   "resultSha256": "7d1dc1432a0b1fb8fe418e917613aaad01a04780d3a476482da4083c925d7314",
+   "answer": "same"
+  },
+  {
+   "id": "labeled_blank_node_with_non_leading_extras",
+   "kind": "TestTurtleEval",
+   "action": "labeled_blank_node_with_non_leading_extras.ttl",
+   "sha256": "1991c9fb989df6290bd75089af60c65cb0a13ec80be872b337311ad7843b0f7e",
+   "result": "labeled_blank_node_object.nt",
+   "resultSha256": "7d1dc1432a0b1fb8fe418e917613aaad01a04780d3a476482da4083c925d7314",
+   "answer": "same"
+  },
+  {
+   "id": "anonymous_blank_node_subject",
+   "kind": "TestTurtleEval",
+   "action": "anonymous_blank_node_subject.ttl",
+   "sha256": "b050d293ac3cce691997197d9684568cb0648b1ec73aff468c976f1a4224b810",
+   "result": "labeled_blank_node_subject.nt",
+   "resultSha256": "6a5add09cc53ddd0909fb761cfa8ce3893df58a1ff772541aeccd432708c805b",
+   "answer": "same"
+  },
+  {
+   "id": "anonymous_blank_node_object",
+   "kind": "TestTurtleEval",
+   "action": "anonymous_blank_node_object.ttl",
+   "sha256": "cb568d3d96868007d58cd008cccd0bafc4a5f33ed9ebeb7cfa82bb3407f25bb6",
+   "result": "labeled_blank_node_object.nt",
+   "resultSha256": "7d1dc1432a0b1fb8fe418e917613aaad01a04780d3a476482da4083c925d7314",
+   "answer": "same"
+  },
+  {
+   "id": "sole_blankNodePropertyList",
+   "kind": "TestTurtleEval",
+   "action": "sole_blankNodePropertyList.ttl",
+   "sha256": "8412c57931d0fee2c7dbc3f4fc17fd58727122f114f7ce1d29b21b9c9a530388",
+   "result": "labeled_blank_node_subject.nt",
+   "resultSha256": "6a5add09cc53ddd0909fb761cfa8ce3893df58a1ff772541aeccd432708c805b",
+   "answer": "same"
+  },
+  {
+   "id": "blankNodePropertyList_as_subject",
+   "kind": "TestTurtleEval",
+   "action": "blankNodePropertyList_as_subject.ttl",
+   "sha256": "88897feed0c0513457534f9b76adaf81bd16134577625d09d331a7e283addf67",
+   "result": "blankNodePropertyList_as_subject.nt",
+   "resultSha256": "eb5027624efbac8d2d52261625732e4c7bad6bf93e9c0a61e57a90080c199f56",
+   "answer": "same"
+  },
+  {
+   "id": "blankNodePropertyList_as_object",
+   "kind": "TestTurtleEval",
+   "action": "blankNodePropertyList_as_object.ttl",
+   "sha256": "4ee8387b08053171e55b5d8c96dd4511bea36b132ad947726587b063685fb6f3",
+   "result": "blankNodePropertyList_as_object.nt",
+   "resultSha256": "344716a9a5001045f4a5c91b52d5a253a206e23958395fc97bf8da16865fe371",
+   "answer": "same"
+  },
+  {
+   "id": "blankNodePropertyList_with_multiple_triples",
+   "kind": "TestTurtleEval",
+   "action": "blankNodePropertyList_with_multiple_triples.ttl",
+   "sha256": "c1eea83e70548ebc0f36d0ba3f897a8eef3b5a5536f1e9f5f6b2f8ce13e8156e",
+   "result": "blankNodePropertyList_with_multiple_triples.nt",
+   "resultSha256": "55b2c91e0defe1dcc5bb02e48a739fd9f50e11cf3a3725843731cb2c8131fb42",
+   "answer": "same"
+  },
+  {
+   "id": "nested_blankNodePropertyLists",
+   "kind": "TestTurtleEval",
+   "action": "nested_blankNodePropertyLists.ttl",
+   "sha256": "bdce7dc9f2b5ec55f92d015e4a22f1307bd277281a30e788eaaba623e21d3b05",
+   "result": "nested_blankNodePropertyLists.nt",
+   "resultSha256": "5e0de15f17daa90dd550ce09bbf05b459da59d92e6c946bdc740b6f43389dd53",
+   "answer": "same"
+  },
+  {
+   "id": "blankNodePropertyList_containing_collection",
+   "kind": "TestTurtleEval",
+   "action": "blankNodePropertyList_containing_collection.ttl",
+   "sha256": "b90d88fe23f3f04c2925d79795b10353f5bc88507fa8f008fea68db9ed96f8e8",
+   "result": "blankNodePropertyList_containing_collection.nt",
+   "resultSha256": "27470cd58abb199e35bb2932a02f18fc7e7fec2615f6a6c64b2a8e50e71a23df",
+   "answer": "same"
+  },
+  {
+   "id": "collection_subject",
+   "kind": "TestTurtleEval",
+   "action": "collection_subject.ttl",
+   "sha256": "a22938712e15cee4c7d859e1fc16b88bda69ac2beab7047313dd673c461c444f",
+   "result": "collection_subject.nt",
+   "resultSha256": "6a0b6074f0617814c7386593c88299f811a37a9891bb2721c1f7e7fa8ad28308",
+   "answer": "same"
+  },
+  {
+   "id": "collection_object",
+   "kind": "TestTurtleEval",
+   "action": "collection_object.ttl",
+   "sha256": "f2e7621575d07f09535f0c8860b270a65860e9b26bb7c618835b4c54578e2af3",
+   "result": "collection_object.nt",
+   "resultSha256": "e9de629fdc5b98e0a5f4732e10e969e8cb9f9e387249b56bdacede79d4cd1b6d",
+   "answer": "same"
+  },
+  {
+   "id": "empty_collection",
+   "kind": "TestTurtleEval",
+   "action": "empty_collection.ttl",
+   "sha256": "3acfeaf1e470711a20a82a47cca98514e1292976eda87a5cc6d7e481121e023b",
+   "result": "empty_collection.nt",
+   "resultSha256": "633e54813820c7d5ae0e9482d868895baa06a52f74eff051fc27e88a6a25b324",
+   "answer": "same"
+  },
+  {
+   "id": "nested_collection",
+   "kind": "TestTurtleEval",
+   "action": "nested_collection.ttl",
+   "sha256": "674a001e3078b32bfaaf8f23259ef284c0d76746e8d1ff18de3def0a4e2d8d9f",
+   "result": "nested_collection.nt",
+   "resultSha256": "f913e4cbf4d098087af867ef9bf1728edcc808e211782e97bc3d06f282d1af6d",
+   "answer": "same"
+  },
+  {
+   "id": "first",
+   "kind": "TestTurtleEval",
+   "action": "first.ttl",
+   "sha256": "8e8b1ce8ee123a700a99b60c4304c7a99d658de5a304ee9f86912ff4649ba733",
+   "result": "first.nt",
+   "resultSha256": "52855b5fc5aa7685006bdeb1561802de22089f487bf4f8d73cce06388efa6f10",
+   "answer": "same"
+  },
+  {
+   "id": "last",
+   "kind": "TestTurtleEval",
+   "action": "last.ttl",
+   "sha256": "37d4e69e0dd5d1dc34d32ae205d7d5ff4ec9fb003bb43ee67a56381e5999a7d1",
+   "result": "last.nt",
+   "resultSha256": "808a05465da3239b67baba3fee8a5a062c34c43e7463eb2fe8c8797befc5cb87",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL1",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL1.ttl",
+   "sha256": "136a70b05e9e69e4909ed5ca84005d9578dc1e77dbe6762c09034fb3f8ded81e",
+   "result": "LITERAL1.nt",
+   "resultSha256": "b24ff4ccb0d509bf31fc58983edae333dc20a1fc28f5f024cd2ab4337cc31c9d",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL1_ascii_boundaries",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL1_ascii_boundaries.ttl",
+   "sha256": "7aa043f909aad62d0c50736e0bf8ea706a7cd09a2c7c9ed9bb1b51f2a6e80e6d",
+   "result": "LITERAL1_ascii_boundaries.nt",
+   "resultSha256": "bd9d0846d78336ae30091681b3efea04226a660def3d817e6af1702104eba7b1",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL1_with_UTF8_boundaries",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL1_with_UTF8_boundaries.ttl",
+   "sha256": "5a0cde9e8eebc6127b490e58fab0ad6a72a9658c2f0f1d8e3c314b59a4f400cd",
+   "result": "LITERAL_with_UTF8_boundaries.nt",
+   "resultSha256": "0af62c3825c5e1eef062b9a0aeb9bccc8f490fb42a1fa993063b5b9733b19246",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL1_all_controls",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL1_all_controls.ttl",
+   "sha256": "01a26df18898946c42e7f5a71876d5b34179a381f24b9edf9d86100aeb79ccd6",
+   "result": "LITERAL1_all_controls.nt",
+   "resultSha256": "eca09eda38ca2d5b54756628156d742ceefebb0d9c7b24dce7f74cd1279efa39",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL1_all_punctuation",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL1_all_punctuation.ttl",
+   "sha256": "ee0fbcabab44fa67bc75c9223e1ecd4c290ef93c1383159026f13617099171ec",
+   "result": "LITERAL1_all_punctuation.nt",
+   "resultSha256": "b99e958e7d9ae362ce4407ac50d3e5c58fdde7f5f54a6e0ec602fbfea6bfab27",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL_LONG1",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL_LONG1.ttl",
+   "sha256": "75b999d3f7c72d96b73eb9ccb55967b03a43d8ddb1180d4374e5f8ede4008ca4",
+   "result": "LITERAL1.nt",
+   "resultSha256": "b24ff4ccb0d509bf31fc58983edae333dc20a1fc28f5f024cd2ab4337cc31c9d",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL_LONG1_ascii_boundaries",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL_LONG1_ascii_boundaries.ttl",
+   "sha256": "2bfec7f5d21d3ad5c68502af5027a6400c3180abf0f2ed78aedb0c0c6d859569",
+   "result": "LITERAL_LONG1_ascii_boundaries.nt",
+   "resultSha256": "372dfa5b484c8846a68966004cc14033078af09b6368f4901f65cc52fec20265",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL_LONG1_with_UTF8_boundaries",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL_LONG1_with_UTF8_boundaries.ttl",
+   "sha256": "b0fbf5b280a5e19d6f15c82803b81ae0c92346a2269d2c1a5dc7a1ba343decb1",
+   "result": "LITERAL_with_UTF8_boundaries.nt",
+   "resultSha256": "0af62c3825c5e1eef062b9a0aeb9bccc8f490fb42a1fa993063b5b9733b19246",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL_LONG1_with_1_squote",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL_LONG1_with_1_squote.ttl",
+   "sha256": "da7b61fd2d0affaa8378f8162bc1162b212430a86316bb46b565a651c569da5f",
+   "result": "LITERAL_LONG1_with_1_squote.nt",
+   "resultSha256": "3d5df32954cf3948facf821bf4bbff46fdfa6fea9ef43dd960c03fa34a5821ba",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL_LONG1_with_2_squotes",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL_LONG1_with_2_squotes.ttl",
+   "sha256": "9c02475bfe0fc6da8429eb7b812204f606fff9d0ec15f5c1068cf5300d5750aa",
+   "result": "LITERAL_LONG1_with_2_squotes.nt",
+   "resultSha256": "3bbd0c143a9ac2aa90486ce6f07dcd14326b66bece4ff4bfd858fbc5e52458a2",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL2",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL2.ttl",
+   "sha256": "b24ff4ccb0d509bf31fc58983edae333dc20a1fc28f5f024cd2ab4337cc31c9d",
+   "result": "LITERAL1.nt",
+   "resultSha256": "b24ff4ccb0d509bf31fc58983edae333dc20a1fc28f5f024cd2ab4337cc31c9d",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL2_ascii_boundaries",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL2_ascii_boundaries.ttl",
+   "sha256": "fe3fd4efbcbc9171bdce53ef1ab88943acc99d6f013e9cda174a49c882aeaa96",
+   "result": "LITERAL2_ascii_boundaries.nt",
+   "resultSha256": "bc8b2814f9f0615025d28856137cfe6093cc55af855a81d41a8481965d228867",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL2_with_UTF8_boundaries",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL2_with_UTF8_boundaries.ttl",
+   "sha256": "a781b65f4770c37623aa99d8b8b4feb54a4c7979ca66866db1cd96ac60b274bd",
+   "result": "LITERAL_with_UTF8_boundaries.nt",
+   "resultSha256": "0af62c3825c5e1eef062b9a0aeb9bccc8f490fb42a1fa993063b5b9733b19246",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL_LONG2",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL_LONG2.ttl",
+   "sha256": "963491c2f7dfbc0c1348c87622849468bb06fb8585f47c5ea57151c9246d9d94",
+   "result": "LITERAL1.nt",
+   "resultSha256": "b24ff4ccb0d509bf31fc58983edae333dc20a1fc28f5f024cd2ab4337cc31c9d",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL_LONG2_ascii_boundaries",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL_LONG2_ascii_boundaries.ttl",
+   "sha256": "046d990f8040ee8ff873efc06845e33fb6e9079ff540d4b3b6c7feb064117d4e",
+   "result": "LITERAL_LONG2_ascii_boundaries.nt",
+   "resultSha256": "77c143f692d7e6b7ec840a2dd6aecc3bb11825df93609bf35945b8d0a7dabb94",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL_LONG2_with_UTF8_boundaries",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL_LONG2_with_UTF8_boundaries.ttl",
+   "sha256": "93734f68795f9e30be80d61349d2d769f66a80e69e340ba0a2bd8504774e529e",
+   "result": "LITERAL_with_UTF8_boundaries.nt",
+   "resultSha256": "0af62c3825c5e1eef062b9a0aeb9bccc8f490fb42a1fa993063b5b9733b19246",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL_LONG2_with_1_squote",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL_LONG2_with_1_squote.ttl",
+   "sha256": "727ecde30cf99ecda1661c0695efc0657f9e7cfc0e8fdfae8ad993b55529fad9",
+   "result": "LITERAL_LONG2_with_1_squote.nt",
+   "resultSha256": "7aa7f8df1d0e579c485ea39436726b42ac6f4c6c1abab838d6566bc556685fe4",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL_LONG2_with_2_squotes",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL_LONG2_with_2_squotes.ttl",
+   "sha256": "20a18c2c922ad25d8036d46f8d582482a0969229f74aacce29548de4f43dbe77",
+   "result": "LITERAL_LONG2_with_2_squotes.nt",
+   "resultSha256": "5292dd8326e9660d90995deb386d8228d794810e21b7d164d8b46eda7a8ac520",
+   "answer": "same"
+  },
+  {
+   "id": "literal_with_CHARACTER_TABULATION",
+   "kind": "TestTurtleEval",
+   "action": "literal_with_CHARACTER_TABULATION.ttl",
+   "sha256": "e7c640c2c91cee0aa39a1831e40640f4f3e65a60f78a10006003ff8219b3da8f",
+   "result": "literal_with_CHARACTER_TABULATION.nt",
+   "resultSha256": "2a48d7e65a17be107dd0d54c5f225e8b501cca8bb2f3ec0c3829452bb60773ec",
+   "answer": "same"
+  },
+  {
+   "id": "literal_with_BACKSPACE",
+   "kind": "TestTurtleEval",
+   "action": "literal_with_BACKSPACE.ttl",
+   "sha256": "bf6a8208c75cd82bd6bd584dee005988b99bd6047bdb861031f6c0ed07f321f1",
+   "result": "literal_with_BACKSPACE.nt",
+   "resultSha256": "70bdbae3e0175a44d44188be85a49d007cb314a78aacd0ba43f5b479824f1d02",
+   "answer": "same"
+  },
+  {
+   "id": "literal_with_LINE_FEED",
+   "kind": "TestTurtleEval",
+   "action": "literal_with_LINE_FEED.ttl",
+   "sha256": "16a6a46847243be58ce5255d106e85adfd4641d1c5892f835efb551d9d613595",
+   "result": "literal_with_LINE_FEED.nt",
+   "resultSha256": "60bc9f1c3bcd008161dec78ab52e8f5513e00153bee401d517c1802949e51bac",
+   "answer": "same"
+  },
+  {
+   "id": "literal_with_CARRIAGE_RETURN",
+   "kind": "TestTurtleEval",
+   "action": "literal_with_CARRIAGE_RETURN.ttl",
+   "sha256": "1d5c9573c86599bde52048ca6535a83e955f0a94c06a43058775a17eee0d7804",
+   "result": "literal_with_CARRIAGE_RETURN.nt",
+   "resultSha256": "52e79321258db6a045bf66a1594bfa6c07ad1c95b2ad51fe828cd05b164a33d8",
+   "answer": "same"
+  },
+  {
+   "id": "literal_with_FORM_FEED",
+   "kind": "TestTurtleEval",
+   "action": "literal_with_FORM_FEED.ttl",
+   "sha256": "904269af773eb213b6564309ecccfa73ce2edbec2b7b6dc13e5c0dd66a08d15b",
+   "result": "literal_with_FORM_FEED.nt",
+   "resultSha256": "3fe36b8120ac1ba669ed99bb4927214a017c8f4246db4f65aa6f2899f537f3e8",
+   "answer": "same"
+  },
+  {
+   "id": "literal_with_REVERSE_SOLIDUS",
+   "kind": "TestTurtleEval",
+   "action": "literal_with_REVERSE_SOLIDUS.ttl",
+   "sha256": "c57303e5f63831eb5d3f947db6467dbddc539fc601a2267537da4a489d2371f2",
+   "result": "literal_with_REVERSE_SOLIDUS.nt",
+   "resultSha256": "b8791ff5811f4e9a396ddc752ae4c1407dced0d891348108b961cbb7e1bb8ab7",
+   "answer": "same"
+  },
+  {
+   "id": "literal_with_escaped_CHARACTER_TABULATION",
+   "kind": "TestTurtleEval",
+   "action": "literal_with_escaped_CHARACTER_TABULATION.ttl",
+   "sha256": "be39870ee53c9b1ef13f9f098f610e8f14ba2d5eed9b43cb4479780d660138e0",
+   "result": "literal_with_CHARACTER_TABULATION.nt",
+   "resultSha256": "2a48d7e65a17be107dd0d54c5f225e8b501cca8bb2f3ec0c3829452bb60773ec",
+   "answer": "same"
+  },
+  {
+   "id": "literal_with_escaped_BACKSPACE",
+   "kind": "TestTurtleEval",
+   "action": "literal_with_escaped_BACKSPACE.ttl",
+   "sha256": "40552b198f9c9f2c3fdad643e3803eda25f2774000925eb4b44f12f121076e3e",
+   "result": "literal_with_BACKSPACE.nt",
+   "resultSha256": "70bdbae3e0175a44d44188be85a49d007cb314a78aacd0ba43f5b479824f1d02",
+   "answer": "same"
+  },
+  {
+   "id": "literal_with_escaped_LINE_FEED",
+   "kind": "TestTurtleEval",
+   "action": "literal_with_escaped_LINE_FEED.ttl",
+   "sha256": "fade5ab6a073fcd936544be69765613a69861591e55c993be240bcca1f8212d2",
+   "result": "literal_with_LINE_FEED.nt",
+   "resultSha256": "60bc9f1c3bcd008161dec78ab52e8f5513e00153bee401d517c1802949e51bac",
+   "answer": "same"
+  },
+  {
+   "id": "literal_with_escaped_CARRIAGE_RETURN",
+   "kind": "TestTurtleEval",
+   "action": "literal_with_escaped_CARRIAGE_RETURN.ttl",
+   "sha256": "104c6a1a7dc5e727ca3f46dbbac9f25f219c4fcfdc65fa7f01a0386debb4804b",
+   "result": "literal_with_CARRIAGE_RETURN.nt",
+   "resultSha256": "52e79321258db6a045bf66a1594bfa6c07ad1c95b2ad51fe828cd05b164a33d8",
+   "answer": "same"
+  },
+  {
+   "id": "literal_with_escaped_FORM_FEED",
+   "kind": "TestTurtleEval",
+   "action": "literal_with_escaped_FORM_FEED.ttl",
+   "sha256": "ed55beaf249160f1a53b49d82cd10b250d14404b5cdfa0b84e8dd50b142658b2",
+   "result": "literal_with_FORM_FEED.nt",
+   "resultSha256": "3fe36b8120ac1ba669ed99bb4927214a017c8f4246db4f65aa6f2899f537f3e8",
+   "answer": "same"
+  },
+  {
+   "id": "literal_with_numeric_escape4",
+   "kind": "TestTurtleEval",
+   "action": "literal_with_numeric_escape4.ttl",
+   "sha256": "5b145db95fe83199772decdff738c56c6402d136da6d166de812cd5332c415b2",
+   "result": "literal_with_numeric_escape4.nt",
+   "resultSha256": "814c4121bc0142b2a2e6d175052de75d28dd53be522a72ac36b946b55ca1f4bb",
+   "answer": "same"
+  },
+  {
+   "id": "literal_with_numeric_escape8",
+   "kind": "TestTurtleEval",
+   "action": "literal_with_numeric_escape8.ttl",
+   "sha256": "457fe2ef6aae47cb0f9f8c1a5874e85c112576106df747feff7251e23bf4ecd6",
+   "result": "literal_with_numeric_escape4.nt",
+   "resultSha256": "814c4121bc0142b2a2e6d175052de75d28dd53be522a72ac36b946b55ca1f4bb",
+   "answer": "same"
+  },
+  {
+   "id": "IRIREF_datatype",
+   "kind": "TestTurtleEval",
+   "action": "IRIREF_datatype.ttl",
+   "sha256": "4d91a3347d2c0c3263c0bd95866bcfaf29e4b633682ec695d90f3b4bff7f51fe",
+   "result": "IRIREF_datatype.nt",
+   "resultSha256": "4d91a3347d2c0c3263c0bd95866bcfaf29e4b633682ec695d90f3b4bff7f51fe",
+   "answer": "same"
+  },
+  {
+   "id": "prefixed_name_datatype",
+   "kind": "TestTurtleEval",
+   "action": "prefixed_name_datatype.ttl",
+   "sha256": "710bef8578722e3816b49274d24c4475f4145aec1a7190b9614dda9a47cc0ba3",
+   "result": "IRIREF_datatype.nt",
+   "resultSha256": "4d91a3347d2c0c3263c0bd95866bcfaf29e4b633682ec695d90f3b4bff7f51fe",
+   "answer": "same"
+  },
+  {
+   "id": "bareword_integer",
+   "kind": "TestTurtleEval",
+   "action": "bareword_integer.ttl",
+   "sha256": "3a3ce3c28bc75959bbaf4f0e7774cfbd5772e269b0564653ed5f783e9a4ddca6",
+   "result": "IRIREF_datatype.nt",
+   "resultSha256": "4d91a3347d2c0c3263c0bd95866bcfaf29e4b633682ec695d90f3b4bff7f51fe",
+   "answer": "same"
+  },
+  {
+   "id": "bareword_decimal",
+   "kind": "TestTurtleEval",
+   "action": "bareword_decimal.ttl",
+   "sha256": "20c9f4850b95c4e1ecc8bf39bd924204da1f9f9ae1a81128dc55dd03fe1fbe80",
+   "result": "bareword_decimal.nt",
+   "resultSha256": "b6825c8335c96dddfb94143b081248f8b1352bae499019b74d05a2b368179cb2",
+   "answer": "same"
+  },
+  {
+   "id": "bareword_double",
+   "kind": "TestTurtleEval",
+   "action": "bareword_double.ttl",
+   "sha256": "1145e7a8abc7c12391765efad6aca5834e0a3ca392bbec9e43cef4a9a0e02a66",
+   "result": "bareword_double.nt",
+   "resultSha256": "7fedd6dd029d3074a2803f7a462ea030cb294e0355d2002b64aba2656417fa4f",
+   "answer": "same"
+  },
+  {
+   "id": "double_lower_case_e",
+   "kind": "TestTurtleEval",
+   "action": "double_lower_case_e.ttl",
+   "sha256": "4148a26cda5bd3ea3a79a95ac3c686fb9ed2002a6101113fec70d96b220df301",
+   "result": "double_lower_case_e.nt",
+   "resultSha256": "06ea62aab2a881e4b477a44ac3e0d541e092d655e0bfb5ba87a28d25531e6aae",
+   "answer": "same"
+  },
+  {
+   "id": "negative_numeric",
+   "kind": "TestTurtleEval",
+   "action": "negative_numeric.ttl",
+   "sha256": "214db9d938fe7d8e51f76d884a8dd22d616df13a01b971311d8933aa1aa0b5f3",
+   "result": "negative_numeric.nt",
+   "resultSha256": "cebb91b58da636fb8a9d5fd6d2e87ae7faad3fc51a94c71f9c76aecc4ec35262",
+   "answer": "same"
+  },
+  {
+   "id": "positive_numeric",
+   "kind": "TestTurtleEval",
+   "action": "positive_numeric.ttl",
+   "sha256": "c870b5306b201ca4ee25d392b1a1d67b8f7133fb1e9472e7c5cfccea6cf7b4d3",
+   "result": "positive_numeric.nt",
+   "resultSha256": "5b004e970be47c718cfe08b9709ae65b580015f92c2a8d959105e9193eb1b695",
+   "answer": "same"
+  },
+  {
+   "id": "numeric_with_leading_0",
+   "kind": "TestTurtleEval",
+   "action": "numeric_with_leading_0.ttl",
+   "sha256": "4fb9ab6c639d4a7afb4920409aa1014524e6d8403771443cc970499c6e027ae6",
+   "result": "numeric_with_leading_0.nt",
+   "resultSha256": "e764cf31b691dda5f8784644ce6d431b8e76e9ed02bdcb9b6f952b5c9fef3d98",
+   "answer": "same"
+  },
+  {
+   "id": "literal_true",
+   "kind": "TestTurtleEval",
+   "action": "literal_true.ttl",
+   "sha256": "2f6dd8ff1cf631bd715ffb40bbb25342d5e0452448500ace9789a9f6292d3b63",
+   "result": "literal_true.nt",
+   "resultSha256": "312b4b59bbdff1c3803c10330d28b4d42fd9f735a1f87556d3f0351898ac1a7e",
+   "answer": "same"
+  },
+  {
+   "id": "literal_false",
+   "kind": "TestTurtleEval",
+   "action": "literal_false.ttl",
+   "sha256": "a5ed0e2acc732d35c651c4eeeb338753c9b0d35f2cd7a20481c3abcedb00f9ab",
+   "result": "literal_false.nt",
+   "resultSha256": "e16f0777ad2d100ba2a7ee615b45168199b0f755893816d15f3ccd52fc10ce0c",
+   "answer": "same"
+  },
+  {
+   "id": "langtagged_non_LONG",
+   "kind": "TestTurtleEval",
+   "action": "langtagged_non_LONG.ttl",
+   "sha256": "08b70369b4df811e716fea578a3bb2233dfce2bd398bd95a5ce2e66e2ea6e89b",
+   "result": "langtagged_non_LONG.nt",
+   "resultSha256": "08b70369b4df811e716fea578a3bb2233dfce2bd398bd95a5ce2e66e2ea6e89b",
+   "answer": "same"
+  },
+  {
+   "id": "langtagged_LONG",
+   "kind": "TestTurtleEval",
+   "action": "langtagged_LONG.ttl",
+   "sha256": "a612d520a3c0da15a63c09afbdee2f62cae84ba3eeb91328c9621016cc9491bd",
+   "result": "langtagged_non_LONG.nt",
+   "resultSha256": "08b70369b4df811e716fea578a3bb2233dfce2bd398bd95a5ce2e66e2ea6e89b",
+   "answer": "same"
+  },
+  {
+   "id": "lantag_with_subtag",
+   "kind": "TestTurtleEval",
+   "action": "lantag_with_subtag.ttl",
+   "sha256": "80a499c5e479a296c5fa5b5f98af8f11a743100af63284a83d55dc0f85184525",
+   "result": "lantag_with_subtag.nt",
+   "resultSha256": "80a499c5e479a296c5fa5b5f98af8f11a743100af63284a83d55dc0f85184525",
+   "answer": "same"
+  },
+  {
+   "id": "objectList_with_two_objects",
+   "kind": "TestTurtleEval",
+   "action": "objectList_with_two_objects.ttl",
+   "sha256": "1c0759940fc533207e906bb1cd2eb419f14dc4b0ee7aa1c353031e0a398e72b1",
+   "result": "objectList_with_two_objects.nt",
+   "resultSha256": "59fc46eff694574af5f1b90f49bba2f6ba7d955e8bd54e9e3ee2b845ce5fed73",
+   "answer": "same"
+  },
+  {
+   "id": "predicateObjectList_with_two_objectLists",
+   "kind": "TestTurtleEval",
+   "action": "predicateObjectList_with_two_objectLists.ttl",
+   "sha256": "ec3721a5bb444a69fb8d4273cacac1a3ddb0fe0db0cffd71ff4e512392bd7e6c",
+   "result": "predicateObjectList_with_two_objectLists.nt",
+   "resultSha256": "ffe3a92be58c1d9ab96dc6267d0257f9aa268d4a97480edbcecc182241fcb3c6",
+   "answer": "same"
+  },
+  {
+   "id": "repeated_semis_at_end",
+   "kind": "TestTurtleEval",
+   "action": "repeated_semis_at_end.ttl",
+   "sha256": "1010d13480d0e04b1d3705a1182dbdf42995bb065183989f98fc743d4431e1c2",
+   "result": "predicateObjectList_with_two_objectLists.nt",
+   "resultSha256": "ffe3a92be58c1d9ab96dc6267d0257f9aa268d4a97480edbcecc182241fcb3c6",
+   "answer": "same"
+  },
+  {
+   "id": "repeated_semis_not_at_end",
+   "kind": "TestTurtleEval",
+   "action": "repeated_semis_not_at_end.ttl",
+   "sha256": "372b22b7172479261708e417db1278cfd4e86bd4c4de913142eb5e3b4793fe81",
+   "result": "repeated_semis_not_at_end.nt",
+   "resultSha256": "5bc9e7b6045579d82a4275e037239449c2fe1e9378cb02fea42582c3702da675",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-syntax-file-01",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-file-01.ttl",
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-file-02",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-file-02.ttl",
+   "sha256": "f279d5912907607fcbe2e9ad395ef3d5a3a64e6f40827fa2278362e6f2cf041a",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-file-03",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-file-03.ttl",
+   "sha256": "9ce8a08abdf58cbc6330e7a2148eb6700c1423d559f2b336f662f299df4bb11a",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-uri-01",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-uri-01.ttl",
+   "sha256": "78a09be1bdb7611a9a5bfa633d728b343fd2a417ff82a4021b4158a676759eac",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-uri-02",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-uri-02.ttl",
+   "sha256": "33c47a83e5746d0aab7da06d02512d3e08202f59dc54e75d133685603753f902",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-uri-03",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-uri-03.ttl",
+   "sha256": "b21e4bb3b650f3e2a1045c664766ece40c181a80871685e2331ed15b0f9951ac",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-uri-04",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-uri-04.ttl",
+   "sha256": "99bc612d7b87bbeae7c9f2c60a7868ce1dab4ff10a3c460aca1dda8834cf05c8",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-base-01",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-base-01.ttl",
+   "sha256": "e9413d748f462b388646d2948b9034d605c0e3d4da5c7dc687b884a8d715af75",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-base-02",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-base-02.ttl",
+   "sha256": "5c8e1ceb20a1fcbe237291e6411037a60da281d62b8461fb045f5f14ebe8c788",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-base-03",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-base-03.ttl",
+   "sha256": "e1e530e3bc682990e91d1e0cb237da36ad902cf060f4d374ce67aaffa90343dc",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-base-04",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-base-04.ttl",
+   "sha256": "8a4b3857c2dc7940b41a040ae7a3feca632bc771eea8ec874473e6cb682b26bc",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-prefix-01",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-prefix-01.ttl",
+   "sha256": "f3c5617d289a37656eecc34080d0add17601c719ad0898cc46862bbf5b6583a7",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-prefix-02",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-prefix-02.ttl",
+   "sha256": "ec2eeeddd57bcf37cf1a8b29298c05866fa141533d19bf7ab321d2269942007e",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-prefix-03",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-prefix-03.ttl",
+   "sha256": "a04336f004420adb6f1a29fd5a455f891f4be03ad86700c870735c20edb1184e",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-prefix-04",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-prefix-04.ttl",
+   "sha256": "1fc52ead7b815351212df30a5bbb9f899fe92b7306990e50e672de57fb2e2634",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-prefix-05",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-prefix-05.ttl",
+   "sha256": "b079ae8ba13a11f8efd3a9aa2c34b9061301aac0cc13c1c4bd6d3772d4fb9203",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-prefix-06",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-prefix-06.ttl",
+   "sha256": "10015365e0891fe7aced7f59f6c98139eb2864f8b46bd7b31a529cd2f08bd954",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-prefix-07",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-prefix-07.ttl",
+   "sha256": "db90ce5af1de8e86888fba5a88246930208af1281c3eaed5eb6339cabc18f7fc",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-prefix-08",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-prefix-08.ttl",
+   "sha256": "d2d8782c5cd65d50501b3b2c29fb9af6e041022494e754c9e0140ef65e427f19",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-prefix-09",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-prefix-09.ttl",
+   "sha256": "73ebe884010db7c40940e35bb9798dc95414d025d83575ce237f0d0fe288f6a5",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-string-01",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-string-01.ttl",
+   "sha256": "d8d706933908c01aae3fe8dfddbf14be1d3a45a9902e932d42b683382622844b",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-string-02",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-string-02.ttl",
+   "sha256": "4da39e807d5a6e0113fed41e0e3bf7daabf273c35a17bbe9e144a46754077cae",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-string-03",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-string-03.ttl",
+   "sha256": "05de3caf28cc90b039d1ce3528adfaeb086c9c2e28afb300ba4a51fbc293c197",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-string-04",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-string-04.ttl",
+   "sha256": "e0699dd9343f92a04f11dde65f57e3a1d097719945b44acdd6828b1b05b849be",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-string-05",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-string-05.ttl",
+   "sha256": "8b3f367f34cc4504fb678bcad18ff189f092c6ec8a16a8a3e7a6212d90b50985",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-string-06",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-string-06.ttl",
+   "sha256": "83ff21916deae1b6c81c8673726f7474821898ae08f0029c79131b2c3f5a6791",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-string-07",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-string-07.ttl",
+   "sha256": "36f60e239b50b67d3cf027ca6f9d6b07b7136ea8374f116170b24aa0c880a461",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-string-08",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-string-08.ttl",
+   "sha256": "9983e45b6be3104a23f1a113a735a9aea613bb4c881fd0535e3560329508cafa",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-string-09",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-string-09.ttl",
+   "sha256": "c0d4ceb51ae72630881ed155ab7cd8ebedabf2ac9152e097d25d62bd89451af7",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-string-10",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-string-10.ttl",
+   "sha256": "67aeeac5d4ae8e0787b577327b8a9a45597ed7c8fe95c455298490c0c9f09189",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-string-11",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-string-11.ttl",
+   "sha256": "f70e26d54e9c1bb548cd6e2bd020d15612312b4f664b19f6e0dcf1d56908e47e",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-str-esc-01",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-str-esc-01.ttl",
+   "sha256": "2fb7ea74aebbfe59f06796550b2ab07cf96910fe4915f4f553a1078a940d5bb3",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-str-esc-02",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-str-esc-02.ttl",
+   "sha256": "429b63f298e74ab5112d0fd8de281f3d9e210fa6967ac7ed1aa792c0d8d09eb2",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-str-esc-03",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-str-esc-03.ttl",
+   "sha256": "17a5a4069cdcee9b51bf1eceb44cdbdd58869e834910d2698addaccbeff9e31c",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-pname-esc-01",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-pname-esc-01.ttl",
+   "sha256": "b94713736cdd59852463d467800cd3af5f3accb4b6ff3d06379396f8f0c1f4d8",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-pname-esc-02",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-pname-esc-02.ttl",
+   "sha256": "e09f72c9cefe702c9c10ff42eab54c2876dda35f167954827aebd8e3af31a0e9",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-pname-esc-03",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-pname-esc-03.ttl",
+   "sha256": "91480d0b679a9d48cdc3161ad745fe213141a79803bc856c1a1bb0d63619f995",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-bnode-01",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-bnode-01.ttl",
+   "sha256": "8616d6dd4254ff9f95d9fc4d641445708898f20c89018ffa4c942f48cc8b63d6",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-bnode-02",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-bnode-02.ttl",
+   "sha256": "cc8cb141e49135cbd33304afb2459b8c23e4e3d0220dbe1f3378f8f3b4e8120b",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-bnode-03",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-bnode-03.ttl",
+   "sha256": "6bfbf2be1e49610fda337653ba7847ada73e1a1b87619d71b983e29994d40068",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-bnode-04",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-bnode-04.ttl",
+   "sha256": "2bf52328b8d330fd76ceea36d2a8ae89e337a53a4ff92ba64315fbbcef2a843e",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-bnode-05",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-bnode-05.ttl",
+   "sha256": "9ff65617128dcf4db342623eb0f7de8a79a34c4878a6c23dc58f2431765be9d8",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-bnode-06",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-bnode-06.ttl",
+   "sha256": "ff00cc38247ff65c5047bf98dc6b2722878646a386358bf2ddd7105f7dbc9487",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-bnode-07",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-bnode-07.ttl",
+   "sha256": "dda94ae6f66577f5663e8387c9c3527f1192a68ee98f600868b60211083d6862",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-bnode-08",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-bnode-08.ttl",
+   "sha256": "d3f0ad54cd337b6fa5c1e28f83526b5f8af27d1b9e315f15496e30615ff16f82",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-bnode-09",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-bnode-09.ttl",
+   "sha256": "334eee455b60034ee347ebcdf1d1f79496b2a14f5b965261ac41fb6b927b8c1f",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-bnode-10",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-bnode-10.ttl",
+   "sha256": "34833a6d31b91a737f401625d449181ccc0a4504ecdd2ba504ba8b6d85483cf2",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-number-01",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-number-01.ttl",
+   "sha256": "f2d921b2070057561d13e4ad3651e1f0b29e13dd221d7b8765e13ee2a94bdb7a",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-number-02",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-number-02.ttl",
+   "sha256": "26908f204cb9514218fe8372345f9e205c747a78e09e889fbe6f8b93c3789ef2",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-number-03",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-number-03.ttl",
+   "sha256": "fc0fa72d60532bf66dd3a550db23d5409b9695720ba69a15130af06a552d9430",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-number-04",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-number-04.ttl",
+   "sha256": "e926cb2847501a72d68d4cbed26c59af427c544349fc6fa25fb81c50d1d719e4",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-number-05",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-number-05.ttl",
+   "sha256": "be25b418dfd7e4223c5aced1d6edbbad904b214aa1b1cc3b671175a0d5b1de4d",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-number-06",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-number-06.ttl",
+   "sha256": "643305dc4830159dba2ffcff6b475f0191dbd0ea9ccc8d5bbd115dca3b79dfeb",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-number-07",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-number-07.ttl",
+   "sha256": "8091e16f2d6042e71121f4b10892be5b7570e1c3175ee02d29243a011e3601b2",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-number-08",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-number-08.ttl",
+   "sha256": "f41a0df109466afa957be2f629a65920031a86b812f26877efc1b4ec39fb7663",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-number-09",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-number-09.ttl",
+   "sha256": "bdcfceb6a5578aaa92f3a4f52872ff4d066a046df32423a356612c05448330c9",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-number-10",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-number-10.ttl",
+   "sha256": "cc8b4e48efa472862fdeba1e89241642b395cabfb450db97ba157665d4c2e051",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-number-11",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-number-11.ttl",
+   "sha256": "fc2b24685ecf7fd98ad7b4b8e7baa94f84b3f51d807de24325ac34965ef1ebf4",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-datatypes-01",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-datatypes-01.ttl",
+   "sha256": "e04e53d64bfbd478952730d5472daa0819ca647c44442c08127e77f84420e1c1",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-datatypes-02",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-datatypes-02.ttl",
+   "sha256": "f53c82e436783ba2a98b11b59e74db80f9ee1ad38c331b308ef8b9e623a82c55",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-kw-01",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-kw-01.ttl",
+   "sha256": "bba564d54d85d484e24d45942de1969de22ba9b0fe539a6ab0379abc74f1a4f0",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-kw-02",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-kw-02.ttl",
+   "sha256": "75478466450a720f24892d7517d3915daa78eac2e3d7b82713d995de86c75697",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-kw-03",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-kw-03.ttl",
+   "sha256": "888676242cf0275e6889e7ebe45b192b30038f1da6c544bfba3bcbeaa2fd97b1",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-struct-01",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-struct-01.ttl",
+   "sha256": "528e5c93eeb5f092a99cc8216f7ae5055699ee84afd771e52d5d5aa5ebaa7ec7",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-struct-02",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-struct-02.ttl",
+   "sha256": "74abcdb64df32505f9a76bdb1302d749f980eea7d9f590d8d31a44b3d6e3ca4c",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-struct-03",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-struct-03.ttl",
+   "sha256": "fee39b285e3e98fd49ad48dab2e4577774fae9f458553b501faa72eaec179aae",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-struct-04",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-struct-04.ttl",
+   "sha256": "108b11d36b01c936f5b280951e2b92453486ce703c207fb1f6ab7022b3ebcf85",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-struct-05",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-struct-05.ttl",
+   "sha256": "fbe05795043a36eec300a452024ad938fbb9385d87c990df4eea8ba4bc978706",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-lists-01",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-lists-01.ttl",
+   "sha256": "076e170aec163a662835a95b846fcf51e12465ffeee5e884aac5540b14661155",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-lists-02",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-lists-02.ttl",
+   "sha256": "38bef27f0c1af3a7b824229330337cdc2f8dd9e6ede634e9d80f74a67d964770",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-lists-03",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-lists-03.ttl",
+   "sha256": "61209a9d459c10383b53441f28c983fa65777cda03dcc90abfdc1a01dc80f64a",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-lists-04",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-lists-04.ttl",
+   "sha256": "2cab057414573097a3c69387e628d8eaf40fe8463e6124424d0e912e1c7e8778",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-lists-05",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-lists-05.ttl",
+   "sha256": "43d286cc1cbc67765ff3d9fdbbb624dddb08331686ba5e870c9b140b693c6155",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-bad-uri-01",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-uri-01.ttl",
+   "sha256": "4852efc4bf48380520f729aa0f662103e81e92d40bd4d4f9d79df913867726d5",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-uri-02",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-uri-02.ttl",
+   "sha256": "b630175dd7224054e4c404643c28acfcb598bbf2bdb51b71322ae9e84d891474",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-uri-03",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-uri-03.ttl",
+   "sha256": "0733aa5d6746a414b3d7af7dc5fd193f30743f71c37ac662dcc325947264438d",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-uri-04",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-uri-04.ttl",
+   "sha256": "72c6a3a2371d4ce42ddbe9cad934fd55ef6505d3a4f9f5bd44288fd92e8d84a0",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-uri-05",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-uri-05.ttl",
+   "sha256": "66444eabddd5a032d69f1df19ec9d436e7621ea54261032509a9ec69a58cc7ed",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-prefix-01",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-prefix-01.ttl",
+   "sha256": "f61e849958e83d4334f965c588145fabd041a0c13c188f4c098f6bea7dfa261b",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-prefix-02",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-prefix-02.ttl",
+   "sha256": "eeb12440ed0f45c7e06d8362ab54d5915d7330a206be12d55189500cfaff77be",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-prefix-03",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-prefix-03.ttl",
+   "sha256": "f43ee28829255f51d71402b4b271e7af5f76fb4ca258424e3279fe8e1b5a98ca",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-prefix-04",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-prefix-04.ttl",
+   "sha256": "6f5b89faf3b7c666a10e3fdf4c66cbbf003c53da44a0dc5b5415c5ea738c8b60",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-prefix-05",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-prefix-05.ttl",
+   "sha256": "b6c1704c30351b5cff445bd419b736f058d8e938fda8fa6e7a9ec41d1ee4b6ee",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-base-01",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-base-01.ttl",
+   "sha256": "591441fe3c2a2e4f46c6db1c8a96d8ff83ae3a4d4b698597e063190156504d08",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-base-02",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-base-02.ttl",
+   "sha256": "64ab7f86e6f5832ddefeed423d5ee6f8dc85473d8caf9e4942d13d9598d6d36f",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-base-03",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-base-03.ttl",
+   "sha256": "f6ec5e6bc96687d5056f3e0d88596bfb95f700f6ce77ff757b4e623862a2f1f5",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-01",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-01.ttl",
+   "sha256": "f55c832e596d53ab4a3842671e708e32945df59176a8d0f3599cfdee33016301",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-02",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-02.ttl",
+   "sha256": "ed6e05a58b9a9b7783c0b0ef230a3aaf630006e082c592ccd6230e2a4fbb1419",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-03",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-03.ttl",
+   "sha256": "293c55cdd2591858258d3abfe3c8e836090d1e03209c3c37ff5b01c6bd53d8df",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-04",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-04.ttl",
+   "sha256": "6bc53796f85f9ba03ece760187ffe523ae69696d46709ffdca104063eea962f6",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-05",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-05.ttl",
+   "sha256": "017043d2a9974fda855d256f79b7ca7fc36b96d3417c5e7892eb55444c7f4bbf",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-06",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-06.ttl",
+   "sha256": "d0158ce6ab5f7d62de262cf9717eb82937bc06c19a78c836920c2f6a326edadc",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-07",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-07.ttl",
+   "sha256": "29d95082f3476485bc6791058dea6f90742b8c0800b9555bd346cbac8cee3f47",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-kw-01",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-kw-01.ttl",
+   "sha256": "832420691bcbca6fc002b291001920f1e4168226aafc2f525f7cd645e66552e0",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-kw-02",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-kw-02.ttl",
+   "sha256": "81897a8b9fc247970217fa6e9c47b76b853429fc28b15de9d1acffe58a14a2ea",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-kw-03",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-kw-03.ttl",
+   "sha256": "52a97ddf48cf849dd5b2a143027dbde11b44e31d0cdf30de6d18d0f372d91d7c",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-kw-04",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-kw-04.ttl",
+   "sha256": "13e42addae93347acd328350938c665fdb999848efdcab4f74f5620112368937",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-kw-05",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-kw-05.ttl",
+   "sha256": "7a40868330d7acb17408072992dd371385f74a1107e1827d0d717771a53dbf98",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-n3-extras-01",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-n3-extras-01.ttl",
+   "sha256": "8dafe15bedb87244a975452556bfa2000eae44711847169ca5da3aba00810d5b",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-n3-extras-02",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-n3-extras-02.ttl",
+   "sha256": "f16c994ed1fa8100cd0b781c091c5aa18cff3ce2b1e23c7913cf559c45516cff",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-n3-extras-03",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-n3-extras-03.ttl",
+   "sha256": "ede01b1f702768159d54862a78b2823ed0694bfcb135bb0a150d3c5aed7c4011",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-n3-extras-04",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-n3-extras-04.ttl",
+   "sha256": "0a516c327d7c6dc36c74b45978ed1e36aab83d753252309d0793e31b19d56549",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-n3-extras-05",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-n3-extras-05.ttl",
+   "sha256": "a9faa343dcecdf327341417fbe6cc0ab1b1a2d56ffb2d9b40e68aed3abd3ceb1",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-n3-extras-06",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-n3-extras-06.ttl",
+   "sha256": "43f40cfe8856b6e7888e506e13d26cf618940d6ea957a5f142ac53e1008b9221",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-n3-extras-07",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-n3-extras-07.ttl",
+   "sha256": "6b8f0303b634e8f3fca9ca31f8d9c6e85227bfb54ee6d3e69da569fb63e7b10f",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-n3-extras-08",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-n3-extras-08.ttl",
+   "sha256": "6b8f0303b634e8f3fca9ca31f8d9c6e85227bfb54ee6d3e69da569fb63e7b10f",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-n3-extras-09",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-n3-extras-09.ttl",
+   "sha256": "a547cd8a33643b419462dc8879e315e5d3a23463f1d0f80642ce93b93c258e6c",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-n3-extras-10",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-n3-extras-10.ttl",
+   "sha256": "a9afc613a6bc63af5ca209b15fb4509bd05afc61ff3f5b1b0def11a80c1a3ca7",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-n3-extras-11",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-n3-extras-11.ttl",
+   "sha256": "ffe3725c25fe82ddd549352c5f32cf806485ba4fbe7387a327f584a3707b50f2",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-n3-extras-12",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-n3-extras-12.ttl",
+   "sha256": "816382cff0040db3f6beb24e252bc7911501ff39f4c3cb65509efbdd49f31e01",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-n3-extras-13",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-n3-extras-13.ttl",
+   "sha256": "9ca27a3e8e7731bcdb1f441e648666e355595ef9ed2ba6b26b6ea551caf58987",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-08",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-08.ttl",
+   "sha256": "153257cefe1e67ee6d2c159607f4a7c77421db927b3efeeb59bdcb77a79ecbb7",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-09",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-09.ttl",
+   "sha256": "10fd7f7592059e33a6cfc19c3e678a41946fb434552d90c3b8a16e844e9fc1fb",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-10",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-10.ttl",
+   "sha256": "05335490d2b519d3714f109295443aaa4dab296983dd946595937a0c66f52f3e",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-11",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-11.ttl",
+   "sha256": "96b7b769e3a086c4de905d6ffd05ace5847ffc4dc7633a9e95b16b3ee14867fd",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-12",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-12.ttl",
+   "sha256": "78858ebd562612289baebdc53929bc7e950d69ad9a9382c9f09ee213b929f587",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-13",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-13.ttl",
+   "sha256": "78858ebd562612289baebdc53929bc7e950d69ad9a9382c9f09ee213b929f587",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-14",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-14.ttl",
+   "sha256": "dde9029f19a8aa4744dafb57b3f71f5be56eb30b8f4aaf86b35358f093832248",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-15",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-15.ttl",
+   "sha256": "b7937bceeddb4fecf5b52d9c44e0a2b012ddaf01617e9c94d06c82eea9cae195",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-16",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-16.ttl",
+   "sha256": "a2a01eb99a2321ede9a56c4a1a0a8872d8900b3eaaca622faece05e9bee79070",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-struct-17",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-struct-17.ttl",
+   "sha256": "a1ac74d3aebe6cac526d272299198a7068755097927cfb7a1c71ffdba89716ac",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-lang-01",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-lang-01.ttl",
+   "sha256": "0f67ceae3b14fcc48c682d0632501086c6beaf34cd2eeef3b135ff8cb46fbe84",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-esc-01",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-esc-01.ttl",
+   "sha256": "e65e3d8e63511d9a20bed3cb8905537b39634a4cff1ff2267d3cfcba357e431b",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-esc-02",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-esc-02.ttl",
+   "sha256": "1f1e32f01ce781be32efb2852aad8e245f0b9eca62960cf8dd3c894ebacca17d",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-esc-03",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-esc-03.ttl",
+   "sha256": "30fdad3e17885d22a75012c1ed6f2b4eca09de06799ca1d95a256c8d4c07fb1d",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-esc-04",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-esc-04.ttl",
+   "sha256": "30fdad3e17885d22a75012c1ed6f2b4eca09de06799ca1d95a256c8d4c07fb1d",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-pname-01",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-pname-01.ttl",
+   "sha256": "16db4ddbe5ff71e6eb65258d88383a89c4ebf565797fa55d8ef5b0c6a4b71663",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-pname-02",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-pname-02.ttl",
+   "sha256": "71fb734257822f4d77d1d34e54a0345dfbc50a93ffe2fe3ac717930e45a52132",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-pname-03",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-pname-03.ttl",
+   "sha256": "5f0abbcc34428605e60211d67c2e5ff5f932d152751744b5972738a574742a70",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-string-01",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-string-01.ttl",
+   "sha256": "b86d1284efd4062b735a2ea585b78dd7060f17dbcb20abc59cb1730053590a87",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-string-02",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-string-02.ttl",
+   "sha256": "16563276e45826007fd3c65ef4f9c61e8162d7bdd8bcb44088c254f2067b0768",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-string-03",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-string-03.ttl",
+   "sha256": "c32e90910f69e4650e0aba05bf0f32558a4f372b17b12483bc0bd1a048b56137",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-string-04",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-string-04.ttl",
+   "sha256": "565ea8c790d0ea4c8ae79ac8a7a2a1fa53744589a685789734177d09e1b07afa",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-string-05",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-string-05.ttl",
+   "sha256": "bdd61c7bc197c61a7d46a83dd4a6d9dede6e472b1645797a6715119d1fc5fde3",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-string-06",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-string-06.ttl",
+   "sha256": "51bff9f8ccf0755bfb0d3c02411493a621143244da1bebc1d87b8582cd93f3f7",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-string-07",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-string-07.ttl",
+   "sha256": "0c1c8ec96794d71970ec0cc2298cb462950ae45ad130aade91ced3398d093864",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-num-01",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-num-01.ttl",
+   "sha256": "b3e87dd6ff981e9966356532725127c051dabfbd9afb6046fc5fb1f62678aab8",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-num-02",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-num-02.ttl",
+   "sha256": "13ebc18e3fd03d6459f8e66ccc96a99b1ccb205a134b50361489516979244c75",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-num-03",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-num-03.ttl",
+   "sha256": "b21c7b33427db0fb3acb865ddc58115b238d24524091f4f513116f6acae2de74",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-num-04",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-num-04.ttl",
+   "sha256": "a6dff215bb62bad5f3eff1676b804f24984bb14ba55a559c1fad59e54e67d0d9",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-num-05",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-num-05.ttl",
+   "sha256": "49d59da3538acbd9ef3d1273661c22fb9900f76eca841a017da96b09f23d2dad",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-eval-struct-01",
+   "kind": "TestTurtleEval",
+   "action": "turtle-eval-struct-01.ttl",
+   "sha256": "78a09be1bdb7611a9a5bfa633d728b343fd2a417ff82a4021b4158a676759eac",
+   "result": "turtle-eval-struct-01.nt",
+   "resultSha256": "78a09be1bdb7611a9a5bfa633d728b343fd2a417ff82a4021b4158a676759eac",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-eval-struct-02",
+   "kind": "TestTurtleEval",
+   "action": "turtle-eval-struct-02.ttl",
+   "sha256": "af1c60c20e80fe9fbb13c1f27c154254dde7bfb948064b18e563b37af99dc67b",
+   "result": "turtle-eval-struct-02.nt",
+   "resultSha256": "fa1f9c5054f8f4159419024edf8600fd296db8ef8be5c7cdeeb6efbe13598b08",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-01",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-01.ttl",
+   "sha256": "4961ac65332d1e26a5fd0901c3b798b9527154a73f713fc3733851c7fbf37ba2",
+   "result": "turtle-subm-01.nt",
+   "resultSha256": "ffe74550696a69a30cb7a678cd673e86536c58a7929294a1e3346ac94c609556",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-02",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-02.ttl",
+   "sha256": "854e003e43c3bbc6162376fd11b1f94bb4016872005c57cb6e92c64ac61fa5d0",
+   "result": "turtle-subm-02.nt",
+   "resultSha256": "e790ea7b6af75624f57542f5ed7a5fbe62fac127390ea90f8ffb3ce9c868de01",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-03",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-03.ttl",
+   "sha256": "ccf764ef618627c88abe40d06d978c46a9818be46660672eef7b0f247ed3a0a8",
+   "result": "turtle-subm-03.nt",
+   "resultSha256": "86b7cd9ea7151049ac8885a5107e65d94afa84bcf797db96e902adbe47ed2c03",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-04",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-04.ttl",
+   "sha256": "e1c87832b06f7357a3cfa837c94be857290d5fc1fc7f2d2888ccf25acce7997c",
+   "result": "turtle-subm-04.nt",
+   "resultSha256": "63b6808bfcfe521c45b067c67cb9be8694852446f3a8214d774f1615f9a4a912",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-05",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-05.ttl",
+   "sha256": "bf3b084c9ebf66746276b3038643dc8462c9f89dd6e01f4d366329aec217f830",
+   "result": "turtle-subm-05.nt",
+   "resultSha256": "ead3132dde9be132cca55a86e0077ff960009d0c9b7e2567d64b42d23afc4f5f",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-06",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-06.ttl",
+   "sha256": "5041381c1db71c66fc1eab3aaa061c73efd698896ad7d488e6469bd1b869e884",
+   "result": "turtle-subm-06.nt",
+   "resultSha256": "a9652d5918fe87f1a88f486f8af190656517a0e1e3b9a6905d51e631fd10254d",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-07",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-07.ttl",
+   "sha256": "e7899c944f7c107aff489a1815ffb670f1744a9c7d1377c30e36b3f0113da87b",
+   "result": "turtle-subm-07.nt",
+   "resultSha256": "6175b51d498c89c7b25b0302e8e9a03a9a80bbdbac27a6fb9bd5f2e5189c25b4",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-08",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-08.ttl",
+   "sha256": "acf127409b35170cc4d4ae9636489d1faedac3019a2e599f41b2ed1d86120a30",
+   "result": "turtle-subm-08.nt",
+   "resultSha256": "fcda57e944e6baa5cf1f978a9b5bfa4fae27f25112f0c38f771ed97bd0086f1a",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-09",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-09.ttl",
+   "sha256": "88421863f7e3fe6ad3144c5515a1d358032f6240c25b368a94b1efd64e9deb51",
+   "result": "turtle-subm-09.nt",
+   "resultSha256": "3ad1f7051808546632c20bb3a6c1ceaa63814eb96a02ccc5438afa0fbde82a47",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-10",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-10.ttl",
+   "sha256": "5376d6c9d8925a260646a2a588832dbcbbcabecdac6ee780de8888632838e8cb",
+   "result": "turtle-subm-10.nt",
+   "resultSha256": "fe59d71eccdae7f6287f3112799f748d3da8a90fa752d19923dabc6fbe524fca",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-11",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-11.ttl",
+   "sha256": "4f680f6fa55e6ad394982b569d660b583f483b91e9db4fb3a403e5eb73ba366b",
+   "result": "turtle-subm-11.nt",
+   "resultSha256": "dd7ec6e61cd746e4945229e82fb9b41fd136a721af24b14abab0e3c608228e0f",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-12",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-12.ttl",
+   "sha256": "6278898e324dc63339c817e8d1192589530b9ab3a7b77967e5a46f9062ec70c8",
+   "result": "turtle-subm-12.nt",
+   "resultSha256": "57e1208d42e1f3e5e4b9e65cd022cf879b079a77c4feda664ad4a65714f6ab15",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-13",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-13.ttl",
+   "sha256": "635e70adf8ea6fb99c554604c44a5393354457b9a46c0f401e962dd8bb93fc5f",
+   "result": "turtle-subm-13.nt",
+   "resultSha256": "9c1931c343fdfa427e54a927506b08360527096f436dca9af941b2ba966f6b06",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-14",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-14.ttl",
+   "sha256": "97958338106a261ff84d68feb00392406fc14d9f406d473a1587b623f897b374",
+   "result": "turtle-subm-14.nt",
+   "resultSha256": "269983116f9adfb2959d502b11151f64f6a9c426e512d413ae39a0bc0cb90ee7",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-15",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-15.ttl",
+   "sha256": "0cae1f7f858842ab54a589e871232a4b4cd66fa45d66b31e7903838925abf7d3",
+   "result": "turtle-subm-15.nt",
+   "resultSha256": "12869ca80034a9136d096986c13315f236f9200896873ca4c7aded4c883cd103",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-16",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-16.ttl",
+   "sha256": "771aa1e897e89abd4a815ad7dbbb458248a93fb1bfabd7d29c5c79c4228b7c2d",
+   "result": "turtle-subm-16.nt",
+   "resultSha256": "5a14af02eef12f7a7450819c46e758b0d1d6c80d2a9a64057640f8b46eab0d90",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-17",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-17.ttl",
+   "sha256": "cba144389be9045a91946272db355d374eb92eb7481ec61bb63f2d820745c7ad",
+   "result": "turtle-subm-17.nt",
+   "resultSha256": "cf023aead405609a5a43f2d50e961d86faac0d63887d57cf2a083e0d752b2992",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-18",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-18.ttl",
+   "sha256": "ad71f2313331a61dd94f7de3e580054559c0af648b6000694fad1d909c93ec95",
+   "result": "turtle-subm-18.nt",
+   "resultSha256": "87c0fea1ad91c08dc52e81d7e5573e64230b55e3cfc7e8adf8760fc98aee9948",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-19",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-19.ttl",
+   "sha256": "f5ffdd2b779caf24d1e12d254ca7b56e45d09e510f678def88973c127628e68b",
+   "result": "turtle-subm-19.nt",
+   "resultSha256": "df6cdaca498e50724244cab8f36c0dae5e0d63cbddde1d0cf6800fa2be9e671c",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-20",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-20.ttl",
+   "sha256": "6bdd3090476a77eebb1c6dc688a8c7ec0bdc449e95ccfd64e0176563163e6f95",
+   "result": "turtle-subm-20.nt",
+   "resultSha256": "9d378b7a989bced2e8c9cec53052450130a4de7a33c9e6ddee43e5d78264b669",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-21",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-21.ttl",
+   "sha256": "ae8428532df59a8c2af00ff56e7208b6ecaf329adb4dc94d907500f12fced36c",
+   "result": "turtle-subm-21.nt",
+   "resultSha256": "9162047d20665a1ebd059b4763c7dba02d9aa7d337efe1deda09cdacda86de08",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-22",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-22.ttl",
+   "sha256": "d3a5cde129dfed43d94366af1e620b9832664743ded41e52e2db9368f5129191",
+   "result": "turtle-subm-22.nt",
+   "resultSha256": "15920a315a72aaa4451692b7ace684a7978220c170836f5915237e3f80770b1d",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-23",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-23.ttl",
+   "sha256": "e01ffb3d50f65d634d3f34c9d54b532c595730736f6ddb702c946d3779e75887",
+   "result": "turtle-subm-23.nt",
+   "resultSha256": "3ff426d6e5db47c032e6e0c9ea84515f68269c5c7ebaaf759fbce4fa41bf58fc",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-24",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-24.ttl",
+   "sha256": "8593a29c64f5cf013b6884a7659fa0c1d291d96281d039f464e1b185ca2eda80",
+   "result": "turtle-subm-24.nt",
+   "resultSha256": "1a0e0e1e82fbfbb4571c3a4d258e3c68691c8410f81cbb2b0ae2208db7eaf573",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-25",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-25.ttl",
+   "sha256": "d60a10c3a55ef7f35b0357a7ece75415d59ce3f3c27d3bf58d9a1a7af965e305",
+   "result": "turtle-subm-25.nt",
+   "resultSha256": "37765779a328527e28faf5e9edd2f7be0196f63e1425266c6b26700acbf80f46",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-26",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-26.ttl",
+   "sha256": "95db1f60e72efd7506a681695f59f7749f7c35189167210e347b3da4d7f5c3a7",
+   "result": "turtle-subm-26.nt",
+   "resultSha256": "95db1f60e72efd7506a681695f59f7749f7c35189167210e347b3da4d7f5c3a7",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-subm-27",
+   "kind": "TestTurtleEval",
+   "action": "turtle-subm-27.ttl",
+   "sha256": "f9d780110cd8bd2255739b61a57ec2ebd34a62dfc19686cd25a508a3a8a2d450",
+   "result": "turtle-subm-27.nt",
+   "resultSha256": "ec08548a349d72eb9e96a891d3f09d791202fbbf3a1694e5b18dc971eab2162c",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-eval-bad-01",
+   "kind": "TestTurtleNegativeEval",
+   "action": "turtle-eval-bad-01.ttl",
+   "sha256": "16b770f01a2ac20d75988aa23de366c2cf2daa47a52465caa3a937cd0b8ab4c0",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-eval-bad-02",
+   "kind": "TestTurtleNegativeEval",
+   "action": "turtle-eval-bad-02.ttl",
+   "sha256": "a61021fa416926ee84fdd28d0de552323c5250692e025a99c9dbd88ea394264d",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-eval-bad-03",
+   "kind": "TestTurtleNegativeEval",
+   "action": "turtle-eval-bad-03.ttl",
+   "sha256": "aa8b6169874917d50a75f9ae48cfe6c6a55999c1948a55b0bc8bbe6a42d360f2",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-eval-bad-04",
+   "kind": "TestTurtleNegativeEval",
+   "action": "turtle-eval-bad-04.ttl",
+   "sha256": "b2502cc5ab0db98ebaf9ed49abd08caa05da33f452bafc0287e474c4ba00c5b7",
+   "answer": "refused"
+  },
+  {
+   "id": "comment_following_localName",
+   "kind": "TestTurtleEval",
+   "action": "comment_following_localName.ttl",
+   "sha256": "d7ac28a3efbf23f3ffa6c25b61c9988a22067a8fb585f684ba771b5196d37714",
+   "result": "IRI_spo.nt",
+   "resultSha256": "9b59264ba4ee34a59449374914f0bd160b086cc777f5bd331779c9edac64de25",
+   "answer": "same"
+  },
+  {
+   "id": "number_sign_following_localName",
+   "kind": "TestTurtleEval",
+   "action": "number_sign_following_localName.ttl",
+   "sha256": "e0e21597b812121f0f974d3621c391fe025f57f058aa7c4eeb0d576cd5544c39",
+   "result": "number_sign_following_localName.nt",
+   "resultSha256": "a75d5cd3ac2b246124881606e456833c25c79a07ba82c8a5a8d6e86c2cd3ec19",
+   "answer": "same"
+  },
+  {
+   "id": "comment_following_PNAME_NS",
+   "kind": "TestTurtleEval",
+   "action": "comment_following_PNAME_NS.ttl",
+   "sha256": "7a697a9f280138e06ffbefab967c9ceea0f13535a245e3f81160a54deda9dece",
+   "result": "comment_following_PNAME_NS.nt",
+   "resultSha256": "6f94df824b3420e7424cf685c3faaa8a1662dea85c4f2da59e5ec0179a569345",
+   "answer": "same"
+  },
+  {
+   "id": "number_sign_following_PNAME_NS",
+   "kind": "TestTurtleEval",
+   "action": "number_sign_following_PNAME_NS.ttl",
+   "sha256": "cbf41d6fae01bd83f096492cc434a07b11bf863c75109e1fc1635904bab8a7f9",
+   "result": "number_sign_following_PNAME_NS.nt",
+   "resultSha256": "fb401fca823b8732df129afae19d16667ab413256cf61a03cce0017a5430f922",
+   "answer": "same"
+  },
+  {
+   "id": "LITERAL_LONG2_with_REVERSE_SOLIDUS",
+   "kind": "TestTurtleEval",
+   "action": "LITERAL_LONG2_with_REVERSE_SOLIDUS.ttl",
+   "sha256": "1a64e7e97a2526f7fc60bac99a71f48782ff9ce2b6e29321c2be0e1c38af471b",
+   "result": "LITERAL_LONG2_with_REVERSE_SOLIDUS.nt",
+   "resultSha256": "122791324b4196f85f723f145f88f7481f6f7e31fa994a42f5f8c46fbfe21814",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-syntax-bad-LITERAL2_with_langtag_and_datatype",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-LITERAL2_with_langtag_and_datatype.ttl",
+   "sha256": "7460b90ec9300717118cd877b478d38097837af1a56e89031d8c033cfd650305",
+   "answer": "refused"
+  },
+  {
+   "id": "two_LITERAL_LONG2s",
+   "kind": "TestTurtleEval",
+   "action": "two_LITERAL_LONG2s.ttl",
+   "sha256": "05a147ed4ae10c87a6f3232ec695efda84f06b131efef95645faa75123e2f541",
+   "result": "two_LITERAL_LONG2s.nt",
+   "resultSha256": "0ada93ce918d3d80f1a848410b04e434034a555fd894be4e554a5152c9798cb4",
+   "answer": "same"
+  },
+  {
+   "id": "langtagged_LONG_with_subtag",
+   "kind": "TestTurtleEval",
+   "action": "langtagged_LONG_with_subtag.ttl",
+   "sha256": "ef7c2c908cb4833bdcf6964d38821c89bbdd45e64cf37c4be7c721dbe9462e0f",
+   "result": "langtagged_LONG_with_subtag.nt",
+   "resultSha256": "0c5cfe8a128dacf800543a493f36864d2cbae9c78c7d73b71482d7cab5808d94",
+   "answer": "same"
+  },
+  {
+   "id": "turtle-syntax-bad-blank-label-dot-end",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-blank-label-dot-end.ttl",
+   "sha256": "319015a5cf4d105588b367a5c1a4fd79825c5e6a6fee5acbad8566a2fe94cfce",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-number-dot-in-anon",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-number-dot-in-anon.ttl",
+   "sha256": "f4fd808ba063eb3dadae97180be119a0d9929ed5845ac00cb35e0b92372a021a",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-ln-dash-start",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-ln-dash-start.ttl",
+   "sha256": "149be3bd0d3d8382d7c8000592d91c5327ced57d124f7d2efd548b50d14b033d",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-ln-escape",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-ln-escape.ttl",
+   "sha256": "b060522675f8504afe8e695c6f86fd100709b009b62d765908a5cac8a49ee05c",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-ln-escape-start",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-ln-escape-start.ttl",
+   "sha256": "193c1ab12ae01fc818d309d48da0b259357ed973154439f297f55ad228618780",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-ns-dot-end",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-ns-dot-end.ttl",
+   "sha256": "f538d5143d5b82f45657d7274182c8040f4f0c43223cbc9baeca9fde1aa32364",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-ns-dot-start",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-ns-dot-start.ttl",
+   "sha256": "30a5785ab4fe4de40f974e44172657e9f432c4c5ebbaa1997ab44394fb4ab851",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-missing-ns-dot-end",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-missing-ns-dot-end.ttl",
+   "sha256": "5ff177ed2060be1e42b9a4974b453cac8a92ca815b279010298c95c32b39ef8a",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-bad-missing-ns-dot-start",
+   "kind": "TestTurtleNegativeSyntax",
+   "action": "turtle-syntax-bad-missing-ns-dot-start.ttl",
+   "sha256": "15cc328bacb87d89e25a0d088d655887d2b7cda5163b54c5b06b3c64be178936",
+   "answer": "refused"
+  },
+  {
+   "id": "turtle-syntax-ln-dots",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-ln-dots.ttl",
+   "sha256": "1098d410f242741ad53b21a1655c11266dd033c5d01cb3326a2f66670dc07625",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-ln-colons",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-ln-colons.ttl",
+   "sha256": "38ef4ab0fbc4a46be2823023cfd5a272a638b04d695c090753d9b2ef76cdd05d",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-ns-dots",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-ns-dots.ttl",
+   "sha256": "5c5a040bf61bfda497990c6a968b46645a326c73e07297f380b13f8e45a36efb",
+   "answer": "accepted"
+  },
+  {
+   "id": "turtle-syntax-blank-label",
+   "kind": "TestTurtlePositiveSyntax",
+   "action": "turtle-syntax-blank-label.ttl",
+   "sha256": "bd99217bd7a0d2bf42e99680830b6128615ae9154a3bf40e8c9dd10671bae870",
+   "answer": "accepted"
+  }
+ ],
+ "examples": [
+  [
+   "suite\nhttp://www.w3.org/2013/TurtleTests/\naccepted turtle-syntax-file-01.ttl 0 0\naccepted turtle-syntax-file-02.ttl 13 0\n#Empty file.\naccepted turtle-syntax-file-03.ttl 31 0\n#One comment, one empty line.\n\naccepted turtle-syntax-uri-01.ttl 119 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> .\naccepted turtle-syntax-uri-02.ttl 143 0\n# x53 is capital S\n<http://www.w3.org/2013/TurtleTests/\\u0053> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> .\naccepted turtle-syntax-uri-03.ttl 147 0\n# x53 is capital S\n<http://www.w3.org/2013/TurtleTests/\\U00000053> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> .\naccepted turtle-syntax-uri-04.ttl 202 0\n# IRI with all chars in it.\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p>\n<scheme:!$%25&'()*+,-./0123456789:/@ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz~?#> .\naccepted turtle-syntax-base-01.ttl 46 0\n@base <http://www.w3.org/2013/TurtleTests/> .\naccepted turtle-syntax-base-02.ttl 43 0\nBASE <http://www.w3.org/2013/TurtleTests/>\naccepted turtle-syntax-base-03.ttl 60 0\n@base <http://www.w3.org/2013/TurtleTests/> .\n<s> <p> <o> .\naccepted turtle-syntax-base-04.ttl 57 0\nbase <http://www.w3.org/2013/TurtleTests/>\n<s> <p> <o> .\naccepted turtle-syntax-prefix-01.ttl 50 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\naccepted turtle-syntax-prefix-02.ttl 47 0\nPreFIX : <http://www.w3.org/2013/TurtleTests/>\naccepted turtle-syntax-prefix-03.ttl 60 0\nPREFIX : <http://www.w3.org/2013/TurtleTests/>\n:s :p :123 .\naccepted turtle-syntax-prefix-04.ttl 63 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p :%20 .\naccepted turtle-syntax-prefix-05.ttl 58 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n: : : .\naccepted turtle-syntax-prefix-06.ttl 159 0\n# colon is a legal pname character\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n@prefix x: <http://www.w3.org/2013/TurtleTests/> .\n:a:b:c  x:d:e:f :::: .\naccepted turtle-syntax-prefix-07.ttl 104 0\n# dash is a legal pname character\n@prefix x: <http://www.w3.org/2013/TurtleTests/> .\nx:a-b-c  x:p x:o .\naccepted turtle-syntax-prefix-08.ttl 108 0\n# underscore is a legal pname character\n@prefix x: <http://www.w3.org/2013/TurtleTests/> .\nx:_  x:p_1 x:o .\naccepted turtle-syntax-prefix-09.ttl 134 0\n# percents\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n@prefix x: <http://www.w3.org/2013/TurtleTests/> .\n:a%3E  x:%25 :a%3Eb .\naccepted turtle-syntax-string-01.ttl 89 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> \"string\" .\naccepted turtle-syntax-string-02.ttl 92 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> \"string\"@en .\naccepted turtle-syntax-string-03.ttl 95 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> \"string\"@en-uk .\naccepted turtle-syntax-string-04.ttl 89 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> 'string' .\naccepted turtle-syntax-string-05.ttl 92 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> 'string'@en .\naccepted turtle-syntax-string-06.ttl 95 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> 'string'@en-uk .\naccepted turtle-syntax-string-07.ttl 100 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> \"\"\"abc\"\"def''ghi\"\"\" .\naccepted turtle-syntax-string-08.ttl 94 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> \"\"\"abc\ndef\"\"\" .\naccepted turtle-syntax-string-09.ttl 94 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> '''abc\ndef''' .\naccepted turtle-syntax-string-10.ttl 97 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> \"\"\"abc\ndef\"\"\"@en .\naccepted turtle-syntax-string-11.ttl 97 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> '''abc\ndef'''@en .\naccepted turtle-syntax-str-esc-01.ttl 86 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> \"a\\n\" .\naccepted turtle-syntax-str-esc-02.ttl 91 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> \"a\\u0020b\" .\naccepted turtle-syntax-str-esc-03.ttl 95 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> \"a\\U00000020b\" .\naccepted turtle-syntax-pname-esc-01.ttl 102 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p :\\~\\.\\-\\!\\$\\&\\'\\(\\)\\*\\+\\,\\;\\=\\/\\?\\#\\@\\_\\%AA .\naccepted turtle-syntax-pname-esc-02.ttl 109 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p :0123\\~\\.\\-\\!\\$\\&\\'\\(\\)\\*\\+\\,\\;\\=\\/\\?\\#\\@\\_\\%AA123 .\naccepted turtle-syntax-pname-esc-03.ttl 70 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:xyz\\~ :abc\\.:  : .\naccepted turtle-syntax-bnode-01.ttl 61 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n[] :p :o .\naccepted turtle-syntax-bnode-02.ttl 61 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p [] .\naccepted turtle-syntax-bnode-03.ttl 68 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p [ :q :o ] .\naccepted turtle-syntax-bnode-04.ttl 80 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p [ :q1 :o1 ; :q2 :o2 ] .\naccepted turtle-syntax-bnode-05.ttl 80 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n[ :q1 :o1 ; :q2 :o2 ] :p :o .\naccepted turtle-syntax-bnode-06.ttl 63 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n_:a  :p :o .\naccepted turtle-syntax-bnode-07.ttl 76 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s  :p _:a .\n_:a  :p :o .\naccepted turtle-syntax-bnode-08.ttl 63 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n[ :p  :o ] .\naccepted turtle-syntax-bnode-09.ttl 79 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n[ :p  :o1,:2 ] .\n:s :p :o  .\naccepted turtle-syntax-bnode-10.ttl 100 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n\n:s1 :p :o .\n[ :p1  :o1 ; :p2 :o2 ] .\n:s2 :p :o .\naccepted turtle-syntax-number-01.ttl 14 0\n<s> <p> 123 .\naccepted turtle-syntax-number-02.ttl 15 0\n<s> <p> -123 .\naccepted turtle-syntax-number-03.ttl 15 0\n<s> <p> +123 .\n",
+   "pass 50"
+  ],
+  [
+   "suite\nhttp://www.w3.org/2013/TurtleTests/\naccepted turtle-syntax-number-04.ttl 38 0\n# This is a decimal.\n<s> <p> 123.0 . \naccepted turtle-syntax-number-05.ttl 35 0\n# This is a decimal.\n<s> <p> .1 . \naccepted turtle-syntax-number-06.ttl 39 0\n# This is a decimal.\n<s> <p> -123.0 . \naccepted turtle-syntax-number-07.ttl 39 0\n# This is a decimal.\n<s> <p> +123.0 . \naccepted turtle-syntax-number-08.ttl 34 0\n# This is an integer\n<s> <p> 123.\naccepted turtle-syntax-number-09.ttl 18 0\n<s> <p> 123.0e1 .\naccepted turtle-syntax-number-10.ttl 18 0\n<s> <p> -123e-1 .\naccepted turtle-syntax-number-11.ttl 18 0\n<s> <p> 123.E+1 .\naccepted turtle-syntax-datatypes-01.ttl 81 0\n@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .\n<s> <p> \"123\"^^xsd:byte .\naccepted turtle-syntax-datatypes-02.ttl 148 0\n@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .\n<s> <p> \"123\"^^xsd:string .\naccepted turtle-syntax-kw-01.ttl 15 0\n<s> <p> true .\naccepted turtle-syntax-kw-02.ttl 16 0\n<s> <p> false .\naccepted turtle-syntax-kw-03.ttl 60 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s a :C .\naccepted turtle-syntax-struct-01.ttl 68 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p :o1 , :o2 .\naccepted turtle-syntax-struct-02.ttl 76 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p1 :o1 ;\n   :p2 :o2 .\naccepted turtle-syntax-struct-03.ttl 81 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p1 :o1 ;\n   :p2 :o2 ;\n   .\naccepted turtle-syntax-struct-04.ttl 81 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p1 :o1 ;;\n   :p2 :o2 \n   .\naccepted turtle-syntax-struct-05.ttl 82 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p1 :o1 ;\n   :p2 :o2 ;;\n   .\naccepted turtle-syntax-lists-01.ttl 61 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p () .\naccepted turtle-syntax-lists-02.ttl 69 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p (1 \"2\" :o) .\naccepted turtle-syntax-lists-03.ttl 63 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n(1) :p (1) .\naccepted turtle-syntax-lists-04.ttl 65 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n(()) :p (()) .\naccepted turtle-syntax-lists-05.ttl 83 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n(1 2 (1 2)) :p (( \"a\") \"b\" :o) .\nrefused turtle-syntax-bad-uri-01.ttl 143 0\n# Bad IRI : space.\n<http://www.w3.org/2013/TurtleTests/ space> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> .\nrefused turtle-syntax-bad-uri-02.ttl 149 0\n# Bad IRI : bad escape\n<http://www.w3.org/2013/TurtleTests/\\u00ZZ11> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> .\nrefused turtle-syntax-bad-uri-03.ttl 151 0\n# Bad IRI : bad escape\n<http://www.w3.org/2013/TurtleTests/\\U00ZZ1111> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> .\nrefused turtle-syntax-bad-uri-04.ttl 163 0\n# Bad IRI : character escapes not allowed.\n<http://www.w3.org/2013/TurtleTests/\\n> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> .\nrefused turtle-syntax-bad-uri-05.ttl 163 0\n# Bad IRI : character escapes not allowed.\n<http://www.w3.org/2013/TurtleTests/\\/> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> .\nrefused turtle-syntax-bad-prefix-01.ttl 60 0\n# No prefix\n:s <http://www.w3.org/2013/TurtleTests/p> \"x\" .\nrefused turtle-syntax-bad-prefix-02.ttl 130 0\n# No prefix\n@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .\n<http://www.w3.org/2013/TurtleTests/s> rdf:type :C .\nrefused turtle-syntax-bad-prefix-03.ttl 37 0\n# @prefix without URI.\n@prefix ex: .\nrefused turtle-syntax-bad-prefix-04.ttl 80 0\n# @prefix without prefix name .\n@prefix <http://www.w3.org/2013/TurtleTests/> .\nrefused turtle-syntax-bad-prefix-05.ttl 70 0\n# @prefix without :\n@prefix x <http://www.w3.org/2013/TurtleTests/> .\nrefused turtle-syntax-bad-base-01.ttl 29 0\n# @base without URI.\n@base .\nrefused turtle-syntax-bad-base-02.ttl 69 0\n# @base in wrong case.\n@BASE <http://www.w3.org/2013/TurtleTests/> .\nrefused turtle-syntax-bad-base-03.ttl 94 0\n# FULL STOP used after SPARQL BASE\nBASE <http://www.w3.org/2013/TurtleTests/> .\n<s> <p> <o> .\nrefused turtle-syntax-bad-struct-01.ttl 142 0\n# Turtle is not TriG\n{ <http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> }\nrefused turtle-syntax-bad-struct-02.ttl 101 0\n# Turtle is not N3\n<http://www.w3.org/2013/TurtleTests/s> = <http://www.w3.org/2013/TurtleTests/o> .\nrefused turtle-syntax-bad-struct-03.ttl 181 0\n# Turtle is not NQuads\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> <http://www.w3.org/2013/TurtleTests/g> .\nrefused turtle-syntax-bad-struct-04.ttl 133 0\n# Turtle does not allow literals-as-subjects\n\"hello\" <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> .\nrefused turtle-syntax-bad-struct-05.ttl 135 0\n# Turtle does not allow literals-as-predicates\n<http://www.w3.org/2013/TurtleTests/s> \"hello\" <http://www.w3.org/2013/TurtleTests/o> .\nrefused turtle-syntax-bad-struct-06.ttl 128 0\n# Turtle does not allow bnodes-as-predicates\n<http://www.w3.org/2013/TurtleTests/s> [] <http://www.w3.org/2013/TurtleTests/o> .\nrefused turtle-syntax-bad-struct-07.ttl 129 0\n# Turtle does not allow bnodes-as-predicates\n<http://www.w3.org/2013/TurtleTests/s> _:p <http://www.w3.org/2013/TurtleTests/o> .\nrefused turtle-syntax-bad-kw-01.ttl 60 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s A :C .\nrefused turtle-syntax-bad-kw-02.ttl 60 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\na :p :o .\nrefused turtle-syntax-bad-kw-03.ttl 60 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p a .\nrefused turtle-syntax-bad-kw-04.ttl 63 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\ntrue :p :o .\nrefused turtle-syntax-bad-kw-05.ttl 63 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s true :o .\nrefused turtle-syntax-bad-n3-extras-01.ttl 102 0\n# {} fomulae not in Turtle\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n\n{ :a :q :c . } :p :z .\n\n",
+   "pass 49"
+  ],
+  [
+   "suite\nhttp://www.w3.org/2013/TurtleTests/\nrefused turtle-syntax-bad-n3-extras-02.ttl 79 0\n# = is not Turtle\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n\n:a = :b .\nrefused turtle-syntax-bad-n3-extras-03.ttl 145 0\n# N3 paths\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n@prefix ns: <http://www.w3.org/2013/TurtleTests/p#> .\n\n:x.\n  ns:p.\n    ns:q :p :z .\nrefused turtle-syntax-bad-n3-extras-04.ttl 132 0\n# N3 paths\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n@prefix ns: <http://www.w3.org/2013/TurtleTests/p#> .\n\n:x^ns:p :p :z .\nrefused turtle-syntax-bad-n3-extras-05.ttl 81 0\n# N3 is...of\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n\n:z is :p of :x .\nrefused turtle-syntax-bad-n3-extras-06.ttl 80 0\n# = is not Turtle\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n\n:a.:b.:c .\nrefused turtle-syntax-bad-n3-extras-07.ttl 51 0\n# @keywords is not Turtle\n@keywords a .\nx a Item .\nrefused turtle-syntax-bad-n3-extras-08.ttl 51 0\n# @keywords is not Turtle\n@keywords a .\nx a Item .\nrefused turtle-syntax-bad-n3-extras-09.ttl 80 0\n# => is not Turtle\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s => :o .\nrefused turtle-syntax-bad-n3-extras-10.ttl 80 0\n# <= is not Turtle\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s <= :o .\nrefused turtle-syntax-bad-n3-extras-11.ttl 89 0\n# @forSome is not Turtle\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n@forSome :x .\nrefused turtle-syntax-bad-n3-extras-12.ttl 87 0\n# @forAll is not Turtle\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n@forAll :x .\nrefused turtle-syntax-bad-n3-extras-13.ttl 50 0\n# @keywords is not Turtle\n@keywords .\nx @a Item .\nrefused turtle-syntax-bad-struct-08.ttl 126 0\n# No DOT\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o>\nrefused turtle-syntax-bad-struct-09.ttl 136 0\n# Too many DOT\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> . .\nrefused turtle-syntax-bad-struct-10.ttl 258 0\n# Too many DOT\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> . .\n<http://www.w3.org/2013/TurtleTests/s1> <http://www.w3.org/2013/TurtleTests/p1> <http://www.w3.org/2013/TurtleTests/o1> .\nrefused turtle-syntax-bad-struct-11.ttl 132 0\n# Trailing ;\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> ;\nrefused turtle-syntax-bad-struct-12.ttl 79 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> \nrefused turtle-syntax-bad-struct-13.ttl 79 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> \nrefused turtle-syntax-bad-struct-14.ttl 108 0\n# Literal as subject\n\"abc\" <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/p>  .\nrefused turtle-syntax-bad-struct-15.ttl 110 0\n# Literal as predicate\n<http://www.w3.org/2013/TurtleTests/s> \"abc\" <http://www.w3.org/2013/TurtleTests/p>  .\nrefused turtle-syntax-bad-struct-16.ttl 105 0\n# BNode as predicate\n<http://www.w3.org/2013/TurtleTests/s> [] <http://www.w3.org/2013/TurtleTests/p>  .\nrefused turtle-syntax-bad-struct-17.ttl 106 0\n# BNode as predicate\n<http://www.w3.org/2013/TurtleTests/s> _:a <http://www.w3.org/2013/TurtleTests/p>  .\nrefused turtle-syntax-bad-lang-01.ttl 106 0\n# Bad lang tag\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> \"string\"@1 .\nrefused turtle-syntax-bad-esc-01.ttl 107 0\n# Bad string escape\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> \"a\\zb\" .\nrefused turtle-syntax-bad-esc-02.ttl 109 0\n# Bad string escape\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> \"\\uWXYZ\" .\nrefused turtle-syntax-bad-esc-03.ttl 113 0\n# Bad string escape\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> \"\\U0000WXYZ\" .\nrefused turtle-syntax-bad-esc-04.ttl 113 0\n# Bad string escape\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> \"\\U0000WXYZ\" .\nrefused turtle-syntax-bad-pname-01.ttl 84 0\n# ~ must be escaped.\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:a~b :p :o .\nrefused turtle-syntax-bad-pname-02.ttl 80 0\n# Bad %-sequence\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:a%2 :p :o .\nrefused turtle-syntax-bad-pname-03.ttl 88 0\n# No \\u (x39 is \"9\")\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:a\\u0039 :p :o .\nrefused turtle-syntax-bad-string-01.ttl 64 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p \"abc' .\nrefused turtle-syntax-bad-string-02.ttl 64 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p 'abc\" .\nrefused turtle-syntax-bad-string-03.ttl 66 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p '''abc' .\nrefused turtle-syntax-bad-string-04.ttl 68 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p \"\"\"abc''' .\nrefused turtle-syntax-bad-string-05.ttl 99 0\n# Long literal with missing end\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p \"\"\"abc\ndef\nrefused turtle-syntax-bad-string-06.ttl 95 0\n# Long literal with 4\"\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p \"\"\"abc\"\"\"\"@en .\nrefused turtle-syntax-bad-string-07.ttl 95 0\n# Long literal with 4'\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p '''abc''''@en .\nrefused turtle-syntax-bad-num-01.ttl 88 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> 123.abc .\nrefused turtle-syntax-bad-num-02.ttl 85 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> 123e .\nrefused turtle-syntax-bad-num-03.ttl 87 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> 123abc .\nrefused turtle-syntax-bad-num-04.ttl 86 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> 0x123 .\nrefused turtle-syntax-bad-num-05.ttl 84 0\n<http://www.w3.org/2013/TurtleTests/s> <http://www.w3.org/2013/TurtleTests/p> +-1 .\n",
+   "pass 42"
+  ],
+  [
+   "suite\nhttp://www.w3.org/2013/TurtleTests/\nrefused turtle-eval-bad-01.ttl 163 0\n# Bad IRI : good escape, bad charcater\n<http://www.w3.org/2013/TurtleTests/\\u0020> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> .\nrefused turtle-eval-bad-02.ttl 148 0\n# Bad IRI : hex 3C is <\n<http://www.w3.org/2013/TurtleTests/\\u003C> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> .\nrefused turtle-eval-bad-03.ttl 148 0\n# Bad IRI : hex 3E is >\n<http://www.w3.org/2013/TurtleTests/\\u003E> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> .\nrefused turtle-eval-bad-04.ttl 133 0\n# Bad IRI\n<http://www.w3.org/2013/TurtleTests/{abc}> <http://www.w3.org/2013/TurtleTests/p> <http://www.w3.org/2013/TurtleTests/o> .\nrefused turtle-syntax-bad-LITERAL2_with_langtag_and_datatype.ttl 126 0\n<http://example.org/resource> <http://example.org#pred> \"value\"@en^^<http://www.w3.org/1999/02/22-rdf-syntax-ns#XMLLiteral> .\nrefused turtle-syntax-bad-blank-label-dot-end.ttl 64 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n_:b1. :p :o .\nrefused turtle-syntax-bad-number-dot-in-anon.ttl 75 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n\n:s\n\t:p [\n\t\t:p1 27.\n\t] .\nrefused turtle-syntax-bad-ln-dash-start.ttl 62 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p :-o .\nrefused turtle-syntax-bad-ln-escape.ttl 63 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p :o%2 .\nrefused turtle-syntax-bad-ln-escape-start.ttl 63 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s :p :%2o .\nrefused turtle-syntax-bad-ns-dot-end.ttl 74 0\n@prefix eg. : <http://www.w3.org/2013/TurtleTests/> .\neg.:s eg.:p eg.:o .\nrefused turtle-syntax-bad-ns-dot-start.ttl 74 0\n@prefix .eg : <http://www.w3.org/2013/TurtleTests/> .\n.eg:s .eg:p .eg:o .\nrefused turtle-syntax-bad-missing-ns-dot-end.ttl 29 0\nvalid:s valid:p invalid.:o .\nrefused turtle-syntax-bad-missing-ns-dot-start.ttl 41 0\n.undefined:s .undefined:p .undefined:o .\naccepted turtle-syntax-ln-dots.ttl 100 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s.1 :p.1 :o.1 .\n:s..2 :p..2 :o..2.\n:3.s :3.p :3.\naccepted turtle-syntax-ln-colons.ttl 133 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n:s:1 :p:1 :o:1 .\n:s::2 :p::2 :o::2 .\n:3:s :3:p :3 .\n::s ::p ::o .\n::s: ::p: ::o: .\naccepted turtle-syntax-ns-dots.ttl 73 0\n@prefix e.g: <http://www.w3.org/2013/TurtleTests/> .\ne.g:s e.g:p e.g:o .\naccepted turtle-syntax-blank-label.ttl 167 0\n@prefix : <http://www.w3.org/2013/TurtleTests/> .\n_:0b :p :o . # Starts with digit\n_:_b :p :o . # Starts with underscore\n_:b.0 :p :o . # Contains dot, ends with digit\n",
+   "pass 18"
+  ]
+ ]
+}

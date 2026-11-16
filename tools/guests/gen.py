@@ -45,7 +45,7 @@ def vectors(g):
     """The acceptance vectors: the prompt's examples, or a raw-request spec's."""
     v = g["vectors"]
     if v.startswith("spec:"):
-        return [tuple(e) for e in json.loads((APP / f"specs/{v[5:]}/spec.json").read_text())["examples"]]
+        return [tuple(e) for p in v[5:].split("+") for e in json.loads((APP / f"specs/{p}/spec.json").read_text())["examples"]]
     return [(e["request"], e["response"]) for e in json.loads((APP / f"prompts/{v}.prompt.json").read_text())["app"]["examples"]]
 
 
