@@ -13,7 +13,7 @@
 # A request is "<generator> <output>\n" and a ustar archive of the step's inputs,
 # and must fit the request bound. A step with "split" runs once per piece of that
 # file, cut at line ends (only before a line matching its "breakBefore", where it has one), each piece
-# staged with the step's other inputs and kept that much smaller; a step with "each" runs once per element of a JSON array;
+# staged with the step's other inputs and kept that much smaller; a step with "each" runs once per element of a JSON array, or once per file of its "files";
 # a step with "glob" runs once per tracked file its patterns match (cut the same
 # way; with "head": true only its first piece), with its "inputs" beside it;
 # a step with "lines" runs once per line of that file, beside its "inputs" (those
@@ -133,8 +133,9 @@ for f in "$steps_file" "generators/$program"/steps/*.json; do [ ! -e "$f" ] || j
       run "$gen" "$out" "$work/stage" "$lines_path" $ins
     done < "$lines_path"
   elif [ -n "$each_path" ]; then
-    # One request per element of a JSON array, each staged as the file itself beside the step's inputs.
-    js "$(echo "$step" | js .each.array)" < "$each_path" > "$work/elements"
+    # One request per element of a JSON array, or per file of "files", each staged as the file itself beside the step's inputs.
+    each_files=$(echo "$step" | js .each.files)
+    for f in ${each_files:-"$each_path"}; do js "$(echo "$step" | js .each.array)" < "$f"; done > "$work/elements"
     while read -r element; do
       rm -rf "$work/stage"; mkdir -p "$work/stage/$(dirname "$each_path")"
       printf '%s\n' "$element" > "$work/stage/$each_path"
