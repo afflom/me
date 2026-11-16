@@ -153,7 +153,7 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
       ...(Number.isNaN(start) ? { undated: true } : {}), ...(method ? { method } : {}), ...(uid ? { uid, sequence } : {}), ...(recurrence ? { recurrence } : {}), ...(more.length ? { more } : {}) };
   }
   if (base.media === "contactCard") {
-    // Every property it holds, read as RFC 6350 defines it (site/read/vcard.mjs).
+    // Every property it holds, read as RFC 6350 defines it (the vcard guest, site/read/read.mjs).
     const card = reader?.readCard ? reader.readCard(text) : null;
     if (card) {
       // Of several instances, the one the card prefers (5.3 PREF: 1 is most preferred).
@@ -496,8 +496,9 @@ export default async function start({ app, reason, $ }) {
   // fetches none of it.
   let deviceOpen = null;
   const deviceOf = () => (deviceOpen ??= (async () => {
-    const [{ openDevice }, { ingestInto }, host] = await Promise.all([import("./device/device.mjs"), import("./google/ingest.mjs"), import("./device/host.mjs")]);
-    const source = openDevice({ decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted, lanes: host.lanes(), source: (rest) => line(`source ${rest}`), arrived: noteArrived });
+    const [{ openDevice }, { ingestInto }, host, read] = await Promise.all([import("./device/device.mjs"), import("./google/ingest.mjs"), import("./device/host.mjs"), import("./read/read.mjs")]);
+    reader ??= read;
+    const source = openDevice({ decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted, vcard: read.vcard, lanes: host.lanes(), source: (rest) => line(`source ${rest}`), arrived: noteArrived });
     return { source, ask: (more = {}) => host.plan({ decide: (rest) => line(`host ${rest}`), halted, ...more }) };
   })());
   async function reportDevice(t) {
