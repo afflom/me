@@ -3,6 +3,7 @@
 \useglossary{lexlean.std.nat@1.2.0}
 \useglossary{prism.arch@1.0.0}
 \importmodule{Foundation.Person.V1.Model}
+\importmodule{PersonIcf}
 \title{Person guarantees}
 \begin{semanticmodule}
 theorem{
@@ -83,6 +84,40 @@ theorem{
     ],
     scrutinee: frame
   }
+}
+
+definition{
+  name: icfCountedFrom,
+  parameters: [position : Nat, rows : (List PersonIcf::IcfEntity)],
+  result: Bool,
+  body: (match rows
+    | List.nil => (position =? (PersonIcf::icfEntityCount))
+    | List.cons row rest => (icfCountedFrom (position + 1) rest)),
+  recursive_argument: rows
+}
+
+definition{
+  name: icfKindedRows,
+  parameters: [rows : (List PersonIcf::IcfEntity)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => ((if (prim equal (project row kind) "category" : Bool) then (not (prim equal (project row code) "" : Bool)) else (((prim equal (project row kind) "chapter" : Bool) || (prim equal (project row kind) "block" : Bool)) && (prim equal (project row code) "" : Bool))) && (icfKindedRows rest))),
+  recursive_argument: rows
+}
+
+theorem{
+  name: icfCounted,
+  parameters: [],
+  statement: ((icfCountedFrom 0 (PersonIcf::icfRows)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: icfKinded,
+  parameters: [],
+  statement: ((icfKindedRows (PersonIcf::icfRows)) = true),
+  proof: decide{}
 }
 \end{semanticmodule}
 \end{lexlean}
