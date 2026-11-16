@@ -576,10 +576,10 @@ suite = "\n".join([
     'import assert from "node:assert/strict";',
     'import { readFileSync } from "node:fs";',
     'import test from "node:test";',
-    'import { GUEST, openGuest } from "../site/read/guest.mjs";',
+    'import { GUESTS, openGuest } from "../site/read/guest.mjs";',
     "",
     'const examples = new Map(JSON.parse(readFileSync("test/oracle/vcard.json", "utf8")).examples.map((e) => [e.id, e]));',
-    'const guest = await openGuest(readFileSync(new URL(GUEST.path, new URL("../site/read/", import.meta.url))), GUEST.sha256);',
+    'const guest = await openGuest(readFileSync(new URL(GUESTS.vcard.path, new URL("../site/read/", import.meta.url))), GUESTS.vcard.sha256);',
     "const reads = async (ids) => { for (const id of ids) assert.equal(await guest(`line\\n${examples.get(id).raw}`), JSON.stringify(examples.get(id).expect), id); };",
     "",
 ] + [f"// enforces: {e['id']}\ntest({json.dumps(e['kind'] + ' ' + e['name'])}, () => reads({json.dumps(e['examples'])}));" for e in inventory if e["implemented"] and e["examples"]] + [""])
