@@ -13,6 +13,7 @@ import { openGuest } from '../google/guest.mjs';
 import { ingestInto } from '../google/ingest.mjs';
 import { GUEST, HOST_GUEST, SOURCE_GUEST, openDevice, formatOf, formatOfText, contactCards, mboxMessages, calendarItems, contactItems, LIMIT } from './device.mjs';
 import { HOST, SURFACES, present, lanes, plan } from './host.mjs';
+import { vcard } from '../read/read.mjs';
 
 const { corpus: ORACLE } = JSON.parse(await readFile(new URL('../../test/oracle/corpus.json', import.meta.url), 'utf8'));
 const example = (id) => { const found = ORACLE.find((c) => c.id === id); if (!found) throw new Error(`no oracle example ${id}`); return found.raw; };
@@ -74,7 +75,7 @@ ok(two.length === 1 && (two[0].match(/^BEGIN:VEVENT\r$/gm) ?? []).length === 2 &
 const timed = ORACLE.filter((c) => c.kind === 'calendar');
 const rooms = timed.flatMap((c) => calendarItems(c.raw));
 ok(timed.length > 40 && timed.every((c) => calendarItems(c.raw).length >= 1) && timed.every((c) => !/^METHOD:/m.test(c.raw) || calendarItems(c.raw).every((e) => e.includes(/^METHOD:[^\r\n]*/m.exec(c.raw)[0]))) && rooms.every((e) => !/[^\r]\n/.test(e) && /^BEGIN:VCALENDAR\r\n/.test(e) && /\r\nEND:VCALENDAR\r\n$/.test(e)), 'every calendar example of RFC 5545 and RFC 5546 with an event, a task or a journal entry splits into items in CRLF lines, free/busy included, each keeping its METHOD');
-ok(contactItems(CARDS.slice(0, 2).join('')).length === 2 && contactItems(CARDS.slice(0, 2).join('').replace(/\r\n/g, '\n')).length === 2, 'one item per card, CRLF or LF');
+ok(contactItems(CARDS.slice(0, 2).join(''), vcard).length === 2 && contactItems(CARDS.slice(0, 2).join('').replace(/\r\n/g, '\n'), vcard).length === 2, 'one item per card, CRLF or LF');
 
 // DV-02: the device as a source, through a fake folder, the detectors and the vault.
 const fileOf = (name, text, lastModified = 1) => {
@@ -100,7 +101,7 @@ const decide = async (line) => { asked.push(line); return folder(line); };
 
 let stop = 'no';
 const store = memoryStore();
-const device = openDevice({ decide, ingest: ingestInto({ vault }), store, halted: () => stop, now: () => Date.parse('2026-11-13T00:00:00Z') });
+const device = openDevice({ decide, ingest: ingestInto({ vault }), vcard, store, halted: () => stop, now: () => Date.parse('2026-11-13T00:00:00Z') });
 const takeout = dirOf('Takeout', [
   dirOf('Mail', [entryOf(fileOf('All mail.mbox', MBOX))]),
   dirOf('Calendar', [entryOf(fileOf('me.ics', ICS))]),
@@ -161,16 +162,25 @@ const doe = ORACLE.find((c) => c.kind === 'contact' && /^N:/m.test(c.raw)).raw;
 const doeName = /^N:(.*)\r$/m.exec(doe)[1];
 const doeEmail = /^EMAIL[^:]*:(.*)\r$/m.exec(doe)[1];
 const lone = /^EMAIL[^:]*:(.*)\r$/m.exec(ORACLE.filter((c) => c.kind === 'contact' && /^EMAIL/m.test(c.raw)).find((c) => !c.raw.includes(doeEmail)).raw)[1];
-const cards = contactCards([{ name: [doeName], email: [doeEmail], tel: [] }, { name: [], email: [lone] }]);
-ok(contactItems(cards).length === 2 && cards.includes(`FN:${doeName.replace(/;/g, '\\;')}`) && cards.includes(`FN:${lone}`), 'picked contacts become vCards');
+const cards = contactCards([{ name: [doeName], email: [doeEmail], tel: [] }, { name: [], email: [lone] }], vcard);
+ok(contactItems(cards, vcard).length === 2 && cards.includes(`FN:${doeName.replace(/;/g, '\\;')}`) && cards.includes(`FN:${lone}`), 'picked contacts become vCards');
 ok((await device.readContacts([{ name: [/^FN[^:]*:(.*)\r$/m.exec(doe)[1]], email: [doeEmail] }])).store === 1, 'picked contacts are kept');
+// A value's line break never adds a request line, a contact the guest refuses
+// (its request beyond the limit) is passed over, and a card beyond the limit
+// (J. Doe's own, its EMAIL line repeated until it is) is still one CRLF card.
+const doeLine = /^EMAIL[^\r]*\r\n/m.exec(doe)[0];
+ok(!contactCards([{ name: [`${doeName}\nemail ${lone}`], email: [doeEmail] }], vcard).includes(`EMAIL:${lone}`), 'a line break in a picked value adds no property');
+ok(contactCards([{ name: [doeName.repeat(600)], email: [doeEmail] }], vcard) === '' && (await device.readContacts([{ name: [doeName.repeat(600)], email: [doeEmail] }])).skip === 1, 'a contact the guest refuses is passed over');
+const big = doe.replace(doeLine, doeLine.repeat(Math.ceil(4096 / doeLine.length) + 1));
+const bigItems = contactItems(`${big.replace(/\r\n/g, '\n')}trailing words\n${doe}`, vcard);
+ok(big.length > 4096 && bigItems.length === 2 && bigItems[0] === big.trimEnd() + '\r\n' && !/[^\r]\n/.test(bigItems[0]), 'a card beyond the guest\'s limit is cut at END:VCARD and kept in CRLF lines');
 
 // The host rule: lanes from the cores and memory the browser reports, as uorc states it.
 ok(lanes({ hardwareConcurrency: 8, deviceMemory: 8 }) === 8 && lanes({ hardwareConcurrency: 32, deviceMemory: 64 }) === HOST.coreLimit && lanes({ hardwareConcurrency: 8, deviceMemory: 1 }) === 2 && lanes({ hardwareConcurrency: 8 }) === 4 && lanes({}) === 1, 'lanes follow the host rule');
 {
   let inFlight = 0, most = 0;
   const slow = { put: async () => { inFlight += 1; most = Math.max(most, inFlight); await new Promise((r) => setTimeout(r, 5)); inFlight -= 1; return { outcome: 'store' }; } };
-  const wide = openDevice({ decide: folder, ingest: ingestInto({ vault: slow }), store: memoryStore(), lanes: 3 });
+  const wide = openDevice({ decide: folder, ingest: ingestInto({ vault: slow }), vcard, store: memoryStore(), lanes: 3 });
   const many = CARDS.join('');
   const t = await wide.readFiles([fileOf('many.vcf', many)]);
   ok(CARDS.length > 3 && t.store === CARDS.length && most === 3, `items are kept on every lane and no more: ${most}`);

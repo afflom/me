@@ -1,0 +1,968 @@
+\begin{lexlean}{PrismSenses}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismSosaTable}
+\title{Text application model}
+\begin{semanticmodule}
+structure{
+  name: SnTok,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: ok, type: Bool}, {name: text, type: Bytes}, {name: next, type: Nat}]
+}
+
+structure{
+  name: SnRead,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: pos, type: Nat},
+    {name: mode, type: Nat},
+    {name: subj, type: Bytes},
+    {name: pred, type: Bytes},
+    {name: stack, type: Bytes},
+    {name: out, type: Bytes},
+    {name: pre, type: Bytes},
+    {name: base, type: Bytes},
+    {name: bn, type: Nat},
+    {name: mayEnd, type: Bool},
+    {name: err, type: Bytes},
+    {name: done, type: Bool}
+  ]
+}
+
+definition{
+  name: snAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => 0
+    | Option.some b => (prim to_nat b : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{name: snLen, parameters: [s : Bytes], result: Nat, body: (prim length s : Nat)}
+
+definition{
+  name: snSlice,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes)) | Option.none => 0x | Option.some b => b)
+}
+
+definition{
+  name: snCut,
+  parameters: [s : Bytes, a : Nat, b : Nat],
+  result: Bytes,
+  body: (snSlice s a (prim subtract b a : Nat))
+}
+
+definition{
+  name: snFrom,
+  parameters: [s : Bytes, a : Nat],
+  result: Bytes,
+  body: (snSlice s a (prim subtract (snLen s) a : Nat))
+}
+
+definition{
+  name: snSame,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bool,
+  body: (prim equal (prim compare_bytes a b : Ordering) (prim compare_bytes 0x00 0x00 : Ordering) : Bool),
+  axioms: [propext]
+}
+
+definition{
+  name: snOctets,
+  parameters: [],
+  result: Bytes,
+  body: 0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff
+}
+
+definition{
+  name: snByte,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (snSlice (snOctets) (prim remainder n 256 0 : Nat) 1)
+}
+
+definition{
+  name: snU16,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (prim append (snByte (prim quotient n 256 0 : Nat)) (snByte n) : Bytes)
+}
+
+definition{
+  name: snG16,
+  parameters: [s : Bytes, k : Nat],
+  result: Nat,
+  body: ((prim multiply (snAt s k) 256 : Nat) + (snAt s (k + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snDecFrom,
+  parameters: [n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let d : Bytes := (prim append (snByte (48 + (prim remainder n 10 0 : Nat))) acc : Bytes); (if (n <? 10) then d else (snDecFrom (prim quotient n 10 0 : Nat) d rest)))),
+  recursive_argument: fuel
+}
+
+definition{name: snDec, parameters: [n : Nat], result: Bytes, body: (snDecFrom n 0x 8)}
+
+definition{
+  name: snMatchFrom,
+  parameters: [s : Bytes, i : Nat, p : Bytes, k : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((snLen p) <? (k + 1)) then true else (if ((snAt s (i + k)) =? (snAt p k)) then (if ((snLen s) <? ((i + k) + 1)) then false else (snMatchFrom s i p (k + 1) rest)) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snMatch,
+  parameters: [s : Bytes, i : Nat, p : Bytes],
+  result: Bool,
+  body: (snMatchFrom s i p 0 (snLen p)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snFindByte,
+  parameters: [s : Bytes, i : Nat, b : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (snLen s)
+    | Nat.succ rest => (if ((snLen s) <? (i + 1)) then (snLen s) else (if ((snAt s i) =? b) then i else (snFindByte s (i + 1) b rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snByteAt,
+  parameters: [s : Bytes, i : Nat, b : Nat],
+  result: Nat,
+  body: (snFindByte s i b (snLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snLineEnd,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (snByteAt s i 10),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snFindFrom,
+  parameters: [s : Bytes, i : Nat, p : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (snLen s)
+    | Nat.succ rest => (if ((snLen s) <? (i + 1)) then (snLen s) else (if (snMatch s i p) then i else (snFindFrom s (i + 1) p rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snFind,
+  parameters: [s : Bytes, i : Nat, p : Bytes],
+  result: Nat,
+  body: (snFindFrom s i p (snLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snHasLineFrom,
+  parameters: [s : Bytes, i : Nat, line : Bytes, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((snLen s) <? (i + 1)) then false else (if (snMatch s i line) then true else (snHasLineFrom s ((snLineEnd s i) + 1) line rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snHasLine,
+  parameters: [s : Bytes, line : Bytes],
+  result: Bool,
+  body: (snHasLineFrom s 0 line (snLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snIsWs,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 32) || ((b =? 10) || ((b =? 13) || (b =? 9))))
+}
+
+definition{name: snIsDigit, parameters: [b : Nat], result: Bool, body: ((47 <? b) && (b <? 58))}
+
+definition{
+  name: snIsAlpha,
+  parameters: [b : Nat],
+  result: Bool,
+  body: (((64 <? b) && (b <? 91)) || ((96 <? b) && (b <? 123)))
+}
+
+definition{
+  name: snIsPn,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((snIsDigit b) || ((snIsAlpha b) || ((b =? 95) || ((b =? 45) || ((b =? 46) || (127 <? b))))))
+}
+
+definition{
+  name: snHexVal,
+  parameters: [b : Nat],
+  result: Nat,
+  body: (if (snIsDigit b) then (prim subtract b 48 : Nat) else (if ((96 <? b) && (b <? 103)) then (prim subtract b 87 : Nat) else (if ((64 <? b) && (b <? 71)) then (prim subtract b 55 : Nat) else 16)))
+}
+
+definition{
+  name: snHexFrom,
+  parameters: [s : Bytes, i : Nat, n : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (n =? 0) then acc else (let h : Nat := (snHexVal (snAt s i)); (if (h =? 16) then 16777216 else (snHexFrom s (i + 1) (prim subtract n 1 : Nat) ((prim multiply acc 16 : Nat) + h) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snHex,
+  parameters: [s : Bytes, i : Nat, n : Nat],
+  result: Nat,
+  body: (snHexFrom s i n 0 9),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snUtf8,
+  parameters: [cp : Nat],
+  result: Bytes,
+  body: (if (cp <? 128) then (snByte cp) else (if (cp <? 2048) then (prim append (snByte (192 + (prim quotient cp 64 0 : Nat))) (snByte (128 + (prim remainder (prim quotient cp 1 0 : Nat) 64 0 : Nat))) : Bytes) else (if (cp <? 65536) then (prim append (snByte (224 + (prim quotient cp 4096 0 : Nat))) (prim append (snByte (128 + (prim remainder (prim quotient cp 64 0 : Nat) 64 0 : Nat))) (snByte (128 + (prim remainder (prim quotient cp 1 0 : Nat) 64 0 : Nat))) : Bytes) : Bytes) else (prim append (snByte (240 + (prim quotient cp 262144 0 : Nat))) (prim append (snByte (128 + (prim remainder (prim quotient cp 4096 0 : Nat) 64 0 : Nat))) (prim append (snByte (128 + (prim remainder (prim quotient cp 64 0 : Nat) 64 0 : Nat))) (snByte (128 + (prim remainder (prim quotient cp 1 0 : Nat) 64 0 : Nat))) : Bytes) : Bytes) : Bytes))))
+}
+
+definition{
+  name: snSkipFrom,
+  parameters: [s : Bytes, i : Nat, comment : Bool, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (snAt s i); (if ((snLen s) <? (i + 1)) then i else (if comment then (if ((b =? 10) || (b =? 13)) then (snSkipFrom s (i + 1) false rest) else (snSkipFrom s (i + 1) true rest)) else (if (snIsWs b) then (snSkipFrom s (i + 1) false rest) else (if (b =? 35) then (snSkipFrom s (i + 1) true rest) else i)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snSkip,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (snSkipFrom s i false (snLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snPnEndFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (snIsPn (snAt s i)) then (snPnEndFrom s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snPnEnd,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (snPnEndFrom s i (snLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snDigitsEndFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (snIsDigit (snAt s i)) then (snDigitsEndFrom s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snDigitsEnd,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (snDigitsEndFrom s i (snLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snTrimDots,
+  parameters: [s : Bytes, k : Nat, start : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => k
+    | Nat.succ rest => (if ((start <? k) && ((snAt s (prim subtract k 1 : Nat)) =? 46)) then (snTrimDots s (prim subtract k 1 : Nat) start rest) else k)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snSchemeFrom,
+  parameters: [r : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (let b : Nat := (snAt r i); (if ((snLen r) <? (i + 1)) then 0 else (if (b =? 58) then (i + 1) else (if ((snIsAlpha b) || ((snIsDigit b) || ((b =? 43) || ((b =? 45) || (b =? 46))))) then (snSchemeFrom r (i + 1) rest) else 0))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snSchemeEnd,
+  parameters: [r : Bytes],
+  result: Nat,
+  body: (if (snIsAlpha (snAt r 0)) then (snSchemeFrom r 1 (snLen r)) else 0),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snPathStart,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((snLen s) <? (i + 1)) then i else (if (((snAt s i) =? 47) || ((snAt s i) =? 63)) then i else (snPathStart s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snLastSlash,
+  parameters: [s : Bytes, i : Nat, best : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => best
+    | Nat.succ rest => (if ((snLen s) <? (i + 1)) then best else (snLastSlash s (i + 1) (if ((snAt s i) =? 47) then (i + 1) else best) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snResolve,
+  parameters: [base : Bytes, r : Bytes],
+  result: Bytes,
+  body: (if (not ((snSchemeEnd r) =? 0)) then r else (if ((snLen base) =? 0) then 0x else (if ((snLen r) =? 0) then base else (let nofrag : Bytes := (snSlice base 0 (snByteAt base 0 35)); (let se : Nat := (snSchemeEnd base); (if ((snAt r 0) =? 35) then (prim append nofrag r : Bytes) else (if (snMatch r 0 0x2f2f) then (prim append (snSlice base 0 se) r : Bytes) else (let p : Nat := (snPathStart nofrag (if (snMatch base se 0x2f2f) then (se + 2) else se) (snLen nofrag)); (if ((snAt r 0) =? 47) then (prim append (snSlice base 0 p) r : Bytes) else (let path : Bytes := (snSlice nofrag 0 (snByteAt nofrag 0 63)); (let k : Nat := (snLastSlash path 0 0 (snLen path)); (if (k <? (p + 1)) then (prim append (snSlice base 0 p) (prim append 0x2f r : Bytes) : Bytes) else (prim append (snSlice path 0 k) r : Bytes))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snIriBad,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b <? 33) || ((b =? 60) || ((b =? 34) || ((b =? 123) || ((b =? 125) || ((b =? 124) || ((b =? 94) || (b =? 96))))))))
+}
+
+definition{
+  name: snUcharAt,
+  parameters: [s : Bytes, j : Nat],
+  result: Nat,
+  body: (if ((snAt s (j + 1)) =? 117) then (snHex s (j + 2) 4) else (if ((snAt s (j + 1)) =? 85) then (snHex s (j + 2) 8) else 16777216)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snUcharLen,
+  parameters: [s : Bytes, j : Nat],
+  result: Nat,
+  body: (if ((snAt s (j + 1)) =? 117) then 6 else 10),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snIriPlainEnd,
+  parameters: [s : Bytes, j : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => j
+    | Nat.succ rest => (let b : Nat := (snAt s j); (if (((snLen s) <? (j + 1)) || ((b =? 62) || ((b =? 92) || (snIriBad b)))) then j else (snIriPlainEnd s (j + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snIriRefFrom,
+  parameters: [s : Bytes, j : Nat, acc : Bytes, fuel : Nat],
+  result: SnTok,
+  body: (match fuel
+    | Nat.zero => (record SnTok {ok := false, text := (prim utf8_encode "not Turtle" : Bytes), next := 0})
+    | Nat.succ rest => (let e : Nat := (snIriPlainEnd s j (snLen s)); (let b : Nat := (snAt s e); (let sofar : Bytes := (prim append acc (snCut s j e) : Bytes); (if ((snLen s) <? (e + 1)) then (record SnTok {ok := false, text := (prim utf8_encode "not Turtle" : Bytes), next := 0}) else (if (b =? 62) then (record SnTok {ok := true, text := sofar, next := (e + 1)}) else (if (b =? 92) then (let cp : Nat := (snUcharAt s e); (if (1114111 <? cp) then (record SnTok {ok := false, text := (prim utf8_encode "not Turtle" : Bytes), next := 0}) else (snIriRefFrom s (e + (snUcharLen s e)) (prim append sofar (snUtf8 cp) : Bytes) rest))) else (record SnTok {ok := false, text := (prim utf8_encode "not Turtle" : Bytes), next := 0})))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snIriRef,
+  parameters: [s : Bytes, i : Nat],
+  result: SnTok,
+  body: (snIriRefFrom s (i + 1) 0x (snLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snPrefixFrom,
+  parameters: [pre : Bytes, i : Nat, name : Bytes, fuel : Nat],
+  result: SnTok,
+  body: (match fuel
+    | Nat.zero => (record SnTok {ok := false, text := 0x, next := 0})
+    | Nat.succ rest => (if ((snLen pre) <? (i + 1)) then (record SnTok {ok := false, text := 0x, next := 0}) else (let e : Nat := (snLineEnd pre i); (if ((snMatch pre i name) && ((snAt pre (i + (snLen name))) =? 0)) then (record SnTok {ok := true, text := (snCut pre ((i + (snLen name)) + 1) e), next := 0}) else (snPrefixFrom pre (e + 1) name rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snLocalEnd,
+  parameters: [s : Bytes, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => k
+    | Nat.succ rest => (let b : Nat := (snAt s k); (if ((snIsPn b) || (b =? 58)) then (snLocalEnd s (k + 1) rest) else (if ((b =? 37) && ((snHex s (k + 1) 2) <? 256)) then (snLocalEnd s (k + 3) rest) else k)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snPname,
+  parameters: [s : Bytes, i : Nat, pre : Bytes],
+  result: SnTok,
+  body: (let j : Nat := (snPnEnd s i); (if (not ((snAt s j) =? 58)) then (record SnTok {ok := false, text := 0x, next := 0}) else (let name : Bytes := (snCut s i j); (let k : Nat := (snTrimDots s (snLocalEnd s (j + 1) (snLen s)) (j + 1) (snLen s)); (let found : SnTok := (snPrefixFrom pre 0 name (snLen pre)); (if ((snAt s k) =? 92) then (record SnTok {ok := false, text := (prim utf8_encode "local name escapes are not read yet" : Bytes), next := 0}) else (if (not (project found ok)) then (record SnTok {ok := false, text := (prim append (prim utf8_encode "prefix " : Bytes) (prim append name (prim utf8_encode ": is not bound" : Bytes) : Bytes) : Bytes), next := 0}) else (record SnTok {ok := true, text := (prim append 0x3c (prim append (project found text) (prim append (snCut s (j + 1) k) 0x3e : Bytes) : Bytes) : Bytes), next := k})))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snOr,
+  parameters: [t : SnTok],
+  result: SnTok,
+  body: (if (project t ok) then t else (if ((snLen (project t text)) =? 0) then (record SnTok {ok := false, text := (prim utf8_encode "not Turtle" : Bytes), next := 0}) else t))
+}
+
+definition{
+  name: snIri,
+  parameters: [s : Bytes, i : Nat, base : Bytes, pre : Bytes],
+  result: SnTok,
+  body: (if ((snAt s i) =? 60) then (let t : SnTok := (snIriRef s i); (if (not (project t ok)) then t else (let r : Bytes := (snResolve base (project t text)); (if ((snLen r) =? 0) then (record SnTok {ok := false, text := (prim utf8_encode "a relative IRI has no base" : Bytes), next := 0}) else (record SnTok {ok := true, text := (prim append 0x3c (prim append r 0x3e : Bytes) : Bytes), next := (project t next)}))))) else (snPname s i pre)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snLabel,
+  parameters: [s : Bytes, i : Nat],
+  result: SnTok,
+  body: (let j : Nat := (snTrimDots s (snPnEnd s (i + 2)) (i + 2) (snLen s)); (if (j =? (i + 2)) then (record SnTok {ok := false, text := (prim utf8_encode "not Turtle" : Bytes), next := 0}) else (record SnTok {ok := true, text := (prim append (prim utf8_encode "_:l" : Bytes) (snCut s (i + 2) j) : Bytes), next := j}))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snLitCp,
+  parameters: [cp : Nat],
+  result: Bytes,
+  body: (if (cp =? 34) then 0x5c22 else (if (cp =? 92) then 0x5c5c else (if (cp =? 10) then 0x5c6e else (if (cp =? 13) then 0x5c72 else (snUtf8 cp)))))
+}
+
+definition{
+  name: snEchar,
+  parameters: [c : Nat],
+  result: Nat,
+  body: (if (c =? 116) then 9 else (if (c =? 98) then 8 else (if (c =? 110) then 10 else (if (c =? 114) then 13 else (if (c =? 102) then 12 else (if (c =? 34) then 34 else (if (c =? 39) then 39 else (if (c =? 92) then 92 else 0))))))))
+}
+
+definition{
+  name: snStrPlainEnd,
+  parameters: [s : Bytes, j : Nat, q : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => j
+    | Nat.succ rest => (let b : Nat := (snAt s j); (if (((snLen s) <? (j + 1)) || ((b =? q) || ((b =? 92) || ((b =? 10) || ((b =? 13) || (b =? 34)))))) then j else (snStrPlainEnd s (j + 1) q rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snStringFrom,
+  parameters: [s : Bytes, j : Nat, q : Nat, triple : Bool, acc : Bytes, fuel : Nat],
+  result: SnTok,
+  body: (match fuel
+    | Nat.zero => (record SnTok {ok := false, text := (prim utf8_encode "not Turtle" : Bytes), next := 0})
+    | Nat.succ rest => (let e : Nat := (snStrPlainEnd s j q (snLen s)); (let b : Nat := (snAt s e); (let sofar : Bytes := (prim append acc (snCut s j e) : Bytes); (if ((snLen s) <? (e + 1)) then (record SnTok {ok := false, text := (prim utf8_encode "not Turtle" : Bytes), next := 0}) else (if (b =? 92) then (let c : Nat := (snAt s (e + 1)); (if (not ((snEchar c) =? 0)) then (snStringFrom s (e + 2) q triple (prim append sofar (snLitCp (snEchar c)) : Bytes) rest) else (let cp : Nat := (snUcharAt s e); (if (1114111 <? cp) then (record SnTok {ok := false, text := (prim utf8_encode "not Turtle" : Bytes), next := 0}) else (snStringFrom s (e + (snUcharLen s e)) q triple (prim append sofar (snLitCp cp) : Bytes) rest))))) else (if triple then (if ((b =? q) && (((snAt s (e + 1)) =? q) && ((snAt s (e + 2)) =? q))) then (record SnTok {ok := true, text := sofar, next := (e + 3)}) else (snStringFrom s (e + 1) q triple (prim append sofar (snLitCp b) : Bytes) rest)) else (if (b =? q) then (record SnTok {ok := true, text := sofar, next := (e + 1)}) else (if (b =? 34) then (snStringFrom s (e + 1) q triple (prim append sofar 0x5c22 : Bytes) rest) else (record SnTok {ok := false, text := (prim utf8_encode "not Turtle" : Bytes), next := 0})))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snLangEnd,
+  parameters: [s : Bytes, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => k
+    | Nat.succ rest => (let b : Nat := (snAt s k); (if ((snIsAlpha b) || ((snIsDigit b) || (b =? 45))) then (snLangEnd s (k + 1) rest) else k))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snQuoted,
+  parameters: [s : Bytes, i : Nat, base : Bytes, pre : Bytes],
+  result: SnTok,
+  body: (let q : Nat := (snAt s i); (let triple : Bool := (((snAt s (i + 1)) =? q) && ((snAt s (i + 2)) =? q)); (let t : SnTok := (snStringFrom s (if triple then (i + 3) else (i + 1)) q triple 0x (snLen s)); (if (not (project t ok)) then t else (let j : Nat := (project t next); (let lex : Bytes := (prim append 0x22 (prim append (project t text) 0x22 : Bytes) : Bytes); (if ((snAt s j) =? 64) then (let k : Nat := (snLangEnd s (j + 1) (snLen s)); (if (k =? (j + 1)) then (record SnTok {ok := false, text := (prim utf8_encode "not Turtle" : Bytes), next := 0}) else (record SnTok {ok := true, text := (prim append lex (snCut s j k) : Bytes), next := k}))) else (if (snMatch s j 0x5e5e) then (let d : SnTok := (snOr (snIri s (j + 2) base pre)); (if (not (project d ok)) then d else (record SnTok {ok := true, text := (prim append lex (prim append 0x5e5e (project d text) : Bytes) : Bytes), next := (project d next)}))) else (record SnTok {ok := true, text := lex, next := j}))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snNumber,
+  parameters: [s : Bytes, i : Nat],
+  result: SnTok,
+  body: (let k : Nat := (if (((snAt s i) =? 43) || ((snAt s i) =? 45)) then (i + 1) else i); (let da : Nat := (snDigitsEnd s k); (let dot : Bool := ((snAt s da) =? 46); (let db : Nat := (if dot then (snDigitsEnd s (da + 1)) else da); (let whole : Bool := (k <? da); (let frac : Bool := (dot && ((da + 1) <? db)); (let xa : Nat := (if (((snAt s (db + 1)) =? 43) || ((snAt s (db + 1)) =? 45)) then (db + 2) else (db + 1)); (let xb : Nat := (snDigitsEnd s xa); (let expo : Bool := ((((snAt s db) =? 101) || ((snAt s db) =? 69)) && (xa <? xb)); (if (expo && (whole || frac)) then (record SnTok {ok := true, text := (prim append 0x22 (prim append (snCut s i xb) 0x225e5e3c687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d6123646f75626c653e : Bytes) : Bytes), next := xb}) else (if frac then (record SnTok {ok := true, text := (prim append 0x22 (prim append (snCut s i db) 0x225e5e3c687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d6123646563696d616c3e : Bytes) : Bytes), next := db}) else (if whole then (record SnTok {ok := true, text := (prim append 0x22 (prim append (snCut s i da) 0x225e5e3c687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d6123696e74656765723e : Bytes) : Bytes), next := da}) else (record SnTok {ok := false, text := 0x, next := 0}))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snWordAt,
+  parameters: [s : Bytes, i : Nat, w : Bytes],
+  result: Bool,
+  body: (let b : Nat := (snAt s (i + (snLen w))); ((snMatch s i w) && (not ((snIsPn b) || (b =? 58))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snLiteral,
+  parameters: [s : Bytes, i : Nat, base : Bytes, pre : Bytes],
+  result: SnTok,
+  body: (let b : Nat := (snAt s i); (if ((b =? 34) || (b =? 39)) then (snQuoted s i base pre) else (let n : SnTok := (snNumber s i); (if (project n ok) then n else (if (snWordAt s i (prim utf8_encode "true" : Bytes)) then (record SnTok {ok := true, text := 0x2274727565225e5e3c687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d6123626f6f6c65616e3e, next := (i + 4)}) else (if (snWordAt s i (prim utf8_encode "false" : Bytes)) then (record SnTok {ok := true, text := 0x2266616c7365225e5e3c687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d6123626f6f6c65616e3e, next := (i + 5)}) else (record SnTok {ok := false, text := 0x, next := 0}))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snRdfType,
+  parameters: [],
+  result: Bytes,
+  body: (prim utf8_encode "<http://www.w3.org/1999/02/22-rdf-syntax-ns#type>" : Bytes)
+}
+
+definition{
+  name: snEmit,
+  parameters: [out : Bytes, a : Bytes, p : Bytes, o : Bytes],
+  result: Bytes,
+  body: (let line : Bytes := (prim append a (prim append 0x20 (prim append p (prim append 0x20 (prim append o 0x202e0a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes); (if (snHasLine out line) then out else (prim append out line : Bytes))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snFrame,
+  parameters: [a : Bytes, p : Bytes],
+  result: Bytes,
+  body: (let f : Bytes := (prim append (snU16 (snLen a)) (prim append a (prim append (snU16 (snLen p)) p : Bytes) : Bytes) : Bytes); (prim append f (snU16 (snLen f)) : Bytes))
+}
+
+definition{
+  name: snTopStart,
+  parameters: [stack : Bytes],
+  result: Nat,
+  body: (prim subtract (prim subtract (snLen stack) 2 : Nat) (snG16 stack (prim subtract (snLen stack) 2 : Nat)) : Nat),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snTopSubj,
+  parameters: [stack : Bytes],
+  result: Bytes,
+  body: (let a : Nat := (snTopStart stack); (snSlice stack (a + 2) (snG16 stack a))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snTopPred,
+  parameters: [stack : Bytes],
+  result: Bytes,
+  body: (let a : Nat := (snTopStart stack); (let n : Nat := (snG16 stack a); (snSlice stack ((a + 4) + n) (snG16 stack ((a + 2) + n))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snFresh,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (prim append (prim utf8_encode "_:b" : Bytes) (snDec n) : Bytes)
+}
+
+definition{
+  name: snClose,
+  parameters: [r : SnRead, i : Nat],
+  result: SnRead,
+  body: (let st : Bytes := (project r stack); (let p : Bytes := (snTopPred st); (let below : Bytes := (snSlice st 0 (snTopStart st)); (if ((snLen p) =? 0) then (record SnRead {pos := (i + 1), mode := 1, subj := (project r subj), pred := (project r pred), stack := below, out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := true, err := (project r err), done := (project r done)}) else (record SnRead {pos := (i + 1), mode := 3, subj := (snTopSubj st), pred := p, stack := below, out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project r err), done := (project r done)}))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snCiFrom,
+  parameters: [s : Bytes, i : Nat, w : Bytes, k : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((snLen w) <? (k + 1)) then true else (let b : Nat := (snAt s (i + k)); (if ((if ((64 <? b) && (b <? 91)) then (b + 32) else b) =? (snAt w k)) then (snCiFrom s i w (k + 1) rest) else false)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snDirective,
+  parameters: [s : Bytes, i : Nat, w : Bytes],
+  result: Nat,
+  body: (if (((snAt s i) =? 64) && (snMatch s (i + 1) w)) then 1 else (if ((snCiFrom s i w 0 (snLen w)) && (snIsWs (snAt s (i + (snLen w))))) then 2 else 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snDirectiveEnd,
+  parameters: [s : Bytes, k : Nat, form : Nat],
+  result: Nat,
+  body: (if (form =? 2) then k else (let d : Nat := (snSkip s k); (if ((snAt s d) =? 46) then (d + 1) else 0))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snPrefixStep,
+  parameters: [r : SnRead, s : Bytes, i : Nat, form : Nat],
+  result: SnRead,
+  body: (let j : Nat := (snSkip s (if (form =? 1) then (i + 7) else (i + 6))); (let k : Nat := (snPnEnd s j); (let a : Nat := (snSkip s (k + 1)); (if ((not ((snAt s k) =? 58)) || (not ((snAt s a) =? 60))) then (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (prim utf8_encode "not Turtle" : Bytes), done := (project r done)}) else (let t : SnTok := (snIriRef s a); (if (not (project t ok)) then (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project t text), done := (project r done)}) else (let iri : Bytes := (snResolve (project r base) (project t text)); (let e : Nat := (snDirectiveEnd s (project t next) form); (if ((snLen iri) =? 0) then (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (prim utf8_encode "a relative IRI has no base" : Bytes), done := (project r done)}) else (if (e =? 0) then (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (prim utf8_encode "not Turtle" : Bytes), done := (project r done)}) else (record SnRead {pos := e, mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (prim append (snCut s j k) (prim append 0x00 (prim append iri (prim append 0x0a (project r pre) : Bytes) : Bytes) : Bytes) : Bytes), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project r err), done := (project r done)}))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snBaseStep,
+  parameters: [r : SnRead, s : Bytes, i : Nat, form : Nat],
+  result: SnRead,
+  body: (let a : Nat := (snSkip s (if (form =? 1) then (i + 5) else (i + 4))); (if (not ((snAt s a) =? 60)) then (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (prim utf8_encode "not Turtle" : Bytes), done := (project r done)}) else (let t : SnTok := (snIriRef s a); (if (not (project t ok)) then (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project t text), done := (project r done)}) else (let iri : Bytes := (snResolve (project r base) (project t text)); (let e : Nat := (snDirectiveEnd s (project t next) form); (if ((snLen iri) =? 0) then (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (prim utf8_encode "a relative IRI has no base" : Bytes), done := (project r done)}) else (if (e =? 0) then (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (prim utf8_encode "not Turtle" : Bytes), done := (project r done)}) else (record SnRead {pos := e, mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := iri, bn := (project r bn), mayEnd := (project r mayEnd), err := (project r err), done := (project r done)}))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snStepSubject,
+  parameters: [r : SnRead, s : Bytes, i : Nat, b : Nat],
+  result: SnRead,
+  body: (if (not ((snDirective s i (prim utf8_encode "prefix" : Bytes)) =? 0)) then (snPrefixStep r s i (snDirective s i (prim utf8_encode "prefix" : Bytes))) else (if (not ((snDirective s i (prim utf8_encode "base" : Bytes)) =? 0)) then (snBaseStep r s i (snDirective s i (prim utf8_encode "base" : Bytes))) else (if (b =? 91) then (let j : Nat := (snSkip s (i + 1)); (let node : Bytes := (snFresh (project r bn)); (if ((snAt s j) =? 93) then (record SnRead {pos := (j + 1), mode := 1, subj := node, pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := ((project r bn) + 1), mayEnd := false, err := (project r err), done := (project r done)}) else (record SnRead {pos := (i + 1), mode := 1, subj := node, pred := (project r pred), stack := (prim append (project r stack) (snFrame 0x 0x) : Bytes), out := (project r out), pre := (project r pre), base := (project r base), bn := ((project r bn) + 1), mayEnd := false, err := (project r err), done := (project r done)})))) else (if (b =? 40) then (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (prim utf8_encode "collections are not read yet" : Bytes), done := (project r done)}) else (if (snMatch s i 0x5f3a) then (let t : SnTok := (snLabel s i); (if (project t ok) then (record SnRead {pos := (project t next), mode := 1, subj := (project t text), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := false, err := (project r err), done := (project r done)}) else (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project t text), done := (project r done)}))) else (let t : SnTok := (snOr (snIri s i (project r base) (project r pre))); (if (project t ok) then (record SnRead {pos := (project t next), mode := 1, subj := (project t text), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := false, err := (project r err), done := (project r done)}) else (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project t text), done := (project r done)})))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snIsA,
+  parameters: [s : Bytes, i : Nat],
+  result: Bool,
+  body: (let c : Nat := (snAt s (i + 1)); (((snAt s i) =? 97) && (((snLen s) <? (i + 2)) || ((snIsWs c) || ((c =? 60) || ((c =? 34) || ((c =? 91) || (c =? 39)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snStepPredicate,
+  parameters: [r : SnRead, s : Bytes, i : Nat, b : Nat],
+  result: SnRead,
+  body: (let nested : Bool := (not ((snLen (project r stack)) =? 0)); (if ((b =? 93) && nested) then (snClose r i) else (if ((b =? 46) && ((project r mayEnd) && (not nested))) then (record SnRead {pos := (i + 1), mode := 0, subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project r err), done := (project r done)}) else (if ((b =? 59) && (project r mayEnd)) then (record SnRead {pos := (i + 1), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project r err), done := (project r done)}) else (if (snIsA s i) then (record SnRead {pos := (i + 1), mode := 2, subj := (project r subj), pred := (snRdfType), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project r err), done := (project r done)}) else (let t : SnTok := (snOr (snIri s i (project r base) (project r pre))); (if (project t ok) then (record SnRead {pos := (project t next), mode := 2, subj := (project r subj), pred := (project t text), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project r err), done := (project r done)}) else (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project t text), done := (project r done)})))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snStepObject,
+  parameters: [r : SnRead, s : Bytes, i : Nat, b : Nat],
+  result: SnRead,
+  body: (if (b =? 91) then (let node : Bytes := (snFresh (project r bn)); (record SnRead {pos := (i + 1), mode := 1, subj := node, pred := (project r pred), stack := (prim append (project r stack) (snFrame (project r subj) (project r pred)) : Bytes), out := (snEmit (project r out) (project r subj) (project r pred) node), pre := (project r pre), base := (project r base), bn := ((project r bn) + 1), mayEnd := true, err := (project r err), done := (project r done)})) else (if (b =? 40) then (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (prim utf8_encode "collections are not read yet" : Bytes), done := (project r done)}) else (if (snMatch s i 0x5f3a) then (let t : SnTok := (snLabel s i); (if (project t ok) then (record SnRead {pos := (project t next), mode := 3, subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (snEmit (project r out) (project r subj) (project r pred) (project t text)), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project r err), done := (project r done)}) else (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project t text), done := (project r done)}))) else (let l : SnTok := (snLiteral s i (project r base) (project r pre)); (if (project l ok) then (record SnRead {pos := (project l next), mode := 3, subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (snEmit (project r out) (project r subj) (project r pred) (project l text)), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project r err), done := (project r done)}) else (if (not ((snLen (project l text)) =? 0)) then (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project l text), done := (project r done)}) else (let t : SnTok := (snOr (snIri s i (project r base) (project r pre))); (if (project t ok) then (record SnRead {pos := (project t next), mode := 3, subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (snEmit (project r out) (project r subj) (project r pred) (project t text)), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project r err), done := (project r done)}) else (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project t text), done := (project r done)}))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snStepAfter,
+  parameters: [r : SnRead, i : Nat, b : Nat],
+  result: SnRead,
+  body: (let nested : Bool := (not ((snLen (project r stack)) =? 0)); (if (b =? 44) then (record SnRead {pos := (i + 1), mode := 2, subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project r err), done := (project r done)}) else (if (b =? 59) then (record SnRead {pos := (i + 1), mode := 1, subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := true, err := (project r err), done := (project r done)}) else (if ((b =? 46) && (not nested)) then (record SnRead {pos := (i + 1), mode := 0, subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project r err), done := (project r done)}) else (if ((b =? 93) && nested) then (snClose r i) else (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (prim utf8_encode "not Turtle" : Bytes), done := (project r done)})))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snStep,
+  parameters: [r : SnRead, s : Bytes],
+  result: SnRead,
+  body: (let i : Nat := (snSkip s (project r pos)); (let b : Nat := (snAt s i); (let m : Nat := (project r mode); (if ((snLen s) <? (i + 1)) then (if ((m =? 0) && ((snLen (project r stack)) =? 0)) then (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (project r err), done := true}) else (record SnRead {pos := (project r pos), mode := (project r mode), subj := (project r subj), pred := (project r pred), stack := (project r stack), out := (project r out), pre := (project r pre), base := (project r base), bn := (project r bn), mayEnd := (project r mayEnd), err := (prim utf8_encode "not Turtle" : Bytes), done := (project r done)})) else (if (m =? 0) then (snStepSubject r s i b) else (if (m =? 1) then (snStepPredicate r s i b) else (if (m =? 2) then (snStepObject r s i b) else (snStepAfter r i b)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snLoop,
+  parameters: [r : SnRead, s : Bytes, fuel : Nat],
+  result: SnRead,
+  body: (match fuel
+    | Nat.zero => r
+    | Nat.succ rest => (if ((project r done) || (not ((snLen (project r err)) =? 0))) then r else (snLoop (snStep r s) s rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snReadTurtle,
+  parameters: [s : Bytes, base : Bytes],
+  result: SnRead,
+  body: (snLoop (record SnRead {pos := 0, mode := 0, subj := 0x, pred := 0x, stack := 0x, out := 0x, pre := 0x, base := base, bn := 0, mayEnd := false, err := 0x, done := false}) s ((snLen s) + 8)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snSosaStart,
+  parameters: [],
+  result: Bytes,
+  body: (prim utf8_encode "<http://www.w3.org/ns/sosa/" : Bytes)
+}
+
+definition{
+  name: snKindFrom,
+  parameters: [tab : Bytes, i : Nat, name : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if ((snLen tab) <? (i + 1)) then 0 else (let k : Nat := (i + (snLen name)); (if ((snMatch tab i name) && ((snAt tab k) =? 32)) then (let c : Nat := (snAt tab (k + 1)); (if (c =? 99) then 1 else (if (c =? 111) then 2 else (if (c =? 100) then 3 else 0)))) else (snKindFrom tab ((snLineEnd tab i) + 1) name rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snKind,
+  parameters: [name : Bytes],
+  result: Nat,
+  body: (if ((snLen name) =? 0) then 0 else (snKindFrom (PrismSosaTable::sosaTerms) 0 name (snLen (PrismSosaTable::sosaTerms)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snSosaName,
+  parameters: [out : Bytes, a : Nat, b : Nat],
+  result: Bytes,
+  body: (if ((snMatch out a (snSosaStart)) && ((snAt out a) =? 60)) then (snCut out (a + 27) (prim subtract b 1 : Nat)) else 0x),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snNote,
+  parameters: [acc : Bytes, name : Bytes],
+  result: Bytes,
+  body: (let w : Bytes := (prim append (prim utf8_encode " sosa:" : Bytes) name : Bytes); (if (((snLen name) =? 0) || (not ((snKind name) =? 0))) then acc else (if ((snFind (prim append acc 0x20 : Bytes) 0 (prim append w 0x20 : Bytes)) <? (snLen acc)) then acc else (prim append acc w : Bytes)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snUnknownFrom,
+  parameters: [out : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((snLen out) <? (i + 1)) then acc else (let e : Nat := (snLineEnd out i); (let a : Nat := (snByteAt out i 32); (let b : Nat := (snByteAt out (a + 1) 32); (snUnknownFrom out (e + 1) (snNote (snNote (snNote acc (snSosaName out i a)) (snSosaName out (a + 1) b)) (snSosaName out (b + 1) (prim subtract e 2 : Nat))) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snJudge,
+  parameters: [out : Bytes, i : Nat, a : Nat, b : Nat, e : Nat],
+  result: Bytes,
+  body: (let p : Bytes := (snSosaName out (a + 1) b); (let k : Nat := (snKind p); (let head : Nat := (snAt out (b + 1)); (let o : Bytes := (snSosaName out (b + 1) (prim subtract e 2 : Nat)); (if (k =? 1) then (prim append (prim utf8_encode "refused: sosa:" : Bytes) (prim append p (prim utf8_encode " is a class, not a property" : Bytes) : Bytes) : Bytes) else (if ((k =? 3) && (not (head =? 34))) then (prim append (prim utf8_encode "refused: sosa:" : Bytes) (prim append p (prim utf8_encode " takes a literal" : Bytes) : Bytes) : Bytes) else (if ((k =? 2) && (head =? 34)) then (prim append (prim utf8_encode "refused: sosa:" : Bytes) (prim append p (prim utf8_encode " takes a resource" : Bytes) : Bytes) : Bytes) else (if (((snMatch out (a + 1) (snRdfType)) && ((b =? ((a + 1) + (snLen (snRdfType)))) && (not ((snLen o) =? 0)))) && (not ((snKind o) =? 1))) then (prim append (prim utf8_encode "refused: sosa:" : Bytes) (prim append o (prim utf8_encode " is a property, not a class" : Bytes) : Bytes) : Bytes) else 0x)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snJudgeFrom,
+  parameters: [out : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (prim append (prim utf8_encode "conforms " : Bytes) (snDec n) : Bytes)
+    | Nat.succ rest => (if ((snLen out) <? (i + 1)) then (prim append (prim utf8_encode "conforms " : Bytes) (snDec n) : Bytes) else (let e : Nat := (snLineEnd out i); (let a : Nat := (snByteAt out i 32); (let b : Nat := (snByteAt out (a + 1) 32); (let v : Bytes := (snJudge out i a b e); (if ((snLen v) =? 0) then (snJudgeFrom out (e + 1) (n + 1) rest) else v))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snCheck,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let r : SnRead := (snReadTurtle s 0x); (if (not ((snLen (project r err)) =? 0)) then (prim append (prim utf8_encode "refused: " : Bytes) (project r err) : Bytes) else (let out : Bytes := (project r out); (let unknown : Bytes := (snUnknownFrom out 0 0x (snLen out)); (if (not ((snLen unknown) =? 0)) then (prim append (prim utf8_encode "refused: not SOSA terms:" : Bytes) unknown : Bytes) else (snJudgeFrom out 0 0 (snLen out))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snFieldFrom,
+  parameters: [body : Bytes, i : Nat, key : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((snLen body) <? (i + 1)) then 0x else (let e : Nat := (snLineEnd body i); (if (snMatch body i key) then (snCut body (i + (snLen key)) e) else (snFieldFrom body (e + 1) key rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snField,
+  parameters: [body : Bytes, key : Bytes],
+  result: Bytes,
+  body: (snFieldFrom body 0 key (snLen body)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{name: snIsBad, parameters: [b : Nat], result: Bool, body: ((snIriBad b) || (b =? 92))}
+
+definition{
+  name: snOfClass,
+  parameters: [b : Nat, c : Nat],
+  result: Bool,
+  body: (if (c =? 0) then (snIsDigit b) else (if (c =? 1) then ((snIsAlpha b) || ((snIsDigit b) || ((b =? 95) || ((b =? 43) || ((b =? 47) || (b =? 45)))))) else (if (c =? 2) then (((96 <? b) && (b <? 123)) || ((snIsDigit b) || (b =? 45))) else (if (c =? 3) then ((snIsDigit b) || ((96 <? b) && (b <? 103))) else (if (c =? 4) then (not ((snIsBad b) || (b =? 62))) else (31 <? b))))))
+}
+
+definition{
+  name: snAllFrom,
+  parameters: [v : Bytes, a : Nat, b : Nat, c : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if (b <? (a + 1)) then true else (if (snOfClass (snAt v a) c) then (snAllFrom v (a + 1) b c rest) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snAll,
+  parameters: [v : Bytes, a : Nat, b : Nat, c : Nat],
+  result: Bool,
+  body: ((a <? b) && (snAllFrom v a b c (snLen v))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snRfc3339,
+  parameters: [v : Bytes],
+  result: Bool,
+  body: (let n : Nat := (snLen v); (let f : Nat := (if ((snAt v 19) =? 46) then (snDigitsEnd v 20) else 19); (let z : Nat := (snAt v f); ((snAll v 0 4 0) && (((snAt v 4) =? 45) && ((snAll v 5 7 0) && (((snAt v 7) =? 45) && ((snAll v 8 10 0) && ((((snAt v 10) =? 84) || ((snAt v 10) =? 116)) && ((snAll v 11 13 0) && (((snAt v 13) =? 58) && ((snAll v 14 16 0) && (((snAt v 16) =? 58) && ((snAll v 17 19 0) && (((f =? 19) || (20 <? f)) && ((((z =? 90) || (z =? 122)) && (n =? (f + 1))) || (((z =? 43) || (z =? 45)) && ((snAll v (f + 1) (f + 3) 0) && (((snAt v (f + 3)) =? 58) && ((snAll v (f + 4) (f + 6) 0) && (n =? (f + 6)))))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snDecimal,
+  parameters: [v : Bytes, a : Nat, b : Nat],
+  result: Bool,
+  body: (let k : Nat := (if ((snAt v a) =? 45) then (a + 1) else a); (let d : Nat := (snDigitsEnd v k); ((k <? d) && (((d =? b) || (((snAt v d) =? 46) && (((d + 1) <? b) && ((snDigitsEnd v (d + 1)) =? b)))) && (not (b <? d)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snEscFrom,
+  parameters: [v : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((snLen v) <? (i + 1)) then acc else (snEscFrom v (i + 1) (prim append acc (snLitCp (snAt v i)) : Bytes) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snInstant,
+  parameters: [o : Bytes, part : Bytes, rel : Bytes, v : Bytes],
+  result: Bytes,
+  body: (let x : Bytes := (prim append o (prim append part 0x3e : Bytes) : Bytes); (prim append (prim append o (prim append (prim utf8_encode ".time> <http://www.w3.org/2006/time#" : Bytes) (prim append rel (prim append (prim utf8_encode "> " : Bytes) (prim append x 0x202e0a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) (prim append (prim append x (prim append 0x20 (prim append (snRdfType) (prim append (prim utf8_encode " <http://www.w3.org/2006/time#Instant>" : Bytes) 0x202e0a : Bytes) : Bytes) : Bytes) : Bytes) (prim append x (prim append 0x203c687474703a2f2f7777772e77332e6f72672f323030362f74696d6523696e5853444461746554696d655374616d703e2022 (prim append v (prim append 0x225e5e3c687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d61236461746554696d655374616d703e 0x202e0a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes))
+}
+
+definition{
+  name: snObs,
+  parameters: [
+    flat : Bool,
+    base : Bytes,
+    now : Bytes,
+    prop : Bytes,
+    sensor : Bytes,
+    value : Bytes,
+    dtype : Bytes,
+    start : Bytes,
+    stop : Bytes
+  ],
+  result: Bytes,
+  body: (let timed : Bool := (not ((snLen start) =? 0)); (if flat then (prim append prop (prim append 0x20 (prim append (if timed then (prim append start (prim append 0x2f (prim append stop 0x20 : Bytes) : Bytes) : Bytes) else 0x) (prim append value 0x0a : Bytes) : Bytes) : Bytes) : Bytes) else (let o : Bytes := (prim append 0x3c (prim append base (prim append (prim utf8_encode "senses/" : Bytes) (prim append now (prim append 0x23 prop : Bytes) : Bytes) : Bytes) : Bytes) : Bytes); (let lead : Bytes := (prim append o (prim utf8_encode "> <http://www.w3.org/ns/sosa/" : Bytes) : Bytes); (prim append (prim append o (prim append (prim utf8_encode "> " : Bytes) (prim append (snRdfType) (prim append (prim utf8_encode " <http://www.w3.org/ns/sosa/Observation>" : Bytes) 0x202e0a : Bytes) : Bytes) : Bytes) : Bytes) (prim append (prim append lead (prim append (prim utf8_encode "madeBySensor> <" : Bytes) (prim append base (prim append (prim utf8_encode "senses#" : Bytes) (prim append sensor (prim append 0x3e 0x202e0a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) (prim append (prim append lead (prim append (prim utf8_encode "observedProperty> <" : Bytes) (prim append base (prim append (prim utf8_encode "senses#" : Bytes) (prim append prop (prim append 0x3e 0x202e0a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) (prim append (prim append lead (prim append (prim utf8_encode "hasFeatureOfInterest> <" : Bytes) (prim append base (prim append (prim utf8_encode "#me>" : Bytes) 0x202e0a : Bytes) : Bytes) : Bytes) : Bytes) (prim append (prim append lead (prim append 0x726573756c7454696d653e2022 (prim append now (prim append 0x225e5e3c687474703a2f2f7777772e77332e6f72672f323030312f584d4c536368656d61236461746554696d653e 0x202e0a : Bytes) : Bytes) : Bytes) : Bytes) (prim append (prim append lead (prim append 0x68617353696d706c65526573756c743e2022 (prim append (snEscFrom value 0 0x (snLen value)) (prim append 0x22 (prim append (if ((snLen dtype) =? 0) then 0x else (prim append (prim utf8_encode "^^<http://www.w3.org/2001/XMLSchema#" : Bytes) (prim append dtype 0x3e : Bytes) : Bytes)) 0x202e0a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) (if timed then (prim append (prim append lead (prim append (prim utf8_encode "phenomenonTime> " : Bytes) (prim append o (prim append (prim utf8_encode ".time>" : Bytes) 0x202e0a : Bytes) : Bytes) : Bytes) : Bytes) (prim append (prim append o (prim append (prim utf8_encode ".time> " : Bytes) (prim append (snRdfType) (prim append (prim utf8_encode " <http://www.w3.org/2006/time#Interval>" : Bytes) 0x202e0a : Bytes) : Bytes) : Bytes) : Bytes) (prim append (snInstant o (prim utf8_encode ".begin" : Bytes) (prim utf8_encode "hasBeginning" : Bytes) start) (snInstant o (prim utf8_encode ".end" : Bytes) (prim utf8_encode "hasEnd" : Bytes) stop) : Bytes) : Bytes) : Bytes) else 0x) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snTimed,
+  parameters: [flat : Bool, base : Bytes, now : Bytes, v : Bytes, prop : Bytes],
+  result: SnTok,
+  body: (let a : Nat := (snByteAt v 0 32); (let b : Nat := (snByteAt v (a + 1) 32); (let uid : Bytes := (snFrom v (b + 1)); (if ((b <? (snLen v)) && ((snRfc3339 (snSlice v 0 a)) && ((snRfc3339 (snCut v (a + 1) b)) && (snAll uid 0 (snLen uid) 5)))) then (record SnTok {ok := true, text := (snObs flat base now prop (prim utf8_encode "calendar" : Bytes) uid 0x (snSlice v 0 a) (snCut v (a + 1) b)), next := 0}) else (record SnTok {ok := false, text := 0x, next := 0}))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snAddress,
+  parameters: [v : Bytes],
+  result: Bool,
+  body: (((snLen v) =? 71) && ((snMatch v 0 (prim utf8_encode "sha256:" : Bytes)) && (snAll v 7 71 3))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snSense,
+  parameters: [flat : Bool, body : Bytes, base : Bytes, now : Bytes, k : Nat],
+  result: SnTok,
+  body: (if (k =? 0) then (let v : Bytes := (snField body (prim utf8_encode "local " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (if (not (snRfc3339 v)) then (record SnTok {ok := false, text := (prim utf8_encode "refused: local is not an RFC 3339 date-time" : Bytes), next := 0}) else (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "localTime" : Bytes) (prim utf8_encode "clock" : Bytes) v (prim utf8_encode "dateTime" : Bytes) 0x 0x), next := 0})))) else (if (k =? 1) then (let v : Bytes := (snField body (prim utf8_encode "zone " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (if (not (snAll v 0 (snLen v) 1)) then (record SnTok {ok := false, text := (prim utf8_encode "refused: zone is not a time zone name" : Bytes), next := 0}) else (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "timeZone" : Bytes) (prim utf8_encode "clock" : Bytes) v 0x 0x 0x), next := 0})))) else (if (k =? 2) then (let v : Bytes := (snField body (prim utf8_encode "event " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (let t : SnTok := (snTimed flat base now v (prim utf8_encode "scheduleNow" : Bytes)); (if (project t ok) then t else (record SnTok {ok := false, text := (prim utf8_encode "refused: event is not start, end and UID" : Bytes), next := 0}))))) else (if (k =? 3) then (let v : Bytes := (snField body (prim utf8_encode "next " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (let t : SnTok := (snTimed flat base now v (prim utf8_encode "scheduleNext" : Bytes)); (if (project t ok) then t else (record SnTok {ok := false, text := (prim utf8_encode "refused: next is not start, end and UID" : Bytes), next := 0}))))) else (if (k =? 4) then (let v : Bytes := (snField body (prim utf8_encode "identity " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (if (not (snAddress v)) then (record SnTok {ok := false, text := (prim utf8_encode "refused: identity is not a sha256 address" : Bytes), next := 0}) else (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "identity" : Bytes) (prim utf8_encode "identity" : Bytes) v 0x 0x 0x), next := 0})))) else (if (k =? 5) then (let v : Bytes := (snField body (prim utf8_encode "functioning " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (if (not (snAddress v)) then (record SnTok {ok := false, text := (prim utf8_encode "refused: functioning is not a sha256 address" : Bytes), next := 0}) else (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "functioningProfile" : Bytes) (prim utf8_encode "functioning" : Bytes) v 0x 0x 0x), next := 0})))) else (if (k =? 6) then (let v : Bytes := (snField body (prim utf8_encode "place " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (if (not (snAll v 0 (snLen v) 2)) then (record SnTok {ok := false, text := (prim utf8_encode "refused: place is not a place key" : Bytes), next := 0}) else (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "place" : Bytes) (prim utf8_encode "surface" : Bytes) v 0x 0x 0x), next := 0})))) else (let v : Bytes := (snField body (prim utf8_encode "position " : Bytes)); (if ((snLen v) =? 0) then (record SnTok {ok := true, text := 0x, next := 0}) else (let a : Nat := (snByteAt v 0 32); (let b : Nat := (snByteAt v (a + 1) 32); (let n : Nat := (snLen v); (if ((b <? n) && (((snByteAt v (b + 1) 32) =? n) && ((snDecimal v 0 a) && ((snDecimal v (a + 1) b) && (snDecimal v (b + 1) n))))) then (record SnTok {ok := true, text := (snObs flat base now (prim utf8_encode "location" : Bytes) (prim utf8_encode "position" : Bytes) (prim append (prim utf8_encode "geo:" : Bytes) (prim append (snSlice v 0 a) (prim append 0x2c (prim append (snCut v (a + 1) b) (prim append (prim utf8_encode ";u=" : Bytes) (snFrom v (b + 1)) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) (prim utf8_encode "anyURI" : Bytes) 0x 0x), next := 0}) else (record SnTok {ok := false, text := (prim utf8_encode "refused: position is not latitude, longitude and accuracy" : Bytes), next := 0})))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snSensesFrom,
+  parameters: [
+    flat : Bool,
+    body : Bytes,
+    base : Bytes,
+    now : Bytes,
+    k : Nat,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (7 <? k) then acc else (let t : SnTok := (snSense flat body base now k); (if (project t ok) then (snSensesFrom flat body base now (k + 1) (prim append acc (project t text) : Bytes) rest) else (project t text))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snObserve,
+  parameters: [flat : Bool, body : Bytes],
+  result: Bytes,
+  body: (let base : Bytes := (snField body (prim utf8_encode "base " : Bytes)); (let now : Bytes := (snField body (prim utf8_encode "now " : Bytes)); (let n : Nat := (snLen base); (if (not (((not ((snSchemeEnd base) =? 0)) && ((snAt base (prim subtract n 1 : Nat)) =? 47)) && (snAll base 0 n 4))) then (prim utf8_encode "refused: base is not an absolute IRI ending in /" : Bytes) else (if (not (snRfc3339 now)) then (prim utf8_encode "refused: now is not an RFC 3339 date-time" : Bytes) else (let out : Bytes := (snSensesFrom flat body base now 0 0x 9); (if (flat || (snMatch out 0 (prim utf8_encode "refused: " : Bytes))) then out else (let verdict : Bytes := (snCheck out); (if (snMatch verdict 0 (prim utf8_encode "conforms " : Bytes)) then out else (prim append (prim utf8_encode "refused: the observations are not SOSA: " : Bytes) verdict : Bytes)))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismSensesDispatch,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let nl : Nat := (snLineEnd s 0); (let verb : Bytes := (snSlice s 0 nl); (let body : Bytes := (snFrom s (nl + 1)); (if (((snLen s) =? 0) || (3328 <? (snLen s))) then (prim utf8_encode "invalid" : Bytes) else (if (snSame verb (prim utf8_encode "check" : Bytes)) then (snCheck body) else (if (snSame verb (prim utf8_encode "observe" : Bytes)) then (snObserve false body) else (if (snSame verb (prim utf8_encode "flat" : Bytes)) then (snObserve true body) else (prim utf8_encode "refused: say check, observe or flat" : Bytes)))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
