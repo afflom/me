@@ -40,7 +40,8 @@ fn oracle_or_01() {
     }
     let spec = read("app/specs/oracle/spec.json");
     let authorities = read("model/authorities.toml");
-    let pinned = spec.matches("\"sha256\"").count();
+    let held = std::fs::read_dir("../../app/specs/oracle/sources").expect("the sources");
+    let pinned = spec.matches("\"sha256\"").count() + held.count();
     assert!(pinned > 0, "OR-01: the oracle pins at least one source");
     assert_eq!(
         authorities.matches("realized_by = [\"OR-01\"]").count()

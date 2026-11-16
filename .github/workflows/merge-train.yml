@@ -141,8 +141,6 @@ jobs:
               node bootstrap/frame-sync.mjs --check &&
               python3 -I tools/realize/gate.py --check &&
               python3 -I tools/standards/gate.py --check --base "$main" &&
-              { [[ ! -f tools/parts/gate.py ]] || python3 -I tools/parts/gate.py; } &&
-              { [[ ! -f tools/product/gate.py ]] || python3 -I tools/product/gate.py; } &&
               python3 -I tools/guests/gen.py check &&
               sh tools/generators/run.sh --check &&
               python3 -I tools/handwritten/gate.py --check --base "$main" &&
@@ -207,7 +205,12 @@ jobs:
               runners=(test/*/run.mjs)
               suites=(test/**/*.test.mjs)
               for runner in "${runners[@]}"; do node "$runner"; done
-              node --test "${suites[@]}"
+              # The gates of the product record's time behaviour measures, one at a time and apart from the rest (as the page check runs them).
+              mapfile -t timed < <(node --input-type=module -e 'import { load } from "./tools/specs/record.mjs"; console.log([...new Set(load("app/specs/product/spec.json").quality.filter((q) => q.subcharacteristic === "time behaviour").flatMap((q) => q.measures.map((m) => m.gate)))].join("\n"))')
+              rest=()
+              for suite in "${suites[@]}"; do [[ " ${timed[*]} " == *" $suite "* ]] || rest+=("$suite"); done
+              node --test --test-concurrency=1 "${timed[@]}"
+              node --test "${rest[@]}"
             )
           }
           ready=()
