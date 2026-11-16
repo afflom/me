@@ -262,6 +262,426 @@ definition{
 }
 
 definition{
+  name: sshDigit,
+  parameters: [d : Nat],
+  result: Bytes,
+  body: (Foundation.Json::span (sshU "0123456789") d (d + 1))
+}
+
+definition{
+  name: sshNumber,
+  parameters: [n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (n <? 10) then (sshDigit n) else (Foundation.Bytes::appendBytes (sshNumber (prim quotient n 10 0 : Nat) rest) (sshDigit (prim remainder n 10 0 : Nat))))),
+  recursive_argument: fuel
+}
+
+definition{name: sshNum, parameters: [n : Nat], result: Bytes, body: (sshNumber n 40)}
+
+definition{
+  name: sshDigitsFrom,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr s i); (if ((47 <? b) && (b <? 58)) then (sshDigitsFrom s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract b 48 : Nat)) rest) else acc))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshHexDigit,
+  parameters: [b : Nat],
+  result: (Option Nat),
+  body: (if ((47 <? b) && (b <? 58)) then (ctor Option.some [Nat] (prim subtract b 48 : Nat)) else (if ((96 <? b) && (b <? 103)) then (ctor Option.some [Nat] (prim subtract b 87 : Nat)) else (if ((64 <? b) && (b <? 71)) then (ctor Option.some [Nat] (prim subtract b 55 : Nat)) else (ctor Option.none [Nat]))))
+}
+
+definition{
+  name: sshHexFrom,
+  parameters: [c : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: (Option Nat),
+  body: (match fuel
+    | Nat.zero => (ctor Option.some [Nat] acc)
+    | Nat.succ rest => (match (sshHexDigit (Foundation.Tar::byteOr c i))
+      | Option.none => (ctor Option.none [Nat])
+      | Option.some d => (sshHexFrom c (i + 1) ((prim multiply acc 16 : Nat) + d) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshColour,
+  parameters: [c : Bytes],
+  result: (Option Nat),
+  body: (if (((Foundation.Bytes::byteLength c) =? 7) && ((Foundation.Tar::byteOr c 0) =? 35)) then (sshHexFrom c 1 0 6) else (ctor Option.none [Nat])),
+  axioms: [Quot.sound, propext]
+}
+
+definition{name: sshScale, parameters: [], result: Nat, body: 100000000}
+
+definition{
+  name: sshFifth,
+  parameters: [y : Nat],
+  result: Nat,
+  body: (prim quotient (prim multiply (prim quotient (prim multiply (prim quotient (prim multiply (prim quotient (prim multiply y y : Nat) (sshScale) 0 : Nat) y : Nat) (sshScale) 0 : Nat) y : Nat) (sshScale) 0 : Nat) y : Nat) (sshScale) 0 : Nat)
+}
+
+definition{
+  name: sshRootFrom,
+  parameters: [q : Nat, lo : Nat, hi : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => lo
+    | Nat.succ rest => (if (hi <=? (lo + 1)) then (if ((sshFifth hi) <=? q) then hi else lo) else (let mid : Nat := (prim quotient (lo + hi) 2 0 : Nat); (if ((sshFifth mid) <=? q) then (sshRootFrom q mid hi rest) else (sshRootFrom q lo mid rest))))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshLinear,
+  parameters: [c : Nat],
+  result: Nat,
+  body: (if (c <=? 10) then (prim quotient (prim multiply c 1000000000 : Nat) 32946 0 : Nat) else (let x : Nat := (prim quotient (prim multiply ((prim multiply c 1000 : Nat) + 14025) (sshScale) : Nat) 269025 0 : Nat); (let q : Nat := (prim quotient (prim multiply x x : Nat) (sshScale) 0 : Nat); (prim quotient (prim multiply q (sshRootFrom q 0 (sshScale) 64) : Nat) (sshScale) 0 : Nat))))
+}
+
+definition{
+  name: sshLuminance,
+  parameters: [c : Nat],
+  result: Nat,
+  body: ((prim multiply 2126 (sshLinear (prim quotient c 65536 0 : Nat)) : Nat) + ((prim multiply 7152 (sshLinear (prim remainder (prim quotient c 256 0 : Nat) 256 0 : Nat)) : Nat) + (prim multiply 722 (sshLinear (prim remainder c 256 0 : Nat)) : Nat)))
+}
+
+definition{
+  name: sshRatio,
+  parameters: [fore : Nat, back : Nat],
+  result: Nat,
+  body: (let a : Nat := ((sshLuminance fore) + (prim multiply 500 (sshScale) : Nat)); (let b : Nat := ((sshLuminance back) + (prim multiply 500 (sshScale) : Nat)); (if (b <=? a) then (prim quotient (prim multiply 100 a : Nat) b 0 : Nat) else (prim quotient (prim multiply 100 b : Nat) a 0 : Nat))))
+}
+
+definition{
+  name: sshHundredths,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (sshCat (cons (sshNum (prim quotient n 100 0 : Nat)) (cons 0x2e (cons (sshDigit (prim quotient (prim remainder n 100 0 : Nat) 10 0 : Nat)) (cons (sshDigit (prim remainder n 10 0 : Nat)) (nil Bytes))))))
+}
+
+definition{
+  name: sshFracAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (Foundation.Tar::byteOr s i); (if ((47 <? b) && (b <? 58)) then (prim subtract b 48 : Nat) else 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshWholeEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr s i); (if ((47 <? b) && (b <? 58)) then (sshWholeEnd s (i + 1) rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshFloorOf,
+  parameters: [s : Bytes, pos : (Option Nat)],
+  result: Nat,
+  body: (match pos
+    | Option.none => 0
+    | Option.some i => (let e : Nat := (sshWholeEnd s i 20); (let whole : Nat := (prim multiply (sshDigitsFrom s i 0 20) 100 : Nat); (if ((Foundation.Tar::byteOr s e) =? 46) then ((whole + (prim multiply (sshFracAt s (e + 1)) 10 : Nat)) + (sshFracAt s (e + 2))) else whole)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshHasTextFrom,
+  parameters: [s : Bytes, arr : (Option Nat), wanted : Bytes, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr n)
+      | Option.none => false
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (if (Foundation.Tar::sameBytes (Foundation.Json::textAt s e) wanted) then true else (sshHasTextFrom s arr wanted (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshSetterFrom,
+  parameters: [s : Bytes, tones : (Option Nat), name : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (match (Foundation.Json::elementAt s tones n)
+      | Option.none => 0x
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (if (sshHasTextFrom s (Foundation.Json::memberAt s e (sshU "sets")) name 0 (Foundation.Bytes::byteLength s)) then (Foundation.Json::textAt s (Foundation.Json::memberAt s e (sshU "key"))) else (sshSetterFrom s tones name (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshToneOf,
+  parameters: [s : Bytes, tones : (Option Nat), name : Bytes],
+  result: Bytes,
+  body: (if ((3 <? (Foundation.Bytes::byteLength name)) && (Foundation.Tar::sameBytes (Foundation.Json::span name 0 3) 0x76722d)) then (let tone : Bytes := (Foundation.Json::span name 3 (Foundation.Bytes::byteLength name)); (if (sshKnown (sshKeyIndex s tones tone)) then tone else 0x)) else (sshSetterFrom s tones name 0 (Foundation.Bytes::byteLength s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshCriterionFloor,
+  parameters: [criterion : Bytes],
+  result: Nat,
+  body: (if (Foundation.Tar::sameBytes criterion 0x312e342e33) then 450 else (if (Foundation.Tar::sameBytes criterion 0x312e342e36) then 700 else (if (Foundation.Tar::sameBytes criterion 0x312e342e3131) then 300 else 0))),
+  axioms: [propext]
+}
+
+definition{
+  name: sshOr,
+  parameters: [value : (Option Nat), fallback : Nat],
+  result: Nat,
+  body: (match value | Option.none => fallback | Option.some v => v)
+}
+
+definition{
+  name: sshToneColour,
+  parameters: [s : Bytes, tones : (Option Nat), key : Bytes, theme : Bytes],
+  result: Nat,
+  body: (match (sshKeyIndex s tones key)
+    | Option.none => 0
+    | Option.some t => (sshOr (sshColour (Foundation.Json::textAt s (Foundation.Json::memberAt s (Foundation.Json::elementAt s tones t) theme))) 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshForeFrom,
+  parameters: [s : Bytes, pairs : (Option Nat), tone : Bytes, textOnly : Bool, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (match (Foundation.Json::elementAt s pairs n)
+      | Option.none => false
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let c : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s e 3)); (if ((Foundation.Tar::sameBytes (Foundation.Json::textAt s (Foundation.Json::elementAt s e 0)) tone) && ((not textOnly) || ((Foundation.Tar::sameBytes c 0x312e342e33) || (Foundation.Tar::sameBytes c 0x312e342e36)))) then true else (sshForeFrom s pairs tone textOnly (n + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshWordEndFrom,
+  parameters: [t : Bytes, i : Nat, stop : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((stop <=? i) || ((Foundation.Tar::byteOr t i) =? 32)) then i else (sshWordEndFrom t (i + 1) stop rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshWordEnd,
+  parameters: [t : Bytes, i : Nat, stop : Nat],
+  result: Nat,
+  body: (sshWordEndFrom t i stop (stop + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshContainsFrom,
+  parameters: [hay : Bytes, needle : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength hay) <? (i + (Foundation.Bytes::byteLength needle))) then false else (if (Foundation.Tar::sameBytes (Foundation.Json::span hay i (i + (Foundation.Bytes::byteLength needle))) needle) then true else (sshContainsFrom hay needle (i + 1) rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshContains,
+  parameters: [hay : Bytes, needle : Bytes],
+  result: Bool,
+  body: (sshContainsFrom hay needle 0 ((Foundation.Bytes::byteLength hay) + 1)),
+  axioms: [propext]
+}
+
+definition{
+  name: sshStrayReason,
+  parameters: [brand : Bytes, kind : Bytes, name : Bytes],
+  result: Bytes,
+  body: (if (sshContains brand (sshCat (cons 0x2d2d (cons name (cons 0x3a2023 (nil Bytes)))))) then (sshCat (cons (sshCat (cons 0x736974652f636172642e63737320647261777320 (cons kind (cons 0x207769746820746865206272616e6420636f6c6f7572202d2d (cons name (nil Bytes)))))) (cons 0x2c207768696368206e6f20746f6e65206f6620746865206c6f6f6b2073657473 (nil Bytes)))) else (if (sshContains brand (sshCat (cons 0x2d2d (cons name (cons 0x3a (nil Bytes)))))) then 0x else (sshCat (cons (sshCat (cons 0x736974652f636172642e63737320647261777320 (cons kind (cons 0x2077697468202d2d (cons name (nil Bytes)))))) (cons 0x2c207768696368206973206e656974686572206120746f6e65206f6620746865206c6f6f6b206e6f7220612076616c7565206f6620746865206272616e64 (nil Bytes)))))),
+  axioms: [propext]
+}
+
+definition{
+  name: sshUsesReason,
+  parameters: [
+    s : Bytes,
+    look : (Option Nat),
+    brand : Bytes,
+    uses : Bytes,
+    i : Nat,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength uses) <=? i) then acc else (let e : Nat := (sshLineFrom uses i ((Foundation.Bytes::byteLength uses) + 1)); (let sp : Nat := (sshWordEnd uses i e); (let kind : Bytes := (Foundation.Json::span uses i sp); (let name : Bytes := (Foundation.Json::span uses (sp + 1) e); (let tone : Bytes := (sshToneOf s (Foundation.Json::memberAt s look (sshU "tones")) name); (let isText : Bool := (Foundation.Tar::sameBytes kind 0x74657874); (sshUsesReason s look brand uses (e + 1) (if ((Foundation.Bytes::byteLength tone) =? 0) then (sshAdd acc (sshStrayReason brand kind name)) else (if (sshForeFrom s (Foundation.Json::memberAt s look (sshU "contrast")) tone isText 0 (Foundation.Bytes::byteLength s)) then acc else (sshAdd acc (sshCat (cons (sshCat (cons 0x736974652f636172642e63737320647261777320 (cons kind (cons 0x20776974682074686520746f6e6520 (cons tone (nil Bytes)))))) (cons (sshCat (cons 0x2c20776869636820746865206c6f6f6b206d6561737572657320696e206e6f2070616972 (cons (if isText then 0x20756e6465722061207465787420637269746572696f6e2028312e342e33206f7220312e342e3629 else 0x) (nil Bytes)))) (nil Bytes))))))) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshPairRecordsFrom,
+  parameters: [
+    s : Bytes,
+    tones : (Option Nat),
+    themes : (Option Nat),
+    pair : (Option Nat),
+    acc : Bytes,
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s themes n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let theme : Bytes := (Foundation.Json::textAt s e); (let fore : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s pair 0)); (let back : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s pair 1)); (let criterion : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s pair 3)); (sshPairRecordsFrom s tones themes pair (sshSep acc 0x2c0a (sshCat (cons (sshCat (cons 0x207b0a2020226964223a2022636f6e74726173742d (cons fore (cons 0x2d6f6e2d (cons back (nil Bytes)))))) (cons (sshCat (cons 0x2d (cons theme (cons 0x222c0a202022637269746572696f6e223a2022776361672d322e322d (cons criterion (nil Bytes)))))) (cons (sshCat (cons 0x222c0a2020226d696e696d756d223a20 (cons (sshHundredths (sshCriterionFloor criterion)) (cons 0x2c0a202022726174696f223a20 (cons (sshHundredths (sshRatio (sshToneColour s tones fore theme) (sshToneColour s tones back theme))) (nil Bytes)))))) (cons 0x0a207d (nil Bytes))))))) (n + 1) rest)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshPairsRecordsFrom,
+  parameters: [
+    s : Bytes,
+    tones : (Option Nat),
+    themes : (Option Nat),
+    pairs : (Option Nat),
+    acc : Bytes,
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s pairs n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (sshPairsRecordsFrom s tones themes pairs (sshPairRecordsFrom s tones themes e acc 0 (Foundation.Bytes::byteLength s)) (n + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshPairThemesReasonFrom,
+  parameters: [
+    s : Bytes,
+    tones : (Option Nat),
+    themes : (Option Nat),
+    pair : (Option Nat),
+    acc : Bytes,
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s themes n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let theme : Bytes := (Foundation.Json::textAt s e); (let fore : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s pair 0)); (let back : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s pair 1)); (let criterion : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s pair 3)); (let ratio : Nat := (sshRatio (sshToneColour s tones fore theme) (sshToneColour s tones back theme)); (sshPairThemesReasonFrom s tones themes pair (if (ratio <? (sshCriterionFloor criterion)) then (sshAdd acc (sshCat (cons (sshCat (cons fore (cons 0x206f6e20 (cons back (cons 0x20726561647320617420 (nil Bytes)))))) (cons (sshCat (cons (sshHundredths ratio) (cons 0x20696e20 (cons theme (cons 0x2c20756e6465722074686520 (nil Bytes)))))) (cons (sshCat (cons (sshHundredths (sshCriterionFloor criterion)) (cons 0x206f66205743414720322e3220 (cons criterion (nil Bytes))))) (nil Bytes)))))) else acc) (n + 1) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshPairsReasonFrom,
+  parameters: [
+    s : Bytes,
+    tones : (Option Nat),
+    themes : (Option Nat),
+    pairs : (Option Nat),
+    acc : Bytes,
+    n : Nat,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s pairs n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let fore : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s e 0)); (let back : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s e 1)); (let criterion : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s e 3)); (let floor : Nat := (sshCriterionFloor criterion); (let a1 : Bytes := (if (floor =? 0) then (sshAdd acc (sshCat (cons (sshCat (cons 0x746865207061697220 (cons fore (cons 0x206f6e20 (cons back (nil Bytes)))))) (cons 0x206e616d6573206e6f20637269746572696f6e207468617420626f756e6473206120636f6e74726173742028312e342e332c20312e342e36206f7220312e342e313129 (nil Bytes))))) else (if ((sshFloorOf s (Foundation.Json::elementAt s e 2)) =? floor) then acc else (sshAdd acc (sshCat (cons (sshCat (cons 0x746865207061697220 (cons fore (cons 0x206f6e20 (cons back (nil Bytes)))))) (cons (sshCat (cons 0x2061736b7320 (cons (sshRaw s (Foundation.Json::elementAt s e 2)) (cons 0x2c20627574205743414720322e3220 (cons criterion (nil Bytes)))))) (cons (sshCat (cons 0x2061736b7320 (cons (sshHundredths floor) (nil Bytes)))) (nil Bytes)))))))); (sshPairsReasonFrom s tones themes pairs (if ((sshKnown (sshKeyIndex s tones fore)) && (sshKnown (sshKeyIndex s tones back))) then (if (floor =? 0) then a1 else (sshPairThemesReasonFrom s tones themes e a1 0 (Foundation.Bytes::byteLength s))) else (sshAdd a1 (sshCat (cons (sshCat (cons 0x746865207061697220 (cons fore (cons 0x206f6e20 (cons back (nil Bytes)))))) (cons 0x206e616d6573206120746f6e6520746865206c6f6f6b20646f6573206e6f742068617665 (nil Bytes)))))) (n + 1) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshContrastRefusal,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (sshFile archive "app/specs/surface/spec.json"); (let uses : Bytes := (sshFile archive ".gen/shell-uses"); (let brand : Bytes := (sshFile archive "site/brand/hologram-warm.css"); (let look : (Option Nat) := (Foundation.Json::memberAt s (Foundation.Json::root s) (sshU "look")); (if ((not ((sshKnown (Foundation.Json::memberAt s look (sshU "tones"))) && ((sshKnown (Foundation.Json::memberAt s look (sshU "themes"))) && (sshKnown (Foundation.Json::memberAt s look (sshU "contrast")))))) || (((Foundation.Bytes::byteLength uses) =? 0) || ((Foundation.Bytes::byteLength brand) =? 0))) then 0x6e65656473206170702f73706563732f737572666163652f737065632e6a736f6e207769746820697473206c6f6f6b2c20736974652f6272616e642f686f6c6f6772616d2d7761726d2e63737320616e64202e67656e2f7368656c6c2d75736573 else (sshUsesReason s look brand uses 0 (sshPairsReasonFrom s (Foundation.Json::memberAt s look (sshU "tones")) (Foundation.Json::memberAt s look (sshU "themes")) (Foundation.Json::memberAt s look (sshU "contrast")) 0x 0 (Foundation.Bytes::byteLength s)) ((Foundation.Bytes::byteLength uses) + 1))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshContrastGenerate,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (sshFile archive "app/specs/surface/spec.json"); (let look : (Option Nat) := (Foundation.Json::memberAt s (Foundation.Json::root s) (sshU "look")); (sshCat (cons 0x5b0a (cons (sshPairsRecordsFrom s (Foundation.Json::memberAt s look (sshU "tones")) (Foundation.Json::memberAt s look (sshU "themes")) (Foundation.Json::memberAt s look (sshU "contrast")) 0x 0 (Foundation.Bytes::byteLength s)) (cons 0x0a5d0a (nil Bytes))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sshDeclStart,
+  parameters: [css : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if (i =? 0) then 0 else (let b : Nat := (Foundation.Tar::byteOr css (prim subtract i 1 : Nat)); (if ((b =? 59) || ((b =? 123) || (b =? 125))) then i else (sshDeclStart css (prim subtract i 1 : Nat) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshSkipSpace,
+  parameters: [css : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr css i); (if ((b =? 32) || ((b =? 10) || ((b =? 9) || (b =? 13)))) then (sshSkipSpace css (i + 1) rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshUseKind,
+  parameters: [property : Bytes],
+  result: Bytes,
+  body: (if (Foundation.Tar::sameBytes property 0x636f6c6f72) then 0x74657874 else (if ((Foundation.Tar::sameBytes property 0x6f75746c696e65) || (Foundation.Tar::sameBytes property 0x6f75746c696e652d636f6c6f72)) then 0x72696e67 else 0x)),
+  axioms: [propext]
+}
+
+definition{
+  name: sshUsesFrom,
+  parameters: [css : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength css) <? (i + 6)) then acc else (if (Foundation.Tar::sameBytes (Foundation.Json::span css i (i + 6)) 0x766172282d2d) then (let e : Nat := (sshNameEnd css (i + 6) (Foundation.Bytes::byteLength css)); (let d : Nat := (sshSkipSpace css (sshDeclStart css i (i + 1)) (Foundation.Bytes::byteLength css)); (let kind : Bytes := (sshUseKind (Foundation.Json::span css d (sshNameEnd css d (Foundation.Bytes::byteLength css)))); (let line : Bytes := (sshCat (cons kind (cons 0x20 (cons (Foundation.Json::span css (i + 6) e) (nil Bytes))))); (sshUsesFrom css e (if (((Foundation.Bytes::byteLength kind) =? 0) || (sshLineOf acc line)) then acc else (sshCat (cons acc (cons line (cons 0x0a (nil Bytes)))))) rest))))) else (sshUsesFrom css (i + 1) acc rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sshUsesGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (let css : Bytes := (sshFile archive "site/card.css"); (if ((Foundation.Bytes::byteLength css) =? 0) then (ctor Option.none [Bytes]) else (ctor Option.some [Bytes] (sshUsesFrom css 0 0x ((Foundation.Bytes::byteLength css) + 1))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: sshStepsReasonFrom,
   parameters: [s : Bytes, top : (Option Nat), arr : (Option Nat), acc : Bytes, n : Nat, fuel : Nat],
   result: Bytes,

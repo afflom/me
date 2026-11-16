@@ -10,12 +10,10 @@ refuses unless every out module is current.
 """
 import email
 import email.policy
-import hashlib
 import json
 import pathlib
 import re
 import sys
-import urllib.request
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 import abnf  # noqa: E402
@@ -33,15 +31,7 @@ def refuse(why):
 
 
 def fetch(text, headers={}):
-    url, sha256 = text["url"], text["sha256"]
-    path = TEXTS / sha256
-    if not path.exists() and "--fetch" not in args:
-        refuse(f"{url} is not kept at {path.relative_to(ROOT)}: run this with --fetch")
-    data = path.read_bytes() if path.exists() else urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=120).read()
-    if hashlib.sha256(data).hexdigest() != sha256:
-        refuse(f"{url} is {hashlib.sha256(data).hexdigest()}, not the pinned {sha256}")
-    path.exists() or path.write_bytes(data)
-    return data.decode("utf-8")
+    return abnf.kept_bytes(text["url"], text["sha256"], TEXTS, refuse, "--fetch" in args, headers).decode("utf-8")
 
 
 def opening(node):

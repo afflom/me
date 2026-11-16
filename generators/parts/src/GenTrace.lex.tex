@@ -1,0 +1,1156 @@
+\begin{lexlean}{GenTrace}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Check}
+\importmodule{GenParts}
+\title{Parts trace}
+\begin{semanticmodule}
+definition{
+  name: trLen,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (Foundation.Bytes::byteLength s)
+}
+
+definition{
+  name: trF,
+  parameters: [archive : Bytes, path : String],
+  result: Bytes,
+  body: (Check::file archive (Check::u path)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trNl,
+  parameters: [x : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes x 0x0a)
+}
+
+definition{
+  name: trSay,
+  parameters: [a : String, b : Bytes, c : String, d : Bytes, e : String],
+  result: Bytes,
+  body: (Check::cat (cons (Check::u a) (cons b (cons (Check::u c) (cons d (cons (Check::u e) (cons 0x0a (nil Bytes))))))))
+}
+
+definition{
+  name: trBlank,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: (Check::blankFrom s 0 (trLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trHasTok,
+  parameters: [toks : Bytes, x : Bytes],
+  result: Bool,
+  body: ((0 <? (trLen x)) && (Check::contains (Check::cat (cons 0x20 (cons toks (cons 0x20 (nil Bytes))))) (Check::cat (cons 0x20 (cons x (cons 0x20 (nil Bytes))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trAdd,
+  parameters: [acc : Bytes, t : Bytes],
+  result: Bytes,
+  body: (if (((trLen t) =? 0) || (trHasTok acc t)) then acc else (Check::cat (cons acc (cons 0x20 (cons t (nil Bytes)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trAddAll,
+  parameters: [acc : Bytes, toks : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen toks) <? (i + 1)) then acc else (let e : Nat := (Check::wordAfter toks i (trLen toks)); (trAddAll (trAdd acc (Foundation.Json::span toks i e)) toks (e + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trSet,
+  parameters: [toks : Bytes],
+  result: Bytes,
+  body: (trAddAll 0x toks 0 ((trLen toks) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trLinesToToks,
+  parameters: [set : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen set) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf set i (trLen set)); (trLinesToToks set (e + 1) (Check::cat (cons acc (cons 0x20 (cons (Foundation.Json::span set i e) (nil Bytes))))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trToks,
+  parameters: [set : Bytes],
+  result: Bytes,
+  body: (trLinesToToks set 0 0x ((trLen set) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trToksToLines,
+  parameters: [toks : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen toks) <? (i + 1)) then acc else (let e : Nat := (Check::wordAfter toks i (trLen toks)); (let t : Bytes := (Foundation.Json::span toks i e); (trToksToLines toks (e + 1) (if ((trLen t) =? 0) then acc else (Check::cat (cons acc (cons t (cons 0x0a (nil Bytes)))))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trLines,
+  parameters: [toks : Bytes],
+  result: Bytes,
+  body: (trToksToLines toks 0 0x ((trLen toks) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trGatherFrom,
+  parameters: [map : Bytes, key : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen map) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf map i (trLen map)); (let l : Bytes := (Foundation.Json::span map i e); (trGatherFrom map key (e + 1) (if (Check::same (Check::firstWord l) key) then (Check::cat (cons acc (cons 0x20 (cons (Check::restWord l) (nil Bytes))))) else acc) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trGather,
+  parameters: [map : Bytes, key : Bytes],
+  result: Bytes,
+  body: (trSet (trGatherFrom map key 0 0x ((trLen map) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trGatherInFrom,
+  parameters: [map : Bytes, set : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen map) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf map i (trLen map)); (let l : Bytes := (Foundation.Json::span map i e); (trGatherInFrom map set (e + 1) (if (Check::inLines set (Check::firstWord l)) then (Check::cat (cons acc (cons 0x20 (cons (Check::restWord l) (nil Bytes))))) else acc) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trGatherIn,
+  parameters: [map : Bytes, set : Bytes],
+  result: Bytes,
+  body: (trSet (trGatherInFrom map set 0 0x ((trLen map) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trViaFrom,
+  parameters: [map : Bytes, set : Bytes, facets : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen map) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf map i (trLen map)); (let l : Bytes := (Foundation.Json::span map i e); (trViaFrom map set facets (e + 1) (if (Check::inLines set (Check::firstWord l)) then (Foundation.Bytes::appendBytes acc (trGather facets (Check::restWord l))) else acc) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trVia,
+  parameters: [map : Bytes, set : Bytes, facets : Bytes],
+  result: Bytes,
+  body: (trViaFrom map set facets 0 0x ((trLen map) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trFilterFrom,
+  parameters: [toks : Bytes, set : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen toks) <? (i + 1)) then acc else (let e : Nat := (Check::wordAfter toks i (trLen toks)); (let t : Bytes := (Foundation.Json::span toks i e); (trFilterFrom toks set (e + 1) (if ((0 <? (trLen t)) && (Check::inLines set t)) then (trAdd acc t) else acc) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trFilter,
+  parameters: [toks : Bytes, set : Bytes],
+  result: Bytes,
+  body: (trFilterFrom toks set 0 0x ((trLen toks) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trFilterNotFrom,
+  parameters: [toks : Bytes, x : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen toks) <? (i + 1)) then acc else (let e : Nat := (Check::wordAfter toks i (trLen toks)); (let t : Bytes := (Foundation.Json::span toks i e); (trFilterNotFrom toks x (e + 1) (if (Check::same t x) then acc else (trAdd acc t)) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trFilterNot,
+  parameters: [toks : Bytes, x : Bytes],
+  result: Bytes,
+  body: (trFilterNotFrom toks x 0 0x ((trLen toks) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trLowerFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen s) <? (i + 1)) then acc else (let b : Nat := (GenParts::ptB s i); (trLowerFrom s (i + 1) (Foundation.Bytes::appendBytes acc (if ((64 <? b) && (b <? 91)) then (Foundation.Json::span (Check::u "abcdefghijklmnopqrstuvwxyz") (prim subtract b 65 : Nat) (prim subtract b 64 : Nat)) else (Foundation.Json::span s i (i + 1)))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trNatFrom,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let b : Nat := (GenParts::ptB s i); (if (((trLen s) <? (i + 1)) || ((b <? 48) || (57 <? b))) then acc else (trNatFrom s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract b 48 : Nat)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trNat,
+  parameters: [s : Bytes, at : (Option Nat), fallback : Nat],
+  result: Nat,
+  body: (match at | Option.none => fallback | Option.some v => (trNatFrom s v 0 (trLen s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trRep,
+  parameters: [s : Bytes, i : Nat, mode : Nat, lead : Bool, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (mode =? 0) then (let b : Nat := (Foundation.Json::at s i); (if (b =? 123) then (Check::cat (cons 0x7b (cons (trRep s (Foundation.Json::space s (i + 1)) 1 true rest) (cons 0x7d (nil Bytes))))) else (if (b =? 91) then (Check::cat (cons 0x5b (cons (trRep s (Foundation.Json::space s (i + 1)) 2 true rest) (cons 0x5d (nil Bytes))))) else (Check::repr s (ctor Option.some [Nat] i))))) else (if (mode =? 1) then (if (Check::memberDone s i) then 0x else (Check::cat (cons (if lead then 0x else 0x2c20) (cons (Check::repr s (ctor Option.some [Nat] i)) (cons 0x3a20 (cons (trRep s (Check::memberValue s i) 0 true rest) (cons (trRep s (Check::memberNext s i) 1 false rest) (nil Bytes)))))))) else (if (Check::elemDone s i) then 0x else (Check::cat (cons (if lead then 0x else 0x2c20) (cons (trRep s i 0 true rest) (cons (trRep s (Check::elemNext s i) 2 false rest) (nil Bytes))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trRepr,
+  parameters: [s : Bytes, at : (Option Nat)],
+  result: Bytes,
+  body: (match at
+    | Option.none => (Check::u "None")
+    | Option.some v => (trRep s v 0 true ((trLen s) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trGlob,
+  parameters: [pat : Bytes, pi : Nat, s : Bytes, si : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((trLen pat) <? (pi + 1)) then (si =? (trLen s)) else (if (Check::startsAt pat pi (Check::u "**/")) then ((trGlob pat (pi + 3) s si rest) || (let e : Nat := (GenParts::ptSegEnd s si (trLen s)); ((si <? e) && ((e <? (trLen s)) && (trGlob pat pi s (e + 1) rest))))) else (if ((GenParts::ptB pat pi) =? 42) then ((trGlob pat (pi + 1) s si rest) || ((si <? (trLen s)) && ((not ((GenParts::ptB s si) =? 47)) && (trGlob pat pi s (si + 1) rest)))) else ((si <? (trLen s)) && (((GenParts::ptB s si) =? (GenParts::ptB pat pi)) && (trGlob pat (pi + 1) s (si + 1) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trAnyGlob,
+  parameters: [spec : Bytes, i : Nat, path : Bytes, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if (Check::elemDone spec i) then false else (let g : Bytes := (Check::str spec (ctor Option.some [Nat] i)); ((trGlob g 0 path 0 (((trLen g) + (trLen path)) + 2)) || (trAnyGlob spec (Check::elemNext spec i) path rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trStratumOf,
+  parameters: [spec : Bytes, i : Nat, path : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (Check::elemDone spec i) then 0x else (let st : (Option Nat) := (ctor Option.some [Nat] i); (if (trAnyGlob spec (Check::elemStart spec (Check::key spec st "paths")) path (trLen spec)) then (Check::plain spec (Check::key spec st "key")) else (trStratumOf spec (Check::elemNext spec i) path rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trStrata,
+  parameters: [spec : Bytes],
+  result: (Option Nat),
+  body: (Check::key spec (Foundation.Json::root spec) "strata"),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trOnePart,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let one : Bytes := (trF archive ".gen/pt-parts"); (Foundation.Json::span one 0 (Check::lineEndOf one 0 (trLen one)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptGround,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let p : Bytes := (trOnePart archive); (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (let k : Bytes := (trStratumOf spec (Check::elemStart spec (trStrata spec)) p (trLen spec)); (if ((trLen k) =? 0) then 0x else (Check::cat (cons p (cons 0x20 (cons k (cons 0x0a (nil Bytes)))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trUngroundedFrom,
+  parameters: [parts : Bytes, ground : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen parts) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf parts i (trLen parts)); (let p : Bytes := (Foundation.Json::span parts i e); (trUngroundedFrom parts ground (e + 1) (if (Check::inLines (Check::firstWords ground) p) then acc else (Foundation.Bytes::appendBytes acc (trSay "part " p " is grounded in no stratum" 0x ""))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: groundReasons,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let parts : Bytes := (trF archive ".gen/pt-parts"); (trUngroundedFrom parts (trF archive ".gen/pt-ground") 0 0x ((trLen parts) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trNotInFrom,
+  parameters: [
+    s : Bytes,
+    i : Nat,
+    set : Bytes,
+    who : Bytes,
+    what : String,
+    tail : String,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone s i) then acc else (let v : (Option Nat) := (ctor Option.some [Nat] i); (trNotInFrom s (Check::elemNext s i) set who what tail (if (Check::oneOf s v set) then acc else (Foundation.Bytes::appendBytes acc (trSay "" who what (trRepr s v) tail))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trStrataFrom,
+  parameters: [
+    spec : Bytes,
+    i : Nat,
+    agency : Bytes,
+    bounds : Bytes,
+    regimes : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone spec i) then acc else (let st : (Option Nat) := (ctor Option.some [Nat] i); (let who : Bytes := (Check::cat (cons (Check::u "stratum ") (cons (Check::plain spec (Check::key spec st "key")) (nil Bytes)))); (let w : (Option Nat) := (Check::key spec st "where"); (trStrataFrom spec (Check::elemNext spec i) agency bounds regimes (Check::cat (cons acc (cons (trNotInFrom spec (Check::elemStart spec (Check::key spec st "who")) agency who " names agency " ", which does not exist" 0x (trLen spec)) (cons (if (Check::oneOf spec w bounds) then 0x else (trSay "" who " names boundary " (trRepr spec w) ", which does not exist")) (cons (trNotInFrom spec (Check::elemStart spec (Check::key spec st "when")) regimes who " names regime " ", which does not exist" 0x (trLen spec)) (nil Bytes)))))) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trKeysOf,
+  parameters: [spec : Bytes, name : String],
+  result: Bytes,
+  body: (Check::fieldOf spec (Check::key spec (Foundation.Json::root spec) name) "key"),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: strataReasons,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (trStrataFrom spec (Check::elemStart spec (trStrata spec)) (trKeysOf spec "agency") (trKeysOf spec "boundaries") (trKeysOf spec "regimes") 0x (trLen spec))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trConcernsFrom,
+  parameters: [
+    s : Bytes,
+    i : Nat,
+    holder : Bytes,
+    check : Bool,
+    seen : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone s i) then acc else (let c : (Option Nat) := (ctor Option.some [Nat] i); (let ok : Bool := (((Foundation.Json::at s i) =? 123) && ((Check::nonempty s (Check::key s c "key")) && (Check::nonempty s (Check::key s c "says")))); (let k : Bytes := (Check::plain s (Check::key s c "key")); (trConcernsFrom s (Check::elemNext s i) holder check (if ok then (Check::cat (cons seen (cons k (cons 0x0a (nil Bytes))))) else seen) (if check then (if (not ok) then (Foundation.Bytes::appendBytes acc (trSay "stakeholder " holder " has a concern without a key and what it says: " (trRepr s c) "")) else (if (Check::inLines seen k) then (Foundation.Bytes::appendBytes acc (trSay "concern " k " is named twice" 0x "")) else acc)) else (if ok then (Check::cat (cons acc (cons k (cons 0x20 (cons holder (cons 0x0a (nil Bytes))))))) else acc)) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trHoldersFrom,
+  parameters: [s : Bytes, i : Nat, check : Bool, seen : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone s i) then acc else (let st : (Option Nat) := (ctor Option.some [Nat] i); (let holder : Bytes := (Check::plain s (Check::key s st "key")); (let found : Bytes := (trConcernsFrom s (Check::elemStart s (Check::key s st "concerns")) holder check seen 0x (trLen s)); (let seen2 : Bytes := (Foundation.Bytes::appendBytes seen (trConcernsFrom s (Check::elemStart s (Check::key s st "concerns")) holder false 0x 0x (trLen s))); (trHoldersFrom s (Check::elemNext s i) check (if check then seen2 else seen) (Foundation.Bytes::appendBytes acc found) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trProduct,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (trF archive "app/specs/product/spec.json"),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptConcerns,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (trProduct archive); (trHoldersFrom s (Check::elemStart s (Check::key s (Foundation.Json::root s) "stakeholders")) false 0x 0x (trLen s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: concernReasons,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (trProduct archive); (trHoldersFrom s (Check::elemStart s (Check::key s (Foundation.Json::root s) "stakeholders")) true 0x 0x (trLen s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trHolderOfFrom,
+  parameters: [map : Bytes, c : Bytes, i : Nat, found : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => found
+    | Nat.succ rest => (if ((trLen map) <? (i + 1)) then found else (let e : Nat := (Check::lineEndOf map i (trLen map)); (let l : Bytes := (Foundation.Json::span map i e); (trHolderOfFrom map c (e + 1) (if (Check::same (Check::firstWord l) c) then (Check::restWord l) else found) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trHolderIs,
+  parameters: [map : Bytes, s : Bytes, at : (Option Nat), who : String],
+  result: Bool,
+  body: ((Check::isText s at) && ((Check::inLines (Check::firstWords map) (Check::str s at)) && (Check::same (trHolderOfFrom map (Check::str s at) 0 0x ((trLen map) + 1)) (Check::u who)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trAnswersFrom,
+  parameters: [s : Bytes, i : Nat, map : Bytes, who : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone s i) then acc else (let c : (Option Nat) := (ctor Option.some [Nat] i); (trAnswersFrom s (Check::elemNext s i) map who (if (trHolderIs map s c "person") then acc else (Foundation.Bytes::appendBytes acc (trSay "" who " answers " (trRepr s c) ", which is no concern of the person"))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trJourneyFile,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (Check::file archive (Check::subject archive "app/specs/product/journeys/")),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: journeyReasons,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (trJourneyFile archive); (let j : (Option Nat) := (Foundation.Json::root s); (let k : Bytes := (Check::plain s (Check::key s j "key")); (let who : Bytes := (Foundation.Bytes::appendBytes (Check::u "journey ") k); (let a : (Option Nat) := (Check::key s j "answers"); (let w : (Option Nat) := (Check::key s j "when"); (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (Check::cat (cons (if (Check::nonempty s a) then 0x else (trSay "" who " answers no concern" 0x "")) (cons (if (Check::nonempty s a) then (trAnswersFrom s (Check::elemStart s a) (trF archive ".gen/pt-concerns") who 0x (trLen s)) else 0x) (cons (if (Check::nonempty s w) then 0x else (trSay "" who " names no regime it happens in" 0x "")) (cons (if (Check::nonempty s w) then (trNotInFrom s (Check::elemStart s w) (trKeysOf spec "regimes") who " happens in " ", which is no regime" 0x (trLen s)) else 0x) (nil Bytes))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trListed,
+  parameters: [s : Bytes, at : (Option Nat)],
+  result: Bytes,
+  body: (if (Check::nonempty s at) then (trToks (Check::texts s at)) else 0x),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: journeyAnswers,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (trJourneyFile archive); (let j : (Option Nat) := (Foundation.Json::root s); (trNl (Foundation.Bytes::appendBytes (Check::plain s (Check::key s j "key")) (trListed s (Check::key s j "answers")))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: journeyWhen,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (trJourneyFile archive); (let j : (Option Nat) := (Foundation.Json::root s); (trNl (Foundation.Bytes::appendBytes (Check::plain s (Check::key s j "key")) (trListed s (Check::key s j "when")))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: journeyWorks,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (trJourneyFile archive); (let j : (Option Nat) := (Foundation.Json::root s); (if ((Check::isText s (Check::key s j "status")) && (Check::same (Check::str s (Check::key s j "status")) (Check::u "works"))) then (trNl (Check::plain s (Check::key s j "key"))) else 0x))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trAlwaysFrom,
+  parameters: [s : Bytes, i : Nat, map : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone s i) then acc else (let e : (Option Nat) := (ctor Option.some [Nat] i); (let a : (Option Nat) := (Check::key s e "answers"); (trAlwaysFrom s (Check::elemNext s i) map (if (Check::nonempty s a) then (trNotInFrom s (Check::elemStart s a) (Check::firstWords map) (Foundation.Bytes::appendBytes (Check::u "always ") (Check::plain s (Check::key s e "key"))) " answers " ", which is no concern" acc (trLen s)) else acc) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trBuilderAnswers,
+  parameters: [s : Bytes, i : Nat, map : Bytes, who : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone s i) then acc else (let c : (Option Nat) := (ctor Option.some [Nat] i); (trBuilderAnswers s (Check::elemNext s i) map who (if (trHolderIs map s c "builder") then acc else (Foundation.Bytes::appendBytes acc (trSay "" who " answers " (trRepr s c) ", which is no concern of the builder"))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trBuilderFrom,
+  parameters: [s : Bytes, i : Nat, map : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone s i) then acc else (let st : (Option Nat) := (ctor Option.some [Nat] i); (trBuilderFrom s (Check::elemNext s i) map (trBuilderAnswers s (Check::elemStart s (Check::key s st "answers")) map (Foundation.Bytes::appendBytes (Check::u "stratum ") (Check::plain s (Check::key s st "key"))) acc (trLen s)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trListAnswersFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone s i) then acc else (trListAnswersFrom s (Check::elemNext s i) (Foundation.Bytes::appendBytes acc (trListed s (Check::key s (ctor Option.some [Nat] i) "answers"))) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trUnansweredFrom,
+  parameters: [
+    set : Bytes,
+    i : Nat,
+    seen : Bytes,
+    answered : Bytes,
+    owed : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen set) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf set i (trLen set)); (let c : Bytes := (Foundation.Json::span set i e); (trUnansweredFrom set (e + 1) (trNl (Foundation.Bytes::appendBytes seen c)) answered owed (if ((Check::inLines seen c) || ((trHasTok answered c) || (Check::inLines owed c))) then acc else (Foundation.Bytes::appendBytes acc (trSay "concern " c " is answered by no journey, always entry or stratum" 0x ""))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trOwedFrom,
+  parameters: [s : Bytes, i : Nat, concernSet : Bytes, answered : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::memberDone s i) then acc else (let c : Bytes := (Check::str s (ctor Option.some [Nat] i)); (let why : (Option Nat) := (ctor Option.some [Nat] (Check::memberValue s i)); (trOwedFrom s (Check::memberNext s i) concernSet answered (Foundation.Bytes::appendBytes acc (if (not (Check::inLines concernSet c)) then (trSay "concerns debt names " (Check::quote c) ", which is no concern" 0x "") else (if (trHasTok answered c) then (trSay "concern " c " is answered now: remove it from the concerns debt" 0x "") else (if (Check::filled s why) then 0x else (trSay "concern " c " is owed without a reason" 0x ""))))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: traceReasons,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let ps : Bytes := (trProduct archive); (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (let map : Bytes := (trF archive ".gen/pt-concerns"); (let always : (Option Nat) := (Check::key ps (Foundation.Json::root ps) "always"); (let answered : Bytes := (Check::cat (cons (Check::restWords (trF archive ".gen/pt-answers")) (cons (trToks (Check::restWords (trF archive ".gen/pt-answers"))) (cons (trListAnswersFrom ps (Check::elemStart ps always) 0x (trLen ps)) (cons (trListAnswersFrom spec (Check::elemStart spec (trStrata spec)) 0x (trLen spec)) (nil Bytes)))))); (let owed : (Option Nat) := (Check::key spec (Check::key spec (Foundation.Json::root spec) "debt") "concerns"); (Check::cat (cons (trAlwaysFrom ps (Check::elemStart ps always) map 0x (trLen ps)) (cons (trBuilderFrom spec (Check::elemStart spec (trStrata spec)) map 0x (trLen spec)) (cons (trUnansweredFrom (Check::firstWords map) 0 0x answered (Check::keys spec owed) 0x ((trLen map) + 1)) (cons (trOwedFrom spec (Check::memberStart spec owed) (Check::firstWords map) answered 0x (trLen spec)) (nil Bytes)))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trHashEnd,
+  parameters: [c : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (trLen c)
+    | Nat.succ rest => (if ((trLen c) <? (i + 1)) then (trLen c) else (if ((GenParts::ptB c i) =? 35) then i else (trHashEnd c (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trCallsFrom,
+  parameters: [s : Bytes, i : Nat, parts : Bytes, toks : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone s i) then acc else (let c : Bytes := (Check::str s (ctor Option.some [Nat] i)); (let file : Bytes := (Foundation.Json::span c 0 (trHashEnd c 0 (trLen c))); (trCallsFrom s (Check::elemNext s i) parts toks (if ((Check::isText s (ctor Option.some [Nat] i)) && ((Check::inLines parts file) && (0 <? (trLen toks)))) then (Check::cat (cons acc (cons file (cons toks (cons 0x0a (nil Bytes)))))) else acc) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trFeature,
+  parameters: [archive : Bytes, field : String],
+  result: Bytes,
+  body: (let s : Bytes := (Check::file archive (Check::subject archive "app/specs/product/features/")); (let f : (Option Nat) := (Foundation.Json::root s); (trCallsFrom s (Check::elemStart s (Check::key s f "calls")) (trF archive ".gen/pt-parts") (trSet (trListed s (Check::key s f field))) 0x (trLen s)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: featureJourneys,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (trFeature archive "journeys"),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: featureSuites,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (trFeature archive "acceptance"),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: facetServes,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let path : Bytes := (Check::subject archive "app/specs/product/facets/"); (let s : Bytes := (Check::file archive path); (trNl (Foundation.Bytes::appendBytes (Check::stem path) (trSet (trListed s (Check::key s (Foundation.Json::root s) "serves"))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trModulesFrom,
+  parameters: [s : Bytes, i : Nat, parts : Bytes, key : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone s i) then acc else (let m : (Option Nat) := (ctor Option.some [Nat] i); (trModulesFrom s (Check::elemNext s i) parts key (if ((Check::isText s m) && (Check::inLines parts (Check::str s m))) then (Check::cat (cons acc (cons (Check::str s m) (cons 0x20 (cons key (cons 0x0a (nil Bytes))))))) else acc) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: facetModules,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (Check::file archive (Check::subject archive "app/specs/coherence/facets/")); (let f : (Option Nat) := (Foundation.Json::root s); (if (Check::nonempty s (Check::key s f "modules")) then (trModulesFrom s (Check::elemStart s (Check::key s f "modules")) (trF archive ".gen/pt-parts") (Check::plain s (Check::key s f "key")) 0x (trLen s)) else 0x))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trAlnumEnd,
+  parameters: [t : Bytes, i : Nat, dots : Bool, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (GenParts::ptB t i); (if ((trLen t) <? (i + 1)) then i else (if (((47 <? b) && (b <? 58)) || (((64 <? b) && (b <? 91)) || (((96 <? b) && (b <? 123)) || (dots && ((b =? 95) || (b =? 46)))))) then (trAlnumEnd t (i + 1) dots rest) else i)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trDispatchFrom,
+  parameters: [t : Bytes, i : Nat, parts : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen t) <? (i + 1)) then acc else (if (((GenParts::ptB t i) =? 102) && (Check::startsAt t i (Check::u "facet =? (facet"))) then (let k0 : Nat := (i + 15); (let k1 : Nat := (trAlnumEnd t k0 false (trLen t)); (let m0 : Nat := (k1 + 9); (let m1 : Nat := (trAlnumEnd t m0 true (trLen t)); (if ((k0 <? k1) && ((Check::startsAt t k1 (Check::u ")) then (")) && ((m0 <? m1) && (Check::startsAt t m1 (Check::u "::"))))) then (let path : Bytes := (GenParts::ptLexPath (Foundation.Json::span t m0 m1)); (trDispatchFrom t (m1 + 2) parts (if (Check::inLines parts path) then (Check::cat (cons acc (cons path (cons 0x20 (cons (trLowerFrom (Foundation.Json::span t k0 k1) 0 0x ((prim subtract k1 k0 : Nat) + 1)) (cons 0x0a (nil Bytes))))))) else acc) rest)) else (trDispatchFrom t (i + 1) parts acc rest)))))) else (trDispatchFrom t (i + 1) parts acc rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptDispatch,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let name : Bytes := (Check::notGen archive); (let root : Bytes := (trF archive ".gen/pt-root"); (if (Check::same (trNl name) root) then (let t : Bytes := (Check::file archive name); (trDispatchFrom t 0 (trF archive ".gen/pt-parts") 0x ((trLen t) + 1))) else 0x))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trUsesFrom,
+  parameters: [edges : Bytes, i : Nat, parts : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen edges) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf edges i (trLen edges)); (let l : Bytes := (Foundation.Json::span edges i e); (let src : Bytes := (Check::firstWord l); (let kept : Bytes := (trFilterNot (trFilter (Check::restWord l) parts) src); (trUsesFrom edges (e + 1) parts (if ((Check::inLines parts src) && (0 <? (trLen kept))) then (Check::cat (cons acc (cons src (cons kept (cons 0x0a (nil Bytes)))))) else acc) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptUses,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let edges : Bytes := (Foundation.Bytes::appendBytes (trF archive ".gen/pt-imports") (trF archive ".gen/pt-twins")); (trUsesFrom edges 0 (trF archive ".gen/pt-parts") 0x ((trLen edges) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trGroundedInFrom,
+  parameters: [ground : Bytes, key : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen ground) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf ground i (trLen ground)); (let l : Bytes := (Foundation.Json::span ground i e); (trGroundedInFrom ground key (e + 1) (if (Check::same (Check::restWord l) key) then (trAdd acc (Check::firstWord l)) else acc) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trCarriedFrom,
+  parameters: [spec : Bytes, i : Nat, ground : Bytes, parts : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone spec i) then acc else (let st : (Option Nat) := (ctor Option.some [Nat] i); (let cb : (Option Nat) := (Check::key spec st "carriedBy"); (let toks : Bytes := (trGroundedInFrom ground (Check::plain spec (Check::key spec st "key")) 0 0x ((trLen ground) + 1)); (trCarriedFrom spec (Check::elemNext spec i) ground parts (if ((Check::nonempty spec cb) && ((Check::oneOf spec cb parts) && (0 <? (trLen toks)))) then (Check::cat (cons acc (cons (Check::str spec cb) (cons toks (cons 0x0a (nil Bytes)))))) else acc) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptCarried,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (trCarriedFrom spec (Check::elemStart spec (trStrata spec)) (trF archive ".gen/pt-ground") (trF archive ".gen/pt-parts") 0x (trLen spec))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trEdges,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes (trF archive ".gen/pt-uses") (trF archive ".gen/pt-carried")),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptFlow,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let q : Bytes := (trOnePart archive); (let edges : Bytes := (trEdges archive); (let r : Bytes := (GenParts::ptFix edges (trNl q) ((trLen edges) + 1)); (let facets : Bytes := (trF archive ".gen/pt-facets"); (trNl (Foundation.Bytes::appendBytes q (trSet (Check::cat (cons (trGatherIn (trF archive ".gen/pt-fj") r) (cons (trVia (trF archive ".gen/pt-coherence") r facets) (cons (trVia (trF archive ".gen/pt-dispatch") r facets) (nil Bytes)))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trPutFrom,
+  parameters: [m : Bytes, p : Bytes, toks : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen m) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf m i (trLen m)); (let l : Bytes := (Foundation.Json::span m i e); (trPutFrom m p toks (e + 1) (Foundation.Bytes::appendBytes acc (trNl (if (Check::same (Check::firstWord l) p) then (Foundation.Bytes::appendBytes p toks) else l))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trPut,
+  parameters: [m : Bytes, p : Bytes, toks : Bytes],
+  result: Bytes,
+  body: (trPutFrom m p toks 0 0x ((trLen m) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trServesOfFrom,
+  parameters: [m : Bytes, toks : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen toks) <? (i + 1)) then acc else (let e : Nat := (Check::wordAfter toks i (trLen toks)); (let t : Bytes := (Foundation.Json::span toks i e); (trServesOfFrom m toks (e + 1) (if ((trLen t) =? 0) then acc else (Foundation.Bytes::appendBytes acc (trGather m t))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trWiden,
+  parameters: [m : Bytes, u : Bytes, p : Bytes],
+  result: Bytes,
+  body: (trPut m p (trSet (Foundation.Bytes::appendBytes (trGather m p) (trServesOfFrom m (trGather u p) 0 0x ((trLen (trGather u p)) + 1))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trEntriesFrom,
+  parameters: [es : Bytes, i : Nat, m : Bytes, u : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => m
+    | Nat.succ rest => (if ((trLen es) <? (i + 1)) then m else (let e : Nat := (Check::lineEndOf es i (trLen es)); (let x : Bytes := (Foundation.Json::span es i e); (trEntriesFrom es (e + 1) (if (Check::inLines (Check::firstWords m) x) then (trWiden m u x) else m) u rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trLastFrom,
+  parameters: [s : Bytes, i : Nat, last : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => last
+    | Nat.succ rest => (if ((trLen s) <? (i + 1)) then last else (let e : Nat := (Check::lineEndOf s i (trLen s)); (trLastFrom s (e + 1) (if (i <? e) then i else last) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trEmptiesFrom,
+  parameters: [m : Bytes, toks : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen toks) <? (i + 1)) then acc else (let e : Nat := (Check::wordAfter toks i (trLen toks)); (let t : Bytes := (Foundation.Json::span toks i e); (trEmptiesFrom m toks (e + 1) (if (((trLen t) =? 0) || (not (trBlank (trGather m t)))) then acc else (trAdd acc t)) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trPutAllFrom,
+  parameters: [m : Bytes, toks : Bytes, v : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => m
+    | Nat.succ rest => (if ((trLen toks) <? (i + 1)) then m else (let e : Nat := (Check::wordAfter toks i (trLen toks)); (let t : Bytes := (Foundation.Json::span toks i e); (trPutAllFrom (if ((trLen t) =? 0) then m else (trPut m t v)) toks v (e + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trShell,
+  parameters: [stack : Bytes, m : Bytes, u : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => m
+    | Nat.succ rest => (if (trBlank stack) then m else (let k : Nat := (trLastFrom stack 0 0 ((trLen stack) + 1)); (let cur : Bytes := (Foundation.Json::span stack k (Check::lineEndOf stack k (trLen stack))); (let qs : Bytes := (trEmptiesFrom m (trGather u cur) 0 0x ((trLen (trGather u cur)) + 1)); (trShell (Foundation.Bytes::appendBytes (Foundation.Json::span stack 0 k) (trLines qs)) (trPutAllFrom m qs (trGather m cur) 0 ((trLen qs) + 1)) u rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trProves,
+  parameters: [spec : Bytes, key : Bytes],
+  result: Bool,
+  body: (Check::nonempty spec (Check::key spec (Check::withField spec (trStrata spec) "key" key) "proves")),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trProofsFrom,
+  parameters: [proofs : Bytes, i : Nat, m : Bytes, u : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => m
+    | Nat.succ rest => (if ((trLen proofs) <? (i + 1)) then m else (let e : Nat := (Check::lineEndOf proofs i (trLen proofs)); (let x : Bytes := (Foundation.Json::span proofs i e); (trProofsFrom proofs (e + 1) (if ((trLen x) =? 0) then m else (trWiden m u x)) u rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trProofPartsFrom,
+  parameters: [ground : Bytes, i : Nat, spec : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen ground) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf ground i (trLen ground)); (let l : Bytes := (Foundation.Json::span ground i e); (trProofPartsFrom ground (e + 1) spec (if (trProves spec (Check::restWord l)) then (trNl (Foundation.Bytes::appendBytes acc (Check::firstWord l))) else acc) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: proofParts,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let ground : Bytes := (trF archive ".gen/pt-ground"); (trProofPartsFrom ground 0 (trF archive "app/specs/parts/spec.json") 0x ((trLen ground) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trEntryParts,
+  parameters: [archive : Bytes, m : Bytes],
+  result: Bytes,
+  body: (trLines (trFilter (trToks (Foundation.Bytes::appendBytes (trF archive ".gen/pt-entries") (trF archive ".gen/pt-root"))) (Check::firstWords m))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ptServes,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let u : Bytes := (trEdges archive); (let m0 : Bytes := (trF archive ".gen/pt-flow"); (let es : Bytes := (trEntryParts archive m0); (let m1 : Bytes := (trEntriesFrom es 0 m0 u ((trLen es) + 1)); (let m2 : Bytes := (trShell es m1 u ((trLen m1) + (trLen u))); (let proofs : Bytes := (trF archive ".gen/pt-proofs"); (trProofsFrom proofs 0 m2 u ((trLen proofs) + 1)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trReachedFrom,
+  parameters: [t : Bytes, i : Nat, prev : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen t) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf t i (trLen t)); (let p : Bytes := (Check::firstWord (Foundation.Json::span t i e)); (trReachedFrom t (e + 1) p (if (((trLen p) =? 0) || (Check::same p prev)) then acc else (trNl (Foundation.Bytes::appendBytes acc p))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptReached,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let t : Bytes := (trF archive "test/parts/reach.txt"); (trReachedFrom t 0 0x 0x ((trLen t) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trWordAt,
+  parameters: [t : Bytes, w : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((trLen t) <? (i + (trLen w))) then false else (if ((((GenParts::ptB t i) =? (GenParts::ptB w 0)) && (Check::startsAt t i w)) && ((GenParts::ptBound t i) && (not (GenParts::ptWord (GenParts::ptB t (i + (trLen w))))))) then true else (trWordAt t w (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trNamedFrom,
+  parameters: [parts : Bytes, i : Nat, t : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen parts) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf parts i (trLen parts)); (let p : Bytes := (Foundation.Json::span parts i e); (trNamedFrom parts (e + 1) t (if ((0 <? (trLen p)) && ((Check::contains t p) || ((GenParts::ptLexFile p) && (trWordAt t (Check::stem p) 0 ((trLen t) + 1))))) then (trNl (Foundation.Bytes::appendBytes acc p)) else acc) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptNamed,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let parts : Bytes := (trF archive ".gen/pt-parts"); (trNamedFrom parts 0 (Check::file archive (Check::notGen archive)) 0x ((trLen parts) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trPrimesFrom,
+  parameters: [spec : Bytes, i : Nat, agency : (Option Nat), acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone spec i) then acc else (let w : (Option Nat) := (ctor Option.some [Nat] i); (let a : (Option Nat) := (Check::withField spec agency "key" (Check::str spec w)); (trPrimesFrom spec (Check::elemNext spec i) agency (prim multiply acc (match a
+      | Option.none => 1
+      | Option.some v => (trNat spec (Check::key spec a "prime") 1)) : Nat) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trFullFrom,
+  parameters: [spec : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone spec i) then acc else (trFullFrom spec (Check::elemNext spec i) (prim multiply acc (trNat spec (Check::key spec (ctor Option.some [Nat] i) "prime") 1) : Nat) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trMiss,
+  parameters: [missing : Bool, word : String],
+  result: Bytes,
+  body: (if missing then (Foundation.Bytes::appendBytes 0x20 (Check::u word)) else 0x)
+}
+
+definition{
+  name: ptCertificate,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let p : Bytes := (trOnePart archive); (let ground : Bytes := (trF archive ".gen/pt-ground"); (let sk : Bytes := (trHolderOfFrom ground p 0 0x ((trLen ground) + 1)); (if ((trLen sk) =? 0) then 0x else (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (let so : (Option Nat) := (Check::withField spec (trStrata spec) "key" sk); (let answers : Bytes := (trF archive ".gen/pt-answers"); (let jl : Bytes := (trLines (trFilter (trGather (trF archive ".gen/pt-serves") p) (Check::firstWords answers))); (let wa : (Option Nat) := (Check::key spec so "who"); (let agency : (Option Nat) := (Check::key spec (Foundation.Json::root spec) "agency"); (let prod : Nat := (trPrimesFrom spec (Check::elemStart spec wa) agency 1 (trLen spec)); (let full : Nat := (trFullFrom spec (Check::elemStart spec agency) 1 (trLen spec)); (let wh : (Option Nat) := (Check::key spec so "where"); (let how : Bool := ((Check::inLines (trF archive ".gen/pt-checked") p) || ((Check::isText spec wh) && (Check::same (Check::str spec wh) (Check::u "kernel")))); (let miss : Bytes := (Check::cat (cons (trMiss (not (Check::nonempty spec (Check::key spec so "what"))) "what") (cons (trMiss (((trBlank (trGatherIn answers jl)) && (not (Check::nonempty spec (Check::key spec so "answers")))) || (not (Check::nonempty spec (Check::key spec so "without")))) "why") (cons (trMiss ((not (Check::nonempty spec wa)) || ((prod <? 2) || (not ((prim subtract full (prim multiply prod (prim quotient full prod 0 : Nat) : Nat) : Nat) =? 0)))) "who") (cons (trMiss (not (Check::oneOf spec wh (trKeysOf spec "boundaries"))) "where") (cons (trMiss ((not (Check::nonempty spec (Check::key spec so "when"))) && (trBlank (trGatherIn (trF archive ".gen/pt-when") jl))) "when") (cons (trMiss (not how) "how") (nil Bytes)))))))); (if ((trLen miss) =? 0) then 0x else (trNl (Foundation.Bytes::appendBytes p miss)))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trJoinFrom,
+  parameters: [toks : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen toks) <? (i + 1)) then acc else (let e : Nat := (Check::wordAfter toks i (trLen toks)); (let t : Bytes := (Foundation.Json::span toks i e); (trJoinFrom toks (e + 1) (if ((trLen t) =? 0) then acc else (if ((trLen acc) =? 0) then t else (Check::cat (cons acc (cons 0x2c20 (cons t (nil Bytes))))))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trJoin,
+  parameters: [toks : Bytes],
+  result: Bytes,
+  body: (trJoinFrom toks 0 0x ((trLen toks) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trMissingFrom,
+  parameters: [
+    missing : Bytes,
+    i : Nat,
+    spec : Bytes,
+    owed : (Option Nat),
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen missing) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf missing i (trLen missing)); (let l : Bytes := (Foundation.Json::span missing i e); (let p : Bytes := (Check::firstWord l); (let m : Bytes := (Check::restWord l); (let oa : (Option Nat) := (Check::keyBytes spec owed p); (trMissingFrom missing (e + 1) spec owed (Foundation.Bytes::appendBytes acc (match oa
+      | Option.none => (trSay "part " p " does not answer " (trJoin m) "")
+      | Option.some v => (if (Check::same (Check::texts spec oa) (trLines m)) then 0x else (Check::cat (cons (Check::u "part ") (cons p (cons (Check::u " does not answer ") (cons (trJoin m) (cons (Check::u " (its debt says ") (cons (trJoin (trToks (Check::texts spec oa))) (cons (Check::u ")") (cons 0x0a (nil Bytes))))))))))))) rest)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trOwedPartsFrom,
+  parameters: [spec : Bytes, i : Nat, ground : Bytes, missing : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::memberDone spec i) then acc else (let p : Bytes := (Check::str spec (ctor Option.some [Nat] i)); (trOwedPartsFrom spec (Check::memberNext spec i) ground missing (Foundation.Bytes::appendBytes acc (if (not (Check::inLines (Check::firstWords ground) p)) then (trSay "parts debt names " p ", which is no part" 0x "") else (if (Check::inLines (Check::firstWords missing) p) then 0x else (trSay "part " p " answers every question now: remove it from the parts debt" 0x "")))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trJourneysDebtFrom,
+  parameters: [
+    js : Bytes,
+    i : Nat,
+    spec : Bytes,
+    unserved : (Option Nat),
+    served : Bytes,
+    works : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen js) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf js i (trLen js)); (let j : Bytes := (Foundation.Json::span js i e); (let uv : (Option Nat) := (Check::keyBytes spec unserved j); (let isServed : Bool := (trHasTok served j); (trJourneysDebtFrom js (e + 1) spec unserved served works (Check::cat (cons acc (cons (if ((Check::inLines works j) && ((not isServed) && (match uv
+      | Option.none => true
+      | Option.some v => (not (Check::filled spec uv))))) then (trSay "journey " j " works, but no feature or facet names a part that serves it" 0x "") else 0x) (cons (match uv
+      | Option.none => 0x
+      | Option.some v => (if isServed then (trSay "journey " j " is served now: remove it from the journeys debt" 0x "") else 0x)) (nil Bytes))))) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: trUnknownJourneysFrom,
+  parameters: [spec : Bytes, i : Nat, js : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::memberDone spec i) then acc else (let k : Bytes := (Check::str spec (ctor Option.some [Nat] i)); (trUnknownJourneysFrom spec (Check::memberNext spec i) js (if (Check::inLines js k) then acc else (Foundation.Bytes::appendBytes acc (trSay "journeys debt names " k ", which is no journey" 0x ""))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: debtReasons,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (let debt : (Option Nat) := (Check::key spec (Foundation.Json::root spec) "debt"); (let owed : (Option Nat) := (Check::key spec debt "parts"); (let unserved : (Option Nat) := (Check::key spec debt "journeys"); (let missing : Bytes := (trF archive ".gen/pt-missing"); (let ground : Bytes := (trF archive ".gen/pt-ground"); (let js : Bytes := (Check::firstWords (trF archive ".gen/pt-answers")); (let served : Bytes := (trToks (Check::restWords (trF archive ".gen/pt-serves"))); (Check::cat (cons (trMissingFrom missing 0 spec owed 0x ((trLen missing) + 1)) (cons (trOwedPartsFrom spec (Check::memberStart spec owed) ground missing 0x (trLen spec)) (cons (trJourneysDebtFrom js 0 spec unserved served (trF archive ".gen/pt-works") 0x ((trLen js) + 1)) (cons (trUnknownJourneysFrom spec (Check::memberStart spec unserved) js 0x (trLen spec)) (nil Bytes)))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trProvedFrom,
+  parameters: [edges : Bytes, i : Nat, proofs : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen edges) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf edges i (trLen edges)); (let l : Bytes := (Foundation.Json::span edges i e); (trProvedFrom edges (e + 1) proofs (if (Check::inLines proofs (Check::firstWord l)) then (trAddAll acc (Check::restWord l) 0 ((trLen l) + 1)) else acc) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptProved,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let edges : Bytes := (trEdges archive); (trLines (trProvedFrom edges 0 (trF archive ".gen/pt-proofs") 0x ((trLen edges) + 1)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: trCheckedFrom,
+  parameters: [
+    parts : Bytes,
+    i : Nat,
+    reach : Bytes,
+    fa : Bytes,
+    named : Bytes,
+    proved : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((trLen parts) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf parts i (trLen parts)); (let p : Bytes := (Foundation.Json::span parts i e); (trCheckedFrom parts (e + 1) reach fa named proved (if ((0 <? (trLen p)) && ((Check::inLines reach p) || ((not (trBlank (trGather fa p))) || ((Check::inLines proved p) || (Check::inLines named p))))) then (trNl (Foundation.Bytes::appendBytes acc p)) else acc) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: checkedParts,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let parts : Bytes := (trF archive ".gen/pt-parts"); (trCheckedFrom parts 0 (trF archive ".gen/pt-reached") (trF archive ".gen/pt-fa") (trF archive ".gen/pt-named") (trF archive ".gen/pt-proved") 0x ((trLen parts) + 1))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
