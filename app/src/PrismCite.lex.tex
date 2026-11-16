@@ -1,0 +1,192 @@
+\begin{lexlean}{PrismCite}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Sha256}
+\importmodule{PrismAnnotation}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: ciB,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => 0
+    | Option.some octet => (prim to_nat octet : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ciIsHex,
+  parameters: [b : Nat],
+  result: Bool,
+  body: (((47 <? b) && (b <? 58)) || ((96 <? b) && (b <? 103)))
+}
+
+definition{
+  name: ciHexRun,
+  parameters: [s : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ more => (if (n =? 0) then true else (if (ciIsHex (ciB s i)) then (ciHexRun s (i + 1) (prim subtract n 1 : Nat) more) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ciAddr,
+  parameters: [s : Bytes, i : Nat],
+  result: Bool,
+  body: (if (((not ((ciB s i) =? 115)) || (not ((ciB s (i + 1)) =? 104))) || ((not ((ciB s (i + 2)) =? 97)) || (not ((ciB s (i + 3)) =? 50)))) then false else (if (((not ((ciB s (i + 4)) =? 53)) || (not ((ciB s (i + 5)) =? 54))) || (not ((ciB s (i + 6)) =? 58))) then false else (ciHexRun s (i + 7) 64 65))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ciDigits,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ more => (if ((47 <? (ciB s i)) && ((ciB s i) <? 58)) then (ciDigits s (i + 1) more) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ciNumOk,
+  parameters: [s : Bytes, i : Nat, e : Nat],
+  result: Bool,
+  body: (if ((e <? (i + 1)) || ((i + 9) <? e)) then false else ((e =? (i + 1)) || (not ((ciB s i) =? 48)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ciNum,
+  parameters: [s : Bytes, i : Nat, e : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ more => (if (e <? (i + 1)) then acc else (ciNum s (i + 1) e ((prim multiply acc 10 : Nat) + (prim subtract (ciB s i) 48 : Nat)) more))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ciHexDigit,
+  parameters: [v : Nat],
+  result: Bytes,
+  body: (match (prim slice 0x30313233343536373839616263646566 v 1 : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: ciEscOne,
+  parameters: [s : Bytes, i : Nat],
+  result: Bytes,
+  body: (let b : Nat := (ciB s i); (if (b =? 34) then 0x5c22 else (if (b =? 92) then 0x5c5c else (if (b =? 8) then 0x5c62 else (if (b =? 9) then 0x5c74 else (if (b =? 10) then 0x5c6e else (if (b =? 12) then 0x5c66 else (if (b =? 13) then 0x5c72 else (if (b <? 32) then (prim append 0x5c753030 (prim append (ciHexDigit (prim quotient b 16 0 : Nat)) (ciHexDigit (prim remainder b 16 0 : Nat)) : Bytes) : Bytes) else (match (prim slice s i 1 : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ciEsc,
+  parameters: [s : Bytes, i : Nat, e : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ more => (if (e <? (i + 1)) then acc else (ciEsc s (i + 1) e (prim append acc (ciEscOne s i) : Bytes) more))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ciCat3,
+  parameters: [a : Bytes, b : Bytes, c : Bytes],
+  result: Bytes,
+  body: (prim append a (prim append b c : Bytes) : Bytes)
+}
+
+definition{
+  name: ciHead,
+  parameters: [s : Bytes, a : Nat, x : Nat, n : Nat],
+  result: Bytes,
+  body: (ciCat3 (ciCat3 0x7b2240636f6e74657874223a22687474703a2f2f7777772e77332e6f72672f6e732f616e6e6f2e6a736f6e6c64222c22626f6479223a7b2273656c6563746f72223a7b226578616374223a22 (ciEsc s x (x + n) 0x (n + 1)) 0x222c2274797065223a225465787451756f746553656c6563746f72227d2c22736f75726365223a22) (match (prim slice s a 71 : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part) 0x222c2274797065223a2253706563696669635265736f75726365227d2c),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ciTail,
+  parameters: [s : Bytes, ds : Nat, de : Nat, es : Nat, ee : Nat],
+  result: Bytes,
+  body: (ciCat3 (ciCat3 0x226d6f7469766174696f6e223a226c696e6b696e67222c22746172676574223a7b2273656c6563746f72223a7b22656e64223a (match (prim slice s es (prim subtract ee es : Nat) : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part) 0x2c227374617274223a) (ciCat3 (match (prim slice s ds (prim subtract de ds : Nat) : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part) 0x2c2274797065223a2254657874506f736974696f6e53656c6563746f72227d2c22736f75726365223a22 (match (prim slice s 0 71 : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)) 0x222c2274797065223a2253706563696669635265736f75726365227d2c2274797065223a22416e6e6f746174696f6e227d)
+}
+
+definition{
+  name: ciJoin,
+  parameters: [head : Bytes, tail : Bytes],
+  result: Bytes,
+  body: (ciCat3 head (ciCat3 0x226964223a227368613235363a (Sha256::sha256Hex (prim append head tail : Bytes)) 0x222c) tail),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ciIsOk,
+  parameters: [r : Bytes],
+  result: Bool,
+  body: (((prim length r : Nat) =? 2) && (((ciB r 0) =? 111) && ((ciB r 1) =? 107))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ciJudged,
+  parameters: [a : Bytes],
+  result: Bytes,
+  body: (if (ciIsOk (PrismAnnotation::prismAnnotationDispatch (prim append 0x616e6e6f746174696f6e4d757374730a a : Bytes))) then a else 0x),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ciSep,
+  parameters: [acc : Bytes, a : Bytes],
+  result: Bytes,
+  body: (if ((prim length a : Nat) =? 0) then 0x else (if ((prim length acc : Nat) =? 1) then (prim append acc a : Bytes) else (ciCat3 acc 0x2c a)))
+}
+
+definition{
+  name: ciItems,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ more => (if ((prim length s : Nat) <? (i + 1)) then acc else (let de : Nat := (ciDigits s i 10); (let ee : Nat := (ciDigits s (de + 1) 10); (let ne : Nat := (ciDigits s (ee + 73) 10); (let n : Nat := (ciNum s (ee + 73) ne 0 10); (if (((not (ciNumOk s i de)) || (not ((ciB s de) =? 32))) || ((not (ciNumOk s (de + 1) ee)) || (not ((ciB s ee) =? 32)))) then 0x else (if (((not (ciAddr s (ee + 1))) || (not ((ciB s (ee + 72)) =? 32))) || ((not (ciNumOk s (ee + 73) ne)) || (not ((ciB s ne) =? 10)))) then 0x else (if ((ciNum s (de + 1) ee 0 10) <? (ciNum s i de 0 10)) then 0x else (if (((prim length s : Nat) <? (((ne + 1) + n) + 1)) || (not ((ciB s ((ne + 1) + n)) =? 10))) then 0x else (let acc2 : Bytes := (ciSep acc (ciJudged (ciJoin (ciHead s (ee + 1) (ne + 1) n) (ciTail s i de (de + 1) ee)))); (if ((prim length acc2 : Nat) =? 0) then 0x else (ciItems s ((ne + 2) + n) acc2 more))))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ciAnswer,
+  parameters: [out : Bytes],
+  result: Bytes,
+  body: (if ((prim length out : Nat) =? 0) then 0x696e76616c6964 else (prim append out 0x5d : Bytes))
+}
+
+definition{
+  name: prismCiteDispatch,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (if (4096 <? (prim length s : Nat)) then 0x696e76616c6964 else (if ((not (ciAddr s 0)) || (not ((ciB s 71) =? 10))) then 0x696e76616c6964 else (ciAnswer (ciItems s 72 0x5b 64)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
