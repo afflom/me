@@ -14,7 +14,8 @@
 # staged with the step's other inputs and kept that much smaller; a step with "each" runs once per element of a JSON array;
 # a step with "glob" runs once per tracked file its patterns match (cut the same
 # way; with "head": true only its first piece), with its "inputs" beside it;
-# a step with "lines" runs once per line of that file, beside its "inputs";
+# a step with "lines" runs once per line of that file, beside its "inputs" (those
+# it lists under "own" hold only the lines whose first word is that line);
 # its output is the outputs joined in order. Outputs under .gen/ are
 # intermediate and never committed; a step reads only the .gen/ outputs of its
 # own program's earlier steps, so programs never depend on each other's order.
@@ -120,10 +121,11 @@ js .steps < "$steps_file" | while read -r step; do
   elif [ -n "$lines_path" ]; then
     # One request per line of a file, staged as that file holding only that
     # line, beside the step's inputs.
-    ins=$(echo "$step" | js .inputs)
+    ins=$(echo "$step" | js .inputs); own=$(echo "$step" | js .own)
     while IFS= read -r line; do
       rm -rf "$work/stage"; mkdir -p "$work/stage/$(dirname "$lines_path")"
       for i in $ins; do mkdir -p "$work/stage/$(dirname "$i")"; cp "$i" "$work/stage/$i"; done
+      for i in $own; do awk -v k="$line" '$1 == k' "$i" > "$work/stage/$i"; done
       printf '%s\n' "$line" > "$work/stage/$lines_path"
       run "$gen" "$out" "$work/stage" "$lines_path" $ins
     done < "$lines_path"
