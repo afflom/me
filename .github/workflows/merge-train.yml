@@ -232,27 +232,43 @@ jobs:
             python3 -m venv "$RUNNER_TEMP/draw"
             "$RUNNER_TEMP/draw/bin/pip" install --quiet --no-deps --only-binary :all: --require-hashes -r bootstrap/draw-requirements.txt
           fi
-          accepted=()
-          for entry in "${ready[@]}"; do
-            number=${entry%%:*}
-            head=${entry#*:}
-            before=$(git rev-parse HEAD)
-            git fetch -q origin "$head"
-            if ! git merge -q --no-ff --no-edit "$head" >/dev/null 2>&1; then
-              git merge --abort || true
-              printf '%s %s %s\n' "$number" "$head" "it conflicts with main ($main) and the pull requests the train takes before it" >>"$RUNNER_TEMP/refused"
-              continue
-            fi
-            # The pull request's own code runs without the token.
-            if (unset GH_TOKEN; fast_gates && bash -euo pipefail -c "$(declare -f acceptances); acceptances") >"$RUNNER_TEMP/gates-$number.log" 2>&1; then
-              accepted+=("$number:$head")
-              echo "#$number $head: the fast gates and the browser acceptances pass on main and the train before it"
-            else
-              tail -n 40 "$RUNNER_TEMP/gates-$number.log"
-              printf '%s %s %s\n' "$number" "$head" "the fast gates or the browser acceptances refuse it merged with main ($main) and the pull requests the train takes before it; see run $GITHUB_RUN_ID" >>"$RUNNER_TEMP/refused"
-              git reset -q --hard "$before"
-            fi
-          done
+          # The browser acceptances take about a quarter of an hour, so the train runs
+          # them once, on all the pull requests that board together, and one by one only
+          # when that tree fails, to find which of them it refuses.
+          board() { # board batch|each: merge each of the queue that passes the fast gates (each: and the browser acceptances) onto HEAD
+            local entry number head before
+            boarded=()
+            for entry in "${queue[@]}"; do
+              number=${entry%%:*}
+              head=${entry#*:}
+              before=$(git rev-parse HEAD)
+              git fetch -q origin "$head"
+              if ! git merge -q --no-ff --no-edit "$head" >/dev/null 2>&1; then
+                git merge --abort || true
+                printf '%s %s %s\n' "$number" "$head" "it conflicts with main ($main) and the pull requests the train takes before it" >>"$RUNNER_TEMP/refused"
+                continue
+              fi
+              # The pull request's own code runs without the token.
+              if (unset GH_TOKEN; fast_gates && { [[ $1 == batch ]] || bash -euo pipefail -c "$(declare -f acceptances); acceptances"; }) >"$RUNNER_TEMP/gates-$number.log" 2>&1; then
+                boarded+=("$entry")
+                echo "#$number $head: passes on main and the train before it ($1)"
+              else
+                tail -n 40 "$RUNNER_TEMP/gates-$number.log"
+                printf '%s %s %s\n' "$number" "$head" "the fast gates or the browser acceptances refuse it merged with main ($main) and the pull requests the train takes before it; see run $GITHUB_RUN_ID" >>"$RUNNER_TEMP/refused"
+                git reset -q --hard "$before"
+              fi
+            done
+          }
+          queue=("${ready[@]}")
+          board batch
+          if [[ ${#boarded[@]} -gt 0 ]] && ! (unset GH_TOKEN; bash -euo pipefail -c "$(declare -f acceptances); acceptances") >"$RUNNER_TEMP/gates-train.log" 2>&1; then
+            tail -n 40 "$RUNNER_TEMP/gates-train.log"
+            echo "the browser acceptances refuse ${boarded[*]} together: taking them one by one"
+            git reset -q --hard "$main"
+            queue=("${boarded[@]}")
+            board each
+          fi
+          accepted=("${boarded[@]}")
           echo "accepted=${accepted[*]:-}" >>"$GITHUB_OUTPUT"
           # The refusals travel to the merge job as an output: a run cannot download its
           # own artifacts while it is still running.
