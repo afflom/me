@@ -12,7 +12,9 @@ structure{
     {name: table, type: Bytes},
     {name: text, type: Bytes},
     {name: octets, type: Bytes},
-    {name: pairs, type: Bytes}
+    {name: pairs, type: Bytes},
+    {name: hot, type: Bytes},
+    {name: memo, type: Bytes}
   ]
 }
 
@@ -115,6 +117,43 @@ definition{
     | Nat.zero => out
     | Nat.succ more => (abnfPairsFrom g more (v + 1) (prim append out (abnfPairOf g v) : Bytes))),
   recursive_argument: left
+}
+
+definition{
+  name: abnfTripleOf,
+  parameters: [g : AbnfInput, v : Nat],
+  result: Bytes,
+  body: (prim append (abnfOctet g (prim quotient v 65536 0 : Nat)) (abnfPairOf g v) : Bytes)
+}
+
+definition{
+  name: abnfCut,
+  parameters: [b : Bytes, i : Nat, k : Nat],
+  result: Bytes,
+  body: (match (prim slice b i k : (Option Bytes))
+    | Option.none => (abnfEmpty)
+    | Option.some x => x)
+}
+
+definition{
+  name: abnfHotFrom,
+  parameters: [left : Nat, hot : Bytes, i : Nat, r : Nat],
+  result: Nat,
+  body: (match left
+    | Nat.zero => 0
+    | Nat.succ more => (if ((abnfWord hot (prim multiply i 5 : Nat)) =? r) then ((abnfTriple hot ((prim multiply i 5 : Nat) + 2)) + 1) else (abnfHotFrom more hot (i + 1) r))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: left
+}
+
+definition{
+  name: abnfHotGet,
+  parameters: [g : AbnfInput, n : Nat, b : Nat, p : Nat],
+  result: Bytes,
+  body: (let d : Nat := ((b + (prim multiply (n + 1) 3 : Nat)) + (abnfTriple (project g memo) (b + (prim multiply p 3 : Nat)))); (match (prim slice (project g memo) (d + 2) (prim multiply (abnfWord (project g memo) d) 2 : Nat) : (Option Bytes))
+    | Option.none => (abnfEmpty)
+    | Option.some x => x)),
+  axioms: [Quot.sound, propext]
 }
 
 definition{
@@ -300,7 +339,7 @@ definition{
   result: Bytes,
   body: (match fuel
     | Nat.zero => (if (mode =? 3) then (abnfLongestFirst g out n) else (abnfEmpty))
-    | Nat.succ more => (let len : Nat := (prim length at : Nat); (if (mode =? 0) then (let tag : Nat := (abnfByte (project g table) o); (if (tag =? 0) then (abnfEndsGo g more n 0 (abnfRuleAt (project g table) (abnfWord (project g table) (o + 4))) 0 0 0 false 0 (abnfEmpty) (abnfEmpty) at) else (if (tag =? 1) then (abnfLitEndsFrom g (prim quotient len 2 0 : Nat) o n false at 0 (abnfEmpty)) else (if (tag =? 2) then (abnfLitEndsFrom g (prim quotient len 2 0 : Nat) o n true at 0 (abnfEmpty)) else (if (tag =? 3) then (abnfRangeEndsFrom g (prim quotient len 2 0 : Nat) (abnfTriple (project g table) (o + 4)) (abnfTriple (project g table) (o + 7)) n at 0 (abnfEmpty)) else (if (tag =? 4) then (abnfEndsGo g more n 1 (o + 6) (abnfWord (project g table) (o + 4)) 0 0 false 0 (abnfEmpty) (abnfEmpty) at) else (if (tag =? 5) then (abnfEndsGo g more n 2 (o + 6) (abnfWord (project g table) (o + 4)) 0 0 false 0 (abnfEmpty) (abnfEmpty) at) else (if (tag =? 6) then (let lo : Nat := (abnfWord (project g table) (o + 4)); (abnfEndsGo g more n 3 (o + 9) 0 lo (abnfWord (project g table) (o + 6)) ((abnfByte (project g table) (o + 8)) =? 1) 0 (if (lo =? 0) then at else (abnfEmpty)) at at)) else (abnfEmpty))))))))) else (if (mode =? 1) then (if (count =? 0) then (abnfEmpty) else (abnfUnion g (abnfEndsGo g more n 0 o 0 0 0 false 0 (abnfEmpty) (abnfEmpty) at) (abnfEndsGo g more n 1 (abnfNext (project g table) o) (prim subtract count 1 : Nat) 0 0 false 0 (abnfEmpty) (abnfEmpty) at))) else (if (mode =? 2) then (if (count =? 0) then at else (if ((prim quotient len 2 0 : Nat) =? 0) then (abnfEmpty) else (abnfEndsGo g more n 2 (abnfNext (project g table) o) (prim subtract count 1 : Nat) 0 0 false 0 (abnfEmpty) (abnfEmpty) (abnfEndsGo g more n 0 o 0 0 0 false 0 (abnfEmpty) (abnfEmpty) at)))) else (if ((prim quotient len 2 0 : Nat) =? 0) then (abnfLongestFirst g out n) else (if (bounded && (high <=? k)) then (abnfLongestFirst g out n) else (let next : Bytes := (abnfEndsGo g more n 0 o 0 0 0 false 0 (abnfEmpty) (abnfEmpty) at); (let had : Nat := (prim multiply (abnfSize seen) 2 : Nat); (let grown : Bytes := (abnfUnion g seen next); (let fresh : Bytes := (if ((k + 1) <? low) then next else (match (prim slice grown had (prim subtract (prim length grown : Nat) had : Nat) : (Option Bytes))
+    | Nat.succ more => (let len : Nat := (prim length at : Nat); (if (mode =? 0) then (let tag : Nat := (abnfByte (project g table) o); (if (tag =? 0) then (let b : Nat := (if (len =? 2) then (abnfHotFrom (prim quotient (prim length (project g hot) : Nat) 5 0 : Nat) (project g hot) 0 (abnfWord (project g table) (o + 4))) else 0); (if (b =? 0) then (abnfEndsGo g more n 0 (abnfRuleAt (project g table) (abnfWord (project g table) (o + 4))) 0 0 0 false 0 (abnfEmpty) (abnfEmpty) at) else (abnfHotGet g n (prim subtract b 1 : Nat) (abnfAt at 0)))) else (if (tag =? 1) then (abnfLitEndsFrom g (prim quotient len 2 0 : Nat) o n false at 0 (abnfEmpty)) else (if (tag =? 2) then (abnfLitEndsFrom g (prim quotient len 2 0 : Nat) o n true at 0 (abnfEmpty)) else (if (tag =? 3) then (abnfRangeEndsFrom g (prim quotient len 2 0 : Nat) (abnfTriple (project g table) (o + 4)) (abnfTriple (project g table) (o + 7)) n at 0 (abnfEmpty)) else (if (tag =? 4) then (abnfEndsGo g more n 1 (o + 6) (abnfWord (project g table) (o + 4)) 0 0 false 0 (abnfEmpty) (abnfEmpty) at) else (if (tag =? 5) then (abnfEndsGo g more n 2 (o + 6) (abnfWord (project g table) (o + 4)) 0 0 false 0 (abnfEmpty) (abnfEmpty) at) else (if (tag =? 6) then (let lo : Nat := (abnfWord (project g table) (o + 4)); (abnfEndsGo g more n 3 (o + 9) 0 lo (abnfWord (project g table) (o + 6)) ((abnfByte (project g table) (o + 8)) =? 1) 0 (if (lo =? 0) then at else (abnfEmpty)) at at)) else (abnfEmpty))))))))) else (if (mode =? 1) then (if (count =? 0) then (abnfEmpty) else (abnfUnion g (abnfEndsGo g more n 0 o 0 0 0 false 0 (abnfEmpty) (abnfEmpty) at) (abnfEndsGo g more n 1 (abnfNext (project g table) o) (prim subtract count 1 : Nat) 0 0 false 0 (abnfEmpty) (abnfEmpty) at))) else (if (mode =? 2) then (if (count =? 0) then at else (if ((prim quotient len 2 0 : Nat) =? 0) then (abnfEmpty) else (abnfEndsGo g more n 2 (abnfNext (project g table) o) (prim subtract count 1 : Nat) 0 0 false 0 (abnfEmpty) (abnfEmpty) (abnfEndsGo g more n 0 o 0 0 0 false 0 (abnfEmpty) (abnfEmpty) at)))) else (if ((prim quotient len 2 0 : Nat) =? 0) then (abnfLongestFirst g out n) else (if (bounded && (high <=? k)) then (abnfLongestFirst g out n) else (let next : Bytes := (abnfEndsGo g more n 0 o 0 0 0 false 0 (abnfEmpty) (abnfEmpty) at); (let had : Nat := (prim multiply (abnfSize seen) 2 : Nat); (let grown : Bytes := (abnfUnion g seen next); (let fresh : Bytes := (if ((k + 1) <? low) then next else (match (prim slice grown had (prim subtract (prim length grown : Nat) had : Nat) : (Option Bytes))
       | Option.none => (abnfEmpty)
       | Option.some b => b)); (abnfEndsGo g more n 3 o 0 low high bounded (k + 1) (if (low <=? (k + 1)) then (prim append out next : Bytes) else out) (abnfKeepFrom g (abnfSize grown) grown 0 (abnfExtremeFrom (abnfSize fresh) fresh 0 false (abnfAt fresh 0)) (abnfEmpty)) fresh)))))))))))),
   axioms: [Quot.sound, propext],
@@ -462,12 +501,62 @@ definition{
 }
 
 definition{
+  name: abnfHotBlock,
+  parameters: [
+    g : AbnfInput,
+    fuel : Nat,
+    n : Nat,
+    o : Nat,
+    left : Nat,
+    p : Nat,
+    used : Nat,
+    offs : Bytes,
+    data : Bytes
+  ],
+  result: Bytes,
+  body: (match left
+    | Nat.zero => (prim append offs data : Bytes)
+    | Nat.succ more => (let e : Bytes := (abnfEnds g fuel n o p); (abnfHotBlock g fuel n o more (p + 1) ((used + 2) + (prim length e : Nat)) (prim append offs (abnfTripleOf g used) : Bytes) (prim append (prim append data (abnfPairOf g (abnfSize e)) : Bytes) e : Bytes)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: left
+}
+
+definition{
+  name: abnfHotAll,
+  parameters: [
+    g : AbnfInput,
+    fuel : Nat,
+    n : Nat,
+    top : Nat,
+    spec : Bytes,
+    left : Nat,
+    i : Nat,
+    hot : Bytes,
+    memo : Bytes
+  ],
+  result: Bytes,
+  body: (match left
+    | Nat.zero => (prim append (prim append (abnfPairOf g (prim quotient (prim length hot : Nat) 5 0 : Nat)) hot : Bytes) memo : Bytes)
+    | Nat.succ more => (let at : Nat := (2 + (prim multiply i (2 + (abnfWord (project g table) 0)) : Nat)); (if ((abnfByte spec ((at + 2) + top)) =? 0) then (abnfHotAll g fuel n top spec more (i + 1) hot memo) else (abnfHotAll g fuel n top spec more (i + 1) (prim append hot (prim append (abnfPairOf g (abnfWord spec at)) (abnfTripleOf g (prim length memo : Nat)) : Bytes) : Bytes) (prim append memo (abnfHotBlock (record AbnfInput {table := (project g table), text := (project g text), octets := (project g octets), pairs := (project g pairs), hot := hot, memo := memo}) fuel n (abnfRuleAt (project g table) (abnfWord spec at)) (n + 1) 0 0 (abnfEmpty) (abnfEmpty)) : Bytes))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: left
+}
+
+definition{
+  name: abnfRun,
+  parameters: [g : AbnfInput, spec : Bytes, fuel : Nat, rule : Nat, n : Nat],
+  result: Bytes,
+  body: (let s : Bytes := (abnfHotAll g fuel n rule spec (abnfWord spec 0) 0 (abnfEmpty) (abnfEmpty)); (let c : Nat := (prim multiply (abnfWord s 0) 5 : Nat); (let found : Bytes := (abnfDeriveGo (record AbnfInput {table := (project g table), text := (project g text), octets := (project g octets), pairs := (project g pairs), hot := (abnfCut s 2 c), memo := (abnfCut s (2 + c) (prim subtract (prim length s : Nat) (2 + c) : Nat))}) fuel n 6 rule 0 0 0 0 false 0 (abnfEmpty) (abnfEmpty) 0 0 n 0); (if (abnfIsNone found) then (prim utf8_encode "none" : Bytes) else found)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: abnfAnswer,
-  parameters: [table : Bytes, request : Bytes, fuel : Nat],
+  parameters: [table : Bytes, spec : Bytes, request : Bytes, fuel : Nat],
   result: Bytes,
   body: (let cut : Nat := (abnfDigitsCount 6 request 0); (if ((cut =? 0) || (not ((abnfByte request cut) =? 32))) then (prim utf8_encode "invalid" : Bytes) else (let rule : Nat := (abnfNumberEnd 6 request 0 0); (if ((abnfWord table 0) <=? rule) then (prim utf8_encode "none" : Bytes) else (match (prim slice request (cut + 1) (prim subtract (prim length request : Nat) (cut + 1) : Nat) : (Option Bytes))
     | Option.none => (prim utf8_encode "invalid" : Bytes)
-    | Option.some text => (let found : Bytes := (abnfDeriveGo (record AbnfInput {table := table, text := text, octets := (abnfOctets), pairs := (abnfPairsFrom (record AbnfInput {table := table, text := text, octets := (abnfOctets), pairs := (abnfEmpty)}) ((prim length text : Nat) + 1) 0 (abnfEmpty))}) fuel (prim length text : Nat) 6 rule 0 0 0 0 false 0 (abnfEmpty) (abnfEmpty) 0 0 (prim length text : Nat) 0); (if (abnfIsNone found) then (prim utf8_encode "none" : Bytes) else found))))))),
+    | Option.some text => (abnfRun (record AbnfInput {table := table, text := text, octets := (abnfOctets), pairs := (abnfPairsFrom (record AbnfInput {table := table, text := text, octets := (abnfOctets), pairs := (abnfEmpty), hot := (abnfEmpty), memo := (abnfEmpty)}) ((prim length text : Nat) + 1) 0 (abnfEmpty)), hot := (abnfEmpty), memo := (abnfEmpty)}) spec fuel rule (prim length text : Nat))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

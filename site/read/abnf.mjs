@@ -16,12 +16,10 @@
 //   const g = abnf(table); const tree = g.match("orig-date", "Date: ...\r\n");
 //   tree = { rule, start, end, text, kids: [trees of named rules] }
 import { GUESTS, openGuestSync } from "./guest.mjs";
-const GUEST = GUESTS.mail;
 
 const encoder = new TextEncoder();
-const url = new URL(GUEST.path, import.meta.url);
-const bytes = url.protocol === "file:" ? await (await import("node:fs/promises")).readFile(url) : new Uint8Array(await (await fetch(url)).arrayBuffer());
-const ask = await openGuestSync(bytes, GUEST.sha256);
+const url = new URL(GUESTS.mail.path, import.meta.url);
+const ask = await openGuestSync(url.protocol === "file:" ? await (await import("node:fs/promises")).readFile(url) : new Uint8Array(await (await fetch(url)).arrayBuffer()), GUESTS.mail.sha256);
 
 export function abnf({ rules }) {
   const names = Object.keys(rules).sort();
