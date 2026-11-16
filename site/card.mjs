@@ -3,6 +3,7 @@
 // the verified app's: this script only carries bytes between the page, the
 // vault, R4, the routed models and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
+import { lines, timeOf, utcOf } from "./time/recur.mjs";
 import { PLACES, ACTS, LABELS, FLOORS, SETTINGS, SECTIONS, SETUP, WORDS, DOMAINS, FEEDERS, FONTS } from "./surface/surface.mjs";
 // The coherence registry's runtime: what an item is about, what an Ask is
 // after, and Today. Loaded once there is something kept or asked, so an
@@ -40,11 +41,6 @@ async function relayConsent() {
 // nothing; an item kept only as a hash says only that.
 const lenient = new TextDecoder("utf-8", { fatal: false });
 
-// RFC 5545 folds long lines; a calendar's fold removes the line break and
-// the one space after it (RFC 5545 3.1). A message's fields are read by their
-// grammar (site/read/mail.mjs), folding included.
-const unfoldCalendar = (text) => text.replace(/\r?\n[ \t]/g, "");
-
 // RFC 2047 encoded words, the common case of a subject or a sender's name.
 // White space between two adjacent encoded words, folding included, is not
 // displayed (section 6.2).
@@ -61,40 +57,9 @@ export function headerWords(value = "") {
   });
 }
 
-function calendarLine(text, name) {
-  return new RegExp(`^${name}((?:;[^:]*)?):(.*)$`, "mi").exec(unfoldCalendar(text));
-}
-
-function calendarField(text, name) {
-  const match = calendarLine(text, name);
-  return match ? match[2].trim().replace(/\\([,;\\])/g, "$1").replace(/\\n/gi, " ") : "";
-}
-
-// A local time in a named zone (RFC 5545 3.2.19 TZID), through the browser's own zone data.
-function zoned(y, mo, d, h, mi, s, zone) {
-  try {
-    const parts = new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" });
-    const wall = Date.UTC(y, mo, d, h, mi, s);
-    const offset = (at) => {
-      const p = Object.fromEntries(parts.formatToParts(at).map(({ type, value }) => [type, +value]));
-      return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - at;
-    };
-    const first = wall - offset(wall);
-    return wall - offset(first);
-  } catch {
-    return new Date(y, mo, d, h, mi, s).getTime();
-  }
-}
-
-function icsTime(value, params = "") {
-  const m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/.exec(value);
-  if (!m) return NaN;
-  const [, y, mo, d, h = "0", mi = "0", s = "0", z] = m;
-  if (z) return Date.UTC(+y, mo - 1, +d, +h, +mi, +s);
-  const zone = /;TZID=("?)([^";:]+)\1/i.exec(params)?.[2];
-  return zone && h !== undefined && m[4] ? zoned(+y, mo - 1, +d, +h, +mi, +s, zone.replace(/^\//, "")) : new Date(+y, mo - 1, +d, +h, +mi, +s).getTime();
-}
-const icsField = (text, name) => { const line = calendarLine(text, name); return line ? icsTime(line[2].trim(), line[1]) : NaN; };
+// A calendar's fields, each by the content-line grammar and time reading of site/time/recur.mjs (RFC 5545 3.1, 3.3.4, 3.3.5).
+const calendarField = (text, name) => (lines(text, name)[0]?.[1] ?? "").replace(/\\([,;\\])/g, "$1").replace(/\\n/gi, " ");
+const icsField = (text, name) => { const [line] = lines(text, name); const t = line && timeOf(...line); return t ? utcOf(t.wall, t.date ? "" : t.zone) : NaN; };
 
 // The first words of a text, as a heading: its first line, cut at a word near 80 characters.
 function headline(text = "") {
@@ -166,11 +131,11 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const end = icsField(text, "DTEND") - first + start;
     const span = Number.isNaN(start) ? "" : [new Date(start), allDay || Number.isNaN(end) ? null : new Date(end)]
       .filter(Boolean).map((d, i) => d.toLocaleString(undefined, i === 0 ? (allDay ? { dateStyle: "full" } : { dateStyle: "full", timeStyle: "short" }) : (allDay ? { dateStyle: "full" } : { timeStyle: "short" }))).join(" – ");
-    const people = [...unfoldCalendar(text).matchAll(/^(?:ORGANIZER|ATTENDEE)([^:\r\n]*):(.*)$/gim)]
-      .map(([, params, value]) => /CN="?([^";:]+)"?/i.exec(params)?.[1] ?? value.replace(/^mailto:/i, "")).filter(Boolean);
-    const notes = reader ? reader.eventText(/^DESCRIPTION(?:;[^:]*)?:(.*)$/mi.exec(unfoldCalendar(text))?.[1] ?? "") : calendarField(text, "DESCRIPTION");
+    const people = lines(text, "(?:ORGANIZER|ATTENDEE)")
+      .map(([params, value]) => /CN="?([^";:]+)"?/i.exec(params)?.[1] ?? value.replace(/^mailto:/i, "")).filter(Boolean);
+    const notes = reader ? reader.eventText(lines(text, "DESCRIPTION")[0]?.[1] ?? "") : calendarField(text, "DESCRIPTION");
     // Comments to the calendar user (RFC 5545 §3.8.1.4), such as a reply's reason, read after the notes.
-    const comments = [...unfoldCalendar(text).matchAll(/^COMMENT(?:;[^:\r\n]*)?:(.*)$/gim)].map(([, value]) => (reader ? reader.eventText(value) : value.trim()));
+    const comments = lines(text, "COMMENT").map(([, value]) => (reader ? reader.eventText(value) : value.trim()));
     // The object's further events (an iMIP PUBLISH of several, an instance's own revision)
     // are events of their own, each read with the calendar's zones and method.
     const more = components.length > 1 && !meta.single ? components.slice(1).map((own, i) => {
@@ -188,7 +153,7 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
       ...(Number.isNaN(start) ? { undated: true } : {}), ...(method ? { method } : {}), ...(uid ? { uid, sequence } : {}), ...(recurrence ? { recurrence } : {}), ...(more.length ? { more } : {}) };
   }
   if (base.media === "contactCard") {
-    // Every property it holds, read as RFC 6350 defines it (site/read/vcard.mjs).
+    // Every property it holds, read as RFC 6350 defines it (the vcard guest, site/read/read.mjs).
     const card = reader?.readCard ? reader.readCard(text) : null;
     if (card) {
       // Of several instances, the one the card prefers (5.3 PREF: 1 is most preferred).
@@ -531,8 +496,9 @@ export default async function start({ app, reason, $ }) {
   // fetches none of it.
   let deviceOpen = null;
   const deviceOf = () => (deviceOpen ??= (async () => {
-    const [{ openDevice }, { ingestInto }, host] = await Promise.all([import("./device/device.mjs"), import("./google/ingest.mjs"), import("./device/host.mjs")]);
-    const source = openDevice({ decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted, lanes: host.lanes(), source: (rest) => line(`source ${rest}`), arrived: noteArrived });
+    const [{ openDevice }, { ingestInto }, host, read] = await Promise.all([import("./device/device.mjs"), import("./google/ingest.mjs"), import("./device/host.mjs"), import("./read/read.mjs")]);
+    reader ??= read;
+    const source = openDevice({ decide: (rest) => line(`folder ${rest}`), ingest: ingestInto({ vault }), halted, vcard: read.vcard, lanes: host.lanes(), source: (rest) => line(`source ${rest}`), arrived: noteArrived });
     return { source, ask: (more = {}) => host.plan({ decide: (rest) => line(`host ${rest}`), halted, ...more }) };
   })());
   async function reportDevice(t) {
@@ -1038,8 +1004,7 @@ export default async function start({ app, reason, $ }) {
   async function keepNote(place, text, domain = place.domains[0]) {
     if (!vault || !text) return false;
     const { route } = await import("./router/router.mjs");
-    const meaning = haltedNow ? null : meaningRead();
-    const mapped = await route({ source: "note", values: { text }, line, halted, learned: meaning ? { meaning } : {} });
+    const mapped = await route({ source: "note", values: { text }, line, halted });
     if (mapped.refused) { say(WORDS.refused, "bad"); return false; }
     if (mapped.domains.length) domain = mapped.domains[0];
     const label = LABELS[Math.max(...mapped.domains.concat(domain).map((d) => FLOORS[d]))].toLowerCase();

@@ -171,6 +171,66 @@
         2048,
         1048576
       ]
+    },
+    {
+      "id": "senses",
+      "wasm": "site/senses/guest/senses.wasm",
+      "pin": "site/senses/guest.mjs",
+      "modules": [
+        "PrismSosaTable",
+        "PrismSenses"
+      ],
+      "dispatch": "PrismSenses::prismSensesDispatch",
+      "vectors": "spec:senses",
+      "limits": [
+        3328,
+        12288,
+        6656
+      ],
+      "memory": [
+        2048,
+        1048576
+      ]
+    },
+    {
+      "id": "vcard",
+      "wasm": "site/read/guest/vcard.wasm",
+      "pin": "site/read/guest.mjs",
+      "as": "vcard",
+      "sync": true,
+      "modules": [
+        "PrismVcardTable",
+        "PrismVcard"
+      ],
+      "dispatch": "PrismVcard::vcardDispatch",
+      "vectors": "spec:vcard",
+      "limits": [
+        4096,
+        8192,
+        8192
+      ]
+    },
+    {
+      "id": "grammar-mail",
+      "wasm": "site/read/guest/grammar-mail.wasm",
+      "pin": "site/read/guest.mjs",
+      "as": "mail",
+      "modules": [
+        "Abnf",
+        "PrismGrammarMail"
+      ],
+      "dispatch": "PrismGrammarMail::prismGrammarMailDispatch",
+      "vectors": "spec:grammar",
+      "sync": true,
+      "memory": [
+        16384,
+        16777216
+      ],
+      "limits": [
+        4096,
+        131072,
+        8192
+      ]
     }
   ]
 }

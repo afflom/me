@@ -111,15 +111,25 @@ export function formatOfText(text) {
   return 'other';
 }
 
-// The contact picker's answer, as vCards.
-export function contactCards(contacts) {
-  const esc = (s) => String(s).replace(/[\\;,]/g, (c) => `\\${c}`).replace(/\r?\n/g, '\\n');
-  return contacts.map((c) => ['BEGIN:VCARD', 'VERSION:4.0', `FN:${esc(c.name?.[0] ?? c.email?.[0] ?? c.tel?.[0] ?? '')}`, ...(c.email ?? []).map((e) => `EMAIL:${esc(e)}`), ...(c.tel ?? []).map((n) => `TEL:${esc(n)}`), 'END:VCARD', ''].join('\r\n')).join('');
+// The contact picker's answer, as vCards: one the vcard guest writes per
+// contact (app/src/PrismVcard.lex.tex "write": FN, else the first email or
+// tel). A value's line breaks become spaces, since a request is read by its
+// lines; a contact the guest refuses writes nothing.
+export function contactCards(contacts, vcard) {
+  const flat = (s) => String(s).replace(/[\r\n]+/g, ' ');
+  return contacts.map((c) => vcard(['write', flat(c.name?.[0] ?? ''), ...(c.email ?? []).map((e) => `email ${flat(e)}`), ...(c.tel ?? []).map((n) => `tel ${flat(n)}`)].join('\n'))).filter((card) => card !== 'invalid').join('');
 }
 
-// vCard: one item per card.
-export function contactItems(text) {
-  return (text.replace(/\r?\n/g, '\n').match(/BEGIN:VCARD\n[\s\S]*?\nEND:VCARD\n?/gi) ?? []).map((card) => card.trimEnd().replace(/\n/g, '\r\n') + '\r\n');
+// vCard: one item per card, as the vcard guest unfolds it ("cards"), asked a
+// card at a time to stay within its request limit. A card beyond the limit
+// (one carrying a photo, say) is cut at its END:VCARD and kept folded as
+// written, in CRLF lines.
+export function contactItems(text, vcard) {
+  return text.split(/(?=^BEGIN:VCARD)/im).flatMap((piece) => {
+    const cards = vcard(`cards\n${piece}`);
+    if (cards !== 'invalid') return cards.split('\0').filter(Boolean);
+    return (piece.replace(/\r?\n/g, '\n').match(/^BEGIN:VCARD\n[\s\S]*?\nEND:VCARD$/im) ?? []).map((card) => card.replace(/\n/g, '\r\n') + '\r\n');
+  });
 }
 
 // The browser's word for a handle's permission, as the guest's `grant`.
@@ -170,15 +180,17 @@ export function handleStore(indexed = globalThis.indexedDB) {
 // openDevice: the device as a source.
 //   decide(line) -> 'read' | 'ask' | 'skip' | 'refuse'   (PrismFolder, through the root)
 //   ingest({envelope, frame, bytes}) -> outcome          (google/ingest.mjs ingestInto)
+//   vcard(request) -> answer                             (the vcard guest, read/read.mjs)
 //   store                                                (handleStore)
 //   halted() -> 'no' | 'yes'
 //   lanes                                                (host.mjs lanes: the host rule)
 // `source` is PrismSource's answer for "<service> <route> <act>" (with the
 // halted word appended here); without it no service's download is read.
 // `arrived(service, kept)` hears how many items of a service's download were kept.
-export function openDevice({ decide, ingest, source = async () => 'refuse', arrived = () => {}, store = handleStore(), halted = () => 'no', now = () => Date.now(), lanes = 1 }) {
+export function openDevice({ decide, ingest, vcard, source = async () => 'refuse', arrived = () => {}, store = handleStore(), halted = () => 'no', now = () => Date.now(), lanes = 1 }) {
   if (typeof decide !== 'function') throw fail('device.decide', 'openDevice needs decide (the PrismFolder guest)');
   if (typeof ingest !== 'function') throw fail('device.ingest', 'openDevice needs ingest');
+  if (typeof vcard !== 'function') throw fail('device.vcard', 'openDevice needs vcard (the vcard guest, site/read/read.mjs)');
   const ask = async (grant, format, action, bulk) => decide(`${grant} ${format} ${action} ${bulk} ${halted()}`);
 
   // Items are kept on as many lanes as the host rule allows.
@@ -228,7 +240,7 @@ export function openDevice({ decide, ingest, source = async () => 'refuse', arri
     }
     const text = await file.text();
     if (format === 'ics') for (const item of calendarItems(text)) await lane(() => keep(format, item, tally));
-    else if (format === 'vcf') for (const item of contactItems(text)) await lane(() => keep(format, item, tally));
+    else if (format === 'vcf') for (const item of contactItems(text, vcard)) await lane(() => keep(format, item, tally));
     else await lane(() => keep(format, text, tally));
   }
 
@@ -350,7 +362,10 @@ export function openDevice({ decide, ingest, source = async () => 'refuse', arri
     },
     // Contacts the owner picked in the browser's contact picker.
     async readContacts(contacts) {
-      return contacts.length ? this.readText(contactCards(contacts)) : tallyOf();
+      const cards = contacts.map((c) => contactCards([c], vcard)).filter(Boolean);
+      const read = cards.length ? await this.readText(cards.join('')) : tallyOf();
+      read.skip += contacts.length - cards.length;
+      return read;
     },
   };
 }

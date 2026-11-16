@@ -297,10 +297,76 @@ definition{
 }
 
 definition{
+  name: ptHeadJoin,
+  parameters: [h : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength h) <? (i + 1)) then acc else (if (((ptB h i) =? 10) && (Check::startsAt h i 0x0a2f2f20)) then (ptHeadJoin h (i + 4) (Foundation.Bytes::appendBytes acc 0x20) rest) else (ptHeadJoin h (i + 1) (Foundation.Bytes::appendBytes acc (Foundation.Json::span h i (i + 1))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptListEnd,
+  parameters: [h : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (ptB h i); (if ((Foundation.Bytes::byteLength h) <? (i + 1)) then i else (if (((47 <? b) && (b <? 58)) || (((64 <? b) && (b <? 91)) || (((96 <? b) && (b <? 123)) || ((b =? 44) || (b =? 32))))) then (ptListEnd h (i + 1) rest) else i)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptLastBuilt,
+  parameters: [h : Bytes, i : Nat, stop : Nat, found : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => found
+    | Nat.succ rest => (if (stop <? (i + 7)) then found else (ptLastBuilt h (i + 1) stop (if (Check::startsAt h i (Check::u ", built")) then i else found) rest))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptNameEndIn,
+  parameters: [h : Bytes, i : Nat, stop : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => stop
+    | Nat.succ rest => (if (stop <? (i + 1)) then stop else (if (((ptB h i) =? 44) && (((ptB h (i + 1)) =? 32) && ((i + 1) <? stop))) then i else (ptNameEndIn h (i + 1) stop rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptBuiltNames,
+  parameters: [h : Bytes, i : Nat, stop : Nat, known : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let e : Nat := (ptNameEndIn h i stop ((Foundation.Bytes::byteLength h) + 1)); (let kept : Bytes := (ptKeep acc known (Check::cat (cons (Check::u "app/src/") (cons (Foundation.Json::span h i e) (cons (Check::u ".lex.tex") (nil Bytes)))))); (if (e <? stop) then (ptBuiltNames h (e + 2) stop known kept rest) else kept)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ptBuilt,
+  parameters: [h : Bytes, i : Nat, known : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength h) <? (i + 1)) then acc else (let s : Nat := (if (Check::startsAt h i (Check::u "guest of ")) then (i + 9) else (if (Check::startsAt h i (Check::u "guests of ")) then (i + 10) else 0)); (if (s =? 0) then (ptBuilt h (i + 1) known acc rest) else (let e : Nat := (ptListEnd h s ((Foundation.Bytes::byteLength h) + 1)); (let b : Nat := (ptLastBuilt h (s + 1) e 0 ((Foundation.Bytes::byteLength h) + 1)); (if (b =? 0) then (ptBuilt h (i + 1) known acc rest) else (ptBuiltNames h s b known acc ((Foundation.Bytes::byteLength h) + 1))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
   name: twins,
   parameters: [archive : Bytes],
   result: Bytes,
-  body: (let name : Bytes := (Check::notGen archive); (if (ptLexFile name) then 0x else (let t : Bytes := (Check::file archive name); (let h : Bytes := (Foundation.Json::span t 0 (ptNthLine t 0 6 ((Foundation.Bytes::byteLength t) + 1))); (ptEdgeLine name (ptTwin h 0 (Check::file archive (Check::u ".gen/pt-parts")) 0x ((Foundation.Bytes::byteLength h) + 1))))))),
+  body: (let name : Bytes := (Check::notGen archive); (if (ptLexFile name) then 0x else (let t : Bytes := (Check::file archive name); (let h : Bytes := (Foundation.Json::span t 0 (ptNthLine t 0 6 ((Foundation.Bytes::byteLength t) + 1))); (let known : Bytes := (Check::file archive (Check::u ".gen/pt-parts")); (let j : Bytes := (ptHeadJoin h 0 0x ((Foundation.Bytes::byteLength h) + 1)); (ptEdgeLine name (ptBuilt j 0 known (ptTwin h 0 known 0x ((Foundation.Bytes::byteLength h) + 1)) ((Foundation.Bytes::byteLength j) + 1))))))))),
   axioms: [Quot.sound, propext]
 }
 
