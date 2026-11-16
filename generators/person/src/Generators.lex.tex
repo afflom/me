@@ -5,6 +5,7 @@
 \importmodule{Foundation.Bytes}
 \importmodule{GenIcf}
 \importmodule{GenIcfTree}
+\importmodule{GenIcfModule}
 \importmodule{Foundation.Tar}
 \importmodule{Foundation.View.Text.V1.Model}
 \importmodule{Foundation.View.Text.V3.Model}
@@ -76,7 +77,9 @@ definition{
     | Option.none => (refused (GenIcf::icfText "needs .gen/icf-tree"))
     | Option.some summaries => (let why : Bytes := (GenIcfTree::check summaries); (if (0 <? (Foundation.Bytes::byteLength why)) then (refused why) else (written (GenIcf::icfText "the ICF's structure holds across every entity\n"))))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "icfunique")) then (match (Foundation.Tar::find archive (GenIcf::icfText ".gen/icf-ids"))
     | Option.none => (refused (GenIcf::icfText "needs .gen/icf-ids"))
-    | Option.some keys => (let why : Bytes := (GenIcfTree::unique keys); (if (0 <? (Foundation.Bytes::byteLength why)) then (refused why) else (written (GenIcf::icfText "every entity of the ICF is in it once\n"))))) else 0x696e76616c6964)))))))))))),
+    | Option.some keys => (let why : Bytes := (GenIcfTree::unique keys); (if (0 <? (Foundation.Bytes::byteLength why)) then (refused why) else (written (GenIcf::icfText "every entity of the ICF is in it once\n"))))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "icfmodule")) then (match (Foundation.Tar::find archive (GenIcf::icfText "app/specs/oracle/spec.json"))
+    | Option.none => (refused (GenIcf::icfText "needs app/specs/oracle/spec.json"))
+    | Option.some spec => (if (Foundation.Tar::sameBytes (GenIcfModule::icfModuleKey spec) (GenIcf::icfText "icf")) then (written (GenIcfModule::icfModule spec)) else (refused (GenIcf::icfText "the oracle's first classification is not the ICF\n")))) else 0x696e76616c6964))))))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

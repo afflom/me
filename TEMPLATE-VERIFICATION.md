@@ -36,6 +36,7 @@ or test is added without the other two.
 | `tools/realize/gate.py --check` (`RZ-01`, settings) | the Language models setting bound to `models.route`, a facet the coherence registry does not have drive it | rejected (`setting \`models\` binds models.route, but the coherence registry does not have \`model\` drive \`models\``; `the coherence registry has \`router\` drive setting \`models\`, but no field of it is bound`); restoring `router.provider` passes |
 | `lexlean verify` (`RZ-01`) | the vault store's judge answers `storehash` where its spec says `store` | rejected (LLV7002 on `PrismRealizabilityProofs`: `rfl` failed on the witness pairs); restoring the judge verifies all 64 realizability theorems with no axioms |
 | `tools/generators/run.sh --check` (`GN-01`, GenSurfaceModel) | the look's dark `muted` tone darkened to `#3a4a42` in `app/specs/surface/spec.json` | rejected (`refused: muted on ground reads at 1.77 in dark, under its 4.5`); restoring the tone writes the model again |
+| `tools/generators/run.sh --check` (`GN-01`, GenSurfaceShell) | the rule for `.pr-setup-bar` renamed in `site/card.css` | rejected (`refused: the class pr-setup-bar has no rule in site/card.css`); restoring the rule writes the set up again |
 | `test/page/voice.test.mjs` (`VO-01`) | `site/voice.mjs` sounds an answer under Quiet (`if (true) sound(`) | rejected (`Quiet sounds nothing`); restoring `if (!quiet) sound(` passes |
 | `prism_pm_01` | `routesBoundary` states that the boundary facet answers with `PrismLearning::prismLearningDispatch` | rejected (`PM-01: routesBoundary must prove the Boundary facet answers with PrismBoundary::prismBoundaryDispatch`); restoring the statement passes |
 | `prismpm verify` | an acceptance vector set without the exact guest-allocation boundary | rejected (PP2009); seen again on the Prism root before its 1024-byte vector was added |
@@ -401,8 +402,10 @@ application's answer is decided by `route`.
 the workspace slots by `bootstrap/page.mjs`. The places, acts, settings and
 every visible word are `PrismSurface` (`app/specs/surface/spec.json`, written
 by the LexLean generators GenSurfaceModel into the LexLean model and its proofs,
-GenSurface into `site/surface/surface.mjs` and `site/card.html`, and GenLook into
-the token block of `site/card.css`). Its 18 guarantees, proved by `decide` against
+GenSurface into `site/surface/surface.mjs` and `site/card.html`, GenLook into
+the token block of `site/card.css`, and GenSurfaceShell into the set up journey,
+`site/surface/setup.mjs`, refusing a step, word, class or element the surface,
+the look or the page does not have). Its 18 guarantees, proved by `decide` against
 `Foundation.Me.V1.Model`, place every owner view exactly once, give each place
 exactly its view's role and domains, group the menu by role, keep outbound
 acts in the Correspondent, Planner and Publisher roles, keep a note at its
