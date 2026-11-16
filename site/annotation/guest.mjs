@@ -6,7 +6,7 @@
 
 export const GUESTS = {
   judge: { path: 'guest/annotation.wasm', sha256: '87c2f80c684f232e39bc5bee7654c08a367ab1fd8dd370b6a589a36a9501848b' },
-  cite: { path: 'guest/cite.wasm', sha256: '9a5740b2651c82d16aa958d29652cb3c576194a0e36b877a7f2da56b06d012ac' },
+  cite: { path: 'guest/cite.wasm', sha256: 'a8ac0cc6e6e19501286a194affea3e2d4bbc218cdef6c439b0368d16ad6afe93' },
 };
 
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
