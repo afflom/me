@@ -260,6 +260,103 @@
         "TS3011",
         "TS3012"
       ]
+    },
+    {
+      "key": "dialogbank",
+      "kind": "held",
+      "title": "DialogBank, gold-standard ISO 24617-2 annotations (Bunt, Petukhova, Malchanau, Fang and Wijnhoven, LREC 2016; Language Resources and Evaluation 2019), its English dialogues in DiAML",
+      "url": "https://dialogbank.lsv.uni-saarland.de/?page_id=3139",
+      "sha256": "b6f4c72c666cd3ec503787b804eaf4bfa5f4f0eaf0496799c092a12db541f248",
+      "examples": "diaml",
+      "held": "DialogBank's pages state no licence, and its dialogues come from corpora with terms of their own (Switchboard, HCRC Map Task, TRAINS, DBOX, the Hujiang lessons). Its files are pinned; no word of them is committed, only how many acts they gave and their SHA-256. No gate downloads them, so nothing here is enforced where the Prism is built: the source is read only with --fetch, and test/oracle/intent.test.mjs reads it only when DIALOGUE_HELD names the acts tools/oracle/gen.py --fetch --held wrote, and says so when it does not.",
+      "files": {
+        "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/2013-11-13-14-06-35-gl-diana.diaml": "53619b4f3b69a3a363c2d5659f0273b18b55542b82715b0c2ec3964ab8d3229a",
+        "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/2013-11-13-14-20-19-gl-rihanna.diaml": "759b5d5a8b2e2bfd676e1bc8e0a91059e2af4d1effe62f5e483e7370b2980268",
+        "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/2013-11-13-14-22-40-gl-venus.diaml": "c857e989818da567acec4de59ae9f58cab52ebeffaa77b8b29f353eefd62db22",
+        "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/2013-11-13-15-44-18-de-eleanor.diaml": "5b541321b8fa27a10c72aad7f82fd99c2090227571b80e3ed54f28a9c1d96a28",
+        "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/2013-11-13-17-04-58-nk-washington.diaml": "711bc7a57089110a32304995b85b655e3e0a26142a1feed0ae8e3234fdf03904",
+        "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/q1ec5.diaml": "c2d5a3defb96b449f1b6b1971c7de5dff56230b70a4f9fcb10445e7ee98b8c54",
+        "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/q1ec6.diaml": "b69dabb0d31d717f44f0209d740a4130ceb7fdfe673b221634b72a5add12d4a6",
+        "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/q1ec7.diaml": "5ed0d35e6208e551a700b89445506f4aee46bcd9987b5862d52498266f8899ca",
+        "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/sw00-0004.diaml": "216e6f2514fd44de11e12b26e825d77046b49a1717ed6e12a59a3ac49e237bd0",
+        "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/sw01-0105.diaml": "00b40727969634c781938acf194f8c73755129d9d61ec98301264f0fd760973a",
+        "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/sw02-0224.diaml": "a59bb1f71899ccd0000a9eeb9f0e245a8d64d61b6d5ffc1288e51e25b26da35e",
+        "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/sw03-0304.diaml": "2cd64956e367dfb5730ec4bc71cc44470cb3eb12a7841b277c8f44cf1362a8bc",
+        "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/trains1.diaml": "ecfd6c2eb30134bfe8b80c30006b760cf2feb503425af59a4cbc59457f1bc5ba",
+        "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/trains2.diaml": "e0f9cc9df83ab7940a43d28e1909c39a6dca357f2216db3622192f96f46b539b",
+        "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/trains3.diaml": "12408c0fce80ed2852a7a91b55bbcbb391bbb5f35e3b3d597cd9a229e7269983",
+        "https://dialogbank.lsv.uni-saarland.de/wp-content/uploads/2022/04/work.diaml": "3c6e3143e557ce99cbe0e36137ad67b66e9571de92cf0787714b87c0a6fc6733"
+      },
+      "malformed": [
+        "2013-11-13-14-06-35-gl-diana.diaml",
+        "2013-11-13-14-22-40-gl-venus.diaml",
+        "2013-11-13-17-04-58-nk-washington.diaml",
+        "q1ec5.diaml"
+      ],
+      "acts": {
+        "question": "question",
+        "propositionalQuestion": "question",
+        "setQuestion": "question",
+        "checkQuestion": "question",
+        "choiceQuestion": "question",
+        "inform": "fact",
+        "agreement": "fact",
+        "disagreement": "fact",
+        "correction": "fact",
+        "answer": "fact",
+        "setAnswer": "fact",
+        "propositionalAnswer": "fact",
+        "confirm": "fact",
+        "disconfirm": "fact",
+        "instruct": "task",
+        "request": "task",
+        "suggest": "task",
+        "offer": "task",
+        "promise": "task"
+      },
+      "unenforced": [
+        {
+          "what": "intent",
+          "why": "what each task-dimension act asks (the general-purpose functions mapped under acts); measured where the acts are supplied, never where the Prism is built, since no gate may download them"
+        },
+        {
+          "what": "segmentation",
+          "why": "which words make a functional segment; the Prism reads one prompt as one segment"
+        },
+        {
+          "what": "functionalDependence",
+          "why": "which earlier act an answer, an acceptance or a refusal responds to (ISO 24617-2 functional dependence relations); the Prism reads each line on its own and has no reader of what a turn depends on"
+        },
+        {
+          "what": "feedbackDependence",
+          "why": "which earlier acts a feedback act reports on (ISO 24617-2 feedback dependence relations); the Prism has no reader of feedback"
+        },
+        {
+          "what": "dimensions",
+          "why": "the eight dimensions beside task (auto- and allo-feedback, turn, time, discourse structuring, own and partner communication, social obligations, contact management); the intent reader reads the task dimension only"
+        },
+        {
+          "what": "responsive functions",
+          "why": "acts that accept, decline or address a request, a suggestion or an offer are commissives or directives whose content is the act they depend on; without functional dependence the reader cannot say what is committed to, so they are not mapped onto an intent"
+        },
+        {
+          "what": "qualifiers",
+          "why": "certainty, conditionality and sentiment qualifiers; the Prism reads none"
+        },
+        {
+          "what": "rhetoricalLink",
+          "why": "rhetorical relations between acts (ISO 24617-8 core relations); the Prism reads none"
+        }
+      ],
+      "comment": "What each functional segment of a dialogue does, in every dimension, and which earlier acts it depends on, as ISO 24617-2's own editors annotated it. acts: the standard's general-purpose functions onto the router's intents, in the task dimension: the information-seeking functions a question, the information-providing functions a fact, the directives and the commissives that open an action (instruct, request, suggest, offer, promise) a task. malformed: files that are not well-formed XML as published (a <when> element left unclosed); they are pinned and not read, and nothing is repaired. unenforced: what the annotation carries that no reader of the Prism is yet held to, each with why; test/oracle/intent.test.mjs counts each where the acts are supplied. measured: what the intent reader found on the acts, when and where; a measurement, not a threshold any gate holds.",
+      "measured": {
+        "on": "2026-11-15",
+        "where": "a local build, not a gate",
+        "acts": 819,
+        "fact-found": 94,
+        "question-found": 19,
+        "task-found": 12
+      }
     }
   ],
   "debt": [
