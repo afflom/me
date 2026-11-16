@@ -32,3 +32,9 @@ export async function openGuest(bytes, sha256) {
   const module = await compile(bytes, sha256);
   return async (line) => run((await WebAssembly.instantiate(module, {})).exports, line);
 }
+
+// The same, answered synchronously once the one asynchronous step (check and compile) is done.
+export async function openGuestSync(bytes, sha256) {
+  const module = await compile(bytes, sha256);
+  return (line) => run(new WebAssembly.Instance(module, {}).exports, line);
+}
