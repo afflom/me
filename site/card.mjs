@@ -1363,7 +1363,6 @@ export default async function start({ app, reason, $ }) {
     // A turn is what was asked and what was said, together; one sentence per item, each on its own line.
     const node = element("div", { className: "pr-turn" }, element("p", { className: "pr-you", textContent: prompt }), element("p", { className: "pr-said", textContent: said.sentences.join("\n") }));
     chat.append(node);
-    node.scrollIntoView({ block: "nearest" });
     const rows = said.sources.map(rowOf);
     drawn.replaceChildren(...rows);
     // The sentences link to the items they say; the list beneath holds all that was found.
@@ -1390,6 +1389,8 @@ export default async function start({ app, reason, $ }) {
       return button;
     }).filter(Boolean);
     node.append(...(links.length ? [element("p", { className: "pr-sources" }, ...links)] : []), ...(offers.length ? [element("div", { className: "pr-offers" }, ...offers)] : []));
+    // Shown once it is whole, so the decision it offers is in view with it.
+    node.scrollIntoView({ block: "nearest" });
   }
   out.style.whiteSpace = "pre-line";
   out.style.minWidth = "0";
