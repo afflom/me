@@ -2,7 +2,7 @@
 
     python3 -I tools/standards/gate.py [--check | --write [--fetch]] [--base REF] [--seed KEY]
 
-The register, app/specs/standards/spec.json, names each standard a part of the
+The register, app/specs/standards/register/<key>.json, names each standard a part of the
 Prism answers to, the part paths it governs, and where its own normative text
 is pinned. From that text, at its pinned SHA-256, each of the standard's
 inventories is extracted mechanically, by a LexLean generator of generators/
@@ -20,7 +20,7 @@ upstream text fixed by their hash; PV-01 skips exactly those files.
 A requirement is enforced when a suite that reaches a part the standard governs
 says so: a line of that suite carrying `enforces: <id>`, or the register's
 "enforcedBy" map naming that suite for the id. Every other requirement is debt,
-listed in app/specs/standards/debt.json, and the list must match exactly.
+listed in app/specs/standards/debt/<key>.json, and the list must match exactly.
 
 It refuses:
   - a pinned text or inventory source that is not the pinned bytes;
@@ -58,7 +58,7 @@ import urllib.request
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SPEC = ROOT / "app/specs/standards/spec.json"
-DEBT = ROOT / "app/specs/standards/debt.json"
+DEBT = ROOT / "app/specs/standards/debt"
 REQUIREMENTS = ROOT / "test/standards/requirements.json"
 ORACLE = ROOT / "app/specs/oracle/spec.json"
 SUITES = ["test/*.test.mjs", "site/*.test.mjs", "crates/conformance/tests/*.rs"]
@@ -269,10 +269,8 @@ def main(argv):
     base = argv[argv.index("--base") + 1] if "--base" in argv else None
     seed = argv[argv.index("--seed") + 1] if "--seed" in argv else None
     refusals = []
-    spec = load(SPEC)
-    debt = load(DEBT)
-    keys = [s["key"] for s in spec["standards"]]
-    refusals += [f"{dup} is registered twice" for dup in sorted({k for k in keys if keys.count(k) > 1})]
+    spec = parts_gate.record.load(SPEC)
+    debt = spec["debt"]
 
     requirements = derive(spec, write, refusals)
     rendered = canonical(requirements)
@@ -307,7 +305,7 @@ def main(argv):
             refusals.append(f"--seed {seed}: no measured standard by that key")
         else:
             debt[seed] = sorted(r["id"] for r in requirements[seed] if r["id"] not in enforced)
-            DEBT.write_text(canonical(debt), encoding="utf-8")
+            (DEBT / f"{seed}.json").write_text(canonical(debt[seed]), encoding="utf-8")
 
     for key, reqs in requirements.items():
         open_ids = {r["id"] for r in reqs if r["id"] not in enforced}
@@ -318,7 +316,8 @@ def main(argv):
     refusals += [f"debt names {key}, which is no measured standard" for key in sorted(set(debt) - set(requirements))]
 
     if base:
-        old_debt = base_json(base, DEBT) or {}
+        whole = base_json(base, DEBT.with_suffix(".json")) or {}
+        old_debt = {key: base_json(base, DEBT / f"{key}.json") or whole.get(key, []) for key in debt}
         old_reqs = base_json(base, REQUIREMENTS) or {}
         old_spec = base_json(base, SPEC) or {}
         for key, ids in debt.items():

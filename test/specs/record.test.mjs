@@ -9,7 +9,7 @@ import { join } from "node:path";
 import test from "node:test";
 import { load } from "../../tools/specs/record.mjs";
 
-const RECORDS = ["app/specs/product/spec.json", "app/specs/coherence/spec.json"];
+const RECORDS = ["app/specs/product/spec.json", "app/specs/coherence/spec.json", "app/specs/parts/spec.json", "app/specs/standards/spec.json"];
 const python = (path) => {
   const code = "import importlib.util,json,sys\ns=importlib.util.spec_from_file_location('r','tools/specs/record.py');m=importlib.util.module_from_spec(s);s.loader.exec_module(m)\nprint(json.dumps(m.load(sys.argv[1])))";
   const run = spawnSync("python3", ["-I", "-c", code, path], { encoding: "utf8" });
@@ -22,7 +22,7 @@ for (const path of RECORDS) {
     const py = python(path);
     assert.equal(py.status, 0, py.stderr);
     assert.deepEqual(js, py.value);
-    assert.ok(Array.isArray(js.facets) || Object.keys(js.facets).length > 0);
+    assert.ok(!("facets" in js) || Array.isArray(js.facets) || Object.keys(js.facets).length > 0);
   });
 }
 

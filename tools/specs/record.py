@@ -2,9 +2,9 @@
 
 A record's spec.json holds what is shared; an entry such as
     "journeys": {"parts": "journeys"}
-stands for every journeys/<key>.json beside it, one file per entry, read as a
+(at any depth of the record) stands for every journeys/<key>.json beside it, one file per entry, read as a
 list ordered by key (J2 before J10). With "as": "map" the files are read as a
-map from each file's name to its content. A list part's file names its own key,
+map from each file's path under the folder to its content. A list part's file names its own key,
 and the key must match the file's name. A record that already holds its entries
 inline (a planted copy written by a test) is read as it is.
 
@@ -19,16 +19,17 @@ def natural(name):
     return [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", name)]
 
 
-def load(path):
+def load(path, record=None):
     path = pathlib.Path(path)
-    record = json.loads(path.read_text(encoding="utf-8"))
+    record = json.loads(path.read_text(encoding="utf-8")) if record is None else record
     for key, value in list(record.items()):
-        if not (isinstance(value, dict) and set(value) <= {"parts", "as"} and "parts" in value):
+        if not (isinstance(value, dict) and set(value) <= {"parts", "as"} and isinstance(value.get("parts"), str)):
+            isinstance(value, dict) and load(path, value)
             continue
         folder = path.parent / value["parts"]
-        files = sorted(folder.glob("*.json"), key=lambda p: natural(p.stem))
+        files = sorted(folder.rglob("*.json"), key=lambda p: natural(p.relative_to(folder).with_suffix("").as_posix()))
         if value.get("as") == "map":
-            record[key] = {p.stem: json.loads(p.read_text(encoding="utf-8")) for p in files}
+            record[key] = {p.relative_to(folder).with_suffix("").as_posix(): json.loads(p.read_text(encoding="utf-8")) for p in files}
         else:
             entries = []
             for p in files:
