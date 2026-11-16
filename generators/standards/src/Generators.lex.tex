@@ -6,8 +6,8 @@
 \importmodule{GenWcag}
 \importmodule{GenAria}
 \importmodule{GenIrp}
-\importmodule{GenEmma}
 \importmodule{GenSosa}
+\importmodule{GenMessage}
 \importmodule{Foundation.Tar}
 \importmodule{Foundation.View.Text.V1.Model}
 \importmodule{Foundation.View.Text.V3.Model}
@@ -79,15 +79,11 @@ definition{
     | Option.none => (refused 0x6e65656473202e67656e2f617269612d66616374732077697468206f6e6c7920726f6c652c20656e642c2061627374726163742c20737461746520616e642070726f7065727479206c696e6573)
     | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x697270) then (match (GenIrp::irpGenerate archive)
     | Option.none => (refused 0x6e65656473206170702f73706563732f7374616e64617264732f757073747265616d2f7363786d6c2d6972702d6d616e69666573742e786d6c20696e207069656365732074686174207374617274206f75747369646520616e20617373657274696f6e2074657874)
-    | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x656d6d616661637473) then (match (GenEmma::emmaFacts archive)
-    | Option.none => (refused 0x6e656564732074686520496d706c656d656e746174696f6e205265706f727420506c616e206b65707420756e646572206170702f73706563732f7374616e64617264732f7465787473)
-    | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x656d6d61) then (match (GenEmma::emmaGenerate archive)
-    | Option.none => (refused 0x6e65656473202e67656e2f656d6d612d6972702d66616374732077697468207468652063656c6c73206f66206561636820617373657274696f6e20726f773a2069642c20666561747572652c2073656374696f6e2c2072657175697265642c2073656d616e74696373)
     | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x736f7361) then (match (GenSosa::sosaGenerate archive true)
     | Option.none => (refused 0x6e65656473206170702f73706563732f7374616e64617264732f757073747265616d2f736f73612e74746c206465636c6172696e6720736f73613a207465726d73)
     | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x736f73617461626c65) then (match (GenSosa::sosaGenerate archive false)
     | Option.none => (refused 0x6e65656473206170702f73706563732f7374616e64617264732f757073747265616d2f736f73612e74746c206465636c6172696e6720736f73613a207465726d73)
-    | Option.some file => (written file)) else 0x696e76616c6964))))))))))))))))),
+    | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x6d667465737473) then (let made : Bytes := (GenMessage::gmInventory archive); (if ((Foundation.Bytes::byteLength made) =? 0) then (refused 0x6e65656473206f6e652066696c65206f66206170702f73706563732f6d6573736167652f757073747265616d2f2077686f7365207465737473206561636820636172727920612073726320737472696e67) else (written made))) else 0x696e76616c6964)))))))))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

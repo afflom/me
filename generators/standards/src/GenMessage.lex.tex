@@ -1,0 +1,345 @@
+\begin{lexlean}{GenMessage}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: mfLen, parameters: [s : Bytes], result: Nat, body: (prim length s : Nat)}
+
+definition{
+  name: mfAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => 0
+    | Option.some b => (prim to_nat b : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfCut,
+  parameters: [s : Bytes, start : Nat, stop : Nat],
+  result: Bytes,
+  body: (let e : Nat := (if ((prim length s : Nat) <? stop) then (prim length s : Nat) else stop); (match (prim slice s start (prim subtract e start : Nat) : (Option Bytes))
+    | Option.none => 0x
+    | Option.some b => b))
+}
+
+definition{
+  name: mfSame,
+  parameters: [left : Bytes, right : Bytes],
+  result: Bool,
+  body: (prim equal (prim compare_bytes left right : Ordering) (prim compare_bytes 0x00 0x00 : Ordering) : Bool),
+  axioms: [propext]
+}
+
+definition{
+  name: mfByteOf,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (if (n <? 128) then (if (n <? 64) then (if (n <? 32) then (if (n <? 16) then (if (n <? 8) then (if (n <? 4) then (if (n <? 2) then (if (n <? 1) then 0x00 else 0x01) else (if (n <? 3) then 0x02 else 0x03)) else (if (n <? 6) then (if (n <? 5) then 0x04 else 0x05) else (if (n <? 7) then 0x06 else 0x07))) else (if (n <? 12) then (if (n <? 10) then (if (n <? 9) then 0x08 else 0x09) else (if (n <? 11) then 0x0a else 0x0b)) else (if (n <? 14) then (if (n <? 13) then 0x0c else 0x0d) else (if (n <? 15) then 0x0e else 0x0f)))) else (if (n <? 24) then (if (n <? 20) then (if (n <? 18) then (if (n <? 17) then 0x10 else 0x11) else (if (n <? 19) then 0x12 else 0x13)) else (if (n <? 22) then (if (n <? 21) then 0x14 else 0x15) else (if (n <? 23) then 0x16 else 0x17))) else (if (n <? 28) then (if (n <? 26) then (if (n <? 25) then 0x18 else 0x19) else (if (n <? 27) then 0x1a else 0x1b)) else (if (n <? 30) then (if (n <? 29) then 0x1c else 0x1d) else (if (n <? 31) then 0x1e else 0x1f))))) else (if (n <? 48) then (if (n <? 40) then (if (n <? 36) then (if (n <? 34) then (if (n <? 33) then 0x20 else 0x21) else (if (n <? 35) then 0x22 else 0x23)) else (if (n <? 38) then (if (n <? 37) then 0x24 else 0x25) else (if (n <? 39) then 0x26 else 0x27))) else (if (n <? 44) then (if (n <? 42) then (if (n <? 41) then 0x28 else 0x29) else (if (n <? 43) then 0x2a else 0x2b)) else (if (n <? 46) then (if (n <? 45) then 0x2c else 0x2d) else (if (n <? 47) then 0x2e else 0x2f)))) else (if (n <? 56) then (if (n <? 52) then (if (n <? 50) then (if (n <? 49) then 0x30 else 0x31) else (if (n <? 51) then 0x32 else 0x33)) else (if (n <? 54) then (if (n <? 53) then 0x34 else 0x35) else (if (n <? 55) then 0x36 else 0x37))) else (if (n <? 60) then (if (n <? 58) then (if (n <? 57) then 0x38 else 0x39) else (if (n <? 59) then 0x3a else 0x3b)) else (if (n <? 62) then (if (n <? 61) then 0x3c else 0x3d) else (if (n <? 63) then 0x3e else 0x3f)))))) else (if (n <? 96) then (if (n <? 80) then (if (n <? 72) then (if (n <? 68) then (if (n <? 66) then (if (n <? 65) then 0x40 else 0x41) else (if (n <? 67) then 0x42 else 0x43)) else (if (n <? 70) then (if (n <? 69) then 0x44 else 0x45) else (if (n <? 71) then 0x46 else 0x47))) else (if (n <? 76) then (if (n <? 74) then (if (n <? 73) then 0x48 else 0x49) else (if (n <? 75) then 0x4a else 0x4b)) else (if (n <? 78) then (if (n <? 77) then 0x4c else 0x4d) else (if (n <? 79) then 0x4e else 0x4f)))) else (if (n <? 88) then (if (n <? 84) then (if (n <? 82) then (if (n <? 81) then 0x50 else 0x51) else (if (n <? 83) then 0x52 else 0x53)) else (if (n <? 86) then (if (n <? 85) then 0x54 else 0x55) else (if (n <? 87) then 0x56 else 0x57))) else (if (n <? 92) then (if (n <? 90) then (if (n <? 89) then 0x58 else 0x59) else (if (n <? 91) then 0x5a else 0x5b)) else (if (n <? 94) then (if (n <? 93) then 0x5c else 0x5d) else (if (n <? 95) then 0x5e else 0x5f))))) else (if (n <? 112) then (if (n <? 104) then (if (n <? 100) then (if (n <? 98) then (if (n <? 97) then 0x60 else 0x61) else (if (n <? 99) then 0x62 else 0x63)) else (if (n <? 102) then (if (n <? 101) then 0x64 else 0x65) else (if (n <? 103) then 0x66 else 0x67))) else (if (n <? 108) then (if (n <? 106) then (if (n <? 105) then 0x68 else 0x69) else (if (n <? 107) then 0x6a else 0x6b)) else (if (n <? 110) then (if (n <? 109) then 0x6c else 0x6d) else (if (n <? 111) then 0x6e else 0x6f)))) else (if (n <? 120) then (if (n <? 116) then (if (n <? 114) then (if (n <? 113) then 0x70 else 0x71) else (if (n <? 115) then 0x72 else 0x73)) else (if (n <? 118) then (if (n <? 117) then 0x74 else 0x75) else (if (n <? 119) then 0x76 else 0x77))) else (if (n <? 124) then (if (n <? 122) then (if (n <? 121) then 0x78 else 0x79) else (if (n <? 123) then 0x7a else 0x7b)) else (if (n <? 126) then (if (n <? 125) then 0x7c else 0x7d) else (if (n <? 127) then 0x7e else 0x7f))))))) else (if (n <? 192) then (if (n <? 160) then (if (n <? 144) then (if (n <? 136) then (if (n <? 132) then (if (n <? 130) then (if (n <? 129) then 0x80 else 0x81) else (if (n <? 131) then 0x82 else 0x83)) else (if (n <? 134) then (if (n <? 133) then 0x84 else 0x85) else (if (n <? 135) then 0x86 else 0x87))) else (if (n <? 140) then (if (n <? 138) then (if (n <? 137) then 0x88 else 0x89) else (if (n <? 139) then 0x8a else 0x8b)) else (if (n <? 142) then (if (n <? 141) then 0x8c else 0x8d) else (if (n <? 143) then 0x8e else 0x8f)))) else (if (n <? 152) then (if (n <? 148) then (if (n <? 146) then (if (n <? 145) then 0x90 else 0x91) else (if (n <? 147) then 0x92 else 0x93)) else (if (n <? 150) then (if (n <? 149) then 0x94 else 0x95) else (if (n <? 151) then 0x96 else 0x97))) else (if (n <? 156) then (if (n <? 154) then (if (n <? 153) then 0x98 else 0x99) else (if (n <? 155) then 0x9a else 0x9b)) else (if (n <? 158) then (if (n <? 157) then 0x9c else 0x9d) else (if (n <? 159) then 0x9e else 0x9f))))) else (if (n <? 176) then (if (n <? 168) then (if (n <? 164) then (if (n <? 162) then (if (n <? 161) then 0xa0 else 0xa1) else (if (n <? 163) then 0xa2 else 0xa3)) else (if (n <? 166) then (if (n <? 165) then 0xa4 else 0xa5) else (if (n <? 167) then 0xa6 else 0xa7))) else (if (n <? 172) then (if (n <? 170) then (if (n <? 169) then 0xa8 else 0xa9) else (if (n <? 171) then 0xaa else 0xab)) else (if (n <? 174) then (if (n <? 173) then 0xac else 0xad) else (if (n <? 175) then 0xae else 0xaf)))) else (if (n <? 184) then (if (n <? 180) then (if (n <? 178) then (if (n <? 177) then 0xb0 else 0xb1) else (if (n <? 179) then 0xb2 else 0xb3)) else (if (n <? 182) then (if (n <? 181) then 0xb4 else 0xb5) else (if (n <? 183) then 0xb6 else 0xb7))) else (if (n <? 188) then (if (n <? 186) then (if (n <? 185) then 0xb8 else 0xb9) else (if (n <? 187) then 0xba else 0xbb)) else (if (n <? 190) then (if (n <? 189) then 0xbc else 0xbd) else (if (n <? 191) then 0xbe else 0xbf)))))) else (if (n <? 224) then (if (n <? 208) then (if (n <? 200) then (if (n <? 196) then (if (n <? 194) then (if (n <? 193) then 0xc0 else 0xc1) else (if (n <? 195) then 0xc2 else 0xc3)) else (if (n <? 198) then (if (n <? 197) then 0xc4 else 0xc5) else (if (n <? 199) then 0xc6 else 0xc7))) else (if (n <? 204) then (if (n <? 202) then (if (n <? 201) then 0xc8 else 0xc9) else (if (n <? 203) then 0xca else 0xcb)) else (if (n <? 206) then (if (n <? 205) then 0xcc else 0xcd) else (if (n <? 207) then 0xce else 0xcf)))) else (if (n <? 216) then (if (n <? 212) then (if (n <? 210) then (if (n <? 209) then 0xd0 else 0xd1) else (if (n <? 211) then 0xd2 else 0xd3)) else (if (n <? 214) then (if (n <? 213) then 0xd4 else 0xd5) else (if (n <? 215) then 0xd6 else 0xd7))) else (if (n <? 220) then (if (n <? 218) then (if (n <? 217) then 0xd8 else 0xd9) else (if (n <? 219) then 0xda else 0xdb)) else (if (n <? 222) then (if (n <? 221) then 0xdc else 0xdd) else (if (n <? 223) then 0xde else 0xdf))))) else (if (n <? 240) then (if (n <? 232) then (if (n <? 228) then (if (n <? 226) then (if (n <? 225) then 0xe0 else 0xe1) else (if (n <? 227) then 0xe2 else 0xe3)) else (if (n <? 230) then (if (n <? 229) then 0xe4 else 0xe5) else (if (n <? 231) then 0xe6 else 0xe7))) else (if (n <? 236) then (if (n <? 234) then (if (n <? 233) then 0xe8 else 0xe9) else (if (n <? 235) then 0xea else 0xeb)) else (if (n <? 238) then (if (n <? 237) then 0xec else 0xed) else (if (n <? 239) then 0xee else 0xef)))) else (if (n <? 248) then (if (n <? 244) then (if (n <? 242) then (if (n <? 241) then 0xf0 else 0xf1) else (if (n <? 243) then 0xf2 else 0xf3)) else (if (n <? 246) then (if (n <? 245) then 0xf4 else 0xf5) else (if (n <? 247) then 0xf6 else 0xf7))) else (if (n <? 252) then (if (n <? 250) then (if (n <? 249) then 0xf8 else 0xf9) else (if (n <? 251) then 0xfa else 0xfb)) else (if (n <? 254) then (if (n <? 253) then 0xfc else 0xfd) else (if (n <? 255) then 0xfe else 0xff))))))))
+}
+
+definition{
+  name: mfByte,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (mfByteOf (prim remainder n 256 0 : Nat))
+}
+
+definition{
+  name: mfU16,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (prim append (mfByte (prim quotient n 256 0 : Nat)) (mfByte n) : Bytes)
+}
+
+definition{
+  name: mfG16,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: ((prim multiply (mfAt s i) 256 : Nat) + (mfAt s (i + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfF,
+  parameters: [x : Bytes],
+  result: Bytes,
+  body: (prim append (mfU16 (mfLen x)) x : Bytes)
+}
+
+definition{
+  name: mfFAt,
+  parameters: [r : Bytes, i : Nat, k : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (k =? 0) then i else (mfFAt r (i + (2 + (mfG16 r i))) (prim subtract k 1 : Nat) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfGet,
+  parameters: [r : Bytes, k : Nat],
+  result: Bytes,
+  body: (let i : Nat := (mfFAt r 0 k k); (mfCut r (i + 2) (i + (2 + (mfG16 r i))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfKw,
+  parameters: [s : Bytes, i : Nat, k : Bytes],
+  result: Bool,
+  body: (mfSame (mfCut s i (i + (mfLen k))) k),
+  axioms: [propext]
+}
+
+definition{
+  name: mfCpLen,
+  parameters: [b : Nat],
+  result: Nat,
+  body: (if (b <? 128) then 1 else (if (b <? 224) then 2 else (if (b <? 240) then 3 else 4)))
+}
+
+definition{
+  name: mfCp,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (mfAt s i); (if (b <? 128) then b else (if (b <? 224) then ((prim multiply (prim subtract b 192 : Nat) 64 : Nat) + (prim subtract (mfAt s (i + 1)) 128 : Nat)) else (if (b <? 240) then ((prim multiply (prim subtract b 224 : Nat) 4096 : Nat) + ((prim multiply (prim subtract (mfAt s (i + 1)) 128 : Nat) 64 : Nat) + (prim subtract (mfAt s (i + 2)) 128 : Nat))) else ((prim multiply (prim subtract b 240 : Nat) 262144 : Nat) + ((prim multiply (prim subtract (mfAt s (i + 1)) 128 : Nat) 4096 : Nat) + ((prim multiply (prim subtract (mfAt s (i + 2)) 128 : Nat) 64 : Nat) + (prim subtract (mfAt s (i + 3)) 128 : Nat)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfUtf8,
+  parameters: [c : Nat],
+  result: Bytes,
+  body: (if (c <? 128) then (mfByte c) else (if (c <? 2048) then (prim append (mfByte (192 + (prim quotient c 64 0 : Nat))) (mfByte (128 + (prim remainder c 64 0 : Nat))) : Bytes) else (if (c <? 65536) then (prim append (mfByte (224 + (prim quotient c 4096 0 : Nat))) (prim append (mfByte (128 + (prim remainder (prim quotient c 64 0 : Nat) 64 0 : Nat))) (mfByte (128 + (prim remainder c 64 0 : Nat))) : Bytes) : Bytes) else (prim append (mfByte (240 + (prim quotient c 262144 0 : Nat))) (prim append (mfByte (128 + (prim remainder (prim quotient c 4096 0 : Nat) 64 0 : Nat))) (prim append (mfByte (128 + (prim remainder (prim quotient c 64 0 : Nat) 64 0 : Nat))) (mfByte (128 + (prim remainder c 64 0 : Nat))) : Bytes) : Bytes) : Bytes))))
+}
+
+definition{
+  name: mfNatFrom,
+  parameters: [n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let d : Bytes := (prim append (mfByte (48 + (prim remainder n 10 0 : Nat))) acc : Bytes); (if (n <? 10) then d else (mfNatFrom (prim quotient n 10 0 : Nat) d rest)))),
+  recursive_argument: fuel
+}
+
+definition{name: mfNat, parameters: [n : Nat], result: Bytes, body: (mfNatFrom n 0x 20)}
+
+definition{
+  name: mfJWs,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 32) || ((b =? 10) || ((b =? 13) || (b =? 9))))
+}
+
+definition{
+  name: mfJSkip,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((i <? (mfLen s)) && (mfJWs (mfAt s i))) then (mfJSkip s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfJStrEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((mfLen s) <? (i + 1)) then i else (if ((mfAt s i) =? 92) then (mfJStrEnd s (i + 2) rest) else (if ((mfAt s i) =? 34) then (i + 1) else (mfJStrEnd s (i + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfJNest,
+  parameters: [s : Bytes, i : Nat, depth : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((mfLen s) <? (i + 1)) then i else (let b : Nat := (mfAt s i); (if (b =? 34) then (mfJNest s (mfJStrEnd s (i + 1) (mfLen s)) depth rest) else (if ((b =? 123) || (b =? 91)) then (mfJNest s (i + 1) (depth + 1) rest) else (if ((b =? 125) || (b =? 93)) then (if (depth <? (1 + 1)) then (i + 1) else (mfJNest s (i + 1) (prim subtract depth 1 : Nat) rest)) else (mfJNest s (i + 1) depth rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfJScalarEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((mfLen s) <? (i + 1)) then i else (let b : Nat := (mfAt s i); (if ((b =? 44) || ((b =? 125) || ((b =? 93) || (mfJWs b)))) then i else (mfJScalarEnd s (i + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfJEnd,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (mfAt s i); (if (b =? 34) then (mfJStrEnd s (i + 1) (mfLen s)) else (if ((b =? 123) || (b =? 91)) then (mfJNest s i 0 (mfLen s)) else (mfJScalarEnd s i (mfLen s))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfJMember,
+  parameters: [s : Bytes, i : Nat, key : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (let a : Nat := (mfJSkip s i (mfLen s)); (if (not ((mfAt s a) =? 34)) then 0 else (let e : Nat := (mfJStrEnd s (a + 1) (mfLen s)); (let c : Nat := (mfJSkip s e (mfLen s)); (let v : Nat := (mfJSkip s (c + 1) (mfLen s)); (let n : Nat := (mfJSkip s (mfJEnd s v) (mfLen s)); (if (mfSame (mfCut s (a + 1) (prim subtract e 1 : Nat)) key) then (v + 1) else (if ((mfAt s n) =? 44) then (mfJMember s (n + 1) key rest) else 0))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfJGet,
+  parameters: [s : Bytes, obj : Nat, key : Bytes],
+  result: Nat,
+  body: (if ((mfAt s obj) =? 123) then (mfJMember s (obj + 1) key (mfLen s)) else 0),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfHex,
+  parameters: [b : Nat],
+  result: Nat,
+  body: (if (b <? 58) then (prim subtract b 48 : Nat) else (if (b <? 71) then (prim subtract b 55 : Nat) else (prim subtract b 87 : Nat)))
+}
+
+definition{
+  name: mfHex4,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: ((prim multiply (mfHex (mfAt s i)) 4096 : Nat) + ((prim multiply (mfHex (mfAt s (i + 1))) 256 : Nat) + ((prim multiply (mfHex (mfAt s (i + 2))) 16 : Nat) + (mfHex (mfAt s (i + 3)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: mfJPlain,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((mfLen s) <? (i + 1)) || (((mfAt s i) =? 34) || ((mfAt s i) =? 92))) then i else (mfJPlain s (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfJEscape,
+  parameters: [s : Bytes, i : Nat, n : Nat],
+  result: Bytes,
+  body: (if (n =? 110) then 0x0a else (if (n =? 116) then 0x09 else (if (n =? 114) then 0x0d else (if (n =? 98) then 0x08 else (if (n =? 102) then 0x0c else (mfCut s i (i + 1)))))))
+}
+
+definition{
+  name: mfJText,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((mfLen s) <? (i + 1)) then acc else (let b : Nat := (mfAt s i); (if (b =? 34) then acc else (if (not (b =? 92)) then (let e : Nat := (mfJPlain s i (mfLen s)); (mfJText s e (prim append acc (mfCut s i e) : Bytes) rest)) else (let n : Nat := (mfAt s (i + 1)); (if (not (n =? 117)) then (mfJText s (i + 2) (prim append acc (mfJEscape s (i + 1) n) : Bytes) rest) else (let u : Nat := (mfHex4 s (i + 2)); (if ((55296 <? (u + 1)) && ((u <? 56320) && (((mfAt s (i + 6)) =? 92) && ((mfAt s (i + 7)) =? 117)))) then (mfJText s (i + 12) (prim append acc (mfUtf8 (65536 + ((prim multiply (prim subtract u 55296 : Nat) 1024 : Nat) + (prim subtract (mfHex4 s (i + 8)) 56320 : Nat)))) : Bytes) rest) else (mfJText s (i + 6) (prim append acc (mfUtf8 u) : Bytes) rest)))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: mfJString,
+  parameters: [s : Bytes, v : Nat],
+  result: Bytes,
+  body: (if ((0 <? v) && ((mfAt s (prim subtract v 1 : Nat)) =? 34)) then (mfJText s v 0x (mfLen s)) else 0x),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gmOctal,
+  parameters: [s : Bytes, i : Nat, stop : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (let b : Nat := (mfAt s i); (if ((48 <? (b + 1)) && (b <? 56)) then (gmOctal s (i + 1) stop ((prim multiply acc 8 : Nat) + (prim subtract b 48 : Nat)) rest) else acc)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: gmNameEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((100 <? (i + 1)) || ((mfAt s i) =? 0)) then i else (gmNameEnd s (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: gmName,
+  parameters: [a : Bytes],
+  result: Bytes,
+  body: (mfCut a 0 (gmNameEnd a 0 100)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gmFile,
+  parameters: [a : Bytes],
+  result: Bytes,
+  body: (mfCut a 512 (512 + (gmOctal a 124 135 0 12))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gmRoot,
+  parameters: [],
+  result: Bytes,
+  body: 0x6170702f73706563732f6d6573736167652f757073747265616d2f
+}
+
+definition{
+  name: gmSlug,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((mfLen s) <? (i + 1)) then acc else (gmSlug s (i + 1) (prim append acc (if ((mfAt s i) =? 47) then 0x2d else (mfCut s i (i + 1))) : Bytes) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: gmEntry,
+  parameters: [path : Bytes, slug : Bytes, k : Nat, src : Bytes],
+  result: Bytes,
+  body: (prim append 0x20207b226964223a2022756e69636f64652d6d657373616765666f726d61742d322d (prim append slug (prim append 0x2d (prim append (mfNat k) (prim append 0x222c2022726566223a2022746573742f74657374732f (prim append path (prim append 0x232f74657374732f (prim append (mfNat k) (prim append 0x222c202274657874223a20 (prim append src 0x2c20226b696e64223a202274657374227d : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes)
+}
+
+definition{
+  name: gmTests,
+  parameters: [s : Bytes, path : Bytes, slug : Bytes, i : Nat, k : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let a : Nat := (mfJSkip s i (mfLen s)); (if ((mfAt s a) =? 93) then (if (k =? 0) then 0x else (prim append 0x5b0a (prim append acc 0x0a5d0a : Bytes) : Bytes)) else (if (not ((mfAt s a) =? 123)) then 0x else (let v : Nat := (mfJGet s a 0x737263); (let e : Nat := (mfJSkip s (mfJEnd s a) (mfLen s)); (if ((v =? 0) || (not ((mfAt s (prim subtract v 1 : Nat)) =? 34))) then 0x else (gmTests s path slug (if ((mfAt s e) =? 44) then (e + 1) else e) (k + 1) (prim append acc (prim append (if (k =? 0) then 0x else 0x2c0a) (gmEntry path slug k (mfCut s (prim subtract v 1 : Nat) (mfJEnd s (prim subtract v 1 : Nat)))) : Bytes) : Bytes) rest)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: gmInventory,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let name : Bytes := (gmName archive); (let s : Bytes := (gmFile archive); (let n : Nat := (mfLen (gmRoot)); (let path : Bytes := (mfCut name n (mfLen name)); (let obj : Nat := (mfJSkip s 0 (mfLen s)); (let v : Nat := (mfJGet s obj 0x7465737473); (if ((not (mfSame (mfCut name 0 n) (gmRoot))) || ((not (mfSame (mfCut path (prim subtract (mfLen path) 5 : Nat) (mfLen path)) 0x2e6a736f6e)) || ((v =? 0) || (not ((mfAt s (prim subtract v 1 : Nat)) =? 91))))) then 0x else (gmTests s path (gmSlug (mfCut path 0 (prim subtract (mfLen path) 5 : Nat)) 0 0x (mfLen path)) v 0 0x (mfLen s))))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
