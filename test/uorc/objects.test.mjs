@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import { openGuest as openKappa, GUEST as KAPPA } from '../../site/kappa/guest.mjs';
 import { openGuest as openUorc, GUEST as UORC } from '../../site/uorc/guest.mjs';
 import { loadClient, makeObjects, structureOf } from '../../site/uorc/objects.mjs';
-import { labelOf } from '../../site/kappa/kappa.mjs';
+import { makeKappa } from '../../site/kappa/kappa.mjs';
 
 const root = new URL('../../', import.meta.url);
 const site = new URL('site/uorc/', root);
@@ -43,6 +43,7 @@ const kappaGuest = await openKappa(new Uint8Array(await readFile(new URL(KAPPA.p
 const uorcGuest = await openUorc(new Uint8Array(await readFile(new URL(UORC.path, site))), UORC.sha256);
 let halted = 'no';
 const asked = [];
+const { labelOf } = makeKappa({ decide: kappaGuest });
 const decide = { kappa: kappaGuest, uorc: async (line) => { asked.push(line); return uorcGuest(line); } };
 const objects = makeObjects({ client: () => client, decide, halted: () => halted });
 

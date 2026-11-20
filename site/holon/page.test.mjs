@@ -63,7 +63,7 @@ await observer.settled();
 ok(asked.some((a) => a.startsWith('holon ')), 'the page asks the holon facet');
 ok(asked.filter((a) => a.startsWith('holon ')).every((a) => a.split(' ').length === 7), 'every holon line has its six fields');
 ok(asked.filter((a) => a.startsWith('curate ')).every((a) => a.split(' ').length === 11), 'every curate line has its ten fields');
-ok(asked.filter((a) => a.startsWith('kappa ')).every((a) => /^kappa sha256:[0-9a-f]{64} match$/.test(a)), 'every claim is named on sha256 by the kappa facet');
+ok(asked.filter((a) => a.startsWith('kappa ')).every((a) => /^kappa admit sha256:[0-9a-f]{64}( [0-9a-f]{64}){0,2}$/.test(a)), 'every claim is named on sha256 by the kappa facet');
 for (const p of tuned) ok((() => { try { paramsOf(p); return true; } catch { return false; } })(), `tuned within the spec: ${JSON.stringify(p)}`);
 const card = observer.scorecard();
 ok(card.find((c) => c.id === 'today')?.kpi !== null, 'the place the owner was in is measured');

@@ -17,7 +17,7 @@
 // `client` returns the pinned uorc client (see loadClient), loaded on first use
 // only, so a page that keeps nothing never fetches it.
 
-import { labelOf, makeKappa } from '../kappa/kappa.mjs';
+import { makeKappa } from '../kappa/kappa.mjs';
 
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
 
@@ -83,7 +83,7 @@ export function makeObjects({ client, decide, halted = () => 'no' }) {
     let restore = 'failed', bytes = null;
     try {
       bytes = uorc.decompress(archive);
-      restore = (await labelOf(bytes)) === label ? 'same' : 'differs';
+      restore = (await kappa.labelOf(bytes)) === label ? 'same' : 'differs';
     } catch { restore = 'failed'; }
     const k = bytes && restore === 'same' ? (await kappa.admit(label, bytes)).outcome : 'refuse';
     const line = `${act} ${halted()} ${s.seal} ${s.format} ${s.scope} ${s.objects} ${restore} ${k === 'admit' ? 'admit' : 'other'}`;
@@ -92,7 +92,7 @@ export function makeObjects({ client, decide, halted = () => 'no' }) {
 
   async function keep(value) {
     const uorc = await uorcOf();
-    const label = await labelOf(value);
+    const label = await kappa.labelOf(value);
     let archive;
     try { archive = uorc.compress(value); } catch { return { outcome: 'refuse' }; }
     const { answer } = await judge('keep', uorc, archive, label);
