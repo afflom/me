@@ -1,0 +1,178 @@
+\begin{lexlean}{GenIcfLean}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Tar}
+\importmodule{GenIcf}
+\title{ICF register generator}
+\begin{semanticmodule}
+definition{
+  name: ilxHex,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then acc else (let b : Nat := (Foundation.Tar::byteOr s i); (let hi : Nat := (prim quotient b 16 0 : Nat); (let lo : Nat := (prim remainder b 16 0 : Nat); (ilxHex s (i + 1) (GenIcf::icfJoin acc (GenIcf::icfJoin (GenIcf::icfSlice (GenIcf::icfText "0123456789abcdef") hi (hi + 1)) (GenIcf::icfSlice (GenIcf::icfText "0123456789abcdef") lo (lo + 1)))) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ilxTitle,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (ilxHex s 0 (GenIcf::icfText "0x") (GenIcf::icfLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ilxStrip,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then acc else (ilxStrip s (i + 1) (if ((Foundation.Tar::byteOr s i) =? 47) then acc else (GenIcf::icfJoin acc (GenIcf::icfSlice s i (i + 1)))) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ilxName,
+  parameters: [line : Bytes],
+  result: Bytes,
+  body: (let linear : Bytes := (GenIcf::icfAfter (GenIcf::icfField line 1) (GenIcf::icfText "http://id.who.int/icd/release/11/icf/")); (GenIcf::icfJoin (GenIcf::icfText "icfRows") (ilxStrip linear 0 0x (GenIcf::icfLen linear)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ilxRow,
+  parameters: [line : Bytes],
+  result: Bytes,
+  body: (let title : Bytes := (GenIcf::icfField line 4); (let level : Nat := (GenIcf::icfDashes title 0 (GenIcf::icfLen title)); (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfText "(cons (record IcfEntity {foundation := ") (GenIcf::icfJoin (GenIcf::icfString (GenIcf::icfAfter (GenIcf::icfField line 0) (GenIcf::icfText "http://id.who.int/icd/entity/"))) (GenIcf::icfText ", linearization := "))) (GenIcf::icfJoin (GenIcf::icfString (GenIcf::icfAfter (GenIcf::icfField line 1) (GenIcf::icfText "http://id.who.int/icd/release/11/icf/"))) (GenIcf::icfJoin (GenIcf::icfText ", code := ") (GenIcf::icfString (GenIcf::icfField line 2))))) (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfText ", block := ") (GenIcf::icfJoin (GenIcf::icfString (GenIcf::icfField line 3)) (GenIcf::icfText ", title := "))) (GenIcf::icfJoin (ilxTitle (GenIcf::icfSlice title (prim multiply level 2 : Nat) (GenIcf::icfLen title))) (GenIcf::icfJoin (GenIcf::icfText ", level := ") (GenIcf::icfDigits level))))) (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfText ", kind := ") (GenIcf::icfJoin (GenIcf::icfString (GenIcf::icfField line 5)) (GenIcf::icfText ", depth := "))) (GenIcf::icfJoin (GenIcf::icfField line 6) (GenIcf::icfJoin (GenIcf::icfText ", residual := ") (GenIcf::icfBool (GenIcf::icfField line 7))))) (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfText ", leaf := ") (GenIcf::icfJoin (GenIcf::icfBool (GenIcf::icfField line 9)) (GenIcf::icfText ", parent := "))) (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfString (GenIcf::icfAfter (GenIcf::icfField line 11) (GenIcf::icfText "http://id.who.int/icd/entity/"))) (GenIcf::icfText ", note := ")) (GenIcf::icfJoin (GenIcf::icfString (GenIcf::icfField line 10)) (GenIcf::icfText "}) ")))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ilxCloses,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (match n
+    | Nat.zero => (GenIcf::icfText "\n}\n\n")
+    | Nat.succ rest => (GenIcf::icfJoin (GenIcf::icfText ")") (ilxCloses rest))),
+  recursive_argument: n
+}
+
+definition{
+  name: ilxClose,
+  parameters: [k : Nat],
+  result: Bytes,
+  body: (GenIcf::icfJoin (GenIcf::icfText "(nil IcfEntity)") (ilxCloses k))
+}
+
+definition{
+  name: ilxOpen,
+  parameters: [line : Bytes],
+  result: Bytes,
+  body: (GenIcf::icfJoin (GenIcf::icfText "definition{\n  name: ") (GenIcf::icfJoin (ilxName line) (GenIcf::icfText ",\n  parameters: [],\n  result: (List IcfEntity),\n  body: "))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ilxHead,
+  parameters: [line : Bytes],
+  result: Bytes,
+  body: (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfJoin 0x5c (GenIcf::icfText "begin{lexlean}{PersonIcf}\n")) (GenIcf::icfJoin 0x5c (GenIcf::icfText "useglossary{lexlean.std.bool@1.2.0}\n"))) (GenIcf::icfJoin (GenIcf::icfJoin 0x5c (GenIcf::icfText "useglossary{lexlean.std.nat@1.2.0}\n")) (GenIcf::icfJoin 0x5c (GenIcf::icfText "useglossary{prism.arch@1.0.0}\n")))) (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfJoin 0x5c (GenIcf::icfText "title{Person model}\n")) (GenIcf::icfJoin 0x5c (GenIcf::icfText "begin{semanticmodule}\nstructure{\n  name: IcfEntity,\n  type_parameters: [],\n  parameters: [],\n  fields: [\n    {name: foundation, type: String},\n    {name: linearization, type: Strin"))) (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfText "g},\n    {name: code, type: String},\n    {name: block, type: String},\n    {name: title, type: Bytes},\n    {name: level, type: Nat},\n    {name: kind, type: String},\n    {name: depth,") (GenIcf::icfText " type: Nat},\n    {name: residual, type: Bool},\n    {name: leaf, type: Bool},\n    {name: parent, type: String},\n    {name: note, type: String}\n  ]\n}\n\ndefinition{\n  name: icfAppendEn")) (GenIcf::icfJoin (GenIcf::icfText "tities,\n  parameters: [front : (List IcfEntity), back : (List IcfEntity)],\n  result: (List IcfEntity),\n  body: (match front\n    | List.nil => back\n    | List.cons item rest => (con") (GenIcf::icfText "s item (icfAppendEntities rest back))),\n  recursive_argument: front\n}\n\ndefinition{name: icfVersion, parameters: [], result: String, body: "))))) (GenIcf::icfJoin (GenIcf::icfString (GenIcf::icfAfter (GenIcf::icfField line 12) (GenIcf::icfText "Version:"))) (GenIcf::icfText "}\n\n"))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ilxFrom,
+  parameters: [s : Bytes, i : Nat, k : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then (if (k =? 0) then acc else (GenIcf::icfJoin acc (ilxClose k))) else (let e : Nat := (GenIcf::icfStopAt s i (GenIcf::icfLen s) 10 (GenIcf::icfLen s)); (let line : Bytes := (GenIcf::icfLineOf s i e); (if ((GenIcf::icfLen line) =? 0) then (ilxFrom s (e + 1) k acc rest) else (if (GenIcf::icfIsHeader line) then (ilxFrom s (e + 1) k (GenIcf::icfJoin acc (ilxHead line)) rest) else (let opened : Bytes := (if (k =? 0) then (GenIcf::icfJoin acc (ilxOpen line)) else acc); (if ((k + 1) =? 50) then (ilxFrom s (e + 1) 0 (GenIcf::icfJoin opened (GenIcf::icfJoin (ilxRow line) (ilxClose 50))) rest) else (ilxFrom s (e + 1) (k + 1) (GenIcf::icfJoin opened (ilxRow line)) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ilxNamesFrom,
+  parameters: [s : Bytes, i : Nat, k : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then (if (k =? 0) then acc else (GenIcf::icfJoin acc (GenIcf::icfJoin (GenIcf::icfDigits k) (GenIcf::icfText "\n")))) else (let e : Nat := (GenIcf::icfStopAt s i (GenIcf::icfLen s) 10 (GenIcf::icfLen s)); (let line : Bytes := (GenIcf::icfLineOf s i e); (if ((GenIcf::icfLen line) =? 0) then (ilxNamesFrom s (e + 1) k acc rest) else (if (GenIcf::icfIsHeader line) then (ilxNamesFrom s (e + 1) k (GenIcf::icfJoin acc 0x) rest) else (let opened : Bytes := (if (k =? 0) then (GenIcf::icfJoin acc (GenIcf::icfJoin (ilxName line) (GenIcf::icfText " "))) else acc); (if ((k + 1) =? 50) then (ilxNamesFrom s (e + 1) 0 (GenIcf::icfJoin opened (GenIcf::icfText "50\n")) rest) else (ilxNamesFrom s (e + 1) (k + 1) (GenIcf::icfJoin opened 0x) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ilxDecimal,
+  parameters: [n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (n <? 10) then (GenIcf::icfDigit n) else (GenIcf::icfJoin (ilxDecimal (prim quotient n 10 0 : Nat) rest) (GenIcf::icfDigit (prim remainder n 10 0 : Nat))))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: ilxNumberFrom,
+  parameters: [s : Bytes, i : Nat, stop : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if (stop <=? i) then n else (ilxNumberFrom s (i + 1) stop ((prim multiply n 10 : Nat) + (prim subtract (Foundation.Tar::byteOr s i) 48 : Nat)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ilxChain,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (GenIcf::icfText "(nil IcfEntity)")
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then (GenIcf::icfText "(nil IcfEntity)") else (let e : Nat := (GenIcf::icfStopAt s i (GenIcf::icfLen s) 10 (GenIcf::icfLen s)); (let sp : Nat := (GenIcf::icfStopAt s i e 32 e); (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfText "(icfAppendEntities (") (GenIcf::icfSlice s i sp)) (GenIcf::icfJoin (GenIcf::icfText ") ") (GenIcf::icfJoin (ilxChain s (e + 1) rest) (GenIcf::icfText ")")))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ilxSum,
+  parameters: [s : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then n else (let e : Nat := (GenIcf::icfStopAt s i (GenIcf::icfLen s) 10 (GenIcf::icfLen s)); (let sp : Nat := (GenIcf::icfStopAt s i e 32 e); (ilxSum s (e + 1) (n + (ilxNumberFrom s (sp + 1) e 0 (prim subtract e sp : Nat))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: leanRows,
+  parameters: [tabulation : Bytes],
+  result: Bytes,
+  body: (ilxFrom tabulation 0 0 0x ((GenIcf::icfLen tabulation) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: leanNames,
+  parameters: [tabulation : Bytes],
+  result: Bytes,
+  body: (ilxNamesFrom tabulation 0 0 0x ((GenIcf::icfLen tabulation) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: leanEnd,
+  parameters: [names : Bytes],
+  result: Bytes,
+  body: (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfText "definition{\n  name: icfRows,\n  parameters: [],\n  result: (List IcfEntity),\n  body: ") (ilxChain names 0 (GenIcf::icfLen names))) (GenIcf::icfJoin (GenIcf::icfText "\n}\n\ndefinition{name: icfEntityCount, parameters: [], result: Nat, body: ") (GenIcf::icfJoin (ilxDecimal (ilxSum names 0 0 (GenIcf::icfLen names)) 20) (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfText "}\n") 0x5c) (GenIcf::icfJoin (GenIcf::icfText "end{semanticmodule}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfText "end{lexlean}\n"))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

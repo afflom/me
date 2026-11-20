@@ -12,6 +12,10 @@
 // says, then BYSETPOS, then COUNT and UNTIL; DTSTART is always the first
 // instance, and EXDATE removes what it names.
 
+import ical from "../read/grammar/ical.mjs";
+import { abnf, first } from "../read/abnf.mjs";
+
+const grammar = abnf(ical);
 const DAY = 86_400_000;
 const WEEKDAYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 const FREQS = ["SECONDLY", "MINUTELY", "HOURLY", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"];
@@ -40,13 +44,14 @@ export function utcOf(wall, zone) {
   }
 }
 
-// A DATE or DATE-TIME as wall-time (ms, read as if UTC) and the zone it is in.
+// A DATE or DATE-TIME as wall-time (ms, read as if UTC) and the zone it is in, read by RFC 5545's own
+// rules (3.3.4 date, 3.3.5 date-time) through the grammar-ical guest; a value they do not derive is not a time.
+const read = new Map();
 export function timeOf(params, value) {
-  const m = /^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})(Z)?)?$/.exec(value);
-  if (!m) return null;
-  const [, y, mo, d, h = "0", mi = "0", s = "0", z] = m;
-  const zone = z ? "UTC" : /;TZID=("?)([^";:]+)\1/i.exec(params)?.[2]?.replace(/^\//, "") ?? "";
-  return { wall: Date.UTC(+y, mo - 1, +d, +h, +mi, +s), zone, date: !m[4] };
+  const tree = read.get(value) ?? read.set(value, grammar.match("date-time", value) ?? grammar.match("date", value)).get(value);
+  const n = (rule) => Number(first(tree, rule)?.text ?? 0);
+  const zone = first(tree, "time-utc") ? "UTC" : /;TZID=("?)([^";:]+)\1/i.exec(params)?.[2]?.replace(/^\//, "") ?? "";
+  return tree && { wall: Date.UTC(n("date-fullyear"), n("date-month") - 1, n("date-mday"), n("time-hour"), n("time-minute"), n("time-second")), zone, date: tree.rule === "date" };
 }
 
 function ruleOf(text) {
@@ -173,8 +178,7 @@ function periods(rule, start) {
 
 // Every instance at or after `from` (UTC ms), up to `limit` of them.
 export function instances(ical, { from = -Infinity, limit = 1000 } = {}) {
-  const [dtstart] = lines(ical, "DTSTART");
-  const begin = dtstart && timeOf(...dtstart);
+  const begin = lines(ical, "DTSTART").slice(0, 1).map((line) => timeOf(...line))[0];
   if (!begin) return [];
   const toUtc = (wall) => utcOf(wall, begin.zone);
   const walls = (name) => lines(ical, name).flatMap(([params, value]) => value.split(",").map((v) => timeOf(params, v.trim())).filter(Boolean).map((t) => utcOf(t.wall, t.zone)));
@@ -189,8 +193,7 @@ export function instances(ical, { from = -Infinity, limit = 1000 } = {}) {
     const span = size * rule.interval;
     const skip = size && rule.count === Infinity && Number.isFinite(from) ? Math.max(0, Math.floor((from - 2 * DAY - first) / span)) : 0;
     // DTSTART counts as the first instance (3.8.5.3).
-    let count = 1;
-    let empty = 0;
+    let [count, empty] = [1, 0];
     for (let p = skip ? first + skip * span : first, made = 0; count < rule.count && empty < 4000; p = next(p)) {
       const these = periodOf(rule, begin.wall, p).filter((w) => w > begin.wall);
       empty = these.length ? 0 : empty + 1;
@@ -212,7 +215,5 @@ export function instances(ical, { from = -Infinity, limit = 1000 } = {}) {
 // When a repeating thing is next: its first instance at or after now, else the last it had.
 export function nextInstance(ical, now = Date.now()) {
   const [next] = instances(ical, { from: now, limit: 1 });
-  if (next !== undefined) return next;
-  const all = instances(ical, { limit: 100_000 });
-  return all.length ? all.at(-1) : NaN;
+  return next ?? instances(ical, { limit: 100_000 }).at(-1) ?? NaN;
 }

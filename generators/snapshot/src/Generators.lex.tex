@@ -6,6 +6,7 @@
 \importmodule{GenPatch}
 \importmodule{GenJcs}
 \importmodule{GenAddr}
+\importmodule{GenVec}
 \importmodule{Foundation.Tar}
 \importmodule{Foundation.View.Text.V1.Model}
 \importmodule{Foundation.View.Text.V3.Model}
@@ -64,6 +65,16 @@ definition{
 }
 
 definition{
+  name: dispatchMore,
+  parameters: [name : Bytes, archive : Bytes],
+  result: Bytes,
+  body: (if (Foundation.Tar::sameBytes name 0x73686173686f7274) then (let r : GenJcs::JcReport := (GenAddr::adShort (sliceOr archive 512 (Foundation.Tar::entrySize archive 0))); (if ((Foundation.Bytes::byteLength (project r failed)) =? 0) then (written (project r passed)) else (refused (project r failed)))) else (if (Foundation.Tar::sameBytes name 0x7368616d6f6e7465) then (let r : GenJcs::JcReport := (GenAddr::adMonte (sliceOr archive 512 (Foundation.Tar::entrySize archive 0))); (if ((Foundation.Bytes::byteLength (project r failed)) =? 0) then (written (project r passed)) else (refused (project r failed)))) else (if (Foundation.Tar::sameBytes name 0x6c6f636b636865636b) then (let r : GenJcs::JcReport := (GenAddr::adLock archive); (if ((Foundation.Bytes::byteLength (project r failed)) =? 0) then (written (project r passed)) else (refused (project r failed)))) else (if (Foundation.Tar::sameBytes name 0x736e617073686f74766563746f7273) then (match (GenVec::vgVectors archive)
+    | Option.none => (refused 0x746865206f7261636c652066696c657320617265206e6f7420696e2074686520726571756573740a)
+    | Option.some v => (written v)) else 0x696e76616c6964)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: dispatch,
   parameters: [value : Bytes],
   result: Bytes,
@@ -75,7 +86,7 @@ definition{
     | Option.none => (refused 0x74686520646f63756d656e74206973206e6f7420492d4a534f4e0a)
     | Option.some c => (written c)) else (if (Foundation.Tar::sameBytes name 0x6a63737061697273) then (let r : GenJcs::JcReport := (GenJcs::jcPairs archive); (if ((Foundation.Bytes::byteLength (project r failed)) =? 0) then (written (project r passed)) else (refused (project r failed)))) else (if (Foundation.Tar::sameBytes name 0x6a63736e756d62657273) then (let r : GenJcs::JcReport := (GenJcs::jcRows (sliceOr archive 512 (Foundation.Tar::entrySize archive 0))); (if ((Foundation.Bytes::byteLength (project r failed)) =? 0) then (written (project r passed)) else (refused (project r failed)))) else (if (Foundation.Tar::sameBytes name 0x61646472657373) then (match (GenAddr::adAddress (sliceOr archive 512 (Foundation.Tar::entrySize archive 0)))
     | Option.none => (refused 0x74686520646f63756d656e74206973206e6f7420492d4a534f4e0a)
-    | Option.some a => (written (Foundation.Bytes::appendBytes a 0x0a))) else (if (Foundation.Tar::sameBytes name 0x73686173686f7274) then (let r : GenJcs::JcReport := (GenAddr::adShort (sliceOr archive 512 (Foundation.Tar::entrySize archive 0))); (if ((Foundation.Bytes::byteLength (project r failed)) =? 0) then (written (project r passed)) else (refused (project r failed)))) else (if (Foundation.Tar::sameBytes name 0x7368616d6f6e7465) then (let r : GenJcs::JcReport := (GenAddr::adMonte (sliceOr archive 512 (Foundation.Tar::entrySize archive 0))); (if ((Foundation.Bytes::byteLength (project r failed)) =? 0) then (written (project r passed)) else (refused (project r failed)))) else (if (Foundation.Tar::sameBytes name 0x6c6f636b636865636b) then (let r : GenJcs::JcReport := (GenAddr::adLock archive); (if ((Foundation.Bytes::byteLength (project r failed)) =? 0) then (written (project r passed)) else (refused (project r failed)))) else 0x696e76616c6964)))))))))))))))),
+    | Option.some a => (written (Foundation.Bytes::appendBytes a 0x0a))) else (dispatchMore name archive)))))))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

@@ -12,59 +12,59 @@ import { drawOn, windowOf, termsOf, wordsOf, mentions } from "../coherence/sense
 import { relativeOf, sequence, spanOf } from "../time/time.mjs";
 import { everyOf, rhythms, sourceOf } from "../time/rhythm.mjs";
 import { nearness } from "./meaning.mjs";
+import * as pin from "../message/guest.mjs";
 
 const S = PROVIDERS.sentence;
 const RANK = ["public", "internal", "confidential", "restricted"];
 const higher = (a, b) => (RANK.indexOf(b) > RANK.indexOf(a) ? b : a);
-const day = new Intl.DateTimeFormat(undefined, { weekday: "short", month: "short", day: "numeric" });
-const clock = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
+// Every sentence is a Unicode MessageFormat 2 message of the sentence provider
+// (app/specs/router/spec.json), formatted by the message guest (app/src/PrismMessage.lex.tex),
+// dates and times too: a part named `at` is an instant, said in the wall time this browser keeps then.
+const guest = new URL(pin.GUESTS.message.path, new URL("../message/guest.mjs", import.meta.url));
+const format = await pin.openGuestSync(guest.protocol === "file:" ? await (await import("node:fs/promises")).readFile(guest) : new Uint8Array(await (await fetch(guest)).arrayBuffer()), pin.GUESTS.message.sha256);
+// A value longer than a sentence can carry is cut; the item it cites holds the rest.
+const zone = (at) => { const m = -new Date(at).getTimezoneOffset(), a = Math.abs(m); return `${m < 0 ? "-" : "+"}${String(Math.trunc(a / 60)).padStart(2, "0")}:${String(a % 60).padStart(2, "0")}`; };
+const cut = (value) => { const text = String(value ?? ""); return text.length > S.lead * 2 ? `${text.slice(0, S.lead * 2)}…` : text; };
+function fill(key, parts = {}) {
+  const [errors, ...text] = format(`format\n${JSON.stringify({ src: S.frames[key], bidiIsolation: "none", params: Object.entries(parts).map(([name, value]) => ({ name, value: cut(value) })), ...(parts.at ? { timeZone: zone(parts.at) } : {}) })}`).split("\n");
+  if (errors) throw Object.assign(new Error(`the ${key} sentence does not format: ${errors}`), { code: "message.format" });
+  return text.join("\n");
+}
 
 // "Mon, Nov 16 at 8:00 AM", or the day alone for an all-day item; told from
 // a "now", also how far that is from it, in wall-time's own periods: "(in 2 days)".
 export function whenOf(at, allDay = false, now = null) {
   if (!at) return "";
-  const date = new Date(at);
-  const said = allDay ? day.format(date) : `${day.format(date)}${S.clock}${clock.format(date)}`;
-  return Number.isFinite(now) ? said + fill(S.frames.ago, { ago: relativeOf(allDay ? new Date(date).setHours(12) : at, allDay ? new Date(now).setHours(12) : now) }) : said;
+  const ago = Number.isFinite(now) ? relativeOf(allDay ? new Date(at).setHours(12) : at, allDay ? new Date(now).setHours(12) : now) : "";
+  return fill("when", { at: new Date(at).toISOString(), allDay: allDay ? "yes" : "", ago });
 }
 
-// What the browser's clock says now, as the person reads a date and a time.
-const full = new Intl.DateTimeFormat(undefined, { dateStyle: "full", timeStyle: "short" });
 const asksNow = (text, terms) => S.now.phrases.some((p) => text.toLowerCase().includes(p)) || (terms.length > 0 && terms.every((t) => S.now.words.includes(t)));
 
+const whatOf = (item) => item.title || (item.body ?? "").split("\n")[0] || "";
 // A sentence ends once: one that already ends in . ? ! or … keeps its own mark.
 const end = (text) => (/[.?!…]$/u.test(text) ? text : `${text}.`);
-const fill = (frame, parts) => frame.replace(/\{(\w+)\}/g, (_, key) => parts[key] ?? "");
-const whatOf = (item) => item.title || (item.body ?? "").split("\n")[0] || "";
 
 // One sentence about one item, by what kind of thing it is. Told from a "now"
 // and the order of what is held, it says how far the item is from now and,
-// for a message, its place in its own conversation; for an event revised
-// since, that this is an earlier version of it.
+// for a message, its place in its own conversation, what it asks or tells in
+// the sender's first words when they say more than its subject, and how often
+// its sender writes (site/time/rhythm.mjs); for an event revised since, that
+// this is an earlier version of it.
 export function sentenceOf(item, me = null, { now = null, order = null, rhythm = null } = {}) {
-  const parts = { what: whatOf(item), who: item.who ?? "", when: whenOf(item.at, item.allDay, now) };
-  const place = order?.get(item.address);
-  if (item.media === "message") {
-    const mine = me?.addresses?.some((a) => (item.who ?? "").toLowerCase().includes(a.toLowerCase()));
-    // What the message asks or tells, in the sender's first words, when they say more than its subject.
-    const lead = item.labels?.lead ?? "";
-    const says = lead && lead.toLowerCase() !== parts.what.toLowerCase() ? fill(S.frames.lead, { lead }) : "";
-    const turn = (place?.of > 1 ? fill(S.frames.turn, place) : "") + (Number.isFinite(place?.after) ? fill(S.frames.after, { after: spanOf(place.after) }) : "");
-    // How often its sender writes, where what they sent keeps a rhythm (site/time/rhythm.mjs).
-    const often = mine ? null : rhythm?.get(sourceOf(item));
-    const beat = often ? fill(often.per > 1 ? S.frames.rhythmMany : S.frames.rhythm, { every: everyOf(often), per: often.per }) : "";
-    return fill(S.frames.message, { ...parts, who: mine ? (me.name ?? parts.who) : parts.who }) + turn + says + beat;
-  }
-  if (item.media === "contactCard") return fill(S.frames.contact, parts);
-  if (item.media === "calendar" || item.start != null) return fill(S.frames.event, parts) + (item.where ? fill(S.frames.place, { who: item.where }) : "") + (place && !place.current ? S.frames.earlier : "");
-  return fill(S.frames.note, parts);
+  const what = whatOf(item), place = order?.get(item.address), lead = item.labels?.lead ?? "";
+  const kind = item.media === "message" || item.media === "contactCard" ? item.media : item.media === "calendar" || item.start != null ? "calendar" : "note";
+  const mine = me?.addresses?.some((a) => (item.who ?? "").toLowerCase().includes(a.toLowerCase()));
+  const often = kind !== "message" || mine ? null : rhythm?.get(sourceOf(item));
+  const said = kind !== "message" ? {} : { turn: place?.of > 1 ? fill("turn", place) : "", after: Number.isFinite(place?.after) ? fill("after", { after: spanOf(place.after) }) : "", lead: lead && lead.toLowerCase() !== what.toLowerCase() ? fill("lead", { lead }) : "", rhythm: often ? fill("rhythm", { every: everyOf(often), per: often.per }) : "" };
+  return fill("item", { kind, what, who: (kind === "message" && mine ? me.name : null) ?? item.who, when: whenOf(item.at, item.allDay, now), where: item.where, earlier: place && !place.current ? "yes" : "", ...said });
 }
 
 // The confirmation of something kept: where it landed in time.
 export function keptSentence(text, mapped) {
   const first = text.trim().split("\n")[0];
   const what = mapped.start != null ? withoutTime(first, mapped.spans) || first : first;
-  return mapped.start != null ? fill(S.frames.kept, { what, when: whenOf(mapped.start, mapped.allDay) }) : fill(S.frames.keptUntimed, { what });
+  return fill("kept", { what, when: mapped.start != null ? whenOf(mapped.start, mapped.allDay) : "" });
 }
 
 // keep: false treats every prompt as a question (a box that only asks).
@@ -81,13 +81,13 @@ export async function answer(prompt, options) {
   // PrismAsk in LexLean), asked of the root guest: the page only carries it out.
   const request = [halted(), asksNow(text, termsOf(text)) ? "asked" : "not", keep ? "keeps" : "asks", mapped.intent ?? "fact", mapped.start != null ? "yes" : "no", held.length ? "some" : "none"];
   const decided = (await line(`ask ${request.join(" ")}`)).trim();
-  if (decided === "clock") return { sentences: [end(fill(S.frames.now, { when: full.format(new Date(now)) }))], sources: [], offers: [], mapped };
+  if (decided === "clock") return { sentences: [end(fill("now", { at: new Date(now).toISOString() }))], sources: [], offers: [], mapped };
   if (decided === "keep") return { sentences: [keptSentence(text, mapped)], sources: [], offers: [{ kind: "keep" }], mapped };
   if (decided === "look") {
     const asked = await answer(prompt, { ...options, keep: false });
     return { ...asked, offers: [...asked.offers, { kind: "keep" }] };
   }
-  if (decided === "empty") return { sentences: [`${S.frames.empty}.`], sources: [], offers: [{ kind: S.offers.empty }], mapped };
+  if (decided === "empty") return { sentences: [`${fill("empty")}.`], sources: [], offers: [{ kind: S.offers.empty }], mapped };
   if (decided !== "answer") return { ...none, mapped };
   // The kind of thing it names (mail, calendar, notes), the words it is after,
   // and whether it only greets or asks how things stand.
@@ -111,10 +111,10 @@ export async function answer(prompt, options) {
     const latest = held.filter(ofKind).sort((a, b) => (kind === "calendar" ? upcoming(a, b, now) : b.at - a.at));
     used = matched.length && terms.length ? matched : latest;
     many = true;
-    if (!used.length) lead = [fill(S.frames.unmatched, { what: words.find((w) => S.kinds[kind].includes(w)) })];
+    if (!used.length) lead = [fill("unmatched", { what: words.find((w) => S.kinds[kind].includes(w)) })];
   }
   if (!used.length) {
-    if (!lead.length) lead = greets ? (terms.some((t) => S.greet.includes(t)) || !terms.length ? [S.frames.help] : []) : [fill(S.frames.unmatched, { what: terms.join(" ") || text })];
+    if (!lead.length) lead = greets ? (terms.some((t) => S.greet.includes(t)) || !terms.length ? [fill("help")] : []) : [fill("unmatched", { what: terms.join(" ") || text })];
     used = overview(held, now);
     many = true;
   }
@@ -136,13 +136,17 @@ export async function answer(prompt, options) {
   // Asked only words the readers pass over (a kind, a weekday, "should"), those words are what is sought.
   const bare = wordsOf(text);
   const sought = named.length ? named : bare.length && bare.every((w) => !S.greet.includes(w) && !S.overview.includes(w)) ? bare : [];
-  const found = sought.length || mapped.meaning ? held.filter((item) => (!kind || !named.length || ofKind(item)) && ((sought.length && mentions(item, sought)) || close(item) >= near)).sort((a, b) => (b.at ?? 0) - (a.at ?? 0)) : [];
+  // What names the asked words comes before what is only near in meaning, then newest first, then by address: an order that does not depend on how the items came in.
+  const says = (item) => Number(sought.length > 0 && mentions(item, sought));
+  const found = sought.length || mapped.meaning ? held.filter((item) => (!kind || !named.length || ofKind(item)) && ((sought.length && mentions(item, sought)) || close(item) >= near)).sort((a, b) => says(b) - says(a) || (b.at ?? 0) - (a.at ?? 0) || (a.address < b.address ? -1 : 1)) : [];
   const offers = told.flatMap((item) => {
     const k = S.offers[item.media === "message" ? "message" : item.media === "plainText" ? "note" : ""];
     return k ? [{ kind: k, item }] : [];
   });
   const rest = found.filter((item) => !told.includes(item));
-  return { sentences, sources: rest.length ? [...told, ...rest].slice(0, S.find) : used.slice(0, S.most), cited: told, offers, mapped };
+  // More found than a list holds: the list is cut after the best, and the reply says how many it left out.
+  const cut = Math.max(0, told.length + rest.length - S.find);
+  return { sentences: cut ? [...sentences, end(fill("more", { count: cut }))] : sentences, sources: rest.length ? [...told, ...rest].slice(0, S.find) : used.slice(0, S.most), cited: told, cut, offers, mapped };
 }
 
 // Events still ahead come first, soonest first; past ones after, latest first.

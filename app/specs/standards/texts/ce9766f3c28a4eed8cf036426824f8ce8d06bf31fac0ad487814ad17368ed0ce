@@ -1,0 +1,1236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+	<head>
+                <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<title>EMMA 1.0 Implementation Report Plan</title>
+		<style type="text/css" xml:space="preserve">
+/*<![CDATA[*/
+body {
+    margin-left: 4%;
+    margin-right: 3%;
+}
+table {
+    border: black;
+    border-width: 1px;
+}
+h2 { font-size: 150% }
+h3 { font-size: 120%; font-weight: bold }
+h4 { font-size: 110%; font-weight: bold}
+.tocline { list-style: none; }
+th { background-color: rgb(180,255,180) }
+td { background-color: rgb(234,255,234) }
+.comment {color: green; font-style: italic}
+.remove {text-decoration: line-through;color: black;}
+.new { color: red; }
+.working {background-color: rgb(255,234,234); padding:0.2em;}
+.fill-in {background-color: rgb(255,234,234);}
+pre.example {
+   font-family: "Courier New", monospace;
+   white-space: pre;
+   background-color: rgb(204,204,255);
+   padding: 0.5em;
+   border: none;
+   border-width: 0;
+   margin-left: 0;
+   font-size: 100%;
+   width: 100%;
+}
+
+table { background-color: rgb(180,180,180) }
+
+table.testlist {
+   border: black;
+   border-width: 1px;
+}
+table.grammars th, table.commands th, able.attrs th, table.testlist th {
+   background-color: rgb(180,255,180);
+   font-size: 10pt;
+   vertical-align: top; text-align: left;
+}
+table.grammars td, table.commands td, table.attrs td, table.testlist td {
+   background-color: rgb(234,255,234);
+   font-size: 10pt;
+   vertical-align: top; text-align: left;
+}
+
+table.attrs {margin-top: 5px}
+/*]]>*/
+</style>
+<link rel="stylesheet" type="text/css" href="https://www.w3.org/StyleSheets/general.css" />
+
+	</head>
+	<body>
+		<div class="head">
+			<a href="https://www.w3.org/" shape="rect">
+                        <img height="48" alt="W3C" src="https://www.w3.org/Icons/w3c_home" width="72" border="0" />
+			</a>
+			<h1 id="h_ir">EMMA: Extensible MultiModal Annotation 1.0:<br /> 
+		    Implementation Report Plan</h1>
+	            <h2>23 September 2008</h2>
+<dl>
+<dt>Editor:</dt>
+<dd>Michael Johnston, AT&amp;T</dd>
+<dt>Authors:</dt>
+<dd>Paolo Baggia, Loquendo</dd>
+<dd>Patrizio Bergallo, Loquendo</dd>
+<dd>Daniel C. Burnett, Nuance</dd>
+<dd>Jerry Carter, Nuance</dd>
+<dd>Deborah Dahl, Invited Expert</dd>
+</dl>
+
+			<p class="copyright">
+				<a href="https://www.w3.org/Consortium/Legal/ipr-notice#Copyright">Copyright &copy;</a> 2008 <a href="https://www.w3.org/">
+					<acronym title="World Wide Web Consortium">W3C</acronym></a><sup> &reg; </sup>
+(<a href="http://www.csail.mit.edu/">
+					<acronym title="Massachusetts Institute of Technology">MIT</acronym>
+				</a>, <a href="http://www.ercim.org/">
+					<acronym title="European Research Consortium for Informatics and Mathematics">ERCIM</acronym>
+				</a>,
+<a href="http://www.keio.ac.jp/">Keio</a>), All Rights Reserved.
+W3C <a href="https://www.w3.org/Consortium/Legal/ipr-notice#Legal_Disclaimer">liability</a>,
+<a href="https://www.w3.org/Consortium/Legal/ipr-notice#W3C_Trademarks">trademark</a>,
+<a href="https://www.w3.org/Consortium/Legal/copyright-documents">document
+use</a>
+ rules apply.</p>
+		  <hr title="Separator for header" />
+		</div>
+		<h2 id="h_toc">
+			<a id="toc" shape="rect" name="toc">Table of
+Contents</a>
+		</h2>
+		<ul>
+			<li class="tocline">1. <a href="#intro" shape="rect">Introduction</a>
+				<ul>
+					<li class="tocline">1.1 <a href="#objectives" shape="rect">Implementation report objectives</a>
+					</li>
+					<li class="tocline">1.2 <a href="#non_objectives" shape="rect">Implementation report non-objectives</a>
+					</li>
+				</ul>
+			</li>
+			<li class="tocline">2. <a href="#cr_work" shape="rect">Work during
+the Candidate Recommendation period</a>
+			</li>
+			<li class="tocline">3. <a href="#participate" shape="rect">Participating in the implementation report</a>
+			</li>
+			<li class="tocline">4. <a href="#pr_entrance_crit" shape="rect">Entrance criteria for the Proposed Recommendation
+phase</a>
+			</li>
+			<li class="tocline">5. <a href="#report_reqs" shape="rect">Implementation report requirements</a>
+				<ul>
+					<li class="tocline">5.1 <a href="#DetailedReqs" shape="rect">Detailed requirements for implementation report</a>
+					</li>
+					<li class="tocline">5.2 <a href="#NotesOnTesting" shape="rect">Notes on testing</a>
+					</li>
+					<li class="tocline">5.3 <a href="#out_of_scope" shape="rect">Out of
+scope</a>
+					</li>
+				</ul>
+			</li>
+			<li class="tocline">6. <a href="#systems" shape="rect">Systems</a>
+			</li>
+			<li class="tocline">7. <a href="#test_class" shape="rect">Test assertions</a>
+				<ul>
+					<li class="tocline">7.1 <a href="#intro_class" shape="rect">Classification of test assertions</a></li>
+				  <li class="tocline">7.2 <a href="#Proposed" shape="rect">EMMA XML Schema conformance</a>
+					</li>
+					<li class="tocline">7.3 <a href="#emma_test_assertions" shape="rect">EMMA test assertions</a>
+					</li>
+				</ul>
+			</li>
+			
+			
+			<li class="tocline">
+				<a href="#appendices" shape="rect">Appendices</a>
+				<ul>
+						<li class="tocline">Appendix A. <a href="#ackA" shape="rect">Implementation report submission format</a>
+					</li>
+					<li class="tocline">Appendix B. <a href="#ackB" shape="rect">Acknowledgements</a>
+					</li>
+				</ul>
+			</li>
+		</ul>
+		<h2 id="h_intro">
+			<a id="intro" name="intro">1.
+Introduction</a>
+		</h2>
+		<p>The <a href="https://www.w3.org/TR/emma/">EMMA
+Specification</a> entered the Candidate Recommendation period on 14 April 2008.</p>
+		<p>Preparation of an Implementation Report is a key
+criterion for moving beyond the Candidate Recommendation phase.
+This document describes the requirements for the Implementation
+Report and the process that the Multimodal Working Group will
+follow in preparing the report.</p>
+
+<p><strong>Note:</strong> This Implementation Report Plan was modified
+as follows:</p>
+
+<dl>
+<dt>22 January 2008</dt>
+<dd>
+<ul>
+<li>The Candidate Recommendation period is modified from "?? 2007" to
+   "14 April 2008" as defined in the 
+   <a href="https://www.w3.org/TR/2007/CR-emma-20071211/#status">
+   Candidate Recommendation</a>.</li>
+</ul>
+</dd>
+
+<dt>23 September 2008</dt>
+<dd>
+<ul>
+<li>
+Test assertions 801, 902, 903 and 1501
+have been removed,
+because they are actually not described in
+<a href="https://www.w3.org/TR/2007/CR-emma-20071211/">
+the EMMA specification</a>.
+</li>
+</ul>
+</dd>
+</dl>
+
+<h4 id="h_objectives">
+			<a id="objectives" name="objectives">1.1
+Implementation report objectives</a>
+		</h4>
+		<ol>
+			<li>Must verify that the specification is implementable.</li>
+		</ol>
+		<h4 id="h_non_objectives">
+			<a id="non_objectives" name="non_objectives">1.2 Implementation report non-objectives</a>
+		</h4>
+		<ol>
+			<li>The IR does not attempt conformance testing of
+implementations.</li>
+		</ol>
+		<h2 id="h_cr_work">
+			<a id="cr_work" name="cr_work">2. Work during
+the Candidate Recommendation period</a>
+		</h2>
+		<p>During the CR period, the Working Group will carry out the
+following activities:</p>
+		<ol>
+			<li>Clarification and improvement of the exposition of the
+specification.</li>
+			<li>Disposing of comments that are communicated to the WG during
+the CR period.</li>
+			<li>Preparation of an Implementation Report meeting the criteria
+outlined in this document.</li>
+		</ol>
+		<h2 id="h_participate">
+			<a id="participate" name="participate">3.
+Participating in the implementation report</a>
+		</h2>
+		<p>You are invited to contribute to the assessment of the W3C EMMA
+1.0 Specification by participating in the Implementation Report
+process.</p>
+		<ul>
+			<li>Deadline for submission of a EMMA Implementation Report is February 29th 2008.</li>
+			<li>All the test assertions are reported in the <a href="#emma_test_assertions" shape="rect">table below</a>.</li>
+			<li>Comments on this document  or requests for
+further information should be sent to the Working Group's public
+mailing list <a href="mailto:www-multimodal@w3.org">www-multimodal@w3.org</a>
+(<a href="http://lists.w3.org/Archives/Public/www-multimodal/">archive</a>). If
+an updated version of this document or the test assertion set is published, a
+notification will be sent to this mailing list.</li>
+	</ul>
+		<h2 id="h_pr_entrance_crit">
+			<a id="pr_entrance_crit" name="pr_entrance_crit">4. Entrance criteria for the Proposed
+Recommendation phase</a>
+		</h2>
+		<p>The Multimodal Working Group established the following
+entrance criteria for the Proposed Recommendation phase in the
+Request for CR:</p>
+		<ol>
+			<li>Sufficient reports of implementation experience have been
+gathered to demonstrate that EMMA processors based on the
+specification are implementable and have compatible behavior.</li>
+			<li>Specific Implementation Report Requirements (<a href="#report_reqs">outlined below</a>) have been met.</li>
+			<li>The Working Group has formally addressed and responded to all
+public comments received by the Working Group.</li>
+		</ol>
+		<h2 id="h_report_reqs">
+			<a id="report_reqs" name="report_reqs">5.
+Implementation report requirements</a>
+		</h2>
+		<h4 id="h_DetailedReqs">
+			<a id="DetailedReqs" shape="rect" name="DetailedReqs">5.1 Detailed requirements for implementation
+report</a>
+		</h4>
+		<ol>
+			<li>Testimonials from implementers will be included in the IR when
+provided to document the utility and implementability of the
+specification.</li>
+			<li>IR must cover all specified features in the specification. For
+each feature the IR should indicate:
+<ul>
+					<li>Feature status: required, optional, other.</li>
+					<li>Feature utility/usefulness based on feedback from
+implementers.</li>
+					<li>Implementability of the feature specification.</li>
+				</ul>
+			</li>
+			<li>Feature status is a factor in test coverage in the report:
+<ul>
+					<li>Required specification features must have at least two
+implementations. Implementations that do not implement a required
+specification feature must document the reason for not implementing
+the feature.</li>
+					<li>Optional specification features must have at least one
+implementation. Implementations that do not implement an optional specification
+feature should document the reason for not implementing the
+feature. </li>
+				</ul>
+			</li>
+		</ol>
+		<div>
+			<h4 id="h_NotesOnTesting">
+				<a id="NotesOnTesting" name="NotesOnTesting">5.2 Notes on testing</a></h4>
+	  <ol>
+				<li>A implementation report must indicate the outcome of evaluating the implementation with respect to each of the test assertions. Possible
+outcomes are "<code>pass</code>", "<code>fail</code>" or
+"<code>not-impl</code>". "</li>
+			</ol>
+		</div>
+		<h4 id="h_out_of_scope">
+			<a id="out_of_scope" name="out_of_scope">5.3 Out of scope</a>
+		</h4>
+		<div style="margin-left: 2em;">
+			<p>EMMA Implementation Report will not cover:</p>
+			<ul>
+				<li>Integration with other markup languages
+(VoiceXML/XHTML/SVG/SRGS)</li>
+			</ul>
+		</div>
+		<a id="test-systems" name="test-systems" />
+		<h2 id="h_systems">
+			<a id="systems" name="systems">6.
+Systems</a>
+		</h2>
+		<p>Note: The testimonials with pink background from "Acme Labs" and
+"Beta Inc." are just examples and will be replaced with the
+actually submitted testimonials.</p>
+		<div class="working">
+			<h3 id="h_acme">Acme Labs</h3>
+			<h4 id="h_acme_summary">Exec Summary</h4>
+			<p>The W3C EMMA 1.0 Specification is well-written, easily
+implementable and extremely useful. Acme Labs used it to describe
+the recipe for haggis.</p>
+			<h3 id="h_beta">Beta Inc.</h3>
+			<h4 id="h_beta_summary">Exec Summary</h4>
+			<p>The W3C EMMA 1.0 Specification is the best thing since
+sliced bread, extremely useful, easily
+implementable and well-written. Beta Inc. used it to build
+a new generation of interactive services, establish world
+peace, build a new chianti-spaghetti hybrid vehicle,
+and mix a perfect martini.</p>
+		</div>
+		<a id="test-results-xml" name="test-results-xml" />
+
+
+		<h2 id="h_test_class">
+			<a id="test_class" name="test_class">7. Test assertions</a>
+		</h2>
+		<p>The aim of this section is to describe the range of test assertions
+developed for the <a href="https://www.w3.org/TR/emma/">EMMA 1.0
+Specification</a>. The table lists all the assertions that were derived
+from the <a href="https://www.w3.org/TR/emma/">EMMA 1.0
+Specification</a>.</p> 
+	<p>The <b>Assert ID</b> column uniquely identifies the assertion.
+The <b>Feature</b> column indicates the specific elements or attributes which the test assertion applies to.
+The <b>Spec</b> column identifies the section of the EMMA 1.0 Specification from which the assertion was derived.
+The <b>REQ</b> column is a Y/N value indicating whether the test assertion is for a feature which is required.
+The <b>SUB</b> column is a Y/N value indicating whether the test assertion is a subconstraint which is dependent on the
+implementation of the preceding non subconstraint feature test assertion.
+The <b>Semantics</b> column specifies the semantics of the feature or the constraint which must be met.
+The <b>Result</b> column will be annotated with the number of 'pass', 'fail', and 'not implemented' (P/F/NI) in
+the set of implementation reports.
+</p>
+<h4 id="h_intro_class">
+			<a id="intro_class" name="intro_class">7.1 Classification of test assertions</a>
+		</h4>
+ <p>
+ Test assertions are classified into two types, basic test assertions which test for the presence of each feature, and sub 
+ constraints which only apply if that particular feature is implemented. Generally, sub constraints 
+ encode structural constraints that could not be expressed in the EMMA schema. Sub constraints are 
+ marked with 'SUB CONSTRAINT:' in the Semantics field. </p>
+
+<h4 id="h_Proposed"><a id="Proposed" name="Proposed">7.2 EMMA XML Schema conformance</a></h4>
+
+<p>The most fundamental test of a conforming EMMA implementation is that the EMMA documents it
+utilizes must successfully validate with respect to the EMMA XML Schema. </p>
+
+<h4 id="emma_test_assertions_h"><a id="emma_test_assertions" name="emma_test_assertions">7.3 EMMA Test assertions</a></h4>
+
+		<table class="testlist" summary="assertions and tests" cellpadding="2" cellspacing="2">
+			<tbody>
+				<tr>
+					<th>Assert ID</th>
+					<th>Feature</th>
+					<th>Spec</th>
+					<th>Req</th>
+					<th>Sub</th>
+					<th>Semantics</th>
+					<th colspan="3">Results</th>
+
+				</tr>
+	            <tr>
+					<th colspan = "6"></th>
+					<th>P</th>
+					<th>F</th>
+					<th>NI</th>
+				</tr>
+				<tr>
+					<th colspan="9">Structural Elements</th>
+				</tr>
+				<tr>
+					<td valign="top">100</td>
+					<td valign="top">emma:emma</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.1" target="spec">[3.1]</a>
+					</td>
+					<td>Y</td><td>N</td>
+					<td valign="top">EMMA documents MUST have emma:emma as the root element.</td>
+					<td></td><td></td><td></td>
+				</tr>
+				<tr>
+					<td valign="top">200</td>
+					<td valign="top">emma:interpretation</td>
+					<td valign="top"><a href="https://www.w3.org/TR/emma/#s3.2" target="spec">[3.2]</a></td>
+					<td>Y</td><td>N</td>
+					<td valign="top">Application namespace markup representing the interpretation of inputs
+					MUST be contained within the emma:interpretation element.</td>
+					<td></td><td></td><td></td>
+				</tr>
+				<tr>
+					<td valign="top">201</td>
+					<td valign="top"></td>
+					<td valign="top"><a href="https://www.w3.org/TR/emma/#s3.2" target="spec">[3.2]</a></td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUB CONSTRAINT: If the emma:interpretation element is empty,
+					then it MUST be annotated as emma:uninterpreted="true' or emma:no-input="true".</td>
+					<td></td><td></td><td></td>
+				</tr>
+				<tr>
+					<td valign="top">300</td>
+					<td valign="top">emma:one-of</td>
+					<td valign="top"><a href="https://www.w3.org/TR/emma/#s3.3.1" target="spec">[3.3.1]</a></td>
+					<td>Y</td><td>N</td>
+					<td valign="top">EMMA N-best interpretations MUST be contained within an emma:one-of element.</td>
+					<td></td><td></td><td></td>
+				</tr>
+				<tr>
+					<td valign="top">301</td>
+					<td valign="top"></td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.3.1" target="spec">[3.3.1]</a></td>
+						<td>Y</td><td>Y</td>
+					<td valign="top">SUB CONSTRAINT: EMMA N-best interpretations contained within an emma:one-of element
+MUST be ordered best-first in document order where the measure is emma:confidence if
+present, otherwise the quality metric is platform specific.</td>
+					
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">310</td>
+					<td valign="top"></td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.3.1" target="spec">[3.3.1]</a>
+					</td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUB CONSTRAINT: If an emma:one-of element contains other emma:one-of elements,
+					(embedded one-of), emma:one-of elements MUST contain a disjunction-type attribute
+					indicating the reason for the multiple interpretations.</td>
+					
+					<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">400</td>
+					<td valign="top">emma:group</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.3.2" target="spec">[3.3.2]</a>
+					</td>
+					<td>N</td><td>N</td>
+					<td valign="top">Interpretations of distinct inputs MAY be represented in a single EMMA document within the emma:group element. </td>
+					
+
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">402</td>
+					<td valign="top">emma:group-info</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.3.2.1" target="spec">[3.3.2.1]</a>
+					</td>
+					<td>N</td><td>N</td>
+					<td valign="top">Information describing the criteria used in determining the grouping
+of interpretations within an emma:group MAY be indicated within an emma:group-info
+child element within emma:group.</td>
+					
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">500</td>
+					<td valign="top">emma:sequence</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.3.3" target="spec">[3.3.3]</a>
+					</td>
+					<td>N</td><td>N</td>
+					<td valign="top">A temporally ordered sequence of distinct inputs MAY be contained within an
+emma:sequence element with document order corresponding to temporal order.</td>
+					
+
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">600</td>
+					<td valign="top">emma:lattice</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.4" target="spec">[3.4]</a>
+					</td>
+					<td>N</td><td>N</td>
+					<td valign="top">Lattices SHOULD be represented as an emma:lattice element containing a series of emma:arc and emma:node elements.</td>
+					
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">602</td>
+					<td valign="top"></td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.4.1" target="spec">[3.4.1]</a>
+					</td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUB CONSTRAINT: The value of the initial attribute on emma:lattice MUST be the value of the from
+attribute on at least one of the emma:arc elements that it contains.</td>
+					
+
+				<td></td><td></td><td></td></tr>
+
+				<tr>
+					<td valign="top">603</td>
+					<td valign="top"></td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.4.1" target="spec">[3.4.1]</a>
+					</td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUB CONSTRAINT: The value of each space separated number within the final attribute on emma:lattice MUST be the value of the to
+attribute on at least one of the emma:arc elements that it contains.</td>
+				
+				<td></td><td></td><td></td></tr>
+
+				<tr>
+					<td valign="top">604</td>
+					<td valign="top"></td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.4.1" target="spec">[3.4.1]</a>
+					</td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUB CONSTRAINT: The value of a to attribute on emma:arc MUST be the value of a from
+attribute on at least one of its emma:arc siblings or be one of the final values on the parent
+emma:lattice element.</td>
+					
+
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">605</td>
+					<td valign="top"></td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.4.1" target="spec">[3.4.1]</a>
+					</td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUB CONSTRAINT: The value of a from attribute on emma:arc MUST be the value of a to
+attribute on at least one of its emma:arc siblings or be the initial value on the parent
+emma:lattice element.</td>
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">606</td>
+					<td valign="top"></td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.4.1" target="spec">[3.4.1]</a>
+					</td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUB CONSTRAINT: Any epsilon transitions in the lattice MUST be represented as emma:arc
+elements with no content other than emma:info.</td>
+				
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">607</td>
+					<td valign="top"></td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.4.1" target="spec">[3.4.1]</a>
+					</td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUB CONSTRAINT: The content of the emma:arc element MUST be either an application namespace XML
+element, well-formed character content, an application namespace element and an emma:info element,
+or well-formed character content and an emma:info element.</td>
+					
+
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">608</td>
+					<td valign="top"></td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.4.1" target="spec">[3.4.1]</a>
+					</td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUB CONSTRAINT: There MUST be no more than one emma:node specification for each numbered node in the lattice.</td>
+					
+
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">609</td>
+					<td valign="top"></td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.4.1" target="spec">[3.4.1]</a>
+					</td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUB CONSTRAINT: For each emma:node specification, the value of the node-number attribute MUST
+appear as the value of at some from or to attribute in one of the sibling emma:arc elements.</td>
+					
+
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">700</td>
+					<td valign="top">emma:literal</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.5" target="spec">[3.5]</a>
+					</td>
+					<td>Y</td><td>N</td>
+					<td valign="top">String literal semantic interpretations MUST be wrapped with the tag emma:literal.</td>
+					
+				<td></td><td></td><td></td></tr>
+	<tr>
+		<th colspan="9">Annotation Elements</th>
+		</tr>
+				
+	<tr>
+					<td valign="top">800</td>
+					<td valign="top">emma:model</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.1.1" target="spec">[4.1.1]</a>
+					</td>
+					<td>N</td><td>N</td>
+					<td valign="top">The data model of the application semantic markup MAY appear within the emma:model element.</td>
+						
+				<td></td><td></td><td></td></tr>
+
+				<tr>
+					<td valign="top">810</td>
+					<td valign="top"></td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.2.16" target="spec">[4.2.16]</a>
+					</td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUB CONSTRAINT: If emma:model appears as a child of emma:emma, there MUST be emma:one-of or emma:interpretation elements within emma:emma with emma:model-ref attributes that refer to the id of the emma:model child of emma:emma.</td>
+											
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">811</td>
+					<td valign="top"></td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.2.16" target="spec">[4.2.16]</a>
+					</td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUB CONSTRAINT: If emma:model-ref appears on an emma:interpretation or emma:one-of,
+											 there MUST be an emma:model child of the dominating emma:emma
+											 whose id value equals the value of the emma:model-ref attribute.</td>
+											
+				<td></td><td></td><td></td></tr>
+
+				<tr>
+					<td valign="top">901</td>
+					<td valign="top">emma:derived-from</td>
+					<td valign="top">
+					<a href="https://www.w3.org/TR/emma/#s4.1.2" target="spec">[4.1.2]</a></td>
+					<td>N</td><td>N</td>
+					<td valign="top">The interpretation of all but the first stage of processing MAY contain an emma:derived-from element
+					with an attribute resource which refers to the interpretation from which that interpretation was derived.</td>
+					
+				<td></td><td></td><td></td></tr>
+				
+				<tr>
+					<td valign="top">904</td>
+					<td valign="top"></td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.1.2" target="spec">[4.1.2]</a>
+					</td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUB CONSTRAINT:If there is more than one emma:derived-from within an emma:interpretation or emma:one-of,
+					                         then all of the emma:derived-from elements MUST have the attribute composite="true".</td>
+					   
+				<td></td><td></td><td></td></tr>
+				
+				<tr>
+					<td valign="top">910</td>
+					<td valign="top">emma:derivation</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.1.2" target="spec">[4.1.2]</a>
+					</td>
+					<td>Y</td><td>N</td>
+					<td valign="top">The interpretation resulting of the most recent processing step MUST
+								appear as a child of emma:emma.</td>
+								
+				<td></td><td></td><td></td></tr>
+				
+				<tr>
+					<td valign="top">911</td>
+					<td valign="top">emma:derivation</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.1.2" target="spec">[4.1.2]</a>
+					</td>
+					<td>N</td><td>N</td>
+					<td valign="top">If interpretations resulting from earlier processing steps 
+								are included they SHOULD appear as children of a single emma:derivation element within emma:emma.</td>
+								
+				<td></td><td></td><td></td></tr>
+
+				<tr>
+					<td valign="top">1000</td>
+					<td valign="top">emma:grammar</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.1.3" target="spec">[4.1.3]</a>
+					</td>
+					<td>N</td><td>N</td>
+					<td valign="top">The grammar used MAY be referenced using an emma:grammar element within emma:emma.</td>
+					
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">1001</td>
+					<td valign="top"></td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.2.15" target="spec">[4.2.15]</a>
+					</td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUB CONSTRAINT: If an emma:interpretation or emma:one-of is annotated with the emma:grammar-ref attribute,
+					           then the value of the emma:grammar-ref MUST reference the id of an emma:grammar element child
+								of emma:emma in the same document.</td>
+					
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">1002</td>
+					<td valign="top"></td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.2.15" target="spec">[4.2.15]</a>
+					</td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUB CONSTRAINT: If an emma:grammar element appears as a child of emma:emma,
+					 then there MUST be an emma:interpretation or emma:one-of element
+					 dominated by that emma:emma, whose emma:grammar-ref attribute references
+					 the id of the emma:grammar element.</td>
+					 
+				<td></td><td></td><td></td></tr>
+
+				<tr>
+					<td valign="top">1100</td>
+					<td valign="top">emma:info</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.1.4" target="spec">[4.1.4]</a>
+					</td>
+					<td>N</td><td>N</td>
+					<td valign="top">Application and vendor specific annotations SHOULD appear within emma:info.</td>
+					
+				<td></td><td></td><td></td></tr>
+				
+				
+ <tr>
+      <th colspan="9">Annotation attributes</th>
+    </tr>
+    <tr>
+      <td width="32" valign="top">1201</td>
+      <td width="122" valign="top">emma:tokens</td>
+      <td width="66" valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.1" target="spec">[4.2.1]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td width="481" valign="top">emma:tokens MAY be used to indicate the sequence of tokens recognized in the input by the recognizer.</td>
+      
+
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">1300</td>
+      <td valign="top">emma:process</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.2" target="spec">[4.2.2]</a></td>
+      <td>N</td><td>N</td>
+      <td valign="top"> emma:process MAY be used to identify the process used to assign
+          the interpretation.
+        </td>
+      
+
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">1400</td>
+      <td valign="top">emma:no-input</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.3" target="spec">[4.2.3]</a></td>
+      <td>Y</td><td>N</td>
+      <td valign="top">emma:no-input="true" MUST be used to designate lack of expected input.
+      </td>
+      
+
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">1500</td>
+      <td valign="top">emma:uninterpreted</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.4" target="spec">[4.2.4]</a>
+      </td>
+      <td>Y</td><td>N</td>
+      <td valign="top"> Input for which the processor is unable to assign an interpretation MUST be marked as emma:uninterpreted="true".</td>
+      
+
+    <td></td><td></td><td></td></tr>
+   
+    <tr>
+      <td valign="top">1600</td>
+      <td valign="top">emma:lang</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.5" target="spec">[4.2.5]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td valign="top">emma:lang MAY be used to designate the human language of input        </td>
+      
+
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">1700</td>
+      <td valign="top">emma:signal</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.6" target="spec">[4.2.6]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td valign="top">emma:signal (with a URI value) MAY be used to designate the location of
+        the signal processed by an EMMA processor.</td>
+      
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">1701</td>
+      <td valign="top">emma:signal-size</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.6" target="spec">[4.2.6]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td valign="top">emma:signal-size MAY be used to indicate the file size in 8-bit octets of the input signal.</td>
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">1800</td>
+      <td valign="top">emma:media-type</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.7" target="spec">[4.2.7]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td valign="top">emma:media-type MAY be used to designate the MIME type of the processed signal.</td>
+      
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">1900</td>
+      <td valign="top">emma:confidence</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.8" target="spec">[4.2.8]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td valign="top">emma:confidence MAY be used to designate the confidence score of an input.</td>
+      
+
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">2000</td>
+      <td valign="top">emma:source</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.9" target="spec">[4.2.9]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td valign="top">emma:source (with a URI value) MAY be used to designate the source device.
+      </td>
+      
+
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">2100</td>
+      <td valign="top">emma:start</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.10.1" target="spec">[4.2.10.1]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td valign="top">emma:start with a millisecond value MAY be used to indicate the absolute
+        start time of an input.</td>
+      
+
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">2101</td>
+      <td valign="top">emma:end</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.10.1" target="spec">[4.2.10.1]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td valign="top">emma:end with a millisecond value MAY be used to indicate the absolute
+        end time of an input.</td>
+      
+
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">2201</td>
+      <td valign="top">emma:time-ref-uri</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.10.2" target="spec">[4.2.10.2]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td valign="top">The emma:time-ref-uri attribute MAY be used to indicate the URI used
+        as a reference point for relative timestamps.</td>
+      
+
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">2202</td>
+      <td valign="top">emma:time-ref-anchor</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.10.2" target="spec">[4.2.10.2]</a>
+      </td>
+      <td>Y</td><td>Y</td>
+      <td valign="top">SUB CONSTRAINT: If the emma:time-ref-uri points to an interval, emma:time-ref-anchor
+        MUST appear on the interpretation with a value of start or end, indicating
+        whether to use the start or end of that interval as the reference point.
+      </td>
+      
+
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">2203</td>
+      <td valign="top">emma:offset-to-start</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.10.2" target="spec">[4.2.10.2]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td valign="top">The value of emma:offset-to-start MAY be used to indicate the number
+        of milliseconds from the reference point to the start of the current input in a relative timestamp.</td>
+      
+
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">2204</td>
+      <td valign="top">emma:duration</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.10.3" target="spec">[4.2.10.3]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td valign="top">The emma:duration attribute value MAY be used to indicate the duration
+        in milliseconds of the current input.</td>
+      
+
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">2300</td>
+      <td valign="top">emma:medium</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.11" target="spec">[4.2.11]</a>
+      </td>
+      <td>Y</td><td>N</td>
+      <td valign="top">emma:medium MUST be included on all EMMA inputs, indicating
+        the medium of input.</td>
+      
+
+    <td></td><td></td><td></td></tr>
+    
+    <tr>
+					<td valign="top">2301</td>
+					<td valign="top">emma:medium</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.1.2" target="spec">[4.1.2]</a>
+					</td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUBCONSTRAINT: When EMMA inputs from different modes are combined to make a composite input, if the combining inputs have different values for emma:medium, then the value on the result MUST be a space separated list of the emma:medium values from the combining modes.</td>
+
+				<td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">2310</td>
+      <td valign="top">emma:mode</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.11" target="spec">[4.2.11]</a>
+      </td>
+      <td>Y</td><td>N</td>
+      <td valign="top">emma:mode MUST be included on all EMMA inputs, indicating
+        the mode of input.</td>
+    <td></td><td></td><td></td></tr>
+    <tr>
+					<td valign="top">2311</td>
+					<td valign="top">emma:mode</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.1.2" target="spec">[4.1.2]</a>
+					</td>
+					<td>Y</td><td>Y</td>
+					<td valign="top">SUBCONSTRAINT: When EMMA inputs from different modes are combined to make a composite input, the value of  emma:mode on the result MUST be a space separated list of the values on the combining inputs.</td>
+					
+				<td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">2320</td>
+      <td valign="top">emma:function</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.11" target="spec">[4.2.11]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td valign="top">emma:function MAY be included on EMMA inputs, providing
+          a classification of the function of the input.
+        </td>
+      
+
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">2330</td>
+      <td valign="top">emma:verbal</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.11" target="spec">[4.2.11]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td valign="top">emma:verbal MAY be included on EMMA inputs, indicating
+          whether the input is verbal or non-verbal.
+        </td>
+      
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">2401</td>
+      <td valign="top">emma:hook</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.12" target="spec">[4.2.12]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td valign="top">emma:hook MAY be used on application namespace markup to indicate
+        where content from another mode needs to be integrated.</td>
+      
+
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">2500</td>
+      <td valign="top">emma:cost</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.13" target="spec">[4.2.13]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td valign="top">emma:cost MAY be used to indicate the cost or weight of an interpretation or lattice arc.</td>
+      
+
+    <td></td><td></td><td></td></tr>
+    <tr>
+      <td valign="top">2510</td>
+      <td valign="top">emma:dialog-turn</td>
+      <td valign="top"> <a href="https://www.w3.org/TR/emma/#s4.2.17" target="spec">[4.2.17]</a>
+      </td>
+      <td>N</td><td>N</td>
+      <td valign="top"> emma:dialog-turn MAY be used to indicate an identifier for the current
+        dialog turn.</td>
+      
+
+    <td></td><td></td><td></td></tr>
+
+
+
+
+					<tr>
+					<th colspan="9">Scope and inheritance of annotations</th>
+				</tr>
+				<tr>
+					<td valign="top">2600</td>
+					<td valign="top">emma:one-of</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s3.3.1" target="spec">[3.3.1]</a>
+					</td>
+					<td>Y</td><td>N</td>
+					<td valign="top">EMMA annotations appearing on emma:one-of MUST be true of all of the
+					container elements (emma:one-of,emma:interpretation,emma:sequence,emma:group) within the emma:one-of.</td>
+					
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">2601</td>
+					<td valign="top">emma:derived-from</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.3" target="spec">[4.3]</a>
+					</td>
+					<td>Y</td><td>N</td>
+					<td valign="top">Each EMMA annotation from the previous stage of a sequential derivation (indicated using emma:derived-from) MUST be true of the interpretations in the current stage of the derivation, unless the annotation is explicitly re-stated.</td>
+					
+				<td></td><td></td><td></td></tr>
+
+				
+
+				<tr>
+
+					<th colspan="9">Endpoint elements and attributes</th>
+				</tr>
+				<tr>
+					<td valign="top">2700</td>
+					<td valign="top">emma:endpoint-info</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.1.5" target="spec">[4.1.5]</a>
+					</td>
+				   <td>N</td><td>N</td>
+					<td valign="top">The emma:endpoint-info element MAY be used to contain emma:endpoint elements describing the
+					characteristics of the endpoints. </td>
+					
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">2701</td>
+					<td valign="top">emma:endpoint</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.1.5" target="spec">[4.1.5]</a>
+					</td>
+					<td>N</td><td>N</td>
+					<td valign="top">The emma:endpoint element MAY be used to provide annotations regarding a communication endpoint.</td>
+					
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">2710</td>
+					<td valign="top">emma:endpoint-role</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.2.14" target="spec">[4.2.14]</a>
+					</td>
+					<td>N</td><td>N</td>
+					<td valign="top">The emma:endpoint-role attribute MAY be used to indicate the role of an endpoint.</td>
+					
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">2711</td>
+					<td valign="top">emma:endpoint-address</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.2.14" target="spec">[4.2.14]</a>
+					</td>
+					<td>N</td><td>N</td>
+					<td valign="top">The emma:endpoint-address attribute MAY be used to indicate the address of an endpoint.</td>
+					
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">2713</td>
+					<td valign="top">emma:port-type</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.2.14" target="spec">[4.2.14]</a>
+					</td>
+					<td>N</td><td>N</td>
+					<td valign="top">The emma:port-type attribute MAY be used to indicate the type of port of an endpoint.</td>
+					
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">2714</td>
+					<td valign="top">emma:port-num</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.2.14" target="spec">[4.2.14]</a>
+					</td>
+					<td>N</td><td>N</td>
+					<td valign="top" >The emma:port-num attribute MAY be used to indicate the port number of an endpoint.</td>
+					
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">2715</td>
+					<td valign="top">emma:message-id</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.2.14" target="spec">[4.2.14]</a>
+					</td>
+					<td>N</td><td>N</td>
+					<td valign="top" >The emma:message-id attribute MAY be used to indicate the message id of an endpoint.</td>
+					
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">2716</td>
+					<td valign="top">emma:service-name</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.2.14" target="spec">[4.2.14]</a>
+					</td>
+					<td>N</td><td>N</td>
+					<td valign="top">The emma:service-name attribute MAY be used to indicate name of service that the system provides.</td>
+					
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">2717</td>
+					<td valign="top">emma:endpoint-pair-ref</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.2.14" target="spec">[4.2.14]</a>
+					</td>
+				<td>N</td><td>N</td>
+					<td valign="top">The emma:endpoint-pair-ref attribute MAY be used to indicate the pairing between sink and source endpoints.</td>
+					
+				<td></td><td></td><td></td></tr>
+				<tr>
+					<td valign="top">2718</td>
+					<td valign="top">emma:endpoint-info-ref</td>
+					<td valign="top">
+						<a href="https://www.w3.org/TR/emma/#s4.2.14" target="spec">[4.2.14]</a>
+					</td>
+					<td>N</td><td>N</td>
+					<td valign="top">The emma:endpoint-info-ref attribute MAY be used to reference the endpoint-info element associated with an interpretation.</td>
+					
+				<td></td><td></td><td></td></tr>
+
+			</tbody>
+		</table>
+
+		
+		<h1 id="h_appendices">
+			<a id="appendices" name="appendices">Appendices</a>
+		</h1>
+		
+		<h2 id="h_ack1">
+			<a id="ackA" name="ack">Appendix A -
+Implementation report submission format</a>
+		</h2>
+<p>The following XML should be used as a template for providing an implementation report.
+</p>
+
+<pre class="example">
+&lt;system-report name="YOUR-SYSTEM-NAME-HERE"&gt;
+	&lt;testimonial&gt;YOUR-WELL-FORMED-TESTIMOMIAL-CONTENT-HERE&lt;/testimonial&gt;
+	&lt;assert id="100" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="200" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="201" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="300" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="301" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="310" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="400" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="402" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="500" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="600" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="602" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="603" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="604" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="605" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="606" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="607" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="608" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="609" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="700" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="800" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="810" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="811" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="901" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="904" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="910" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="911" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="1000" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="1001" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="1002" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="1100" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="1201" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="1300" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="1400" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="1500" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="1600" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="1700" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="1701" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="1800" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="1900" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2000" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2100" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2101" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2201" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2202" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2203" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2204" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2300" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2301" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2310" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2311" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2320" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2330" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2401" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2500" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2510" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2600" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2601" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2700" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2701" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2710" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2711" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2713" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2714" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2715" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2716" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2717" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+	&lt;assert id="2718" res="pass|fail|not-impl"&gt;OPTIONAL-NOTES-HERE&lt;/assert&gt;
+&lt;/system-report&gt;
+</pre>
+<h2 id="h_ack">
+			<a id="ackB" name="ack">Appendix B -
+Acknowledgements</a>
+		</h2>
+		<p>The Multimodal Working Group would like to acknowledge the contributions of several individuals:</p>
+		<ul>
+		<li>Kazuyuki Ashimura, W3C</li>
+		<li>Jin Liu, T-Systems</li>
+		<li>Dave Raggett, Volantis, W3C</li>
+		<li>Massimo Romanelli, DFKI</li>
+		</ul>
+<div class="navbar">
+			<hr />
+		</div>
+	</body>
+</html>

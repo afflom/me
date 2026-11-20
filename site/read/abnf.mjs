@@ -2,9 +2,8 @@
 // from the pinned RFC text by tools/standards/abnf.py (RFC 5234 ABNF), and the
 // Prism matches text against them in LexLean: app/src/Abnf.lex.tex walks the
 // rules as the byte table tools/standards/grammar.py writes into
-// app/src/PrismGrammarMail.lex.tex and PrismGrammarIcal.lex.tex, built as the
-// grammar-mail and grammar-ical guests and pinned in ./guest.mjs and
-// ../calendar/guest.mjs (GU-01), whose loader checks and compiles it once, when
+// app/src/PrismGrammarMail.lex.tex and PrismGrammarIcal.lex.tex, built as the grammar-mail and grammar-ical guests and
+// pinned in ./guest.mjs (GU-01), whose loader checks and compiles it once, when
 // this module loads; each match then runs it synchronously, so a reader stays
 // synchronous. Chromium instantiates a module this small on the main thread
 // (its limit is 8 MB).
@@ -21,20 +20,17 @@ import { GUEST as ICAL } from "../calendar/guest.mjs";
 
 const encoder = new TextEncoder();
 // Each grammar's guest, by the grammar's key: checked and compiled once, here.
-const asks = Object.fromEntries(await Promise.all(Object.entries({ mail: new URL(GUESTS.mail.path, import.meta.url), ical: new URL(ICAL.path, new URL("../calendar/", import.meta.url)) }).map(async ([key, url]) => {
-  const bytes = url.protocol === "file:" ? await (await import("node:fs/promises")).readFile(url) : new Uint8Array(await (await fetch(url)).arrayBuffer());
-  return [key, await openGuestSync(bytes, (key === "mail" ? GUESTS.mail : ICAL).sha256)];
-})));
+const bytesOf = async (url) => (url.protocol === "file:" ? (await import("node:fs/promises")).readFile(url) : new Uint8Array(await (await fetch(url)).arrayBuffer()));
+const asks = Object.fromEntries(await Promise.all([["mail", GUESTS.mail, import.meta.url], ["ical", ICAL, new URL("../calendar/", import.meta.url)]].map(async ([key, guest, base]) => [key, await openGuestSync(await bytesOf(new URL(guest.path, base)), guest.sha256)])));
 
 export function abnf({ rules, key }) {
-  const ask = asks[key];
   const names = Object.keys(rules).sort();
   const index = new Map(names.map((n, i) => [n, i]));
   return {
     match(rule, text) {
       // A text beyond what the guest can hold (it traps) is not read, like one beyond its request limit ("invalid").
       let answer = "none";
-      try { if (index.has(rule)) answer = ask(`${index.get(rule)} ${text}`); } catch { return null; }
+      try { if (index.has(rule)) answer = asks[key](`${index.get(rule)} ${text}`); } catch { return null; }
       if (answer === "none" || answer === "invalid") return null;
       const cps = Array.from(text);
       const at = new Map([[0, 0]]);

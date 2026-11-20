@@ -1,0 +1,227 @@
+{
+ "name": "message",
+ "comment": "The Prism's message formatter (app/src/PrismMessage.lex.tex), which words every reply, held to the whole Unicode MessageFormat 2.0 test suite of release LDML 48.2: every test of every file. 'text' pins the specification (UTS #35 Part 9) and 'suite' the test files, each by SHA-256 at the release's commit. A request is 'check', a line break, a file's defaultTestProperties object, then test objects of that file, every byte as Unicode publishes it; the guest runs each test by the suite's own rules (the text when 'exp' is given, the error types in order when 'expErrors' lists them, no error otherwise) and answers 'pass', or 'fail', the index of the first failing test and what came out. 'examples' here are the tests of syntax.json and are the acceptance vectors of the guest 'message'; rules/spec.json carries the files outside functions/ as the vectors of 'message-rules' and functions/spec.json the files under functions/ as the vectors of 'message-functions', all three built from the same module, because one build holds about 30 KB of vectors. 'data' pins what the functions read: Unicode CLDR 48 (plural and ordinal rules, number symbols and patterns, currency digits and symbols, Gregorian calendar names and patterns, time zone formats) for the locales listed, and the Unicode Character Database 17 (decompositions, combining classes, composition exclusions, general categories) for Normalization Form C; 'tables' names each table compiled into the module by size and SHA-256. Plural rules are read as CLDR writes them, at run time; number options follow ECMA-402's digit options; a locale outside 'locales' is served as 'en'. Dates are Gregorian; a time zone is UTC or a fixed offset, given by the literal or by the request's 'timeZone'. Formatting to parts (expParts) is not compared. Two more requests serve the page: 'format' and 'parts', each followed by one object with locale, bidiIsolation, src and params (and optionally timeZone); 'format' answers the error types on one line and then the text, 'parts' adds a line per expression placeholder (start and end in code points of the text, then its source) before an empty line and the text.",
+ "text": {
+  "url": "https://www.unicode.org/reports/tr35/tr35-78/tr35-messageFormat.html",
+  "sha256": "afb7131cf0753a0ff2ccc747d49f21cab06d6da2a65da65782d9ed55d2e019ad"
+ },
+ "suite": {
+  "repository": "https://github.com/unicode-org/message-format-wg",
+  "release": "LDML48.2",
+  "commit": "7f142fb4f1f5ea6ab1eb34ce2b87e918ca9fd331",
+  "base": "https://raw.githubusercontent.com/unicode-org/message-format-wg/7f142fb4f1f5ea6ab1eb34ce2b87e918ca9fd331/",
+  "files": [
+   {
+    "path": "test/tests/bidi.json",
+    "sha256": "fa3ebcd416dbdadab63731ee7a18a25b531773e4cc159dbe22da4ca1cba64afb",
+    "tests": 27
+   },
+   {
+    "path": "test/tests/data-model-errors.json",
+    "sha256": "6b8d8527b5248af76bca3f61d7c58c3339c91b05555f2fc11727efc81b94e615",
+    "tests": 23
+   },
+   {
+    "path": "test/tests/fallback.json",
+    "sha256": "9654322cdaed27660b53d91e7142795aa62ce2da87a99e7ce6a471549139c010",
+    "tests": 8
+   },
+   {
+    "path": "test/tests/functions/currency.json",
+    "sha256": "12c38d70bfea75c016427ad9623122dd19efdd1cb848b72fcf54dd72292abdea",
+    "tests": 12
+   },
+   {
+    "path": "test/tests/functions/date.json",
+    "sha256": "8b8c76dd1e44b625e97185a04b73f6b416b98931bc1d532325b50f1ff9bfe219",
+    "tests": 7
+   },
+   {
+    "path": "test/tests/functions/datetime.json",
+    "sha256": "f7f15c40eba40e972a2d84bf9f7e54a12f4d5b7a65ae9b316e8fe7cc2aae20cd",
+    "tests": 7
+   },
+   {
+    "path": "test/tests/functions/integer.json",
+    "sha256": "bc6f05c8df8252e656cff58f70bdc976fd813f306ab063aac87c474c6f8b58c1",
+    "tests": 13
+   },
+   {
+    "path": "test/tests/functions/number.json",
+    "sha256": "13fe17281e72a65d0cee73f923077db3d9d2c513cf7b0f2258f657d09b57cc9e",
+    "tests": 41
+   },
+   {
+    "path": "test/tests/functions/offset.json",
+    "sha256": "e9e3057e12d11028d41c387858e6262c3a1a698018b9f69401d9d37e296e81d5",
+    "tests": 16
+   },
+   {
+    "path": "test/tests/functions/percent.json",
+    "sha256": "6167bccb70e03c209cc86ea0244197c8138a18271696868ca996c04382756654",
+    "tests": 13
+   },
+   {
+    "path": "test/tests/functions/string.json",
+    "sha256": "a5d9bedd56a0a5b5de1a90487a21c82f0b8dfe11f18455f9e745b24b0fed800f",
+    "tests": 9
+   },
+   {
+    "path": "test/tests/functions/time.json",
+    "sha256": "8215b8f822de2750256baf125229c3b80d1f2206e2a5cb8551b6996181e96a50",
+    "tests": 6
+   },
+   {
+    "path": "test/tests/pattern-selection.json",
+    "sha256": "510a7e054f7d86eee645877bbfe8739bcd7ccabfa4290c8fbd93d64e3a89dadc",
+    "tests": 22
+   },
+   {
+    "path": "test/tests/syntax-errors.json",
+    "sha256": "26a090b1eb1fdda98d578362c7a49184350a5f80fd919ad54a1735e00786909b",
+    "tests": 133
+   },
+   {
+    "path": "test/tests/syntax.json",
+    "sha256": "4311db5ee6cfc307fa0505a7484ce7cf9e326dd770cc1c85772a35b3fdbdb810",
+    "tests": 114
+   },
+   {
+    "path": "test/tests/u-options.json",
+    "sha256": "6931deea81ec7c2a282e48428fee3250b3b27ee74690573e3c2ed23747d1f64a",
+    "tests": 10
+   }
+  ]
+ },
+ "data": {
+  "cldr": {
+   "repository": "https://github.com/unicode-org/cldr-json",
+   "release": "48.0.0",
+   "base": "https://raw.githubusercontent.com/unicode-org/cldr-json/48.0.0/cldr-json/",
+   "files": [
+    {
+     "path": "cldr-core/supplemental/currencyData.json",
+     "sha256": "ab007c5bb654a11601d6328f73a9b5b504334c556f3edb760020d6e2cc408472"
+    },
+    {
+     "path": "cldr-core/supplemental/ordinals.json",
+     "sha256": "8a945afc483a4f677fb5641f08a2ccc62948ee05f316d21996be6561c2f83155"
+    },
+    {
+     "path": "cldr-core/supplemental/plurals.json",
+     "sha256": "6c0a48e9bcfc25856f90202f703c2c7f89c105d6868f7712a943a6ed2dcbe8f4"
+    },
+    {
+     "path": "cldr-dates-full/main/en/ca-gregorian.json",
+     "sha256": "22fe41db0ac6d90d92c709c6aa5cca8f15bdb20e10200cbdb92b1fbe6532eca3"
+    },
+    {
+     "path": "cldr-dates-full/main/en/timeZoneNames.json",
+     "sha256": "db04305a4bac1389b965e71974adf174adc4130f38b86dfcf1f4e2eec343a174"
+    },
+    {
+     "path": "cldr-dates-full/main/fr/ca-gregorian.json",
+     "sha256": "0a82c7914d023e375888e914d63be846cb9815c03db25308ae303c1ce3d8bace"
+    },
+    {
+     "path": "cldr-dates-full/main/fr/timeZoneNames.json",
+     "sha256": "80a606e72cbad4508bd264217c15b6aa5bb9069cb631e73587e685d6198b5378"
+    },
+    {
+     "path": "cldr-numbers-full/main/en/currencies.json",
+     "sha256": "a6c41b28f4035f65ae698b53a66866982b4ff49bc0de7e840f91d2c6e6bdc23b"
+    },
+    {
+     "path": "cldr-numbers-full/main/en/numbers.json",
+     "sha256": "07a58e473f6d28dcc5d5562539d3ab5c8fbe37e435414969e3a2672525a80d5f"
+    },
+    {
+     "path": "cldr-numbers-full/main/fr/currencies.json",
+     "sha256": "39fc400b745a6e056bb12d23c58f0753c01eae3cfb2c356a445dac6149760d06"
+    },
+    {
+     "path": "cldr-numbers-full/main/fr/numbers.json",
+     "sha256": "f18f89da2e35b477626c21577e509583cd7831e651caccef2d82799b5c8c93e8"
+    }
+   ]
+  },
+  "ucd": {
+   "release": "17.0.0",
+   "base": "https://www.unicode.org/Public/17.0.0/ucd/",
+   "files": [
+    {
+     "path": "UnicodeData.txt",
+     "sha256": "2e1efc1dcb59c575eedf5ccae60f95229f706ee6d031835247d843c11d96470c"
+    },
+    {
+     "path": "CompositionExclusions.txt",
+     "sha256": "2f239196ef3b5b61db5cc476e9bd80f534d15aa1b74e1be1dea5d042a344c85f"
+    },
+    {
+     "path": "NormalizationTest.txt",
+     "sha256": "5019ffd530751a741900c849c0e010332f142a3612234639bd200b82138a87db"
+    }
+   ]
+  },
+  "locales": [
+   "en",
+   "fr"
+  ],
+  "tables": {
+   "mfCcc": {
+    "bytes": 2821,
+    "sha256": "a6e8b7aabad1b83a9f8c5d5df07f723999b509c0b736e9c977e3df56bc94dcec"
+   },
+   "mfLet": {
+    "bytes": 4104,
+    "sha256": "ba05ad9eb8188d1c0c57ebba136aaa69f9ee2200a7142601e2668ec4eb7a56fd"
+   },
+   "mfLoc": {
+    "bytes": 9754,
+    "sha256": "3d6063b114bd19bdf3d1b382e10c7ce7224b19188b856adc11838fc2766de8ad"
+   },
+   "mfUcd": {
+    "bytes": 20810,
+    "sha256": "6ba583c3bb287b2d1cdc5b02cc97e485fbd3e1a56bfd86cb8cc3b691ee0f65dd"
+   },
+   "mfUcp": {
+    "bytes": 1922,
+    "sha256": "f44771528cf948ac267f591f12595b9ae7f99703b0ad18674dd2d5fcfff9a775"
+   }
+  }
+ },
+ "examples": [
+  [
+   "check\n{\n    \"bidiIsolation\": \"none\",\n    \"locale\": \"en-US\"\n  }\n{\n      \"description\": \"message -> simple-message -> <empty>\",\n      \"src\": \"\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> simple-start-char\",\n      \"src\": \"a\",\n      \"exp\": \"a\"\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> simple-start-char pattern -> ...\",\n      \"src\": \"hello\",\n      \"exp\": \"hello\"\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> escaped-char\",\n      \"src\": \"\\\\\\\\\",\n      \"exp\": \"\\\\\"\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> 1*escaped-char\",\n      \"src\": \"\\\\\\\\\\\\{\\\\|\\\\}\",\n      \"exp\": \"\\\\{|}\"\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> simple-start-char pattern -> ... -> simple-start-char *text-char placeholder\",\n      \"src\": \"hello {world}\",\n      \"exp\": \"hello world\"\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> simple-start-char pattern -> ... -> simple-start-char *text-char placeholder\",\n      \"src\": \"hello {|world|}\",\n      \"exp\": \"hello world\"\n    }\n{\n      \"description\": \"message -> simple-message -> s simple-start pattern -> s simple-start-char pattern -> ...\",\n      \"src\": \"\\n hello\\t\",\n      \"exp\": \"\\n hello\\t\"\n    }\n{\n      \"src\": \"hello {$place}\",\n      \"params\": [\n        {\n          \"name\": \"place\",\n          \"value\": \"world\"\n        }\n      ],\n      \"exp\": \"hello world\"\n    }\n{\n      \"src\": \"hello {$place-.}\",\n      \"params\": [\n        {\n          \"name\": \"place-.\",\n          \"value\": \"world\"\n        }\n      ],\n      \"exp\": \"hello world\"\n    }\n{\n      \"src\": \"hello {$place}\",\n      \"expErrors\": [\n        {\n          \"type\": \"unresolved-variable\"\n        }\n      ],\n      \"exp\": \"hello {$place}\"\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> placeholder -> expression -> literal-expression -> \\\"{\\\" literal \\\"}\\\"\",\n      \"src\": \"{a}\",\n      \"exp\": \"a\"\n    }\n{\n      \"description\": \"... -> literal-expression -> \\\"{\\\" literal s annotation \\\"}\\\" -> \\\"{\\\" literal s function \\\"}\\\" -> \\\"{\\\" literal s \\\":\\\" identifier \\\"}\\\" -> \\\"{\\\" literal s \\\":\\\" name \\\"}\\\"\",\n      \"src\": \"{a :f}\",\n      \"exp\": \"{|a|}\",\n      \"expErrors\": [{ \"type\": \"unknown-function\" }]\n    }\n{\n      \"description\": \"... -> \\\"{\\\" literal s \\\":\\\" namespace \\\":\\\" name \\\"}\\\"\",\n      \"src\": \"{a :u:f}\",\n      \"exp\": \"{|a|}\",\n      \"expErrors\": [{ \"type\": \"unknown-function\" }]\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> placeholder -> expression -> variable-expression -> \\\"{\\\" variable \\\"}\\\"\",\n      \"src\": \"{$x}\",\n      \"exp\": \"{$x}\",\n      \"expErrors\": [{ \"type\": \"unresolved-variable\" }]\n    }",
+   "pass"
+  ],
+  [
+   "check\n{\n    \"bidiIsolation\": \"none\",\n    \"locale\": \"en-US\"\n  }\n{\n      \"description\": \"... -> variable-expression -> \\\"{\\\" variable s annotation \\\"}\\\" -> \\\"{\\\" variable s function \\\"}\\\" -> \\\"{\\\" variable s \\\":\\\" identifier \\\"}\\\" -> \\\"{\\\" variable s \\\":\\\" name \\\"}\\\"\",\n      \"src\": \"{$x :f}\",\n      \"exp\": \"{$x}\",\n      \"expErrors\": [{ \"type\": \"unresolved-variable\" }, { \"type\": \"unknown-function\" }]\n    }\n{\n      \"description\": \"... -> \\\"{\\\" variable s \\\":\\\" namespace \\\":\\\" name \\\"}\\\"\",\n      \"src\": \"{$x :u:f}\",\n      \"exp\": \"{$x}\",\n      \"expErrors\": [{ \"type\": \"unresolved-variable\" }, { \"type\": \"unknown-function\" }]\n    }\n{\n      \"description\": \"... -> annotation-expression -> function -> \\\"{\\\" \\\":\\\" namespace \\\":\\\" name \\\"}\\\"\",\n      \"src\": \"{:u:f}\",\n      \"exp\": \"{:u:f}\",\n      \"expErrors\": [{ \"type\": \"unknown-function\" }]\n    }\n{\n      \"description\": \"... -> annotation-expression -> function -> \\\"{\\\" \\\":\\\" name \\\"}\\\"\",\n      \"src\": \"{:f}\",\n      \"exp\": \"{:f}\",\n      \"expErrors\": [{ \"type\": \"unknown-function\" }]\n    }\n{\n      \"description\": \"message -> complex-message -> complex-body -> quoted-pattern -> \\\"{{\\\" pattern \\\"}}\\\" -> \\\"{{\\\"\\\"}}\\\"\",\n      \"src\": \"{{}}\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> placeholder -> markup -> \\\"{\\\" \\\"#\\\" identifier \\\"}\\\"\", \n      \"src\": \"{#tag}\",\n      \"exp\": \"\",\n      \"expParts\": [\n        {\n          \"type\": \"markup\",\n          \"kind\": \"open\",\n          \"name\": \"tag\"\n        }\n      ]\n    }\n{\n      \"description\": \"message -> complex-message -> *(declaration [s]) complex-body -> declaration complex-body -> input-declaration complex-body -> input variable-expression complex-body\",\n      \"src\": \".input{$x}{{}}\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"message -> complex-message -> s *(declaration [s]) complex-body s -> s declaration complex-body s -> s input-declaration complex-body s -> s input variable-expression complex-body s\",\n      \"src\": \"\\t.input{$x}{{}}\\n\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"message -> complex-message -> *(declaration [s]) complex-body -> declaration declaration complex-body -> input-declaration input-declaration complex-body -> input variable-expression input variable-expression complex-body\",\n      \"src\": \".input{$x}.input{$y}{{}}\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"message -> complex-message -> *(declaration [s]) complex-body -> declaration s declaration complex-body -> input-declaration s input-declaration complex-body -> input variable-expression s input variable-expression complex-body\",\n      \"src\": \".input{$x} .input{$y}{{}}\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"message -> complex-message -> s *(declaration [s]) complex-body s -> s complex-body s\",\n      \"src\": \"  {{}}  \",\n      \"exp\": \"\"\n    }",
+   "pass"
+  ],
+  [
+   "check\n{\n    \"bidiIsolation\": \"none\",\n    \"locale\": \"en-US\"\n  }\n{\n      \"description\": \"message -> complex-message -> *(declaration [s]) complex-body -> declaration declaration complex-body -> local-declaration input-declaration complex-body -> local s variable [s] \\\"=\\\" [s] expression input variable-expression complex-body\",\n      \"src\": \".local $x ={a}.input{$y}{{}}\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"message -> complex-message -> complex-body -> ... -> matcher -> match-statement variant -> match selector key quoted-pattern -> \\\".match\\\" variable literal quoted-pattern\",\n      \"src\": \".local $a={a :f}.match $a a{{}}*{{}}\",\n      \"exp\": \"\",\n      \"expErrors\": [{ \"type\": \"unknown-function\" }, { \"type\": \"bad-selector\" }]\n    }\n{\n      \"description\": \"... input-declaration -> input s variable-expression ...\",\n      \"src\": \".input {$x}{{}}\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"... local-declaration -> local s variable s \\\"=\\\" expression ...\",\n      \"src\": \".local $x ={a}{{}}\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"... local-declaration -> local s variable \\\"=\\\" s expression ...\",\n      \"src\": \".local $x= {a}{{}}\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"... local-declaration -> local s variable s \\\"=\\\" expression ...\",\n      \"src\": \".local $x = {a}{{}}\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"input-declaration-like content in complex-message\",\n      \"src\": \"{{.input {$x}}}\",\n      \"params\": [{ \"name\": \"x\", \"value\": \"X\" }],\n      \"exp\": \".input X\"\n    }\n{\n      \"description\": \"local-declaration-like content in complex-message with leading whitespace\",\n      \"src\": \"{{ .local $x = {$y}}}\",\n      \"params\": [{ \"name\": \"y\", \"value\": \"Y\" }],\n      \"exp\": \" .local $x = Y\"\n    }\n{\n      \"description\": \"... matcher -> match-statement [s] variant -> match 1*([s] selector) variant -> match selector selector variant -> match selector selector variant key s key quoted-pattern\",\n      \"src\": \".local $a={a :f}.local $b={b :f}.match $a $b a b{{}}* *{{}}\",\n      \"exp\": \"\",\n      \"expErrors\": [\n        { \"type\": \"unknown-function\" },\n        { \"type\": \"bad-selector\" },\n        { \"type\": \"unknown-function\" },\n        { \"type\": \"bad-selector\" }\n      ]\n    }\n{\n      \"description\": \"... matcher -> match-statement [s] variant -> match 1*([s] selector) variant -> match selector variant variant ...\",\n      \"src\": \".local $a={a :f}.match $a a{{}}b{{}}*{{}}\",\n      \"exp\": \"\",\n      \"expErrors\": [{ \"type\": \"unknown-function\" }, { \"type\": \"bad-selector\" }]\n    }\n{\n      \"description\": \"... variant -> key s quoted-pattern -> ...\",\n      \"src\": \".local $a={a :f}.match $a a {{}}*{{}}\",\n      \"exp\": \"\",\n      \"expErrors\": [{ \"type\": \"unknown-function\" }, { \"type\": \"bad-selector\" }]\n    }",
+   "pass"
+  ],
+  [
+   "check\n{\n    \"bidiIsolation\": \"none\",\n    \"locale\": \"en-US\"\n  }\n{\n      \"description\": \"... variant -> key s key s quoted-pattern -> ...\",\n      \"src\": \".local $a={a :f}.local $b={b :f}.match $a $b a b {{}}* *{{}}\",\n      \"exp\": \"\",\n      \"expErrors\": [\n        { \"type\": \"unknown-function\" },\n        { \"type\": \"bad-selector\" },\n        { \"type\": \"unknown-function\" },\n        { \"type\": \"bad-selector\" }\n      ]\n    }\n{\n      \"description\": \"... key -> \\\"*\\\" ...\",\n      \"src\": \".local $a={a :f}.match $a *{{}}\",\n      \"exp\": \"\",\n      \"expErrors\": [{ \"type\": \"unknown-function\" }, { \"type\": \"bad-selector\" }]\n    }\n{\n      \"description\": \"simple-message -> simple-start pattern -> placeholder -> expression -> literal-expression -> \\\"{\\\" s literal \\\"}\\\"\",\n      \"src\": \"{ a}\",\n      \"exp\": \"a\"\n    }\n{\n      \"description\": \"... literal-expression -> \\\"{\\\" literal s attribute \\\"}\\\" -> \\\"{\\\" literal s \\\"@\\\" identifier \\\"}\\\"\",\n      \"src\": \"{a @c}\",\n      \"exp\": \"a\"\n    }\n{\n      \"description\": \"... -> literal-expression -> \\\"{\\\" literal s \\\"}\\\"\",\n      \"src\": \"{a }\",\n      \"exp\": \"a\"\n    }\n{\n      \"description\": \"simple-message -> simple-start pattern -> placeholder -> expression -> variable-expression -> \\\"{\\\" s variable \\\"}\\\"\",\n      \"src\": \"{ $x}\",\n      \"exp\": \"{$x}\",\n      \"expErrors\": [{ \"type\": \"unresolved-variable\" }]\n    }\n{\n      \"description\": \"... variable-expression -> \\\"{\\\" variable s attribute \\\"}\\\" -> \\\"{\\\" variable s \\\"@\\\" identifier \\\"}\\\"\",\n      \"src\": \"{$x @c}\",\n      \"exp\": \"{$x}\",\n      \"expErrors\": [{ \"type\": \"unresolved-variable\" }]\n    }\n{\n      \"description\": \"... -> variable-expression -> \\\"{\\\" variable s \\\"}\\\"\",\n      \"src\": \"{$x }\",\n      \"exp\": \"{$x}\",\n      \"expErrors\": [{ \"type\": \"unresolved-variable\" }]\n    }\n{\n      \"description\": \"simple-message -> simple-start pattern -> placeholder -> expression -> annotation-expression -> \\\"{\\\" s annotation \\\"}\\\"\",\n      \"src\": \"{ :f}\",\n      \"exp\": \"{:f}\",\n      \"expErrors\": [{ \"type\": \"unknown-function\" }]\n    }\n{\n      \"description\": \"... annotation-expression -> \\\"{\\\" annotation s attribute \\\"}\\\" -> \\\"{\\\" annotation s \\\"@\\\" identifier \\\"}\\\"\",\n      \"src\": \"{:f @c}\",\n      \"exp\": \"{:f}\",\n      \"expErrors\": [{ \"type\": \"unknown-function\" }]\n    }\n{\n      \"description\": \"... -> annotation-expression -> \\\"{\\\" annotation s \\\"}\\\"\",\n      \"src\": \"{:f }\",\n      \"exp\": \"{:f}\",\n      \"expErrors\": [{ \"type\": \"unknown-function\" }]\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> placeholder -> markup -> \\\"{\\\" s \\\"#\\\" identifier \\\"}\\\"\", \n      \"src\": \"{ #a}\",\n      \"exp\": \"\"\n    }",
+   "pass"
+  ],
+  [
+   "check\n{\n    \"bidiIsolation\": \"none\",\n    \"locale\": \"en-US\"\n  }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> placeholder -> markup -> \\\"{\\\" \\\"#\\\" identifier option \\\"}\\\" -> \\\"{\\\" \\\"#\\\" identifier identifier \\\"=\\\" literal \\\"}\\\"\",\n      \"src\": \"{#tag foo=bar}\",\n      \"exp\": \"\",\n      \"expParts\": [\n        {\n          \"type\": \"markup\",\n          \"kind\": \"open\",\n          \"name\": \"tag\",\n          \"options\": {\n            \"foo\": \"bar\"\n          }\n        }\n      ]\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> placeholder -> markup -> \\\"{\\\" \\\"#\\\" identifier attribute \\\"}\\\" -> \\\"{\\\" \\\"#\\\" identifier identifier \\\"=\\\" literal \\\"}\\\"\",\n      \"src\": \"{#a @c}\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> placeholder -> markup -> \\\"{\\\" \\\"#\\\" identifier s \\\"}\\\" -> \\\"{\\\" \\\"#\\\" identifier identifier \\\"=\\\" literal \\\"}\\\"\",\n      \"src\": \"{#a }\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> placeholder -> markup -> \\\"{\\\" \\\"#\\\" identifier \\\"/\\\" \\\"}\\\" -> \\\"{\\\" \\\"#\\\" identifier identifier \\\"=\\\" literal \\\"}\\\"\",\n      \"src\": \"{#a/}\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> placeholder -> markup -> \\\"{\\\" \\\"/\\\" identifier \\\"}\\\"\",\n      \"src\": \"{/a}\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> placeholder -> markup -> \\\"{\\\" s \\\"/\\\" identifier \\\"}\\\"\",\n      \"src\": \"{ /a}\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> placeholder -> markup -> \\\"{\\\" \\\"/\\\" identifier option \\\"}\\\"\",\n      \"src\": \"{/tag foo=bar}\",\n      \"exp\": \"\",\n      \"expParts\": [\n        {\n          \"type\": \"markup\",\n          \"kind\": \"close\",\n          \"name\": \"tag\",\n          \"options\": {\n            \"foo\": \"bar\"\n          }\n        }\n      ]\n    }\n{\n      \"description\": \"message -> simple-message -> simple-start pattern -> placeholder -> markup -> \\\"{\\\" \\\"/\\\" identifier s \\\"}\\\"\",\n      \"src\": \"{/a }\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"... annotation-expression -> function -> \\\":\\\" identifier option\",\n      \"src\": \"{:f k=v}\",\n      \"exp\": \"{:f}\",\n      \"expErrors\": [{ \"type\": \"unknown-function\" }]\n    }\n{\n      \"description\": \"... option -> identifier s \\\"=\\\" literal\",\n      \"src\": \"{:f k =v}\",\n      \"exp\": \"{:f}\",\n      \"expErrors\": [{ \"type\": \"unknown-function\" }]\n    }\n{\n      \"description\": \"... option -> identifier \\\"=\\\" s literal\",\n      \"src\": \"{:f k= v}\",\n      \"exp\": \"{:f}\",\n      \"expErrors\": [{ \"type\": \"unknown-function\" }]\n    }\n{\n      \"description\": \"... option -> identifier s \\\"=\\\" s literal\",\n      \"src\": \"{:f k = v}\",\n      \"exp\": \"{:f}\",\n      \"expErrors\": [{ \"type\": \"unknown-function\" }]\n    }\n{\n      \"description\": \"... attribute -> \\\"@\\\" identifier \\\"=\\\" literal ...\",\n      \"src\": \"{a @c=d}\",\n      \"exp\": \"a\"\n    }",
+   "pass"
+  ],
+  [
+   "check\n{\n    \"bidiIsolation\": \"none\",\n    \"locale\": \"en-US\"\n  }\n{\n      \"description\": \"... attribute -> \\\"@\\\" identifier s \\\"=\\\" literal ...\",\n      \"src\": \"{a @c =d}\",\n      \"exp\": \"a\"\n    }\n{\n      \"description\": \"... attribute -> \\\"@\\\" identifier \\\"=\\\" s literal ...\",\n      \"src\": \"{a @c= d}\",\n      \"exp\": \"a\"\n    }\n{\n      \"description\": \"... attribute -> \\\"@\\\" identifier s \\\"=\\\" s literal ...\",\n      \"src\": \"{a @c = d}\",\n      \"exp\": \"a\"\n    }\n{\n      \"description\": \"... attribute -> \\\"@\\\" identifier s \\\"=\\\" s quoted-literal ...\",\n      \"src\": \"{42 @foo=|bar|}\",\n      \"exp\": \"42\",\n      \"expParts\": [{ \"type\": \"string\", \"value\": \"42\" }]\n    }\n{\n      \"description\": \"... quoted-literal\",\n      \"src\": \"{||}\",\n      \"exp\": \"\"\n    }\n{\n      \"description\": \"... quoted-literal\",\n      \"src\": \"{|a|}\",\n      \"exp\": \"a\"\n    }\n{\n      \"description\": \"... quoted-literal\",\n      \"src\": \"{|\\\\\\\\|}\",\n      \"exp\": \"\\\\\"\n    }\n{\n      \"description\": \"... quoted-literal\",\n      \"src\": \"{|a\\\\\\\\\\\\{\\\\|\\\\}|}\",\n      \"exp\": \"a\\\\{|}\"\n    }\n{\n      \"description\": \"... unquoted-literal\",\n      \"src\": \"{0}\",\n      \"exp\": \"0\"\n    }\n{\n      \"description\": \"... unquoted-literal\",\n      \"src\": \"{-0}\",\n      \"exp\": \"-0\"\n    }\n{\n      \"description\": \"... unquoted-literal\",\n      \"src\": \"{1}\",\n      \"exp\": \"1\"\n    }\n{\n      \"description\": \"... unquoted-literal\",\n      \"src\": \"{11}\",\n      \"exp\": \"11\"\n    }\n{\n      \"description\": \"... unquoted-literal\",\n      \"src\": \"{0.1}\",\n      \"exp\": \"0.1\"\n    }\n{\n      \"description\": \"... unquoted-literal\",\n      \"src\": \"{0.12}\",\n      \"exp\": \"0.12\"\n    }\n{\n      \"description\": \"... unquoted-literal\",\n      \"src\": \"{0e1}\",\n      \"exp\": \"0e1\"\n    }\n{\n      \"description\": \"... unquoted-literal\",\n      \"src\": \"{0E1}\",\n      \"exp\": \"0E1\"\n    }\n{\n      \"description\": \"... unquoted-literal\",\n      \"src\": \"{0E-1}\",\n      \"exp\": \"0E-1\"\n    }\n{\n      \"description\": \"... unquoted-literal\",\n      \"src\": \"{0E-1}\",\n      \"exp\": \"0E-1\"\n    }\n{\n      \"description\": \"+ as unquoted-literal\",\n      \"src\": \"{+}\",\n      \"exp\": \"+\"\n    }\n{\n      \"description\": \"- as unquoted-literal\",\n      \"src\": \"{-}\",\n      \"exp\": \"-\"\n    }\n{\n      \"description\": \". as unquoted-literal\",\n      \"src\": \"{·}\",\n      \"exp\": \"·\"\n    }\n{\n      \"description\": \"emoji as unquoted-literal\",\n      \"src\": \"{🥔}\",\n      \"exp\": \"🥔\"\n    }\n{\n      \"description\": \"emoji above U+FFFF as unquoted-literal, \",\n      \"src\": \"{🀄️}\",\n      \"exp\": \"🀄️\"\n    }\n{\n      \"description\": \"multi-code-point emoji as unquoted-literal\",\n      \"src\": \"{🏳️‍🌈}\",\n      \"exp\": \"🏳️‍🌈\"\n    }\n{\n      \"description\": \"various characters as unquoted-literal\",\n      \"src\": \"{\\u00a1\\u061d\\u1681\\u200b\\u2010\\u2030\\u2060\\u206a\\u3001\\ue000\\ufdf0}\",\n      \"exp\": \"\\u00a1\\u061d\\u1681\\u200b\\u2010\\u2030\\u2060\\u206a\\u3001\\ue000\\ufdf0\"\n    }\n{\n      \"src\": \"hello { world\\t\\n}\",\n      \"exp\": \"hello world\"\n    }\n{\n      \"src\": \"hello {\\u3000world\\r}\",\n      \"exp\": \"hello world\"\n    }",
+   "pass"
+  ],
+  [
+   "check\n{\n    \"bidiIsolation\": \"none\",\n    \"locale\": \"en-US\"\n  }\n{\n      \"src\": \"{$one} and {$two}\",\n      \"params\": [\n        {\n          \"name\": \"one\",\n          \"value\": 1.3\n        },\n        {\n          \"name\": \"two\",\n          \"value\": 4.2\n        }\n      ],\n      \"exp\": \"1.3 and 4.2\"\n    }\n{\n      \"src\": \"{$one} et {$two}\",\n      \"locale\": \"fr\",\n      \"params\": [\n        {\n          \"name\": \"one\",\n          \"value\": 1.3\n        },\n        {\n          \"name\": \"two\",\n          \"value\": 4.2\n        }\n      ],\n      \"exp\": \"1,3 et 4,2\"\n    }\n{\n      \"src\": \".local $foo = {bar} {{bar {$foo}}}\",\n      \"exp\": \"bar bar\"\n    }\n{\n      \"src\": \".local $foo = {|bar|} {{bar {$foo}}}\",\n      \"exp\": \"bar bar\"\n    }\n{\n      \"src\": \".local $foo = {|bar|} {{bar {$foo}}}\",\n      \"params\": [\n        {\n          \"name\": \"foo\",\n          \"value\": \"foo\"\n        }\n      ],\n      \"exp\": \"bar bar\"\n    }\n{\n      \"src\": \".local $foo = {$bar} {{bar {$foo}}}\",\n      \"params\": [\n        {\n          \"name\": \"bar\",\n          \"value\": \"foo\"\n        }\n      ],\n      \"exp\": \"bar foo\"\n    }\n{\n      \"src\": \".local $foo = {$baz} .local $bar = {$foo} {{bar {$bar}}}\",\n      \"params\": [\n        {\n          \"name\": \"baz\",\n          \"value\": \"foo\"\n        }\n      ],\n      \"exp\": \"bar foo\"\n    }\n{\n      \"src\": \".input {$foo} {{bar {$foo}}}\",\n      \"params\": [\n        {\n          \"name\": \"foo\",\n          \"value\": \"foo\"\n        }\n      ],\n      \"exp\": \"bar foo\"\n    }\n{\n      \"src\": \".input {$foo} .local $bar = {$foo} {{bar {$bar}}}\",\n      \"params\": [\n        {\n          \"name\": \"foo\",\n          \"value\": \"foo\"\n        }\n      ],\n      \"exp\": \"bar foo\"\n    }\n{\n      \"src\": \".local $foo = {$baz} .local $bar = {$foo} {{bar {$bar}}}\",\n      \"params\": [\n        {\n          \"name\": \"baz\",\n          \"value\": \"foo\"\n        }\n      ],\n      \"exp\": \"bar foo\"\n    }\n{\n      \"src\": \".local $x = {42} .local $y = {$x} {{{$x} {$y}}}\",\n      \"exp\": \"42 42\"\n    }\n{\n      \"src\": \"{#tag}content\",\n      \"exp\": \"content\",\n      \"expParts\": [\n        {\n          \"type\": \"markup\",\n          \"kind\": \"open\",\n          \"name\": \"tag\"\n        },\n        {\n          \"type\": \"text\",\n          \"value\": \"content\"\n        }\n      ]\n    }\n{\n      \"src\": \"{#ns:tag}content{/ns:tag}\",\n      \"exp\": \"content\",\n      \"expParts\": [\n        {\n          \"type\": \"markup\",\n          \"kind\": \"open\",\n          \"name\": \"ns:tag\"\n        },\n        {\n          \"type\": \"text\",\n          \"value\": \"content\"\n        },\n        {\n          \"type\": \"markup\",\n          \"kind\": \"close\",\n          \"name\": \"ns:tag\"\n        }\n      ]\n    }\n{\n      \"src\": \"{/tag}content\",\n      \"exp\": \"content\",\n      \"expParts\": [\n        {\n          \"type\": \"markup\",\n          \"kind\": \"close\",\n          \"name\": \"tag\"\n        },\n        {\n          \"type\": \"text\",\n          \"value\": \"content\"\n        }\n      ]\n    }",
+   "pass"
+  ],
+  [
+   "check\n{\n    \"bidiIsolation\": \"none\",\n    \"locale\": \"en-US\"\n  }\n{\n      \"src\": \"{#tag foo=bar/}\",\n      \"exp\": \"\",\n      \"expParts\": [\n        {\n          \"type\": \"markup\",\n          \"kind\": \"standalone\",\n          \"name\": \"tag\",\n          \"options\": {\n            \"foo\": \"bar\"\n          }\n        }\n      ]\n    }\n{\n      \"src\": \"{#tag a:foo=|foo| b:bar=$bar}\",\n      \"params\": [\n        {\n          \"name\": \"bar\",\n          \"value\": \"b a r\"\n        }\n      ],\n      \"exp\": \"\",\n      \"expParts\": [\n        {\n          \"type\": \"markup\",\n          \"kind\": \"open\",\n          \"name\": \"tag\",\n          \"options\": {\n            \"a:foo\": \"foo\",\n            \"b:bar\": \"b a r\"\n          }\n        }\n      ]\n    }\n{\n      \"src\": \"{42 @foo @bar=13}\",\n      \"exp\": \"42\",\n      \"expParts\": [{ \"type\": \"string\", \"value\": \"42\" }]\n    }\n{\n      \"src\": \"{{trailing whitespace}} \\n\",\n      \"exp\": \"trailing whitespace\"\n    }\n{\n      \"description\": \"NFC: text is not normalized\",\n      \"src\": \"\\u1E0A\\u0323\",\n      \"exp\": \"\\u1E0A\\u0323\"\n    }\n{\n      \"description\": \"NFC: variables are compared to each other as-if normalized; decl is non-normalized, use is\",\n      \"src\": \".local $\\u0044\\u0323\\u0307 = {foo} {{{$\\u1E0c\\u0307}}}\",\n      \"exp\": \"foo\"\n    }\n{\n      \"description\": \"NFC: variables are compared to each other as-if normalized; decl is normalized, use isn't\",\n      \"src\": \".local $\\u1E0c\\u0307 = {foo} {{{$\\u0044\\u0323\\u0307}}}\",\n      \"exp\": \"foo\"\n    }\n{\n      \"description\": \"NFC: variables are compared to each other as-if normalized; decl is normalized, use isn't\",\n      \"src\": \".input {$\\u1E0c\\u0307} {{{$\\u0044\\u0323\\u0307}}}\",\n      \"params\": [{\"name\": \"\\u1E0c\\u0307\", \"value\": \"foo\"}],\n      \"exp\": \"foo\"\n    }\n{\n      \"description\": \"NFC: variables are compared to each other as-if normalized; decl is non-normalized, use is\",\n      \"src\": \".input {$\\u0044\\u0323\\u0307} {{{$\\u1E0c\\u0307}}}\",\n      \"params\": [{\"name\": \"\\u0044\\u0323\\u0307\", \"value\": \"foo\"}],\n      \"exp\": \"foo\"\n    }\n{\n      \"description\": \"NFC: variables are compared to each other as-if normalized; decl is non-normalized, use is; reordering\",\n      \"src\": \".local $\\u0044\\u0307\\u0323 = {foo} {{{$\\u1E0c\\u0307}}}\",\n      \"exp\": \"foo\"\n    }\n{\n      \"description\": \"NFC: variables are compared to each other as-if normalized; decl is non-normalized, use is; special case mapping\",\n      \"src\": \".local $\\u0041\\u030A\\u0301 = {foo} {{{$\\u01FA}}}\",\n      \"exp\": \"foo\"\n    }",
+   "pass"
+  ]
+ ]
+}

@@ -31,7 +31,7 @@ const encoder = new TextEncoder();
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
 import { isZip, zipEntries } from './zip.mjs';
 import { exportItems, exportKind } from '../source/exports.mjs';
-import { mboxSeparator } from '../read/mail.mjs';
+import { mboxSeparator, headerLines, readField } from '../read/mail.mjs';
 
 const sha256 = async (bytes) => hex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
 const fail = (code, message) => Object.assign(new Error(message ?? code), { code });
@@ -106,9 +106,12 @@ export function formatOfText(text) {
   const head = text.trimStart().slice(0, 4096);
   if (/^BEGIN:VCALENDAR/i.test(head)) return 'ics';
   if (/^BEGIN:VCARD/i.test(head)) return 'vcf';
-  if (/^From \S+/.test(head)) return 'mbox';
-  if (/^(?:[A-Za-z][A-Za-z0-9-]*:[^\n]*\r?\n(?:[ \t][^\n]*\r?\n)*)+\r?\n/.test(head) && /^(?:from|date|subject|message-id|received|return-path|delivered-to|mime-version):/im.test(head)) return 'eml';
-  return 'other';
+  // Mail by its grammar (site/read/mail.mjs): an mbox by RFC 4155's separator
+  // line; a message by a header section, closed by its empty line, whose every
+  // line is a field and one of them a field RFC 5322 3.6 or RFC 2045 names.
+  if (mboxSeparator(head.split('\n', 1)[0])) return 'mbox';
+  const fields = /\r?\n\r?\n/.test(head) ? headerLines(head).map(readField) : [];
+  return fields.every(Boolean) && fields.some((f) => f.rule && !/optional/.test(f.rule)) ? 'eml' : 'other';
 }
 
 // The contact picker's answer, as vCards: one the vcard guest writes per

@@ -4,7 +4,7 @@
 // exports holo_alloc(len) and holo_run(ptr, len) -> (outPtr << 32 | outLen);
 // bytes whose SHA-256 is not the pinned one are refused before they compile.
 
-export const GUEST = { path: 'guest/grammar-ical.wasm', sha256: '0d6a42def901f9eeb136cd2e5b45b43e480dda75e94b3b129ae083f69b0c3640' };
+export const GUEST = { path: 'guest/grammar-ical.wasm', sha256: '21bb11a7b449796865ecbc2cd11547f27909eb307a551c1f57de7ed96c447f63' };
 
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
 const encoder = new TextEncoder();
@@ -30,8 +30,17 @@ export async function openGuest(bytes, sha256) {
   return async (line) => run((await WebAssembly.instantiate(module, {})).exports, line);
 }
 
-// The same, answered synchronously once the one asynchronous step (check and compile) is done.
+// The same, answered synchronously once the one asynchronous step (check and
+// compile) is done, by one instance kept and put back as it began before each
+// request: its memory above the stack as first instantiated, and what it grew
+// by zero. An instance a request trapped is dropped. So no state carries over,
+// and reading thousands of fields does not leave thousands of instances.
 export async function openGuestSync(bytes, sha256) {
   const module = await compile(bytes, sha256);
-  return (line) => run(new WebAssembly.Instance(module, {}).exports, line);
+  let x = null, first = null, from = 0;
+  return (line) => {
+    if (x) { const memory = new Uint8Array(x.memory.buffer); memory.set(first, from); memory.fill(0, from + first.length); }
+    else { x = new WebAssembly.Instance(module, {}).exports; from = Number(x.__stack_high?.value ?? 0); first = new Uint8Array(x.memory.buffer).slice(from); }
+    try { return run(x, line); } catch (error) { x = null; throw error; }
+  };
 }

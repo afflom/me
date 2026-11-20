@@ -1,5 +1,5 @@
 {
-  "comment": "The Prism's surface: every place, act, setting and visible word of the page. GenSurfaceModel (generators/surfacemodel) writes PrismSurface.lex.tex and its proofs from this file, and GenSurface (generators/surface) writes site/surface/surface.mjs. Indices refer to Foundation.Me.V1.Model: views, roles, domains, labels. Two viewpoints, after ISO/IEC 42010: the person's view is the page; the system view is what runs on its own and is never drawn, so a place or setting in the system view has no host on the page. All of the person's settings are one panel in a few sections, in the order a person needs them; each section names the journeys it serves (app/specs/product/spec.json), and reveals its detail always, until the person has done what it asks, or only on a tap. Set up is the few sections a person meets first, in order, one at a time: every section that shows its detail until done is a step, and an empty place offers the step that fills it. Every list the person sees has its order: newest first, upcoming first (then what has passed), by the latest exchange, or Today's agenda; nothing reorders it.",
+  "comment": "The Prism's surface: every place, act, setting and visible word of the page. GenSurfaceModel (generators/surfacemodel) writes PrismSurface.lex.tex and its proofs from this file, GenSurface (generators/surface) writes site/surface/surface.mjs, and GenSurfaceShell (generators/surfaceshell) writes the page's set up, site/surface/setup.mjs. Indices refer to Foundation.Me.V1.Model: views, roles, domains, labels. Two viewpoints, after ISO/IEC 42010: the person's view is the page; the system view is what runs on its own and is never drawn, so a place or setting in the system view has no host on the page. All of the person's settings are one panel in a few sections, in the order a person needs them; each section names the journeys it serves (app/specs/product/spec.json), and reveals its detail always, until the person has done what it asks, or only on a tap. Set up is the few sections a person meets first, in order, one at a time: every section that shows its detail until done is a step, and an empty place offers the step that fills it. Every list the person sees has its order: newest first, upcoming first (then what has passed), by the latest exchange, or Today's agenda; nothing reorders it.",
   "domains": ["Health", "Money", "Identity", "People", "Conversations", "Time", "Places", "Work", "Things", "Tasks", "Library", "Topics"],
   "floors": [3, 2, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1],
   "labels": ["Public", "Internal", "Confidential", "Restricted"],
@@ -131,7 +131,7 @@
     {"key": "share", "setting": "none", "act": "share", "word": "", "domains": []}
   ],
   "look": {
-    "comment": "The Prism's look, after verdant resonance's interface without its world: an abyss-green ground, verdant, solar and crystal accents, a display serif over a sans and a mono. Each tone takes the brand variables it lists, in both themes; GenSurfaceModel refuses a pair below its contrast.",
+    "comment": "The Prism's look, after verdant resonance's interface without its world: an abyss-green ground, verdant, solar and crystal accents, a display serif over a sans and a mono. Each tone takes the brand variables it lists, in both themes; Each pair of contrast is fore, back, the least ratio and the WCAG 2.2 success criterion that asks it (1.4.3 text at 4.5, 1.4.6 enhanced text at 7, 1.4.11 non-text at 3): GenSurfaceModel refuses a pair below its ratio, and GenSurfaceShell refuses a ratio that is not its criterion's, and a colour site/card.css draws text or a focus ring with that no pair measures. Each target is a name, the selector of its rule in site/card.css and the WCAG 2.2 success criterion that bounds its size (2.5.8 at 24 CSS pixels, 2.5.5 at 44): GenSurfaceShell refuses a target smaller than its criterion asks, and a rule that sets a least height on a control the look lists as no target.",
     "themes": ["dark", "light"],
     "tones": [
       {"key": "ground", "sets": ["background"], "dark": "#0c2219", "light": "#f1f5f0"},
@@ -152,23 +152,37 @@
       {"key": "warning", "sets": ["warning"], "dark": "#f0a860", "light": "#97530a"}
     ],
     "contrast": [
-      ["ink", "ground", 7],
-      ["ink", "surface", 7],
-      ["ink", "raised", 7],
-      ["ink", "hover", 7],
-      ["muted", "ground", 4.5],
-      ["muted", "surface", 4.5],
-      ["muted", "raised", 4.5],
-      ["faint", "ground", 4.5],
-      ["onSolar", "solar", 4.5],
-      ["onSolar", "solarHover", 4.5],
-      ["verdant", "ground", 4.5],
-      ["crystal", "ground", 4.5],
-      ["danger", "ground", 4.5],
-      ["warning", "ground", 4.5],
-      ["danger", "surface", 4.5],
-      ["verdant", "surface", 4.5],
-      ["solar", "ground", 1.5]
+      ["ink", "ground", 7, "1.4.6"],
+      ["ink", "surface", 7, "1.4.6"],
+      ["ink", "raised", 7, "1.4.6"],
+      ["ink", "hover", 7, "1.4.6"],
+      ["muted", "ground", 4.5, "1.4.3"],
+      ["muted", "surface", 4.5, "1.4.3"],
+      ["muted", "raised", 4.5, "1.4.3"],
+      ["faint", "ground", 4.5, "1.4.3"],
+      ["onSolar", "solar", 4.5, "1.4.3"],
+      ["onSolar", "solarHover", 4.5, "1.4.3"],
+      ["verdant", "ground", 4.5, "1.4.3"],
+      ["crystal", "ground", 4.5, "1.4.3"],
+      ["danger", "ground", 4.5, "1.4.3"],
+      ["warning", "ground", 4.5, "1.4.3"],
+      ["danger", "surface", 4.5, "1.4.3"],
+      ["verdant", "surface", 4.5, "1.4.3"],
+      ["ground", "verdant", 4.5, "1.4.3"]
+    ],
+    "targets": [
+      ["place", "button.pr-go", "2.5.8"],
+      ["new", ".pr-top .pr-new", "2.5.5"],
+      ["field", ".pr input:not([type=\"checkbox\"]):not([type=\"file\"]), .pr textarea, .pr-ask textarea", "2.5.5"],
+      ["action", ".pr .pr-row > button, .pr-compose button, .pr-setting button", "2.5.5"],
+      ["detail", ".pr-detail > summary", "2.5.5"],
+      ["step", ".pr-step > button", "2.5.5"],
+      ["switch", ".pr input[role=\"switch\"]", "2.5.8"],
+      ["file", ".pr-file", "2.5.5"],
+      ["ask", ".pr-ask textarea", "2.5.5"],
+      ["send", ".pr-ask button", "2.5.5"],
+      ["card", ".pr .pr-card-go", "2.5.5"],
+      ["feed", ".pr .pr-card-feed", "2.5.8"]
     ],
     "fonts": [
       {"key": "display", "family": "Cormorant Garamond", "file": "CormorantGaramond-SemiBold.woff2", "weight": 600, "fallback": "Georgia", "metrics": {"size": "92%", "ascent": "100.4%", "descent": "31.2%"}, "load": "gesture"}

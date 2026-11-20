@@ -40,7 +40,8 @@ fn oracle_or_01() {
     }
     let spec = read("app/specs/oracle/spec.json");
     let authorities = read("model/authorities.toml");
-    let pinned = spec.matches("\"sha256\"").count();
+    let held = std::fs::read_dir("../../app/specs/oracle/sources").expect("the sources");
+    let pinned = spec.matches("\"sha256\"").count() + held.count();
     assert!(pinned > 0, "OR-01: the oracle pins at least one source");
     assert_eq!(
         authorities.matches("realized_by = [\"OR-01\"]").count()
@@ -57,7 +58,7 @@ fn oracle_or_01() {
 /// `VC-01`: vCard is read as RFC 6350 defines it: the page's property table is derived from the RFC's own ABNF, every entry of IANA's vCard Elements registry is implemented and exercised by an example line its RFC gives (or one derived from an RFC's own example of a property it applies to), RFC 6350 and each RFC extending it being pinned, the Prism reads each example line as a reference reader written to RFC 6350 sections 3.3 and 3.4 reads it, and an entry neither met nor in a debt that only shrinks fails the build
 #[test]
 fn oracle_vc_01() {
-    let generator = read("tools/oracle/vcard.py");
+    let generator = read("tools/oracle/vcard.py") + &read("tools/standards/abnf.py");
     for needle in [
         "not the pinned",
         "def documentation_only",
