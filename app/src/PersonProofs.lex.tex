@@ -4,6 +4,8 @@
 \useglossary{prism.arch@1.0.0}
 \importmodule{Foundation.Person.V1.Model}
 \importmodule{PersonIcf}
+\importmodule{PersonSchema}
+\importmodule{Foundation.Vocab.V1.SchemaOrg}
 \title{Person guarantees}
 \begin{semanticmodule}
 theorem{
@@ -117,6 +119,41 @@ theorem{
   name: icfKinded,
   parameters: [],
   statement: ((icfKindedRows (PersonIcf::icfRows)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: schemaTypesNamed,
+  parameters: [],
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaSection "types")) =? (Foundation.Vocab.V1.SchemaOrg::vocabTypeCount)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: schemaPropertiesNamed,
+  parameters: [],
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaSection "properties")) =? (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: schemaMembersNamed,
+  parameters: [],
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaSection "members")) =? (Foundation.Vocab.V1.SchemaOrg::vocabMemberCount)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: schemaPersonKnown,
+  parameters: [],
+  statement: (((PersonSchema::schemaPersonType) <? (Foundation.Vocab.V1.SchemaOrg::vocabTypeCount)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: personPropertiesOutsideSchemaOrg,
+  parameters: [],
+  statement: ((PersonSchema::schemaSame (PersonSchema::schemaModelOutside (Foundation.Person.V1.Model::personProperties) (PersonSchema::schemaPersonProperties)) (cons "healthCondition" (nil String))) = true),
   proof: decide{}
 }
 \end{semanticmodule}
