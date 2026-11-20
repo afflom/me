@@ -1,0 +1,44 @@
+{
+ "key": "w3c-turtle-1.1",
+ "title": "W3C RDF 1.1 Turtle, Recommendation 25 February 2014",
+ "issuer": "W3C",
+ "text": {
+  "url": "https://www.w3.org/TR/2014/REC-turtle-20140225/",
+  "sha256": "f1ff33edbd9dbac6a472e001064ef70b4aee849972f3d8b5afa837b5f9cc6580"
+ },
+ "governs": [
+  "app/src/PrismSenses.lex.tex",
+  "site/turtle/guest.mjs"
+ ],
+ "realizedBy": [
+  "ST-01"
+ ],
+ "inventories": [
+  {
+   "generated": "test/standards/generated/w3c-turtle-1.1.jsonl",
+   "vendored": "app/specs/standards/upstream/turtle-manifest.ttl",
+   "source": {
+    "url": "https://www.w3.org/2013/TurtleTests/manifest.ttl",
+    "sha256": "3fd91f9e4bfad9b07ee9bfa41786744dc4c46c05838fc43da33f2cb8331c941c"
+   }
+  }
+ ],
+ "enforcedByKind": {
+  "TestTurtleEval": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "every evaluation test of the W3C Turtle test suite, its files byte for byte as W3C serves them (app/specs/turtle/spec.json), is in an acceptance vector of the turtle guests, which answer pass only when the reader's verdict on each is the suite's; prismpm build runs them and GU-01 holds the pinned wasm to those vectors"
+  },
+  "TestTurtleNegativeEval": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "every negative evaluation test of the W3C Turtle test suite, its files byte for byte as W3C serves them (app/specs/turtle/spec.json), is in an acceptance vector of the turtle guests, which answer pass only when the reader's verdict on each is the suite's; prismpm build runs them and GU-01 holds the pinned wasm to those vectors"
+  },
+  "TestTurtleNegativeSyntax": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "every negative syntax test of the W3C Turtle test suite, its files byte for byte as W3C serves them (app/specs/turtle/spec.json), is in an acceptance vector of the turtle guests, which answer pass only when the reader's verdict on each is the suite's; prismpm build runs them and GU-01 holds the pinned wasm to those vectors"
+  },
+  "TestTurtlePositiveSyntax": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "every positive syntax test of the W3C Turtle test suite, its files byte for byte as W3C serves them (app/specs/turtle/spec.json), is in an acceptance vector of the turtle guests, which answer pass only when the reader's verdict on each is the suite's; prismpm build runs them and GU-01 holds the pinned wasm to those vectors"
+  }
+ }
+}

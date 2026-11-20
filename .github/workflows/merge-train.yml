@@ -95,7 +95,7 @@ jobs:
   test:
     name: test the train against main
     runs-on: ubuntu-24.04
-    timeout-minutes: 90
+    timeout-minutes: 240
     outputs:
       accepted: ${{ steps.train.outputs.accepted }}
       main: ${{ steps.train.outputs.main }}
@@ -133,6 +133,7 @@ jobs:
           image=$(sed -n 's/.*"sdk_image":"\([^"]*\)".*/\1/p' prismpm.lock)
           [[ $image =~ ^[a-z0-9.-]+(:[0-9]{1,5})?/[a-z0-9./_-]+@sha256:[0-9a-f]{64}$ ]]
           scratch=$(mktemp -d)
+          export scratch image
           trap 'rm -rf "$scratch"' EXIT
           fast_gates() {
             node bootstrap/brand-sync.mjs --check &&
@@ -140,8 +141,6 @@ jobs:
               node bootstrap/frame-sync.mjs --check &&
               python3 -I tools/realize/gate.py --check &&
               python3 -I tools/standards/gate.py --check --base "$main" &&
-              { [[ ! -f tools/parts/gate.py ]] || python3 -I tools/parts/gate.py; } &&
-              { [[ ! -f tools/product/gate.py ]] || python3 -I tools/product/gate.py; } &&
               python3 -I tools/guests/gen.py check &&
               sh tools/generators/run.sh --check &&
               python3 -I tools/handwritten/gate.py --check --base "$main" &&
@@ -155,40 +154,147 @@ jobs:
                 --env SDK_IMAGE="$image" \
                 "$image" bash -c 'set -euo pipefail; mkdir -p "$HOME"; just fmt-check model template-check lint test'
           }
+          # The browser acceptances on the merged tree, as the page job runs them on a
+          # pull request alone (CO-01 and the timing budgets failed on main after #145 and
+          # #161 were each green): a holo built from this tree, without the proof that
+          # main's own run binds, the page assembled around it, then every runner and
+          # every suite once. In a worktree of its own (the gates' own tests need git), so the train's tree stays what it merges, and in a
+          # shell of its own, because bash ignores errexit inside an if.
+          acceptances() {
+            local copy=$RUNNER_TEMP/accept
+            git worktree remove --force "$copy" 2>/dev/null || rm -rf "$copy"
+            git worktree add -q --detach "$copy" HEAD
+            mkdir -p "$scratch/prismpm-home/.docker"
+            printf '{}\n' >"$scratch/prismpm-home/.docker/config.json"
+            (
+              cd "$copy"
+              shopt -s nullglob globstar
+              docker run --rm \
+                --user "$(id -u):$(id -g)" \
+                --group-add "$(stat -c '%g' /var/run/docker.sock)" \
+                --volume "$scratch:/tmp" \
+                --volume "$PWD:$PWD" \
+                --volume /var/run/docker.sock:/var/run/docker.sock \
+                --workdir "$PWD" \
+                --env DOCKER_CONFIG=/tmp/prismpm-home/.docker \
+                --env BUILDX_CONFIG=/tmp/prismpm-buildx \
+                --env HOME=/tmp/prismpm-home \
+                --env PRISMPM_EPHEMERAL_HOME=1 \
+                --env SDK_IMAGE="$image" \
+                "$image" bash -c 'set -euo pipefail; prismpm --project app build --no-provenance'
+              holos=(app/.prism/build/*/*.holo)
+              [[ ${#holos[@]} -eq 1 ]]
+              fingerprint=$(node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync(process.argv[1], "utf8")).archive_fingerprint)' "$(dirname "${holos[0]}")/application/holo-identities.json")
+              "$RUNNER_TEMP/draw/bin/python" -I bootstrap/og.py
+              "$RUNNER_TEMP/draw/bin/python" -I bootstrap/icons.py
+              cp "${holos[0]}" site/app.holo
+              cp -r try/vendor site/vendor
+              rm -rf site/vendor/prism-code/fixtures site/vault/test
+              node -e '
+                const { readFileSync, writeFileSync } = require("node:fs");
+                const [id, url] = process.argv.slice(1);
+                const app = JSON.parse(readFileSync("site/app.json", "utf8"));
+                app.attestations ??= {};
+                app.attestations.build = { id, url };
+                writeFileSync("site/app.json", `${JSON.stringify(app, null, 2)}\n`);
+              ' "$fingerprint" "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+              node bootstrap/page.mjs site
+              for objects in bootstrap/*-objects.mjs; do node "$objects" site; done
+              node bootstrap/precache.mjs site
+              export NODE_PATH="$(npm root --global)"
+              runners=(test/*/run.mjs)
+              suites=(test/**/*.test.mjs)
+              for runner in "${runners[@]}"; do node "$runner"; done
+              # The gates of the product record's time behaviour measures, one at a time and apart from the rest (as the page check runs them).
+              mapfile -t timed < <(node --input-type=module -e 'import { load } from "./tools/specs/record.mjs"; console.log([...new Set(load("app/specs/product/spec.json").quality.filter((q) => q.subcharacteristic === "time behaviour").flatMap((q) => q.measures.map((m) => m.gate)))].join("\n"))')
+              rest=()
+              for suite in "${suites[@]}"; do [[ " ${timed[*]} " == *" $suite "* ]] || rest+=("$suite"); done
+              node --test --test-concurrency=1 "${timed[@]}"
+              node --test "${rest[@]}"
+            )
+          }
           ready=()
+          : >"$RUNNER_TEMP/refused"
           while read -r number head draft fork; do
             [[ $draft == false && $fork == false ]] || continue
             ok=true
             for name in "page / gates" "acceptance / ubuntu-24.04"; do
               state=$(gh api "repos/$REPO/commits/$head/check-runs" -f check_name="$name" -X GET --jq '[.check_runs[] | .conclusion][0] // "pending"')
               [[ $state == success ]] || ok=false
+              # A check that ended without passing is said once, so a pull request is never left waiting in silence.
+              case $state in success | pending) ;; *) printf '%s %s %s\n' "$number" "$head" "its check \"$name\" ended $state on this head, so it is not green; push to this branch to run it again" >>"$RUNNER_TEMP/refused" ;; esac
             done
             if $ok; then ready+=("$number:$head"); fi
           done < <(gh api "repos/$REPO/pulls?state=open&base=main&sort=created&direction=asc&per_page=50" \
             --jq '.[] | "\(.number) \(.head.sha) \(.draft) \(.head.repo.full_name != .base.repo.full_name)"')
-          echo "ready: ${ready[*]:-none}"
-          accepted=()
-          : >"$RUNNER_TEMP/refused"
+          # A pull request that names an open deploy-blocked issue in its description is
+          # there to get the live page moving again, so it boards first: pull requests
+          # ahead of it by number cannot then make the gates refuse it round after round
+          # (#181 was refused twice that way while main's deploy stayed blocked).
+          blocking=$(gh api "repos/$REPO/issues?state=open&labels=deploy-blocked&per_page=20" --jq '[.[].number | tostring] | join("|")')
+          first=()
+          later=()
           for entry in "${ready[@]}"; do
-            number=${entry%%:*}
-            head=${entry#*:}
-            before=$(git rev-parse HEAD)
-            git fetch -q origin "$head"
-            if ! git merge -q --no-ff --no-edit "$head" >/dev/null 2>&1; then
-              git merge --abort || true
-              printf '%s %s %s\n' "$number" "$head" "it conflicts with main ($main) and the pull requests the train takes before it" >>"$RUNNER_TEMP/refused"
-              continue
-            fi
-            # The pull request's own code runs without the token.
-            if (unset GH_TOKEN; fast_gates) >"$RUNNER_TEMP/gates-$number.log" 2>&1; then
-              accepted+=("$number:$head")
-              echo "#$number $head: the fast gates pass on main and the train before it"
-            else
-              tail -n 40 "$RUNNER_TEMP/gates-$number.log"
-              printf '%s %s %s\n' "$number" "$head" "the fast gates refuse it merged with main ($main) and the pull requests the train takes before it; see run $GITHUB_RUN_ID" >>"$RUNNER_TEMP/refused"
-              git reset -q --hard "$before"
-            fi
+            if [[ -n $blocking ]] && gh api "repos/$REPO/pulls/${entry%%:*}" --jq '.body // ""' | grep -qE "#($blocking)([^0-9]|$)"; then first+=("$entry"); else later+=("$entry"); fi
           done
+          ready=("${first[@]}" "${later[@]}")
+          echo "ready: ${ready[*]:-none}"
+          # What the acceptances need on the runner, installed once and before any pull request's code runs.
+          if [[ ${#ready[@]} -gt 0 ]]; then
+            npm install --no-audit --no-fund --global playwright@1.56.1
+            playwright install --with-deps chromium
+            python3 -m venv "$RUNNER_TEMP/draw"
+            "$RUNNER_TEMP/draw/bin/pip" install --quiet --no-deps --only-binary :all: --require-hashes -r bootstrap/draw-requirements.txt
+          fi
+          # The fast gates and the browser acceptances take about forty minutes, so the
+          # train runs them once, on the tree of all the pull requests that merge onto
+          # main together, and one by one only when that tree fails, to find which of
+          # them it refuses. What is tested is still exactly the tree that merges.
+          gates() { # gates LOG: the fast gates and the browser acceptances on HEAD; the pull requests' own code runs without the token
+            (unset GH_TOKEN; fast_gates && bash -euo pipefail -c "$(declare -f acceptances); acceptances") >"$1" 2>&1
+          }
+          said() { # said LOG: what refused, in the log's own words, on one line
+            tail -n 40 "$1" >&2
+            # A gate that passes says so in the same form as one that refuses, and the gates stop at the first refusal: the last lines are the ones that refused.
+            grep -E '^ *not ok |^gate failed|^[A-Z][A-Z0-9]-[0-9]+: ' "$1" | grep -v ' is what ' | sed 's/^ *//' | tr -d '@`' | tail -n 4 | paste -sd ';' | cut -c1-900
+          }
+          board() { # board together|each: merge each of the queue onto HEAD (each: where it passes the gates there)
+            local entry number head before
+            boarded=()
+            for entry in "${queue[@]}"; do
+              number=${entry%%:*}
+              head=${entry#*:}
+              before=$(git rev-parse HEAD)
+              git fetch -q origin "$head"
+              if ! git merge -q --no-ff --no-edit "$head" >/dev/null 2>&1; then
+                git merge --abort || true
+                printf '%s %s %s\n' "$number" "$head" "it conflicts with main ($main) and the pull requests the train takes before it" >>"$RUNNER_TEMP/refused"
+                continue
+              fi
+              if [[ $1 == together ]] || gates "$RUNNER_TEMP/gates-$number.log"; then
+                boarded+=("$entry")
+                echo "#$number $head: boards on main and the train before it ($1)"
+              else
+                printf '%s %s %s\n' "$number" "$head" "the fast gates or the browser acceptances refuse it merged with main ($main) and the pull requests the train takes before it; see run $GITHUB_RUN_ID. They say: $(said "$RUNNER_TEMP/gates-$number.log")" >>"$RUNNER_TEMP/refused"
+                git reset -q --hard "$before"
+              fi
+            done
+          }
+          queue=("${ready[@]}")
+          board together
+          if [[ ${#boarded[@]} -gt 0 ]] && ! gates "$RUNNER_TEMP/gates-train.log"; then
+            why=$(said "$RUNNER_TEMP/gates-train.log")
+            echo "the gates refuse ${boarded[*]} together ($why)"
+            git reset -q --hard "$main"
+            if [[ ${#boarded[@]} -eq 1 ]]; then
+              printf '%s %s %s\n' "${boarded[0]%%:*}" "${boarded[0]#*:}" "the fast gates or the browser acceptances refuse it merged with main ($main); see run $GITHUB_RUN_ID. They say: $why" >>"$RUNNER_TEMP/refused"
+              boarded=()
+            else
+              queue=("${boarded[@]}")
+              board each
+            fi
+          fi
+          accepted=("${boarded[@]}")
           echo "accepted=${accepted[*]:-}" >>"$GITHUB_OUTPUT"
           # The refusals travel to the merge job as an output: a run cannot download its
           # own artifacts while it is still running.

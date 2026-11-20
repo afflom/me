@@ -17,16 +17,16 @@ import * as pin from "../message/guest.mjs";
 const S = PROVIDERS.sentence;
 const RANK = ["public", "internal", "confidential", "restricted"];
 const higher = (a, b) => (RANK.indexOf(b) > RANK.indexOf(a) ? b : a);
-const day = new Intl.DateTimeFormat(undefined, { weekday: "short", month: "short", day: "numeric" });
-const clock = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
 // Every sentence is a Unicode MessageFormat 2 message of the sentence provider
-// (app/specs/router/spec.json), formatted by the message guest (app/src/PrismMessage.lex.tex).
+// (app/specs/router/spec.json), formatted by the message guest (app/src/PrismMessage.lex.tex),
+// dates and times too: a part named `at` is an instant, said in the wall time this browser keeps then.
 const guest = new URL(pin.GUESTS.message.path, new URL("../message/guest.mjs", import.meta.url));
 const format = await pin.openGuestSync(guest.protocol === "file:" ? await (await import("node:fs/promises")).readFile(guest) : new Uint8Array(await (await fetch(guest)).arrayBuffer()), pin.GUESTS.message.sha256);
 // A value longer than a sentence can carry is cut; the item it cites holds the rest.
+const zone = (at) => { const m = -new Date(at).getTimezoneOffset(), a = Math.abs(m); return `${m < 0 ? "-" : "+"}${String(Math.trunc(a / 60)).padStart(2, "0")}:${String(a % 60).padStart(2, "0")}`; };
 const cut = (value) => { const text = String(value ?? ""); return text.length > S.lead * 2 ? `${text.slice(0, S.lead * 2)}…` : text; };
 function fill(key, parts = {}) {
-  const [errors, ...text] = format(`format\n${JSON.stringify({ src: S.frames[key], bidiIsolation: "none", params: Object.entries(parts).map(([name, value]) => ({ name, value: cut(value) })) })}`).split("\n");
+  const [errors, ...text] = format(`format\n${JSON.stringify({ src: S.frames[key], bidiIsolation: "none", params: Object.entries(parts).map(([name, value]) => ({ name, value: cut(value) })), ...(parts.at ? { timeZone: zone(parts.at) } : {}) })}`).split("\n");
   if (errors) throw Object.assign(new Error(`the ${key} sentence does not format: ${errors}`), { code: "message.format" });
   return text.join("\n");
 }
@@ -35,13 +35,10 @@ function fill(key, parts = {}) {
 // a "now", also how far that is from it, in wall-time's own periods: "(in 2 days)".
 export function whenOf(at, allDay = false, now = null) {
   if (!at) return "";
-  const date = new Date(at);
-  const ago = Number.isFinite(now) ? relativeOf(allDay ? new Date(date).setHours(12) : at, allDay ? new Date(now).setHours(12) : now) : "";
-  return fill("when", { day: day.format(date), time: allDay ? "" : clock.format(date), ago });
+  const ago = Number.isFinite(now) ? relativeOf(allDay ? new Date(at).setHours(12) : at, allDay ? new Date(now).setHours(12) : now) : "";
+  return fill("when", { at: new Date(at).toISOString(), allDay: allDay ? "yes" : "", ago });
 }
 
-// What the browser's clock says now, as the person reads a date and a time.
-const full = new Intl.DateTimeFormat(undefined, { dateStyle: "full", timeStyle: "short" });
 const asksNow = (text, terms) => S.now.phrases.some((p) => text.toLowerCase().includes(p)) || (terms.length > 0 && terms.every((t) => S.now.words.includes(t)));
 
 const whatOf = (item) => item.title || (item.body ?? "").split("\n")[0] || "";
@@ -84,7 +81,7 @@ export async function answer(prompt, options) {
   // PrismAsk in LexLean), asked of the root guest: the page only carries it out.
   const request = [halted(), asksNow(text, termsOf(text)) ? "asked" : "not", keep ? "keeps" : "asks", mapped.intent ?? "fact", mapped.start != null ? "yes" : "no", held.length ? "some" : "none"];
   const decided = (await line(`ask ${request.join(" ")}`)).trim();
-  if (decided === "clock") return { sentences: [end(fill("now", { when: full.format(new Date(now)) }))], sources: [], offers: [], mapped };
+  if (decided === "clock") return { sentences: [end(fill("now", { at: new Date(now).toISOString() }))], sources: [], offers: [], mapped };
   if (decided === "keep") return { sentences: [keptSentence(text, mapped)], sources: [], offers: [{ kind: "keep" }], mapped };
   if (decided === "look") {
     const asked = await answer(prompt, { ...options, keep: false });
@@ -139,13 +136,17 @@ export async function answer(prompt, options) {
   // Asked only words the readers pass over (a kind, a weekday, "should"), those words are what is sought.
   const bare = wordsOf(text);
   const sought = named.length ? named : bare.length && bare.every((w) => !S.greet.includes(w) && !S.overview.includes(w)) ? bare : [];
-  const found = sought.length || mapped.meaning ? held.filter((item) => (!kind || !named.length || ofKind(item)) && ((sought.length && mentions(item, sought)) || close(item) >= near)).sort((a, b) => (b.at ?? 0) - (a.at ?? 0)) : [];
+  // What names the asked words comes before what is only near in meaning, then newest first, then by address: an order that does not depend on how the items came in.
+  const says = (item) => Number(sought.length > 0 && mentions(item, sought));
+  const found = sought.length || mapped.meaning ? held.filter((item) => (!kind || !named.length || ofKind(item)) && ((sought.length && mentions(item, sought)) || close(item) >= near)).sort((a, b) => says(b) - says(a) || (b.at ?? 0) - (a.at ?? 0) || (a.address < b.address ? -1 : 1)) : [];
   const offers = told.flatMap((item) => {
     const k = S.offers[item.media === "message" ? "message" : item.media === "plainText" ? "note" : ""];
     return k ? [{ kind: k, item }] : [];
   });
   const rest = found.filter((item) => !told.includes(item));
-  return { sentences, sources: rest.length ? [...told, ...rest].slice(0, S.find) : used.slice(0, S.most), cited: told, offers, mapped };
+  // More found than a list holds: the list is cut after the best, and the reply says how many it left out.
+  const cut = Math.max(0, told.length + rest.length - S.find);
+  return { sentences: cut ? [...sentences, end(fill("more", { count: cut }))] : sentences, sources: rest.length ? [...told, ...rest].slice(0, S.find) : used.slice(0, S.most), cited: told, cut, offers, mapped };
 }
 
 // Events still ahead come first, soonest first; past ones after, latest first.

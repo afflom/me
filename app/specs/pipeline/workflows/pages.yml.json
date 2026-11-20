@@ -108,7 +108,13 @@
        "this image's Lean and Lake, the architecture and every input file. A",
        "tag or a manual run proves in full. A reused proof leaves no holo, so",
        "the holo is then built (six minutes, no proof) and must carry the very",
-       "build ID the reused attestation verified, or this job fails."
+       "build ID the reused attestation verified, or this job fails.",
+       "",
+       "The merge train merges with the workflow's own token, which starts no",
+       "push run, so it dispatches this workflow on main instead. That dispatch",
+       "stands for the push and is named so here, or every publish would prove",
+       "in full (30 minutes, and main's run for #162 was cut at the job limit).",
+       "A run a person starts by hand is still a manual run and proves in full."
       ]
      }
     },
@@ -136,7 +142,7 @@
     },
     {
      "name": "On main, the proof the merged pull request's page build kept",
-     "if": "steps.proof-cache.outputs.cache-hit != 'true' && github.event_name == 'push' && github.ref == 'refs/heads/main'",
+     "if": "steps.proof-cache.outputs.cache-hit != 'true' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'",
      "continue-on-error": true,
      "shell": "bash",
      "env": {
@@ -159,7 +165,7 @@
      "name": "Build and verify the holo through the locked SDK",
      "shell": "bash",
      "env": {
-      "PRISM_PROOF_EVENT": "${{ github.event_name }}:${{ github.ref }}"
+      "PRISM_PROOF_EVENT": "${{ (github.event_name == 'workflow_dispatch' && github.actor == 'github-actions[bot]') && 'push' || github.event_name }}:${{ github.ref }}"
      },
      "run": "set -euo pipefail\nimage=$(sed -n 's/.*\"sdk_image\":\"\\([^\"]*\\)\".*/\\1/p' prismpm.lock)\nif [[ ! $image =~ ^[a-z0-9.-]+(:[0-9]{1,5})?/[a-z0-9./_-]+@sha256:[0-9a-f]{64}$ ]]; then\n  printf '%s\\n' 'prismpm.lock does not select an immutable SDK image' >&2\n  exit 64\nfi\ndocker_config=$(mktemp -d)\n# The SDK's /tmp is a private directory on the runner's own disk, as\n# bootstrap.yml has it since template 1cb0d36: the patched SDK's build\n# outgrows a fixed 2 GiB tmpfs.\nscratch=$(mktemp -d)\nmkdir -p \"$scratch/prismpm-home/.docker\"\ntrap 'rm -rf \"$docker_config\" \"$scratch\"' EXIT\nprintf '{}\\n' >\"$docker_config/config.json\"\ndocker run --rm \\\n  --user \"$(id -u):$(id -g)\" \\\n  --group-add \"$(stat -c '%g' /var/run/docker.sock)\" \\\n  --volume \"$scratch:/tmp\" \\\n  --volume \"$PWD:$PWD\" \\\n  --volume /var/run/docker.sock:/var/run/docker.sock \\\n  --volume \"$docker_config:/tmp/prismpm-home/.docker:ro\" \\\n  --workdir \"$PWD\" \\\n  --env DOCKER_CONFIG=/tmp/prismpm-home/.docker \\\n  --env BUILDX_CONFIG=/tmp/prismpm-buildx \\\n  --env HOME=/tmp/prismpm-home \\\n  --env PRISMPM_EPHEMERAL_HOME=1 \\\n  --env PRISM_PROOF_EVENT \\\n  --env SDK_IMAGE=\"$image\" \\\n  \"$image\" bash -c '\n    set -euo pipefail\n    # The one way a holo is built when a proof is reused.\n    # PrismPM 0.4.0 refuses a provenance statement here: the lock\n    # sits at the root, not beside the app. `verify` writes the\n    # same holo without one (a487fb6a for #94 both ways), and the\n    # build-id check below is what binds it to the reused proof.\n    build_holo() { prismpm --project \"$1\" build --no-provenance; }\n    # A pull request proves in full, so main'\"'\"'s reused-proof build\n    # never runs on it. Rehearse that build alongside the proof, on\n    # a copy of this tree, so a change that breaks it fails here\n    # and not in main'\"'\"'s deploy (#94 blocked main this way).\n    rehearsal=\n    if [[ ${PRISM_PROOF_EVENT:-} == pull_request:* ]]; then\n      mkdir -p /tmp/rehearsal\n      tar --exclude=./.git --exclude=./app/.prism --exclude=./.prism-proof --exclude=./target -cf - . | tar -xf - -C /tmp/rehearsal\n      (cd /tmp/rehearsal && build_holo app) >/tmp/rehearsal.log 2>&1 &\n      rehearsal=$!\n    fi\n    just app\n    if [[ -n $rehearsal ]]; then\n      if wait \"$rehearsal\"; then\n        echo \"main'\"'\"'s reused-proof build works on this tree: $(tail -n 1 /tmp/rehearsal.log)\"\n      else\n        cat /tmp/rehearsal.log >&2\n        printf \"%s\\n\" \"main'\"'\"'s reused-proof build fails on this tree, so merging it would block the deploy\" >&2\n        exit 1\n      fi\n    fi\n    shopt -s nullglob\n    holos=(app/.prism/build/*/*.holo)\n    if [[ ${#holos[@]} -eq 0 ]]; then\n      proved=$(grep -o \"\\\"build_id\\\": *\\\"[0-9a-f]\\{64\\}\\\"\" .prism-proof/verified/manifest.json | grep -o \"[0-9a-f]\\{64\\}\")\n      test -n \"$proved\"\n      build_holo app\n      holos=(app/.prism/build/*/*.holo)\n      test ${#holos[@]} -eq 1\n      built=$(basename \"$(dirname \"${holos[0]}\")\")\n      if [[ $built != \"$proved\" ]]; then\n        # Not the build the reused proof verified: that proof says\n        # nothing about this holo, so prove this tree in full.\n        printf \"the holo built here (%s) is not the build the reused proof verified (%s): proving in full\\n\" \"$built\" \"$proved\" >&2\n        rm -rf app/.prism .prism-proof\n        PRISM_PROOF_EVENT= just app\n        holos=(app/.prism/build/*/*.holo)\n        test ${#holos[@]} -eq 1\n      else\n        echo \"the holo is build $built, the build the reused proof verified\"\n      fi\n    fi\n  '\n"
     },
@@ -255,7 +261,7 @@
     {
      "name": "Every browser acceptance under test/, from the pieces this page serves",
      "shell": "bash",
-     "run": "set -euo pipefail\nexport NODE_PATH=\"$(npm root --global)\"\nshopt -s nullglob globstar\nrunners=(test/*/run.mjs)\nsuites=(test/**/*.test.mjs)\ntest ${#runners[@]} -gt 0\ntest ${#suites[@]} -gt 0\nfor runner in \"${runners[@]}\"; do\n  echo \"::group::$runner\"\n  node \"$runner\"\n  echo \"::endgroup::\"\ndone\n# Twice, on pull requests and before deploys alike: a check that does\n# not decide the same way every run (a race with the page) fails here,\n# on its pull request, instead of on main after the merge.\nfor pass in 1 2; do\n  echo \"::group::every *.test.mjs, pass $pass of 2\"\n  node --test \"${suites[@]}\"\n  echo \"::endgroup::\"\ndone\n",
+     "run": "set -euo pipefail\nexport NODE_PATH=\"$(npm root --global)\"\nshopt -s nullglob globstar\nrunners=(test/*/run.mjs)\nsuites=(test/**/*.test.mjs)\ntest ${#runners[@]} -gt 0\ntest ${#suites[@]} -gt 0\nfor runner in \"${runners[@]}\"; do\n  echo \"::group::$runner\"\n  node \"$runner\"\n  echo \"::endgroup::\"\ndone\n# Twice, on pull requests and before deploys alike: a check that does\n# not decide the same way every run (a race with the page) fails here,\n# on its pull request, instead of on main after the merge.\n# A time measure is taken with the machine to itself: the suites the product\n# record names as gates of its time behaviour measures run one at a time,\n# apart from the rest, which run side by side and would slow them.\nmapfile -t timed < <(node --input-type=module -e 'import { load } from \"./tools/specs/record.mjs\"; console.log([...new Set(load(\"app/specs/product/spec.json\").quality.filter((q) => q.subcharacteristic === \"time behaviour\").flatMap((q) => q.measures.map((m) => m.gate)))].join(\"\\n\"))')\nrest=()\nfor suite in \"${suites[@]}\"; do [[ \" ${timed[*]} \" == *\" $suite \"* ]] || rest+=(\"$suite\"); done\nfor pass in 1 2; do\n  echo \"::group::every *.test.mjs, pass $pass of 2\"\n  node --test --test-concurrency=1 \"${timed[@]}\"\n  node --test \"${rest[@]}\"\n  echo \"::endgroup::\"\ndone\n",
      "#": {
       "": [
        "Every browser acceptance under test/ runs here, on every pull request",

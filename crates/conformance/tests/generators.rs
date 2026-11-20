@@ -6,7 +6,8 @@
 //! properties of the standards register; generators/surface: GenSurface, the page's
 //! surface.mjs and card.html; generators/look: GenLook, card.css's look block;
 //! generators/surfacemodel: GenSurfaceModel, the surface's LexLean model and its proofs;
-//! generators/surfaceshell: GenSurfaceShell, the page's set up, site/surface/setup.mjs). Native Lean has a
+//! generators/surfaceshell: GenSurfaceShell, the page's set up, site/surface/setup.mjs,
+//! and the look's contrasts by WCAG 2.2 criterion; generators/surfacetargets: GenSurfaceTargets, the size of each target by criterion). Native Lean has a
 //! fixed time for one program, so families of generators are separate programs;
 //! they share generators/foundation, copied into each. tools/generators/build.sh
 //! builds one in the locked SDK and pins it in its lock.json; tools/generators/run.sh

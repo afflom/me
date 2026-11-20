@@ -36,6 +36,24 @@
         "app/specs/oracle/spec.json"
       ],
       "output": "site/person/icf.mjs"
+    },
+    {
+      "generator": "icflean",
+      "split": "app/specs/oracle/icf/SimpleTabulation-ICF-en.txt",
+      "output": ".gen/icf-lean-rows"
+    },
+    {
+      "generator": "icfleannames",
+      "split": "app/specs/oracle/icf/SimpleTabulation-ICF-en.txt",
+      "output": ".gen/icf-lean-names"
+    },
+    {
+      "generator": "icfleanend",
+      "inputs": [
+        ".gen/icf-lean-names"
+      ],
+      "after": ".gen/icf-lean-rows",
+      "output": "app/src/PersonIcf.lex.tex"
     }
   ]
 }

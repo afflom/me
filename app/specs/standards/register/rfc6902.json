@@ -1,0 +1,48 @@
+{
+ "key": "rfc6902",
+ "title": "RFC 6902 JavaScript Object Notation (JSON) Patch",
+ "issuer": "IETF",
+ "text": {
+  "url": "https://www.rfc-editor.org/rfc/rfc6902.txt",
+  "sha256": "ded8fa1754ab1566fd72611c9d5bcde931cd2bdf8351889e2ef5b50efdf1eed4"
+ },
+ "inventories": [
+  {
+   "generated": "test/standards/generated/rfc6902.jsonl",
+   "vendored": "app/specs/standards/texts/ded8fa1754ab1566fd72611c9d5bcde931cd2bdf8351889e2ef5b50efdf1eed4",
+   "source": {
+    "url": "https://www.rfc-editor.org/rfc/rfc6902.txt",
+    "sha256": "ded8fa1754ab1566fd72611c9d5bcde931cd2bdf8351889e2ef5b50efdf1eed4"
+   }
+  }
+ ],
+ "governs": [
+  "app/src/PrismSnapshot.lex.tex",
+  "site/snapshot/guest.mjs"
+ ],
+ "realizedBy": [
+  "ST-01"
+ ],
+ "enforcedBy": {
+  "rfc6902-4-5d946f07": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests spec_tests.json (RFC 6902 Appendix A) case A.13, an operation with two op members, is answered by refusal; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6902-4-d4abf196": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests spec_tests.json (RFC 6902 Appendix A) case A.11, an add with the undefined member xyz, is answered by the document the add alone gives; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6902-4.1-06d0e10d": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests spec_tests.json (RFC 6902 Appendix A) case A.12 and the 4.1 missing-object case, adds whose target's parent does not exist, are answered by refusal; A.1, A.2, A.10 and A.16 by the added documents; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6902-4.6-159a78dd": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests spec_tests.json (RFC 6902 Appendix A) case A.8 is answered by the unchanged document, A.9 (a different string) and A.15 (number against string) by refusal; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6902-5-ec058a4b": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests spec_tests.json (RFC 6902 Appendix A) case A.9, A.12, A.13, A.15 and 4.1, patches with an operation that fails or a document that violates the RFC, are answered by refusal of the whole patch, not a partial document; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  }
+ }
+}

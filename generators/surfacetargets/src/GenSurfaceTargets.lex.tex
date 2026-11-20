@@ -1,0 +1,393 @@
+\begin{lexlean}{GenSurfaceTargets}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Utf8}
+\title{Surface targets generator}
+\begin{semanticmodule}
+definition{
+  name: stgU,
+  parameters: [value : String],
+  result: Bytes,
+  body: (Foundation.Utf8::encode value)
+}
+
+definition{
+  name: stgCat,
+  parameters: [parts : (List Bytes)],
+  result: Bytes,
+  body: (match parts
+    | List.nil => 0x
+    | List.cons head rest => (Foundation.Bytes::appendBytes head (stgCat rest))),
+  recursive_argument: parts
+}
+
+definition{
+  name: stgSep,
+  parameters: [acc : Bytes, sep : Bytes, item : Bytes],
+  result: Bytes,
+  body: (if ((Foundation.Bytes::byteLength item) =? 0) then acc else (if ((Foundation.Bytes::byteLength acc) =? 0) then item else (stgCat (cons acc (cons sep (cons item (nil Bytes)))))))
+}
+
+definition{
+  name: stgAdd,
+  parameters: [acc : Bytes, reason : Bytes],
+  result: Bytes,
+  body: (stgSep acc 0x3b20 reason)
+}
+
+definition{
+  name: stgKnown,
+  parameters: [value : (Option Nat)],
+  result: Bool,
+  body: (match value | Option.none => false | Option.some v => true)
+}
+
+definition{
+  name: stgFile,
+  parameters: [archive : Bytes, path : String],
+  result: Bytes,
+  body: (match (Foundation.Tar::find archive (stgU path)) | Option.none => 0x | Option.some f => f),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: stgNameByte,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((((96 <? b) && (b <? 123)) || ((64 <? b) && (b <? 91))) || (((47 <? b) && (b <? 58)) || ((b =? 45) || (b =? 95))))
+}
+
+definition{
+  name: stgLineFrom,
+  parameters: [t : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((Foundation.Bytes::byteLength t) <=? i) || ((Foundation.Tar::byteOr t i) =? 10)) then i else (stgLineFrom t (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stgDigit,
+  parameters: [d : Nat],
+  result: Bytes,
+  body: (Foundation.Json::span (stgU "0123456789") d (d + 1))
+}
+
+definition{
+  name: stgNumber,
+  parameters: [n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (n <? 10) then (stgDigit n) else (Foundation.Bytes::appendBytes (stgNumber (prim quotient n 10 0 : Nat) rest) (stgDigit (prim remainder n 10 0 : Nat))))),
+  recursive_argument: fuel
+}
+
+definition{name: stgNum, parameters: [n : Nat], result: Bytes, body: (stgNumber n 40)}
+
+definition{
+  name: stgDigitsFrom,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr s i); (if ((47 <? b) && (b <? 58)) then (stgDigitsFrom s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract b 48 : Nat)) rest) else acc))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stgHundredths,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (stgCat (cons (stgNum (prim quotient n 100 0 : Nat)) (cons 0x2e (cons (stgDigit (prim quotient (prim remainder n 100 0 : Nat) 10 0 : Nat)) (cons (stgDigit (prim remainder n 10 0 : Nat)) (nil Bytes))))))
+}
+
+definition{
+  name: stgFracAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let b : Nat := (Foundation.Tar::byteOr s i); (if ((47 <? b) && (b <? 58)) then (prim subtract b 48 : Nat) else 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: stgWholeEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr s i); (if ((47 <? b) && (b <? 58)) then (stgWholeEnd s (i + 1) rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stgFloorOf,
+  parameters: [s : Bytes, pos : (Option Nat)],
+  result: Nat,
+  body: (match pos
+    | Option.none => 0
+    | Option.some i => (let e : Nat := (stgWholeEnd s i 20); (let whole : Nat := (prim multiply (stgDigitsFrom s i 0 20) 100 : Nat); (if ((Foundation.Tar::byteOr s e) =? 46) then ((whole + (prim multiply (stgFracAt s (e + 1)) 10 : Nat)) + (stgFracAt s (e + 2))) else whole)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: stgContainsFrom,
+  parameters: [hay : Bytes, needle : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength hay) <? (i + (Foundation.Bytes::byteLength needle))) then false else (if (Foundation.Tar::sameBytes (Foundation.Json::span hay i (i + (Foundation.Bytes::byteLength needle))) needle) then true else (stgContainsFrom hay needle (i + 1) rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stgContains,
+  parameters: [hay : Bytes, needle : Bytes],
+  result: Bool,
+  body: (stgContainsFrom hay needle 0 ((Foundation.Bytes::byteLength hay) + 1)),
+  axioms: [propext]
+}
+
+definition{
+  name: stgSkipSpace,
+  parameters: [css : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr css i); (if ((b =? 32) || ((b =? 10) || ((b =? 9) || (b =? 13)))) then (stgSkipSpace css (i + 1) rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stgCommentEnd,
+  parameters: [css : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength css) <=? i) then i else (if (((Foundation.Tar::byteOr css i) =? 42) && ((Foundation.Tar::byteOr css (i + 1)) =? 47)) then (i + 2) else (stgCommentEnd css (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stgIsSpace,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((b =? 32) || ((b =? 10) || ((b =? 9) || (b =? 13))))
+}
+
+definition{
+  name: stgBackSpace,
+  parameters: [css : Bytes, i : Nat, stop : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (i <=? stop) then i else (if (stgIsSpace (Foundation.Tar::byteOr css (prim subtract i 1 : Nat))) then (stgBackSpace css (prim subtract i 1 : Nat) stop rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stgValueEnd,
+  parameters: [css : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (Foundation.Tar::byteOr css i); (if (((Foundation.Bytes::byteLength css) <=? i) || ((b =? 59) || (b =? 125))) then i else (stgValueEnd css (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stgStarts,
+  parameters: [css : Bytes, i : Nat, word : Bytes],
+  result: Bool,
+  body: (Foundation.Tar::sameBytes (Foundation.Json::span css i (i + (Foundation.Bytes::byteLength word))) word),
+  axioms: [propext]
+}
+
+definition{
+  name: stgSizeProp,
+  parameters: [css : Bytes, i : Nat],
+  result: Nat,
+  body: (if (stgStarts css i 0x6d696e2d6865696768743a) then 11 else (if (stgStarts css i 0x6865696768743a) then 7 else (if (stgStarts css i 0x6d696e2d77696474683a) then 10 else (if (stgStarts css i 0x77696474683a) then 6 else 0)))),
+  axioms: [propext]
+}
+
+definition{
+  name: stgSizesFrom,
+  parameters: [
+    css : Bytes,
+    i : Nat,
+    depth : Nat,
+    start : Nat,
+    sel : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength css) <=? i) then acc else (let b : Nat := (Foundation.Tar::byteOr css i); (if ((b =? 47) && ((Foundation.Tar::byteOr css (i + 1)) =? 42)) then (let e : Nat := (stgCommentEnd css (i + 2) (Foundation.Bytes::byteLength css)); (stgSizesFrom css e depth e sel acc rest)) else (if (b =? 123) then (let a : Nat := (stgSkipSpace css start (Foundation.Bytes::byteLength css)); (stgSizesFrom css (i + 1) (depth + 1) (i + 1) (Foundation.Json::span css a (stgBackSpace css i a (Foundation.Bytes::byteLength css))) acc rest)) else (if (b =? 125) then (stgSizesFrom css (i + 1) (prim subtract depth 1 : Nat) (i + 1) sel acc rest) else (if (b =? 59) then (stgSizesFrom css (i + 1) depth (i + 1) sel acc rest) else (let p : Nat := (if ((depth =? 1) && (i =? (stgSkipSpace css start (Foundation.Bytes::byteLength css)))) then (stgSizeProp css i) else 0); (if (p =? 0) then (stgSizesFrom css (i + 1) depth start sel acc rest) else (let v : Nat := (stgSkipSpace css (i + p) (Foundation.Bytes::byteLength css)); (let e : Nat := (stgValueEnd css v (Foundation.Bytes::byteLength css)); (stgSizesFrom css e depth start sel (stgCat (cons (stgCat (cons acc (cons (Foundation.Json::span css i (prim subtract (i + p) 1 : Nat)) (cons 0x09 (cons (Foundation.Json::span css v (stgBackSpace css e v (Foundation.Bytes::byteLength css))) (nil Bytes)))))) (cons (stgCat (cons 0x09 (cons sel (cons 0x0a (nil Bytes))))) (nil Bytes)))) rest)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stgSizesGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (let css : Bytes := (stgFile archive "site/card.css"); (if ((Foundation.Bytes::byteLength css) =? 0) then (ctor Option.none [Bytes]) else (ctor Option.some [Bytes] (stgSizesFrom css 0 0 0 0x 0x ((Foundation.Bytes::byteLength css) + 1))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: stgSizeOfFrom,
+  parameters: [sizes : Bytes, head : Bytes, tail : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength sizes) <=? i) then acc else (let e : Nat := (stgLineFrom sizes i ((Foundation.Bytes::byteLength sizes) + 1)); (let a : Nat := (i + (Foundation.Bytes::byteLength head)); (let z : Nat := (prim subtract e (Foundation.Bytes::byteLength tail) : Nat); (stgSizeOfFrom sizes head tail (e + 1) (if (((a <=? z) && ((stgStarts sizes i head) && (stgStarts sizes z tail))) && (not (stgContains (Foundation.Json::span sizes a z) 0x09))) then (Foundation.Json::span sizes a z) else acc) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stgSizeOf,
+  parameters: [sizes : Bytes, prop : Bytes, sel : Bytes],
+  result: Bytes,
+  body: (stgSizeOfFrom sizes (stgCat (cons prop (cons 0x09 (nil Bytes)))) (stgCat (cons 0x09 (cons sel (nil Bytes)))) 0 0x ((Foundation.Bytes::byteLength sizes) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: stgPx,
+  parameters: [v : Bytes],
+  result: Nat,
+  body: (let e : Nat := (stgWholeEnd v 0 20); (let u : Nat := (if ((Foundation.Tar::byteOr v e) =? 46) then (stgWholeEnd v (e + 1) 20) else e); (let unit : Bytes := (Foundation.Json::span v u (Foundation.Bytes::byteLength v)); (let n : Nat := (stgFloorOf v (ctor Option.some [Nat] 0)); (if (u =? 0) then 0 else (if (Foundation.Tar::sameBytes unit 0x72656d) then (prim multiply n 16 : Nat) else (if (Foundation.Tar::sameBytes unit 0x7078) then n else 0))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: stgTargetFloor,
+  parameters: [criterion : Bytes],
+  result: Nat,
+  body: (if (Foundation.Tar::sameBytes criterion 0x322e352e38) then 2400 else (if (Foundation.Tar::sameBytes criterion 0x322e352e35) then 4400 else 0)),
+  axioms: [propext]
+}
+
+definition{
+  name: stgSide,
+  parameters: [sizes : Bytes, least : String, exact : String, sel : Bytes],
+  result: Nat,
+  body: (let m : Nat := (stgPx (stgSizeOf sizes (stgU least) sel)); (if (m =? 0) then (stgPx (stgSizeOf sizes (stgU exact) sel)) else m)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: stgTargetsReasonFrom,
+  parameters: [s : Bytes, sizes : Bytes, targets : (Option Nat), acc : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s targets n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let name : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s e 0)); (let sel : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s e 1)); (let criterion : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s e 2)); (let floor : Nat := (stgTargetFloor criterion); (let h : Nat := (stgSide sizes "min-height" "height" sel); (let w : Nat := (stgSide sizes "min-width" "width" sel); (let a1 : Bytes := (if (floor =? 0) then (stgAdd acc (stgCat (cons 0x7468652074617267657420 (cons name (cons 0x206e616d6573206e6f20637269746572696f6e207468617420626f756e64732061207461726765742073697a652028322e352e35206f7220322e352e3829 (nil Bytes)))))) else (if (h =? 0) then (stgAdd acc (stgCat (cons 0x7468652074617267657420 (cons name (cons 0x20686173206e6f2068656967687420696e207078206f722072656d20696e20612072756c65206f6620736974652f636172642e63737320666f7220 (cons sel (nil Bytes))))))) else (if (h <? floor) then (stgAdd acc (stgCat (cons (stgCat (cons 0x7468652074617267657420 (cons name (cons 0x20697320 (cons (stgHundredths h) (nil Bytes)))))) (cons (stgCat (cons 0x2043535320706978656c7320686967682c20756e6465722074686520 (cons (stgHundredths floor) (cons 0x206f66205743414720322e3220 (cons criterion (nil Bytes)))))) (nil Bytes))))) else acc))); (stgTargetsReasonFrom s sizes targets (if ((0 <? w) && (w <? floor)) then (stgAdd a1 (stgCat (cons (stgCat (cons 0x7468652074617267657420 (cons name (cons 0x20697320 (cons (stgHundredths w) (nil Bytes)))))) (cons (stgCat (cons 0x2043535320706978656c7320776964652c20756e6465722074686520 (cons (stgHundredths floor) (cons 0x206f66205743414720322e3220 (cons criterion (nil Bytes)))))) (nil Bytes))))) else a1) (n + 1) rest))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stgListedFrom,
+  parameters: [s : Bytes, targets : (Option Nat), sel : Bytes, n : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (match (Foundation.Json::elementAt s targets n)
+      | Option.none => false
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (if (Foundation.Tar::sameBytes (Foundation.Json::textAt s (Foundation.Json::elementAt s e 1)) sel) then true else (stgListedFrom s targets sel (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stgTypeFrom,
+  parameters: [sel : Bytes, word : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength sel) <? (i + (Foundation.Bytes::byteLength word))) then false else (let b : Nat := (if (i =? 0) then 32 else (Foundation.Tar::byteOr sel (prim subtract i 1 : Nat))); (if (((stgStarts sel i word) && (not (stgNameByte (Foundation.Tar::byteOr sel (i + (Foundation.Bytes::byteLength word)))))) && ((stgIsSpace b) || ((b =? 44) || ((b =? 62) || ((b =? 43) || ((b =? 126) || (b =? 40))))))) then true else (stgTypeFrom sel word (i + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stgControl,
+  parameters: [sel : Bytes],
+  result: Bool,
+  body: (let n : Nat := ((Foundation.Bytes::byteLength sel) + 1); ((stgTypeFrom sel 0x627574746f6e 0 n) || ((stgTypeFrom sel 0x696e707574 0 n) || ((stgTypeFrom sel 0x7465787461726561 0 n) || ((stgTypeFrom sel 0x73656c656374 0 n) || (stgTypeFrom sel 0x73756d6d617279 0 n)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: stgTabFrom,
+  parameters: [t : Bytes, i : Nat, stop : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((stop <=? i) || ((Foundation.Tar::byteOr t i) =? 9)) then i else (stgTabFrom t (i + 1) stop rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stgStraySizes,
+  parameters: [s : Bytes, targets : (Option Nat), sizes : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength sizes) <=? i) then acc else (let e : Nat := (stgLineFrom sizes i ((Foundation.Bytes::byteLength sizes) + 1)); (let sel : Bytes := (Foundation.Json::span sizes ((stgTabFrom sizes (i + 11) e (e + 1)) + 1) e); (stgStraySizes s targets sizes (e + 1) (if (((stgStarts sizes i 0x6d696e2d68656967687409) && (stgControl sel)) && (not (stgListedFrom s targets sel 0 (Foundation.Bytes::byteLength s)))) then (stgAdd acc (stgCat (cons 0x736974652f636172642e63737320736574732061206c6561737420686569676874206f6e2074686520636f6e74726f6c20 (cons sel (cons 0x2c20776869636820746865206c6f6f6b206c69737473206173206e6f20746172676574 (nil Bytes)))))) else acc) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stgTargetRecordsFrom,
+  parameters: [s : Bytes, sizes : Bytes, targets : (Option Nat), acc : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s targets n)
+      | Option.none => acc
+      | Option.some i => (let e : (Option Nat) := (ctor Option.some [Nat] i); (let name : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s e 0)); (let sel : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s e 1)); (let criterion : Bytes := (Foundation.Json::textAt s (Foundation.Json::elementAt s e 2)); (let w : Nat := (stgSide sizes "min-width" "width" sel); (stgTargetRecordsFrom s sizes targets (stgSep acc 0x2c0a (stgCat (cons (stgCat (cons 0x207b0a2020226964223a20227461726765742d (cons name (cons 0x222c0a202022637269746572696f6e223a2022776361672d322e322d (cons criterion (nil Bytes)))))) (cons (stgCat (cons 0x222c0a2020226d696e696d756d223a20 (cons (stgHundredths (stgTargetFloor criterion)) (cons 0x2c0a202022686569676874223a20 (cons (stgHundredths (stgSide sizes "min-height" "height" sel)) (nil Bytes)))))) (cons (stgCat (cons (if (w =? 0) then 0x else (stgCat (cons 0x2c0a2020227769647468223a20 (cons (stgHundredths w) (nil Bytes))))) (cons 0x0a207d (nil Bytes)))) (nil Bytes)))))) (n + 1) rest)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: stgTargetsRefusal,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (stgFile archive "app/specs/surface/spec.json"); (let sizes : Bytes := (stgFile archive ".gen/shell-sizes"); (let targets : (Option Nat) := (Foundation.Json::memberAt s (Foundation.Json::memberAt s (Foundation.Json::root s) (stgU "look")) (stgU "targets")); (if ((not (stgKnown targets)) || ((Foundation.Bytes::byteLength sizes) =? 0)) then 0x6e65656473206170702f73706563732f737572666163652f737065632e6a736f6e2077697468207468652074617267657473206f6620697473206c6f6f6b2c20616e64202e67656e2f7368656c6c2d73697a6573 else (stgStraySizes s targets sizes 0 (stgTargetsReasonFrom s sizes targets 0x 0 (Foundation.Bytes::byteLength s)) ((Foundation.Bytes::byteLength sizes) + 1)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: stgTargetsGenerate,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (stgFile archive "app/specs/surface/spec.json"); (let sizes : Bytes := (stgFile archive ".gen/shell-sizes"); (stgCat (cons 0x5b0a (cons (stgTargetRecordsFrom s sizes (Foundation.Json::memberAt s (Foundation.Json::memberAt s (Foundation.Json::root s) (stgU "look")) (stgU "targets")) 0x 0 (Foundation.Bytes::byteLength s)) (cons 0x0a5d0a (nil Bytes))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

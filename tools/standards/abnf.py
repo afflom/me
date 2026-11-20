@@ -19,13 +19,30 @@ A grammar is the rules of one or more pinned texts; a rule defined twice must
 be defined the same way, an "=/" adds alternatives, and every rule referred to
 must be defined, bound or imported, or the grammar is refused.
 """
+import hashlib
 import re
+import urllib.request
 
 PAGE_FOOT = re.compile(r"\[Page \d+\]\s*$")
 
 
-def unpaginate(text):
-    """The RFC's text without its page breaks: footer, form feed, header and the padding around them."""
+def kept_bytes(url, sha256, texts, refuse, fetch, headers={}, keep=True):
+    """A pinned source's bytes, read from the tree (texts/<sha256>) and never from the network;
+    fetch downloads a pin that is not kept yet and keeps it, unless keep is false (a source that may not be republished).
+    Refused unless their SHA-256 is the pinned one."""
+    path = texts / sha256
+    if not path.exists() and not fetch:
+        refuse(f"{url} is not kept at {path.relative_to(texts.parents[3])}: run this with --fetch")
+    data = path.read_bytes() if path.exists() else urllib.request.urlopen(urllib.request.Request(url, headers=headers), timeout=120).read()
+    if hashlib.sha256(data).hexdigest() != sha256:
+        refuse(f"{url} is {hashlib.sha256(data).hexdigest()}, not the pinned {sha256}")
+    keep and not path.exists() and path.write_bytes(data)
+    return data
+
+
+def unpaginate(text, examples=False):
+    """The RFC's text without its page breaks: footer, form feed, header and the padding around them.
+    examples: a break between two lines of one indented example joins them; elsewhere it is a paragraph break."""
     lines = text.replace("\r\n", "\n").split("\n")
     out = []
     i = 0
@@ -43,6 +60,8 @@ def unpaginate(text):
                 i += 1
             while i < len(lines) and not lines[i].strip():
                 i += 1
+            if examples and not (out and i < len(lines) and out[-1].startswith("   ") and lines[i].startswith("   ")):
+                out.append("")
             continue
         out.append(line)
         i += 1
