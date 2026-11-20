@@ -1,5 +1,5 @@
 {
-  "comment": "The grammars the Prism reads its content by, each the specifications' own ABNF taken from their pinned text by tools/standards/grammar.py (tools/standards/abnf.py) and written to out as data for site/read/abnf.mjs. texts: each specification, pinned by SHA-256, and the sections whose rules it contributes (all, when none are named). lends: a text whose rules are taken only where the others refer to them (RFC 5234's core rules). rules: the only rules a text gives. replaces: rules a text defines anew over an earlier one's (RFC 2231 over RFC 2045's parameter). lexical: in RFC 822's notation (\":=\"), the rules written whole, as tokens; in the rest comments and white space may stand between elements (RFC 822 3.1.4). errata: verified errata, applied to the text first (occurs: how many times its words stand there, once unless said). bindings: a rule its specification states in prose, given here in ABNF (or as the characters one class leaves once others are taken out: except, minus) with the reason, so a machine can match it; each must replace a prose rule. headers: the header fields the grammar defines, each by the literal its rule opens with (\"Date:\"), the current rule first and its obsolete form (RFC 5322 section 4) after. zones: RFC 5322 section 4.3's obsolete zone names, from its own sentences. witnesses: where to write, for each rule, the shortest field or message the grammar derives through it, so a suite can show the reader matches every rule. examples: each indented example field of the named texts (an example field line with the lines that continue it), with what Python's email package (policy.default, RFC 2045, RFC 2183, RFC 2231) reads of it, or that it finds it defective, as the reference the reader is held to; an example naming an address at a domain not reserved for documentation (the oracle spec's reserved list) is left out.",
+  "comment": "The grammars the Prism reads its content by, each the specifications' own ABNF taken from their pinned text by tools/standards/grammar.py (tools/standards/abnf.py) and written to out as data for site/read/abnf.mjs. texts: each specification, pinned by SHA-256, and the sections whose rules it contributes (all, when none are named). lends: a text whose rules are taken only where the others refer to them (RFC 5234's core rules). rules: the only rules a text gives. replaces: rules a text defines anew over an earlier one's (RFC 2231 over RFC 2045's parameter). lexical: in RFC 822's notation (\":=\"), the rules written whole, as tokens; in the rest comments and white space may stand between elements (RFC 822 3.1.4). asides: lines of a text's prose that are shaped like a rule and are not one (RFC 5545 3.8.1.6's \"decimal = degrees + minutes/60 + seconds/3600.\"). errata: verified errata, applied to the text first (occurs: how many times its words stand there, once unless said). bindings: a rule its specification states in prose, given here in ABNF (or as the characters one class leaves once others are taken out: except, minus) with the reason, so a machine can match it; each must replace a prose rule. headers: the header fields the grammar defines, each by the literal its rule opens with (\"Date:\"), the current rule first and its obsolete form (RFC 5322 section 4) after. zones: RFC 5322 section 4.3's obsolete zone names, from its own sentences. witnesses: where to write, for each rule, the shortest field or message the grammar derives through it, so a suite can show the reader matches every rule. examples: each indented example field of the named texts (an example field line with the lines that continue it), with what Python's email package (policy.default, RFC 2045, RFC 2183, RFC 2231) reads of it, or that it finds it defective, as the reference the reader is held to; an example naming an address at a domain not reserved for documentation (the oracle spec's reserved list) is left out.",
   "grammars": [
     {
       "key": "mail",
@@ -321,6 +321,86 @@
         ],
         "out": "test/standards/mail.examples.json"
       }
+    },
+    {
+      "key": "ical",
+      "title": "iCalendar objects (RFC 5545, with RFC 3986's URI, RFC 4288's media type names, RFC 5646's language tags, RFC 3629's UTF-8 and RFC 5234's core rules)",
+      "out": "site/read/grammar/ical.mjs",
+      "module": "app/src/PrismGrammarIcal.lex.tex",
+      "texts": [
+        {
+          "key": "rfc5234",
+          "url": "https://www.rfc-editor.org/rfc/rfc5234.txt",
+          "sha256": "fc871020f53baa6b60fc6835c557b433f38d53c5cc41ab56d03622b084f53a12",
+          "sections": [
+            "B.1"
+          ],
+          "lends": true
+        },
+        {
+          "key": "rfc5545",
+          "url": "https://www.rfc-editor.org/rfc/rfc5545.txt",
+          "sha256": "c256f809479d98aa23d71bbd1658b3800ea9f13f41ca56e59c8d2de1b31cbfcb",
+          "sections": [
+            "3"
+          ],
+          "asides": [
+            "decimal"
+          ]
+        },
+        {
+          "key": "rfc3986",
+          "url": "https://www.rfc-editor.org/rfc/rfc3986.txt",
+          "sha256": "3102dae4b68cebe40337730312fcb612297b8928547267e8b3d1ee6002b2d683",
+          "sections": [
+            "A"
+          ],
+          "replaces": [
+            "uri"
+          ]
+        },
+        {
+          "key": "rfc4288",
+          "url": "https://www.rfc-editor.org/rfc/rfc4288.txt",
+          "sha256": "752b7a5b52cde6fe4dcefc96bcf7458e637e2ea5b5558d76bf4c11db8bc1d79a",
+          "sections": [
+            "4.2"
+          ],
+          "lends": true
+        },
+        {
+          "key": "rfc5646",
+          "url": "https://www.rfc-editor.org/rfc/rfc5646.txt",
+          "sha256": "5d9515f053163c80e7294a84d18217dc83471acc7caa9773da2ac40deeec8228",
+          "sections": [
+            "2.1"
+          ],
+          "lends": true
+        }
+      ],
+      "bindings": {
+        "utf8-2": [
+          "%x80-7FF",
+          "RFC 3629 section 4's two-octet sequences, as the code points they encode: the page reads decoded text, where a UTF-8 sequence is one character"
+        ],
+        "utf8-3": [
+          "%x800-D7FF / %xE000-FFFF",
+          "RFC 3629 section 4's three-octet sequences, as the code points they encode (surrogates are not characters)"
+        ],
+        "utf8-4": [
+          "%x10000-10FFFF",
+          "RFC 3629 section 4's four-octet sequences, as the code points they encode"
+        ],
+        "minver": [
+          "iana-token",
+          "RFC 5545 3.7.4: \"<A IANA-registered iCalendar version identifier>\", taken as the form RFC 5545 3.1 gives every IANA-registered name (iana-token)"
+        ],
+        "maxver": [
+          "iana-token",
+          "RFC 5545 3.7.4: \"<A IANA-registered iCalendar version identifier>\", taken as the form RFC 5545 3.1 gives every IANA-registered name (iana-token)"
+        ]
+      },
+      "witnesses": "test/standards/ical.witnesses.json"
     }
   ],
   "examples": [

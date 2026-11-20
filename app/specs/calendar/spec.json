@@ -1,5 +1,5 @@
 {
- "comment": "The calendar reader's two sources, kept at their pinned bytes (the registries at app/specs/calendar/upstream/icalendar.xml, RFC 5545 among the standard texts at app/specs/standards/texts/<sha256>). generators/calendar's GenCalendar reads them (generators/pipeline.json) into site/calendar/registry.mjs, every element IANA registers for the standard with what the standard's section 3 says of it, and into ST-01's inventory of those elements (test/standards/generated/iana-icalendar.json).",
+ "comment": "The calendar reader's two sources, kept at their pinned bytes (the registries at app/specs/calendar/upstream/icalendar.xml, RFC 5545 among the standard texts at app/specs/standards/texts/<sha256>). generators/calendar's GenCalendar reads them (generators/pipeline.json) into site/calendar/registry.mjs, every element IANA registers for the standard with what the standard's section 3 says of it, and into ST-01's inventory of those elements (test/standards/generated/iana-icalendar.json). examples: the grammar-ical guest's acceptance vectors (app/specs/guests/spec.json): a request is a rule's place among the ical grammar's rules in sorted order, a space and the text; the answer is \"none\" or each rule the derivation went through as rule,start,end,depth in octets. The texts are RFC 5545's own (3.3.5's DATE-TIME, 3.8.2.4's DTSTART, 3.8.5.3's last-work-day rule, and a date RFC 5545 does not write).",
  "registry": {
   "key": "iana-icalendar",
   "title": "IANA iCalendar Element Registries (components, properties, parameters, value data types and their values)",
@@ -14,5 +14,23 @@
   "path": "app/specs/standards/texts/c256f809479d98aa23d71bbd1658b3800ea9f13f41ca56e59c8d2de1b31cbfcb",
   "url": "https://www.rfc-editor.org/rfc/rfc5545.txt",
   "sha256": "c256f809479d98aa23d71bbd1658b3800ea9f13f41ca56e59c8d2de1b31cbfcb"
- }
+ },
+ "examples": [
+  [
+   "56 19980119T020000",
+   "56,0,15,0 52,0,8,1 57,0,8,2 53,0,4,3 64,0,1,4 64,1,2,4 64,2,3,4 64,3,4,4 55,4,6,3 64,4,5,4 64,5,6,4 54,6,8,3 64,6,7,4 64,7,8,4 258,9,15,1 259,9,11,2 64,9,10,3 64,10,11,3 260,11,13,2 64,11,12,3 64,12,13,3 262,13,15,2 64,13,14,3 64,14,15,3"
+  ],
+  [
+   "72 DTSTART;TZID=America/New_York:19980119T020000\r\n",
+   "72,0,47,0 73,7,29,1 278,8,29,2 169,13,29,3 230,13,14,4 230,14,15,4 230,15,16,4 230,16,17,4 230,17,18,4 230,18,19,4 230,19,20,4 230,20,21,4 230,21,22,4 230,22,23,4 230,23,24,4 230,24,25,4 230,25,26,4 230,26,27,4 230,27,28,4 230,28,29,4 74,30,45,1 56,30,45,2 52,30,38,3 57,30,38,4 53,30,34,5 64,30,31,6 64,31,32,6 64,32,33,6 64,33,34,6 55,34,36,5 64,34,35,6 64,35,36,6 54,36,38,5 64,36,37,6 64,37,38,6 258,39,45,3 259,39,41,4 64,39,40,5 64,40,41,5 260,41,43,4 64,41,42,5 64,42,43,5 262,43,45,4 64,43,44,5 64,44,45,5 50,45,47,1 47,45,46,2 143,46,47,2"
+  ],
+  [
+   "203 FREQ=MONTHLY;BYDAY=MO,TU,WE,TH,FR;BYSETPOS=-1",
+   "203,0,45,0 204,0,12,1 109,5,12,2 204,13,33,1 24,19,33,2 310,19,21,3 309,19,21,4 310,22,24,3 309,22,24,4 310,25,27,3 309,25,27,4 310,28,30,3 309,28,30,4 310,31,33,3 309,31,33,4 204,34,45,1 23,43,45,2 240,43,45,3 317,43,45,4 153,43,44,5 162,44,45,5 64,44,45,6"
+  ],
+  [
+   "56 1998-01-19",
+   "none"
+  ]
+ ]
 }

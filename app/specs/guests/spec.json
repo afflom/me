@@ -231,6 +231,28 @@
         131072,
         8192
       ]
+    },
+    {
+      "id": "grammar-ical",
+      "wasm": "site/calendar/guest/grammar-ical.wasm",
+      "pin": "site/calendar/guest.mjs",
+      "as": "ical",
+      "modules": [
+        "Abnf",
+        "PrismGrammarIcal"
+      ],
+      "dispatch": "PrismGrammarIcal::prismGrammarIcalDispatch",
+      "vectors": "spec:calendar",
+      "sync": true,
+      "memory": [
+        16384,
+        16777216
+      ],
+      "limits": [
+        4096,
+        131072,
+        8192
+      ]
     }
   ]
 }

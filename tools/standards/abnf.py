@@ -378,7 +378,7 @@ def grammar(texts, bindings=None):
     for t in texts:
         key = t["key"]
         text = apply_errata(key, unpaginate(t["text"]), t.get("errata"))
-        found = definitions(text, t.get("sections"))
+        found = [d for d in definitions(text, t.get("sections")) if d[0] not in t.get("asides", ())]
         if t.get("rules"):
             missing = set(t["rules"]) - {d[0] for d in found}
             if missing:

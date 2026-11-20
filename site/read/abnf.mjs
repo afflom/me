@@ -2,8 +2,9 @@
 // from the pinned RFC text by tools/standards/abnf.py (RFC 5234 ABNF), and the
 // Prism matches text against them in LexLean: app/src/Abnf.lex.tex walks the
 // rules as the byte table tools/standards/grammar.py writes into
-// app/src/PrismGrammarMail.lex.tex, built as the grammar-mail guest and
-// pinned in ./guest.mjs (GU-01), whose loader checks and compiles it once, when
+// app/src/PrismGrammarMail.lex.tex and PrismGrammarIcal.lex.tex, built as the
+// grammar-mail and grammar-ical guests and pinned in ./guest.mjs and
+// ../calendar/guest.mjs (GU-01), whose loader checks and compiles it once, when
 // this module loads; each match then runs it synchronously, so a reader stays
 // synchronous. Chromium instantiates a module this small on the main thread
 // (its limit is 8 MB).
@@ -16,14 +17,17 @@
 //   const g = abnf(table); const tree = g.match("orig-date", "Date: ...\r\n");
 //   tree = { rule, start, end, text, kids: [trees of named rules] }
 import { GUESTS, openGuestSync } from "./guest.mjs";
-const GUEST = GUESTS.mail;
+import { GUEST as ICAL } from "../calendar/guest.mjs";
 
 const encoder = new TextEncoder();
-const url = new URL(GUEST.path, import.meta.url);
-const bytes = url.protocol === "file:" ? await (await import("node:fs/promises")).readFile(url) : new Uint8Array(await (await fetch(url)).arrayBuffer());
-const ask = await openGuestSync(bytes, GUEST.sha256);
+// Each grammar's guest, by the grammar's key: checked and compiled once, here.
+const asks = Object.fromEntries(await Promise.all(Object.entries({ mail: new URL(GUESTS.mail.path, import.meta.url), ical: new URL(ICAL.path, new URL("../calendar/", import.meta.url)) }).map(async ([key, url]) => {
+  const bytes = url.protocol === "file:" ? await (await import("node:fs/promises")).readFile(url) : new Uint8Array(await (await fetch(url)).arrayBuffer());
+  return [key, await openGuestSync(bytes, (key === "mail" ? GUESTS.mail : ICAL).sha256)];
+})));
 
-export function abnf({ rules }) {
+export function abnf({ rules, key }) {
+  const ask = asks[key];
   const names = Object.keys(rules).sort();
   const index = new Map(names.map((n, i) => [n, i]));
   return {
