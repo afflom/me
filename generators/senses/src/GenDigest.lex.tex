@@ -1,0 +1,99 @@
+\begin{lexlean}{GenDigest}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{GenSenses}
+\title{Message digest cases generator}
+\begin{semanticmodule}
+definition{
+  name: digLineStop,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let e : Nat := (GenSenses::senFind s i 0x0a (Foundation.Bytes::byteLength s)); (if ((i <? e) && ((Foundation.Tar::byteOr s (prim subtract e 1 : Nat)) =? 13)) then (prim subtract e 1 : Nat) else e)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: digDecFrom,
+  parameters: [n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let k : Nat := (prim remainder n 10 0 : Nat); (let t : Bytes := (Foundation.Bytes::appendBytes (Foundation.Json::span 0x30313233343536373839 k (k + 1)) acc); (if (n <? 10) then t else (digDecFrom (prim quotient n 10 0 : Nat) t rest))))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: digDec,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (digDecFrom n 0x 8)
+}
+
+definition{
+  name: digEsc,
+  parameters: [s : Bytes, i : Nat, stop : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (let b : Nat := (Foundation.Tar::byteOr s i); (digEsc s (i + 1) stop (Foundation.Bytes::appendBytes acc (if (b =? 34) then 0x5c22 else (if (b =? 92) then 0x5c5c else (if (b =? 10) then 0x5c6e else (if (b =? 13) then 0x5c72 else (Foundation.Json::span s i (i + 1))))))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: digRows,
+  parameters: [s : Bytes, i : Nat, key : Bytes, prefix : Bytes, kind : Bytes, text : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then acc else (let e : Nat := (GenSenses::senFind s i 0x0a (Foundation.Bytes::byteLength s)); (digRows s (e + 1) key prefix kind text (if (GenSenses::senStartsAt s i key) then (let v : Bytes := (Foundation.Json::span s (i + (Foundation.Bytes::byteLength key)) (digLineStop s i)); (Foundation.Bytes::appendBytes acc (GenSenses::senCat (cons 0x7b226964223a2022 (cons prefix (cons v (cons 0x222c20226b696e64223a2022 (cons kind (cons 0x222c2022726566223a2022 (cons key (cons v (cons 0x222c202274657874223a2022 (cons text (cons 0x227d0a (nil Bytes))))))))))))))) else acc) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: digReqs,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (GenSenses::senU "app/specs/oracle/nist-cavp-sha256/SHA256ShortMsg.rsp"))
+    | Option.some s => (ctor Option.some [Bytes] (digRows s 0 0x4c656e203d20 0x6e6973742d666970732d3138302d342d73686f72746d73672d 0x53686f72744d7367 0x746865205348412d32353620646967657374206f6620746865206d657373616765206f662074686973206d616e79206269747320696e2053484132353653686f72744d73672e72737020697320746865204d44207468652066696c65206769766573 0x (Foundation.Bytes::byteLength s)))
+    | Option.none => (match (Foundation.Tar::find archive (GenSenses::senU "app/specs/oracle/nist-cavp-sha256/SHA256Monte.rsp"))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some s => (ctor Option.some [Bytes] (digRows s 0 0x434f554e54203d20 0x6e6973742d666970732d3138302d342d6d6f6e74652d 0x4d6f6e7465 0x7468697320636865636b706f696e74206f6620746865205348415653204d6f6e7465204361726c6f20746573742066726f6d20746865207365656420696e205348413235364d6f6e74652e72737020697320746865204d44207468652066696c65206769766573 0x (Foundation.Bytes::byteLength s))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: digLens,
+  parameters: [s : Bytes, i : Nat, stop : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (let e : Nat := (GenSenses::senFind s i 0x0a (Foundation.Bytes::byteLength s)); (digLens s (e + 1) stop (if (GenSenses::senStartsAt s i 0x4c656e203d20) then (GenSenses::senCat (cons acc (cons 0x20 (cons (Foundation.Json::span s (i + 6) (digLineStop s i)) (nil Bytes))))) else acc) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: digExample,
+  parameters: [s : Bytes, a : Nat, b : Nat],
+  result: Bytes,
+  body: (GenSenses::senCat (cons 0x202020205b22636176705c6e (cons (digEsc s a b 0x (Foundation.Bytes::byteLength s)) (cons 0x222c202270617373 (cons (digLens s a b 0x (Foundation.Bytes::byteLength s)) (cons 0x5c6e225d (nil Bytes))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: digSpec,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (GenSenses::senU "app/specs/oracle/nist-cavp-sha256/SHA256ShortMsg.rsp"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (let p : Nat := (GenSenses::senFind s 0 0x4c656e203d203236340d (Foundation.Bytes::byteLength s)); (let q : Nat := (GenSenses::senFind s p 0x4c656e203d203430300d (Foundation.Bytes::byteLength s)); (if ((not (p <? q)) || (not (q <? (Foundation.Bytes::byteLength s)))) then (ctor Option.none [Bytes]) else (ctor Option.some [Bytes] (GenSenses::senCat (cons 0x7b0a202022636f6d6d656e74223a20225772697474656e2062792067656e657261746f72732f73656e736573202864696765737473706563292066726f6d204e495354277320434156502066696c652053484132353653686f72744d73672e727370206174206974732070696e6e656420627974657320286170702f73706563732f6f7261636c652f6e6973742d636176702d7368613235362f6c6f636b2e6a736f6e293a20646f206e6f7420656469742e2045616368206578616d706c652069732061202763617670272072657175657374206f6620746865206469676573742067756573742c2061207069656365206f66207468652066696c65206279746520666f7220627974652c20616e642069747320616e737765723a20746865204c656e206f66206576657279206d65737361676520696e207468652070696563652c20776869636820746865206775657374206769766573206f6e6c79207768656e20746865205348412d32353620697420636f6d7075746573206f662065616368206d65737361676520697320746865204d44207468652066696c652067697665732e205468652066696c6520697320637574206265666f7265204c656e203d2032363420616e64204c656e203d2034303020736f207468617420612070696563652066697473206120726571756573742e222c0a2020226578616d706c6573223a205b0a (cons (digExample s 0 p) (cons 0x2c0a (cons (digExample s p q) (cons 0x2c0a (cons (digExample s q (Foundation.Bytes::byteLength s)) (cons 0x0a20205d0a7d0a (nil Bytes)))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

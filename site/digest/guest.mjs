@@ -1,0 +1,3 @@
+export const GUESTS = {
+  digest: { path: 'guest/digest.wasm', sha256: '0000000000000000000000000000000000000000000000000000000000000000' },
+};
