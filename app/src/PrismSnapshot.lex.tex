@@ -3,6 +3,7 @@
 \useglossary{lexlean.std.nat@1.2.0}
 \useglossary{prism.arch@1.0.0}
 \importmodule{Foundation.Bytes}
+\importmodule{Sha256}
 \title{system state}
 \begin{semanticmodule}
 definition{
@@ -1526,282 +1527,6 @@ definition{
   axioms: [Quot.sound, propext]
 }
 
-definition{name: shaMask, parameters: [], result: UInt64, body: (4294967295 : UInt64)}
-
-definition{
-  name: shaAdd,
-  parameters: [a : UInt64, b : UInt64],
-  result: UInt64,
-  body: (match (prim checked_add a b : (Option UInt64))
-    | Option.none => (0 : UInt64)
-    | Option.some t => (prim bit_and t (shaMask) : UInt64)),
-  axioms: [Quot.sound, propext]
-}
-
-definition{
-  name: shaShr,
-  parameters: [x : UInt64, n : UInt32],
-  result: UInt64,
-  body: (match (prim shift_right x n : (Option UInt64))
-    | Option.none => (0 : UInt64)
-    | Option.some r => r),
-  axioms: [Quot.sound, propext]
-}
-
-definition{
-  name: shaShl,
-  parameters: [x : UInt64, n : UInt32],
-  result: UInt64,
-  body: (match (prim shift_left x n : (Option UInt64))
-    | Option.none => (0 : UInt64)
-    | Option.some r => (prim bit_and r (shaMask) : UInt64)),
-  axioms: [Quot.sound, propext]
-}
-
-definition{
-  name: shaRotr,
-  parameters: [x : UInt64, n : UInt32, m : UInt32],
-  result: UInt64,
-  body: (prim bit_xor (shaShr x n) (shaShl x m) : UInt64),
-  axioms: [Quot.sound, propext]
-}
-
-definition{
-  name: shaByteWord,
-  parameters: [s : Bytes, i : Nat],
-  result: UInt64,
-  body: (match (Foundation.Bytes::byteAt s i)
-    | Option.none => (0 : UInt64)
-    | Option.some b => (prim bit_or (prim bit_or (prim bit_or (prim bit_or (prim bit_or (prim bit_or (prim bit_or (prim bit_or (0 : UInt64) (match (prim equal (prim bit_and b (1 : UInt8) : UInt8) (1 : UInt8) : Bool)
-      | Bool.false => (0 : UInt64)
-      | Bool.true => (1 : UInt64)) : UInt64) (match (prim equal (prim bit_and b (2 : UInt8) : UInt8) (2 : UInt8) : Bool)
-      | Bool.false => (0 : UInt64)
-      | Bool.true => (2 : UInt64)) : UInt64) (match (prim equal (prim bit_and b (4 : UInt8) : UInt8) (4 : UInt8) : Bool)
-      | Bool.false => (0 : UInt64)
-      | Bool.true => (4 : UInt64)) : UInt64) (match (prim equal (prim bit_and b (8 : UInt8) : UInt8) (8 : UInt8) : Bool)
-      | Bool.false => (0 : UInt64)
-      | Bool.true => (8 : UInt64)) : UInt64) (match (prim equal (prim bit_and b (16 : UInt8) : UInt8) (16 : UInt8) : Bool)
-      | Bool.false => (0 : UInt64)
-      | Bool.true => (16 : UInt64)) : UInt64) (match (prim equal (prim bit_and b (32 : UInt8) : UInt8) (32 : UInt8) : Bool)
-      | Bool.false => (0 : UInt64)
-      | Bool.true => (32 : UInt64)) : UInt64) (match (prim equal (prim bit_and b (64 : UInt8) : UInt8) (64 : UInt8) : Bool)
-      | Bool.false => (0 : UInt64)
-      | Bool.true => (64 : UInt64)) : UInt64) (match (prim equal (prim bit_and b (128 : UInt8) : UInt8) (128 : UInt8) : Bool)
-      | Bool.false => (0 : UInt64)
-      | Bool.true => (128 : UInt64)) : UInt64)),
-  axioms: [Quot.sound, propext]
-}
-
-definition{
-  name: shaWordAt,
-  parameters: [s : Bytes, i : Nat],
-  result: UInt64,
-  body: (prim bit_xor (prim bit_xor (shaShl (shaByteWord s i) (24 : UInt32)) (shaShl (shaByteWord s (i + 1)) (16 : UInt32)) : UInt64) (prim bit_xor (shaShl (shaByteWord s (i + 2)) (8 : UInt32)) (shaByteWord s (i + 3)) : UInt64) : UInt64),
-  axioms: [Quot.sound, propext]
-}
-
-definition{
-  name: shaOctets,
-  parameters: [],
-  result: Bytes,
-  body: 0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f303132333435363738393a3b3c3d3e3f404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5d5e5f606162636465666768696a6b6c6d6e6f707172737475767778797a7b7c7d7e7f808182838485868788898a8b8c8d8e8f909192939495969798999a9b9c9d9e9fa0a1a2a3a4a5a6a7a8a9aaabacadaeafb0b1b2b3b4b5b6b7b8b9babbbcbdbebfc0c1c2c3c4c5c6c7c8c9cacbcccdcecfd0d1d2d3d4d5d6d7d8d9dadbdcdddedfe0e1e2e3e4e5e6e7e8e9eaebecedeeeff0f1f2f3f4f5f6f7f8f9fafbfcfdfeff
-}
-
-definition{
-  name: shaOctet,
-  parameters: [b : Nat],
-  result: Bytes,
-  body: (match (Foundation.Bytes::sliceBytes (shaOctets) b 1)
-    | Option.none => 0x
-    | Option.some o => o)
-}
-
-definition{
-  name: shaNibble,
-  parameters: [n : Nat],
-  result: Bytes,
-  body: (match (Foundation.Bytes::sliceBytes 0x30313233343536373839616263646566 n 1)
-    | Option.none => 0x
-    | Option.some o => o)
-}
-
-definition{
-  name: shaOctetNat,
-  parameters: [value : UInt8],
-  result: Nat,
-  body: ((((((((0 + (match (prim equal (prim bit_and value (1 : UInt8) : UInt8) (1 : UInt8) : Bool)
-    | Bool.false => 0
-    | Bool.true => 1)) + (match (prim equal (prim bit_and value (2 : UInt8) : UInt8) (2 : UInt8) : Bool)
-    | Bool.false => 0
-    | Bool.true => 2)) + (match (prim equal (prim bit_and value (4 : UInt8) : UInt8) (4 : UInt8) : Bool)
-    | Bool.false => 0
-    | Bool.true => 4)) + (match (prim equal (prim bit_and value (8 : UInt8) : UInt8) (8 : UInt8) : Bool)
-    | Bool.false => 0
-    | Bool.true => 8)) + (match (prim equal (prim bit_and value (16 : UInt8) : UInt8) (16 : UInt8) : Bool)
-    | Bool.false => 0
-    | Bool.true => 16)) + (match (prim equal (prim bit_and value (32 : UInt8) : UInt8) (32 : UInt8) : Bool)
-    | Bool.false => 0
-    | Bool.true => 32)) + (match (prim equal (prim bit_and value (64 : UInt8) : UInt8) (64 : UInt8) : Bool)
-    | Bool.false => 0
-    | Bool.true => 64)) + (match (prim equal (prim bit_and value (128 : UInt8) : UInt8) (128 : UInt8) : Bool)
-    | Bool.false => 0
-    | Bool.true => 128)),
-  axioms: [Quot.sound, propext]
-}
-
-definition{
-  name: shaLow,
-  parameters: [x : UInt64],
-  result: Nat,
-  body: ((((((((0 + (match (prim equal (prim bit_and x (1 : UInt64) : UInt64) (1 : UInt64) : Bool)
-    | Bool.false => 0
-    | Bool.true => 1)) + (match (prim equal (prim bit_and x (2 : UInt64) : UInt64) (2 : UInt64) : Bool)
-    | Bool.false => 0
-    | Bool.true => 2)) + (match (prim equal (prim bit_and x (4 : UInt64) : UInt64) (4 : UInt64) : Bool)
-    | Bool.false => 0
-    | Bool.true => 4)) + (match (prim equal (prim bit_and x (8 : UInt64) : UInt64) (8 : UInt64) : Bool)
-    | Bool.false => 0
-    | Bool.true => 8)) + (match (prim equal (prim bit_and x (16 : UInt64) : UInt64) (16 : UInt64) : Bool)
-    | Bool.false => 0
-    | Bool.true => 16)) + (match (prim equal (prim bit_and x (32 : UInt64) : UInt64) (32 : UInt64) : Bool)
-    | Bool.false => 0
-    | Bool.true => 32)) + (match (prim equal (prim bit_and x (64 : UInt64) : UInt64) (64 : UInt64) : Bool)
-    | Bool.false => 0
-    | Bool.true => 64)) + (match (prim equal (prim bit_and x (128 : UInt64) : UInt64) (128 : UInt64) : Bool)
-    | Bool.false => 0
-    | Bool.true => 128)),
-  axioms: [Quot.sound, propext]
-}
-
-definition{
-  name: shaWordBytes,
-  parameters: [x : UInt64],
-  result: Bytes,
-  body: (Foundation.Bytes::appendBytes (Foundation.Bytes::appendBytes (shaOctet (shaLow (shaShr x (24 : UInt32)))) (shaOctet (shaLow (shaShr x (16 : UInt32))))) (Foundation.Bytes::appendBytes (shaOctet (shaLow (shaShr x (8 : UInt32)))) (shaOctet (shaLow x)))),
-  axioms: [Quot.sound, propext]
-}
-
-definition{
-  name: shaNatBe,
-  parameters: [x : Nat, width : Nat, acc : Bytes],
-  result: Bytes,
-  body: (match width
-    | Nat.zero => acc
-    | Nat.succ rest => (shaNatBe (prim quotient x 256 0 : Nat) rest (Foundation.Bytes::appendBytes (shaOctet (prim remainder x 256 0 : Nat)) acc))),
-  recursive_argument: width
-}
-
-definition{
-  name: shaK,
-  parameters: [],
-  result: Bytes,
-  body: 0x428a2f9871374491b5c0fbcfe9b5dba53956c25b59f111f1923f82a4ab1c5ed5d807aa9812835b01243185be550c7dc372be5d7480deb1fe9bdc06a7c19bf174e49b69c1efbe47860fc19dc6240ca1cc2de92c6f4a7484aa5cb0a9dc76f988da983e5152a831c66db00327c8bf597fc7c6e00bf3d5a7914706ca63511429296727b70a852e1b21384d2c6dfc53380d13650a7354766a0abb81c2c92e92722c85a2bfe8a1a81a664bc24b8b70c76c51a3d192e819d6990624f40e3585106aa07019a4c1161e376c082748774c34b0bcb5391c0cb34ed8aa4a5b9cca4f682e6ff3748f82ee78a5636f84c878148cc7020890befffaa4506cebbef9a3f7c67178f2
-}
-
-definition{
-  name: shaZeros,
-  parameters: [n : Nat, acc : Bytes],
-  result: Bytes,
-  body: (match n
-    | Nat.zero => acc
-    | Nat.succ rest => (shaZeros rest (Foundation.Bytes::appendBytes acc 0x00))),
-  recursive_argument: n
-}
-
-definition{
-  name: shaPadded,
-  parameters: [m : Bytes],
-  result: Bytes,
-  body: (let n : Nat := (Foundation.Bytes::byteLength m); (let r : Nat := (prim remainder (n + 9) 64 0 : Nat); (let k : Nat := (if (r =? 0) then 0 else (prim subtract 64 r : Nat)); (Foundation.Bytes::appendBytes (Foundation.Bytes::appendBytes (Foundation.Bytes::appendBytes m 0x80) (shaZeros k 0x)) (shaNatBe (prim multiply n 8 : Nat) 8 0x)))))
-}
-
-definition{
-  name: shaSchedule,
-  parameters: [block : Bytes, t : Nat, w : Bytes, fuel : Nat],
-  result: Bytes,
-  body: (match fuel
-    | Nat.zero => w
-    | Nat.succ rest => (if (63 <? t) then w else (let x : UInt64 := (if (t <? 16) then (shaWordAt block (prim multiply t 4 : Nat)) else (let w2 : UInt64 := (shaWordAt w (prim multiply (prim subtract t 2 : Nat) 4 : Nat)); (let w15 : UInt64 := (shaWordAt w (prim multiply (prim subtract t 15 : Nat) 4 : Nat)); (let s0 : UInt64 := (prim bit_xor (prim bit_xor (shaRotr w15 (7 : UInt32) (25 : UInt32)) (shaRotr w15 (18 : UInt32) (14 : UInt32)) : UInt64) (shaShr w15 (3 : UInt32)) : UInt64); (let s1 : UInt64 := (prim bit_xor (prim bit_xor (shaRotr w2 (17 : UInt32) (15 : UInt32)) (shaRotr w2 (19 : UInt32) (13 : UInt32)) : UInt64) (shaShr w2 (10 : UInt32)) : UInt64); (shaAdd (shaAdd s1 (shaWordAt w (prim multiply (prim subtract t 7 : Nat) 4 : Nat))) (shaAdd s0 (shaWordAt w (prim multiply (prim subtract t 16 : Nat) 4 : Nat))))))))); (shaSchedule block (t + 1) (Foundation.Bytes::appendBytes w (shaWordBytes x)) rest)))),
-  axioms: [Quot.sound, propext],
-  recursive_argument: fuel
-}
-
-definition{
-  name: shaRounds,
-  parameters: [
-    w : Bytes,
-    t : Nat,
-    a : UInt64,
-    b : UInt64,
-    c : UInt64,
-    d : UInt64,
-    e : UInt64,
-    f : UInt64,
-    g : UInt64,
-    h : UInt64,
-    fuel : Nat
-  ],
-  result: Bytes,
-  body: (match fuel
-    | Nat.zero => 0x
-    | Nat.succ rest => (if (63 <? t) then (Foundation.Bytes::appendBytes (Foundation.Bytes::appendBytes (Foundation.Bytes::appendBytes (shaWordBytes a) (shaWordBytes b)) (Foundation.Bytes::appendBytes (shaWordBytes c) (shaWordBytes d))) (Foundation.Bytes::appendBytes (Foundation.Bytes::appendBytes (shaWordBytes e) (shaWordBytes f)) (Foundation.Bytes::appendBytes (shaWordBytes g) (shaWordBytes h)))) else (let s1 : UInt64 := (prim bit_xor (prim bit_xor (shaRotr e (6 : UInt32) (26 : UInt32)) (shaRotr e (11 : UInt32) (21 : UInt32)) : UInt64) (shaRotr e (25 : UInt32) (7 : UInt32)) : UInt64); (let ch : UInt64 := (prim bit_xor (prim bit_and e f : UInt64) (prim bit_and (prim bit_xor e (shaMask) : UInt64) g : UInt64) : UInt64); (let t1 : UInt64 := (shaAdd (shaAdd (shaAdd h s1) (shaAdd ch (shaWordAt (shaK) (prim multiply t 4 : Nat)))) (shaWordAt w (prim multiply t 4 : Nat))); (let s0 : UInt64 := (prim bit_xor (prim bit_xor (shaRotr a (2 : UInt32) (30 : UInt32)) (shaRotr a (13 : UInt32) (19 : UInt32)) : UInt64) (shaRotr a (22 : UInt32) (10 : UInt32)) : UInt64); (let maj : UInt64 := (prim bit_xor (prim bit_xor (prim bit_and a b : UInt64) (prim bit_and a c : UInt64) : UInt64) (prim bit_and b c : UInt64) : UInt64); (shaRounds w (t + 1) (shaAdd t1 (shaAdd s0 maj)) a b c (shaAdd d t1) e f g rest)))))))),
-  axioms: [Quot.sound, propext],
-  recursive_argument: fuel
-}
-
-definition{
-  name: shaMix,
-  parameters: [state : Bytes, out : Bytes, i : Nat, fuel : Nat],
-  result: Bytes,
-  body: (match fuel
-    | Nat.zero => 0x
-    | Nat.succ rest => (if (7 <? i) then 0x else (Foundation.Bytes::appendBytes (shaWordBytes (shaAdd (shaWordAt state (prim multiply i 4 : Nat)) (shaWordAt out (prim multiply i 4 : Nat)))) (shaMix state out (i + 1) rest)))),
-  axioms: [Quot.sound, propext],
-  recursive_argument: fuel
-}
-
-definition{
-  name: shaBlocks,
-  parameters: [m : Bytes, i : Nat, state : Bytes, fuel : Nat],
-  result: Bytes,
-  body: (match fuel
-    | Nat.zero => state
-    | Nat.succ rest => (match (Foundation.Bytes::sliceBytes m i 64)
-      | Option.none => state
-      | Option.some block => (let w : Bytes := (shaSchedule block 0 0x 64); (let out : Bytes := (shaRounds w 0 (shaWordAt state 0) (shaWordAt state 4) (shaWordAt state 8) (shaWordAt state 12) (shaWordAt state 16) (shaWordAt state 20) (shaWordAt state 24) (shaWordAt state 28) 65); (shaBlocks m (i + 64) (shaMix state out 0 8) rest))))),
-  axioms: [Quot.sound, propext],
-  recursive_argument: fuel
-}
-
-definition{
-  name: sha256,
-  parameters: [m : Bytes],
-  result: Bytes,
-  body: (let p : Bytes := (shaPadded m); (shaBlocks p 0 0x6a09e667bb67ae853c6ef372a54ff53a510e527f9b05688c1f83d9ab5be0cd19 ((prim quotient (Foundation.Bytes::byteLength p) 64 0 : Nat) + 1))),
-  axioms: [Quot.sound, propext]
-}
-
-definition{
-  name: shaHexFrom,
-  parameters: [dg : Bytes, i : Nat, n : Nat, acc : Bytes],
-  result: Bytes,
-  body: (match n
-    | Nat.zero => acc
-    | Nat.succ rest => (let b : Nat := (match (Foundation.Bytes::byteAt dg i)
-      | Option.none => 0
-      | Option.some o => (shaOctetNat o)); (shaHexFrom dg (i + 1) rest (Foundation.Bytes::appendBytes acc (Foundation.Bytes::appendBytes (shaNibble (prim quotient b 16 0 : Nat)) (shaNibble (prim remainder b 16 0 : Nat))))))),
-  axioms: [Quot.sound, propext],
-  recursive_argument: n
-}
-
-definition{
-  name: sha256Hex,
-  parameters: [m : Bytes],
-  result: Bytes,
-  body: (let dg : Bytes := (sha256 m); (shaHexFrom dg 0 (Foundation.Bytes::byteLength dg) 0x)),
-  axioms: [Quot.sound, propext]
-}
-
 definition{
   name: snEolFrom,
   parameters: [s : Bytes, i : Nat, fuel : Nat],
@@ -1846,7 +1571,7 @@ definition{
   result: Bytes,
   body: (match (jcCanonicalize p)
     | Option.none => 0x6e6f7420492d4a534f4e
-    | Option.some c => (jpCat 0x7368613235363a (sha256Hex c))),
+    | Option.some c => (jpCat 0x7368613235363a (Sha256::sha256Hex c))),
   axioms: [Quot.sound, propext]
 }
 
@@ -1868,7 +1593,7 @@ definition{
   name: snDigest,
   parameters: [p : Bytes],
   result: Bytes,
-  body: (let e : Nat := (snEol p 0); (if (jpSame (jpSpan p 0 6) 0x4c656e203d20) then (let n : Nat := (jpNatFrom p 6 0 7); (if (jpSame (jpSpan p (e + 1) (e + 7)) 0x4d7367203d20) then (jpCat 0x4d44203d20 (sha256Hex (snUnhexFrom p (e + 7) (prim quotient n 8 0 : Nat) 0x ((prim quotient n 8 0 : Nat) + 1)))) else 0x696e76616c6964)) else 0x696e76616c6964)),
+  body: (let e : Nat := (snEol p 0); (if (jpSame (jpSpan p 0 6) 0x4c656e203d20) then (let n : Nat := (jpNatFrom p 6 0 7); (if (jpSame (jpSpan p (e + 1) (e + 7)) 0x4d7367203d20) then (jpCat 0x4d44203d20 (Sha256::sha256Hex (snUnhexFrom p (e + 7) (prim quotient n 8 0 : Nat) 0x ((prim quotient n 8 0 : Nat) + 1)))) else 0x696e76616c6964)) else 0x696e76616c6964)),
   axioms: [Quot.sound, propext]
 }
 
@@ -1917,7 +1642,7 @@ definition{
   name: snTransitionId,
   parameters: [f : Bytes, q : Bytes, prev : Bytes],
   result: Bytes,
-  body: (jpCat 0x7368613235363a (sha256Hex (jpCat 0x5b22 (jpCat f (jpCat 0x222c22 (jpCat q (jpCat 0x222c (jpCat (if ((jpLen prev) =? 0) then 0x6e756c6c else (jpCat 0x22 (jpCat prev 0x22))) 0x5d)))))))),
+  body: (jpCat 0x7368613235363a (Sha256::sha256Hex (jpCat 0x5b22 (jpCat f (jpCat 0x222c22 (jpCat q (jpCat 0x222c (jpCat (if ((jpLen prev) =? 0) then 0x6e756c6c else (jpCat 0x22 (jpCat prev 0x22))) 0x5d)))))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -1948,7 +1673,7 @@ definition{
         | Option.none => 0x6e6f7420492d4a534f4e
         | Option.some fc => (match (jcCanonicalize q)
           | Option.none => 0x6e6f7420492d4a534f4e
-          | Option.some qc => (if (jpSame tc fc) then 0x74686520737461746520646f6573206e6f74206368616e6765 else (snRecord (jpCat 0x7368613235363a (sha256Hex fc)) (jpCat 0x7368613235363a (sha256Hex qc)) (jpCat 0x7368613235363a (sha256Hex tc)) prev)))))),
+          | Option.some qc => (if (jpSame tc fc) then 0x74686520737461746520646f6573206e6f74206368616e6765 else (snRecord (jpCat 0x7368613235363a (Sha256::sha256Hex fc)) (jpCat 0x7368613235363a (Sha256::sha256Hex qc)) (jpCat 0x7368613235363a (Sha256::sha256Hex tc)) prev)))))),
   axioms: [Quot.sound, propext]
 }
 
