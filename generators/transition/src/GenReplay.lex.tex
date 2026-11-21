@@ -1,0 +1,106 @@
+\begin{lexlean}{GenReplay}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Tar}
+\importmodule{GenPatch}
+\importmodule{GenJcs}
+\importmodule{GenRec}
+\title{Replay vector writer}
+\begin{semanticmodule}
+structure{
+  name: RpState,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: acc, type: Bytes}, {name: prev, type: Bytes}, {name: last, type: Bytes}]
+}
+
+definition{
+  name: rpRequest,
+  parameters: [d : Bytes, q : Bytes, prev : Bytes, text : Bytes],
+  result: Bytes,
+  body: (GenPatch::jpCat 0x7265706c61790a5b (GenPatch::jpCat d (GenPatch::jpCat 0x2c (GenPatch::jpCat q (GenPatch::jpCat 0x2c (GenPatch::jpCat (if ((GenPatch::jpLen prev) =? 0) then 0x6e756c6c else (GenPatch::jpCat 0x22 (GenPatch::jpCat prev 0x22))) (GenPatch::jpCat 0x2c (GenPatch::jpCat (GenPatch::jpEncode text) 0x5d)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rpEmit,
+  parameters: [st : RpState, on : Bool, req : Bytes, resp : Bytes],
+  result: Bytes,
+  body: (if ((on && (0 <? (GenPatch::jpLen (project st last)))) && ((GenPatch::jpLen req) <? 2049)) then (GenRec::rvJoin (project st acc) (GenRec::rvPair req resp)) else (project st acc)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rpStay,
+  parameters: [st : RpState, on : Bool, d : Bytes, q : Bytes, resp : Bytes],
+  result: RpState,
+  body: (record RpState {acc := (rpEmit st on (rpRequest d q (project st prev) (project st last)) resp), prev := (project st prev), last := (project st last)}),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rpMoved,
+  parameters: [
+    st : RpState,
+    emit : Bool,
+    mode : Nat,
+    d : Bytes,
+    q : Bytes,
+    f : Bytes,
+    qa : Bytes,
+    t : Bytes,
+    tc : Bytes
+  ],
+  result: RpState,
+  body: (let text : Bytes := (GenRec::snRecord f qa t (project st prev)); (record RpState {acc := (if (mode =? 0) then (rpEmit (record RpState {acc := (project st acc), prev := (project st prev), last := text}) emit (rpRequest d q (project st prev) text) tc) else (rpEmit st emit (rpRequest d q (project st prev) (project st last)) 0x746865207265636f726420646f6573206e6f74206d61746368)), prev := (GenRec::snTransitionId f qa (project st prev)), last := text})),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rpCase,
+  parameters: [el : Bytes, st : RpState, emit : Bool, mode : Nat],
+  result: RpState,
+  body: (match (GenRec::rvMember el 0x646f63)
+    | Option.none => st
+    | Option.some d => (match (GenRec::rvMember el 0x7061746368)
+      | Option.none => st
+      | Option.some q => (match (GenRec::rvMember el 0x6578706563746564)
+        | Option.some x => (match (GenJcs::jcCanonicalize x)
+          | Option.none => st
+          | Option.some tc => (match (GenJcs::jcCanonicalize d)
+            | Option.none => st
+            | Option.some fc => (match (GenJcs::jcCanonicalize q)
+              | Option.none => st
+              | Option.some qc => (if (GenPatch::jpSame tc fc) then (rpStay st (emit && (mode =? 0)) d q 0x74686520737461746520646f6573206e6f74206368616e6765) else (rpMoved st emit mode d q (GenRec::rvAddr fc) (GenRec::rvAddr qc) (GenRec::rvAddr tc) tc)))))
+        | Option.none => (match (GenRec::rvMember el 0x6572726f72)
+          | Option.none => st
+          | Option.some y => (rpStay st (emit && (mode =? 0)) d q 0x74686520706174636820646f6573206e6f74206170706c79))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rpFrom,
+  parameters: [cases : Bytes, n : Nat, lo : Nat, hi : Nat, mode : Nat, st : RpState, fuel : Nat],
+  result: RpState,
+  body: (match fuel
+    | Nat.zero => st
+    | Nat.succ rest => (match (GenPatch::jpElement cases n)
+      | Option.none => st
+      | Option.some h => (rpFrom cases (n + 1) lo hi mode (rpCase (GenPatch::jpSpan cases (project h vstart) (project h vend)) st ((lo <? (n + 1)) && (n <? hi)) mode) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rpVectors,
+  parameters: [archive : Bytes, mode : Nat, lo : Nat, hi : Nat, head : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive 0x6170702f73706563732f6f7261636c652f6a736f6e2d70617463682d74657374732f74657374732e6a736f6e)
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some t => (let cases : Bytes := (GenPatch::jpCompact t); (let st : RpState := (rpFrom cases 0 lo hi mode (record RpState {acc := 0x, prev := 0x, last := 0x}) ((GenPatch::jpCount cases) + 1)); (ctor Option.some [Bytes] (GenPatch::jpCat head (GenPatch::jpCat 0x222c226578616d706c6573223a5b0a (GenPatch::jpCat (project st acc) 0x0a5d7d0a))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

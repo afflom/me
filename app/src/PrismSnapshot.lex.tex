@@ -1694,10 +1694,54 @@ definition{
 }
 
 definition{
+  name: snReplayOf,
+  parameters: [d : Bytes, q : Bytes, prev : Bytes, want : Bytes],
+  result: Bytes,
+  body: (match (jpPatch d q)
+    | Option.none => 0x74686520706174636820646f6573206e6f74206170706c79
+    | Option.some r => (match (jcCanonicalize r)
+      | Option.none => 0x6e6f7420492d4a534f4e
+      | Option.some tc => (match (jcCanonicalize d)
+        | Option.none => 0x6e6f7420492d4a534f4e
+        | Option.some fc => (match (jcCanonicalize q)
+          | Option.none => 0x6e6f7420492d4a534f4e
+          | Option.some qc => (if (jpSame tc fc) then 0x74686520737461746520646f6573206e6f74206368616e6765 else (if (jpSame (snRecord (jpCat 0x7368613235363a (Sha256::sha256Hex fc)) (jpCat 0x7368613235363a (Sha256::sha256Hex qc)) (jpCat 0x7368613235363a (Sha256::sha256Hex tc)) prev) want) then tc else 0x746865207265636f726420646f6573206e6f74206d61746368)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snReplayText,
+  parameters: [a : Bytes, d : Bytes, q : Bytes, prev : Bytes],
+  result: Bytes,
+  body: (match (jpElement a 3)
+    | Option.none => 0x696e76616c6964
+    | Option.some w => (if ((jpAt a (project w vstart)) =? 34) then (match (jpDecode a ((project w vstart) + 1))
+      | Option.none => 0x696e76616c6964
+      | Option.some want => (snReplayOf d q prev want)) else 0x696e76616c6964)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snReplay,
+  parameters: [p : Bytes],
+  result: Bytes,
+  body: (let a : Bytes := (jpCompact p); (if ((jpCount a) =? 4) then (match (jpElement a 0)
+    | Option.none => 0x696e76616c6964
+    | Option.some d => (match (jpElement a 1)
+      | Option.none => 0x696e76616c6964
+      | Option.some q => (match (jpElement a 2)
+        | Option.none => 0x696e76616c6964
+        | Option.some v => (match (snPrev (jpSpan a (project v vstart) (project v vend)))
+          | Option.none => 0x696e76616c6964
+          | Option.some prev => (snReplayText a (jpSpan a (project d vstart) (project d vend)) (jpSpan a (project q vstart) (project q vend)) prev))))) else 0x696e76616c6964)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: prismSnapshotDispatch,
   parameters: [s : Bytes],
   result: Bytes,
-  body: (if (2048 <? (jpLen s)) then 0x696e76616c6964 else (let e : Nat := (snEol s 0); (let op : Bytes := (jpSpan s 0 e); (let p : Bytes := (jpSpan s (e + 1) (jpLen s)); (if (jpSame op 0x63616e6f6e6963616c) then (snCanonical p) else (if (jpSame op 0x61646472657373) then (snAddress p) else (if (jpSame op 0x6170706c79) then (snApply p) else (if (jpSame op 0x736861323536) then (snDigest p) else (if (jpSame op 0x7472616e736974696f6e) then (snTransition p) else 0x696e76616c6964))))))))),
+  body: (if (2048 <? (jpLen s)) then 0x696e76616c6964 else (let e : Nat := (snEol s 0); (let op : Bytes := (jpSpan s 0 e); (let p : Bytes := (jpSpan s (e + 1) (jpLen s)); (if (jpSame op 0x63616e6f6e6963616c) then (snCanonical p) else (if (jpSame op 0x61646472657373) then (snAddress p) else (if (jpSame op 0x6170706c79) then (snApply p) else (if (jpSame op 0x736861323536) then (snDigest p) else (if (jpSame op 0x7472616e736974696f6e) then (snTransition p) else (if (jpSame op 0x7265706c6179) then (snReplay p) else 0x696e76616c6964)))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}
