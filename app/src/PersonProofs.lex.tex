@@ -46,7 +46,8 @@ theorem{
       {proof: reflexivity{}, binders: [], constructor: emailMessage},
       {proof: reflexivity{}, binders: [], constructor: creativeWork},
       {proof: reflexivity{}, binders: [], constructor: medicalCondition},
-      {proof: reflexivity{}, binders: [], constructor: invoice}
+      {proof: reflexivity{}, binders: [], constructor: invoice},
+      {proof: reflexivity{}, binders: [], constructor: patient}
     ],
     scrutinee: facet
   }
@@ -151,9 +152,23 @@ theorem{
 }
 
 theorem{
-  name: personPropertiesOutsideSchemaOrg,
+  name: personPropertiesAreSchemaOrg,
   parameters: [],
-  statement: ((PersonSchema::schemaSame (PersonSchema::schemaModelOutside (Foundation.Person.V1.Model::personProperties) (PersonSchema::schemaPersonProperties)) (cons "healthCondition" (nil String))) = true),
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 0) (PersonSchema::schemaPersonProperties))) =? 0) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: schemaOrgPersonPropertiesModelled,
+  parameters: [],
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchema::schemaPersonProperties) (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 0))) =? 0) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: patientPropertiesAreSchemaOrg,
+  parameters: [],
+  statement: (((PersonSchema::schemaSame (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 12) (cons "healthCondition" (nil String))) && ((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 12) (PersonSchema::schemaPatientProperties))) =? 0)) = true),
   proof: decide{}
 }
 \end{semanticmodule}

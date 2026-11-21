@@ -156,16 +156,30 @@ definition{
 }
 
 definition{
-  name: schemaModelOutside,
-  parameters: [
-    properties : (List Foundation.Person.V1.Model::PersonProperty),
-    allowed : (List String)
-  ],
+  name: schemaPatientProperties,
+  parameters: [],
+  result: (List String),
+  body: (schemaNamesAt (schemaPropertiesOf (schemaClosure 64 (cons (schemaIndexFrom "Patient" (schemaSection "types") 0) (nil Nat)) (nil Nat)) (Foundation.Vocab.V1.SchemaOrg::vocabPropertyRows)) (schemaSection "properties"))
+}
+
+definition{
+  name: schemaModelNames,
+  parameters: [properties : (List Foundation.Person.V1.Model::PersonProperty), facet : Nat],
   result: (List String),
   body: (match properties
     | List.nil => (nil String)
-    | List.cons property rest => (if (((Foundation.Person.V1.Model::personFacetNumber (project property facet)) =? 0) && (not (schemaContains (Foundation.Person.V1.Model::personPropertyName (project property index)) allowed))) then (cons (Foundation.Person.V1.Model::personPropertyName (project property index)) (schemaModelOutside rest allowed)) else (schemaModelOutside rest allowed))),
+    | List.cons property rest => (if ((Foundation.Person.V1.Model::personFacetNumber (project property facet)) =? facet) then (cons (Foundation.Person.V1.Model::personPropertyName (project property index)) (schemaModelNames rest facet)) else (schemaModelNames rest facet))),
   recursive_argument: properties
+}
+
+definition{
+  name: schemaOutside,
+  parameters: [names : (List String), allowed : (List String)],
+  result: (List String),
+  body: (match names
+    | List.nil => (nil String)
+    | List.cons item rest => (if (schemaContains item allowed) then (schemaOutside rest allowed) else (cons item (schemaOutside rest allowed)))),
+  recursive_argument: names
 }
 
 definition{
