@@ -10,7 +10,7 @@
 // What the owner's content has taught the readers (the people it is with and
 // the words it keeps using) comes in as `learned` (see labels.mjs).
 import { FIELDS, PROVIDERS } from "./table.mjs";
-import { READERS, domainsFor, kindOf } from "./features.mjs";
+import { READERS, domainsFor, headTask, kindOf, plain } from "./features.mjs";
 
 const [, VALUE_NAMES] = FIELDS.find(([name]) => name === "value");
 const [, FEATURE_NAMES] = FIELDS.find(([name]) => name === "feature");
@@ -41,6 +41,8 @@ export async function route({ source, values, line, halted, now = Date.now(), le
   if (!out.parties.some((p) => !p.robot)) out.parties.push(...(out.mentioned ?? []));
   out.party = out.parties[0]?.name ?? null;
   out.domains = domainsFor(out.intent, out.start);
+  // Words said to the Prism are a dialogue act in a dimension (ISO 24617-2): feedback on what was last said when the head fit for that reads so, else the task.
+  if (source === "note" && out.meaning) out.act = headTask(await learned.meaning.read(plain(values.text)), PROVIDERS.intent.heads.autoFeedback) ? "autoFeedback" : "task";
   return out;
 }
 
