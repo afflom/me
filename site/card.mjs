@@ -3,7 +3,6 @@
 // the verified app's: this script only carries bytes between the page, the
 // vault, R4, the routed models and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
-import { lines, timeOf, utcOf } from "./time/recur.mjs";
 import { PLACES, ACTS, LABELS, FLOORS, SETTINGS, SECTIONS, WORDS, DOMAINS, FEEDERS, FONTS } from "./surface/surface.mjs";
 import { makeSetup } from "./surface/setup.mjs";
 // The coherence registry's runtime: what an item is about, what an Ask is
@@ -58,9 +57,9 @@ export function headerWords(value = "") {
   });
 }
 
-// A calendar's fields, each by the content-line grammar and time reading of site/time/recur.mjs (RFC 5545 3.1, 3.3.4, 3.3.5).
-const calendarField = (text, name) => (lines(text, name)[0]?.[1] ?? "").replace(/\\([,;\\])/g, "$1").replace(/\\n/gi, " ");
-const icsField = (text, name) => { const [line] = lines(text, name); const t = line && timeOf(...line); return t ? utcOf(t.wall, t.date ? "" : t.zone) : NaN; };
+// A calendar's fields, each by the content-line and time reading of site/time/recur.mjs (RFC 5545 3.1, 3.3.4, 3.3.5), which comes with the reader: its grammar guest is not part of a first visit.
+const calendarField = (text, name) => (reader?.lines(text, name)[0]?.[1] ?? "").replace(/\\([,;\\])/g, "$1").replace(/\\n/gi, " ");
+const icsField = (text, name) => { const [line] = reader?.lines(text, name) ?? []; const t = line && reader.timeOf(...line); return t ? reader.utcOf(t.wall, t.date ? "" : t.zone) : NaN; };
 
 // The first words of a text, as a heading: its first line, cut at a word near 80 characters.
 function headline(text = "") {
@@ -132,11 +131,11 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
     const end = icsField(text, "DTEND") - first + start;
     const span = Number.isNaN(start) ? "" : [new Date(start), allDay || Number.isNaN(end) ? null : new Date(end)]
       .filter(Boolean).map((d, i) => d.toLocaleString(undefined, i === 0 ? (allDay ? { dateStyle: "full" } : { dateStyle: "full", timeStyle: "short" }) : (allDay ? { dateStyle: "full" } : { timeStyle: "short" }))).join(" – ");
-    const people = lines(text, "(?:ORGANIZER|ATTENDEE)")
+    const people = (reader?.lines(text, "(?:ORGANIZER|ATTENDEE)") ?? [])
       .map(([params, value]) => /CN="?([^";:]+)"?/i.exec(params)?.[1] ?? value.replace(/^mailto:/i, "")).filter(Boolean);
-    const notes = reader ? reader.eventText(lines(text, "DESCRIPTION")[0]?.[1] ?? "") : calendarField(text, "DESCRIPTION");
+    const notes = reader ? reader.eventText(reader.lines(text, "DESCRIPTION")[0]?.[1] ?? "") : calendarField(text, "DESCRIPTION");
     // Comments to the calendar user (RFC 5545 §3.8.1.4), such as a reply's reason, read after the notes.
-    const comments = lines(text, "COMMENT").map(([, value]) => (reader ? reader.eventText(value) : value.trim()));
+    const comments = (reader?.lines(text, "COMMENT") ?? []).map(([, value]) => (reader ? reader.eventText(value) : value.trim()));
     // The object's further events (an iMIP PUBLISH of several, an instance's own revision)
     // are events of their own, each read with the calendar's zones and method.
     const more = components.length > 1 && !meta.single ? components.slice(1).map((own, i) => {
