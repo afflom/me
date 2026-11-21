@@ -1,0 +1,122 @@
+{
+ "name": "annotation-two",
+ "comment": "More acceptance vectors of the annotation judge, held as app/specs/annotation/spec.json holds its own: each document is pinned by SHA-256 from the same sources at the same revisions, and each answer is what the suite's runner reports with the suite's validator. They are apart only because one build's vectors are bounded.",
+ "content": [
+  {
+   "from": "suite",
+   "path": "tools/samples/example17.json",
+   "sha256": "c5782e48bebfeb1deb580a4382abf0833df2843f52c8678b0b2c10ff82748cdc"
+  },
+  {
+   "from": "suite",
+   "path": "tools/samples/example19.json",
+   "sha256": "e31962dfab517194352cf80eb90d6c520f6e6fbcb882821c73ef262c48f790c9"
+  },
+  {
+   "from": "suite",
+   "path": "tools/samples/example2.json",
+   "sha256": "f50179f0488af58860956793c23254f4e0c39c0dd7ac0658e583b6701cf7d989"
+  },
+  {
+   "from": "suite",
+   "path": "tools/samples/example20.json",
+   "sha256": "b7aff191b2ad08963d571b79ba3464d9d115fc4baf2a8f08061c8d94c14f2191"
+  },
+  {
+   "from": "suite",
+   "path": "tools/samples/example6.json",
+   "sha256": "6992b7e7cdcd288297551aa21e91479860d99cdc95e46ceb70cf2a379bd80c63"
+  },
+  {
+   "from": "examples",
+   "path": "model/wd2/examples/correct/anno11.json",
+   "sha256": "cb6c30f8ae8b10ee3a072f536dd04427920ee7706384b13b60253753c4ea40b9"
+  },
+  {
+   "from": "examples",
+   "path": "model/wd2/examples/correct/anno23.json",
+   "sha256": "350b68089c03df829bd776a49a2fc88f69d17f6f5c27d9dc8c1119560623dc12"
+  },
+  {
+   "from": "examples",
+   "path": "model/wd2/examples/correct/anno31.json",
+   "sha256": "7e50d78e8f4b580af8a584fce4abeaf39c787482a4aa6857a7cd24bdae83dc13"
+  }
+ ],
+ "vectors": [
+  {
+   "test": "annotationOptionals",
+   "content": "tools/samples/example2.json"
+  },
+  {
+   "test": "annotationOptionals",
+   "content": "model/wd2/examples/correct/anno23.json"
+  },
+  {
+   "test": "annotationOptionals",
+   "content": "tools/samples/example20.json"
+  },
+  {
+   "test": "collectionOptionals",
+   "content": "tools/samples/example19.json"
+  },
+  {
+   "test": "annotationOptionals",
+   "content": "tools/samples/example17.json"
+  },
+  {
+   "test": "annotationOptionals",
+   "content": "model/wd2/examples/correct/anno11.json"
+  },
+  {
+   "test": "annotationOptionals",
+   "content": "model/wd2/examples/correct/anno31.json"
+  },
+  {
+   "test": "annotationsAgentOptionals",
+   "content": "model/wd2/examples/correct/anno11.json"
+  },
+  {
+   "test": "annotationOptionals",
+   "content": "tools/samples/example6.json"
+  }
+ ],
+ "examples": [
+  [
+   "annotationOptionals\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/anno2\",\n  \"type\": \"Annotation\",\n  \"body\": {\n    \"id\": \"http://example.org/analysis1.mp3\",\n    \"format\": \"audio/mpeg\",\n    \"language\": \"fr\"\n  },\n  \"target\": {\n    \"id\": \"http://example.gov/patent1.pdf\",\n    \"format\": \"application/pdf\",\n    \"language\": [\"en\", \"ar\"],\n    \"textDirection\": \"ltr\",\n    \"processingLanguage\": \"en\"\n  }\n}",
+   "3.3.1-annotationSingleCreatorImplemented 3.3.1-annotationCreatedImplemented 3.3.5-annotationSingleMotivationImplemented 3.2.5-bodyValueImplemented 3.3.1-annotationGeneratedImplemented 3.3.1-annotationModifiedImplemented 3.3.3-annotationAudienceImplemented 3.3.5-annotationMotivationImplemented 3.3.6-annotationRightsImplemented 3.3.7-annotationCanonicalImplemented 3.3.7-annotationViaImplemented 4.4-annotationStylesheetImplemented 3.3.1-bodySingleCreator 3.3.1-bodyCreated 3.2.2-bodyType 3.2.1-bodyProcessingLanguage 3.2.1-bodyTextDirection 3.3.1-bodyModified 3.3.3-bodyAudience 3.3.4-bodyAccessibility 3.3.5-bodyPurpose 3.3.6-bodyRights 3.3.7-bodyCanonical 3.3.7-bodyVia 3.2.4-bodyETBTypeTextualBody 3.2.4-bodyETBTypeText 3.2.7-bodyChoice 3.2.1-targSingleLanguage 3.3.1-targSingleCreator 3.3.1-targCreated 3.2.2-targType 3.3.1-targModified 3.3.3-targAudience 3.3.4-targAccessibility 3.3.5-targPurpose 3.3.6-targRights 3.3.7-targCanonical 3.3.7-targVia 3.2.7-targChoice 4-bodySpecificResource 4-targSpecificResource 4.3.3-refinedBy 4.4-styleClass 4.5-renderedVia 4.6-scope 4.2-selectorFound 4.2.1-fragmentSelector 4.2.1-conformsTo 4.2.2-cssSelector 4.2.3-xpathSelector 4.2.4-textQuoteSelector 4.2.4-prefix 4.2.4-suffix 4.2.5-textPositionSelector 4.2.6-dataPositionSelector 4.2.7-svgSelector 4.2.8-rangeSelector 4.3-stateFound 4.3.1-timeState 4.3.2-requestHeaderState 4.3.1-cached"
+  ],
+  [
+   "annotationOptionals\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/anno23\",\n  \"type\": \"Annotation\",\n  \"body\": \"http://example.org/comment1\",\n  \"target\": {\n    \"source\": \"http://example.org/page1\",\n    \"selector\": {\n      \"type\": \"TextQuoteSelector\",\n      \"exact\": \"anotation\",\n      \"prefix\": \"this is an \",\n      \"suffix\": \" that has some\"\n    }\n  }\n}",
+   "3.3.1-annotationSingleCreatorImplemented 3.3.1-annotationCreatedImplemented 3.3.5-annotationSingleMotivationImplemented 3.2.5-bodyValueImplemented 3.3.1-annotationGeneratedImplemented 3.3.1-annotationModifiedImplemented 3.3.3-annotationAudienceImplemented 3.3.5-annotationMotivationImplemented 3.3.6-annotationRightsImplemented 3.3.7-annotationCanonicalImplemented 3.3.7-annotationViaImplemented 4.4-annotationStylesheetImplemented 3.2.1-bodySingleFormat 3.2.1-bodySingleLanguage 3.3.1-bodySingleCreator 3.3.1-bodyCreated 3.2.1-bodyFormat 3.2.1-bodyLanguage 3.2.2-bodyType 3.2.1-bodyProcessingLanguage 3.2.1-bodyTextDirection 3.3.1-bodyModified 3.3.3-bodyAudience 3.3.4-bodyAccessibility 3.3.5-bodyPurpose 3.3.6-bodyRights 3.3.7-bodyCanonical 3.3.7-bodyVia 3.2.1-bodyEWR 3.2.4-bodyETB 3.2.4-bodyETBTypeTextualBody 3.2.4-bodyETBTypeText 3.2.7-bodyChoice 3.2.1-targSingleFormat 3.2.1-targSingleLanguage 3.3.1-targSingleCreator 3.3.1-targCreated 3.2.1-targFormat 3.2.1-targLanguage 3.2.2-targType 3.2.1-targProcessingLanguage 3.2.1-targTextDirection 3.3.1-targModified 3.3.3-targAudience 3.3.4-targAccessibility 3.3.5-targPurpose 3.3.6-targRights 3.3.7-targCanonical 3.3.7-targVia 3.2.7-targChoice 4-bodySpecificResource 4.4-styleClass 4.5-renderedVia 4.6-scope 4.2.1-fragmentSelector 4.2.1-conformsTo 4.2.2-cssSelector 4.2.3-xpathSelector 4.2.5-textPositionSelector 4.2.6-dataPositionSelector 4.2.7-svgSelector 4.2.8-rangeSelector 4.3.1-timeState 4.3.2-requestHeaderState 4.3.1-cached"
+  ],
+  [
+   "annotationOptionals\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/anno20\",\n  \"type\": \"Annotation\",\n  \"canonical\": \"urn:uuid:dbfb1861-0ecf-41ad-be94-a584e5c4f1df\",\n  \"via\": \"http://other.example.org/anno1\",\n  \"body\": {\n    \"id\": \"http://example.net/review1\",\n    \"rights\": \"http://creativecommons.org/licenses/by/4.0/\"\n  },\n  \"target\": \"http://example.com/product1\"\n}",
+   "3.3.1-annotationSingleCreatorImplemented 3.3.1-annotationCreatedImplemented 3.3.5-annotationSingleMotivationImplemented 3.2.5-bodyValueImplemented 3.3.1-annotationGeneratedImplemented 3.3.1-annotationModifiedImplemented 3.3.3-annotationAudienceImplemented 3.3.5-annotationMotivationImplemented 3.3.6-annotationRightsImplemented 4.4-annotationStylesheetImplemented 3.2.1-bodySingleFormat 3.2.1-bodySingleLanguage 3.3.1-bodySingleCreator 3.3.1-bodyCreated 3.2.1-bodyFormat 3.2.1-bodyLanguage 3.2.2-bodyType 3.2.1-bodyProcessingLanguage 3.2.1-bodyTextDirection 3.3.1-bodyModified 3.3.3-bodyAudience 3.3.4-bodyAccessibility 3.3.5-bodyPurpose 3.3.7-bodyCanonical 3.3.7-bodyVia 3.2.4-bodyETBTypeTextualBody 3.2.4-bodyETBTypeText 3.2.7-bodyChoice 3.2.1-targSingleFormat 3.2.1-targSingleLanguage 3.3.1-targSingleCreator 3.3.1-targCreated 3.2.1-targFormat 3.2.1-targLanguage 3.2.2-targType 3.2.1-targProcessingLanguage 3.2.1-targTextDirection 3.3.1-targModified 3.3.3-targAudience 3.3.4-targAccessibility 3.3.5-targPurpose 3.3.6-targRights 3.3.7-targCanonical 3.3.7-targVia 3.2.1-targEWR 3.2.7-targChoice 4-bodySpecificResource 4-targSpecificResource 4.3.3-refinedBy 4.4-styleClass 4.5-renderedVia 4.6-scope 4.2-selectorFound 4.2.1-fragmentSelector 4.2.1-conformsTo 4.2.2-cssSelector 4.2.3-xpathSelector 4.2.4-textQuoteSelector 4.2.4-prefix 4.2.4-suffix 4.2.5-textPositionSelector 4.2.6-dataPositionSelector 4.2.7-svgSelector 4.2.8-rangeSelector 4.3-stateFound 4.3.1-timeState 4.3.2-requestHeaderState 4.3.1-cached"
+  ],
+  [
+   "collectionOptionals\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/anno19\",\n  \"type\": \"Annotation\",\n  \"rights\": \"https://creativecommons.org/publicdomain/zero/1.0/\",\n  \"body\": {\n    \"id\": \"http://example.net/review1\",\n    \"rights\": \"http://creativecommons.org/licenses/by-nc/4.0/\"\n  },\n  \"target\": \"http://example.com/product1\"\n}",
+   "5.1-collectionLabelImplemented 5.1-collectionLastImplemented 5.1-collectionTotalImplemented 5.1-collectionFirstImplemented 3.3.1-collectionModifiedImplemented 3.3.1-collectionCreatorImplemented 3.3.1-collectionCreatedImplemented 3.3.2-collectionCreatorAgentEmail_sha1Implemented 3.3.2-collectionCreatorAgentEmailImplemented 3.3.2-collectionCreatorAgentHomepageImplemented 3.3.2-collectionCreatorAgentIdImplemented 3.3.2-collectionCreatorAgentNameImplemented 3.3.2-collectionCreatorAgentNicknameImplemented 3.3.2-collectionCreatorAgentTypeImplemented"
+  ],
+  [
+   "annotationOptionals\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/anno17\",\n  \"type\": \"Annotation\",\n  \"motivation\": \"commenting\",\n  \"body\": \"http://example.net/comment1\",\n  \"target\": {\n    \"id\": \"http://example.com/video1\",\n    \"type\": \"Video\",\n    \"accessibility\": \"captions\"\n  }\n}",
+   "3.3.1-annotationSingleCreatorImplemented 3.3.1-annotationCreatedImplemented 3.2.5-bodyValueImplemented 3.3.1-annotationGeneratedImplemented 3.3.1-annotationModifiedImplemented 3.3.3-annotationAudienceImplemented 3.3.6-annotationRightsImplemented 3.3.7-annotationCanonicalImplemented 3.3.7-annotationViaImplemented 4.4-annotationStylesheetImplemented 3.2.1-bodySingleFormat 3.2.1-bodySingleLanguage 3.3.1-bodySingleCreator 3.3.1-bodyCreated 3.2.1-bodyFormat 3.2.1-bodyLanguage 3.2.2-bodyType 3.2.1-bodyProcessingLanguage 3.2.1-bodyTextDirection 3.3.1-bodyModified 3.3.3-bodyAudience 3.3.4-bodyAccessibility 3.3.5-bodyPurpose 3.3.6-bodyRights 3.3.7-bodyCanonical 3.3.7-bodyVia 3.2.1-bodyEWR 3.2.4-bodyETB 3.2.4-bodyETBTypeTextualBody 3.2.4-bodyETBTypeText 3.2.7-bodyChoice 3.2.1-targSingleFormat 3.2.1-targSingleLanguage 3.3.1-targSingleCreator 3.3.1-targCreated 3.2.1-targFormat 3.2.1-targLanguage 3.2.1-targProcessingLanguage 3.2.1-targTextDirection 3.3.1-targModified 3.3.3-targAudience 3.3.5-targPurpose 3.3.6-targRights 3.3.7-targCanonical 3.3.7-targVia 3.2.7-targChoice 4-bodySpecificResource 4-targSpecificResource 4.3.3-refinedBy 4.4-styleClass 4.5-renderedVia 4.6-scope 4.2-selectorFound 4.2.1-fragmentSelector 4.2.1-conformsTo 4.2.2-cssSelector 4.2.3-xpathSelector 4.2.4-textQuoteSelector 4.2.4-prefix 4.2.4-suffix 4.2.5-textPositionSelector 4.2.6-dataPositionSelector 4.2.7-svgSelector 4.2.8-rangeSelector 4.3-stateFound 4.3.1-timeState 4.3.2-requestHeaderState 4.3.1-cached"
+  ],
+  [
+   "annotationOptionals\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/anno11\",\n  \"type\": \"Annotation\",\n  \"creator\": \"http://example.org/user1\",\n  \"created\": \"2015-01-28T12:00:00Z\",\n  \"modified\": \"2015-01-29T09:00:00Z\",\n  \"generator\": \"http://example.org/client1\",\n  \"generated\": \"2015-02-04T12:00:00Z\",\n  \"body\": {\n    \"id\": \"http://example.net/review1\",\n    \"creator\": \"http://example.net/user2\",\n    \"created\": \"2014-06-02T17:00:00Z\"\n  },\n  \"target\": \"http://example.com/restaurant1\"\n}",
+   "3.3.5-annotationSingleMotivationImplemented 3.2.5-bodyValueImplemented 3.3.3-annotationAudienceImplemented 3.3.5-annotationMotivationImplemented 3.3.6-annotationRightsImplemented 3.3.7-annotationCanonicalImplemented 3.3.7-annotationViaImplemented 4.4-annotationStylesheetImplemented 3.2.1-bodySingleFormat 3.2.1-bodySingleLanguage 3.2.1-bodyFormat 3.2.1-bodyLanguage 3.2.2-bodyType 3.2.1-bodyProcessingLanguage 3.2.1-bodyTextDirection 3.3.1-bodyModified 3.3.3-bodyAudience 3.3.4-bodyAccessibility 3.3.5-bodyPurpose 3.3.6-bodyRights 3.3.7-bodyCanonical 3.3.7-bodyVia 3.2.4-bodyETBTypeTextualBody 3.2.4-bodyETBTypeText 3.2.7-bodyChoice 3.2.1-targSingleFormat 3.2.1-targSingleLanguage 3.3.1-targSingleCreator 3.3.1-targCreated 3.2.1-targFormat 3.2.1-targLanguage 3.2.2-targType 3.2.1-targProcessingLanguage 3.2.1-targTextDirection 3.3.1-targModified 3.3.3-targAudience 3.3.4-targAccessibility 3.3.5-targPurpose 3.3.6-targRights 3.3.7-targCanonical 3.3.7-targVia 3.2.1-targEWR 3.2.7-targChoice 4-bodySpecificResource 4-targSpecificResource 4.3.3-refinedBy 4.4-styleClass 4.5-renderedVia 4.6-scope 4.2-selectorFound 4.2.1-fragmentSelector 4.2.1-conformsTo 4.2.2-cssSelector 4.2.3-xpathSelector 4.2.4-textQuoteSelector 4.2.4-prefix 4.2.4-suffix 4.2.5-textPositionSelector 4.2.6-dataPositionSelector 4.2.7-svgSelector 4.2.8-rangeSelector 4.3-stateFound 4.3.1-timeState 4.3.2-requestHeaderState 4.3.1-cached"
+  ],
+  [
+   "annotationOptionals\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/anno31\",\n  \"type\": \"Annotation\",\n  \"body\": \"http://example.org/note1\",\n  \"target\": {\n    \"source\": \"http://example.org/page1\",\n    \"state\": {\n      \"type\": \"TimeState\",\n      \"cached\": \"http://archive.example.org/copy1\",\n      \"sourceDate\": \"2015-07-20T13:30:00Z\"\n    }\n  }\n}",
+   "3.3.1-annotationSingleCreatorImplemented 3.3.1-annotationCreatedImplemented 3.3.5-annotationSingleMotivationImplemented 3.2.5-bodyValueImplemented 3.3.1-annotationGeneratedImplemented 3.3.1-annotationModifiedImplemented 3.3.3-annotationAudienceImplemented 3.3.5-annotationMotivationImplemented 3.3.6-annotationRightsImplemented 3.3.7-annotationCanonicalImplemented 3.3.7-annotationViaImplemented 4.4-annotationStylesheetImplemented 3.2.1-bodySingleFormat 3.2.1-bodySingleLanguage 3.3.1-bodySingleCreator 3.3.1-bodyCreated 3.2.1-bodyFormat 3.2.1-bodyLanguage 3.2.2-bodyType 3.2.1-bodyProcessingLanguage 3.2.1-bodyTextDirection 3.3.1-bodyModified 3.3.3-bodyAudience 3.3.4-bodyAccessibility 3.3.5-bodyPurpose 3.3.6-bodyRights 3.3.7-bodyCanonical 3.3.7-bodyVia 3.2.1-bodyEWR 3.2.4-bodyETB 3.2.4-bodyETBTypeTextualBody 3.2.4-bodyETBTypeText 3.2.7-bodyChoice 3.2.1-targSingleFormat 3.2.1-targSingleLanguage 3.3.1-targSingleCreator 3.3.1-targCreated 3.2.1-targFormat 3.2.1-targLanguage 3.2.2-targType 3.2.1-targProcessingLanguage 3.2.1-targTextDirection 3.3.1-targModified 3.3.3-targAudience 3.3.4-targAccessibility 3.3.5-targPurpose 3.3.6-targRights 3.3.7-targCanonical 3.3.7-targVia 3.2.7-targChoice 4-bodySpecificResource 4.4-styleClass 4.5-renderedVia 4.6-scope 4.2-selectorFound 4.2.1-fragmentSelector 4.2.1-conformsTo 4.2.2-cssSelector 4.2.3-xpathSelector 4.2.4-textQuoteSelector 4.2.4-prefix 4.2.4-suffix 4.2.5-textPositionSelector 4.2.6-dataPositionSelector 4.2.7-svgSelector 4.2.8-rangeSelector 4.3-stateFound 4.3.2-requestHeaderState"
+  ],
+  [
+   "annotationsAgentOptionals\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/anno11\",\n  \"type\": \"Annotation\",\n  \"creator\": \"http://example.org/user1\",\n  \"created\": \"2015-01-28T12:00:00Z\",\n  \"modified\": \"2015-01-29T09:00:00Z\",\n  \"generator\": \"http://example.org/client1\",\n  \"generated\": \"2015-02-04T12:00:00Z\",\n  \"body\": {\n    \"id\": \"http://example.net/review1\",\n    \"creator\": \"http://example.net/user2\",\n    \"created\": \"2014-06-02T17:00:00Z\"\n  },\n  \"target\": \"http://example.com/restaurant1\"\n}",
+   "3.3.2-annotationCreatorAgentIdImplemented 3.3.2-annotationCreatorAgentTypeImplemented 3.3.2-annotationCreatorAgentNicknameImplemented 3.3.2-annotationCreatorAgentSingleNameImplemented 3.3.2-annotationCreatorAgentNameImplemented 3.3.2-annotationCreatorAgentEmailImplemented 3.3.2-annotationCreatorAgentEmail_sha1Implemented 3.3.2-annotationCreatorAgentHomepageImplemented 3.3.2-annotationGeneratorAgentIdImplemented 3.3.2-annotationGeneratorAgentTypeImplemented 3.3.2-annotationGeneratorAgentNicknameImplemented 3.3.2-annotationGeneratorAgentSingleNameImplemented 3.3.2-annotationGeneratorAgentNameImplemented 3.3.2-annotationGeneratorAgentEmailImplemented 3.3.2-annotationGeneratorAgentEmail_sha1Implemented 3.3.2-annotationGeneratorAgentHomepageImplemented 3.3.2-bodyCreatorAgentIdImplemented 3.3.2-bodyCreatorAgentTypeImplemented 3.3.2-bodyCreatorAgentNicknameImplemented 3.3.2-bodyCreatorAgentSingleNameImplemented 3.3.2-bodyCreatorAgentNameImplemented 3.3.2-bodyCreatorAgentEmailImplemented 3.3.2-bodyCreatorAgentEmail_sha1Implemented 3.3.2-bodyCreatorAgentHomepageImplemented 3.3.1-targCreator 3.3.2-targCreatorAgentIdImplemented 3.3.2-targCreatorAgentTypeImplemented 3.3.2-targCreatorAgentNicknameImplemented 3.3.2-targCreatorAgentSingleNameImplemented 3.3.2-targCreatorAgentNameImplemented 3.3.2-targCreatorAgentEmailImplemented 3.3.2-targCreatorAgentEmail_sha1Implemented 3.3.2-targCreatorAgentHomepageImplemented"
+  ],
+  [
+   "annotationOptionals\n{\n  \"@context\": \"http://www.w3.org/ns/anno.jsonld\",\n  \"id\": \"http://example.org/anno6\",\n  \"type\":\"Annotation\",\n  \"bodyValue\": \"Comment text\",\n  \"target\": \"http://example.org/target1\"\n}",
+   "3.3.1-annotationSingleCreatorImplemented 3.3.1-annotationCreatedImplemented 3.3.5-annotationSingleMotivationImplemented 3.3.1-annotationGeneratedImplemented 3.3.1-annotationModifiedImplemented 3.3.3-annotationAudienceImplemented 3.3.5-annotationMotivationImplemented 3.3.6-annotationRightsImplemented 3.3.7-annotationCanonicalImplemented 3.3.7-annotationViaImplemented 4.4-annotationStylesheetImplemented 3.1-bodyKeyFound 3.2.1-bodySingleFormat 3.2.1-bodySingleLanguage 3.3.1-bodySingleCreator 3.3.1-bodyCreated 3.2.1-bodyFormat 3.2.1-bodyLanguage 3.2.2-bodyType 3.2.1-bodyProcessingLanguage 3.2.1-bodyTextDirection 3.3.1-bodyModified 3.3.3-bodyAudience 3.3.4-bodyAccessibility 3.3.5-bodyPurpose 3.3.6-bodyRights 3.3.7-bodyCanonical 3.3.7-bodyVia 3.2.1-bodyEWR 3.2.4-bodyETB 3.2.4-bodyETBTypeTextualBody 3.2.4-bodyETBTypeText 3.2.7-bodyChoice 3.2.1-targSingleFormat 3.2.1-targSingleLanguage 3.3.1-targSingleCreator 3.3.1-targCreated 3.2.1-targFormat 3.2.1-targLanguage 3.2.2-targType 3.2.1-targProcessingLanguage 3.2.1-targTextDirection 3.3.1-targModified 3.3.3-targAudience 3.3.4-targAccessibility 3.3.5-targPurpose 3.3.6-targRights 3.3.7-targCanonical 3.3.7-targVia 3.2.1-targEWR 3.2.7-targChoice 4-bodySpecificResource 4-targSpecificResource 4.3.3-refinedBy 4.4-styleClass 4.5-renderedVia 4.6-scope 4.2-selectorFound 4.2.1-fragmentSelector 4.2.1-conformsTo 4.2.2-cssSelector 4.2.3-xpathSelector 4.2.4-textQuoteSelector 4.2.4-prefix 4.2.4-suffix 4.2.5-textPositionSelector 4.2.6-dataPositionSelector 4.2.7-svgSelector 4.2.8-rangeSelector 4.3-stateFound 4.3.1-timeState 4.3.2-requestHeaderState 4.3.1-cached"
+  ]
+ ]
+}
