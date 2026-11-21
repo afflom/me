@@ -173,6 +173,16 @@ definition{
 }
 
 definition{
+  name: schemaJoin,
+  parameters: [front : (List String), back : (List String)],
+  result: (List String),
+  body: (match front
+    | List.nil => back
+    | List.cons item rest => (cons item (schemaJoin rest back))),
+  recursive_argument: front
+}
+
+definition{
   name: schemaOutside,
   parameters: [names : (List String), allowed : (List String)],
   result: (List String),

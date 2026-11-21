@@ -30,6 +30,27 @@ theorem{
 }
 
 theorem{
+  name: morePropertiesNumbered,
+  parameters: [],
+  statement: ((Foundation.Person.V1.Model::personNumberedFrom 63 (Foundation.Person.V1.Model::personPropertiesMore)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: moreLabelsDeclared,
+  parameters: [],
+  statement: ((Foundation.Person.V1.Model::personLabelsInRange (Foundation.Person.V1.Model::personPropertiesMore)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: moreHealthAndSpecialRestricted,
+  parameters: [],
+  statement: ((Foundation.Person.V1.Model::personDetectedRestricted (Foundation.Person.V1.Model::personPropertiesMore)) = true),
+  proof: decide{}
+}
+
+theorem{
   name: facetRoundTrip,
   parameters: [facet : Foundation.Person.V1.Model::PersonFacet],
   statement: ((Foundation.Person.V1.Model::personFacetOf (Foundation.Person.V1.Model::personFacetType facet)) = (ctor Option.some [Foundation.Person.V1.Model::PersonFacet] facet)),
@@ -154,14 +175,21 @@ theorem{
 theorem{
   name: personPropertiesAreSchemaOrg,
   parameters: [],
-  statement: (((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 0) (PersonSchema::schemaPersonProperties))) =? 0) = true),
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchema::schemaJoin (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 0) (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personPropertiesMore) 0)) (PersonSchema::schemaPersonProperties))) =? 0) = true),
   proof: decide{}
 }
 
 theorem{
   name: schemaOrgPersonPropertiesModelled,
   parameters: [],
-  statement: (((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchema::schemaPersonProperties) (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 0))) =? 0) = true),
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchema::schemaPersonProperties) (PersonSchema::schemaJoin (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 0) (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personPropertiesMore) 0)))) =? 0) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: morePropertiesArePerson,
+  parameters: [],
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personPropertiesMore) 0)) =? 60) = true),
   proof: decide{}
 }
 
