@@ -57,12 +57,23 @@ definition{
 }
 
 definition{
+  name: jsSeen,
+  parameters: [s : Bytes, x : Bytes, i : Nat, stop : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if (stop <? (i + 1)) then false else (let e : Nat := (jsEol s i (prim subtract (GenPatch::jpLen s) i : Nat)); (if ((GenPatch::jpSame (GenPatch::jpSpan s i e) x) && true) then true else (jsSeen s x (e + 1) stop rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
   name: jsLines,
   parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
   result: Bytes,
   body: (match fuel
     | Nat.zero => acc
-    | Nat.succ rest => (if ((GenPatch::jpLen s) <? (i + 1)) then acc else (let e : Nat := (jsEol s i (prim subtract (GenPatch::jpLen s) i : Nat)); (jsLines s (e + 1) (GenRec::rvJoin acc (GenPatch::jpSpan s i e)) rest)))),
+    | Nat.succ rest => (if ((GenPatch::jpLen s) <? (i + 1)) then acc else (let e : Nat := (jsEol s i (prim subtract (GenPatch::jpLen s) i : Nat)); (let x : Bytes := (GenPatch::jpSpan s i e); (jsLines s (e + 1) (if ((jsSeen s x 0 i (i + 1)) && true) then acc else (GenRec::rvJoin acc x)) rest))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
