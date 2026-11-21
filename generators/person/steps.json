@@ -54,6 +54,24 @@
       ],
       "after": ".gen/icf-lean-rows",
       "output": "app/src/PersonIcf.lex.tex"
+    },
+    {
+      "generator": "vocabnames",
+      "split": "site/vocab/register.json",
+      "output": ".gen/vocab-name-rows"
+    },
+    {
+      "generator": "vocabnamenames",
+      "split": "site/vocab/register.json",
+      "output": ".gen/vocab-name-names"
+    },
+    {
+      "generator": "vocabnamesend",
+      "inputs": [
+        ".gen/vocab-name-names"
+      ],
+      "after": ".gen/vocab-name-rows",
+      "output": "app/src/VocabNames.lex.tex"
     }
   ]
 }
