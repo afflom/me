@@ -15,13 +15,12 @@
 // "rule,start,end,depth" in UTF-8 octets, in order; that is the tree here.
 //   const g = abnf(table); const tree = g.match("orig-date", "Date: ...\r\n");
 //   tree = { rule, start, end, text, kids: [trees of named rules] }
-import { GUESTS, openGuestSync } from "./guest.mjs";
-import { GUEST as ICAL } from "../calendar/guest.mjs";
+import { GUESTS, opened } from "./guest.mjs";
+import { GUEST as ICAL, opened as openedIcal } from "../calendar/guest.mjs";
 
 const encoder = new TextEncoder();
 // Each grammar's guest, by the grammar's key: checked and compiled once, here.
-const bytesOf = async (url) => (url.protocol === "file:" ? (await import("node:fs/promises")).readFile(url) : new Uint8Array(await (await fetch(url)).arrayBuffer()));
-const asks = Object.fromEntries(await Promise.all([["mail", GUESTS.mail, import.meta.url], ["ical", ICAL, new URL("../calendar/", import.meta.url)]].map(async ([key, guest, base]) => [key, await openGuestSync(await bytesOf(new URL(guest.path, base)), guest.sha256)])));
+const asks = { mail: await opened(GUESTS.mail), ical: await openedIcal(ICAL) };
 
 export function abnf({ rules, key }) {
   const names = Object.keys(rules).sort();
@@ -48,9 +47,8 @@ export function abnf({ rules, key }) {
     },
     // Every rule a derivation went through, by name.
     rulesOf(tree, out = new Set()) {
-      if (!tree) return out;
-      out.add(tree.rule);
-      for (const kid of tree.kids) this.rulesOf(kid, out);
+      if (tree) out.add(tree.rule);
+      for (const kid of tree?.kids ?? []) this.rulesOf(kid, out);
       return out;
     },
   };
@@ -58,11 +56,7 @@ export function abnf({ rules, key }) {
 
 // The named rules found under a tree, depth first, as written.
 export function all(tree, rule, out = []) {
-  if (!tree) return out;
-  for (const kid of tree.kids) {
-    if (kid.rule === rule) out.push(kid);
-    else all(kid, rule, out);
-  }
+  for (const kid of tree?.kids ?? []) kid.rule === rule ? out.push(kid) : all(kid, rule, out);
   return out;
 }
 export const first = (tree, rule) => all(tree, rule)[0] ?? null;

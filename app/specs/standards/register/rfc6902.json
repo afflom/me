@@ -24,6 +24,14 @@
   "ST-01"
  ],
  "enforcedBy": {
+  "rfc6902-4-174d230e": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests tests.json case \"unrecognized op should fail\", an operation whose op is spam, is answered by refusal; prismpm build runs every acceptance vector of the snapshot-patch guest entry (app/specs/snapshot-patch/spec.json, written from the oracle by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6902-4-30dabaa7": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests tests.json cases \"missing 'path' parameter\" and \"'path' parameter with null value\" are answered by refusal; prismpm build runs every acceptance vector of the snapshot-patch guest entry (app/specs/snapshot-patch/spec.json, written from the oracle by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
   "rfc6902-4-5d946f07": {
    "suite": "crates/conformance/tests/guests.rs",
    "how": "json-patch-tests spec_tests.json (RFC 6902 Appendix A) case A.13, an operation with two op members, is answered by refusal; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
@@ -36,9 +44,49 @@
    "suite": "crates/conformance/tests/guests.rs",
    "how": "json-patch-tests spec_tests.json (RFC 6902 Appendix A) case A.12 and the 4.1 missing-object case, adds whose target's parent does not exist, are answered by refusal; A.1, A.2, A.10 and A.16 by the added documents; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
   },
+  "rfc6902-4.1-ae9fcb99": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests tests.json case \"missing 'value' parameter to add\" is answered by refusal; prismpm build runs every acceptance vector of the snapshot-patch guest entry (app/specs/snapshot-patch/spec.json, written from the oracle by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6902-4.1-dd5c908f": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests tests.json case \"add item to array at index > length should fail\", an add at /3 of a two-element array, is answered by refusal; prismpm build runs every acceptance vector of the snapshot-patch guest entry (app/specs/snapshot-patch/spec.json, written from the oracle by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6902-4.2-2b1ef42f": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests tests.json cases \"Removing nonexistent field\", \"Removing deep nonexistent path\" and \"Removing nonexistent index\" are answered by refusal; prismpm build runs every acceptance vector of the snapshot-patch guest entry (app/specs/snapshot-patch/spec.json, written from the oracle by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6902-4.3-2b1ef42f": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests tests.json case \"test replace with missing parent key should fail\" is answered by refusal; prismpm build runs every acceptance vector of the snapshot-patch guest entry (app/specs/snapshot-patch/spec.json, written from the oracle by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6902-4.3-460c075d": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests tests.json case \"missing 'value' parameter to replace\" is answered by refusal; prismpm build runs every acceptance vector of the snapshot-patch guest entry (app/specs/snapshot-patch/spec.json, written from the oracle by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6902-4.4-96f491da": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests tests.json case \"missing from parameter to move\" is answered by refusal; prismpm build runs every acceptance vector of the snapshot-patch guest entry (app/specs/snapshot-patch/spec.json, written from the oracle by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6902-4.4-c85200d6": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests tests.json case \"missing from location to move\" is answered by refusal; prismpm build runs every acceptance vector of the snapshot-patch guest entry (app/specs/snapshot-patch/spec.json, written from the oracle by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6902-4.5-2c90fd3c": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests tests.json case \"missing from parameter to copy\" is answered by refusal; prismpm build runs every acceptance vector of the snapshot-patch guest entry (app/specs/snapshot-patch/spec.json, written from the oracle by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6902-4.5-c85200d6": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests tests.json case \"missing from location to copy\" is answered by refusal; prismpm build runs every acceptance vector of the snapshot-patch guest entry (app/specs/snapshot-patch/spec.json, written from the oracle by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
   "rfc6902-4.6-159a78dd": {
    "suite": "crates/conformance/tests/guests.rs",
    "how": "json-patch-tests spec_tests.json (RFC 6902 Appendix A) case A.8 is answered by the unchanged document, A.9 (a different string) and A.15 (number against string) by refusal; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6902-4.6-dca29c99": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests tests.json cases \"missing 'value' parameter to test\" and \"missing value parameter to test - where undef is falsy\" are answered by refusal; prismpm build runs every acceptance vector of the snapshot-patch guest entry (app/specs/snapshot-patch/spec.json, written from the oracle by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
   },
   "rfc6902-5-ec058a4b": {
    "suite": "crates/conformance/tests/guests.rs",

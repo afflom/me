@@ -4,7 +4,7 @@
 // exports holo_alloc(len) and holo_run(ptr, len) -> (outPtr << 32 | outLen);
 // bytes whose SHA-256 is not the pinned one are refused before they compile.
 
-export const GUEST = { path: 'guest/grammar-ical.wasm', sha256: '21bb11a7b449796865ecbc2cd11547f27909eb307a551c1f57de7ed96c447f63' };
+export const GUEST = { path: 'guest/grammar-ical.wasm', sha256: 'd5159956cf206dfc5c9bd1175da0d24073ee16ab05d52bd245efdc67d466ef95' };
 
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
 const encoder = new TextEncoder();
@@ -43,4 +43,11 @@ export async function openGuestSync(bytes, sha256) {
     else { x = new WebAssembly.Instance(module, {}).exports; from = Number(x.__stack_high?.value ?? 0); first = new Uint8Array(x.memory.buffer).slice(from); }
     try { return run(x, line); } catch (error) { x = null; throw error; }
   };
+}
+
+// The guest as this module serves it: its bytes read from beside this file
+// under Node and fetched from beside it in a browser, then opened as above.
+export async function opened(guest, open = openGuestSync) {
+  const at = new URL(guest.path, import.meta.url);
+  return open(at.protocol === "file:" ? await (await import("node:fs/promises")).readFile(at) : new Uint8Array(await (await fetch(at)).arrayBuffer()), guest.sha256);
 }

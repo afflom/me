@@ -1,0 +1,303 @@
+\begin{lexlean}{PrismTurn}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismEmma}
+\importmodule{PrismProv}
+\title{Text application model}
+\begin{semanticmodule}
+definition{name: tnLen, parameters: [s : Bytes], result: Nat, body: (prim length s : Nat)}
+
+definition{
+  name: tnAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => 0
+    | Option.some b => (prim to_nat b : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnCut,
+  parameters: [s : Bytes, start : Nat, stop : Nat],
+  result: Bytes,
+  body: (let e : Nat := (if ((prim length s : Nat) <? stop) then (prim length s : Nat) else stop); (match (prim slice s start (prim subtract e start : Nat) : (Option Bytes))
+    | Option.none => 0x
+    | Option.some b => b))
+}
+
+definition{
+  name: tnSame,
+  parameters: [left : Bytes, right : Bytes],
+  result: Bool,
+  body: (prim equal (prim compare_bytes left right : Ordering) (prim compare_bytes 0x00 0x00 : Ordering) : Bool),
+  axioms: [propext]
+}
+
+definition{
+  name: tnByteOf,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (if (n <? 128) then (if (n <? 64) then (if (n <? 32) then (if (n <? 16) then (if (n <? 8) then (if (n <? 4) then (if (n <? 2) then (if (n <? 1) then 0x00 else 0x01) else (if (n <? 3) then 0x02 else 0x03)) else (if (n <? 6) then (if (n <? 5) then 0x04 else 0x05) else (if (n <? 7) then 0x06 else 0x07))) else (if (n <? 12) then (if (n <? 10) then (if (n <? 9) then 0x08 else 0x09) else (if (n <? 11) then 0x0a else 0x0b)) else (if (n <? 14) then (if (n <? 13) then 0x0c else 0x0d) else (if (n <? 15) then 0x0e else 0x0f)))) else (if (n <? 24) then (if (n <? 20) then (if (n <? 18) then (if (n <? 17) then 0x10 else 0x11) else (if (n <? 19) then 0x12 else 0x13)) else (if (n <? 22) then (if (n <? 21) then 0x14 else 0x15) else (if (n <? 23) then 0x16 else 0x17))) else (if (n <? 28) then (if (n <? 26) then (if (n <? 25) then 0x18 else 0x19) else (if (n <? 27) then 0x1a else 0x1b)) else (if (n <? 30) then (if (n <? 29) then 0x1c else 0x1d) else (if (n <? 31) then 0x1e else 0x1f))))) else (if (n <? 48) then (if (n <? 40) then (if (n <? 36) then (if (n <? 34) then (if (n <? 33) then 0x20 else 0x21) else (if (n <? 35) then 0x22 else 0x23)) else (if (n <? 38) then (if (n <? 37) then 0x24 else 0x25) else (if (n <? 39) then 0x26 else 0x27))) else (if (n <? 44) then (if (n <? 42) then (if (n <? 41) then 0x28 else 0x29) else (if (n <? 43) then 0x2a else 0x2b)) else (if (n <? 46) then (if (n <? 45) then 0x2c else 0x2d) else (if (n <? 47) then 0x2e else 0x2f)))) else (if (n <? 56) then (if (n <? 52) then (if (n <? 50) then (if (n <? 49) then 0x30 else 0x31) else (if (n <? 51) then 0x32 else 0x33)) else (if (n <? 54) then (if (n <? 53) then 0x34 else 0x35) else (if (n <? 55) then 0x36 else 0x37))) else (if (n <? 60) then (if (n <? 58) then (if (n <? 57) then 0x38 else 0x39) else (if (n <? 59) then 0x3a else 0x3b)) else (if (n <? 62) then (if (n <? 61) then 0x3c else 0x3d) else (if (n <? 63) then 0x3e else 0x3f)))))) else (if (n <? 96) then (if (n <? 80) then (if (n <? 72) then (if (n <? 68) then (if (n <? 66) then (if (n <? 65) then 0x40 else 0x41) else (if (n <? 67) then 0x42 else 0x43)) else (if (n <? 70) then (if (n <? 69) then 0x44 else 0x45) else (if (n <? 71) then 0x46 else 0x47))) else (if (n <? 76) then (if (n <? 74) then (if (n <? 73) then 0x48 else 0x49) else (if (n <? 75) then 0x4a else 0x4b)) else (if (n <? 78) then (if (n <? 77) then 0x4c else 0x4d) else (if (n <? 79) then 0x4e else 0x4f)))) else (if (n <? 88) then (if (n <? 84) then (if (n <? 82) then (if (n <? 81) then 0x50 else 0x51) else (if (n <? 83) then 0x52 else 0x53)) else (if (n <? 86) then (if (n <? 85) then 0x54 else 0x55) else (if (n <? 87) then 0x56 else 0x57))) else (if (n <? 92) then (if (n <? 90) then (if (n <? 89) then 0x58 else 0x59) else (if (n <? 91) then 0x5a else 0x5b)) else (if (n <? 94) then (if (n <? 93) then 0x5c else 0x5d) else (if (n <? 95) then 0x5e else 0x5f))))) else (if (n <? 112) then (if (n <? 104) then (if (n <? 100) then (if (n <? 98) then (if (n <? 97) then 0x60 else 0x61) else (if (n <? 99) then 0x62 else 0x63)) else (if (n <? 102) then (if (n <? 101) then 0x64 else 0x65) else (if (n <? 103) then 0x66 else 0x67))) else (if (n <? 108) then (if (n <? 106) then (if (n <? 105) then 0x68 else 0x69) else (if (n <? 107) then 0x6a else 0x6b)) else (if (n <? 110) then (if (n <? 109) then 0x6c else 0x6d) else (if (n <? 111) then 0x6e else 0x6f)))) else (if (n <? 120) then (if (n <? 116) then (if (n <? 114) then (if (n <? 113) then 0x70 else 0x71) else (if (n <? 115) then 0x72 else 0x73)) else (if (n <? 118) then (if (n <? 117) then 0x74 else 0x75) else (if (n <? 119) then 0x76 else 0x77))) else (if (n <? 124) then (if (n <? 122) then (if (n <? 121) then 0x78 else 0x79) else (if (n <? 123) then 0x7a else 0x7b)) else (if (n <? 126) then (if (n <? 125) then 0x7c else 0x7d) else (if (n <? 127) then 0x7e else 0x7f))))))) else (if (n <? 192) then (if (n <? 160) then (if (n <? 144) then (if (n <? 136) then (if (n <? 132) then (if (n <? 130) then (if (n <? 129) then 0x80 else 0x81) else (if (n <? 131) then 0x82 else 0x83)) else (if (n <? 134) then (if (n <? 133) then 0x84 else 0x85) else (if (n <? 135) then 0x86 else 0x87))) else (if (n <? 140) then (if (n <? 138) then (if (n <? 137) then 0x88 else 0x89) else (if (n <? 139) then 0x8a else 0x8b)) else (if (n <? 142) then (if (n <? 141) then 0x8c else 0x8d) else (if (n <? 143) then 0x8e else 0x8f)))) else (if (n <? 152) then (if (n <? 148) then (if (n <? 146) then (if (n <? 145) then 0x90 else 0x91) else (if (n <? 147) then 0x92 else 0x93)) else (if (n <? 150) then (if (n <? 149) then 0x94 else 0x95) else (if (n <? 151) then 0x96 else 0x97))) else (if (n <? 156) then (if (n <? 154) then (if (n <? 153) then 0x98 else 0x99) else (if (n <? 155) then 0x9a else 0x9b)) else (if (n <? 158) then (if (n <? 157) then 0x9c else 0x9d) else (if (n <? 159) then 0x9e else 0x9f))))) else (if (n <? 176) then (if (n <? 168) then (if (n <? 164) then (if (n <? 162) then (if (n <? 161) then 0xa0 else 0xa1) else (if (n <? 163) then 0xa2 else 0xa3)) else (if (n <? 166) then (if (n <? 165) then 0xa4 else 0xa5) else (if (n <? 167) then 0xa6 else 0xa7))) else (if (n <? 172) then (if (n <? 170) then (if (n <? 169) then 0xa8 else 0xa9) else (if (n <? 171) then 0xaa else 0xab)) else (if (n <? 174) then (if (n <? 173) then 0xac else 0xad) else (if (n <? 175) then 0xae else 0xaf)))) else (if (n <? 184) then (if (n <? 180) then (if (n <? 178) then (if (n <? 177) then 0xb0 else 0xb1) else (if (n <? 179) then 0xb2 else 0xb3)) else (if (n <? 182) then (if (n <? 181) then 0xb4 else 0xb5) else (if (n <? 183) then 0xb6 else 0xb7))) else (if (n <? 188) then (if (n <? 186) then (if (n <? 185) then 0xb8 else 0xb9) else (if (n <? 187) then 0xba else 0xbb)) else (if (n <? 190) then (if (n <? 189) then 0xbc else 0xbd) else (if (n <? 191) then 0xbe else 0xbf)))))) else (if (n <? 224) then (if (n <? 208) then (if (n <? 200) then (if (n <? 196) then (if (n <? 194) then (if (n <? 193) then 0xc0 else 0xc1) else (if (n <? 195) then 0xc2 else 0xc3)) else (if (n <? 198) then (if (n <? 197) then 0xc4 else 0xc5) else (if (n <? 199) then 0xc6 else 0xc7))) else (if (n <? 204) then (if (n <? 202) then (if (n <? 201) then 0xc8 else 0xc9) else (if (n <? 203) then 0xca else 0xcb)) else (if (n <? 206) then (if (n <? 205) then 0xcc else 0xcd) else (if (n <? 207) then 0xce else 0xcf)))) else (if (n <? 216) then (if (n <? 212) then (if (n <? 210) then (if (n <? 209) then 0xd0 else 0xd1) else (if (n <? 211) then 0xd2 else 0xd3)) else (if (n <? 214) then (if (n <? 213) then 0xd4 else 0xd5) else (if (n <? 215) then 0xd6 else 0xd7))) else (if (n <? 220) then (if (n <? 218) then (if (n <? 217) then 0xd8 else 0xd9) else (if (n <? 219) then 0xda else 0xdb)) else (if (n <? 222) then (if (n <? 221) then 0xdc else 0xdd) else (if (n <? 223) then 0xde else 0xdf))))) else (if (n <? 240) then (if (n <? 232) then (if (n <? 228) then (if (n <? 226) then (if (n <? 225) then 0xe0 else 0xe1) else (if (n <? 227) then 0xe2 else 0xe3)) else (if (n <? 230) then (if (n <? 229) then 0xe4 else 0xe5) else (if (n <? 231) then 0xe6 else 0xe7))) else (if (n <? 236) then (if (n <? 234) then (if (n <? 233) then 0xe8 else 0xe9) else (if (n <? 235) then 0xea else 0xeb)) else (if (n <? 238) then (if (n <? 237) then 0xec else 0xed) else (if (n <? 239) then 0xee else 0xef)))) else (if (n <? 248) then (if (n <? 244) then (if (n <? 242) then (if (n <? 241) then 0xf0 else 0xf1) else (if (n <? 243) then 0xf2 else 0xf3)) else (if (n <? 246) then (if (n <? 245) then 0xf4 else 0xf5) else (if (n <? 247) then 0xf6 else 0xf7))) else (if (n <? 252) then (if (n <? 250) then (if (n <? 249) then 0xf8 else 0xf9) else (if (n <? 251) then 0xfa else 0xfb)) else (if (n <? 254) then (if (n <? 253) then 0xfc else 0xfd) else (if (n <? 255) then 0xfe else 0xff))))))))
+}
+
+definition{
+  name: tnByte,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (tnByteOf (prim remainder n 256 0 : Nat))
+}
+
+definition{
+  name: tnEol,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((tnLen s) <? (i + 1)) || ((tnAt s i) =? 10)) then i else (tnEol s (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnKw,
+  parameters: [s : Bytes, i : Nat, k : Bytes],
+  result: Bool,
+  body: (tnSame (tnCut s i (i + (tnLen k))) k),
+  axioms: [propext]
+}
+
+definition{
+  name: tnFind,
+  parameters: [s : Bytes, i : Nat, k : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if ((tnLen s) <? (i + 1)) then 0 else (if ((tnKw s i k) && ((tnAt s (i + (tnLen k))) =? 32)) then (i + ((tnLen k) + 1)) else (tnFind s ((tnEol s i (tnLen s)) + 1) k rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnVal,
+  parameters: [s : Bytes, k : Bytes],
+  result: Bytes,
+  body: (let i : Nat := (tnFind s 0 k (tnLen s)); (if (i =? 0) then 0x else (tnCut s i (tnEol s i (tnLen s))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnDigit,
+  parameters: [b : Nat],
+  result: Bool,
+  body: ((48 <? (b + 1)) && (b <? (57 + 1)))
+}
+
+definition{
+  name: tnAll,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((tnLen s) <? (i + 1)) then true else (if (tnDigit (tnAt s i)) then (tnAll s (i + 1) rest) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnDigits,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: ((0 <? (tnLen s)) && (((tnLen s) <? (15 + 1)) && (tnAll s 0 (tnLen s)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnSpace,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((tnLen s) <? (i + 1)) || ((tnAt s i) =? 32)) then i else (tnSpace s (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnInstant,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: (((tnLen s) =? 24) && (((tnAt s 4) =? 45) && (((tnAt s 7) =? 45) && (((tnAt s 10) =? 84) && (((tnAt s 13) =? 58) && (((tnAt s 16) =? 58) && (((tnAt s 19) =? 46) && (((tnAt s 23) =? 90) && (tnAll (prim append (tnCut s 0 4) (prim append (tnCut s 5 7) (prim append (tnCut s 8 10) (prim append (tnCut s 11 13) (prim append (tnCut s 14 16) (prim append (tnCut s 17 19) (tnCut s 20 23) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) 0 17))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnIriBody,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((tnLen s) <? (i + 1)) then true else (let b : Nat := (tnAt s i); (if ((b <? (32 + 1)) || ((b =? 34) || ((b =? 60) || ((b =? 62) || ((b =? 92) || (b =? 127)))))) then false else (tnIriBody s (i + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnIri,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: ((3 <? (tnLen s)) && (((tnLen s) <? (200 + 1)) && ((((tnAt s (prim subtract (tnLen s) 1 : Nat)) =? 47) || ((tnAt s (prim subtract (tnLen s) 1 : Nat)) =? 35)) && (tnIriBody s 0 (tnLen s))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnStr,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if ((tnLen s) <? (i + 1)) then 0 else (let b : Nat := (tnAt s i); (if (b =? 34) then (if ((i + 1) =? (tnLen s)) then (i + 1) else 0) else (if (b <? 32) then 0 else (if (b =? 92) then (let n : Nat := (tnAt s (i + 1)); (if ((n =? 34) || ((n =? 92) || ((n =? 110) || ((n =? 114) || (n =? 116))))) then (tnStr s (i + 2) rest) else 0)) else (tnStr s (i + 1) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnIsStr,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: ((2 <? ((tnLen s) + 1)) && (((tnAt s 0) =? 34) && (0 <? (tnStr s 1 (tnLen s))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnPlain,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((tnLen s) <? ((i + 1) + 1)) then acc else (if (((tnAt s i) =? 92) && ((tnAt s (i + 1)) =? 34)) then (tnPlain s (i + 2) (prim append acc 0x22 : Bytes) rest) else (if ((tnAt s i) =? 92) then (tnPlain s (i + 2) (prim append acc (tnCut s i (i + 2)) : Bytes) rest) else (tnPlain s (i + 1) (prim append acc (tnCut s i (i + 1)) : Bytes) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnText,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (tnPlain s 1 0x (tnLen s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnSaid,
+  parameters: [ms : Bytes, prompt : Bytes],
+  result: Bytes,
+  body: (let text : Bytes := (tnText prompt); (PrismEmma::prismEmmaDispatch (prim append 0x696e7075740a626573742070726f6d70742d (prim append ms (prim append 0x0a73657420737461727420 (prim append ms (prim append 0x0a73657420656e6420 (prim append ms (prim append 0x0a736574206d656469756d2074616374696c650a736574206d6f6465206b6579730a7365742066756e6374696f6e206469616c6f670a7365742076657262616c20747275650a73657420746f6b656e7320 (prim append text (prim append 0x0a6c69746572616c20 text : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnAddrOk,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((tnLen s) <? (i + 1)) then true else (let b : Nat := (tnAt s i); (if ((tnDigit b) || (((65 <? (b + 1)) && (b <? (90 + 1))) || (((97 <? (b + 1)) && (b <? (122 + 1))) || ((b =? 58) || ((b =? 35) || ((b =? 45) || ((b =? 95) || (b =? 46)))))))) then (tnAddrOk s (i + 1) rest) else false)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnAddr,
+  parameters: [s : Bytes],
+  result: Bool,
+  body: ((0 <? (tnLen s)) && (((tnLen s) <? (100 + 1)) && ((not ((tnAt s (prim subtract (tnLen s) 1 : Nat)) =? 46)) && (tnAddrOk s 0 (tnLen s))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnName,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((tnLen s) <? (i + 1)) then acc else (tnName s (i + 1) (prim append acc (if (((tnAt s i) =? 58) || ((tnAt s i) =? 35)) then 0x2d else (tnCut s i (i + 1))) : Bytes) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnCited,
+  parameters: [s : Bytes, i : Nat, ms : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let j : Nat := (tnFind s i 0x6369746564 (tnLen s)); (if (j =? 0) then acc else (let e : Nat := (tnEol s j (tnLen s)); (let n : Bytes := (tnName (tnCut s j e) 0 0x (prim subtract e j : Nat)); (tnCited s (e + 1) ms (prim append acc (prim append 0x656e74697479286d653a (prim append n (prim append 0x290a75736564286d653a7475726e2d (prim append ms (prim append 0x2c206d653a (prim append n (prim append 0x2c202d290a7761734465726976656446726f6d286d653a7265706c792d (prim append ms (prim append 0x2c206d653a (prim append n 0x290a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnCitedOk,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (let j : Nat := (tnFind s i 0x6369746564 (tnLen s)); (if (j =? 0) then true else (let e : Nat := (tnEol s j (tnLen s)); (if (tnAddr (tnCut s j e)) then (tnCitedOk s (e + 1) rest) else false))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnTurn,
+  parameters: [s : Bytes, base : Bytes, ms : Bytes, at0 : Bytes, after : Bytes, reply : Bytes],
+  result: Bytes,
+  body: (prim append 0x646f63756d656e740a707265666978206d65203c (prim append base (prim append 0x3e0a (prim append 0x6167656e74286d653a6d652c205b70726f763a747970653d2770726f763a506572736f6e275d290a6167656e74286d653a707269736d2c205b70726f763a747970653d2770726f763a536f6674776172654167656e74275d290a61637465644f6e426568616c664f66286d653a707269736d2c206d653a6d65290a (prim append 0x656e74697479286d653a70726f6d70742d (prim append ms (prim append 0x290a656e74697479286d653a7265706c792d (prim append ms (prim append 0x2c205b70726f763a76616c75653d (prim append reply (prim append 0x5d290a (prim append 0x6163746976697479286d653a7475726e2d (prim append ms (prim append 0x2c20 (prim append at0 (prim append 0x2c202d290a (prim append 0x77617341747472696275746564546f286d653a70726f6d70742d (prim append ms (prim append 0x2c206d653a6d65290a7761734173736f63696174656457697468286d653a7475726e2d (prim append ms (prim append 0x2c206d653a707269736d2c202d290a (prim append 0x75736564286d653a7475726e2d (prim append ms (prim append 0x2c206d653a70726f6d70742d (prim append ms (prim append 0x2c20 (prim append at0 (prim append 0x290a (prim append 0x77617347656e6572617465644279286d653a7265706c792d (prim append ms (prim append 0x2c206d653a7475726e2d (prim append ms (prim append 0x2c202d290a7761734465726976656446726f6d286d653a7265706c792d (prim append ms (prim append 0x2c206d653a70726f6d70742d (prim append ms (prim append 0x290a77617341747472696275746564546f286d653a7265706c792d (prim append ms (prim append 0x2c206d653a707269736d290a (prim append (tnCited s 0 ms 0x (tnLen s)) (prim append (if ((tnLen after) =? 0) then 0x else (prim append 0x6163746976697479286d653a7475726e2d (prim append after (prim append 0x290a776173496e666f726d65644279286d653a7475726e2d (prim append ms (prim append 0x2c206d653a7475726e2d (prim append after 0x290a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes)) 0x656e64446f63756d656e74 : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnJudge,
+  parameters: [said : Bytes, turn : Bytes],
+  result: Bytes,
+  body: (if (not (tnKw (PrismEmma::prismEmmaDispatch (prim append 0x636865636b0a said : Bytes)) 0 0x636f6e666f726d73)) then 0x726566757365643a2077686174207761732073616964206973206e6f7420454d4d41 else (if (not (tnSame (PrismProv::prismProvDispatch (prim append 0x636865636b0a turn : Bytes)) 0x76616c6964)) then 0x726566757365643a20746865207475726e206973206e6f742076616c69642050524f56 else 0x)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnRecord,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let base : Bytes := (tnVal s 0x62617365); (let now : Bytes := (tnVal s 0x6e6f77); (let k : Nat := (tnSpace now 0 (tnLen now)); (let ms : Bytes := (tnCut now 0 k); (let at0 : Bytes := (tnCut now (k + 1) (tnLen now)); (let after : Bytes := (tnVal s 0x6166746572); (let prompt : Bytes := (tnVal s 0x70726f6d7074); (let reply : Bytes := (tnVal s 0x7265706c79); (if (not (tnIri base)) then 0x726566757365643a2062617365206973206e6f742061206e616d65737061636520495249 else (if (not ((tnDigits ms) && (tnInstant at0))) then 0x726566757365643a206e6f77206973206e6f74206d696c6c697365636f6e647320616e6420616e20696e7374616e74 else (if (not (((tnLen after) =? 0) || (tnDigits after))) then 0x726566757365643a206166746572206973206e6f74206d696c6c697365636f6e6473 else (if (not ((tnIsStr prompt) && (tnIsStr reply))) then 0x726566757365643a2070726f6d707420616e64207265706c7920617265206e6f7420737472696e6773 else (if (not (tnCitedOk s 0 (tnLen s))) then 0x726566757365643a20612063697465642061646472657373206973206e6f7420616e2061646472657373 else (let said : Bytes := (tnSaid ms prompt); (let turn : Bytes := (tnTurn s base ms at0 after reply); (let why : Bytes := (tnJudge said turn); (if ((tnLen why) =? 0) then (prim append said (prim append 0x0a turn : Bytes) : Bytes) else why))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnClose,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if ((tnLen s) <? (i + 1)) then 0 else (if (tnKw s i 0x3c2f656d6d613a656d6d613e0a) then (i + 12) else (tnClose s (i + 1) rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnCheck,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let e : Nat := (tnClose s 0 (tnLen s)); (let why : Bytes := (if (e =? 0) then 0x726566757365643a2077686174207761732073616964206973206e6f7420454d4d41 else (tnJudge (tnCut s 0 e) (tnCut s (e + 1) (tnLen s)))); (if ((tnLen why) =? 0) then 0x6163636570746564 else why))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (tnKw value 0 0x7265636f72640a) then (tnRecord (tnCut value 7 (tnLen value))) else (if (tnKw value 0 0x636865636b0a) then (tnCheck (tnCut value 6 (tnLen value))) else 0x696e76616c6964)),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

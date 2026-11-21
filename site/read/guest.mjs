@@ -5,7 +5,7 @@
 // bytes whose SHA-256 is not the pinned one are refused before they compile.
 
 export const GUESTS = {
-  mail: { path: 'guest/grammar-mail.wasm', sha256: '94064e50ebacbad172e68d984d80e44d2775d908ce4e772f437d433b87858ec4' },
+  mail: { path: 'guest/grammar-mail.wasm', sha256: '9cc5db2cff8d42e49aedefdd78e5215c5a46dff905aa2389be736033b4de0961' },
   vcard: { path: 'guest/vcard.wasm', sha256: '48780c76070326bab5ebd1853dc497e1ed5940aae4fec6be0cea6a0967f28bdc' },
 };
 
@@ -46,4 +46,11 @@ export async function openGuestSync(bytes, sha256) {
     else { x = new WebAssembly.Instance(module, {}).exports; from = Number(x.__stack_high?.value ?? 0); first = new Uint8Array(x.memory.buffer).slice(from); }
     try { return run(x, line); } catch (error) { x = null; throw error; }
   };
+}
+
+// The guest as this module serves it: its bytes read from beside this file
+// under Node and fetched from beside it in a browser, then opened as above.
+export async function opened(guest, open = openGuestSync) {
+  const at = new URL(guest.path, import.meta.url);
+  return open(at.protocol === "file:" ? await (await import("node:fs/promises")).readFile(at) : new Uint8Array(await (await fetch(at)).arrayBuffer()), guest.sha256);
 }
