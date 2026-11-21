@@ -1873,10 +1873,106 @@ definition{
 }
 
 definition{
+  name: snLowHex,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (let c : Nat := (jpAt s i); (if (((47 <? c) && (c <? 58)) || ((96 <? c) && (c <? 103))) then (snLowHex s (i + 1) rest) else false))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snIsAddr,
+  parameters: [b : Bytes],
+  result: Bool,
+  body: (((jpLen b) =? 71) && ((jpSame (jpSpan b 0 7) 0x7368613235363a) && (snLowHex b 7 64))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snPrev,
+  parameters: [x : Bytes],
+  result: (Option Bytes),
+  body: (if (jpSame x 0x6e756c6c) then (ctor Option.some [Bytes] 0x) else (let n : Nat := (jpLen x); (if ((n =? 73) && (((jpAt x 0) =? 34) && (((jpAt x 72) =? 34) && (snIsAddr (jpSpan x 1 72))))) then (ctor Option.some [Bytes] (jpSpan x 1 72)) else (ctor Option.none [Bytes])))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snStmt1,
+  parameters: [head : Bytes, a : Bytes],
+  result: Bytes,
+  body: (jpCat head (jpCat a 0x290a))
+}
+
+definition{
+  name: snStmt2,
+  parameters: [head : Bytes, a : Bytes, b : Bytes, tail : Bytes],
+  result: Bytes,
+  body: (jpCat head (jpCat a (jpCat 0x2c (jpCat b tail))))
+}
+
+definition{
+  name: snTransitionId,
+  parameters: [f : Bytes, q : Bytes, prev : Bytes],
+  result: Bytes,
+  body: (jpCat 0x7368613235363a (sha256Hex (jpCat 0x5b22 (jpCat f (jpCat 0x222c22 (jpCat q (jpCat 0x222c (jpCat (if ((jpLen prev) =? 0) then 0x6e756c6c else (jpCat 0x22 (jpCat prev 0x22))) 0x5d)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snChain,
+  parameters: [act : Bytes, prev : Bytes],
+  result: Bytes,
+  body: (if ((jpLen prev) =? 0) then 0x else (jpCat (snStmt1 0x616374697669747928 prev) (snStmt2 0x776173496e666f726d6564427928 act prev 0x290a)))
+}
+
+definition{
+  name: snRecord,
+  parameters: [f : Bytes, q : Bytes, t : Bytes, prev : Bytes],
+  result: Bytes,
+  body: (let act : Bytes := (snTransitionId f q prev); (jpCat 0x646f63756d656e740a70726566697820736861323536203c6e69683a7368612d3235363b3e0a (jpCat (snStmt1 0x656e7469747928 f) (jpCat (snStmt1 0x656e7469747928 q) (jpCat (snStmt1 0x656e7469747928 t) (jpCat (snStmt1 0x616374697669747928 act) (jpCat (snStmt2 0x7573656428 act f 0x2c2d290a) (jpCat (snStmt2 0x7573656428 act q 0x2c2d290a) (jpCat (snStmt2 0x77617347656e657261746564427928 t act 0x2c2d290a) (jpCat (snStmt2 0x7761734465726976656446726f6d28 t f (jpCat 0x2c (jpCat act 0x2c2d2c2d2c5b70726f763a747970653d2770726f763a5265766973696f6e275d290a))) (jpCat (snChain act prev) 0x656e64446f63756d656e740a))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snTransitionOf,
+  parameters: [d : Bytes, q : Bytes, prev : Bytes],
+  result: Bytes,
+  body: (match (jpPatch d q)
+    | Option.none => 0x74686520706174636820646f6573206e6f74206170706c79
+    | Option.some r => (match (jcCanonicalize r)
+      | Option.none => 0x6e6f7420492d4a534f4e
+      | Option.some tc => (match (jcCanonicalize d)
+        | Option.none => 0x6e6f7420492d4a534f4e
+        | Option.some fc => (match (jcCanonicalize q)
+          | Option.none => 0x6e6f7420492d4a534f4e
+          | Option.some qc => (if (jpSame tc fc) then 0x74686520737461746520646f6573206e6f74206368616e6765 else (snRecord (jpCat 0x7368613235363a (sha256Hex fc)) (jpCat 0x7368613235363a (sha256Hex qc)) (jpCat 0x7368613235363a (sha256Hex tc)) prev)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snTransition,
+  parameters: [p : Bytes],
+  result: Bytes,
+  body: (let a : Bytes := (jpCompact p); (if ((jpCount a) =? 3) then (match (jpElement a 0)
+    | Option.none => 0x696e76616c6964
+    | Option.some d => (match (jpElement a 1)
+      | Option.none => 0x696e76616c6964
+      | Option.some q => (match (jpElement a 2)
+        | Option.none => 0x696e76616c6964
+        | Option.some v => (match (snPrev (jpSpan a (project v vstart) (project v vend)))
+          | Option.none => 0x696e76616c6964
+          | Option.some prev => (snTransitionOf (jpSpan a (project d vstart) (project d vend)) (jpSpan a (project q vstart) (project q vend)) prev))))) else 0x696e76616c6964)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: prismSnapshotDispatch,
   parameters: [s : Bytes],
   result: Bytes,
-  body: (if (2048 <? (jpLen s)) then 0x696e76616c6964 else (let e : Nat := (snEol s 0); (let op : Bytes := (jpSpan s 0 e); (let p : Bytes := (jpSpan s (e + 1) (jpLen s)); (if (jpSame op 0x63616e6f6e6963616c) then (snCanonical p) else (if (jpSame op 0x61646472657373) then (snAddress p) else (if (jpSame op 0x6170706c79) then (snApply p) else (if (jpSame op 0x736861323536) then (snDigest p) else 0x696e76616c6964)))))))),
+  body: (if (2048 <? (jpLen s)) then 0x696e76616c6964 else (let e : Nat := (snEol s 0); (let op : Bytes := (jpSpan s 0 e); (let p : Bytes := (jpSpan s (e + 1) (jpLen s)); (if (jpSame op 0x63616e6f6e6963616c) then (snCanonical p) else (if (jpSame op 0x61646472657373) then (snAddress p) else (if (jpSame op 0x6170706c79) then (snApply p) else (if (jpSame op 0x736861323536) then (snDigest p) else (if (jpSame op 0x7472616e736974696f6e) then (snTransition p) else 0x696e76616c6964))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}
