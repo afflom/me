@@ -21,7 +21,8 @@ const ARRIVED = Date.UTC(2026, 10, 14, 12);
 const UPDATES = ["REPLY", "CANCEL", "REFRESH", "COUNTER", "DECLINECOUNTER"];
 // The reference: each example's METHOD and its first component's UID, SEQUENCE, RECURRENCE-ID and times.
 const lines = (raw) => raw.replace(/\r?\n[ \t]/g, "").split(/\r?\n/);
-const field = (ls, name) => ls.find((l) => new RegExp(`^${name}[;:]`, "i").test(l))?.replace(/^[^:]*:/, "").trim() ?? "";
+// A line whose parameter has no "=" is not a content line (RFC 5545 3.1): RFC 5546 writes one, RECURRENCE-ID;THISANDFUTURE, and it is not read.
+const field = (ls, name) => ls.find((l) => new RegExp(`^${name}(;[^;:=]+=[^;:]*)*:`, "i").test(l))?.replace(/^[^:]*:/, "").trim() ?? "";
 const reference = corpus.map((example) => {
   const all = lines(example.raw);
   const begin = all.findIndex((l) => /^BEGIN:V(EVENT|TODO|JOURNAL)$/i.test(l));

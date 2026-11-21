@@ -32,6 +32,7 @@ const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join(
 import { isZip, zipEntries } from './zip.mjs';
 import { exportItems, exportKind } from '../source/exports.mjs';
 import { mboxSeparator, headerLines, readField } from '../read/mail.mjs';
+import { lines, parts } from '../time/recur.mjs';
 
 const sha256 = async (bytes) => hex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
 const fail = (code, message) => Object.assign(new Error(message ?? code), { code });
@@ -86,19 +87,16 @@ export function calendarItems(text) {
   // METHOD, CALSCALE) and its time zones go with each item; the components
   // that share a UID are one item, a recurring event with its overrides
   // (section 3.8.4.4).
-  const lines = text.replace(/\r?\n/g, '\r\n');
-  const body = /BEGIN:VCALENDAR\r\n([\s\S]*?)END:VCALENDAR/i.exec(lines)?.[1] ?? lines;
-  const zones = body.match(/BEGIN:VTIMEZONE\r\n[\s\S]*?\r\nEND:VTIMEZONE\r\n?/g) ?? [];
-  const parts = body.match(/BEGIN:(VEVENT|VTODO|VJOURNAL|VFREEBUSY)\r\n[\s\S]*?\r\nEND:\1\r\n?/g) ?? [];
-  const own = body.replace(/BEGIN:(VTIMEZONE|VEVENT|VTODO|VJOURNAL|VFREEBUSY)\r\n[\s\S]*?\r\nEND:\1\r\n?/g, '').split('\r\n').filter((l) => /^(VERSION|PRODID|METHOD|CALSCALE)[;:]/i.test(l));
+  const all = parts(text);
+  const own = all.filter((p) => /^(VERSION|PRODID|METHOD|CALSCALE)[;:]/i.test(p.kind ? '' : p.text)).map((p) => p.text);
   const head = [...(own.some((l) => /^VERSION[;:]/i.test(l)) ? [] : ['VERSION:2.0']), ...(own.some((l) => /^PRODID[;:]/i.test(l)) ? [] : ['PRODID:-//prism//device//EN']), ...own];
+  const zones = all.filter((p) => p.kind === 'VTIMEZONE').map((p) => p.text);
   const byUid = new Map();
-  parts.forEach((part, i) => {
-    const uid = /^UID:(.*)$/m.exec(part.replace(/\r\n[ \t]/g, ''))?.[1]?.trim() || `#${i}`;
-    if (!byUid.has(uid)) byUid.set(uid, []);
-    byUid.get(uid).push(part.replace(/\r\n$/, ''));
+  all.filter((p) => /^V(EVENT|TODO|JOURNAL|FREEBUSY)$/.test(p.kind)).forEach((part, i) => {
+    const uid = lines(part.text, 'UID')[0]?.[1] || `#${i}`;
+    byUid.set(uid, [...(byUid.get(uid) ?? []), part.text.trimEnd()]);
   });
-  return [...byUid.values()].map((group) => ['BEGIN:VCALENDAR', ...head, ...zones.map((z) => z.replace(/\r\n$/, '')), ...group, 'END:VCALENDAR', ''].join('\r\n'));
+  return [...byUid.values()].map((group) => ['BEGIN:VCALENDAR', ...head, ...zones.map((z) => z.trimEnd()), ...group, 'END:VCALENDAR', ''].join('\r\n'));
 }
 
 // The format of pasted or picked text, from its first bytes.
