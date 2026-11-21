@@ -70,7 +70,7 @@ fn uorc_uo_01() {
     assert!(
         read("app/src/Prism.lex.tex").contains("(PrismUorcObjects::uorcObjectsDispatch rest)")
             && read("app/src/PrismUorcObjects.lex.tex")
-                .contains("(PrismUorc::prismUorcDispatch (uorcObjectsLine value))"),
+                .contains("(PrismUorc::prismUorcJudge (uorcObjectsRequest value act halted))"),
         "UO-01: the Prism root routes uorc through its reader to PrismUorc"
     );
     let toml = read("app/lexlean.toml");
