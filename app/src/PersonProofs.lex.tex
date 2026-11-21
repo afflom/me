@@ -5,6 +5,7 @@
 \importmodule{Foundation.Person.V1.Model}
 \importmodule{PersonIcf}
 \importmodule{PersonSchema}
+\importmodule{PersonSchemaPin}
 \importmodule{Foundation.Vocab.V1.SchemaOrg}
 \title{Person guarantees}
 \begin{semanticmodule}
@@ -197,6 +198,34 @@ theorem{
   name: patientPropertiesAreSchemaOrg,
   parameters: [],
   statement: (((PersonSchema::schemaSame (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 12) (cons "healthCondition" (nil String))) && ((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 12) (PersonSchema::schemaPatientProperties))) =? 0)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: schemaOrgReleasePropertiesModelled,
+  parameters: [],
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchemaPin::schemaPinNames) (PersonSchema::schemaJoin (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 0) (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personPropertiesMore) 0)))) =? 0) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: schemaOrgReleaseCounted,
+  parameters: [],
+  statement: (((PersonSchema::schemaLength (PersonSchemaPin::schemaPinNames)) =? (PersonSchemaPin::schemaPinCount)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: registerHoldsRelease,
+  parameters: [],
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchemaPin::schemaPinNames) (PersonSchema::schemaPersonProperties))) =? 0) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: releaseHoldsRegister,
+  parameters: [],
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchema::schemaPersonProperties) (PersonSchemaPin::schemaPinNames))) =? 0) = true),
   proof: decide{}
 }
 \end{semanticmodule}

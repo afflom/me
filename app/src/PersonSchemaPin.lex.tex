@@ -1,0 +1,47 @@
+\begin{lexlean}{PersonSchemaPin}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\title{Schema.org register}
+\begin{semanticmodule}
+definition{
+  name: schemaPinAppend,
+  parameters: [front : (List String), back : (List String)],
+  result: (List String),
+  body: (match front
+    | List.nil => back
+    | List.cons item rest => (cons item (schemaPinAppend rest back))),
+  recursive_argument: front
+}
+
+definition{
+  name: schemaPinPart0,
+  parameters: [],
+  result: (List String),
+  body: (cons "additionalName" (cons "additionalType" (cons "address" (cons "affiliation" (cons "agentInteractionStatistic" (cons "alternateName" (cons "alumniOf" (cons "award" (cons "awards" (cons "birthDate" (cons "birthPlace" (cons "brand" (cons "callSign" (cons "children" (cons "colleague" (cons "colleagues" (cons "contactPoint" (cons "contactPoints" (cons "deathDate" (cons "deathPlace" (cons "description" (cons "disambiguatingDescription" (cons "duns" (cons "email" (cons "familyName" (cons "faxNumber" (cons "follows" (cons "funder" (cons "funding" (cons "gender" (nil String)))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: schemaPinPart1,
+  parameters: [],
+  result: (List String),
+  body: (cons "givenName" (cons "globalLocationNumber" (cons "hasCertification" (cons "hasCredential" (cons "hasOccupation" (cons "hasOfferCatalog" (cons "hasPOS" (cons "height" (cons "homeLocation" (cons "honorificPrefix" (cons "honorificSuffix" (cons "identifier" (cons "image" (cons "interactionStatistic" (cons "isicV4" (cons "jobTitle" (cons "knows" (cons "knowsAbout" (cons "knowsLanguage" (cons "lifeEvent" (cons "mainEntityOfPage" (cons "makesOffer" (cons "memberOf" (cons "naics" (cons "name" (cons "nationality" (cons "netWorth" (cons "owner" (cons "owns" (cons "parent" (nil String)))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: schemaPinPart2,
+  parameters: [],
+  result: (List String),
+  body: (cons "parents" (cons "performerIn" (cons "potentialAction" (cons "pronouns" (cons "publishingPrinciples" (cons "relatedTo" (cons "sameAs" (cons "seeks" (cons "sibling" (cons "siblings" (cons "skills" (cons "sponsor" (cons "spouse" (cons "subjectOf" (cons "taxID" (cons "telephone" (cons "url" (cons "vatID" (cons "weight" (cons "workLocation" (cons "worksFor" (nil String))))))))))))))))))))))
+}
+
+definition{
+  name: schemaPinNames,
+  parameters: [],
+  result: (List String),
+  body: (schemaPinAppend (schemaPinPart0) (schemaPinAppend (schemaPinPart1) (schemaPinAppend (schemaPinPart2) (nil String))))
+}
+
+definition{name: schemaPinCount, parameters: [], result: Nat, body: 81}
+\end{semanticmodule}
+\end{lexlean}

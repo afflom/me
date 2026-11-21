@@ -1,0 +1,191 @@
+\begin{lexlean}{GenSchemaPerson}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Tar}
+\importmodule{GenIcf}
+\importmodule{GenIcfTree}
+\importmodule{GenIcfLean}
+\importmodule{GenVocabNames}
+\title{ICF register generator}
+\begin{semanticmodule}
+definition{
+  name: spxIdOf,
+  parameters: [body : Bytes],
+  result: Bytes,
+  body: (if (GenIcf::icfStarts body (GenIcf::icfText "\"@id\": \"")) then (GenIcf::icfSlice body 8 (GenIcf::icfStopAt body 8 (GenIcf::icfLen body) 34 (GenIcf::icfLen body))) else 0x),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: spxAny,
+  parameters: [got : Bytes, i : Nat, types : Bytes, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((GenIcf::icfLen got) <=? i) then false else (let e : Nat := (GenIcfTree::trLineEnd got i); (let k : Bytes := (GenIcf::icfSlice got i e); (if ((GenIcfTree::trSame k (GenIcf::icfText "schema:Person")) || (GenIcfTree::trHasLine types 0 k ((GenIcf::icfLen types) + 1))) then true else (spxAny got (e + 1) types rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: spxEmit,
+  parameters: [mode : Nat, types : Bytes, node : Bytes, prop : Bool, got : Bytes],
+  result: Bytes,
+  body: (if (mode =? 1) then (if (GenIcfTree::trSame node (GenIcf::icfText "schema:Person")) then got else 0x) else (if (mode =? 2) then (if ((GenIcfTree::trHasLine types 0 node ((GenIcf::icfLen types) + 1)) && (0 <? (GenIcf::icfLen got))) then (GenIcf::icfJoin node (GenIcf::icfText " has a parent that the types of Person leave out\n")) else 0x) else (if (mode =? 3) then (if ((GenIcfTree::trHasLine types 0 node ((GenIcf::icfLen types) + 1)) && ((GenIcf::icfLen got) =? 0)) then (GenIcf::icfJoin node (GenIcf::icfText " has no parent\n")) else 0x) else (if (prop && (spxAny got 0 types ((GenIcf::icfLen got) + 1))) then (GenIcf::icfJoin (if (GenIcf::icfStarts node (GenIcf::icfText "schema:")) then (GenIcf::icfAfter node (GenIcf::icfText "schema:")) else node) (GenIcf::icfText "\n")) else 0x)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: spxWalk,
+  parameters: [
+    s : Bytes,
+    i : Nat,
+    key : Bytes,
+    mode : Nat,
+    types : Bytes,
+    node : Bytes,
+    prop : Bool,
+    on : Bool,
+    got : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then acc else (let e : Nat := (GenIcf::icfStopAt s i (GenIcf::icfLen s) 10 (GenIcf::icfLen s)); (let line : Bytes := (GenIcf::icfLineOf s i e); (let n : Nat := (GenVocabNames::vnxIndent line 0 (GenIcf::icfLen line)); (let body : Bytes := (GenIcf::icfSlice line n (GenIcf::icfLen line)); (if (n =? 4) then (if (GenIcf::icfStarts body 0x7b) then (spxWalk s (e + 1) key mode types 0x false false 0x acc rest) else (if (GenIcf::icfStarts body 0x7d) then (spxWalk s (e + 1) key mode types 0x false false 0x (GenIcf::icfJoin acc (spxEmit mode types node prop got)) rest) else (spxWalk s (e + 1) key mode types node prop on got acc rest))) else (if (n =? 6) then (if (0 <? (GenIcf::icfLen (spxIdOf body))) then (spxWalk s (e + 1) key mode types (spxIdOf body) prop false got acc rest) else (if (GenIcf::icfStarts body (GenIcf::icfText "\"@type\": \"rdf:Property\"")) then (spxWalk s (e + 1) key mode types node true false got acc rest) else (spxWalk s (e + 1) key mode types node prop (GenIcf::icfStarts body key) got acc rest))) else (if (on && (0 <? (GenIcf::icfLen (spxIdOf body)))) then (spxWalk s (e + 1) key mode types node prop on (GenIcf::icfJoin got (GenIcf::icfJoin (spxIdOf body) (GenIcf::icfText "\n"))) acc rest) else (spxWalk s (e + 1) key mode types node prop on got acc rest)))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: spxFirst,
+  parameters: [archive : Bytes, header : Nat, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (if ((Foundation.Tar::byteOr archive header) =? 0) then (ctor Option.none [Bytes]) else (let size : Nat := (Foundation.Tar::entrySize archive header); (if (GenIcf::icfStarts (Foundation.Tar::entryName archive header) (GenIcf::icfText ".gen/")) then (spxFirst archive ((header + 512) + (Foundation.Tar::padded size)) rest) else (Foundation.Bytes::sliceBytes archive (header + 512) size))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: schemaSource,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (spxFirst archive 0 (prim quotient (GenIcf::icfLen archive) 512 0 : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: schemaParents,
+  parameters: [vocabulary : Bytes, types : Bytes],
+  result: Bytes,
+  body: (spxWalk vocabulary 0 (GenIcf::icfText "\"rdfs:subClassOf\": ") 1 types 0x false false 0x 0x ((GenIcf::icfLen vocabulary) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: schemaOrphans,
+  parameters: [vocabulary : Bytes, types : Bytes],
+  result: Bytes,
+  body: (spxWalk vocabulary 0 (GenIcf::icfText "\"rdfs:subClassOf\": ") 2 types 0x false false 0x 0x ((GenIcf::icfLen vocabulary) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: schemaRoots,
+  parameters: [vocabulary : Bytes, types : Bytes],
+  result: Bytes,
+  body: (spxWalk vocabulary 0 (GenIcf::icfText "\"rdfs:subClassOf\": ") 3 types 0x false false 0x 0x ((GenIcf::icfLen vocabulary) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: schemaNames,
+  parameters: [vocabulary : Bytes, types : Bytes],
+  result: Bytes,
+  body: (spxWalk vocabulary 0 (GenIcf::icfText "\"schema:domainIncludes\": ") 4 types 0x false false 0x 0x ((GenIcf::icfLen vocabulary) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: spxReqFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then acc else (let e : Nat := (GenIcfTree::trLineEnd s i); (let name : Bytes := (GenIcf::icfSlice s i e); (spxReqFrom s (e + 1) (GenIcf::icfJoin acc (GenIcf::icfJoin (GenIcf::icfText "{\"id\": \"schemaorg-person-") (GenIcf::icfJoin name (GenIcf::icfJoin (GenIcf::icfText "\", \"kind\": \"property\", \"ref\": \"schema:") (GenIcf::icfJoin name (GenIcf::icfJoin (GenIcf::icfText "\", \"text\": \"the Person model of the Prism holds the property ") (GenIcf::icfJoin name (GenIcf::icfText ", which Schema.org gives a Person\"}\n")))))))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: schemaReqs,
+  parameters: [names : Bytes],
+  result: Bytes,
+  body: (spxReqFrom names 0 0x ((GenIcf::icfLen names) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: spxConses,
+  parameters: [s : Bytes, i : Nat, left : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (GenIcf::icfText "(nil String)")
+    | Nat.succ rest => (if (((GenIcf::icfLen s) <=? i) || (left =? 0)) then (GenIcf::icfText "(nil String)") else (let e : Nat := (GenIcfTree::trLineEnd s i); (GenIcf::icfJoin (GenIcf::icfText "(cons ") (GenIcf::icfJoin (GenIcf::icfString (GenIcf::icfSlice s i e)) (GenIcf::icfJoin (GenIcf::icfText " ") (GenIcf::icfJoin (spxConses s (e + 1) (prim subtract left 1 : Nat) rest) (GenIcf::icfText ")")))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: spxParts,
+  parameters: [s : Bytes, i : Nat, p : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then acc else (spxParts s (GenVocabNames::vnxSkip s i 30 30) (p + 1) (GenIcf::icfJoin acc (GenIcf::icfJoin (GenIcf::icfText "definition{\n  name: schemaPinPart") (GenIcf::icfJoin (GenIcfLean::ilxDecimal p 20) (GenIcf::icfJoin (GenIcf::icfText ",\n  parameters: [],\n  result: (List String),\n  body: ") (GenIcf::icfJoin (spxConses s i 30 30) (GenIcf::icfText "\n}\n\n")))))) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: spxPartChain,
+  parameters: [p : Nat, count : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (GenIcf::icfText "(nil String)")
+    | Nat.succ rest => (if (count <=? p) then (GenIcf::icfText "(nil String)") else (GenIcf::icfJoin (GenIcf::icfText "(schemaPinAppend (schemaPinPart") (GenIcf::icfJoin (GenIcfLean::ilxDecimal p 20) (GenIcf::icfJoin (GenIcf::icfText ") ") (GenIcf::icfJoin (spxPartChain (p + 1) count rest) (GenIcf::icfText ")"))))))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: spxLines,
+  parameters: [s : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then n else (spxLines s ((GenIcfTree::trLineEnd s i) + 1) (n + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: spxHead,
+  parameters: [unused : Nat],
+  result: Bytes,
+  body: (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "begin{lexlean}{PersonSchemaPin}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "useglossary{lexlean.std.bool@1.2.0}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "useglossary{lexlean.std.nat@1.2.0}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "useglossary{prism.arch@1.0.0}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "title{Schema.org register}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "begin{semanticmodule}\ndefinition{\n  name: schemaPinAppend,\n  parameters: [front : (List String), back : (List String)],\n  result: (List String),\n  body: (match front\n    | List.nil => back\n") (GenIcf::icfText "    | List.cons item rest => (cons item (schemaPinAppend rest back))),\n  recursive_argument: front\n}\n\n")))))))))))))
+}
+
+definition{
+  name: schemaPin,
+  parameters: [names : Bytes],
+  result: Bytes,
+  body: (GenIcf::icfJoin (spxHead 0) (GenIcf::icfJoin (spxParts names 0 0 0x ((GenIcf::icfLen names) + 1)) (GenIcf::icfJoin (GenIcf::icfText "definition{\n  name: schemaPinNames,\n  parameters: [],\n  result: (List String),\n  body: ") (GenIcf::icfJoin (let count : Nat := (GenVocabNames::vnxPartCount names 0 0 ((GenIcf::icfLen names) + 1)); (spxPartChain 0 count (count + 1))) (GenIcf::icfJoin (GenIcf::icfText "\n}\n\ndefinition{name: schemaPinCount, parameters: [], result: Nat, body: ") (GenIcf::icfJoin (GenIcfLean::ilxDecimal (spxLines names 0 0 ((GenIcf::icfLen names) + 1)) 20) (GenIcf::icfJoin (GenIcf::icfText "}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "end{semanticmodule}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfText "end{lexlean}\n"))))))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
