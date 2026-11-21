@@ -75,6 +75,30 @@
   "rfc8785-3.2.4-42882237": {
    "suite": "crates/conformance/tests/guests.rs",
    "how": "the RFC 8785 author's test data (cyberphone/json-canonicalization) weird.json, french.json and values.json: the answer is the UTF-8 bytes of the output file; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot/spec.json, written from the oracles by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc8785-3.2.2.3-2f82800e": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "JSONTestSuite (nst/JSONTestSuite, app/specs/oracle/json-test-suite) n_number_NaN.json, n_number_-NaN.json, n_number_Inf.json, n_number_infinity.json and n_number_minus_infinity.json, which the suite says a parser must refuse, and its i_number files whose exponent overflows a double to Infinity (huge_exp, neg_int_huge_exp, pos_double_huge_exp, real_neg_overflow, real_pos_overflow): canonical answers each 'not I-JSON'; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot-refusal/spec.json and app/specs/snapshot-refusal/ijson/spec.json, written from the suite by generators/transition) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc8785-3.2.2.2-2eedd5b0": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "JSONTestSuite (nst/JSONTestSuite, app/specs/oracle/json-test-suite) the ten i_ files the suite names as lone, missing, inverted or incomplete surrogates (i_object_key_lone_2nd_surrogate.json, i_string_lone_second_surrogate.json, i_string_invalid_lonely_surrogate.json and the rest of i_*surrogate*): the suite leaves their verdict to the parser, this requirement settles it, and canonical answers each 'not I-JSON'; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot-refusal/ijson/spec.json, written from the suite by generators/transition) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc8785-3.1-14f3ad1b": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "JSONTestSuite (nst/JSONTestSuite, app/specs/oracle/json-test-suite) the ten i_*surrogate* files, strings that are not expressible as Unicode: canonical answers each 'not I-JSON'; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot-refusal/ijson/spec.json, written from the suite by generators/transition) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc8785-3.1-95a5d7cd": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "JSONTestSuite (nst/JSONTestSuite, app/specs/oracle/json-test-suite) y_object_duplicated_key.json and y_object_duplicated_key_and_value.json: the suite's two documents with a duplicated name, which RFC 8259 lets a parser accept and this requirement forbids; canonical answers each 'not I-JSON'; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot-refusal/ijson/spec.json, written from the suite by generators/transition) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc8785-3.1-ffeae857": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "JSONTestSuite (nst/JSONTestSuite, app/specs/oracle/json-test-suite) the five i_number files whose value overflows an IEEE 754 double (i_number_huge_exp.json, i_number_neg_int_huge_exp.json, i_number_pos_double_huge_exp.json, i_number_real_neg_overflow.json, i_number_real_pos_overflow.json): canonical answers each 'not I-JSON'; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot-refusal/ijson/spec.json, written from the suite by generators/transition) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc8785-3.1-321d353e": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "JSONTestSuite (nst/JSONTestSuite, app/specs/oracle/json-test-suite) input that is not I-JSON is refused, not adapted: every n_ file that is UTF-8 and within the request bound (174), and the suite's duplicated names, lone surrogates and overflowing numbers (17), are each answered 'not I-JSON'; prismpm build runs every acceptance vector of the snapshot guest (app/specs/snapshot-refusal/spec.json, app/specs/snapshot-refusal/more/spec.json and app/specs/snapshot-refusal/ijson/spec.json, written from the suite by generators/transition) and GU-01 holds the pinned wasm to those vectors"
   }
  }
 }

@@ -1,0 +1,116 @@
+\begin{lexlean}{PrismDigest}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Sha256}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: dgAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => 0
+    | Option.some b => (prim to_nat b : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: dgLen,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (prim length s : Nat)
+}
+
+definition{
+  name: dgSlice,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some b => b)
+}
+
+definition{
+  name: dgCut,
+  parameters: [s : Bytes, a : Nat, b : Nat],
+  result: Bytes,
+  body: (dgSlice s a (prim subtract b a : Nat))
+}
+
+definition{
+  name: dgSame,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bool,
+  body: (prim equal (prim compare_bytes a b : Ordering) (prim compare_bytes 0x00 0x00 : Ordering) : Bool),
+  axioms: [propext]
+}
+
+definition{
+  name: dgMatch,
+  parameters: [s : Bytes, i : Nat, p : Bytes],
+  result: Bool,
+  body: (dgSame (dgSlice s i (dgLen p)) p),
+  axioms: [propext]
+}
+
+definition{
+  name: dgLineEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((dgLen s) <? (i + 1)) || ((dgAt s i) =? 10)) then i else (dgLineEnd s (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: dgNatFrom,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let b : Nat := (dgAt s i); (if ((47 <? b) && (b <? 58)) then (dgNatFrom s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract b 48 : Nat)) rest) else acc))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: dgNibble,
+  parameters: [b : Nat],
+  result: Nat,
+  body: (if ((47 <? b) && (b <? 58)) then (prim subtract b 48 : Nat) else (if ((96 <? b) && (b <? 103)) then (prim subtract b 87 : Nat) else (if ((64 <? b) && (b <? 71)) then (prim subtract b 55 : Nat) else 0)))
+}
+
+definition{
+  name: dgUnhex,
+  parameters: [s : Bytes, i : Nat, count : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (count =? 0) then acc else (dgUnhex s (i + 2) (prim subtract count 1 : Nat) (prim append acc (Sha256::shaOctet ((prim multiply (dgNibble (dgAt s i)) 16 : Nat) + (dgNibble (dgAt s (i + 1))))) : Bytes) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: dgCavpFrom,
+  parameters: [s : Bytes, i : Nat, len : Bytes, msg : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (prim append acc 0x0a : Bytes)
+    | Nat.succ rest => (if ((dgLen s) <? (i + 1)) then (prim append acc 0x0a : Bytes) else (let e : Nat := (dgLineEnd s i (dgLen s)); (let z : Nat := (if ((i <? e) && ((dgAt s (prim subtract e 1 : Nat)) =? 13)) then (prim subtract e 1 : Nat) else e); (if (dgMatch s i (prim utf8_encode "Len = " : Bytes)) then (dgCavpFrom s (e + 1) (dgCut s (i + 6) z) msg acc rest) else (if (dgMatch s i (prim utf8_encode "Msg = " : Bytes)) then (dgCavpFrom s (e + 1) len (dgCut s (i + 6) z) acc rest) else (if (dgMatch s i (prim utf8_encode "MD = " : Bytes)) then (let bits : Nat := (dgNatFrom len 0 0 (dgLen len)); (let count : Nat := (prim quotient bits 8 0 : Nat); (let m : Bytes := (dgUnhex msg 0 count 0x (count + 1)); (if ((((dgLen len) =? 0) || (not ((prim remainder bits 8 0 : Nat) =? 0))) || (((dgLen msg) <? (count + count)) || (not (dgSame (Sha256::sha256Hex m) (dgCut s (i + 5) z))))) then (prim append (prim utf8_encode "fail " : Bytes) (prim append len 0x0a : Bytes) : Bytes) else (dgCavpFrom s (e + 1) 0x 0x (prim append acc (prim append 0x20 len : Bytes) : Bytes) rest))))) else (dgCavpFrom s (e + 1) len msg acc rest)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: prismDigestDispatch,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let nl : Nat := (dgLineEnd s 0 (dgLen s)); (let verb : Bytes := (dgSlice s 0 nl); (let body : Bytes := (dgSlice s (nl + 1) (prim subtract (dgLen s) (nl + 1) : Nat)); (if (((dgLen s) =? 0) || (6144 <? (dgLen s))) then (prim utf8_encode "invalid" : Bytes) else (if (dgSame verb (prim utf8_encode "hex" : Bytes)) then (prim append (Sha256::sha256Hex body) 0x0a : Bytes) else (if (dgSame verb (prim utf8_encode "cavp" : Bytes)) then (dgCavpFrom body 0 0x 0x (prim utf8_encode "pass" : Bytes) (dgLen body)) else (prim utf8_encode "refused: say hex or cavp" : Bytes))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
