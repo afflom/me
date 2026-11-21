@@ -1,0 +1,21 @@
+{
+  "id": "digest-monte",
+  "wasm": "site/digest/guest/digest-monte.wasm",
+  "pin": "site/digest/guest.mjs",
+  "modules": [
+    "Sha256",
+    "PrismDigest"
+  ],
+  "dispatch": "PrismDigest::prismDigestDispatch",
+  "vectors": "spec:digest/monte",
+  "limits": [
+    6144,
+    16384,
+    12288
+  ],
+  "memory": [
+    16384,
+    1048576
+  ],
+  "as": "monte"
+}
