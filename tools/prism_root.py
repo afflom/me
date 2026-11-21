@@ -37,7 +37,7 @@ FACETS = [
     ("source", "PrismSource", "prismSourceDispatch"),
     ("model", "PrismModels", "prismModelsDispatch"),
     ("kappa", "PrismKappaLabel", "kappaLabelDispatch"),
-    ("uorc", "PrismUorc", "prismUorcDispatch"),
+    ("uorc", "PrismUorcObjects", "uorcObjectsDispatch"),
     ("holon", "PrismHolon", "prismHolonDispatch"),
     ("curate", "PrismCurate", "prismCurateDispatch"),
     ("resonance", "PrismResonance", "prismResonanceDispatch"),
