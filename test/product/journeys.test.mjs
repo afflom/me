@@ -18,8 +18,8 @@ async function walk(browser, url, journey, returning) {
   const context = await browser.newContext({ timezoneId: "UTC", locale: "en-US" });
   await device(context);
   const page = await context.newPage();
-  const errors = [];
-  page.on("pageerror", (error) => errors.push(error.message));
+  const errors = [], said = [];
+  page.on("pageerror", (error) => errors.push(error.message)).on("console", (m) => ["warning", "error"].includes(m.type()) && said.push(m.text().slice(0, 200)));
   try {
     await open(page, url);
     if (returning) { await page.reload(); await page.waitForSelector("html.pr-ready", { timeout: 60000 }); }
@@ -27,7 +27,7 @@ async function walk(browser, url, journey, returning) {
     assert.deepEqual(errors, [], `page errors: ${errors.join(" | ")}`);
     return { ok: true };
   } catch (error) {
-    return { ok: false, why: String(error?.message ?? error).split("\n")[0] };
+    return { ok: false, why: String(error?.message ?? error).split("\n")[0] + (said.length ? `; the page said: ${said.join("; ")}` : "") };
   } finally {
     await context.close();
   }
