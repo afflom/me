@@ -150,7 +150,7 @@ definition{
   name: kappaLabelAskAdmit,
   parameters: [s : Bytes, a : Nat, n : Nat],
   result: Bytes,
-  body: (let e : Nat := (kappaLabelStopAt s 32 a n); (let label : Bytes := (kappaLabelSliceOf s a (prim subtract e a : Nat)); (if (e <? n) then (let b : Nat := (e + 1); (let f : Nat := (kappaLabelStopAt s 32 b n); (if (f <? n) then (let c : Nat := (f + 1); (if ((kappaLabelStopAt s 32 c n) <? n) then 0x696e76616c6964 else (kappaLabelAskDone label (kappaLabelSliceOf s b (prim subtract f b : Nat)) (kappaLabelSliceOf s c (prim subtract n c : Nat))))) else 0x6e65656420646967657374205348412d323536))) else (kappaLabelAskNeed (kappaLabelAskHost (kappaLabelSliceOf label 0 (kappaLabelStopAt label 58 0 (Foundation.Bytes::byteLength label)))))))),
+  body: (let e : Nat := (kappaLabelStopAt s 32 a n); (let label : Bytes := (kappaLabelSliceOf s a (prim subtract e a : Nat)); (if (e <? n) then (let b : Nat := (e + 1); (let f : Nat := (kappaLabelStopAt s 32 b n); (if (f <? n) then (let c : Nat := (f + 1); (if ((kappaLabelStopAt s 32 c n) <? n) then 0x696e76616c6964 else (kappaLabelAskDone label (kappaLabelSliceOf s c (prim subtract n c : Nat)) (kappaLabelSliceOf s b (prim subtract f b : Nat))))) else (let axis : Bytes := (kappaLabelSliceOf label 0 (kappaLabelStopAt label 58 0 (Foundation.Bytes::byteLength label))); (if (prim equal axis 0x736861323536 : Bool) then (kappaLabelAskDone label (kappaLabelSliceOf s b (prim subtract n b : Nat)) (kappaLabelSliceOf s b (prim subtract n b : Nat))) else (kappaLabelAskNeed (kappaLabelAskHost axis))))))) else 0x6e65656420646967657374205348412d323536))),
   axioms: [Quot.sound, propext]
 }
 

@@ -131,7 +131,7 @@ fn kappa_kp_01() {
 fn kappa_kp_02() {
     let page = read("site/kappa/kappa.mjs");
     assert!(
-        page.contains("fields(await ask(decide, [\"admit\", label], bytes)"),
+        page.contains("fields(await ask(decide, [\"admit\", label], bytes, ["),
         "KP-02: the admission is the guest's answer, asked through the generated glue"
     );
     let ask = read("site/glue/ask.mjs");

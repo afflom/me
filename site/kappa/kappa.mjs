@@ -17,7 +17,9 @@ export const rootDecide = (dispatch) => word(dispatch, "kappa");
 
 export function makeKappa({ decide }) {
   return {
-    admit: async (label, bytes) => fields(await ask(decide, ["admit", label], bytes), [
+    admit: async (label, bytes) => fields(await ask(decide, ["admit", label], bytes, [
+        "digest SHA-256"
+      ]), [
         "sha256",
         "outcome",
         "axis",

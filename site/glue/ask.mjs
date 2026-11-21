@@ -15,14 +15,17 @@ const HOST = {
 
 export const word = (dispatch, name) => async (line) => String(await dispatch(`${name} ${line}`)).trim();
 
-export async function ask(decide, words, blob) {
+// `gives` are facts the module's model says its guest always asks for: they go with the first ask.
+export async function ask(decide, words, blob, gives = []) {
+  const give = (name, ...rest) => HOST[name](blob, ...rest);
   let line = words.join(' ');
+  for (const fact of gives) line += ` ${await give(...fact.split(' '))}`;
   for (let turn = 0; turn < 8; turn += 1) {
     const [head, ...rest] = String(await decide(line)).trim().split(' ');
     if (head === 'done') return rest;
     if (head === 'refuse') throw fail(rest[0], rest.slice(1).join(' '));
     if (head !== 'need' || !Object.hasOwn(HOST, rest[0])) return null;
-    line += ` ${await HOST[rest[0]](blob, ...rest.slice(1))}`;
+    line += ` ${await give(...rest)}`;
   }
   return null;
 }
