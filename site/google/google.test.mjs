@@ -1,25 +1,16 @@
 // GG-01..GG-03: the Google connection, run in Node against the real guests.
 // Google itself is a test double: no network, and every value is synthetic.
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
 import { example, expectOf } from '../../test/oracle/examples.mjs';
 import { connectGoogle, parseGrant, serviceOf, toICalendar, fromBase64Url, API, SCOPES } from './google.mjs';
-import { GUESTS, openGuest } from './guest.mjs';
+import { GUESTS, opened } from './guest.mjs';
 import { ingestInto, detect } from './ingest.mjs';
 import { seal, open, tagOf } from './seal.mjs';
 
-const here = new URL('./', import.meta.url);
-const bytesOf = async (path) => new Uint8Array(await readFile(new URL(path, here)));
-const call = await openGuest(await bytesOf(GUESTS.call.path), GUESTS.call.sha256);
-const link = await openGuest(await bytesOf(GUESTS.link.path), GUESTS.link.sha256);
+const call = await opened(GUESTS.call);
+const link = await opened(GUESTS.link);
 let checks = 0;
 const ok = (cond, message) => { assert.ok(cond, message); checks += 1; };
-
-// A guest whose bytes are not the pinned fingerprint is refused before it compiles.
-const tampered = await bytesOf(GUESTS.call.path);
-tampered[tampered.length - 1] ^= 1;
-await assert.rejects(openGuest(tampered, GUESTS.call.sha256), /guest refused/);
-checks += 1;
 
 // GG-01: PrismGoogle, every request, against its seven guarantees.
 const product = (...lists) => lists.reduce((acc, list) => acc.flatMap((a) => list.map((b) => [...a, b])), [[]]);

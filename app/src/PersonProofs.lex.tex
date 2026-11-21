@@ -3,6 +3,9 @@
 \useglossary{lexlean.std.nat@1.2.0}
 \useglossary{prism.arch@1.0.0}
 \importmodule{Foundation.Person.V1.Model}
+\importmodule{PersonIcf}
+\importmodule{PersonSchema}
+\importmodule{Foundation.Vocab.V1.SchemaOrg}
 \title{Person guarantees}
 \begin{semanticmodule}
 theorem{
@@ -83,6 +86,75 @@ theorem{
     ],
     scrutinee: frame
   }
+}
+
+definition{
+  name: icfCountedFrom,
+  parameters: [position : Nat, rows : (List PersonIcf::IcfEntity)],
+  result: Bool,
+  body: (match rows
+    | List.nil => (position =? (PersonIcf::icfEntityCount))
+    | List.cons row rest => (icfCountedFrom (position + 1) rest)),
+  recursive_argument: rows
+}
+
+definition{
+  name: icfKindedRows,
+  parameters: [rows : (List PersonIcf::IcfEntity)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => ((if (prim equal (project row kind) "category" : Bool) then (not (prim equal (project row code) "" : Bool)) else (((prim equal (project row kind) "chapter" : Bool) || (prim equal (project row kind) "block" : Bool)) && (prim equal (project row code) "" : Bool))) && (icfKindedRows rest))),
+  recursive_argument: rows
+}
+
+theorem{
+  name: icfCounted,
+  parameters: [],
+  statement: ((icfCountedFrom 0 (PersonIcf::icfRows)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: icfKinded,
+  parameters: [],
+  statement: ((icfKindedRows (PersonIcf::icfRows)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: schemaTypesNamed,
+  parameters: [],
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaSection "types")) =? (Foundation.Vocab.V1.SchemaOrg::vocabTypeCount)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: schemaPropertiesNamed,
+  parameters: [],
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaSection "properties")) =? (Foundation.Vocab.V1.SchemaOrg::vocabPropertyCount)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: schemaMembersNamed,
+  parameters: [],
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaSection "members")) =? (Foundation.Vocab.V1.SchemaOrg::vocabMemberCount)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: schemaPersonKnown,
+  parameters: [],
+  statement: (((PersonSchema::schemaPersonType) <? (Foundation.Vocab.V1.SchemaOrg::vocabTypeCount)) = true),
+  proof: decide{}
+}
+
+theorem{
+  name: personPropertiesOutsideSchemaOrg,
+  parameters: [],
+  statement: ((PersonSchema::schemaSame (PersonSchema::schemaModelOutside (Foundation.Person.V1.Model::personProperties) (PersonSchema::schemaPersonProperties)) (cons "healthCondition" (nil String))) = true),
+  proof: decide{}
 }
 \end{semanticmodule}
 \end{lexlean}

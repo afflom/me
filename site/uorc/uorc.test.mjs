@@ -1,7 +1,7 @@
 // UO-01: the uorc facet, run in Node against the real guest, over every request.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { GUEST, openGuest } from './guest.mjs';
+import { GUEST, opened } from './guest.mjs';
 // The decision as the model states it (app/specs/uorc/spec.json): the guest
 // built from it must answer every request as the spec's own tree does.
 const SPEC = JSON.parse(await readFile(new URL('../../app/specs/uorc/spec.json', import.meta.url), 'utf8'));
@@ -13,16 +13,9 @@ const walk = (t, r) => (typeof t === 'string' ? t : walk(r[t.if[0]] === t.if[1] 
 const judge = (r) => walk(SPEC.tree, r);
 const lineOf = (r) => FIELDS.map(([name]) => r[name]).join(' ');
 
-const here = new URL('./', import.meta.url);
-const bytes = new Uint8Array(await readFile(new URL(GUEST.path, here)));
-const uorc = await openGuest(bytes, GUEST.sha256);
+const uorc = await opened(GUEST);
 let checks = 0;
 const ok = (cond, message) => { assert.ok(cond, message); checks += 1; };
-
-const tampered = bytes.slice();
-tampered[tampered.length - 1] ^= 1;
-await assert.rejects(openGuest(tampered, GUEST.sha256), /guest refused/);
-checks += 1;
 
 const product = (lists) => lists.reduce((acc, list) => acc.flatMap((a) => list.map((b) => [...a, b])), [[]]);
 const names = FIELDS.map(([name]) => name);

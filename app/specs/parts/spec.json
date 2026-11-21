@@ -1,5 +1,5 @@
 {
-  "comment": "Every part of the Prism answers six questions, after verdant resonance's W5HCertificate (Foundation/Ontology/V1/Model, verifyW5HCertificateComplete) and the six interrogatives of the Zachman framework: what it is, why it is there (the stakeholder concern it answers, through the journey and feature that need it, and what is obstructed without it), who acts in it, where it runs (its boundary), when it acts (its temporal regime) and how it is checked. A part is every tracked module of the page (site/**/*.mjs, site/extension/*.js) and every module of the model (app/src/**/*.lex.tex). The LexLean program generators/parts (GenParts, GenTrace; its steps in generators/parts/steps.json, held by GN-01) derives each part's answers from the record it already has: the product record's concerns, journeys and features, the coherence registry, the Prism root's dispatch, the imports between parts and the suites and proofs that reach them. Only the strata below are written by hand; each part is grounded in the first stratum whose paths match it, and a part no stratum grounds is refused. A part with an unanswered question is refused unless it is in 'debt', which only shrinks.",
+  "comment": "Every part of the Prism answers six questions, after verdant resonance's W5HCertificate (Foundation/Ontology/V1/Model, verifyW5HCertificateComplete) and the six interrogatives of the Zachman framework: what it is, why it is there (the stakeholder concern it answers, through the journey and feature that need it, and what is obstructed without it), who acts in it, where it runs (its boundary), when it acts (its temporal regime) and how it is checked. A part is every tracked module of the page (site/**/*.mjs, site/extension/*.js) and every module of the model (app/src/**/*.lex.tex). The LexLean program generators/parts (GenParts, GenTrace; its steps in generators/parts/steps.json, held by GN-01) derives each part's answers from the record it already has: the product record's concerns, journeys and features, the coherence registry, the Prism root's dispatch, the imports between parts and the suites and proofs that reach them. Only the strata below are written by hand; each part is grounded in the first stratum whose paths match it, and a part no stratum grounds is refused. A part with an unanswered question is refused unless it owes exactly those answers in the debt, which only shrinks: one file per part, app/specs/parts/debt/<the part's path>.json, listing the questions it still owes, so two changes to the debt never touch the same file.",
   "agency": [
     {
       "key": "prism",
@@ -232,6 +232,26 @@
       ]
     },
     {
+      "key": "register",
+      "paths": [
+        "app/src/PersonIcf.lex.tex",
+        "app/src/VocabNames.lex.tex",
+        "app/src/PersonSchema.lex.tex"
+      ],
+      "what": "a pinned authority's classification or vocabulary held whole in the Prism's Lean model, written by a LexLean generator from the pinned release, or the person's terms computed from it",
+      "without": "the model's proofs could speak only of a list written by hand, never of the whole classification, so a change could drop part of the person unnoticed",
+      "who": [
+        "builder"
+      ],
+      "where": "kernel",
+      "when": [
+        "build"
+      ],
+      "answers": [
+        "working"
+      ]
+    },
+    {
       "key": "decision",
       "paths": [
         "app/src/*.lex.tex",
@@ -248,94 +268,6 @@
   "debt": {
     "concerns": {
       "furthest": "no check yet orders the work by the journey furthest from its target"
-    },
-    "parts": {
-      "site/extension/bridge.js": [
-        "how"
-      ],
-      "site/extension/seen.js": [
-        "how"
-      ],
-      "site/read/vcard.table.mjs": [
-        "why",
-        "when"
-      ],
-      "site/r4/decide.mjs": [
-        "why",
-        "when"
-      ],
-      "site/r4/r4-worker.mjs": [
-        "why",
-        "when",
-        "how"
-      ],
-      "site/r4/r4.mjs": [
-        "why",
-        "when"
-      ],
-      "site/r4/receipt.mjs": [
-        "why",
-        "when",
-        "how"
-      ],
-      "site/calendar/registry.mjs": [
-        "why",
-        "when",
-        "how"
-      ],
-      "app/src/PrismScxml.lex.tex": [
-        "why",
-        "when",
-        "how"
-      ],
-      "site/scxml/guest.mjs": [
-        "how"
-      ],
-      "app/src/PrismSenses.lex.tex": [
-        "why",
-        "when",
-        "how"
-      ],
-      "app/src/PrismSosaTable.lex.tex": [
-        "why",
-        "when",
-        "how"
-      ],
-      "site/senses/guest.mjs": [
-        "how"
-      ],
-      "site/turtle/guest.mjs": [
-        "how"
-      ],
-      "app/src/PrismAnnotation.lex.tex": [
-        "why",
-        "when",
-        "how"
-      ],
-      "app/src/PrismAnnotationTable.lex.tex": [
-        "why",
-        "when",
-        "how"
-      ],
-      "site/annotation/guest.mjs": [
-        "how"
-      ],
-      "app/src/PrismEmma.lex.tex": [
-        "why",
-        "when",
-        "how"
-      ],
-      "site/emma/guest.mjs": [
-        "how"
-      ],
-      "app/src/PrismProv.lex.tex": [
-        "why",
-        "when",
-        "how"
-      ],
-      "site/prov/guest.mjs": [
-        "how"
-      ]
     }
   }
 }

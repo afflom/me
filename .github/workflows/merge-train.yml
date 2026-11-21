@@ -227,6 +227,17 @@ jobs:
             if $ok; then ready+=("$number:$head"); fi
           done < <(gh api "repos/$REPO/pulls?state=open&base=main&sort=created&direction=asc&per_page=50" \
             --jq '.[] | "\(.number) \(.head.sha) \(.draft) \(.head.repo.full_name != .base.repo.full_name)"')
+          # A pull request that names an open deploy-blocked issue in its description is
+          # there to get the live page moving again, so it boards first: pull requests
+          # ahead of it by number cannot then make the gates refuse it round after round
+          # (#181 was refused twice that way while main's deploy stayed blocked).
+          blocking=$(gh api "repos/$REPO/issues?state=open&labels=deploy-blocked&per_page=20" --jq '[.[].number | tostring] | join("|")')
+          first=()
+          later=()
+          for entry in "${ready[@]}"; do
+            if [[ -n $blocking ]] && gh api "repos/$REPO/pulls/${entry%%:*}" --jq '.body // ""' | grep -qE "#($blocking)([^0-9]|$)"; then first+=("$entry"); else later+=("$entry"); fi
+          done
+          ready=("${first[@]}" "${later[@]}")
           echo "ready: ${ready[*]:-none}"
           # What the acceptances need on the runner, installed once and before any pull request's code runs.
           if [[ ${#ready[@]} -gt 0 ]]; then
@@ -244,7 +255,8 @@ jobs:
           }
           said() { # said LOG: what refused, in the log's own words, on one line
             tail -n 40 "$1" >&2
-            grep -E '^ *not ok |^gate failed|^[A-Z][A-Z0-9]-[0-9]+: ' "$1" | sed 's/^ *//' | tr -d '@`' | head -n 8 | paste -sd ';' | cut -c1-900
+            # A gate that passes says so in the same form as one that refuses, and the gates stop at the first refusal: the last lines are the ones that refused.
+            grep -E '^ *not ok |^gate failed|^[A-Z][A-Z0-9]-[0-9]+: ' "$1" | grep -v ' is what ' | sed 's/^ *//' | tr -d '@`' | tail -n 4 | paste -sd ';' | cut -c1-900
           }
           board() { # board together|each: merge each of the queue onto HEAD (each: where it passes the gates there)
             local entry number head before

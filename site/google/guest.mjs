@@ -27,8 +27,23 @@ function run(x, line) {
   return decoder.decode(new Uint8Array(x.memory.buffer, Number(packed >> 32n), Number(packed & 0xffffffffn)));
 }
 
-// A fresh instance per request: the guest's allocator never frees, and no state carries over.
+// One instance, kept and put back as it began before each request: its memory
+// above the stack as first instantiated, and what it grew by zero. An instance
+// a request trapped is dropped. So no state carries over, and asking often
+// does not leave an instance behind each time.
 export async function openGuest(bytes, sha256) {
   const module = await compile(bytes, sha256);
-  return async (line) => run((await WebAssembly.instantiate(module, {})).exports, line);
+  let x = null, first = null, from = 0;
+  return async (line) => {
+    if (x) { const memory = new Uint8Array(x.memory.buffer); memory.set(first, from); memory.fill(0, from + first.length); }
+    else { x = (await WebAssembly.instantiate(module, {})).exports; from = Number(x.__stack_high?.value ?? 0); first = new Uint8Array(x.memory.buffer).slice(from); }
+    try { return run(x, line); } catch (error) { x = null; throw error; }
+  };
+}
+
+// The guest as this module serves it: its bytes read from beside this file
+// under Node and fetched from beside it in a browser, then opened as above.
+export async function opened(guest, open = openGuest) {
+  const at = new URL(guest.path, import.meta.url);
+  return open(at.protocol === "file:" ? await (await import("node:fs/promises")).readFile(at) : new Uint8Array(await (await fetch(at)).arrayBuffer()), guest.sha256);
 }

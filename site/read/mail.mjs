@@ -38,15 +38,20 @@ export function readField(line) {
   return field;
 }
 function readOnce(line) {
-  const name = /^([!-9;-~]+)[ \t]*:/.exec(line)?.[1];
+  const name = /^([!-9;-~]+)[ \t]*:/.exec(line)?.[1]?.toLowerCase();
   if (!name) return null;
+  // A field is read by its grammar when it is first asked for: a header has many fields, and who reads it asks for few.
+  let got = null, read = () => (got ??= byRule(name, line));
+  return { name, get rule() { return read().rule; }, get tree() { return read().tree; }, get raw() { return read().raw; } };
+}
+function byRule(name, line) {
   // RFC 5322's rules end with the field's CRLF; RFC 2045's leave it to the header they stand in.
   const bare = line.replace(/\r\n$/, "");
-  for (const rule of [...(mail.fields[name.toLowerCase()] ?? []), "optional-field", "obs-optional"]) {
+  for (const rule of [...(mail.fields[name] ?? []), "optional-field", "obs-optional"]) {
     const tree = grammar.match(rule, line) ?? grammar.match(rule, bare);
-    if (tree) return { name: name.toLowerCase(), rule, tree };
+    if (tree) return { rule, tree };
   }
-  return { name: name.toLowerCase(), rule: null, tree: null, raw: line };
+  return { rule: null, tree: null, raw: line };
 }
 
 export const fieldsOf = (raw) => headerLines(raw).map(readField).filter(Boolean);

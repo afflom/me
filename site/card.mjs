@@ -333,8 +333,14 @@ export default async function start({ app, reason, $ }) {
     return;
   }
 
-  // The root guest: "<facet> <rest>" in, the facet's answer out.
-  const line = async (text) => decoder.decode(await app.dispatch(encoder.encode(text))).trim();
+  // The root guest: "<facet> <rest>" in, the facet's answer out. The guest takes
+  // no imports and each request runs alone, so the same line has the same
+  // answer: it is asked once and remembered. The runtime starts an instance for
+  // every request, and the browser can refuse one more before it has let the
+  // earlier ones go; a line refused so is asked again a moment later.
+  const ask = async (text, tries = 4) => { try { return decoder.decode(await app.dispatch(encoder.encode(text))).trim(); } catch (error) { if (tries < 2 || !/out of memory/i.test(String(error?.message ?? error))) throw error; await new Promise((again) => setTimeout(again, 250)); return ask(text, tries - 1); } };
+  const asked = new Map();
+  const line = (text) => asked.get(text) ?? (asked.size > 4096 && asked.clear(), asked.set(text, ask(text).catch((error) => { asked.delete(text); throw error; })).get(text));
 
   // The vault: kept in this browser, every keep and read decided by the app.
   let vault = null;
@@ -1359,10 +1365,13 @@ export default async function start({ app, reason, $ }) {
       form.querySelector("textarea")?.focus();
     }
   }
-  function turn(prompt, said) {
+  let turned = null;
+  function turn(prompt, said, recordOf) {
     // A turn is what was asked and what was said, together; one sentence per item, each on its own line.
     const node = element("div", { className: "pr-turn" }, element("p", { className: "pr-you", textContent: prompt }), element("p", { className: "pr-said", textContent: said.sentences.join("\n") }));
     chat.append(node);
+    // Its record (EMMA and PROV) is kept with it, and names the turn before it.
+    const at = Date.now(); node.record = recordOf(prompt, said, at, turned); turned = node.record ? at : turned;
     const rows = said.sources.map(rowOf);
     drawn.replaceChildren(...rows);
     // The sentences link to the items they say; the list beneath holds all that was found.
@@ -1403,11 +1412,11 @@ export default async function start({ app, reason, $ }) {
     try {
       // The person's words go through the R4 router; a question is answered in
       // sentences from what is held, under the Boundary, with what it drew on.
-      const [{ answer }] = await Promise.all([import("./router/answer.mjs"), notesKept]);
+      const [{ answer, recordOf }] = await Promise.all([import("./router/answer.mjs"), notesKept]);
       // A question is answered; anything else the person says is offered to keep, in its place and time.
       const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: true, meaning: haltedNow ? null : meaningRead() });
       drawn.replaceChildren();
-      if (said.sentences.length) { turn(prompt, said); say("", "idle"); $("pr-prompt").value = ""; }
+      if (said.sentences.length) { turn(prompt, said, recordOf); say("", "idle"); $("pr-prompt").value = ""; }
       else if (haltedNow) say(WORDS.halted, "bad");
       else if (said.refused) say(WORDS["answer.asks"], "warn");
       else say(WORDS["answer.none"], "");

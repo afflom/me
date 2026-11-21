@@ -1,0 +1,18 @@
+{"id": "rfc6902-4-5d946f07", "kind": "must", "ref": "RFC 6902 4", "text": "Operation objects MUST have exactly one \"op\" member, whose value indicates the operation to perform."}
+{"id": "rfc6902-4-174d230e", "kind": "must", "ref": "RFC 6902 4", "text": "Its value MUST be one of \"add\", \"remove\", \"replace\", \"move\", \"copy\", or \"test\"; other values are errors."}
+{"id": "rfc6902-4-30dabaa7", "kind": "must", "ref": "RFC 6902 4", "text": "Additionally, operation objects MUST have exactly one \"path\" member."}
+{"id": "rfc6902-4-d4abf196", "kind": "must", "ref": "RFC 6902 4", "text": "Members that are not explicitly defined for the operation in question MUST be ignored (i.e., the operation will complete as if the undefined member did not appear in the object)."}
+{"id": "rfc6902-4.1-ae9fcb99", "kind": "must", "ref": "RFC 6902 4.1", "text": "The operation object MUST contain a \"value\" member whose content specifies the value to be added."}
+{"id": "rfc6902-4.1-06d0e10d", "kind": "must", "ref": "RFC 6902 4.1", "text": "When the operation is applied, the target location MUST reference one of:"}
+{"id": "rfc6902-4.1-dd5c908f", "kind": "must", "ref": "RFC 6902 4.1", "text": "The specified index MUST NOT be greater than the number of elements in the array."}
+{"id": "rfc6902-4.2-2b1ef42f", "kind": "must", "ref": "RFC 6902 4.2", "text": "The target location MUST exist for the operation to be successful."}
+{"id": "rfc6902-4.3-460c075d", "kind": "must", "ref": "RFC 6902 4.3", "text": "The operation object MUST contain a \"value\" member whose content specifies the replacement value."}
+{"id": "rfc6902-4.3-2b1ef42f", "kind": "must", "ref": "RFC 6902 4.3", "text": "The target location MUST exist for the operation to be successful."}
+{"id": "rfc6902-4.4-96f491da", "kind": "must", "ref": "RFC 6902 4.4", "text": "The operation object MUST contain a \"from\" member, which is a string containing a JSON Pointer value that references the location in the target document to move the value from."}
+{"id": "rfc6902-4.4-c85200d6", "kind": "must", "ref": "RFC 6902 4.4", "text": "The \"from\" location MUST exist for the operation to be successful."}
+{"id": "rfc6902-4.4-8bf2ea5e", "kind": "must", "ref": "RFC 6902 4.4", "text": "The \"from\" location MUST NOT be a proper prefix of the \"path\" location; i.e., a location cannot be moved into one of its children."}
+{"id": "rfc6902-4.5-2c90fd3c", "kind": "must", "ref": "RFC 6902 4.5", "text": "The operation object MUST contain a \"from\" member, which is a string containing a JSON Pointer value that references the location in the target document to copy the value from."}
+{"id": "rfc6902-4.5-c85200d6", "kind": "must", "ref": "RFC 6902 4.5", "text": "The \"from\" location MUST exist for the operation to be successful."}
+{"id": "rfc6902-4.6-dca29c99", "kind": "must", "ref": "RFC 6902 4.6", "text": "The operation object MUST contain a \"value\" member that conveys the value to be compared to the target location's value."}
+{"id": "rfc6902-4.6-159a78dd", "kind": "must", "ref": "RFC 6902 4.6", "text": "The target location MUST be equal to the \"value\" value for the operation to be considered successful."}
+{"id": "rfc6902-5-ec058a4b", "kind": "should", "ref": "RFC 6902 5", "text": "If a normative requirement is violated by a JSON Patch document, or if an operation is not successful, evaluation of the JSON Patch document SHOULD terminate and application of the entire patch document SHALL NOT be deemed successful."}
