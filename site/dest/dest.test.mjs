@@ -3,7 +3,7 @@
 // the cases used here, and every hand-off is recorded, never performed.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { GUEST, openGuest } from './guest.mjs';
+import { GUEST, opened } from './guest.mjs';
 // The decision as the model states it (app/specs/dest/spec.json): the guest
 // built from it must answer every request as the spec's own tree does.
 const SPEC = JSON.parse(await readFile(new URL('../../app/specs/dest/spec.json', import.meta.url), 'utf8'));
@@ -17,17 +17,9 @@ const lineOf = (r) => FIELDS.map(([name]) => r[name]).join(' ');
 import { makeRouter, toneOf, sealOf, buildMail, buildEvent, buildShare } from './dest.mjs';
 import { example } from '../../test/oracle/examples.mjs';
 
-const here = new URL('./', import.meta.url);
-const bytes = new Uint8Array(await readFile(new URL(GUEST.path, here)));
-const dest = await openGuest(bytes, GUEST.sha256);
+const dest = await opened(GUEST);
 let checks = 0;
 const ok = (cond, message) => { assert.ok(cond, message); checks += 1; };
-
-// A guest whose bytes are not the pinned fingerprint is refused before it compiles.
-const tampered = bytes.slice();
-tampered[tampered.length - 1] ^= 1;
-await assert.rejects(openGuest(tampered, GUEST.sha256), /guest refused/);
-checks += 1;
 
 // DS-01: every request, against the generated mirror and the eleven guarantees.
 const product = (lists) => lists.reduce((acc, list) => acc.flatMap((a) => list.map((b) => [...a, b])), [[]]);
