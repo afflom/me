@@ -1408,7 +1408,7 @@ export default async function start({ app, reason, $ }) {
       // sentences from what is held, under the Boundary, with what it drew on.
       const [{ answer, recordOf }] = await Promise.all([import("./router/answer.mjs"), notesKept]);
       // A question is answered; anything else the person says is offered to keep, in its place and time.
-      const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: true, meaning: haltedNow ? null : meaningRead() });
+      const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: true, meaning: haltedNow ? null : meaningRead(), after: turned });
       drawn.replaceChildren();
       if (said.sentences.length) { turn(prompt, said, recordOf); say("", "idle"); $("pr-prompt").value = ""; }
       else if (haltedNow) say(WORDS.halted, "bad");

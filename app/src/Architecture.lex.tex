@@ -65,14 +65,14 @@ definition{
   name: concernPrismAskProvedGuarantees,
   parameters: [],
   result: Foundation.Arch::Concern,
-  body: (record Foundation.Arch::Concern {index := 2, name := "Proved guarantees: Prism Ask", text := "Each of the 7 properties of the spec holds for every request, proved by the Lean kernel."})
+  body: (record Foundation.Arch::Concern {index := 2, name := "Proved guarantees: Prism Ask", text := "Each of the 10 properties of the spec holds for every request, proved by the Lean kernel."})
 }
 
 definition{
   name: concernPrismAskRefusedMalformedRequests,
   parameters: [],
   result: Foundation.Arch::Concern,
-  body: (record Foundation.Arch::Concern {index := 3, name := "Refused malformed requests: Prism Ask", text := "A request that is not the 6 fields in order, or is longer than 160 bytes, is answered invalid and never guessed."})
+  body: (record Foundation.Arch::Concern {index := 3, name := "Refused malformed requests: Prism Ask", text := "A request that is not the 7 fields in order, or is longer than 184 bytes, is answered invalid and never guessed."})
 }
 
 definition{
@@ -625,7 +625,7 @@ definition{
   name: componentPrismAskPrismAskGuest,
   parameters: [],
   result: Foundation.Arch::Component,
-  body: (record Foundation.Arch::Component {index := 2, kind := (ctor Foundation.Arch::ComponentKind.service), name := "Prism Ask guest", text := "The Core-Wasm guest built from the model: it answers one request of at most 160 bytes with one answer of at most 64."})
+  body: (record Foundation.Arch::Component {index := 2, kind := (ctor Foundation.Arch::ComponentKind.service), name := "Prism Ask guest", text := "The Core-Wasm guest built from the model: it answers one request of at most 184 bytes with one answer of at most 64."})
 }
 
 definition{
