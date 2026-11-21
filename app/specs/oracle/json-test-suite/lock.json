@@ -1,0 +1,18 @@
+{
+  "comment": "JSONTestSuite's test_parsing files, byte for byte at the pinned commit under app/specs/oracle/json-test-suite/test_parsing: the validation oracle for what a JSON parser must refuse (RFC 8259), and so for what the canonical form (RFC 8785, whose input must be I-JSON, RFC 7493) refuses. The suite names each file by its verdict: n_ must be refused, y_ must be accepted, i_ is left to the parser. Held here: every n_ file that is UTF-8 and fits the snapshot guest's 2048-byte request (174 of 188; 12 are not UTF-8, which an acceptance vector cannot carry, and 2 are larger than the request bound), and the files the suite names as lone or broken surrogates (10 i_ files), numbers whose exponent overflows a double (5 i_ files) and duplicated names (2 y_ files), which RFC 8785 sections 3.1, 3.2.2.2 and 3.2.2.3 require to be refused. SHA256SUMS lists each file in sha256sum's format and is written from the files by generators/transition's jsonsuitesums (GN-01 fails when a file changes, is added or is removed); generators/snapshot's lockcheck holds SHA256SUMS and the licence to the hashes below.",
+  "source": "https://github.com/nst/JSONTestSuite",
+  "commit": "1ef36fa01286573e846ac449e8683f8833c5b26a",
+  "licence": "MIT",
+  "standard": "RFC 8259 The JavaScript Object Notation (JSON) Data Interchange Format, IETF; RFC 7493 The I-JSON Message Format; RFC 8785 JSON Canonicalization Scheme",
+  "files": [
+    {
+      "path": "app/specs/oracle/json-test-suite/LICENSE",
+      "url": "https://raw.githubusercontent.com/nst/JSONTestSuite/1ef36fa01286573e846ac449e8683f8833c5b26a/LICENSE",
+      "sha256": "8bd0e0578be788c617ea01d18b2a8146e3746ae50bddadc65a5f9d3aad08ad49"
+    },
+    {
+      "path": "app/specs/oracle/json-test-suite/SHA256SUMS",
+      "sha256": "bf164f0172eff060e40d72e21a48daea58e7a0021e384222a3a80f195fc8d250"
+    }
+  ]
+}

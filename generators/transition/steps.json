@@ -1,5 +1,5 @@
 {
-  "comment": "The steps of the transition program (generators/transition/), run in order by tools/generators/run.sh. Each step reads json-patch-tests tests.json and walks its cases as one history: a case that states an expected document is a transition from its document by its patch, chained to the transition before it. transitions and transitionsmore write the acceptance vectors of the snapshot guest's transition request (cases 1 to 36, and the rest): the W3C PROV record the case must give, whose addresses are those of the case's own document, patch and expected document; 'the state does not change' where the expected document is the document; 'the patch does not apply' where the case states an error. provtransitions and provtransitionsmore write the same records as acceptance vectors of the PROV-CONSTRAINTS checker (guest prov), each to be answered valid. GenPatch, GenJcs and Sha256 are the modules of generators/snapshot, byte for byte.",
+  "comment": "The steps of the transition program (generators/transition/), run in order by tools/generators/run.sh. Each step reads json-patch-tests tests.json and walks its cases as one history: a case that states an expected document is a transition from its document by its patch, chained to the transition before it. transitions and transitionsmore write the acceptance vectors of the snapshot guest's transition request (cases 1 to 36, and the rest): the W3C PROV record the case must give, whose addresses are those of the case's own document, patch and expected document; 'the state does not change' where the expected document is the document; 'the patch does not apply' where the case states an error. provtransitions and provtransitionsmore write the same records as acceptance vectors of the PROV-CONSTRAINTS checker (guest prov), each to be answered valid. GenPatch, GenJcs and Sha256 are the modules of generators/snapshot, byte for byte. jsonsuitesums writes the SHA256SUMS of the JSONTestSuite files held under app/specs/oracle/json-test-suite, one request per file. refusalcase writes, for one of those files, the acceptance vector of the snapshot guest's canonical request over the file's text, to be answered 'not I-JSON'; refusals, refusalsmore and refusalsijson gather them: the files the suite says a parser must refuse (n_, in two halves), and the lone surrogates, overflowing numbers and duplicated names that RFC 8785 requires refused.",
   "steps": [
     {
       "generator": "transitions",
@@ -28,6 +28,56 @@
         "app/specs/oracle/json-patch-tests/tests.json"
       ],
       "output": "app/specs/prov/transition-more/spec.json"
+    },
+    {
+      "generator": "jsonsuitesums",
+      "glob": [
+        "app/specs/oracle/json-test-suite/test_parsing/*.json"
+      ],
+      "output": "app/specs/oracle/json-test-suite/SHA256SUMS"
+    },
+    {
+      "generator": "refusalcase",
+      "glob": [
+        "app/specs/oracle/json-test-suite/test_parsing/n_[a-n]*.json"
+      ],
+      "output": ".gen/refusal-cases"
+    },
+    {
+      "generator": "refusals",
+      "inputs": [
+        ".gen/refusal-cases"
+      ],
+      "output": "app/specs/snapshot-refusal/spec.json"
+    },
+    {
+      "generator": "refusalcase",
+      "glob": [
+        "app/specs/oracle/json-test-suite/test_parsing/n_[o-s]*.json"
+      ],
+      "output": ".gen/refusal-cases-more"
+    },
+    {
+      "generator": "refusalsmore",
+      "inputs": [
+        ".gen/refusal-cases-more"
+      ],
+      "output": "app/specs/snapshot-refusal/more/spec.json"
+    },
+    {
+      "generator": "refusalcase",
+      "glob": [
+        "app/specs/oracle/json-test-suite/test_parsing/i_*.json",
+        "app/specs/oracle/json-test-suite/test_parsing/y_*.json"
+      ],
+      "output": ".gen/refusal-cases-ijson"
+    },
+    {
+      "generator": "refusalsijson",
+      "inputs": [
+        ".gen/refusal-cases-ijson"
+      ],
+      "output": "app/specs/snapshot-refusal/ijson/spec.json"
     }
   ]
 }
