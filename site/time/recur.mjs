@@ -13,22 +13,41 @@
 // instance, and EXDATE removes what it names.
 
 import ical from "../read/grammar/ical.mjs";
-import { abnf, first } from "../read/abnf.mjs";
+import { abnf, all, first } from "../read/abnf.mjs";
 
 const grammar = abnf(ical);
 const DAY = 86_400_000;
 const WEEKDAYS = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
 const FREQS = ["SECONDLY", "MINUTELY", "HOURLY", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"];
 
-const unfold = (text) => text.replace(/\r?\n[ \t]/g, "");
-export const lines = (text, name) => [...unfold(text).matchAll(new RegExp(`^${name}((?:;[^:\\r\\n]*)?):([^\\r\\n]*)$`, "gim"))].map(([, params, value]) => [params, value.trim()]);
+// Content lines (3.1): unfolded as the section says, each read whole by RFC 5545's `contentline`, its name, parameters and value taken from
+// the derivation; a line the rule does not derive is not one. A line longer than one request is its head, then the rest of its value (`value`).
+const unfold = (text) => text.replace(/\r?\n[ \t]/g, "").split(/\r?\n/);
+const [CUT, seen, read] = [1000, new Map(), new Map()];
+function lineOf(line, cps = Array.from(line)) {
+  if (seen.size > 4096) seen.clear();
+  const tree = seen.get(line) ?? seen.set(line, cps.every((_, i) => i < CUT || i % CUT || grammar.match("value", cps.slice(i, i + CUT).join(""))) && (grammar.match("contentline", `${cps.slice(0, CUT).join("")}\r\n`) ?? false)).get(line);
+  return tree && [cps.slice(first(tree, "name").end, first(tree, "value").start - 1).join(""), cps.slice(first(tree, "value").start).join("").trim(), tree];
+}
+export const lines = (text, name) => unfold(text).filter((line) => new RegExp(`^${name}[;:]`, "i").test(line)).map((line) => lineOf(line)).filter((line) => line && new RegExp(`^${name}$`, "i").test(first(line[2], "name").text));
+// A calendar object's parts in order (3.4, 3.6): its own content lines (kind "") and its components, each whole from its
+// BEGIN line to the END line that closes it, as written, in CRLF lines. The VCALENDAR lines themselves are not parts.
+export function parts(text, out = [], open = []) {
+  for (const line of text.split(/\r?\n(?![ \t])/).filter(Boolean).map((l) => l.replace(/\r?\n/g, "\r\n"))) {
+    const [, kind] = (/^(BEGIN|END):/i.test(line) && lines(line, "(?:BEGIN|END)")[0]) || [];
+    if (/^VCALENDAR$/i.test(kind)) continue;
+    const begins = kind && /^BEGIN/i.test(line);
+    if (begins && !open.length) out.push({ kind: kind.toUpperCase(), text: "", open });
+    if (begins) open.push(kind);
+    if (open.length) out.at(-1).text += `${line}\r\n`; else out.push({ kind: "", text: line });
+    if (kind && !begins && open.pop() && !open.length) delete out.at(-1).open;
+  }
+  return out.filter((part) => !part.open);
+}
 
 // One formatter per zone: making one is the slow part of reading a zone's wall-time.
 const clocks = new Map();
-const zoneClock = (zone) => {
-  if (!clocks.has(zone)) clocks.set(zone, new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" }));
-  return clocks.get(zone);
-};
+const zoneClock = (zone) => clocks.get(zone) ?? clocks.set(zone, new Intl.DateTimeFormat("en-US", { timeZone: zone, hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })).get(zone);
 
 // Wall-time in a named zone, as UTC, through the browser's own zone data.
 export function utcOf(wall, zone) {
@@ -37,8 +56,7 @@ export function utcOf(wall, zone) {
   try {
     const parts = zoneClock(zone);
     const offset = (at) => { const p = Object.fromEntries(parts.formatToParts(at).map(({ type, value }) => [type, +value])); return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) - at; };
-    const first = wall - offset(wall);
-    return wall - offset(first);
+    return wall - offset(wall - offset(wall));
   } catch {
     return utcOf(wall, "");
   }
@@ -46,27 +64,24 @@ export function utcOf(wall, zone) {
 
 // A DATE or DATE-TIME as wall-time (ms, read as if UTC) and the zone it is in, read by RFC 5545's own
 // rules (3.3.4 date, 3.3.5 date-time) through the grammar-ical guest; a value they do not derive is not a time.
-const read = new Map();
-export function timeOf(params, value) {
+export function timeOf(params, value, line) {
   const tree = read.get(value) ?? read.set(value, grammar.match("date-time", value) ?? grammar.match("date", value)).get(value);
   const n = (rule) => Number(first(tree, rule)?.text ?? 0);
-  const zone = first(tree, "time-utc") ? "UTC" : /;TZID=("?)([^";:]+)\1/i.exec(params)?.[2]?.replace(/^\//, "") ?? "";
-  return tree && { wall: Date.UTC(n("date-fullyear"), n("date-month") - 1, n("date-mday"), n("time-hour"), n("time-minute"), n("time-second")), zone, date: tree.rule === "date" };
+  const tzid = first(all(line, "param").find((p) => first(p, "param-name").text.toUpperCase() === "TZID"), "param-value")?.text.replace(/^"|"$/g, "").replace(/^\//, "");
+  return tree && { wall: Date.UTC(n("date-fullyear"), n("date-month") - 1, n("date-mday"), n("time-hour"), n("time-minute"), n("time-second")), zone: first(tree, "time-utc") ? "UTC" : tzid ?? "", date: tree.rule === "date" };
 }
 
+// A recurrence rule (3.3.10) by RFC 5545's `recur`: its parts and their numbers are the derivation's; a text the rule does not derive is no rule.
 function ruleOf(text) {
-  const parts = Object.fromEntries(text.split(";").map((p) => p.split("=")).filter(([k, v]) => k && v !== undefined).map(([k, v]) => [k.toUpperCase(), v]));
-  // Day, week and month numbers count from 1 (or back from -1); hours, minutes and seconds from 0.
-  const list = (k) => (parts[k] ? parts[k].split(",").map(Number).filter((n) => Number.isInteger(n) && (n !== 0 || ["BYSECOND", "BYMINUTE", "BYHOUR"].includes(k))) : null);
+  const parts = new Map(all(grammar.match("recur", text), "recur-rule-part").map((p) => [p.text.slice(0, p.text.indexOf("=")).toUpperCase(), p]));
+  const word = (k) => parts.get(k)?.text.slice(k.length + 1).toUpperCase();
+  const list = (k, rule) => (parts.has(k) ? all(parts.get(k), rule).map((n) => Number(n.text)) : null);
   return {
-    freq: FREQS.indexOf((parts.FREQ ?? "").toUpperCase()),
-    interval: Math.max(1, Number(parts.INTERVAL ?? 1) || 1),
-    count: parts.COUNT ? Number(parts.COUNT) : Infinity,
-    until: parts.UNTIL ? timeOf("", parts.UNTIL) : null,
-    wkst: Math.max(0, WEEKDAYS.indexOf((parts.WKST ?? "MO").toUpperCase())),
-    byday: parts.BYDAY ? parts.BYDAY.split(",").map((d) => /^([+-]?\d{1,2})?([A-Z]{2})$/i.exec(d.trim())).filter(Boolean).map(([, n, w]) => ({ n: n ? Number(n) : 0, w: WEEKDAYS.indexOf(w.toUpperCase()) })) : null,
-    bymonth: list("BYMONTH"), bymonthday: list("BYMONTHDAY"), byyearday: list("BYYEARDAY"), byweekno: list("BYWEEKNO"),
-    byhour: list("BYHOUR"), byminute: list("BYMINUTE"), bysecond: list("BYSECOND"), bysetpos: list("BYSETPOS"),
+    freq: FREQS.indexOf(word("FREQ")), interval: Math.max(1, Number(word("INTERVAL") ?? 1)), count: Number(word("COUNT") ?? Infinity),
+    until: parts.has("UNTIL") ? timeOf("", word("UNTIL")) : null, wkst: Math.max(0, WEEKDAYS.indexOf(word("WKST") ?? "MO")),
+    byday: parts.has("BYDAY") ? all(parts.get("BYDAY"), "weekdaynum").map((d) => ({ n: Number(d.text.slice(0, -2)), w: WEEKDAYS.indexOf(d.text.slice(-2).toUpperCase()) })) : null,
+    bymonth: list("BYMONTH", "monthnum"), bymonthday: list("BYMONTHDAY", "monthdaynum"), byyearday: list("BYYEARDAY", "yeardaynum"), byweekno: list("BYWEEKNO", "weeknum"),
+    byhour: list("BYHOUR", "hour"), byminute: list("BYMINUTE", "minutes"), bysecond: list("BYSECOND", "seconds"), bysetpos: list("BYSETPOS", "setposday"),
   };
 }
 
@@ -139,10 +154,9 @@ function daysOf(rule, start, period) {
 }
 
 // The instants of one period: its days, at the times the time parts expand or limit to.
-function periodOf(rule, start, period) {
+function periodOf(rule, start, period, { freq } = rule) {
   const s = new Date(start);
   const [h0, m0, s0] = [s.getUTCHours(), s.getUTCMinutes(), s.getUTCSeconds()];
-  const { freq } = rule;
   const unit = (list, fixed, own) => (list ? list : [own]).filter((v) => fixed === undefined || v === fixed);
   let out = [];
   if (freq >= 3) {
@@ -167,8 +181,7 @@ function periodOf(rule, start, period) {
 
 // The first period (as its own number) and how to step to the next.
 function periods(rule, start) {
-  const [y, m] = ymd(start);
-  const step = rule.interval;
+  const [[y, m], step] = [ymd(start), rule.interval];
   if (rule.freq === 6) return { first: y, next: (p) => p + step };
   if (rule.freq === 5) return { first: y * 12 + (m - 1), next: (p) => p + step };
   if (rule.freq === 4) { const day = Math.floor(start / DAY) * DAY; return { first: day - ((weekday(day) - rule.wkst + 7) % 7) * DAY, next: (p) => p + 7 * step * DAY, size: 7 * DAY }; }
@@ -181,7 +194,7 @@ export function instances(ical, { from = -Infinity, limit = 1000 } = {}) {
   const begin = lines(ical, "DTSTART").slice(0, 1).map((line) => timeOf(...line))[0];
   if (!begin) return [];
   const toUtc = (wall) => utcOf(wall, begin.zone);
-  const walls = (name) => lines(ical, name).flatMap(([params, value]) => value.split(",").map((v) => timeOf(params, v.trim())).filter(Boolean).map((t) => utcOf(t.wall, t.zone)));
+  const walls = (name) => lines(ical, name).flatMap(([params, value, line]) => value.split(",").map((v) => timeOf(params, v.trim(), line)).filter(Boolean).map((t) => utcOf(t.wall, t.zone)));
   const excluded = new Set(walls("EXDATE"));
   const out = new Set([toUtc(begin.wall), ...walls("RDATE")]);
   for (const [, text] of lines(ical, "RRULE")) {
@@ -213,7 +226,4 @@ export function instances(ical, { from = -Infinity, limit = 1000 } = {}) {
 }
 
 // When a repeating thing is next: its first instance at or after now, else the last it had.
-export function nextInstance(ical, now = Date.now()) {
-  const [next] = instances(ical, { from: now, limit: 1 });
-  return next ?? instances(ical, { limit: 100_000 }).at(-1) ?? NaN;
-}
+export const nextInstance = (ical, now = Date.now()) => instances(ical, { from: now, limit: 1 })[0] ?? instances(ical, { limit: 100_000 }).at(-1) ?? NaN;
