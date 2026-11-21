@@ -26,12 +26,7 @@ definition{
   recursive_argument: fuel
 }
 
-definition{
-  name: digDec,
-  parameters: [n : Nat],
-  result: Bytes,
-  body: (digDecFrom n 0x 8)
-}
+definition{name: digDec, parameters: [n : Nat], result: Bytes, body: (digDecFrom n 0x 8)}
 
 definition{
   name: digEsc,
@@ -46,7 +41,16 @@ definition{
 
 definition{
   name: digRows,
-  parameters: [s : Bytes, i : Nat, key : Bytes, prefix : Bytes, kind : Bytes, text : Bytes, acc : Bytes, fuel : Nat],
+  parameters: [
+    s : Bytes,
+    i : Nat,
+    key : Bytes,
+    prefix : Bytes,
+    kind : Bytes,
+    text : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
   result: Bytes,
   body: (match fuel
     | Nat.zero => acc
