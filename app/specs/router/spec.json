@@ -688,6 +688,8 @@
         "when": ".input {$allDay :string}\n.input {$ago :string}\n.local $day = {$at :date fields=month-day-weekday length=medium}\n.local $time = {$at :time precision=minute}\n.match $allDay $ago\nyes || {{{$day}}}\nyes * {{{$day} ({$ago})}}\n* || {{{$day} at {$time}}}\n* * {{{$day} at {$time} ({$ago})}}",
         "kept": ".input {$when :string}\n.match $when\n|| {{Keep “{$what}” as a note?}}\n* {{Keep “{$what}” for {$when}?}}",
         "now": "It is {$at :datetime dateFields=year-month-day-weekday dateLength=long timePrecision=minute}",
+        "under": "“{$what}” is under way until {$when}",
+        "next": "Next is “{$what}”, {$when}",
         "unmatched": "Nothing you hold mentions “{$what}”",
         "empty": "Nothing has arrived yet: connect your mail and calendar, or keep a note, and ask again",
         "help": "Ask about your day, a person, your mail, your calendar or your notes",
@@ -708,6 +710,7 @@
       },
       "most": 3,
       "find": 1000,
+      "held": 24,
       "lead": 160,
       "offers": {
         "message": "reply",

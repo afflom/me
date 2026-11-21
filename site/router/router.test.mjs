@@ -180,6 +180,10 @@ for (const word of words) {
 }
 // QR-04 "find-missing": examples that name the asked word and are missing from the list.
 assert.ok(findLost.length <= 0, `find-missing: ${findLost.length} (${findLost.slice(0, 12).join("; ")})`);
+// What time it is, at the senses' first pinned clock (app/specs/senses/clocks.json), names the RFC 5545 event then under way.
+const pinned = Date.parse(JSON.parse(readFileSync(new URL("../../app/specs/senses/clocks.json", import.meta.url), "utf8")).clocks[0]);
+const timed = await answer("what time is it", { items: kept, line: boundaryLine, halted: () => "no", now: pinned, keep: false });
+assert.ok(timed.cited[0]?.at <= pinned && timed.cited[0].end > pinned && /^“.+” is under way until /u.test(timed.sentences[1]), timed.sentences.join(" "));
 const conference = await answer("conference", { items: held.map((h) => h.item), line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
 assert.ok(conference.sources.length > 3 && conference.sentences.length <= 3, "while the sentences say only a few");
 assert.ok(conference.cited.every((item) => conference.sources.includes(item)), "and what they say is in the list");
