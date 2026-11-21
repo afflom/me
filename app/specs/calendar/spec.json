@@ -1,9 +1,10 @@
 {
- "comment": "The calendar reader's two sources, kept at their pinned bytes (the registries at app/specs/calendar/upstream/icalendar.xml, RFC 5545 among the standard texts at app/specs/standards/texts/<sha256>). generators/calendar's GenCalendar reads them (generators/pipeline.json) into site/calendar/registry.mjs, every element IANA registers for the standard with what the standard's section 3 says of it, and into ST-01's inventory of those elements (test/standards/generated/iana-icalendar.json). examples: the grammar-ical guest's acceptance vectors (app/specs/guests/spec.json): a request is a rule's place among the ical grammar's rules in sorted order, a space and the text; the answer is \"none\" or each rule the derivation went through as rule,start,end,depth in octets. The texts are RFC 5545's own (3.3.5's DATE-TIME, 3.8.2.4's DTSTART, 3.8.5.3's last-work-day rule, and a date RFC 5545 does not write).",
+ "comment": "The calendar reader's two sources, kept at their pinned bytes (the registries at app/specs/calendar/upstream/icalendar.xml, RFC 5545 among the standard texts at app/specs/standards/texts/<sha256>). generators/calendar's GenCalendar reads them (generators/pipeline.json) into site/calendar/registry.mjs, every element IANA registers for the standard with what the standard's section 3 says of it, and into ST-01's inventory of those elements (test/standards/generated/iana-icalendar.json). examples: the grammar-ical guest's acceptance vectors (app/specs/guests/spec.json): a request is a rule's place among the ical grammar's rules in sorted order, a space and the text; the answer is \"none\" or each rule the derivation went through as rule,start,end,depth in octets. The texts are RFC 5545's own (3.3.5's DATE-TIME, 3.8.2.4's DTSTART, 3.8.5.3's last-work-day rule, and a date RFC 5545 does not write). registry.apart: the elements the enforcing suite (test/calendar.registry.test.mjs, written by GenCalendar's icalsuite from RFC 5545's own section 3 examples, test/standards/generated/rfc5545-examples.txt) leaves in ST-01's debt though the RFC gives examples of them: ATTACH, whose rule as RFC 5545 prints it puts CRLF inside its second alternative only, so it derives none of its own URI examples, and no verified erratum corrects it. CONTACT is apart too: each of its examples holds a telephone number, so none is kept (below). slips: the example lines of RFC 5545 section 3 that the RFC's own grammar does not derive, each as printed (unfolded) with the section it is in and why; the suite refuses any other, and requires each of these to be refused. An example row that holds a number shaped like a telephone number is left out of the examples file (PV-01 keeps such numbers out of the repository), and with it its whole example; one of those, a CONTACT line of 3.8.4.2, is a slip too (its ALTREP URI holds a backslash).",
  "registry": {
   "key": "iana-icalendar",
   "title": "IANA iCalendar Element Registries (components, properties, parameters, value data types and their values)",
   "standard": "rfc5545",
+  "apart": "property ATTACH;property CONTACT",
   "path": "app/specs/calendar/upstream/icalendar.xml",
   "url": "https://www.iana.org/assignments/icalendar/icalendar.xml",
   "sha256": "7b4f0da76b12c04ceaf608f8b4c28386945f27578150e2c35e6c9e84052399a1"
@@ -32,5 +33,22 @@
    "56 1998-01-19",
    "none"
   ]
+ ],
+ "slips": [
+  {
+   "section": "3.8.4.1",
+   "line": "ATTENDEE;SENT-BY=mailto:jan_doe@example.com;CN=John Smith:mailto:jsmith@example.com",
+   "why": "SENT-BY's value is a quoted cal-address (3.2.18: sentbyparam = \"SENT-BY\" \"=\" DQUOTE cal-address DQUOTE); the example leaves the quotes out."
+  },
+  {
+   "section": "3.6.4",
+   "line": "ORGANIZER:jsmith@example.com",
+   "why": "ORGANIZER's value is a cal-address, a URI (3.3.3); the example has no scheme."
+  },
+  {
+   "section": "3.8.5.2",
+   "line": "RDATE;VALUE=DATE:19970101,19970120,19970217,1997042119970526,19970704,19970901,19971014,19971128,19971129,19971225",
+   "why": "The example folds after 19970421 without the comma that separates two dates, so unfolded the two run together."
+  }
  ]
 }
