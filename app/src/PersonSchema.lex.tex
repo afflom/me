@@ -1,0 +1,183 @@
+\begin{lexlean}{PersonSchema}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Person.V1.Model}
+\importmodule{Foundation.Vocab.V1.SchemaOrg}
+\importmodule{VocabNames}
+\title{Person model}
+\begin{semanticmodule}
+definition{
+  name: schemaAfter,
+  parameters: [wanted : String, tokens : (List VocabNames::VocabToken)],
+  result: (List VocabNames::VocabToken),
+  body: (match tokens
+    | List.nil => (nil VocabNames::VocabToken)
+    | List.cons token rest => (if ((project token mark) && (prim equal (project token text) wanted : Bool)) then rest else (schemaAfter wanted rest))),
+  recursive_argument: tokens
+}
+
+definition{
+  name: schemaNamesFrom,
+  parameters: [tokens : (List VocabNames::VocabToken)],
+  result: (List String),
+  body: (match tokens
+    | List.nil => (nil String)
+    | List.cons token rest => (if (project token mark) then (nil String) else (cons (project token text) (schemaNamesFrom rest)))),
+  recursive_argument: tokens
+}
+
+definition{
+  name: schemaSection,
+  parameters: [wanted : String],
+  result: (List String),
+  body: (schemaNamesFrom (schemaAfter wanted (VocabNames::vocabTokens)))
+}
+
+definition{
+  name: schemaLength,
+  parameters: [items : (List String)],
+  result: Nat,
+  body: (match items | List.nil => 0 | List.cons item rest => ((schemaLength rest) + 1)),
+  recursive_argument: items
+}
+
+definition{
+  name: schemaIndexFrom,
+  parameters: [wanted : String, items : (List String), position : Nat],
+  result: Nat,
+  body: (match items
+    | List.nil => position
+    | List.cons item rest => (if (prim equal item wanted : Bool) then position else (schemaIndexFrom wanted rest (position + 1)))),
+  recursive_argument: items
+}
+
+definition{
+  name: schemaContains,
+  parameters: [wanted : String, items : (List String)],
+  result: Bool,
+  body: (match items
+    | List.nil => false
+    | List.cons item rest => ((prim equal item wanted : Bool) || (schemaContains wanted rest))),
+  recursive_argument: items
+}
+
+definition{
+  name: schemaHas,
+  parameters: [wanted : Nat, items : (List Nat)],
+  result: Bool,
+  body: (match items
+    | List.nil => false
+    | List.cons item rest => ((item =? wanted) || (schemaHas wanted rest))),
+  recursive_argument: items
+}
+
+definition{
+  name: schemaAny,
+  parameters: [items : (List Nat), among : (List Nat)],
+  result: Bool,
+  body: (match items
+    | List.nil => false
+    | List.cons item rest => ((schemaHas item among) || (schemaAny rest among))),
+  recursive_argument: items
+}
+
+definition{
+  name: schemaParentsOf,
+  parameters: [wanted : Nat, rows : (List Foundation.Vocab.V1.SchemaOrg::VocabTypeRow)],
+  result: (List Nat),
+  body: (match rows
+    | List.nil => (nil Nat)
+    | List.cons row rest => (if ((project row index) =? wanted) then (project row parents) else (schemaParentsOf wanted rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: schemaClosure,
+  parameters: [fuel : Nat, frontier : (List Nat), seen : (List Nat)],
+  result: (List Nat),
+  body: (match fuel
+    | Nat.zero => seen
+    | Nat.succ more => (match frontier
+      | List.nil => seen
+      | List.cons item rest => (if (schemaHas item seen) then (schemaClosure more rest seen) else (schemaClosure more (Foundation.Vocab.V1.SchemaOrg::vocabAppendNats (schemaParentsOf item (Foundation.Vocab.V1.SchemaOrg::vocabTypeRows)) rest) (cons item seen))))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: schemaPersonType,
+  parameters: [],
+  result: Nat,
+  body: (schemaIndexFrom "Person" (schemaSection "types") 0)
+}
+
+definition{
+  name: schemaPersonTypes,
+  parameters: [],
+  result: (List Nat),
+  body: (schemaClosure 64 (cons (schemaPersonType) (nil Nat)) (nil Nat))
+}
+
+definition{
+  name: schemaPropertiesOf,
+  parameters: [types : (List Nat), rows : (List Foundation.Vocab.V1.SchemaOrg::VocabPropertyRow)],
+  result: (List Nat),
+  body: (match rows
+    | List.nil => (nil Nat)
+    | List.cons row rest => (if (schemaAny (project row domains) types) then (cons (project row index) (schemaPropertiesOf types rest)) else (schemaPropertiesOf types rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: schemaNameAt,
+  parameters: [position : Nat, items : (List String)],
+  result: String,
+  body: (match items
+    | List.nil => ""
+    | List.cons item rest => (if (position =? 0) then item else (schemaNameAt (prim subtract position 1 : Nat) rest))),
+  recursive_argument: items
+}
+
+definition{
+  name: schemaNamesAt,
+  parameters: [positions : (List Nat), items : (List String)],
+  result: (List String),
+  body: (match positions
+    | List.nil => (nil String)
+    | List.cons position rest => (cons (schemaNameAt position items) (schemaNamesAt rest items))),
+  recursive_argument: positions
+}
+
+definition{
+  name: schemaPersonProperties,
+  parameters: [],
+  result: (List String),
+  body: (schemaNamesAt (schemaPropertiesOf (schemaPersonTypes) (Foundation.Vocab.V1.SchemaOrg::vocabPropertyRows)) (schemaSection "properties"))
+}
+
+definition{
+  name: schemaModelOutside,
+  parameters: [
+    properties : (List Foundation.Person.V1.Model::PersonProperty),
+    allowed : (List String)
+  ],
+  result: (List String),
+  body: (match properties
+    | List.nil => (nil String)
+    | List.cons property rest => (if (((Foundation.Person.V1.Model::personFacetNumber (project property facet)) =? 0) && (not (schemaContains (Foundation.Person.V1.Model::personPropertyName (project property index)) allowed))) then (cons (Foundation.Person.V1.Model::personPropertyName (project property index)) (schemaModelOutside rest allowed)) else (schemaModelOutside rest allowed))),
+  recursive_argument: properties
+}
+
+definition{
+  name: schemaSame,
+  parameters: [left : (List String), right : (List String)],
+  result: Bool,
+  body: (match left
+    | List.nil => ((schemaLength right) =? 0)
+    | List.cons item rest => (match right
+      | List.nil => false
+      | List.cons other more => ((prim equal item other : Bool) && (schemaSame rest more)))),
+  recursive_argument: left
+}
+\end{semanticmodule}
+\end{lexlean}

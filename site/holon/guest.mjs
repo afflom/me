@@ -40,3 +40,10 @@ export async function openGuest(bytes, sha256) {
     try { return run(x, line); } catch (error) { x = null; throw error; }
   };
 }
+
+// The guest as this module serves it: its bytes read from beside this file
+// under Node and fetched from beside it in a browser, then opened as above.
+export async function opened(guest, open = openGuest) {
+  const at = new URL(guest.path, import.meta.url);
+  return open(at.protocol === "file:" ? await (await import("node:fs/promises")).readFile(at) : new Uint8Array(await (await fetch(at)).arrayBuffer()), guest.sha256);
+}

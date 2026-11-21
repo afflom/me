@@ -1033,32 +1033,31 @@ definition{
 }
 
 definition{
+  name: ptOwed,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let name : Bytes := (Check::notGen archive); (let f : Bytes := (Check::file archive name); (Check::cat (cons (Foundation.Json::span name 21 (prim subtract (trLen name) 5 : Nat)) (cons (trToks (Check::texts f (Foundation.Json::root f))) (cons 0x0a (nil Bytes))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: trMissingFrom,
-  parameters: [
-    missing : Bytes,
-    i : Nat,
-    spec : Bytes,
-    owed : (Option Nat),
-    acc : Bytes,
-    fuel : Nat
-  ],
+  parameters: [missing : Bytes, i : Nat, owed : Bytes, acc : Bytes, fuel : Nat],
   result: Bytes,
   body: (match fuel
     | Nat.zero => acc
-    | Nat.succ rest => (if ((trLen missing) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf missing i (trLen missing)); (let l : Bytes := (Foundation.Json::span missing i e); (let p : Bytes := (Check::firstWord l); (let m : Bytes := (Check::restWord l); (let oa : (Option Nat) := (Check::keyBytes spec owed p); (trMissingFrom missing (e + 1) spec owed (Foundation.Bytes::appendBytes acc (match oa
-      | Option.none => (trSay "part " p " does not answer " (trJoin m) "")
-      | Option.some v => (if (Check::same (Check::texts spec oa) (trLines m)) then 0x else (Check::cat (cons (Check::u "part ") (cons p (cons (Check::u " does not answer ") (cons (trJoin m) (cons (Check::u " (its debt says ") (cons (trJoin (trToks (Check::texts spec oa))) (cons (Check::u ")") (cons 0x0a (nil Bytes))))))))))))) rest)))))))),
+    | Nat.succ rest => (if ((trLen missing) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf missing i (trLen missing)); (let l : Bytes := (Foundation.Json::span missing i e); (let p : Bytes := (Check::firstWord l); (let m : Bytes := (Check::restWord l); (let o : Bytes := (trHolderOfFrom owed p 0 0x ((trLen owed) + 1)); (trMissingFrom missing (e + 1) owed (Foundation.Bytes::appendBytes acc (if (not (Check::inLines (Check::firstWords owed) p)) then (trSay "part " p " does not answer " (trJoin m) "") else (if (Check::same (trLines o) (trLines m)) then 0x else (Check::cat (cons (Check::u "part ") (cons p (cons (Check::u " does not answer ") (cons (trJoin m) (cons (Check::u " (its debt says ") (cons (trJoin o) (cons (Check::u ")") (cons 0x0a (nil Bytes))))))))))))) rest)))))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
   name: trOwedPartsFrom,
-  parameters: [spec : Bytes, i : Nat, ground : Bytes, missing : Bytes, acc : Bytes, fuel : Nat],
+  parameters: [owed : Bytes, i : Nat, ground : Bytes, missing : Bytes, acc : Bytes, fuel : Nat],
   result: Bytes,
   body: (match fuel
     | Nat.zero => acc
-    | Nat.succ rest => (if (Check::memberDone spec i) then acc else (let p : Bytes := (Check::str spec (ctor Option.some [Nat] i)); (trOwedPartsFrom spec (Check::memberNext spec i) ground missing (Foundation.Bytes::appendBytes acc (if (not (Check::inLines (Check::firstWords ground) p)) then (trSay "parts debt names " p ", which is no part" 0x "") else (if (Check::inLines (Check::firstWords missing) p) then 0x else (trSay "part " p " answers every question now: remove it from the parts debt" 0x "")))) rest)))),
+    | Nat.succ rest => (if ((trLen owed) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf owed i (trLen owed)); (let p : Bytes := (Check::firstWord (Foundation.Json::span owed i e)); (trOwedPartsFrom owed (e + 1) ground missing (Foundation.Bytes::appendBytes acc (if (not (Check::inLines (Check::firstWords ground) p)) then (trSay "parts debt names " p ", which is no part" 0x "") else (if (Check::inLines (Check::firstWords missing) p) then 0x else (trSay "part " p " answers every question now: remove it from the parts debt" 0x "")))) rest))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
@@ -1102,7 +1101,7 @@ definition{
   name: debtReasons,
   parameters: [archive : Bytes],
   result: Bytes,
-  body: (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (let debt : (Option Nat) := (Check::key spec (Foundation.Json::root spec) "debt"); (let owed : (Option Nat) := (Check::key spec debt "parts"); (let unserved : (Option Nat) := (Check::key spec debt "journeys"); (let missing : Bytes := (trF archive ".gen/pt-missing"); (let ground : Bytes := (trF archive ".gen/pt-ground"); (let js : Bytes := (Check::firstWords (trF archive ".gen/pt-answers")); (let served : Bytes := (trToks (Check::restWords (trF archive ".gen/pt-serves"))); (Check::cat (cons (trMissingFrom missing 0 spec owed 0x ((trLen missing) + 1)) (cons (trOwedPartsFrom spec (Check::memberStart spec owed) ground missing 0x (trLen spec)) (cons (trJourneysDebtFrom js 0 spec unserved served (trF archive ".gen/pt-works") 0x ((trLen js) + 1)) (cons (trUnknownJourneysFrom spec (Check::memberStart spec unserved) js 0x (trLen spec)) (nil Bytes)))))))))))))),
+  body: (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (let debt : (Option Nat) := (Check::key spec (Foundation.Json::root spec) "debt"); (let owed : Bytes := (trF archive ".gen/pt-debt"); (let unserved : (Option Nat) := (Check::key spec debt "journeys"); (let missing : Bytes := (trF archive ".gen/pt-missing"); (let ground : Bytes := (trF archive ".gen/pt-ground"); (let js : Bytes := (Check::firstWords (trF archive ".gen/pt-answers")); (let served : Bytes := (trToks (Check::restWords (trF archive ".gen/pt-serves"))); (Check::cat (cons (trMissingFrom missing 0 owed 0x ((trLen missing) + 1)) (cons (trOwedPartsFrom owed 0 ground missing 0x ((trLen owed) + 1)) (cons (trJourneysDebtFrom js 0 spec unserved served (trF archive ".gen/pt-works") 0x ((trLen js) + 1)) (cons (trUnknownJourneysFrom spec (Check::memberStart spec unserved) js 0x (trLen spec)) (nil Bytes)))))))))))))),
   axioms: [Quot.sound, propext]
 }
 
