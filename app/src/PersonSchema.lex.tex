@@ -3,6 +3,7 @@
 \useglossary{lexlean.std.nat@1.2.0}
 \useglossary{prism.arch@1.0.0}
 \importmodule{Foundation.Person.V1.Model}
+\importmodule{Foundation.Person.V1.More}
 \importmodule{Foundation.Vocab.V1.SchemaOrg}
 \importmodule{VocabNames}
 \title{Person model}
@@ -170,6 +171,23 @@ definition{
     | List.nil => (nil String)
     | List.cons property rest => (if ((Foundation.Person.V1.Model::personFacetNumber (project property facet)) =? facet) then (cons (Foundation.Person.V1.Model::personPropertyName (project property index)) (schemaModelNames rest facet)) else (schemaModelNames rest facet))),
   recursive_argument: properties
+}
+
+definition{
+  name: schemaMoreFrom,
+  parameters: [index : Nat, left : Nat],
+  result: (List Foundation.Person.V1.Model::PersonProperty),
+  body: (match left
+    | Nat.zero => (nil Foundation.Person.V1.Model::PersonProperty)
+    | Nat.succ rest => (cons (Foundation.Person.V1.Model::personMoreProperty index) (schemaMoreFrom (index + 1) rest))),
+  recursive_argument: left
+}
+
+definition{
+  name: schemaMoreProperties,
+  parameters: [],
+  result: (List Foundation.Person.V1.Model::PersonProperty),
+  body: (schemaMoreFrom (Foundation.Person.V1.More::personMoreFirst) (Foundation.Person.V1.More::personMoreCount))
 }
 
 definition{
