@@ -1,0 +1,36 @@
+{
+ "key": "rfc6901",
+ "title": "RFC 6901 JavaScript Object Notation (JSON) Pointer",
+ "issuer": "IETF",
+ "text": {
+  "url": "https://www.rfc-editor.org/rfc/rfc6901.txt",
+  "sha256": "12f9f4fc13d686aa4fbe7d144d70166cd3fcd4ab89174c2b13bda8f4b55e49da"
+ },
+ "inventories": [
+  {
+   "generated": "test/standards/generated/rfc6901.jsonl",
+   "vendored": "app/specs/standards/texts/12f9f4fc13d686aa4fbe7d144d70166cd3fcd4ab89174c2b13bda8f4b55e49da",
+   "source": {
+    "url": "https://www.rfc-editor.org/rfc/rfc6901.txt",
+    "sha256": "12f9f4fc13d686aa4fbe7d144d70166cd3fcd4ab89174c2b13bda8f4b55e49da"
+   }
+  }
+ ],
+ "governs": [
+  "app/src/PrismSnapshot.lex.tex",
+  "site/snapshot/guest.mjs"
+ ],
+ "realizedBy": [
+  "ST-01"
+ ],
+ "enforcedBy": {
+  "rfc6901-4-a29c85e1": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests tests.json the two cases \"test with bad array number that has leading zeros\" (/00 and /01) and the \"bad number\" cases of test, remove, replace, copy, move and add are answered by refusal, and the cases that index arrays by digits or by - by the documents they expect; prismpm build runs every acceptance vector of the snapshot-patch guest entry (app/specs/snapshot-patch/spec.json, written from the oracle by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6901-5-3520c6ca": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "json-patch-tests tests.json the case that tests the RFC 6901 section 5 example document, whose patch holds the pointers /i\\j and /k\"l escaped as JSON strings, is answered by the unchanged document; prismpm build runs every acceptance vector of the snapshot-patch guest entry (app/specs/snapshot-patch/spec.json, written from the oracle by generators/snapshot) and GU-01 holds the pinned wasm to those vectors"
+  }
+ }
+}
