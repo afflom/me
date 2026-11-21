@@ -76,15 +76,15 @@ export function sentenceOf(item, me = null, { now = null, order = null, rhythm =
 
 // The confirmation of something kept: where it landed in time.
 export function keptSentence(text, mapped) {
-  const first = text.trim().split("\n")[0];
-  const what = mapped.start != null ? withoutTime(first, mapped.spans) || first : first;
+  const first = text.trim().split("\n")[0], what = mapped.start != null ? withoutTime(first, mapped.spans) || first : first;
   return fill("kept", { what, when: mapped.start != null ? whenOf(mapped.start, mapped.allDay) : "" });
 }
 
 // keep: false treats every prompt as a question (a box that only asks).
 // meaning: the router's meaning reader (site/router/meaning.mjs), when it has opened.
+// after: when the turn before this one was, if there was one: only then can the words be feedback on it.
 export async function answer(prompt, options) {
-  const { items = [], me = null, line, halted, now = Date.now(), keep = true, meaning = null } = options;
+  const { items = [], me = null, line, halted, now = Date.now(), keep = true, meaning = null, after = null } = options;
   const text = (prompt ?? "").trim();
   const none = { sentences: [], sources: [], offers: [], mapped: null };
   if (!text) return none;
@@ -93,10 +93,11 @@ export async function answer(prompt, options) {
   const held = items.filter((item) => !item.sealed);
   // What to do with the words is the Prism Ask decision's (app/specs/ask/spec.json,
   // PrismAsk in LexLean), asked of the root guest: the page only carries it out.
-  const request = [halted(), asksNow(text, termsOf(text)) ? "asked" : "not", keep ? "keeps" : "asks", mapped.intent ?? "fact", mapped.start != null ? "yes" : "no", held.length ? "some" : "none"];
+  const request = [halted(), asksNow(text, termsOf(text)) ? "asked" : "not", keep ? "keeps" : "asks", mapped.intent ?? "fact", mapped.start != null ? "yes" : "no", held.length ? "some" : "none", after && mapped.act === "autoFeedback" ? "autofeedback" : "task"];
   const decided = (await line(`ask ${request.join(" ")}`)).trim();
   const going = decided === "clock" ? await schedule(held, now) : [], cited = going.map(([, item]) => item);
   if (decided === "clock") return { sentences: [fill("now", { at: new Date(now).toISOString() }), ...going.map(([frame, item, edge]) => fill(frame, { what: item.title, when: whenOf(item[edge], item.allDay, now) }))].map(end), sources: cited, cited, offers: [], mapped };
+  if (decided === "heard") return { sentences: [end(fill("heard"))], sources: [], offers: [], mapped };
   if (decided === "keep") return { sentences: [keptSentence(text, mapped)], sources: [], offers: [{ kind: "keep" }], mapped };
   if (decided === "look") {
     const asked = await answer(prompt, { ...options, keep: false });
@@ -107,19 +108,16 @@ export async function answer(prompt, options) {
   // The kind of thing it names (mail, calendar, notes), the words it is after,
   // and whether it only greets or asks how things stand.
   const words = text.toLowerCase().match(/[\p{L}]+/gu) ?? [];
-  const kind = Object.keys(S.kinds).find((k) => words.some((w) => S.kinds[k].includes(w))) ?? null;
-  const ofKind = (item) => (kind === "calendar" ? item.media === "calendar" || item.start != null : item.media === kind && item.start == null);
+  const kind = Object.keys(S.kinds).find((k) => words.some((w) => S.kinds[k].includes(w))) ?? null, ofKind = (item) => (kind === "calendar" ? item.media === "calendar" || item.start != null : item.media === kind && item.start == null);
   const terms = termsOf(text).filter((t) => !Object.values(S.kinds).flat().includes(t));
   const greets = terms.every((t) => S.greet.includes(t) || S.overview.includes(t));
   // The words that name what is asked about, without the ones that only ask how things stand.
   const named = terms.filter((t) => !S.overview.includes(t) && !S.greet.includes(t));
   const span = windowOf(text, now);
   // What the ask means, near what each item means (PROVIDERS.meaning), as well as the words they share.
-  const near = PROVIDERS.meaning?.near ?? 1;
-  const close = (item) => (mapped.meaning && item.meaning ? nearness(mapped.meaning, item.meaning) : 0);
+  const near = PROVIDERS.meaning?.near ?? 1, close = (item) => (mapped.meaning && item.meaning ? nearness(mapped.meaning, item.meaning) : 0);
   let used = drawOn(items, text, { now, vector: mapped.meaning, near, facetsOf: meaning?.facets ?? null });
-  let lead = [];
-  let many = Boolean(span);
+  let lead = [], many = Boolean(span);
   if (kind && !span) {
     // Mail and notes newest first; the calendar from what is next.
     const matched = used.filter(ofKind);
@@ -143,14 +141,12 @@ export async function answer(prompt, options) {
   // everything that names it; otherwise the best match.
   const naming = many ? [] : used.filter((item) => mentions(item, named));
   const told = many ? used.slice(0, S.most) : naming.length > 1 ? naming.slice(0, S.most) : used.slice(0, 1);
-  const order = sequence(held);
-  const rhythm = rhythms(held);
+  const order = sequence(held), rhythm = rhythms(held);
   const sentences = [...lead.map((s) => `${s}.`), ...told.map((item) => end(sentenceOf(item, me, { now, order, rhythm })))];
   // Everything held that names the asked words is found: the sentences say
   // the few, and the list beneath holds those first, then the rest, newest first.
   // Asked only words the readers pass over (a kind, a weekday, "should"), those words are what is sought.
-  const bare = wordsOf(text);
-  const sought = named.length ? named : bare.length && bare.every((w) => !S.greet.includes(w) && !S.overview.includes(w)) ? bare : [];
+  const bare = wordsOf(text), sought = named.length ? named : bare.length && bare.every((w) => !S.greet.includes(w) && !S.overview.includes(w)) ? bare : [];
   // What names the asked words comes before what is only near in meaning, then newest first, then by address: an order that does not depend on how the items came in.
   const says = (item) => Number(sought.length > 0 && mentions(item, sought));
   const found = sought.length || mapped.meaning ? held.filter((item) => (!kind || !named.length || ofKind(item)) && ((sought.length && mentions(item, sought)) || close(item) >= near)).sort((a, b) => says(b) - says(a) || (b.at ?? 0) - (a.at ?? 0) || (a.address < b.address ? -1 : 1)) : [];
@@ -166,8 +162,7 @@ export async function answer(prompt, options) {
 
 // Events still ahead come first, soonest first; past ones after, latest first.
 function upcoming(a, b, now) {
-  const at = (item) => item.start ?? item.at ?? 0;
-  const ahead = (item) => !item.undated && !item.cancelled && at(item) >= now - 3_600_000;
+  const at = (item) => item.start ?? item.at ?? 0, ahead = (item) => !item.undated && !item.cancelled && at(item) >= now - 3_600_000;
   if (ahead(a) !== ahead(b)) return ahead(a) ? -1 : 1;
   return ahead(a) ? at(a) - at(b) : at(b) - at(a);
 }
