@@ -33,21 +33,21 @@ theorem{
 theorem{
   name: morePropertiesNumbered,
   parameters: [],
-  statement: ((Foundation.Person.V1.Model::personNumberedFrom 63 (Foundation.Person.V1.Model::personPropertiesMore)) = true),
+  statement: ((Foundation.Person.V1.Model::personNumberedFrom 63 (PersonSchema::schemaMoreProperties)) = true),
   proof: decide{}
 }
 
 theorem{
   name: moreLabelsDeclared,
   parameters: [],
-  statement: ((Foundation.Person.V1.Model::personLabelsInRange (Foundation.Person.V1.Model::personPropertiesMore)) = true),
+  statement: ((Foundation.Person.V1.Model::personLabelsInRange (PersonSchema::schemaMoreProperties)) = true),
   proof: decide{}
 }
 
 theorem{
   name: moreHealthAndSpecialRestricted,
   parameters: [],
-  statement: ((Foundation.Person.V1.Model::personDetectedRestricted (Foundation.Person.V1.Model::personPropertiesMore)) = true),
+  statement: ((Foundation.Person.V1.Model::personDetectedRestricted (PersonSchema::schemaMoreProperties)) = true),
   proof: decide{}
 }
 
@@ -176,21 +176,21 @@ theorem{
 theorem{
   name: personPropertiesAreSchemaOrg,
   parameters: [],
-  statement: (((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchema::schemaJoin (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 0) (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personPropertiesMore) 0)) (PersonSchema::schemaPersonProperties))) =? 0) = true),
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchema::schemaJoin (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 0) (PersonSchema::schemaModelNames (PersonSchema::schemaMoreProperties) 0)) (PersonSchema::schemaPersonProperties))) =? 0) = true),
   proof: decide{}
 }
 
 theorem{
   name: schemaOrgPersonPropertiesModelled,
   parameters: [],
-  statement: (((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchema::schemaPersonProperties) (PersonSchema::schemaJoin (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 0) (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personPropertiesMore) 0)))) =? 0) = true),
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchema::schemaPersonProperties) (PersonSchema::schemaJoin (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 0) (PersonSchema::schemaModelNames (PersonSchema::schemaMoreProperties) 0)))) =? 0) = true),
   proof: decide{}
 }
 
 theorem{
   name: morePropertiesArePerson,
   parameters: [],
-  statement: (((PersonSchema::schemaLength (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personPropertiesMore) 0)) =? 60) = true),
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaModelNames (PersonSchema::schemaMoreProperties) 0)) =? 60) = true),
   proof: decide{}
 }
 
@@ -204,7 +204,7 @@ theorem{
 theorem{
   name: schemaOrgReleasePropertiesModelled,
   parameters: [],
-  statement: (((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchemaPin::schemaPinNames) (PersonSchema::schemaJoin (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 0) (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personPropertiesMore) 0)))) =? 0) = true),
+  statement: (((PersonSchema::schemaLength (PersonSchema::schemaOutside (PersonSchemaPin::schemaPinNames) (PersonSchema::schemaJoin (PersonSchema::schemaModelNames (Foundation.Person.V1.Model::personProperties) 0) (PersonSchema::schemaModelNames (PersonSchema::schemaMoreProperties) 0)))) =? 0) = true),
   proof: decide{}
 }
 
