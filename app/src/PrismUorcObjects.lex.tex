@@ -27,18 +27,10 @@ definition{
 }
 
 definition{
-  name: uorcObjectsIs,
-  parameters: [s : Bytes, k : Nat, word : Bytes],
-  result: Bool,
-  body: (prim equal (uorcObjectsWord s k) word : Bool),
-  axioms: [Quot.sound, propext]
-}
-
-definition{
-  name: uorcObjectsRequest,
-  parameters: [value : Bytes, act : Nat, halted : Nat],
-  result: PrismUorc::PrismUorcRequest,
-  body: (record PrismUorc::PrismUorcRequest {act := act, halted := halted, seal := (if ((uorcObjectsIs value 6 0x31) && (uorcObjectsIs value 7 0x74727565)) then (PrismUorc::prismUorcSealOk) else (PrismUorc::prismUorcSealBroken)), format := (if ((uorcObjectsIs value 8 0x32) && (uorcObjectsIs value 9 0x31)) then (PrismUorc::prismUorcFormatKnown) else (PrismUorc::prismUorcFormatOther)), scope := (if ((uorcObjectsIs value 10 0x73656c662d636f6e7461696e6564) && (uorcObjectsIs value 11 0x6e6f6e65)) then (PrismUorc::prismUorcScopeSelf) else (if ((uorcObjectsIs value 10 0x636f6e646974696f6e616c) && (uorcObjectsIs value 11 0x7374616e64617264)) then (PrismUorc::prismUorcScopeStandard) else (PrismUorc::prismUorcScopeOther))), objects := (if ((uorcObjectsIs value 6 0x31) && (uorcObjectsIs value 12 0x31)) then (PrismUorc::prismUorcObjectsOne) else (PrismUorc::prismUorcObjectsMany)), restore := (if (uorcObjectsIs value 5 0x6661696c6564) then (PrismUorc::prismUorcRestoreFailed) else (if (((Foundation.Bytes::byteLength (uorcObjectsWord value 4)) =? 64) && (uorcObjectsIs value 5 (uorcObjectsWord value 4))) then (PrismUorc::prismUorcRestoreSame) else (PrismUorc::prismUorcRestoreDiffers))), kappa := (if (uorcObjectsIs value 3 0x61646d6974) then (PrismUorc::prismUorcKappaAdmit) else (PrismUorc::prismUorcKappaOther))}),
+  name: uorcObjectsLine,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (let one : Bool := (prim equal (uorcObjectsWord value 6) 0x31 : Bool); (Foundation.Bytes::appendBytes (uorcObjectsWord value 1) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (uorcObjectsWord value 2) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if (one && (prim equal (uorcObjectsWord value 7) 0x74727565 : Bool)) then 0x6f6b else 0x62726f6b656e) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if ((prim equal (uorcObjectsWord value 8) 0x32 : Bool) && (prim equal (uorcObjectsWord value 9) 0x31 : Bool)) then 0x6b6e6f776e else 0x6f74686572) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if ((prim equal (uorcObjectsWord value 10) 0x73656c662d636f6e7461696e6564 : Bool) && (prim equal (uorcObjectsWord value 11) 0x6e6f6e65 : Bool)) then 0x73656c66 else (if ((prim equal (uorcObjectsWord value 10) 0x636f6e646974696f6e616c : Bool) && (prim equal (uorcObjectsWord value 11) 0x7374616e64617264 : Bool)) then 0x7374616e64617264 else 0x6f74686572)) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if (one && (prim equal (uorcObjectsWord value 12) 0x31 : Bool)) then 0x6f6e65 else 0x6d616e79) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if (prim equal (uorcObjectsWord value 5) 0x6661696c6564 : Bool) then 0x6661696c6564 else (if (((Foundation.Bytes::byteLength (uorcObjectsWord value 4)) =? 64) && (prim equal (uorcObjectsWord value 5) (uorcObjectsWord value 4) : Bool)) then 0x73616d65 else 0x64696666657273)) (Foundation.Bytes::appendBytes 0x20 (if (prim equal (uorcObjectsWord value 3) 0x61646d6974 : Bool) then 0x61646d6974 else 0x6f74686572)))))))))))))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -46,19 +38,7 @@ definition{
   name: uorcObjectsDispatch,
   parameters: [value : Bytes],
   result: Bytes,
-  body: (if (uorcObjectsIs value 0 0x6a75646765) then (match (PrismUorc::prismUorcParseAct (uorcObjectsWord value 1))
-    | Option.none => 0x696e76616c6964
-    | Option.some act => (match (PrismUorc::prismUorcParseHalted (uorcObjectsWord value 2))
-      | Option.none => 0x696e76616c6964
-      | Option.some halted => (PrismUorc::prismUorcEncodeAnswer (PrismUorc::prismUorcJudge (uorcObjectsRequest value act halted))))) else 0x696e76616c6964),
-  axioms: [Quot.sound, propext]
-}
-
-definition{
-  name: uorcObjectsGuest,
-  parameters: [value : Bytes],
-  result: Bytes,
-  body: (if (uorcObjectsIs value 0 0x6a75646765) then (uorcObjectsDispatch value) else (PrismUorc::prismUorcDispatch value)),
+  body: (if (260 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (if (prim equal (uorcObjectsWord value 0) 0x6a75646765 : Bool) then (uorcObjectsLine value) else (PrismUorc::prismUorcDispatch value))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

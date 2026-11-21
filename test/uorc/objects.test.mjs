@@ -44,7 +44,7 @@ const uorcGuest = await openUorc(new Uint8Array(await readFile(new URL(UORC.path
 let halted = 'no';
 const asked = [];
 const { labelOf } = makeKappa({ decide: kappaGuest });
-const decide = { kappa: kappaGuest, uorc: async (line) => { asked.push(line); return uorcGuest(line); } };
+const decide = { kappa: kappaGuest, read: uorcGuest, uorc: async (line) => { asked.push(line); return uorcGuest(line); } };
 const objects = makeObjects({ client: () => client, decide, halted: () => halted });
 
 // The objects are the validation oracles' own examples (test/oracle/corpus.json: the
@@ -58,17 +58,17 @@ const kept = await objects.keep(value);
 ok(kept.outcome === 'keep', `a sound object is kept: ${asked.at(-1)}`);
 ok(kept.kappa === (await labelOf(value)), 'it is named by the kappa label of its bytes');
 ok(kept.archive.length < value.length, `the archive is smaller than the value (${largest[0].id})`);
-ok(/^judge keep no admit ([0-9a-f]{64}) \1 1 true 2 1 conditional standard 1$/.test(asked.at(-1)), `the uorc facet saw only structure: ${asked.at(-1)}`);
+ok(asked.at(-1) === 'keep no ok known standard one same admit', `the uorc facet saw only structure: ${asked.at(-1)}`);
 const opened = await objects.open(kept.archive, kept.kappa);
 ok(opened.outcome === 'open' && Buffer.compare(Buffer.from(opened.bytes), Buffer.from(value)) === 0, 'the archive opens to the very bytes');
 
 // Planted defects: each refuses.
 const flipped = kept.archive.slice();
 flipped[flipped.length - 1] ^= 1;
-ok((await objects.open(flipped, kept.kappa)).outcome === 'refuse' && / false /.test(asked.at(-1)), `a flipped seal bit is a broken seal, never opened: ${asked.at(-1)}`);
+ok((await objects.open(flipped, kept.kappa)).outcome === 'refuse' && / broken /.test(asked.at(-1)), `a flipped seal bit is a broken seal, never opened: ${asked.at(-1)}`);
 const other = (await objects.keep(new TextEncoder().encode(largest[1].raw))).archive;
 ok((await objects.open(other, kept.kappa)).outcome === 'refuse', 'an archive of other bytes is never opened under this label');
-ok(/^judge open no mismatch ([0-9a-f]{64}) (?!\1)[0-9a-f]{64} /.test(asked.at(-1)), `the facet was told another restore: ${asked.at(-1)}`);
+ok(asked.at(-1).endsWith(' differs other'), `the facet was told the restore differs: ${asked.at(-1)}`);
 ok((await objects.open(new Uint8Array([1, 2, 3]), kept.kappa)).outcome === 'refuse', 'bytes that are no archive are refused');
 ok((await objects.open(kept.archive, 'sha256:abcd')).outcome === 'refuse', 'a malformed label is refused');
 const two = client.compressFiles([{ path: 'a', data: value }, { path: 'b', data: value }]);
@@ -90,12 +90,12 @@ for (const example of corpus) {
   ok(back.outcome === 'open' && Buffer.compare(Buffer.from(back.bytes), Buffer.from(bytes)) === 0, `${example.id} opens to its very bytes`);
 }
 ok(corpus.length > 0 && new Set(lock.standardBases).size === 2 && bases.size === 2, `the oracle examples take both locked bases: ${bases.size}`);
-ok((await makeObjects({ client: () => Object.assign(Object.create(client), { standardBases: ['f'.repeat(64)] }), decide }).open(kept.archive, kept.kappa)).outcome === 'refuse' && asked.at(-1).endsWith(' conditional other 1'), 'any other basis is other');
+ok((await makeObjects({ client: () => Object.assign(Object.create(client), { standardBases: ['f'.repeat(64)] }), decide }).open(kept.archive, kept.kappa)).outcome === 'refuse' && asked.at(-1) === 'open no ok known other one same admit', 'any other basis is other');
 halted = 'yes';
 ok((await objects.keep(value)).outcome === 'refuse', 'nothing is kept while halted');
 ok((await objects.open(kept.archive, kept.kappa)).outcome === 'refuse', 'nothing is opened while halted');
 halted = 'no';
-const liar = makeObjects({ client: () => client, decide: { kappa: kappaGuest, uorc: async () => 'keep' } });
+const liar = makeObjects({ client: () => client, decide: { kappa: kappaGuest, read: uorcGuest, uorc: async () => 'keep' } });
 ok((await liar.open(kept.archive, kept.kappa)).outcome === 'refuse', 'an open is projected only on the answer open');
 
 // UO-03: the vault keeps a value as its uorc archive and gives the value back only through it.

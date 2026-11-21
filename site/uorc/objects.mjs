@@ -18,12 +18,15 @@
 // only, so a page that keeps nothing never fetches it.
 
 import { makeKappa } from '../kappa/kappa.mjs';
+import { GUEST, opened } from './guest.mjs';
 
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
 
 export function rootDecide(dispatch) {
   const ask = (facet) => async (line) => String(await dispatch(`${facet} ${line}`)).trim();
-  return { kappa: ask('kappa'), uorc: ask('uorc') };
+  // The reader of an archive's facts is the uorc guest, opened on first use; the decision stays with the root.
+  let reader = null;
+  return { kappa: ask('kappa'), uorc: ask('uorc'), read: async (line) => (await (reader ??= opened(GUEST)))(line) };
 }
 
 // The pinned client: the lock names every byte; bytes that differ are refused before they run.
@@ -53,7 +56,7 @@ export async function loadClient({ base = new URL('./', import.meta.url), fetche
 }
 
 export function makeObjects({ client, decide, halted = () => 'no' }) {
-  if (!decide?.kappa || !decide?.uorc) throw new Error('makeObjects needs decide.kappa and decide.uorc (the guest)');
+  if (!decide?.kappa || !decide?.uorc || !decide?.read) throw new Error('makeObjects needs decide.kappa, decide.uorc and decide.read (the guest)');
   const kappa = makeKappa({ decide: decide.kappa });
   let loaded = null;
   const uorcOf = () => (loaded ??= Promise.resolve(client()));
@@ -68,7 +71,7 @@ export function makeObjects({ client, decide, halted = () => 'no' }) {
     const basis = f.basis === null ? 'none' : (uorc.standardBases ?? []).includes(f.basis) ? 'standard' : 'other';
     const k = (await kappa.admit(label, bytes)).outcome;
     const line = `judge ${act} ${halted()} ${k} ${label.split(':')[1] || '-'} ${restored} ${frames.length} ${f.integrity_ok ?? '-'} ${f.format ?? '-'} ${f.profile ?? '-'} ${f.scope ?? '-'} ${basis} ${f.objects ?? '-'}`;
-    return { answer: await decide.uorc(line), bytes };
+    return { answer: await decide.uorc(await decide.read(line)), bytes };
   }
 
   async function keep(value) {

@@ -68,10 +68,9 @@ fn uorc_uo_01() {
         "UO-01: the answer is decided by the judge the guarantees are about"
     );
     assert!(
-        read("app/src/Prism.lex.tex").contains("(PrismUorcObjects::uorcObjectsDispatch rest)")
-            && read("app/src/PrismUorcObjects.lex.tex")
-                .contains("(PrismUorc::prismUorcJudge (uorcObjectsRequest value act halted))"),
-        "UO-01: the Prism root routes uorc through its reader to PrismUorc"
+        read("app/src/Prism.lex.tex").contains("(PrismUorc::prismUorcDispatch rest)")
+            && read("site/uorc/objects.mjs").contains("await decide.uorc(await decide.read(line))"),
+        "UO-01: the Prism root routes uorc to PrismUorc, on the request its reader gives"
     );
     let toml = read("app/lexlean.toml");
     assert!(
