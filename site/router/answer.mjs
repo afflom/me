@@ -24,9 +24,10 @@ const higher = (a, b) => (RANK.indexOf(b) > RANK.indexOf(a) ? b : a);
 // dates and times too: a part named `at` is an instant, said in the wall time this browser keeps then.
 const format = await pin.opened(pin.GUESTS.message);
 // A turn is kept as its record (app/src/PrismTurn.lex.tex): what was said as W3C EMMA, and the
-// turn as W3C PROV with what the reply drew on and the turn before; null when a checker refuses it.
+// turn as W3C PROV with what the reply drew on and the turn before, and a W3C Web Annotation for each
+// thing whose title the reply quotes, placed where it is quoted (in code points); null when a checker refuses it.
 const record = await turns.opened(turns.GUEST);
-export const recordOf = (prompt, said, now, after = null) => record(["record", `base ${new URL("../", import.meta.url)}`, `now ${now} ${new Date(now).toISOString()}`, ...(after ? [`after ${after}`] : []), `prompt ${JSON.stringify(prompt)}`, `reply ${JSON.stringify(said.sentences.join("\n"))}`, ...(said.cited ?? []).map((item) => `cited ${item.address}`)].join("\n")).replace(/^(refused|invalid)[^]*$/u, "") || null;
+export const recordOf = (prompt, said, now, after = null) => record(["record", `base ${new URL("../", import.meta.url)}`, `now ${now} ${new Date(now).toISOString()}`, ...(after ? [`after ${after}`] : []), `prompt ${JSON.stringify(prompt)}`, `reply ${JSON.stringify(said.sentences.join("\n"))}`, ...(said.cited ?? []).map((item, i, all) => ((n, size) => ((at) => `cited ${item.address}${at < 0 ? "" : ` ${size(said.sentences.slice(0, n).map((line) => `${line}\n`).join("") + said.sentences[n].slice(0, at))} ${size(said.sentences.slice(0, n).map((line) => `${line}\n`).join("") + said.sentences[n].slice(0, at) + item.title)}`}`)(item.title ? said.sentences[n]?.indexOf(item.title) ?? -1 : -1))(said.sentences.length - all.length - (said.cut ? 1 : 0) + i, (text) => [...text].length))].join("\n")).replace(/^(refused|invalid)[^]*$/u, "") || null;
 // What is under way and what comes next is the senses guest's observation (app/src/PrismSenses.lex.tex,
 // SOSA) of the calendar items held that have not ended: the page hands it their times and says what it names.
 const sense = await senses.opened(senses.GUEST), second = (at) => `${new Date(at).toISOString().slice(0, 19)}Z`;
