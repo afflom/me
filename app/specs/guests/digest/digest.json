@@ -1,0 +1,20 @@
+{
+  "id": "digest",
+  "wasm": "site/digest/guest/digest.wasm",
+  "pin": "site/digest/guest.mjs",
+  "modules": [
+    "Sha256",
+    "PrismDigest"
+  ],
+  "dispatch": "PrismDigest::prismDigestDispatch",
+  "vectors": "spec:digest",
+  "limits": [
+    6144,
+    16384,
+    12288
+  ],
+  "memory": [
+    2048,
+    1048576
+  ]
+}
