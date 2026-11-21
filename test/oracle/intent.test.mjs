@@ -26,7 +26,7 @@ import test from "node:test";
 import { FIELDS, judge, PROVIDERS } from "../../site/router/table.mjs";
 import { route } from "../../site/router/router.mjs";
 import { asksQuestion, plain } from "../../site/router/features.mjs";
-import { answer } from "../../site/router/answer.mjs";
+import { answer, recordOf } from "../../site/router/answer.mjs";
 import { specDecider } from "../../site/r4/decide.mjs";
 import { serve } from "./examples.mjs";
 
@@ -71,8 +71,9 @@ async function found(acts, keys) {
     if (act.intent) held[act.intent][Number(({ event: "fact" }[mapped.intent] ?? mapped.intent) === act.intent)] += 1;
   }
   // An act the router reads as feedback is taken as heard when a turn came before it, and only then (the Ask decision, app/specs/ask/spec.json).
-  const nod = acts.find((a) => a.mapped.act === "autoFeedback" && a.mapped.intent === "fact" && a.mapped.start == null), ask = specDecider(read("../../app/specs/ask/spec.json"));
-  for (const after of nod ? [1, null] : []) assert.equal((await answer(nod.text, { line: async (l) => (l.startsWith("ask ") ? ask(l.slice(4)).outcome : line(l)), halted: () => "no", meaning: learned.meaning, after })).sentences[0] === `${PROVIDERS.sentence.frames.heard}.`, Boolean(after), `“${nod.text}” after ${after}`);
+  const nod = acts.find((a) => a.mapped.act === "autoFeedback" && a.mapped.intent === "fact" && a.mapped.start == null), ask = specDecider(read("../../app/specs/ask/spec.json")), told = { line: async (l) => (l.startsWith("ask ") ? ask(l.slice(4)).outcome : line(l)), halted: () => "no", meaning: learned.meaning };
+  for (const after of nod ? [1, null] : []) assert.equal((await answer(nod.text, { ...told, after })).sentences[0] === `${PROVIDERS.sentence.frames.heard}.`, Boolean(after), `“${nod.text}” after ${after}`);
+  if (nod) assert.match(recordOf(nod.text, await answer(nod.text, { ...told, after: 1 }), 2, 1) ?? "", /entity\(me:prompt-2, \[me:dimension="autoFeedback"\]\)/u, "the turn's record keeps the act on the prompt");
   const percent = Object.entries(held).map(([intent, [missed, hit]]) => [keys[intent], Math.floor((100 * hit) / (missed + hit))]);
   for (const [name, head] of Object.entries(PROVIDERS.intent.heads)) {
     assert.equal(head.model, PROVIDERS.meaning.model, `the ${name} head reads the compiled meaning model's vectors`);
