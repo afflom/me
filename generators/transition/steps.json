@@ -1,0 +1,33 @@
+{
+  "comment": "The steps of the transition program (generators/transition/), run in order by tools/generators/run.sh. Each step reads json-patch-tests tests.json and walks its cases as one history: a case that states an expected document is a transition from its document by its patch, chained to the transition before it. transitions and transitionsmore write the acceptance vectors of the snapshot guest's transition request (cases 1 to 36, and the rest): the W3C PROV record the case must give, whose addresses are those of the case's own document, patch and expected document; 'the state does not change' where the expected document is the document; 'the patch does not apply' where the case states an error. provtransitions and provtransitionsmore write the same records as acceptance vectors of the PROV-CONSTRAINTS checker (guest prov), each to be answered valid. GenPatch, GenJcs and Sha256 are the modules of generators/snapshot, byte for byte.",
+  "steps": [
+    {
+      "generator": "transitions",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/snapshot-transition/spec.json"
+    },
+    {
+      "generator": "transitionsmore",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/snapshot-transition/more/spec.json"
+    },
+    {
+      "generator": "provtransitions",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/prov/transition/spec.json"
+    },
+    {
+      "generator": "provtransitionsmore",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/prov/transition-more/spec.json"
+    }
+  ]
+}
