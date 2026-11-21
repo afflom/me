@@ -13,6 +13,8 @@ import { relativeOf, sequence, spanOf } from "../time/time.mjs";
 import { everyOf, rhythms, sourceOf } from "../time/rhythm.mjs";
 import { nearness } from "./meaning.mjs";
 import * as pin from "../message/guest.mjs";
+import * as turns from "../turn/guest.mjs";
+import * as senses from "../senses/guest.mjs";
 
 const S = PROVIDERS.sentence;
 const RANK = ["public", "internal", "confidential", "restricted"];
@@ -20,8 +22,20 @@ const higher = (a, b) => (RANK.indexOf(b) > RANK.indexOf(a) ? b : a);
 // Every sentence is a Unicode MessageFormat 2 message of the sentence provider
 // (app/specs/router/spec.json), formatted by the message guest (app/src/PrismMessage.lex.tex),
 // dates and times too: a part named `at` is an instant, said in the wall time this browser keeps then.
-const guest = new URL(pin.GUESTS.message.path, new URL("../message/guest.mjs", import.meta.url));
-const format = await pin.openGuestSync(guest.protocol === "file:" ? await (await import("node:fs/promises")).readFile(guest) : new Uint8Array(await (await fetch(guest)).arrayBuffer()), pin.GUESTS.message.sha256);
+const format = await pin.opened(pin.GUESTS.message);
+// A turn is kept as its record (app/src/PrismTurn.lex.tex): what was said as W3C EMMA, and the
+// turn as W3C PROV with what the reply drew on and the turn before, and a W3C Web Annotation for each
+// thing whose title the reply quotes, placed where it is quoted (in code points); null when a checker refuses it.
+const record = await turns.opened(turns.GUEST);
+export const recordOf = (prompt, said, now, after = null) => record(["record", `base ${new URL("../", import.meta.url)}`, `now ${now} ${new Date(now).toISOString()}`, ...(after ? [`after ${after}`] : []), `prompt ${JSON.stringify(prompt)}`, `reply ${JSON.stringify(said.sentences.join("\n"))}`, ...(said.cited ?? []).map((item, i, all) => ((n, size) => ((at) => `cited ${item.address}${at < 0 ? "" : ` ${size(said.sentences.slice(0, n).map((line) => `${line}\n`).join("") + said.sentences[n].slice(0, at))} ${size(said.sentences.slice(0, n).map((line) => `${line}\n`).join("") + said.sentences[n].slice(0, at) + item.title)}`}`)(item.title ? said.sentences[n]?.indexOf(item.title) ?? -1 : -1))(said.sentences.length - all.length - (said.cut ? 1 : 0) + i, (text) => [...text].length))].join("\n")).replace(/^(refused|invalid)[^]*$/u, "") || null;
+// What is under way and what comes next is the senses guest's observation (app/src/PrismSenses.lex.tex,
+// SOSA) of the calendar items held that have not ended: the page hands it their times and says what it names.
+const sense = await senses.opened(senses.GUEST), second = (at) => `${new Date(at).toISOString().slice(0, 19)}Z`;
+async function schedule(items, now) {
+  const open = items.filter((item) => item.media === "calendar" && item.end > now).sort((x, y) => x.at - y.at).slice(0, S.held);
+  const seen = await sense(["flat", `base ${new URL("../", import.meta.url)}`, `now ${second(now)}`, ...open.map((item) => `held ${second(item.at)} ${second(item.end)} ${item.address}`), ""].join("\n"));
+  return [["under", "scheduleNow", "end"], ["next", "scheduleNext", "at"]].map(([frame, name, edge]) => [frame, open.find((item) => item.address === seen.match(new RegExp(`^${name} \\S+ (.+)$`, "m"))?.[1]), edge]).filter(([, item]) => item);
+}
 // A value longer than a sentence can carry is cut; the item it cites holds the rest.
 const zone = (at) => { const m = -new Date(at).getTimezoneOffset(), a = Math.abs(m); return `${m < 0 ? "-" : "+"}${String(Math.trunc(a / 60)).padStart(2, "0")}:${String(a % 60).padStart(2, "0")}`; };
 const cut = (value) => { const text = String(value ?? ""); return text.length > S.lead * 2 ? `${text.slice(0, S.lead * 2)}…` : text; };
@@ -81,7 +95,8 @@ export async function answer(prompt, options) {
   // PrismAsk in LexLean), asked of the root guest: the page only carries it out.
   const request = [halted(), asksNow(text, termsOf(text)) ? "asked" : "not", keep ? "keeps" : "asks", mapped.intent ?? "fact", mapped.start != null ? "yes" : "no", held.length ? "some" : "none"];
   const decided = (await line(`ask ${request.join(" ")}`)).trim();
-  if (decided === "clock") return { sentences: [end(fill("now", { at: new Date(now).toISOString() }))], sources: [], offers: [], mapped };
+  const going = decided === "clock" ? await schedule(held, now) : [], cited = going.map(([, item]) => item);
+  if (decided === "clock") return { sentences: [fill("now", { at: new Date(now).toISOString() }), ...going.map(([frame, item, edge]) => fill(frame, { what: item.title, when: whenOf(item[edge], item.allDay, now) }))].map(end), sources: cited, cited, offers: [], mapped };
   if (decided === "keep") return { sentences: [keptSentence(text, mapped)], sources: [], offers: [{ kind: "keep" }], mapped };
   if (decided === "look") {
     const asked = await answer(prompt, { ...options, keep: false });

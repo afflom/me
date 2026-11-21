@@ -4,21 +4,19 @@
 // that follows PrismLearning's spec rules, as site/resonance/resonance.test.mjs does.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { GUESTS, openGuest } from './guest.mjs';
-import { GUEST as RES_GUEST, openGuest as openRes } from '../resonance/guest.mjs';
-import { GUEST as KAPPA_GUEST, openGuest as openKappa } from '../kappa/guest.mjs';
+import { GUESTS, opened } from './guest.mjs';
+import { GUEST as RES_GUEST, opened as openRes } from '../resonance/guest.mjs';
+import { GUEST as KAPPA_GUEST, opened as openKappa } from '../kappa/guest.mjs';
 import { makeResonance, paramsOf, DEFAULTS } from '../resonance/resonance.mjs';
 import { observe } from './page.mjs';
 
-const here = new URL('./', import.meta.url);
-const open = async (opener, g, base) => opener(new Uint8Array(await readFile(new URL(g.path, base))), g.sha256);
 const guest = {
-  holon: await open(openGuest, GUESTS.holon, here),
-  curate: await open(openGuest, GUESTS.curate, here),
-  resonance: await open(openRes, RES_GUEST, new URL('../resonance/', here)),
-  kappa: await open(openKappa, KAPPA_GUEST, new URL('../kappa/', here)),
+  holon: await opened(GUESTS.holon),
+  curate: await opened(GUESTS.curate),
+  resonance: await openRes(RES_GUEST),
+  kappa: await openKappa(KAPPA_GUEST),
 };
-const learningSpec = JSON.parse(await readFile(new URL('../../app/specs/learning/spec.json', here), 'utf8'));
+const learningSpec = JSON.parse(await readFile(new URL('../../app/specs/learning/spec.json', import.meta.url), 'utf8'));
 const test = (c, r) => {
   const v = r[c.field];
   return c.op === 'is' ? v === c.value : c.op === 'is not' ? v !== c.value : c.op === '>=' ? v >= c.value : c.op === '<=' ? v <= c.value : false;

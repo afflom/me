@@ -296,28 +296,56 @@ definition{
   name: ggCore2P3,
   parameters: [],
   result: Bytes,
-  body: 0x61636b6564202620307866666666666666666e2929293b0a7d0a0a2f2f204120667265736820696e7374616e63652070657220726571756573743a20746865206775657374277320616c6c6f6361746f72206e657665722066726565732c20616e64206e6f2073746174652063617272696573206f7665722e0a6578706f7274
+  body: 0x61636b6564202620307866666666666666666e2929293b0a7d0a0a2f2f204f6e6520696e7374616e63652c206b65707420616e6420707574206261636b20617320697420626567616e206265666f7265206561636820726571756573743a20697473206d656d6f72790a2f2f2061626f76652074686520737461636b20617320
 }
 
 definition{
   name: ggCore2P4,
   parameters: [],
   result: Bytes,
-  body: 0x206173796e632066756e6374696f6e206f70656e47756573742862797465732c2073686132353629207b0a2020636f6e7374206d6f64756c65203d20617761697420636f6d70696c652862797465732c20736861323536293b0a202072657475726e206173796e6320286c696e6529203d3e2072756e28286177616974205765
+  body: 0x666972737420696e7374616e7469617465642c20616e6420776861742069742067726577206279207a65726f2e20416e20696e7374616e63650a2f2f2061207265717565737420747261707065642069732064726f707065642e20536f206e6f2073746174652063617272696573206f7665722c20616e642061736b696e6720
 }
 
 definition{
   name: ggCore2P5,
   parameters: [],
   result: Bytes,
-  body: 0x62417373656d626c792e696e7374616e7469617465286d6f64756c652c207b7d29292e6578706f7274732c206c696e65293b0a7d0a
+  body: 0x6f6674656e0a2f2f20646f6573206e6f74206c6561766520616e20696e7374616e636520626568696e6420656163682074696d652e0a6578706f7274206173796e632066756e6374696f6e206f70656e47756573742862797465732c2073686132353629207b0a2020636f6e7374206d6f64756c65203d20617761697420636f
+}
+
+definition{
+  name: ggCore2P6,
+  parameters: [],
+  result: Bytes,
+  body: 0x6d70696c652862797465732c20736861323536293b0a20206c65742078203d206e756c6c2c206669727374203d206e756c6c2c2066726f6d203d20303b0a202072657475726e206173796e6320286c696e6529203d3e207b0a20202020696620287829207b20636f6e7374206d656d6f7279203d206e65772055696e74384172
+}
+
+definition{
+  name: ggCore2P7,
+  parameters: [],
+  result: Bytes,
+  body: 0x72617928782e6d656d6f72792e627566666572293b206d656d6f72792e7365742866697273742c2066726f6d293b206d656d6f72792e66696c6c28302c2066726f6d202b2066697273742e6c656e677468293b207d0a20202020656c7365207b2078203d2028617761697420576562417373656d626c792e696e7374616e7469
+}
+
+definition{
+  name: ggCore2P8,
+  parameters: [],
+  result: Bytes,
+  body: 0x617465286d6f64756c652c207b7d29292e6578706f7274733b2066726f6d203d204e756d62657228782e5f5f737461636b5f686967683f2e76616c7565203f3f2030293b206669727374203d206e65772055696e7438417272617928782e6d656d6f72792e627566666572292e736c6963652866726f6d293b207d0a20202020
+}
+
+definition{
+  name: ggCore2P9,
+  parameters: [],
+  result: Bytes,
+  body: 0x747279207b2072657475726e2072756e28782c206c696e65293b207d20636174636820286572726f7229207b2078203d206e756c6c3b207468726f77206572726f723b207d0a20207d3b0a7d0a
 }
 
 definition{
   name: ggCore2,
   parameters: [],
   result: Bytes,
-  body: (ggApp (ggApp (ggCore2P0) (ggApp (ggCore2P1) (ggCore2P2))) (ggApp (ggCore2P3) (ggApp (ggCore2P4) (ggCore2P5))))
+  body: (ggApp (ggCore2P0) (ggApp (ggCore2P1) (ggApp (ggCore2P2) (ggApp (ggCore2P3) (ggApp (ggCore2P4) (ggApp (ggCore2P5) (ggApp (ggCore2P6) (ggApp (ggCore2P7) (ggApp (ggCore2P8) (ggCore2P9))))))))))
 }
 
 definition{
@@ -384,10 +412,61 @@ definition{
 }
 
 definition{
+  name: ggOpenedAP0,
+  parameters: [],
+  result: Bytes,
+  body: 0x0a2f2f205468652067756573742061732074686973206d6f64756c65207365727665732069743a2069747320627974657320726561642066726f6d2062657369646520746869732066696c650a2f2f20756e646572204e6f646520616e64206665746368
+}
+
+definition{
+  name: ggOpenedAP1,
+  parameters: [],
+  result: Bytes,
+  body: 0x65642066726f6d2062657369646520697420696e20612062726f777365722c207468656e206f70656e65642061732061626f76652e0a6578706f7274206173796e632066756e6374696f6e206f70656e65642867756573742c206f70656e203d206f7065
+}
+
+definition{name: ggOpenedAP2, parameters: [], result: Bytes, body: 0x6e4775657374}
+
+definition{
+  name: ggOpenedA,
+  parameters: [],
+  result: Bytes,
+  body: (ggApp (ggApp (ggOpenedAP0) (ggOpenedAP1)) (ggOpenedAP2))
+}
+
+definition{
+  name: ggOpenedBP0,
+  parameters: [],
+  result: Bytes,
+  body: 0x29207b0a2020636f6e7374206174203d206e65772055524c2867756573742e706174682c20696d706f72742e6d6574612e75726c293b0a202072657475726e206f70656e2861742e70726f746f636f6c203d3d3d202266696c653a22203f206177616974
+}
+
+definition{
+  name: ggOpenedBP1,
+  parameters: [],
+  result: Bytes,
+  body: 0x2028617761697420696d706f727428226e6f64653a66732f70726f6d697365732229292e7265616446696c6528617429203a206e65772055696e743841727261792861776169742028617761697420666574636828617429292e61727261794275666665
+}
+
+definition{
+  name: ggOpenedBP2,
+  parameters: [],
+  result: Bytes,
+  body: 0x722829292c2067756573742e736861323536293b0a7d0a
+}
+
+definition{
+  name: ggOpenedB,
+  parameters: [],
+  result: Bytes,
+  body: (ggApp (ggApp (ggOpenedBP0) (ggOpenedBP1)) (ggOpenedBP2))
+}
+
+definition{
   name: ggRender,
   parameters: [archive : Bytes, target : Bytes],
   result: (Option Bytes),
-  body: (let k : Nat := (ggLastSlash target); (let here : Bytes := (ggSpan target 0 k); (let facet : Bytes := (ggSpan here ((ggLastSlash here) + 1) k); (let n : Nat := (ggLen (ggFold archive target here 3)); (if (((n =? 0) || (0 <? (ggLen (ggFold archive target here 5)))) || (not (ggSame (ggSpan target k (ggLen target)) 0x2f67756573742e6d6a73))) then (ctor Option.none [Bytes]) else (let head : Bytes := (ggApp (ggApp (ggApp (ggApp (ggHead1) (if (n =? 1) then 0x else 0x73)) 0x206f6620) (ggFold archive target here 0)) (ggHead2)); (let body : Bytes := (if (n =? 1) then (ggApp (ggApp 0x6578706f727420636f6e7374204755455354203d20 (ggFold archive target here 2)) 0x3b0a) else (ggApp (ggApp 0x6578706f727420636f6e737420475545535453203d207b0a (ggFold archive target here 1)) 0x7d3b0a)); (ctor Option.some [Bytes] (ggApp (ggApp (ggApp (ggApp (ggApp head body) (ggCore1)) facet) (ggCore2)) (if (0 <? (ggLen (ggFold archive target here 4))) then (ggSync) else 0x)))))))))),
+  body: (let k : Nat := (ggLastSlash target); (let here : Bytes := (ggSpan target 0 k); (let facet : Bytes := (ggSpan here ((ggLastSlash here) + 1) k); (let n : Nat := (ggLen (ggFold archive target here 3)); (if (((n =? 0) || (0 <? (ggLen (ggFold archive target here 5)))) || (not (ggSame (ggSpan target k (ggLen target)) 0x2f67756573742e6d6a73))) then (ctor Option.none [Bytes]) else (let head : Bytes := (ggApp (ggApp (ggApp (ggApp (ggHead1) (if (n =? 1) then 0x else 0x73)) 0x206f6620) (ggFold archive target here 0)) (ggHead2)); (let body : Bytes := (if (n =? 1) then (ggApp (ggApp 0x6578706f727420636f6e7374204755455354203d20 (ggFold archive target here 2)) 0x3b0a) else (ggApp (ggApp 0x6578706f727420636f6e737420475545535453203d207b0a (ggFold archive target here 1)) 0x7d3b0a)); (ctor Option.some [Bytes] (let sync : Bool := (0 <? (ggLen (ggFold archive target here 4))); (ggApp (ggApp (ggApp (ggApp (ggApp (ggApp (ggApp (ggApp head body) (ggCore1)) facet) (ggCore2)) (if sync then (ggSync) else 0x)) (ggOpenedA)) (if sync then 0x53796e63 else 0x)) (ggOpenedB))))))))))),
   axioms: [Quot.sound, propext]
 }
 

@@ -1392,9 +1392,9 @@ def act_examples(text, source, meetings=None, unnamed=False):
     held = json.loads(text)
     types = ET.fromstring(held[source["types"]].encode("latin-1"))
     names = {t.get(NITE_ID): t.get("name") for t in types.iter() if t.get(NITE_ID)}
-    intents = {i: source["acts"][n] for i, n in names.items() if n in source["acts"]}
-    if set(source["acts"]) - set(names.values()):
-        refuse(f"{source['key']} maps act types its ontology does not have: {sorted(set(source['acts']) - set(names.values()))}")
+    intents = {i: {"intent": source["acts"][n]} if n in source["acts"] else {"dimension": source["dimensions"][n]} for i, n in names.items() if n in source["acts"] or n in source["dimensions"]}
+    if (set(source["acts"]) | set(source["dimensions"])) - set(names.values()) or set(source["acts"]) & set(source["dimensions"]):
+        refuse(f"{source['key']} maps act types its ontology does not have, or maps one twice: {sorted(set(source['acts']) ^ set(source['dimensions']) - set(names.values()))}")
     entities = ET.fromstring(held[source["entities"]].encode("latin-1"))
     person = next(t for t in entities.iter() if t.get("name") == source["person"])
     people = {t.get(NITE_ID) for t in person.iter()}
@@ -1427,7 +1427,7 @@ def act_examples(text, source, meetings=None, unnamed=False):
             for word, punctuation in (order[i] for i in span):
                 said += word if punctuation or not said else " " + word
             if said.strip():
-                yield json.dumps({"text": said.strip(), "act": names[kind], "intent": intents[kind], "meeting": m.group(2)}, ensure_ascii=False)
+                yield json.dumps({"text": said.strip(), "act": names[kind], **intents[kind], "meeting": m.group(2)}, ensure_ascii=False)
 
 
 XML_ID = "{http://www.w3.org/XML/1998/namespace}id"
@@ -1482,7 +1482,7 @@ def read_held(rows):
 
 def read_act(raw):
     act = json.loads(raw)
-    return {"text": act["text"], "act": act["act"], "intent": act["intent"]}
+    return {k: act[k] for k in ("text", "act", "intent", "dimension") if k in act}
 
 
 def read_similarity(raw):
@@ -1504,10 +1504,9 @@ if "--fit-acts" in args:
 # the tests that read them (test/oracle/intent.test.mjs); written outside it.
 # They are downloaded, so it needs --fetch.
 if "--held" in args:
-    out = pathlib.Path(args[args.index("--held") + 1])
     rows = [row for source in SPEC["sources"] if source.get("held") for row in dialogue_examples(fetch(source), source)]
-    out.write_text("\n".join(rows) + "\n", encoding="utf-8")
-    print(f"oracle: {len(rows)} held examples to {out}")
+    pathlib.Path(args[args.index("--held") + 1]).write_text("\n".join(rows) + "\n", encoding="utf-8")
+    print(f"oracle: {len(rows)} held examples written")
     sys.exit(0)
 
 corpus, texts = [], {}

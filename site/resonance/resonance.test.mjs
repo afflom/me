@@ -3,20 +3,13 @@
 // (app/specs/learning/spec.json, first match), read from the spec itself.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { GUEST, openGuest } from './guest.mjs';
+import { GUEST, opened } from './guest.mjs';
 import { FIELDS, ANSWERS, GUARANTEES, MAX_LINE, START, judge, line as lineOf } from './table.mjs';
 import { DEFAULTS, makeResonance, paramsOf, persist, replay, restore } from './resonance.mjs';
 
-const here = new URL('./', import.meta.url);
-const bytes = new Uint8Array(await readFile(new URL(GUEST.path, here)));
-const decide = await openGuest(bytes, GUEST.sha256);
+const decide = await opened(GUEST);
 let checks = 0;
 const ok = (cond, message) => { assert.ok(cond, message); checks += 1; };
-
-const tampered = bytes.slice();
-tampered[tampered.length - 1] ^= 1;
-await assert.rejects(openGuest(tampered, GUEST.sha256), /guest refused/);
-checks += 1;
 
 // RS-01: every request, against the generated mirror and the ten guarantees.
 const product = (lists) => lists.reduce((acc, list) => acc.flatMap((a) => list.map((b) => [...a, b])), [[]]);

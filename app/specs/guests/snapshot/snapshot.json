@@ -3,17 +3,19 @@
   "wasm": "site/snapshot/guest/snapshot.wasm",
   "pin": "site/snapshot/guest.mjs",
   "modules": [
+    "Sha256",
     "PrismSnapshot"
   ],
   "dispatch": "PrismSnapshot::prismSnapshotDispatch",
   "vectors": "spec:snapshot",
   "limits": [
     2048,
-    512,
+    2048,
     4096
   ],
   "memory": [
     2048,
     1048576
-  ]
+  ],
+  "as": "snapshot"
 }

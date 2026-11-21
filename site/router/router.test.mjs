@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import { judge, FIELDS, GUARANTEES } from "./table.mjs";
 import { route } from "./router.mjs";
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { readItem, useReader } from "../card.mjs";
 import * as reader from "../read/read.mjs";
 import { specDecider } from "../r4/decide.mjs";
@@ -82,7 +83,7 @@ console.log(`router: ${asked.length} decisions, all held`);
 
 // The chat's answers: a question is answered in a sentence from what is held,
 // under the Boundary; anything else is offered to keep with its confirmation.
-const { answer } = await import("./answer.mjs");
+const { answer, recordOf } = await import("./answer.mjs");
 const boundaryLine = async (text) => (text.startsWith("boundary") ? (text.trim().endsWith(" yes") ? "deny" : "allow") : text.startsWith("ask ") ? askDecide(text.slice(4)).outcome : line(text));
 const flight = { address: "f", media: "calendar", title: "Flight to Lisbon", who: "Airport", where: "Airport", body: "", label: "confidential", at: new Date(2026, 10, 16, 8).getTime(), domains: [5] };
 const mail = { address: "m", media: "message", title: "Lunch on Thursday?", who: "Robin Example", body: "Are you free?", label: "confidential", at: new Date(2026, 10, 12, 9).getTime(), domains: [4] };
@@ -133,6 +134,16 @@ const said = await named("what did Joel say?");
 // A message is told by what its sender says first, and a question keeps its own mark.
 const asking = { ...reply, address: "j2", labels: { kind: "person", parties: [], topics: [], lead: "Can we move the review to 4?" } };
 const told = await answer("what did Joel say?", { items: [asking, review], line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
+// The turn is kept as its record: what was said as EMMA, the turn as PROV naming what the reply drew on and
+// the turn before, and the turn guest accepts it when it is read back.
+const turned = recordOf("what did Joel say?", { ...told, cited: told.cited.map((item) => ({ ...item, address: `k1:${item.address}` })) }, WEDNESDAY, WEDNESDAY - 60000);
+assert.match(turned, /^<emma:emma [^]*emma:tokens="what did Joel say\?"[^]*<\/emma:emma>\ndocument\n[^]*wasInformedBy\(/u);
+for (const item of told.cited) assert.ok(turned.includes(`wasDerivedFrom(me:reply-${WEDNESDAY}, me:k1-${item.address})`), `the record does not name ${item.address}`);
+assert.equal((await (await import("../turn/guest.mjs")).opened((await import("../turn/guest.mjs")).GUEST))(`check\n${turned}`), "accepted");
+// Each thing whose title the reply quotes is cited where it is quoted: a Web Annotation on the reply's text, addressed by its SHA-256.
+const quoted = turned.split("endDocument\n")[1].split("\n").map((line) => JSON.parse(line)), replied = told.sentences.join("\n");
+assert.deepEqual(quoted.map((note) => [note.body.source, note.target.source, [...replied].slice(note.target.selector.start, note.target.selector.end).join("")]), told.cited.map((item) => [`k1:${item.address}`, `sha256:${createHash("sha256").update(replied).digest("hex")}`, item.title]));
+assert.equal(recordOf("a\u0001", told, WEDNESDAY), null, "a prompt EMMA cannot hold has no record");
 assert.match(told.sentences[0], /^Joël Example wrote “Re: Proposal draft for the grant” on .+: Can we move the review to 4\?$/u, told.sentences[0]);
 assert.match(said.sentences[0], /^Joël Example wrote “Re: Proposal draft for the grant” on /u, "what someone said is their mail");
 assert.equal(said.sentences.length, 1, said.sentences.join(" "));
@@ -173,6 +184,10 @@ for (const word of words) {
 }
 // QR-04 "find-missing": examples that name the asked word and are missing from the list.
 assert.ok(findLost.length <= 0, `find-missing: ${findLost.length} (${findLost.slice(0, 12).join("; ")})`);
+// What time it is, at the senses' first pinned clock (app/specs/senses/clocks.json), names the RFC 5545 event then under way.
+const pinned = Date.parse(JSON.parse(readFileSync(new URL("../../app/specs/senses/clocks.json", import.meta.url), "utf8")).clocks[0]);
+const timed = await answer("what time is it", { items: kept, line: boundaryLine, halted: () => "no", now: pinned, keep: false });
+assert.ok(timed.cited[0]?.at <= pinned && timed.cited[0].end > pinned && /^“.+” is under way until /u.test(timed.sentences[1]), timed.sentences.join(" "));
 const conference = await answer("conference", { items: held.map((h) => h.item), line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
 assert.ok(conference.sources.length > 3 && conference.sentences.length <= 3, "while the sentences say only a few");
 assert.ok(conference.cited.every((item) => conference.sources.includes(item)), "and what they say is in the list");

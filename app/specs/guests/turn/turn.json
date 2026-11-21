@@ -1,0 +1,27 @@
+{
+  "id": "turn",
+  "wasm": "site/turn/guest/turn.wasm",
+  "pin": "site/turn/guest.mjs",
+  "as": "turn",
+  "sync": true,
+  "modules": [
+    "PrismTurn",
+    "PrismEmma",
+    "PrismProv",
+    "Sha256",
+    "PrismAnnotationTable",
+    "PrismAnnotation",
+    "PrismCite"
+  ],
+  "dispatch": "PrismTurn::tnDispatch",
+  "vectors": "spec:turn",
+  "limits": [
+    4096,
+    6144,
+    8192
+  ],
+  "memory": [
+    16384,
+    1048576
+  ]
+}

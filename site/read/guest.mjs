@@ -5,7 +5,7 @@
 // bytes whose SHA-256 is not the pinned one are refused before they compile.
 
 export const GUESTS = {
-  mail: { path: 'guest/grammar-mail.wasm', sha256: '94064e50ebacbad172e68d984d80e44d2775d908ce4e772f437d433b87858ec4' },
+  mail: { path: 'guest/grammar-mail.wasm', sha256: '0a2a6f46d794f4de888f773678f7ba8849dab23f5847d8909c8fbe2362bcc9c1' },
   vcard: { path: 'guest/vcard.wasm', sha256: '48780c76070326bab5ebd1853dc497e1ed5940aae4fec6be0cea6a0967f28bdc' },
 };
 
@@ -27,10 +27,18 @@ function run(x, line) {
   return decoder.decode(new Uint8Array(x.memory.buffer, Number(packed >> 32n), Number(packed & 0xffffffffn)));
 }
 
-// A fresh instance per request: the guest's allocator never frees, and no state carries over.
+// One instance, kept and put back as it began before each request: its memory
+// above the stack as first instantiated, and what it grew by zero. An instance
+// a request trapped is dropped. So no state carries over, and asking often
+// does not leave an instance behind each time.
 export async function openGuest(bytes, sha256) {
   const module = await compile(bytes, sha256);
-  return async (line) => run((await WebAssembly.instantiate(module, {})).exports, line);
+  let x = null, first = null, from = 0;
+  return async (line) => {
+    if (x) { const memory = new Uint8Array(x.memory.buffer); memory.set(first, from); memory.fill(0, from + first.length); }
+    else { x = (await WebAssembly.instantiate(module, {})).exports; from = Number(x.__stack_high?.value ?? 0); first = new Uint8Array(x.memory.buffer).slice(from); }
+    try { return run(x, line); } catch (error) { x = null; throw error; }
+  };
 }
 
 // The same, answered synchronously once the one asynchronous step (check and
@@ -46,4 +54,11 @@ export async function openGuestSync(bytes, sha256) {
     else { x = new WebAssembly.Instance(module, {}).exports; from = Number(x.__stack_high?.value ?? 0); first = new Uint8Array(x.memory.buffer).slice(from); }
     try { return run(x, line); } catch (error) { x = null; throw error; }
   };
+}
+
+// The guest as this module serves it: its bytes read from beside this file
+// under Node and fetched from beside it in a browser, then opened as above.
+export async function opened(guest, open = openGuestSync) {
+  const at = new URL(guest.path, import.meta.url);
+  return open(at.protocol === "file:" ? await (await import("node:fs/promises")).readFile(at) : new Uint8Array(await (await fetch(at)).arrayBuffer()), guest.sha256);
 }

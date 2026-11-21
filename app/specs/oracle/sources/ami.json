@@ -52,7 +52,15 @@
     "sug": "task",
     "off": "task"
   },
-  "comment": "What a line asks of its reader, as AMI's annotators marked each dialogue act. Its classes are the general-purpose communicative functions of ISO 24617-2 (Bunt et al.): Inform provides information (a fact); the Elicit acts seek it (a question); Suggest is a directive and Offer a commissive, both an action someone is to take (a task). Backchannels, stalls, fragments, assessments and social acts ask nothing of the owner and are not mapped. train: the series of AMI's scenario training partition, whose acts the intent head is fit on (test/oracle/intent.test.mjs, INTENT_FIT); they never enter the repository, only the head's weights do.",
+  "dimensions": {
+    "bck": "autoFeedback"
+  },
+  "dimensionsFrom": {
+    "title": "Mezza, Cervone, Stepanov, Tortoreto, Riccardi: ISO-Standard Domain-Independent Dialogue Act Tagging for Conversational Agents, COLING 2018, Table 7 (after Petukhova et al. 2014)",
+    "url": "https://aclanthology.org/C18-1300/",
+    "says": "AMI's Backchannel is ISO 24617-2 Feedback; its AMI column maps no class to Social Obligation Management, so Be-Positive, Be-Negative and Comment-About-Understanding are not mapped here"
+  },
+  "comment": "What a line asks of its reader, as AMI's annotators marked each dialogue act. Its classes are the general-purpose communicative functions of ISO 24617-2 (Bunt et al.): Inform provides information (a fact); the Elicit acts seek it (a question); Suggest is a directive and Offer a commissive, both an action someone is to take (a task). dimensions: the classes read as an ISO 24617-2 dimension other than task, by the published mapping dimensionsFrom names: a Backchannel is feedback on what was just said (autoFeedback). Stalls, fragments, assessments and social acts are not mapped. train: the series of AMI's scenario training partition, whose acts the intent head is fit on (test/oracle/intent.test.mjs, INTENT_FIT); they never enter the repository, only the head's weights do.",
   "train": [
     "ES2002",
     "ES2005",

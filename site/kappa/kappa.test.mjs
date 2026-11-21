@@ -1,22 +1,24 @@
 // KP-01..KP-02: the kappa facet, run in Node against the real guest.
 // No network: the bytes are synthetic, the digests are WebCrypto's.
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { GUEST, openGuest } from './guest.mjs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { GUEST, opened } from './guest.mjs';
 import { AXES, FIELDS, ANSWERS, GUARANTEES, EXAMPLES, MAX_LINE, NAMED, read, judge, answer as mirror } from './table.mjs';
 import { makeKappa } from './kappa.mjs';
 
-const here = new URL('./', import.meta.url);
-const bytes = new Uint8Array(await readFile(new URL(GUEST.path, here)));
-const kappa = await openGuest(bytes, GUEST.sha256);
+const kappa = await opened(GUEST);
+
+// A guest whose bytes are not the pinned fingerprint is refused before it compiles: every guest of every loader.
+for (const dir of readdirSync(new URL('../', import.meta.url))) {
+  const loader = existsSync(new URL(`../${dir}/guest.mjs`, import.meta.url)) ? await import(`../${dir}/guest.mjs`) : {};
+  for (const guest of Object.values(loader.GUESTS ?? (loader.GUEST ? [loader.GUEST] : []))) {
+    const tampered = new Uint8Array(readFileSync(new URL(`../${dir}/${guest.path}`, import.meta.url)));
+    tampered[tampered.length - 1] ^= 1;
+    await assert.rejects(loader.openGuest(tampered, guest.sha256), /guest refused/, `${dir} opens a guest that is not its pin`);
+  }
+}
 let checks = 0;
 const ok = (cond, message) => { assert.ok(cond, message); checks += 1; };
-
-// A guest whose bytes are not the pinned fingerprint is refused before it compiles.
-const tampered = bytes.slice();
-tampered[tampered.length - 1] ^= 1;
-await assert.rejects(openGuest(tampered, GUEST.sha256), /guest refused/);
-checks += 1;
 
 // KP-01: the spec's examples, then labels of every shape on every axis, for every digest word.
 for (const [line, expected] of EXAMPLES) {

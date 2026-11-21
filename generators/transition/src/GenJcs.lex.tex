@@ -1,0 +1,632 @@
+\begin{lexlean}{GenJcs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Tar}
+\importmodule{Foundation.Json}
+\importmodule{GenPatch}
+\title{JSON canonicalizer}
+\begin{semanticmodule}
+structure{
+  name: JcDouble,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: neg, type: Bool}, {name: sig, type: Nat}, {name: exb, type: Nat}]
+}
+
+structure{
+  name: JcDigits,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: digits, type: Nat}, {name: count, type: Nat}, {name: point, type: Nat}]
+}
+
+structure{
+  name: JcDiv,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: quo, type: Nat}, {name: rem, type: Bytes}]
+}
+
+structure{
+  name: JcReport,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: passed, type: Bytes}, {name: failed, type: Bytes}]
+}
+
+structure{
+  name: JcKey,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: key, type: Bytes},
+    {name: order, type: Bytes},
+    {name: kstart, type: Nat},
+    {name: kend, type: Nat}
+  ]
+}
+
+definition{
+  name: jcPowFrom,
+  parameters: [base : Nat, k : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (k =? 0) then acc else (jcPowFrom base (prim subtract k 1 : Nat) (prim multiply acc base : Nat) rest))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcPow,
+  parameters: [base : Nat, k : Nat],
+  result: Nat,
+  body: (jcPowFrom base k 1 (k + 1))
+}
+
+definition{
+  name: jcDigitCountFrom,
+  parameters: [n : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (n <? 10) then acc else (jcDigitCountFrom (prim quotient n 10 0 : Nat) (acc + 1) rest))),
+  recursive_argument: fuel
+}
+
+definition{name: jcDigitCount, parameters: [n : Nat], result: Nat, body: (jcDigitCountFrom n 1 21)}
+
+definition{
+  name: jbNormFrom,
+  parameters: [a : Bytes, j : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (GenPatch::jpSpan a 0 j)
+    | Nat.succ rest => (if (j =? 0) then 0x else (if ((GenPatch::jpAt a (prim subtract j 1 : Nat)) =? 0) then (jbNormFrom a (prim subtract j 1 : Nat) rest) else (GenPatch::jpSpan a 0 j)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jbNorm,
+  parameters: [a : Bytes],
+  result: Bytes,
+  body: (jbNormFrom a (GenPatch::jpLen a) ((GenPatch::jpLen a) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jbFromNatFrom,
+  parameters: [n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (n =? 0) then acc else (jbFromNatFrom (prim quotient n 256 0 : Nat) (GenPatch::jpCat acc (GenPatch::jpByte (prim remainder n 256 0 : Nat))) rest))),
+  recursive_argument: fuel
+}
+
+definition{name: jbFromNat, parameters: [n : Nat], result: Bytes, body: (jbFromNatFrom n 0x 9)}
+
+definition{
+  name: jbMulFrom,
+  parameters: [a : Bytes, i : Nat, m : Nat, carry : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenPatch::jpLen a) <? (i + 1)) then (GenPatch::jpCat acc (jbFromNat carry)) else (let v : Nat := ((prim multiply (GenPatch::jpAt a i) m : Nat) + carry); (jbMulFrom a (i + 1) m (prim quotient v 256 0 : Nat) (GenPatch::jpCat acc (GenPatch::jpByte (prim remainder v 256 0 : Nat))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jbMul,
+  parameters: [a : Bytes, m : Nat, carry : Nat],
+  result: Bytes,
+  body: (jbNorm (jbMulFrom a 0 m carry 0x ((GenPatch::jpLen a) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jbPowMulFrom,
+  parameters: [a : Bytes, base : Nat, k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => a
+    | Nat.succ rest => (if (k =? 0) then a else (jbPowMulFrom (jbMul a base 0) base (prim subtract k 1 : Nat) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jbPowMul,
+  parameters: [a : Bytes, base : Nat, k : Nat],
+  result: Bytes,
+  body: (jbPowMulFrom a base k (k + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jbCmpFrom,
+  parameters: [a : Bytes, b : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 1
+    | Nat.succ rest => (if (i =? 0) then 1 else (let x : Nat := (GenPatch::jpAt a (prim subtract i 1 : Nat)); (let y : Nat := (GenPatch::jpAt b (prim subtract i 1 : Nat)); (if (x <? y) then 0 else (if (y <? x) then 2 else (jbCmpFrom a b (prim subtract i 1 : Nat) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jbCmp,
+  parameters: [a : Bytes, b : Bytes],
+  result: Nat,
+  body: (if ((GenPatch::jpLen a) <? (GenPatch::jpLen b)) then 0 else (if ((GenPatch::jpLen b) <? (GenPatch::jpLen a)) then 2 else (jbCmpFrom a b (GenPatch::jpLen a) ((GenPatch::jpLen a) + 1)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jbSubFrom,
+  parameters: [a : Bytes, b : Bytes, i : Nat, borrow : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenPatch::jpLen a) <? (i + 1)) then acc else (let x : Nat := (GenPatch::jpAt a i); (let y : Nat := ((GenPatch::jpAt b i) + borrow); (if (x <? y) then (jbSubFrom a b (i + 1) 1 (GenPatch::jpCat acc (GenPatch::jpByte (prim subtract (x + 256) y : Nat))) rest) else (jbSubFrom a b (i + 1) 0 (GenPatch::jpCat acc (GenPatch::jpByte (prim subtract x y : Nat))) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jbSub,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bytes,
+  body: (jbNorm (jbSubFrom a b 0 0 0x ((GenPatch::jpLen a) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jbHalfFrom,
+  parameters: [a : Bytes, i : Nat, c : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (i =? 0) then acc else (let v : Nat := ((prim multiply c 256 : Nat) + (GenPatch::jpAt a (prim subtract i 1 : Nat))); (jbHalfFrom a (prim subtract i 1 : Nat) (prim remainder v 2 0 : Nat) (GenPatch::jpCat (GenPatch::jpByte (prim quotient v 2 0 : Nat)) acc) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jbHalf,
+  parameters: [a : Bytes],
+  result: Bytes,
+  body: (jbNorm (jbHalfFrom a (GenPatch::jpLen a) 0 0x ((GenPatch::jpLen a) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jbTopBits,
+  parameters: [t : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if (t =? 0) then n else (jbTopBits (prim quotient t 2 0 : Nat) (n + 1) rest))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: jbBits,
+  parameters: [a : Bytes],
+  result: Nat,
+  body: (if ((GenPatch::jpLen a) =? 0) then 0 else ((prim multiply (prim subtract (GenPatch::jpLen a) 1 : Nat) 8 : Nat) + (jbTopBits (GenPatch::jpAt a (prim subtract (GenPatch::jpLen a) 1 : Nat)) 0 9))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jbDivFrom,
+  parameters: [r : Bytes, t : Bytes, i : Nat, q : Nat, fuel : Nat],
+  result: JcDiv,
+  body: (match fuel
+    | Nat.zero => (record JcDiv {quo := q, rem := r})
+    | Nat.succ rest => (if (i =? 0) then (record JcDiv {quo := q, rem := r}) else (if ((jbCmp r t) =? 0) then (jbDivFrom r (jbHalf t) (prim subtract i 1 : Nat) q rest) else (jbDivFrom (jbSub r t) (jbHalf t) (prim subtract i 1 : Nat) (q + (jcPow 2 (prim subtract i 1 : Nat))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jbDiv,
+  parameters: [n : Bytes, d : Bytes],
+  result: JcDiv,
+  body: (let bn : Nat := (jbBits n); (let bd : Nat := (jbBits d); (if (bn <? bd) then (record JcDiv {quo := 0, rem := n}) else (let p : Nat := (prim subtract bn bd : Nat); (if (61 <? p) then (record JcDiv {quo := (jcPow 2 62), rem := 0x}) else (jbDivFrom n (jbPowMul d 2 p) (p + 1) 0 (p + 2))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jbRound,
+  parameters: [a : Bytes, b : Bytes],
+  result: Nat,
+  body: (let qr : JcDiv := (jbDiv a b); (let q : Nat := (project qr quo); (let c : Nat := (jbCmp (jbMul (project qr rem) 2 0) b); (if ((c =? 2) || ((c =? 1) && ((prim remainder q 2 0 : Nat) =? 1))) then (q + 1) else q)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jcScaleNum,
+  parameters: [num : Bytes, eb : Nat],
+  result: Bytes,
+  body: (if (1099 <? eb) then num else (jbPowMul num 2 (prim subtract 1100 eb : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jcScaleDen,
+  parameters: [den : Bytes, eb : Nat],
+  result: Bytes,
+  body: (if (1099 <? eb) then (jbPowMul den 2 (prim subtract eb 1100 : Nat)) else den),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jcSettle,
+  parameters: [num : Bytes, den : Bytes, eb : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => eb
+    | Nat.succ rest => (let q : Nat := (project (jbDiv (jcScaleNum num eb) (jcScaleDen den eb)) quo); (if ((jcPow 2 53) <? (q + 1)) then (jcSettle num den (eb + 1) rest) else (if ((q <? (jcPow 2 52)) && (26 <? eb)) then (jcSettle num den (prim subtract eb 1 : Nat) rest) else eb)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcNearest,
+  parameters: [neg : Bool, m : Bytes, d : Nat, eb : Nat],
+  result: (Option JcDouble),
+  body: (if ((GenPatch::jpLen m) =? 0) then (ctor Option.some [JcDouble] (record JcDouble {neg := neg, sig := 0, exb := 0})) else (if (2310 <? (d + eb)) then (ctor Option.none [JcDouble]) else (if (((d + eb) + 330) <? 2000) then (ctor Option.some [JcDouble] (record JcDouble {neg := neg, sig := 0, exb := 0})) else (let num : Bytes := (if (1999 <? eb) then (jbPowMul m 10 (prim subtract eb 2000 : Nat)) else m); (let den : Bytes := (if (1999 <? eb) then (jbFromNat 1) else (jbPowMul (jbFromNat 1) 10 (prim subtract 2000 eb : Nat))); (let start : Nat := (if ((1100 + (jbBits num)) <? (((jbBits den) + 53) + 26)) then 26 else (prim subtract (1100 + (jbBits num)) ((jbBits den) + 53) : Nat)); (let e : Nat := (jcSettle num den start 4); (let q : Nat := (jbRound (jcScaleNum num e) (jcScaleDen den e)); (let carry : Bool := (q =? (jcPow 2 53)); (let q2 : Nat := (if (carry && true) then (prim quotient q 2 0 : Nat) else q); (let e2 : Nat := (if (carry && true) then (e + 1) else e); (if (2071 <? e2) then (ctor Option.none [JcDouble]) else (ctor Option.some [JcDouble] (record JcDouble {neg := neg, sig := q2, exb := e2})))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jcHexFrom,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenPatch::jpLen s) <? (i + 1)) then acc else (jcHexFrom s (i + 1) ((prim multiply acc 16 : Nat) + (GenPatch::jpHex (GenPatch::jpAt s i))) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcFromBits,
+  parameters: [h : Bytes],
+  result: (Option JcDouble),
+  body: (let top : Nat := (GenPatch::jpHex (GenPatch::jpAt h 0)); (let neg : Bool := (7 <? top); (let w : Nat := (jcHexFrom (GenPatch::jpCat (GenPatch::jpHexDigit (prim remainder top 8 0 : Nat)) (GenPatch::jpSpan h 1 (GenPatch::jpLen h))) 0 0 ((GenPatch::jpLen h) + 1)); (let ex : Nat := (prim quotient w (jcPow 2 52) 0 : Nat); (let fr : Nat := (prim remainder w (jcPow 2 52) 0 : Nat); (if (ex =? 2047) then (ctor Option.none [JcDouble]) else (if (ex =? 0) then (ctor Option.some [JcDouble] (record JcDouble {neg := neg, sig := fr, exb := (if (fr =? 0) then 0 else 26)})) else (ctor Option.some [JcDouble] (record JcDouble {neg := neg, sig := (fr + (jcPow 2 52)), exb := (prim subtract (1100 + ex) 1075 : Nat)}))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jcSame,
+  parameters: [a : (Option JcDouble), m : Nat, eb : Nat],
+  result: Bool,
+  body: (match a
+    | Option.none => false
+    | Option.some x => (((project x sig) =? m) && ((project x exb) =? eb)))
+}
+
+definition{
+  name: jcPointUp,
+  parameters: [num : Bytes, t : Bytes, nb : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => nb
+    | Nat.succ rest => (if ((jbCmp num t) =? 0) then nb else (jcPointUp num (jbMul t 10 0) (nb + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcPointDown,
+  parameters: [t : Bytes, den : Bytes, nb : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => nb
+    | Nat.succ rest => (let t10 : Bytes := (jbMul t 10 0); (if ((jbCmp t10 den) =? 0) then (jcPointDown t10 den (prim subtract nb 1 : Nat) rest) else nb))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcTryFrom,
+  parameters: [num : Bytes, den : Bytes, m : Nat, eb : Nat, nb : Nat, k : Nat, fuel : Nat],
+  result: JcDigits,
+  body: (match fuel
+    | Nat.zero => (record JcDigits {digits := 0, count := 0, point := nb})
+    | Nat.succ rest => (let a : Bytes := (if (nb <? ((k + 400) + 1)) then (jbPowMul num 10 (prim subtract (k + 400) nb : Nat)) else num); (let b : Bytes := (if (nb <? ((k + 400) + 1)) then den else (jbPowMul den 10 (prim subtract nb (k + 400) : Nat))); (let s0 : Nat := (jbRound a b); (let up : Bool := (s0 =? (jcPow 10 k)); (let s : Nat := (if (up && true) then (prim quotient s0 10 0 : Nat) else s0); (let nn : Nat := (if (up && true) then (nb + 1) else nb); (if (jcSame (jcNearest false (jbFromNat s) (jcDigitCount s) (prim subtract (nn + 2000) (400 + k) : Nat)) m eb) then (record JcDigits {digits := s, count := k, point := nn}) else (jcTryFrom num den m eb nb (k + 1) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcShortest,
+  parameters: [m : Nat, eb : Nat],
+  result: JcDigits,
+  body: (let big : Bytes := (jbFromNat m); (let num : Bytes := (if (1099 <? eb) then (jbPowMul big 2 (prim subtract eb 1100 : Nat)) else big); (let den : Bytes := (if (1099 <? eb) then (jbFromNat 1) else (jbPowMul (jbFromNat 1) 2 (prim subtract 1100 eb : Nat))); (let nb : Nat := (if ((jbCmp num den) =? 0) then (jcPointDown num den 400 400) else (jcPointUp num den 400 400)); (jcTryFrom num den m eb nb 1 17))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jcZeros,
+  parameters: [n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (n =? 0) then acc else (jcZeros (prim subtract n 1 : Nat) (GenPatch::jpCat acc 0x30) rest))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcLayout,
+  parameters: [g : JcDigits],
+  result: Bytes,
+  body: (let d : Bytes := (GenPatch::jpDec (project g digits)); (let k : Nat := (project g count); (let nb : Nat := (project g point); (if (((k + 400) <? (nb + 1)) && (nb <? 422)) then (GenPatch::jpCat d (jcZeros (prim subtract nb (400 + k) : Nat) 0x 25)) else (if ((400 <? nb) && (nb <? 422)) then (GenPatch::jpCat (GenPatch::jpSpan d 0 (prim subtract nb 400 : Nat)) (GenPatch::jpCat 0x2e (GenPatch::jpSpan d (prim subtract nb 400 : Nat) k))) else (if ((394 <? nb) && (nb <? 401)) then (GenPatch::jpCat (GenPatch::jpCat 0x302e (jcZeros (prim subtract 400 nb : Nat) 0x 7)) d) else (let x : Bytes := (if (400 <? nb) then (GenPatch::jpCat 0x2b (GenPatch::jpDec (prim subtract nb 401 : Nat))) else (GenPatch::jpCat 0x2d (GenPatch::jpDec (prim subtract 401 nb : Nat)))); (let mant : Bytes := (if (k =? 1) then d else (GenPatch::jpCat (GenPatch::jpSpan d 0 1) (GenPatch::jpCat 0x2e (GenPatch::jpSpan d 1 k)))); (GenPatch::jpCat mant (GenPatch::jpCat 0x65 x))))))))))
+}
+
+definition{
+  name: jcSerialize,
+  parameters: [x : JcDouble],
+  result: Bytes,
+  body: (if ((project x sig) =? 0) then 0x30 else (GenPatch::jpCat (if ((project x neg) && true) then 0x2d else 0x) (jcLayout (jcShortest (project x sig) (project x exb))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jcDigitsFrom,
+  parameters: [s : Bytes, i : Nat, k : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (k <? (i + 1)) then acc else (let b : Nat := (GenPatch::jpAt s i); (if (b =? 46) then (jcDigitsFrom s (i + 1) k acc rest) else (jcDigitsFrom s (i + 1) k (jbMul acc 10 (prim subtract b 48 : Nat)) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcSigFrom,
+  parameters: [s : Bytes, i : Nat, k : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if (k <? (i + 1)) then n else (let b : Nat := (GenPatch::jpAt s i); (if (b =? 46) then (jcSigFrom s (i + 1) k n rest) else (if ((n =? 0) && (b =? 48)) then (jcSigFrom s (i + 1) k n rest) else (jcSigFrom s (i + 1) k (n + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcExpFrom,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let b : Nat := (GenPatch::jpAt s i); (if ((b <? 48) || (57 <? b)) then acc else (if (100000 <? acc) then (jcExpFrom s (i + 1) acc rest) else (jcExpFrom s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract b 48 : Nat)) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcParse,
+  parameters: [s : Bytes],
+  result: (Option JcDouble),
+  body: (let neg : Bool := ((GenPatch::jpAt s 0) =? 45); (let i : Nat := (if (neg && true) then 1 else 0); (let j : Nat := (GenPatch::jpDigits s i); (let hasF : Bool := ((GenPatch::jpAt s j) =? 46); (let k : Nat := (if (hasF && true) then (GenPatch::jpDigits s (j + 1)) else j); (let fp : Nat := (if (hasF && true) then (prim subtract k (j + 1) : Nat) else 0); (let m : Bytes := (jcDigitsFrom s i k 0x ((GenPatch::jpLen s) + 1)); (let d : Nat := (jcSigFrom s i k 0 ((GenPatch::jpLen s) + 1)); (let hasE : Bool := (((GenPatch::jpAt s k) =? 101) || ((GenPatch::jpAt s k) =? 69)); (let sgn : Nat := (GenPatch::jpAt s (k + 1)); (let es : Nat := (if ((sgn =? 43) || (sgn =? 45)) then (k + 2) else (k + 1)); (let ev : Nat := (if (hasE && true) then (jcExpFrom s es 0 ((GenPatch::jpLen s) + 1)) else 0); (let eneg : Bool := (hasE && (sgn =? 45)); (let hi : Nat := (2000 + (if (eneg && true) then 0 else ev)); (let lo : Nat := ((if (eneg && true) then ev else 0) + fp); (if ((GenPatch::jpLen m) =? 0) then (ctor Option.some [JcDouble] (record JcDouble {neg := neg, sig := 0, exb := 0})) else (if (hi <? lo) then (if (((d + hi) + 330) <? (lo + 2000)) then (ctor Option.some [JcDouble] (record JcDouble {neg := neg, sig := 0, exb := 0})) else (ctor Option.none [JcDouble])) else (jcNearest neg m d (prim subtract hi lo : Nat))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jcNumber,
+  parameters: [s : Bytes],
+  result: (Option Bytes),
+  body: (match (jcParse s)
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some x => (ctor Option.some [Bytes] (jcSerialize x))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jcUtf16From,
+  parameters: [t : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenPatch::jpLen t) <? (i + 1)) then acc else (let b : Nat := (GenPatch::jpAt t i); (let n : Nat := (if (b <? 128) then 1 else (if (b <? 224) then 2 else (if (b <? 240) then 3 else 4))); (let lead : Nat := (if (b <? 128) then b else (if (b <? 224) then (prim subtract b 192 : Nat) else (if (b <? 240) then (prim subtract b 224 : Nat) else (prim subtract b 240 : Nat)))); (let c1 : Nat := (prim subtract (GenPatch::jpAt t (i + 1)) 128 : Nat); (let c2 : Nat := (prim subtract (GenPatch::jpAt t (i + 2)) 128 : Nat); (let c3 : Nat := (prim subtract (GenPatch::jpAt t (i + 3)) 128 : Nat); (let cp : Nat := (if (n =? 1) then lead else (if (n =? 2) then ((prim multiply lead 64 : Nat) + c1) else (if (n =? 3) then (((prim multiply lead 4096 : Nat) + (prim multiply c1 64 : Nat)) + c2) else ((((prim multiply lead 262144 : Nat) + (prim multiply c1 4096 : Nat)) + (prim multiply c2 64 : Nat)) + c3)))); (let units : Bytes := (if (cp <? 65536) then (GenPatch::jpCat (GenPatch::jpByte (prim quotient cp 256 0 : Nat)) (GenPatch::jpByte (prim remainder cp 256 0 : Nat))) else (let v : Nat := (prim subtract cp 65536 : Nat); (let hi : Nat := (55296 + (prim quotient v 1024 0 : Nat)); (let lo : Nat := (56320 + (prim remainder v 1024 0 : Nat)); (GenPatch::jpCat (GenPatch::jpCat (GenPatch::jpByte (prim quotient hi 256 0 : Nat)) (GenPatch::jpByte (prim remainder hi 256 0 : Nat))) (GenPatch::jpCat (GenPatch::jpByte (prim quotient lo 256 0 : Nat)) (GenPatch::jpByte (prim remainder lo 256 0 : Nat)))))))); (jcUtf16From t (i + n) (GenPatch::jpCat acc units) rest))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcUtf16,
+  parameters: [t : Bytes],
+  result: Bytes,
+  body: (jcUtf16From t 0 0x ((GenPatch::jpLen t) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jcBestFrom,
+  parameters: [s : Bytes, i : Nat, prev : (Option Bytes), best : (Option JcKey), fuel : Nat],
+  result: (Option JcKey),
+  body: (match fuel
+    | Nat.zero => best
+    | Nat.succ rest => (let v : Nat := ((Foundation.Json::stringEnd s (i + 1)) + 2); (let e : Nat := (Foundation.Json::valueEnd s v); (let k : Bytes := (match (GenPatch::jpDecode s (i + 1))
+      | Option.none => 0x
+      | Option.some x => x); (let o : Bytes := (jcUtf16 k); (let above : Bool := (match prev
+      | Option.none => true
+      | Option.some q => (GenPatch::jpLess q o)); (let better : Bool := (match best
+      | Option.none => true
+      | Option.some bb => (GenPatch::jpLess o (project bb order))); (let nb : (Option JcKey) := (if (above && better) then (ctor Option.some [JcKey] (record JcKey {key := k, order := o, kstart := v, kend := e})) else best); (if ((GenPatch::jpAt s e) =? 44) then (jcBestFrom s (e + 1) prev nb rest) else nb))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcBest,
+  parameters: [s : Bytes, prev : (Option Bytes)],
+  result: (Option JcKey),
+  body: (if ((GenPatch::jpAt s 1) =? 125) then (ctor Option.none [JcKey]) else (jcBestFrom s 1 prev (ctor Option.none [JcKey]) ((GenPatch::jpLen s) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jcDuplicateFrom,
+  parameters: [s : Bytes, prev : (Option Bytes), fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (match (jcBest s prev)
+      | Option.none => false
+      | Option.some bb => (if ((GenPatch::jpCountKey s (project bb key)) <? 2) then (jcDuplicateFrom s (ctor Option.some [Bytes] (project bb order)) rest) else true))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcCanon,
+  parameters: [s : Bytes, mode : Nat, prev : (Option Bytes), acc : Bytes, n : Nat, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (if (mode =? 1) then (match (jcBest s prev)
+      | Option.none => (ctor Option.some [Bytes] (GenPatch::jpCat acc 0x7d))
+      | Option.some bb => (match (jcCanon (GenPatch::jpSpan s (project bb kstart) (project bb kend)) 0 (ctor Option.none [Bytes]) 0x 0 rest)
+        | Option.none => (ctor Option.none [Bytes])
+        | Option.some cv => (jcCanon s 1 (ctor Option.some [Bytes] (project bb order)) (GenPatch::jpCat (GenPatch::jpCat acc (if (n =? 0) then 0x else 0x2c)) (GenPatch::jpCat (GenPatch::jpCat (GenPatch::jpEncode (project bb key)) 0x3a) cv)) (n + 1) rest))) else (if (mode =? 2) then (match (GenPatch::jpElement s n)
+      | Option.none => (ctor Option.some [Bytes] (GenPatch::jpCat acc 0x5d))
+      | Option.some e => (match (jcCanon (GenPatch::jpSpan s (project e start) (project e vend)) 0 (ctor Option.none [Bytes]) 0x 0 rest)
+        | Option.none => (ctor Option.none [Bytes])
+        | Option.some cv => (jcCanon s 2 prev (GenPatch::jpCat acc (GenPatch::jpCat (if (n =? 0) then 0x else 0x2c) cv)) (n + 1) rest))) else (let b : Nat := (GenPatch::jpAt s 0); (if (b =? 34) then (match (GenPatch::jpDecode s 1)
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some d => (ctor Option.some [Bytes] (GenPatch::jpEncode d))) else (if (b =? 91) then (jcCanon s 2 prev 0x5b 0 rest) else (if (b =? 123) then (if (GenPatch::jpKeysOk s) then (if (jcDuplicateFrom s (ctor Option.none [Bytes]) ((GenPatch::jpLen s) + 1)) then (ctor Option.none [Bytes]) else (jcCanon s 1 (ctor Option.none [Bytes]) 0x7b 0 rest)) else (ctor Option.none [Bytes])) else (if ((b =? 116) || ((b =? 102) || (b =? 110))) then (ctor Option.some [Bytes] s) else (jcNumber s))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcCanonicalize,
+  parameters: [s : Bytes],
+  result: (Option Bytes),
+  body: (if (GenPatch::jpValid s) then (let c : Bytes := (GenPatch::jpCompact s); (jcCanon c 0 (ctor Option.none [Bytes]) 0x 0 ((prim multiply (GenPatch::jpLen c) 3 : Nat) + 3))) else (ctor Option.none [Bytes])),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jcNameAfter,
+  parameters: [p : Bytes, i : Nat, last : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => last
+    | Nat.succ rest => (if ((GenPatch::jpLen p) <? (i + 1)) then last else (jcNameAfter p (i + 1) (if ((GenPatch::jpAt p i) =? 47) then (i + 1) else last) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcFindOutput,
+  parameters: [archive : Bytes, h : Nat, base : Bytes, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (if ((GenPatch::jpAt archive h) =? 0) then (ctor Option.none [Bytes]) else (let size : Nat := (Foundation.Tar::entrySize archive h); (let name : Bytes := (Foundation.Tar::entryName archive h); (let cut : Nat := (jcNameAfter name 0 0 ((GenPatch::jpLen name) + 1)); (let dir : Bytes := (GenPatch::jpSpan name 0 cut); (let leaf : Bytes := (GenPatch::jpSpan name cut (GenPatch::jpLen name)); (let isOut : Bool := (((7 <? cut) && (GenPatch::jpSame (GenPatch::jpSpan dir (prim subtract cut 7 : Nat) cut) 0x6f75747075742f)) && (GenPatch::jpSame leaf base)); (if (isOut && true) then (ctor Option.some [Bytes] (GenPatch::jpSpan archive (h + 512) ((h + 512) + size))) else (jcFindOutput archive ((h + 512) + (Foundation.Tar::padded size)) base rest)))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcPairsFrom,
+  parameters: [archive : Bytes, h : Nat, acc : Bytes, why : Bytes, fuel : Nat],
+  result: JcReport,
+  body: (match fuel
+    | Nat.zero => (record JcReport {passed := acc, failed := why})
+    | Nat.succ rest => (if ((GenPatch::jpAt archive h) =? 0) then (record JcReport {passed := acc, failed := why}) else (let size : Nat := (Foundation.Tar::entrySize archive h); (let name : Bytes := (Foundation.Tar::entryName archive h); (let cut : Nat := (jcNameAfter name 0 0 ((GenPatch::jpLen name) + 1)); (let isIn : Bool := ((6 <? cut) && (GenPatch::jpSame (GenPatch::jpSpan name (prim subtract cut 6 : Nat) cut) 0x696e7075742f)); (let next : Nat := ((h + 512) + (Foundation.Tar::padded size)); (if (isIn && true) then (let leaf : Bytes := (GenPatch::jpSpan name cut (GenPatch::jpLen name)); (let raw : Bytes := (GenPatch::jpSpan archive (h + 512) ((h + 512) + size)); (let ok : Bool := (match (jcFindOutput archive 0 leaf ((prim quotient (GenPatch::jpLen archive) 512 0 : Nat) + 1))
+      | Option.none => false
+      | Option.some want => (match (jcCanonicalize raw)
+        | Option.none => false
+        | Option.some got => (GenPatch::jpSame got want))); (if (ok && true) then (jcPairsFrom archive next (GenPatch::jpCat acc (GenPatch::jpCat leaf 0x0a)) why rest) else (jcPairsFrom archive next acc (GenPatch::jpCat why (GenPatch::jpCat name 0x3a206e6f74206974732063616e6f6e6963616c206f75747075740a)) rest))))) else (jcPairsFrom archive next acc why rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcLineEnd,
+  parameters: [t : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((GenPatch::jpLen t) <? (i + 1)) || ((GenPatch::jpAt t i) =? 10)) then i else (jcLineEnd t (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcWordEnd,
+  parameters: [t : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((GenPatch::jpLen t) <? (i + 1)) || ((GenPatch::jpAt t i) =? 32)) then i else (jcWordEnd t (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcHexFromAll,
+  parameters: [h : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((GenPatch::jpLen h) <? (i + 1)) then true else (let b : Nat := (GenPatch::jpAt h i); (if ((GenPatch::jpIsDigit b) || ((96 <? b) && (b <? 103))) then (jcHexFromAll h (i + 1) rest) else false)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcAllHex,
+  parameters: [h : Bytes],
+  result: Bool,
+  body: (((GenPatch::jpLen h) =? 16) && (jcHexFromAll h 0 17)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jcRoundTrips,
+  parameters: [want : Bytes],
+  result: Bool,
+  body: (match (jcNumber want) | Option.none => false | Option.some r => (GenPatch::jpSame r want)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jcRowsFrom,
+  parameters: [t : Bytes, i : Nat, acc : Bytes, why : Bytes, fuel : Nat],
+  result: JcReport,
+  body: (match fuel
+    | Nat.zero => (record JcReport {passed := acc, failed := why})
+    | Nat.succ rest => (if ((GenPatch::jpLen t) <? (i + 1)) then (record JcReport {passed := acc, failed := why}) else (let e : Nat := (jcLineEnd t i ((GenPatch::jpLen t) + 1)); (let line : Bytes := (GenPatch::jpSpan t i e); (let isRow : Bool := ((GenPatch::jpSame (GenPatch::jpSpan line 0 5) 0x2020207c20) && ((GenPatch::jpSame (GenPatch::jpSpan line 21 24) 0x207c20) && (jcAllHex (GenPatch::jpSpan line 5 21)))); (if (isRow && true) then (let h : Bytes := (GenPatch::jpSpan line 5 21); (let want : Bytes := (GenPatch::jpSpan line 24 (jcWordEnd line 24 ((GenPatch::jpLen line) + 1))); (let ok : Bool := (match (jcFromBits h)
+      | Option.none => ((GenPatch::jpLen want) =? 0)
+      | Option.some x => ((GenPatch::jpSame (jcSerialize x) want) && (jcRoundTrips want))); (let entry : Bytes := (GenPatch::jpCat h (GenPatch::jpCat 0x20 (GenPatch::jpCat (if ((GenPatch::jpLen want) =? 0) then 0x6f7574206f662072616e6765 else want) 0x0a))); (if (ok && true) then (jcRowsFrom t (e + 1) (GenPatch::jpCat acc entry) why rest) else (jcRowsFrom t (e + 1) acc (GenPatch::jpCat why (GenPatch::jpCat 0x726f7720 entry)) rest)))))) else (jcRowsFrom t (e + 1) acc why rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: jcPairs,
+  parameters: [archive : Bytes],
+  result: JcReport,
+  body: (jcPairsFrom archive 0 0x 0x ((prim quotient (GenPatch::jpLen archive) 512 0 : Nat) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: jcRows,
+  parameters: [t : Bytes],
+  result: JcReport,
+  body: (jcRowsFrom t 0 0x 0x ((GenPatch::jpLen t) + 1)),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
