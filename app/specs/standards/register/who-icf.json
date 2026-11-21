@@ -2,8 +2,20 @@
  "key": "who-icf",
  "title": "WHO International Classification of Functioning, Disability and Health",
  "issuer": "WHO",
- "text": null,
- "unpinned": "the ICF classification's machine-readable release needs pinning with an extractor of its codes",
+ "text": {
+  "url": "https://icdcdn.who.int/static/releasefiles/2026-01/SimpleTabulation-ICF-en.zip",
+  "sha256": "38776b09204984dcf1ce3d00f5cf25238abd4cfe37a9929c8799d11f101652d5"
+ },
+ "inventories": [
+  {
+   "generated": "test/standards/generated/who-icf.jsonl",
+   "vendored": "app/specs/oracle/icf/SimpleTabulation-ICF-en.txt",
+   "source": {
+    "url": "https://icdcdn.who.int/static/releasefiles/2026-01/SimpleTabulation-ICF-en.zip#SimpleTabulation-ICF-en.txt",
+    "sha256": "2e0b2555b2630cc9e21f187968c3a2e4a6612224d05e944f1091942a35f333c4"
+   }
+  }
+ ],
  "governs": [
   "app/src/PersonIcf.lex.tex",
   "site/person/icf.mjs",
@@ -11,5 +23,19 @@
  ],
  "realizedBy": [
   "ST-01"
- ]
+ ],
+ "enforcedByKind": {
+  "block": {
+   "suite": "test/person/icf.test.mjs",
+   "how": "every row of WHO's tabulation SimpleTabulation-ICF-en.txt, byte for byte as the 2026-01 release publishes it, is an entity of site/person/icf.mjs with the row's code, title and URIs (generators/person icf and icfmodule write it and GN-01 holds it), and the suite reads the model back against the tabulation"
+  },
+  "category": {
+   "suite": "test/person/icf.test.mjs",
+   "how": "every row of WHO's tabulation SimpleTabulation-ICF-en.txt, byte for byte as the 2026-01 release publishes it, is an entity of site/person/icf.mjs with the row's code, title and URIs (generators/person icf and icfmodule write it and GN-01 holds it), and the suite reads the model back against the tabulation"
+  },
+  "chapter": {
+   "suite": "test/person/icf.test.mjs",
+   "how": "every row of WHO's tabulation SimpleTabulation-ICF-en.txt, byte for byte as the 2026-01 release publishes it, is an entity of site/person/icf.mjs with the row's code, title and URIs (generators/person icf and icfmodule write it and GN-01 holds it), and the suite reads the model back against the tabulation"
+  }
+ }
 }
