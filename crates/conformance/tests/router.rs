@@ -11,18 +11,19 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .ancestors()
-        .nth(2)
-        .expect("crates/conformance is two below the root")
-        .to_path_buf()
+    PathBuf::from(concat!(env!("CARGO_MANIFEST_DIR"), "/../.."))
 }
 
 fn read(path: &str) -> String {
     std::fs::read_to_string(root().join(path)).unwrap_or_else(|e| panic!("{path}: {e}"))
 }
 
+// One Node suite at a time: labels.test.mjs times QR-03, and a suite running beside
+// it reads about a fifth slower (190 against 165), which the pace does not take out.
+static ONE: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 fn run(program: &str, args: &[&str]) {
+    let _one = ONE.lock().unwrap_or_else(|e| e.into_inner());
     let result = Command::new(program)
         .args(args)
         .current_dir(root())
