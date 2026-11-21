@@ -26,6 +26,8 @@ import test from "node:test";
 import { FIELDS, judge, PROVIDERS } from "../../site/router/table.mjs";
 import { route } from "../../site/router/router.mjs";
 import { asksQuestion, plain } from "../../site/router/features.mjs";
+import { answer } from "../../site/router/answer.mjs";
+import { specDecider } from "../../site/r4/decide.mjs";
 import { serve } from "./examples.mjs";
 
 const { chromium } = createRequire(import.meta.url)("playwright");
@@ -59,21 +61,23 @@ async function meanings(texts) {
 
 // The percent of each intent's acts the router reads as their annotators marked them; then, for
 // each dimension head (PROVIDERS.intent.heads), the percent of that dimension's acts it reads as
-// such and of all the other acts it leaves alone: the sign of bias plus weights times the meaning
-// vector of the act's plain text (features.mjs plain).
+// such and of all the other acts it leaves alone, as the router reads the act (route's `act`).
 async function found(acts, keys) {
   const vectors = await meanings([...new Set(acts.flatMap((a) => [a.text, plain(a.text)]))]);
   const learned = { meaning: { read: async (text) => vectors.get(text) ?? null } };
   const held = { question: [0, 0], task: [0, 0], fact: [0, 0] };
-  for (const act of acts.filter((a) => a.intent)) {
-    const mapped = await route({ source: "note", values: { text: act.text }, line, halted: () => "no", now: 0, learned });
-    held[act.intent][Number(({ event: "fact" }[mapped.intent] ?? mapped.intent) === act.intent)] += 1;
+  for (const act of acts) {
+    const mapped = (act.mapped = await route({ source: "note", values: { text: act.text }, line, halted: () => "no", now: 0, learned }));
+    if (act.intent) held[act.intent][Number(({ event: "fact" }[mapped.intent] ?? mapped.intent) === act.intent)] += 1;
   }
+  // An act the router reads as feedback is taken as heard when a turn came before it, and only then (the Ask decision, app/specs/ask/spec.json).
+  const nod = acts.find((a) => a.mapped.act === "autoFeedback" && a.mapped.intent === "fact" && a.mapped.start == null), ask = specDecider(read("../../app/specs/ask/spec.json"));
+  for (const after of nod ? [1, null] : []) assert.equal((await answer(nod.text, { line: async (l) => (l.startsWith("ask ") ? ask(l.slice(4)).outcome : line(l)), halted: () => "no", meaning: learned.meaning, after })).sentences[0] === `${PROVIDERS.sentence.frames.heard}.`, Boolean(after), `“${nod.text}” after ${after}`);
   const percent = Object.entries(held).map(([intent, [missed, hit]]) => [keys[intent], Math.floor((100 * hit) / (missed + hit))]);
   for (const [name, head] of Object.entries(PROVIDERS.intent.heads)) {
     assert.equal(head.model, PROVIDERS.meaning.model, `the ${name} head reads the compiled meaning model's vectors`);
     const read = [[0, 0], [0, 0]];
-    for (const act of acts) read[Number(act.dimension === name)][Number((vectors.get(plain(act.text)).reduce((z, x, k) => z + head.weights[k] * x, head.bias) > 0) === (act.dimension === name))] += 1;
+    for (const act of acts) read[Number(act.dimension === name)][Number((act.mapped.act === name) === (act.dimension === name))] += 1;
     percent.push(...keys[name].map((key, i) => [key, Math.floor((100 * read[1 - i][1]) / (read[1 - i][0] + read[1 - i][1]))]));
   }
   console.log(`# QR-16 ${percent.map(([k, v]) => `${k} ${v}%`).join(", ")} over ${acts.length} acts`);

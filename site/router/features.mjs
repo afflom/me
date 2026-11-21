@@ -90,10 +90,9 @@ export function asksQuestion(text) {
 // but apostrophes, the form their fit's corpora share (Mezza et al., COLING 2018, 4.1).
 export const plain = (text) => text.toLowerCase().replace(/[^\p{L}\p{N}'\s]/gu, " ").replace(/\s+/g, " ").trim();
 
-// Whether the intent head (PROVIDERS.intent.head, fit on the AMI Meeting
-// Corpus, QR-16) reads a meaning vector as a task.
-export function headTask(vector) {
-  const head = PROVIDERS.intent.head;
+// Whether a head (the intent head PROVIDERS.intent.head, or a dimension head, each fit on the
+// AMI Meeting Corpus, QR-16) reads a meaning vector as what it is fit for: a task, by the intent head.
+export function headTask(vector, head = PROVIDERS.intent.head) {
   if (!head || !vector || vector.length !== head.weights.length) return null;
   let z = head.bias;
   for (let k = 0; k < vector.length; k += 1) z += head.weights[k] * vector[k];
