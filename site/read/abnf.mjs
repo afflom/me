@@ -2,7 +2,7 @@
 // from the pinned RFC text by tools/standards/abnf.py (RFC 5234 ABNF), and the
 // Prism matches text against them in LexLean: app/src/Abnf.lex.tex walks the
 // rules as the byte table tools/standards/grammar.py writes into
-// app/src/PrismGrammarMail.lex.tex, built as the grammar-mail guest and
+// app/src/PrismGrammarMail.lex.tex and PrismGrammarIcal.lex.tex, built as the grammar-mail and grammar-ical guests and
 // pinned in ./guest.mjs (GU-01), whose loader checks and compiles it once, when
 // this module loads; each match then runs it synchronously, so a reader stays
 // synchronous. Chromium instantiates a module this small on the main thread
@@ -16,18 +16,20 @@
 //   const g = abnf(table); const tree = g.match("orig-date", "Date: ...\r\n");
 //   tree = { rule, start, end, text, kids: [trees of named rules] }
 import { GUESTS, opened } from "./guest.mjs";
+import { GUEST as ICAL, opened as openedIcal } from "../calendar/guest.mjs";
 
 const encoder = new TextEncoder();
-const ask = await opened(GUESTS.mail);
+// Each grammar's guest, by the grammar's key: checked and compiled once, here.
+const asks = { mail: await opened(GUESTS.mail), ical: await openedIcal(ICAL) };
 
-export function abnf({ rules }) {
+export function abnf({ rules, key }) {
   const names = Object.keys(rules).sort();
   const index = new Map(names.map((n, i) => [n, i]));
   return {
     match(rule, text) {
       // A text beyond what the guest can hold (it traps) is not read, like one beyond its request limit ("invalid").
       let answer = "none";
-      try { if (index.has(rule)) answer = ask(`${index.get(rule)} ${text}`); } catch { return null; }
+      try { if (index.has(rule)) answer = asks[key](`${index.get(rule)} ${text}`); } catch { return null; }
       if (answer === "none" || answer === "invalid") return null;
       const cps = Array.from(text);
       const at = new Map([[0, 0]]);

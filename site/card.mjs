@@ -3,7 +3,6 @@
 // the verified app's: this script only carries bytes between the page, the
 // vault, R4, the routed models and the root guest.
 import { openVault, routerDecide } from "./vault/vault.mjs";
-import { lines, timeOf, utcOf } from "./time/recur.mjs";
 import { PLACES, ACTS, LABELS, FLOORS, SETTINGS, SECTIONS, WORDS, DOMAINS, FEEDERS, FONTS } from "./surface/surface.mjs";
 import { makeSetup } from "./surface/setup.mjs";
 // The coherence registry's runtime: what an item is about, what an Ask is
@@ -58,9 +57,9 @@ export function headerWords(value = "") {
   });
 }
 
-// A calendar's fields, each by the content-line grammar and time reading of site/time/recur.mjs (RFC 5545 3.1, 3.3.4, 3.3.5).
-const calendarField = (text, name) => (lines(text, name)[0]?.[1] ?? "").replace(/\\([,;\\])/g, "$1").replace(/\\n/gi, " ");
-const icsField = (text, name) => { const [line] = lines(text, name); const t = line && timeOf(...line); return t ? utcOf(t.wall, t.date ? "" : t.zone) : NaN; };
+// A calendar's fields, each by the content-line and time reading of site/time/recur.mjs (RFC 5545 3.1, 3.3.4, 3.3.5), which comes with the reader: its grammar guest is not part of a first visit.
+const calendarField = (text, name) => (reader?.lines(text, name)[0]?.[1] ?? "").replace(/\\([,;\\])/g, "$1").replace(/\\n/gi, " ");
+const icsField = (text, name) => { const [line] = reader?.lines(text, name) ?? []; const t = line && reader.timeOf(...line); return t ? reader.utcOf(t.wall, t.date ? "" : t.zone) : NaN; };
 
 // The first words of a text, as a heading: its first line, cut at a word near 80 characters.
 function headline(text = "") {
@@ -109,38 +108,33 @@ export function readItem({ address, outcome, bytes, meta = {}, at = 0 }) {
   if (base.media === "calendar") {
     // The event's own fields: the calendar's time zones come first and carry DTSTARTs of their own (1970).
     const whole = text;
-    // A component ends at the next END of any of the three: RFC 6047's own example closes a VTODO with END:VEVENT.
-    const components = [...whole.matchAll(/BEGIN:(?:VEVENT|VTODO|VJOURNAL)[\s\S]*?END:(?:VEVENT|VTODO|VJOURNAL)/g)].map(([component]) => component);
+    // Its components, each from its BEGIN line to the END line that closes it (RFC 6047's own example closes a VTODO with END:VEVENT).
+    const parts = reader?.parts(whole) ?? [];
+    const components = parts.filter((part) => /^V(EVENT|TODO|JOURNAL)$/.test(part.kind)).map((part) => part.text);
     text = components[0] ?? whole;
     // Its time is its own: when it starts, else when it is due (a VTODO), else when the
     // object was made (DTSTAMP, CREATED, LAST-MODIFIED), never when it arrived here.
-    const timed = icsField(text, "DTSTART");
-    const due = icsField(text, "DUE");
     const made = ["DTSTAMP", "CREATED", "LAST-MODIFIED"].map((name) => icsField(text, name)).find((t) => !Number.isNaN(t)) ?? NaN;
-    const first = Number.isNaN(timed) ? due : timed;
+    const first = ["DTSTART", "DUE"].map((name) => icsField(text, name)).find((t) => !Number.isNaN(t)) ?? NaN;
     // What it is to the event it names (RFC 5546): its method, identity, revision and instance.
-    const method = calendarField(whole, "METHOD").toUpperCase();
-    const uid = calendarField(text, "UID");
-    const sequence = Number(calendarField(text, "SEQUENCE")) || 0;
-    const recurrence = calendarField(text, "RECURRENCE-ID");
+    const [method, uid, sequence, recurrence] = [calendarField(whole, "METHOD").toUpperCase(), calendarField(text, "UID"), Number(calendarField(text, "SEQUENCE")) || 0, calendarField(text, "RECURRENCE-ID")];
     // A repeating event is shown at its next time, not at the first one years ago.
     const start = reader && components[0] ? reader.nextTime(components[0], first) : first;
     // A to-do or a journal entry (RFC 5545 3.6.2, 3.6.3) is something to do or a note, not a meeting.
-    const component = /^BEGIN:(VEVENT|VTODO|VJOURNAL)/.exec(text)?.[1] ?? (/^BEGIN:VFREEBUSY/m.test(whole) ? "VFREEBUSY" : "VEVENT");
-    const allDay = /^\d{8}$/.test(calendarField(text, "DTSTART"));
+    const component = parts.find((part) => part.kind && part.text === text)?.kind ?? parts.find((part) => part.kind === "VFREEBUSY")?.kind ?? "VEVENT";
+    const allDay = !!reader?.timeOf(...(reader.lines(text, "DTSTART")[0] ?? []))?.date;
     // Opened, an event reads as the person would say it: when, where, who, and its notes.
     const end = icsField(text, "DTEND") - first + start;
     const span = Number.isNaN(start) ? "" : [new Date(start), allDay || Number.isNaN(end) ? null : new Date(end)]
       .filter(Boolean).map((d, i) => d.toLocaleString(undefined, i === 0 ? (allDay ? { dateStyle: "full" } : { dateStyle: "full", timeStyle: "short" }) : (allDay ? { dateStyle: "full" } : { timeStyle: "short" }))).join(" – ");
-    const people = lines(text, "(?:ORGANIZER|ATTENDEE)")
-      .map(([params, value]) => /CN="?([^";:]+)"?/i.exec(params)?.[1] ?? value.replace(/^mailto:/i, "")).filter(Boolean);
-    const notes = reader ? reader.eventText(lines(text, "DESCRIPTION")[0]?.[1] ?? "") : calendarField(text, "DESCRIPTION");
+    const people = (reader?.lines(text, "(?:ORGANIZER|ATTENDEE)") ?? []).map(([params, value]) => /CN="?([^";:]+)"?/i.exec(params)?.[1] ?? value.replace(/^mailto:/i, "")).filter(Boolean);
+    const notes = reader ? reader.eventText(reader.lines(text, "DESCRIPTION")[0]?.[1] ?? "") : calendarField(text, "DESCRIPTION");
     // Comments to the calendar user (RFC 5545 §3.8.1.4), such as a reply's reason, read after the notes.
-    const comments = lines(text, "COMMENT").map(([, value]) => (reader ? reader.eventText(value) : value.trim()));
+    const comments = (reader?.lines(text, "COMMENT") ?? []).map(([, value]) => (reader ? reader.eventText(value) : value.trim()));
     // The object's further events (an iMIP PUBLISH of several, an instance's own revision)
     // are events of their own, each read with the calendar's zones and method.
     const more = components.length > 1 && !meta.single ? components.slice(1).map((own, i) => {
-      const alone = components.reduce((rest, other) => (other === own ? rest : rest.replace(other, "")), whole);
+      const alone = ["BEGIN:VCALENDAR", ...parts.map((part) => part.text.trimEnd()).filter((part) => part === own.trimEnd() || !components.includes(`${part}\r\n`)), "END:VCALENDAR", ""].join("\r\n");
       return readItem({ address: `${address}#${i + 1}`, outcome, bytes: new TextEncoder().encode(alone), meta: { ...meta, single: true }, at: base.at });
     }) : [];
     // Without a summary it is headed by its notes, as a calendar shows it.
