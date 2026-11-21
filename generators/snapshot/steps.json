@@ -1,5 +1,5 @@
 {
-  "comment": "The steps of the snapshot program (generators/snapshot/), run in order by tools/generators/run.sh. jsonpatchoracle applies every case of the json-patch-tests suite (app/specs/oracle/json-patch-tests) as RFC 6902 says; jcspairs canonicalizes every input of the RFC 8785 author's test data (app/specs/oracle/json-canonicalization) and compares it with its output; jcsnumbers serializes every row of RFC 8785 Appendix B (app/specs/oracle/rfc8785) and writes the rows it held. Each refuses on any difference. shashort and shamonte hash every NIST CAVP SHA-256 message and Monte Carlo checkpoint (app/specs/oracle/nist-cavp-sha256) with the SHA-256 that snapshot addresses use; lockcheck hashes every vendored oracle file and refuses one whose SHA-256 is not the one its lock.json pins, or a file the lock does not list. snapshotvectors writes the acceptance vectors of the snapshot guest (app/specs/snapshot/spec.json) from those oracles: apply, every case of spec_tests.json (RFC 6902 Appendix A) as [document, patch], answered by the RFC 8785 form of its expected document or by refusal for an error case; canonical, every input of the RFC 8785 author's test data, answered by its output byte for byte; address, the same inputs, answered by sha256: and the SHA-256 of that output; sha256, every message of NIST CAVP SHA256ShortMsg.rsp as its Len and Msg lines, answered by its MD line.",
+  "comment": "The steps of the snapshot program (generators/snapshot/), run in order by tools/generators/run.sh. jsonpatchoracle applies every case of the json-patch-tests suite (app/specs/oracle/json-patch-tests) as RFC 6902 says; jcspairs canonicalizes every input of the RFC 8785 author's test data (app/specs/oracle/json-canonicalization) and compares it with its output; jcsnumbers serializes every row of RFC 8785 Appendix B (app/specs/oracle/rfc8785) and writes the rows it held. Each refuses on any difference. shashort and shamonte hash every NIST CAVP SHA-256 message and Monte Carlo checkpoint (app/specs/oracle/nist-cavp-sha256) with the SHA-256 that snapshot addresses use; lockcheck hashes every vendored oracle file and refuses one whose SHA-256 is not the one its lock.json pins, or a file the lock does not list. snapshotvectors writes the acceptance vectors of the snapshot guest (app/specs/snapshot/spec.json) from those oracles: apply, every case of spec_tests.json (RFC 6902 Appendix A) as [document, patch], answered by the RFC 8785 form of its expected document or by refusal for an error case; canonical, every input of the RFC 8785 author's test data, answered by its output byte for byte; address, the same inputs, answered by sha256: and the SHA-256 of that output; sha256, every message of NIST CAVP SHA256ShortMsg.rsp as its Len and Msg lines, answered by its MD line. snapshotpatchvectors writes app/specs/snapshot-patch/spec.json, more acceptance vectors of the same guest: every case of json-patch-tests tests.json that states an outcome, as an apply request and its answer.",
   "steps": [
     {
       "generator": "jsonpatchoracle",
@@ -110,6 +110,13 @@
         "app/specs/oracle/nist-cavp-sha256/SHA256ShortMsg.rsp"
       ],
       "output": "app/specs/snapshot/spec.json"
+    },
+    {
+      "generator": "snapshotpatchvectors",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/snapshot-patch/spec.json"
     }
   ]
 }
