@@ -1,0 +1,54 @@
+{
+  "about": [
+    "Kappa labels in the owner's browser: the content address of",
+    "UOR-Foundation/kappa-registry (\"<axis>:<lowercase hex digest>\").",
+    "The Prism's kappa facet (the reader PrismKappaLabel, in front of the",
+    "builder's PrismKappa) reads the label, names the digest the browser host",
+    "must re-derive from the bytes (WebCrypto's SHA-256 and SHA-512), compares it",
+    "and decides. An axis the host cannot compute is never guessed: it answers",
+    "unverified, never admit. Every admission also names the bytes on SHA-256,",
+    "kappa-registry's mandatory secondary axis.",
+    "  const kappa = makeKappa({ decide: rootDecide(dispatch) });",
+    "  await kappa.admit(label, bytes) -> { sha256?, outcome, axis?, discriminant?, digestBytes? }",
+    "  await kappa.labelOf(bytes, 'sha256') -> \"sha256:...\""
+  ],
+  "word": "kappa",
+  "make": "makeKappa",
+  "asks": [
+    {
+      "name": "admit",
+      "verb": "admit",
+      "params": [
+        {
+          "name": "label"
+        },
+        {
+          "blob": "bytes"
+        }
+      ],
+      "fields": [
+        "sha256",
+        "outcome",
+        "axis",
+        "discriminant#",
+        "digestBytes#"
+      ],
+      "gives": [
+        "digest SHA-256"
+      ]
+    },
+    {
+      "name": "labelOf",
+      "verb": "label",
+      "params": [
+        {
+          "blob": "bytes"
+        },
+        {
+          "name": "wire",
+          "default": "sha256"
+        }
+      ]
+    }
+  ]
+}

@@ -131,21 +131,27 @@ fn kappa_kp_01() {
 fn kappa_kp_02() {
     let page = read("site/kappa/kappa.mjs");
     assert!(
-        page.contains("crypto.subtle.digest(axis.host, bytes)"),
-        "KP-02: digests come from the host's WebCrypto, named by the spec"
+        page.contains("fields(await ask(decide, [\"admit\", label], bytes, ["),
+        "KP-02: the admission is the guest's answer, asked through the generated glue"
     );
+    let ask = read("site/glue/ask.mjs");
     assert!(
-        page.contains("if (!axis || !axis.host || !bytes) return 'uncomputed';"),
-        "KP-02: an axis the host cannot compute is uncomputed, never guessed"
+        ask.contains("crypto.subtle.digest(algorithm, blob)") && ask.contains("blob ? hex("),
+        "KP-02: digests come from the host's WebCrypto, named by the guest; bytes not given are never guessed"
     );
+    let reader = read("app/src/PrismKappaLabel.lex.tex");
     assert!(
-        page.contains("const answer = parseAnswer(await decide(`${label} ${word}`));"),
-        "KP-02: the admission is the guest's answer"
+        reader.contains("name: kappaLabelAskHost") && reader.contains("name: kappaLabelAskDone"),
+        "KP-02: the reader names the host digest and compares it with the label's"
     );
-    assert!(
-        !page.contains("fetch(") && !page.contains("XMLHttpRequest") && !page.contains("WebSocket"),
-        "KP-02: no host is called from the kappa module"
-    );
+    for text in [&page, &ask] {
+        assert!(
+            !text.contains("fetch(")
+                && !text.contains("XMLHttpRequest")
+                && !text.contains("WebSocket"),
+            "KP-02: no host is called from the kappa module"
+        );
+    }
     let spec = read("app/specs/kappa/spec.json");
     assert_eq!(
         spec.matches("\"host\": \"SHA-").count(),

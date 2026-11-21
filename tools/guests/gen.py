@@ -16,7 +16,7 @@ the locked SDK with no network (lexlean lock, fmt, lock, verify, then prismpm
 build) and records `.prism/build/<id>/core-wasm/*.wasm`.
 
 app/specs/guests/<facet>/<id>.lock.json holds, for that guest, the SHA-256 of the project `write`
-lays out (every input byte the build reads) and of the wasm built from it.
+lays out, less the Foundation modules its entry points never import, and of the wasm built from it.
 `check` fails when a guest's modules, vectors or limits changed since it was
 built, when its wasm is not the one recorded, or when its pin says otherwise:
 no guest the page runs is older than the model. Each site/<facet>/guest.mjs
@@ -122,9 +122,21 @@ definition{{
     return out
 
 
+def reached(d):
+    """What the guest is made of: the project's own files and the modules its entry points import, and no other."""
+    src, seen = pathlib.Path(d) / "src", set()
+    todo = list(src.glob("*.lex.tex"))
+    while todo:
+        p = todo.pop()
+        if p not in seen and p.is_file():
+            seen.add(p)
+            todo += [src / (m.replace(".", "/") + ".lex.tex") for m in re.findall(r"\\importmodule\{([^}]+)\}", p.read_text())]
+    return sorted(x for x in pathlib.Path(d).rglob("*") if x.is_file() and (src not in x.parents or x in seen))
+
+
 def tree_digest(d):
     h = hashlib.sha256()
-    for p in sorted(x for x in pathlib.Path(d).rglob("*") if x.is_file()):
+    for p in reached(d):
         rel = p.relative_to(d).as_posix().encode()
         h.update(len(rel).to_bytes(4, "big") + rel)
         data = p.read_bytes()
