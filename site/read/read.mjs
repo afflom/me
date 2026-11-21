@@ -5,6 +5,7 @@
 // conferencing boilerplate, and a repeating event is shown at its next time.
 // Loaded only once something is kept, so a first visit carries none of it.
 import { nextInstance } from "../time/recur.mjs";
+export { lines, parts, timeOf, utcOf } from "../time/recur.mjs";
 import { contentType, disposition, entity, transferEncoding } from "./mail.mjs";
 export { messageHeader } from "./mail.mjs";
 import * as pin from "./guest.mjs";
