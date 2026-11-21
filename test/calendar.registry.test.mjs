@@ -65,6 +65,8 @@ function reads(kind, name, sec) {
   }
 }
 
+// enforces: rfc5545-component-VCALENDAR
+test('component VCALENDAR', () => reads('component', 'VCALENDAR', '3.4'));
 // enforces: rfc5545-component-VEVENT
 test('component VEVENT', () => reads('component', 'VEVENT', '3.6.1'));
 // enforces: rfc5545-component-VTODO
@@ -267,6 +269,8 @@ test('enum CLASS=PUBLIC', () => reads('enum', 'CLASS=PUBLIC', '3.8.1.3'));
 test('enum CLASS=PRIVATE', () => reads('enum', 'CLASS=PRIVATE', '3.8.1.3'));
 // enforces: rfc5545-enum-CLASS-CONFIDENTIAL
 test('enum CLASS=CONFIDENTIAL', () => reads('enum', 'CLASS=CONFIDENTIAL', '3.8.1.3'));
+// enforces: rfc5545-enum-STATUS-CONFIRMED
+test('enum STATUS=CONFIRMED', () => reads('enum', 'STATUS=CONFIRMED', '3.8.1.11'));
 // enforces: rfc5545-enum-STATUS-DRAFT
 test('enum STATUS=DRAFT', () => reads('enum', 'STATUS=DRAFT', '3.8.1.11'));
 // enforces: rfc5545-enum-STATUS-NEEDS-ACTION
