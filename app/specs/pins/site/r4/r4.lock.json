@@ -1,0 +1,99 @@
+{
+  "schema": "me/r4-lock/2",
+  "note": "Every byte the R4 adapter runs or loads, by SHA-256. Objects are served by this page as gzip pieces of at most pieceBytes; the browser checks each piece after decompressing it and the whole object after joining them. Bytes that do not re-derive to their fingerprint are refused.",
+  "limitBytes": 16777216,
+  "pieceBytes": 8388608,
+  "engine": {
+    "id": "lexlean-r4-wasm",
+    "source": {
+      "repository": "casey-allard/lexlean-r4",
+      "commit": "cafe2b88ea047ad98e888bb89818208f172f102d",
+      "origin": "https://raw.githubusercontent.com/casey-allard/lexlean-r4/cafe2b88ea047ad98e888bb89818208f172f102d/"
+    },
+    "glue": {
+      "path": "public/lexlean_r4.js",
+      "fingerprint": "sha256-6786d0698dfa83d10abf8b4c1c577269251c3d5f26af0c86d21e82128046d4f6",
+      "bytes": 73600,
+      "pieces": [
+        {
+          "fingerprint": "sha256-6786d0698dfa83d10abf8b4c1c577269251c3d5f26af0c86d21e82128046d4f6",
+          "bytes": 73600
+        }
+      ]
+    },
+    "wasm": {
+      "path": "public/lexlean_r4_bg.wasm",
+      "fingerprint": "sha256-a5c0925f6ce054195036012428a473a65ca8469affba159499af9f3df966e42c",
+      "bytes": 51671674,
+      "pieces": [
+        {
+          "fingerprint": "sha256-f53033495e9cc9476a98eed59fb9757442e9ddb436da083a650275d2447827b0",
+          "bytes": 8388608
+        },
+        {
+          "fingerprint": "sha256-a1787462568fbbcce4c56f0a88960f115f4ab95ffff58126d02d785b3b4b8d67",
+          "bytes": 8388608
+        },
+        {
+          "fingerprint": "sha256-ff4d5f5043e11cf0a8457e3053d4745a4bf477e92d97693f1b1506d6b9d298d2",
+          "bytes": 8388608
+        },
+        {
+          "fingerprint": "sha256-eccc556146d6e2b48305215b57108e6a1579b831ffadcb8d485a435652c61355",
+          "bytes": 8388608
+        },
+        {
+          "fingerprint": "sha256-18930efdb7e678eae9669e722b898152aeda9f07b131d83ee8652e90dad23dde",
+          "bytes": 8388608
+        },
+        {
+          "fingerprint": "sha256-ab65e6f5651acf02e0726e3a11fe0715a02a0d9648d8071bda11bceb9849c55b",
+          "bytes": 8388608
+        },
+        {
+          "fingerprint": "sha256-a518fe3f095b285bd52f8d14cec54d97738e0b56a891028ad42f324e22f3fcd3",
+          "bytes": 1340026
+        }
+      ]
+    },
+    "upstreamProvenance": "public/provenance.json at the same commit names adapter_wasm_sha256 a5c0925f… and binding_javascript_sha256 6786d069…, the same bytes as above."
+  },
+  "models": {
+    "inprism": [
+      {
+        "id": "r4-bootstrap-v8",
+        "engine": "lexlean-r4-wasm",
+        "schema": "uor-r4.lut-stack/8",
+        "magic": "UORLUT01",
+        "path": "crates/wasm/src/bootstrap_v8.uorlut",
+        "fingerprint": "sha256-22b96912d0472bb2bf01643696ddcbe522ab7e51a3c77158ac22395006477bca",
+        "bytes": 40124160,
+        "label": "public",
+        "pieces": [
+          {
+            "fingerprint": "sha256-97aa9083ddf2f517f37c6c21b40100979a6657a63a44e45b840c348d92d306c7",
+            "bytes": 8388608
+          },
+          {
+            "fingerprint": "sha256-4ba4171a51f14be796f6c6a15dfc294409fbc4af8185f86d0617814efb3ffbb0",
+            "bytes": 8388608
+          },
+          {
+            "fingerprint": "sha256-290a4ac6d4807d33a07c0591b832966bdf2043f535e9b4b90e0159073e535a4e",
+            "bytes": 8388608
+          },
+          {
+            "fingerprint": "sha256-638faf862169544dfd4aa24167cdd6c4adecbcdd767aa5b2b4994488f46704f1",
+            "bytes": 8388608
+          },
+          {
+            "fingerprint": "sha256-8fb12c735bd85887fe3b89caef05c3b288357c7a4e8cca70b86ed75a1a91e939",
+            "bytes": 6569728
+          }
+        ]
+      }
+    ],
+    "compiled": [],
+    "routed": []
+  }
+}

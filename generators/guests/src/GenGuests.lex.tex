@@ -477,5 +477,268 @@ definition{
   body: (ggRender archive target),
   axioms: [Quot.sound, propext]
 }
+
+definition{
+  name: ggPagePin,
+  parameters: [archive : Bytes, target : Bytes],
+  result: (Option Bytes),
+  body: (if (ggSame (ggSpan target 0 5) 0x736974652f) then (Foundation.Tar::find archive (ggApp 0x6170702f73706563732f70696e732f target)) else (ctor Option.none [Bytes])),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: glAskP0,
+  parameters: [],
+  result: Bytes,
+  body: 0x2f2f205772697474656e2062792067656e657261746f72732f6775657374732028677565737461736b292e20446f206e6f7420656469742e0a2f2f20486f7720612067656e6572617465642070616765206d6f64756c652061736b73206974732067756573742e20546865206775657374206465636964657320657665727974
+}
+
+definition{
+  name: glAskP1,
+  parameters: [],
+  result: Bytes,
+  body: 0x68696e673a2069740a2f2f20616e73776572732022646f6e65203c6669656c64733e222c2022726566757365203c636f64653e203c726561736f6e3e222c206f7220226e656564203c666163743e222c206e616d696e6720610a2f2f2066616374206f6e6c79207468652062726f7773657220686f73742063616e2067697665
+}
+
+definition{
+  name: glAskP2,
+  parameters: [],
+  result: Bytes,
+  body: 0x2e205468697320676976657320746865206661637420616e642061736b7320616761696e20776974680a2f2f20697420617070656e6465642c20736f206e6f2070616765206d6f64756c6520686f6c6473206c6f676963206f6620697473206f776e2e0a0a636f6e737420686578203d2028753829203d3e2041727261792e66
+}
+
+definition{
+  name: glAskP3,
+  parameters: [],
+  result: Bytes,
+  body: 0x726f6d2875382c20286229203d3e20622e746f537472696e67283136292e706164537461727428322c2027302729292e6a6f696e282727293b0a636f6e7374206661696c203d2028636f64652c206d65737361676529203d3e204f626a6563742e61737369676e286e6577204572726f72286d657373616765292c207b20636f
+}
+
+definition{
+  name: glAskP4,
+  parameters: [],
+  result: Bytes,
+  body: 0x6465207d293b0a0a2f2f2054686520686f737427732066616374732e204120666163742061626f757420627974657320746861742077657265206e6f7420676976656e20697320222d222e0a636f6e737420484f5354203d207b0a20206469676573743a206173796e632028626c6f622c20616c676f726974686d29203d3e20
+}
+
+definition{
+  name: glAskP5,
+  parameters: [],
+  result: Bytes,
+  body: 0x28626c6f62203f20686578286e65772055696e743841727261792861776169742063727970746f2e737562746c652e64696765737428616c676f726974686d2c20626c6f62292929203a20272d27292c0a2020736b69703a206173796e63202829203d3e20272d272c0a7d3b0a0a6578706f727420636f6e737420776f726420
+}
+
+definition{
+  name: glAskP6,
+  parameters: [],
+  result: Bytes,
+  body: 0x3d202864697370617463682c206e616d6529203d3e206173796e6320286c696e6529203d3e20537472696e672861776169742064697370617463682860247b6e616d657d20247b6c696e657d6029292e7472696d28293b0a0a2f2f20606769766573602061726520666163747320746865206d6f64756c652773206d6f64656c
+}
+
+definition{
+  name: glAskP7,
+  parameters: [],
+  result: Bytes,
+  body: 0x20736179732069747320677565737420616c776179732061736b7320666f723a207468657920676f2077697468207468652066697273742061736b2e0a6578706f7274206173796e632066756e6374696f6e2061736b286465636964652c20776f7264732c20626c6f622c206769766573203d205b5d29207b0a2020636f6e73
+}
+
+definition{
+  name: glAskP8,
+  parameters: [],
+  result: Bytes,
+  body: 0x742067697665203d20286e616d652c202e2e2e7265737429203d3e20484f53545b6e616d655d28626c6f622c202e2e2e72657374293b0a20206c6574206c696e65203d20776f7264732e6a6f696e28272027293b0a2020666f722028636f6e73742066616374206f6620676976657329206c696e65202b3d206020247b617761
+}
+
+definition{
+  name: glAskP9,
+  parameters: [],
+  result: Bytes,
+  body: 0x69742067697665282e2e2e666163742e73706c69742827202729297d603b0a2020666f7220286c6574207475726e203d20303b207475726e203c20383b207475726e202b3d203129207b0a20202020636f6e7374205b686561642c202e2e2e726573745d203d20537472696e6728617761697420646563696465286c696e6529
+}
+
+definition{
+  name: glAskP10,
+  parameters: [],
+  result: Bytes,
+  body: 0x292e7472696d28292e73706c697428272027293b0a202020206966202868656164203d3d3d2027646f6e6527292072657475726e20726573743b0a202020206966202868656164203d3d3d20277265667573652729207468726f77206661696c28726573745b305d2c20726573742e736c6963652831292e6a6f696e28272027
+}
+
+definition{
+  name: glAskP11,
+  parameters: [],
+  result: Bytes,
+  body: 0x29293b0a20202020696620286865616420213d3d20276e65656427207c7c20214f626a6563742e6861734f776e28484f53542c20726573745b305d29292072657475726e206e756c6c3b0a202020206c696e65202b3d206020247b61776169742067697665282e2e2e72657374297d603b0a20207d0a202072657475726e206e
+}
+
+definition{
+  name: glAskP12,
+  parameters: [],
+  result: Bytes,
+  body: 0x756c6c3b0a7d0a0a2f2f2054686520616e73776572277320776f72647320756e646572207468656972206e616d65733a20222d22206973206c656674206f75742c2061206e616d6520656e64696e6720696e20232069732061206e756d6265722e0a6578706f72742066756e6374696f6e206669656c647328616e737765722c
+}
+
+definition{
+  name: glAskP13,
+  parameters: [],
+  result: Bytes,
+  body: 0x206e616d657329207b0a2020696620286e616d6573203d3d3d206e756c6c29207b0a202020206966202821616e73776572207c7c20616e737765722e6c656e67746820213d3d203129207468726f77206661696c2827676c75652e616e73776572272c20277468652067756573742067617665206e6f20616e7377657227293b
+}
+
+definition{
+  name: glAskP14,
+  parameters: [],
+  result: Bytes,
+  body: 0x0a2020202072657475726e20616e737765725b305d3b0a20207d0a20206966202821616e73776572207c7c20616e737765722e6c656e677468203e206e616d65732e6c656e677468292072657475726e207b206f7574636f6d653a2027696e76616c696427207d3b0a2020636f6e7374206f7574203d207b7d3b0a2020616e73
+}
+
+definition{
+  name: glAskP15,
+  parameters: [],
+  result: Bytes,
+  body: 0x7765722e666f7245616368282876616c75652c206929203d3e207b0a202020206966202876616c756520213d3d20272d2729206f75745b6e616d65735b695d2e7265706c616365282723272c202727295d203d206e616d65735b695d2e656e6473576974682827232729203f204e756d6265722876616c756529203a2076616c
+}
+
+definition{
+  name: glAskP16,
+  parameters: [],
+  result: Bytes,
+  body: 0x75653b0a20207d293b0a202072657475726e206f75743b0a7d0a
+}
+
+definition{
+  name: glAskText,
+  parameters: [],
+  result: Bytes,
+  body: (ggApp (ggApp (ggApp (ggApp (glAskP0) (glAskP1)) (ggApp (glAskP2) (glAskP3))) (ggApp (ggApp (glAskP4) (glAskP5)) (ggApp (glAskP6) (glAskP7)))) (ggApp (ggApp (ggApp (glAskP8) (glAskP9)) (ggApp (glAskP10) (glAskP11))) (ggApp (ggApp (glAskP12) (glAskP13)) (ggApp (glAskP14) (ggApp (glAskP15) (glAskP16))))))
+}
+
+definition{
+  name: glRaw,
+  parameters: [s : Bytes, v : (Option Nat)],
+  result: Bytes,
+  body: (match v
+    | Option.none => 0x
+    | Option.some i => (ggSpan s i (Foundation.Json::valueEnd s i))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: glAbout,
+  parameters: [s : Bytes, arr : (Option Nat), j : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr j)
+      | Option.none => acc
+      | Option.some e => (glAbout s arr (j + 1) (ggApp (ggApp (ggApp acc 0x2f2f20) (Foundation.Json::textAt s (ctor Option.some [Nat] e))) 0x0a) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: glParam,
+  parameters: [s : Bytes, e : Nat],
+  result: Bytes,
+  body: (match (Foundation.Json::member s e 0x626c6f62)
+    | Option.some b => (Foundation.Json::textAt s (ctor Option.some [Nat] b))
+    | Option.none => (match (Foundation.Json::member s e 0x64656661756c74)
+      | Option.none => (ggField s e "name")
+      | Option.some d => (ggApp (ggApp (ggField s e "name") 0x203d20) (glRaw s (ctor Option.some [Nat] d))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: glParams,
+  parameters: [s : Bytes, arr : (Option Nat), j : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr j)
+      | Option.none => acc
+      | Option.some e => (glParams s arr (j + 1) (ggApp (if ((ggLen acc) =? 0) then acc else (ggApp acc 0x2c20)) (glParam s e)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: glWords,
+  parameters: [s : Bytes, arr : (Option Nat), j : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr j)
+      | Option.none => acc
+      | Option.some e => (glWords s arr (j + 1) (match (Foundation.Json::member s e 0x626c6f62)
+        | Option.some b => acc
+        | Option.none => (ggApp (ggApp acc 0x2c20) (ggField s e "name"))) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: glBlob,
+  parameters: [s : Bytes, arr : (Option Nat), j : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x756e646566696e6564
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr j)
+      | Option.none => 0x756e646566696e6564
+      | Option.some e => (match (Foundation.Json::member s e 0x626c6f62)
+        | Option.some b => (Foundation.Json::textAt s (ctor Option.some [Nat] b))
+        | Option.none => (glBlob s arr (j + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: glAsk,
+  parameters: [s : Bytes, e : Nat],
+  result: Bytes,
+  body: (let ps : (Option Nat) := (Foundation.Json::member s e 0x706172616d73); (let n : Nat := (ggLen s); (ggApp (ggApp (ggApp (ggApp (ggApp (ggApp (ggApp (ggApp (ggApp (ggApp (ggApp (ggApp 0x20202020 (ggField s e "name")) 0x3a206173796e632028) (glParams s ps 0 0x n)) 0x29203d3e206669656c64732861776169742061736b286465636964652c205b) (glRaw s (Foundation.Json::member s e 0x76657262))) (glWords s ps 0 0x n)) 0x5d2c20) (glBlob s ps 0 n)) (match (Foundation.Json::member s e 0x6769766573)
+    | Option.none => 0x
+    | Option.some g => (ggApp 0x2c20 (glRaw s (ctor Option.some [Nat] g))))) 0x292c20) (match (Foundation.Json::member s e 0x6669656c6473)
+    | Option.none => 0x6e756c6c
+    | Option.some f => (glRaw s (ctor Option.some [Nat] f)))) 0x292c0a))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: glAsks,
+  parameters: [s : Bytes, arr : (Option Nat), j : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s arr j)
+      | Option.none => acc
+      | Option.some e => (glAsks s arr (j + 1) (ggApp acc (glAsk s e)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: glModule,
+  parameters: [s : Bytes, model : Bytes],
+  result: Bytes,
+  body: (let r : (Option Nat) := (Foundation.Json::root s); (let n : Nat := (ggLen s); (ggApp (ggApp (ggApp (ggApp (ggApp (ggApp (ggApp (ggApp (ggApp (ggApp 0x2f2f205772697474656e2062792067656e657261746f72732f67756573747320286775657374676c7565292066726f6d20 model) 0x2e20446f206e6f7420656469742e0a) (glAbout s (Foundation.Json::memberAt s r 0x61626f7574) 0 0x n)) 0x0a696d706f7274207b2061736b2c206669656c64732c20776f7264207d2066726f6d20272e2e2f676c75652f61736b2e6d6a73273b0a0a6578706f727420636f6e737420726f6f74446563696465203d2028646973706174636829203d3e20776f72642864697370617463682c20) (glRaw s (Foundation.Json::memberAt s r 0x776f7264))) 0x293b0a0a6578706f72742066756e6374696f6e20) (Foundation.Json::textAt s (Foundation.Json::memberAt s r 0x6d616b65))) 0x287b20646563696465207d29207b0a202072657475726e207b0a) (glAsks s (Foundation.Json::memberAt s r 0x61736b73) 0 0x n)) 0x20207d3b0a7d0a))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ggGuestGlue,
+  parameters: [archive : Bytes, target : Bytes],
+  result: (Option Bytes),
+  body: (let model : Bytes := (ggApp (ggApp 0x6170702f73706563732f6775657374732f676c75652f target) 0x2e6a736f6e); (if (ggSame (ggSpan target 0 5) 0x736974652f) then (match (Foundation.Tar::find archive model)
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (ctor Option.some [Bytes] (glModule s model))) else (ctor Option.none [Bytes]))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ggGuestAsk,
+  parameters: [target : Bytes],
+  result: (Option Bytes),
+  body: (if (ggSame target 0x736974652f676c75652f61736b2e6d6a73) then (ctor Option.some [Bytes] (glAskText)) else (ctor Option.none [Bytes])),
+  axioms: [propext]
+}
 \end{semanticmodule}
 \end{lexlean}

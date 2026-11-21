@@ -174,5 +174,32 @@ definition{
   body: (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfText "definition{\n  name: icfRows,\n  parameters: [],\n  result: (List IcfEntity),\n  body: ") (ilxChain names 0 (GenIcf::icfLen names))) (GenIcf::icfJoin (GenIcf::icfText "\n}\n\ndefinition{name: icfEntityCount, parameters: [], result: Nat, body: ") (GenIcf::icfJoin (ilxDecimal (ilxSum names 0 0 (GenIcf::icfLen names)) 20) (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfText "}\n") 0x5c) (GenIcf::icfJoin (GenIcf::icfText "end{semanticmodule}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfText "end{lexlean}\n"))))))),
   axioms: [Quot.sound, propext]
 }
+
+definition{
+  name: ilxReq,
+  parameters: [line : Bytes],
+  result: Bytes,
+  body: (let linear : Bytes := (GenIcf::icfAfter (GenIcf::icfField line 1) (GenIcf::icfText "http://id.who.int/icd/release/11/icf/")); (let kind : Bytes := (GenIcf::icfField line 5); (let code : Bytes := (GenIcf::icfField line 2); (let block : Bytes := (GenIcf::icfField line 3); (GenIcf::icfJoin (GenIcf::icfText "{\"id\": \"who-icf-") (GenIcf::icfJoin (ilxStrip linear 0 0x (GenIcf::icfLen linear)) (GenIcf::icfJoin (GenIcf::icfText "\", \"kind\": \"") (GenIcf::icfJoin kind (GenIcf::icfJoin (GenIcf::icfText "\", \"ref\": \"") (GenIcf::icfJoin kind (GenIcf::icfJoin (GenIcf::icfText " ") (GenIcf::icfJoin (if ((GenIcf::icfLen code) =? 0) then (if ((GenIcf::icfLen block) =? 0) then linear else block) else code) (GenIcf::icfText "\", \"text\": \"the Prism holds this ICF entity with WHO's code, title and URI\"}\n"))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ilxReqFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenIcf::icfLen s) <=? i) then acc else (let e : Nat := (GenIcf::icfStopAt s i (GenIcf::icfLen s) 10 (GenIcf::icfLen s)); (let line : Bytes := (GenIcf::icfLineOf s i e); (if (((GenIcf::icfLen line) =? 0) || (GenIcf::icfIsHeader line)) then (ilxReqFrom s (e + 1) acc rest) else (ilxReqFrom s (e + 1) (GenIcf::icfJoin acc (ilxReq line)) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: reqRows,
+  parameters: [tabulation : Bytes],
+  result: Bytes,
+  body: (ilxReqFrom tabulation 0 0x ((GenIcf::icfLen tabulation) + 1)),
+  axioms: [Quot.sound, propext]
+}
 \end{semanticmodule}
 \end{lexlean}
