@@ -112,5 +112,15 @@ definition{
       | Option.some r => (let cases : Bytes := (GenPatch::jpCompact t); (let a : Bytes := (vgApplyFrom cases 0 0x ((GenPatch::jpCount cases) + 1)); (let j : Bytes := (vgJcsFrom archive 0 a ((prim quotient (GenPatch::jpLen archive) 512 0 : Nat) + 1)); (let x : Bytes := (vgShaFrom r 0 j ((prim quotient (GenPatch::jpLen r) 8 0 : Nat) + 1)); (ctor Option.some [Bytes] (GenPatch::jpCat 0x7b226e616d65223a22736e617073686f74222c22636f6d6d656e74223a2254686520616363657074616e636520766563746f7273206f662074686520736e617073686f7420677565737420286170702f7372632f507269736d536e617073686f742e6c65782e746578292c207772697474656e2066726f6d20746865206f7261636c657320756e646572206170702f73706563732f6f7261636c652062792074686520736e617073686f74766563746f72732073746570206f662067656e657261746f72732f736e617073686f742f73746570732e6a736f6e2c207768696368207361797320776861742065616368206f6e652069732e222c226578616d706c6573223a5b0a (GenPatch::jpCat x 0x0a5d7d0a))))))))),
   axioms: [Quot.sound, propext]
 }
+
+definition{
+  name: vgPatchVectors,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive 0x6170702f73706563732f6f7261636c652f6a736f6e2d70617463682d74657374732f74657374732e6a736f6e)
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some t => (let cases : Bytes := (GenPatch::jpCompact t); (let a : Bytes := (vgApplyFrom cases 0 0x ((GenPatch::jpCount cases) + 1)); (ctor Option.some [Bytes] (GenPatch::jpCat 0x7b226e616d65223a22736e617073686f742d7061746368222c226578616d706c6573223a5b0a (GenPatch::jpCat a 0x0a5d7d0a)))))),
+  axioms: [Quot.sound, propext]
+}
 \end{semanticmodule}
 \end{lexlean}
