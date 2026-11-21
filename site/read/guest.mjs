@@ -5,7 +5,7 @@
 // bytes whose SHA-256 is not the pinned one are refused before they compile.
 
 export const GUESTS = {
-  mail: { path: 'guest/grammar-mail.wasm', sha256: '9cc5db2cff8d42e49aedefdd78e5215c5a46dff905aa2389be736033b4de0961' },
+  mail: { path: 'guest/grammar-mail.wasm', sha256: '0a2a6f46d794f4de888f773678f7ba8849dab23f5847d8909c8fbe2362bcc9c1' },
   vcard: { path: 'guest/vcard.wasm', sha256: '48780c76070326bab5ebd1853dc497e1ed5940aae4fec6be0cea6a0967f28bdc' },
 };
 
