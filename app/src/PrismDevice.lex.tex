@@ -1,0 +1,67 @@
+\begin{lexlean}{PrismDevice}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: deviceAbout,
+  parameters: [],
+  result: String,
+  body: "The file formats the owner's device source reads by a registered file extension. Each row is one extension as its media type's IANA registration states it: the format PrismFolder judges it as, the kind of item it holds, the content type each item is kept under, the pinned registration (deviceRegistrations, held to its SHA-256 by app/specs/oracle/media-types/lock.json) and that registration's own statement of the extension, word for word. GenBrowser's deviceformats writes site/device/formats.mjs from these rows and refuses a row whose statement is not in its registration. A message file (.eml) and a Maildir folder have no registered extension; site/device/device.mjs still names them by hand."
+}
+
+structure{
+  name: DeviceFormat,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: extension, type: String},
+    {name: format, type: String},
+    {name: media, type: String},
+    {name: contentType, type: String},
+    {name: registration, type: Nat},
+    {name: statement, type: String}
+  ]
+}
+
+definition{
+  name: deviceRegistrations,
+  parameters: [],
+  result: (List String),
+  body: (cons "app/specs/oracle/media-types/application-mbox.txt" (cons "app/specs/oracle/media-types/text-calendar.txt" (cons "app/specs/oracle/media-types/text-vcard.txt" (nil String))))
+}
+
+definition{
+  name: deviceFormats,
+  parameters: [],
+  result: (List DeviceFormat),
+  body: (cons (record DeviceFormat {extension := "mbox", format := "mbox", media := "message", contentType := "message/rfc822", registration := 0, statement := "sometimes have an \".mbox\""}) (cons (record DeviceFormat {extension := "ics", format := "ics", media := "calendar", contentType := "text/calendar", registration := 1, statement := "The file extension of \"ics\" is to be used"}) (cons (record DeviceFormat {extension := "ifb", format := "ics", media := "calendar", contentType := "text/calendar", registration := 1, statement := "The file extension of \"ifb\" is to be used"}) (cons (record DeviceFormat {extension := "vcf", format := "vcf", media := "contactCard", contentType := "text/vcard", registration := 2, statement := "File extension(s):  .vcf .vcard"}) (cons (record DeviceFormat {extension := "vcard", format := "vcf", media := "contactCard", contentType := "text/vcard", registration := 2, statement := "File extension(s):  .vcf .vcard"}) (nil DeviceFormat))))))
+}
+
+definition{
+  name: deviceRegistrationCount,
+  parameters: [rows : (List String)],
+  result: Nat,
+  body: (match rows | List.nil => 0 | List.cons row rest => ((deviceRegistrationCount rest) + 1)),
+  recursive_argument: rows
+}
+
+definition{
+  name: deviceFormatsResolve,
+  parameters: [rows : (List DeviceFormat)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => ((((project row registration) + 1) <=? (deviceRegistrationCount (deviceRegistrations))) && (deviceFormatsResolve rest))),
+  recursive_argument: rows
+}
+
+theorem{
+  name: deviceEveryFormatIsRegistered,
+  parameters: [],
+  statement: ((deviceFormatsResolve (deviceFormats)) = true),
+  proof: decide{}
+}
+\end{semanticmodule}
+\end{lexlean}

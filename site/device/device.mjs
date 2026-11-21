@@ -30,6 +30,8 @@ const DB = 'prism-device';
 const encoder = new TextEncoder();
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
 import { isZip, zipEntries } from './zip.mjs';
+import { FORMATS } from './formats.mjs';
+export { FORMATS };
 import { exportItems, exportKind } from '../source/exports.mjs';
 import { mboxSeparator, headerLines, readField } from '../read/mail.mjs';
 import { lines, parts } from '../time/recur.mjs';
@@ -37,19 +39,17 @@ import { lines, parts } from '../time/recur.mjs';
 const sha256 = async (bytes) => hex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
 const fail = (code, message) => Object.assign(new Error(message ?? code), { code });
 
-// The format of a file, from its name and the folder it sits in.
+// The format of a file, from its name and the folder it sits in: an extension
+// a media type's registration states (formats.mjs, written from
+// app/src/PrismDevice.lex.tex), a message file, or a Maildir message.
 export function formatOf(name, parent = '') {
   const lower = name.toLowerCase();
-  if (/\.(mbox|mbx)$/.test(lower)) return 'mbox';
-  if (lower.endsWith('.eml')) return 'eml';
-  if (/\.(ics|ical|ifb)$/.test(lower)) return 'ics';
-  if (/\.(vcf|vcard)$/.test(lower)) return 'vcf';
-  if ((parent === 'cur' || parent === 'new') && !lower.startsWith('.')) return 'maildir';
-  return 'other';
+  const stated = FORMATS.find(([extension]) => lower.endsWith(`.${extension}`))?.[1] ?? (lower.endsWith('.eml') ? 'eml' : null);
+  return stated ?? ((parent === 'cur' || parent === 'new') && !lower.startsWith('.') ? 'maildir' : 'other');
 }
 
-const MEDIA = { mbox: 'message', eml: 'message', maildir: 'message', ics: 'calendar', vcf: 'contactCard' };
-const TYPE = { message: 'message/rfc822', calendar: 'text/calendar', contactCard: 'text/vcard' };
+const MEDIA = { ...Object.fromEntries(FORMATS.map(([, format, media]) => [format, media])), eml: 'message', maildir: 'message' };
+const TYPE = Object.fromEntries(FORMATS.map(([, , media, type]) => [media, type]));
 
 // mbox (RFC 4155): each message begins at a separator line, read by its
 // grammar (site/read/mail.mjs), at the start or after the empty line that ends

@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { openGuest } from '../google/guest.mjs';
 import { ingestInto } from '../google/ingest.mjs';
-import { GUEST, HOST_GUEST, SOURCE_GUEST, openDevice, formatOf, formatOfText, contactCards, mboxMessages, calendarItems, contactItems, LIMIT } from './device.mjs';
+import { FORMATS, GUEST, HOST_GUEST, SOURCE_GUEST, openDevice, formatOf, formatOfText, contactCards, mboxMessages, calendarItems, contactItems, LIMIT } from './device.mjs';
 import { HOST, SURFACES, present, lanes, plan } from './host.mjs';
 import { vcard } from '../read/read.mjs';
 
@@ -59,6 +59,7 @@ ok((await folder('granted mbox read small')) === 'invalid', 'a short request is 
 
 // The parsers: the formats Google Takeout, Proton, Apple and Thunderbird write.
 ok(formatOf('All mail Including Spam and Trash.mbox') === 'mbox' && formatOf('a.EML') === 'eml' && formatOf('cal.ics') === 'ics' && formatOf('contacts.vcf') === 'vcf', 'formats by name');
+ok(FORMATS.length === 5 && FORMATS.every(([extension, format]) => formatOf(`a.${extension.toUpperCase()}`) === format) && formatOf('busy.ifb') === 'ics' && formatOf('a.vcard') === 'vcf' && formatOf('a.ical') === 'other' && formatOf('a.mbx') === 'other', 'every extension a registration states, and no other');
 ok(formatOf('1700000000.M1P2.host:2,S', 'cur') === 'maildir' && formatOf('.hidden', 'cur') === 'other' && formatOf('notes.txt') === 'other', 'Maildir by its folder, nothing else');
 const chunked = (text, size = 7) => (async function* () { const b = new TextEncoder().encode(text); for (let i = 0; i < b.length; i += size) yield b.slice(i, i + size); })();
 const MBOX = mboxOf('rfc5322-1', 'rfc5322-6');
