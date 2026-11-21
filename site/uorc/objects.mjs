@@ -3,12 +3,12 @@
 //
 // A uorc archive is the object's reference: a lossless, executable structure
 // with a UORC-SHA256-CHAIN-v1 seal over itself. Keeping an object compresses
-// it, reads the archive's structure (inspect: seal, format, scope, object
-// count) without decoding, restores it within the client's work bound, names
-// the restored bytes by their kappa label, and asks two proved facets: kappa
-// (is this a sound label for these bytes?) and uorc (may this structure be
-// kept, or opened?). The uorc facet sees only the structure, never the
-// content: the values are projected only when it answers open.
+// it, gives the Prism the archive's one frame as the client reads it (inspect,
+// without decoding) and the SHA-256 of what it restores to, and asks two
+// proved facets: kappa (is this a sound label for these bytes?) and uorc
+// (may this structure be kept, or opened?). The uorc facet reads the facts
+// itself and sees only structure, never content: the values are projected
+// only when it answers open.
 //
 //   const objects = makeObjects({ client, decide: { kappa, uorc }, halted });
 //   await objects.keep(bytes)           -> { outcome: 'keep', archive, kappa } | { outcome: 'refuse' }
@@ -52,41 +52,22 @@ export async function loadClient({ base = new URL('./', import.meta.url), fetche
   return Object.assign(uorc, { standardBases: lock.standardBases });
 }
 
-// The archive's structure, read without decoding it.
-// bases: the identities of the standard bases the pinned client writes against (the lock's standardBases).
-export function structureOf(uorc, archive, bases) {
-  const standard = new Set(Array.isArray(bases) ? bases : typeof bases === 'string' ? [bases] : []);
-  let info;
-  try { info = uorc.inspect(archive); } catch { return { seal: 'broken', format: 'other', scope: 'other', objects: 'many' }; }
-  const frames = Array.isArray(info) ? info : [];
-  const one = frames.length === 1 ? frames[0] : null;
-  return {
-    seal: frames.length > 0 && frames.every((f) => f.integrity_ok === true) ? 'ok' : 'broken',
-    format: frames.length > 0 && frames.every((f) => f.format === 2 && f.profile === 1) ? 'known' : 'other',
-    scope: frames.length === 0 ? 'other'
-      : frames.every((f) => f.scope === 'self-contained' && f.basis === null) ? 'self'
-      : frames.every((f) => f.scope === 'conditional' && standard.has(f.basis)) ? 'standard'
-      : 'other',
-    objects: one && one.objects === 1 ? 'one' : 'many',
-  };
-}
-
 export function makeObjects({ client, decide, halted = () => 'no' }) {
   if (!decide?.kappa || !decide?.uorc) throw new Error('makeObjects needs decide.kappa and decide.uorc (the guest)');
   const kappa = makeKappa({ decide: decide.kappa });
   let loaded = null;
   const uorcOf = () => (loaded ??= Promise.resolve(client()));
 
-  // Restore the archive within the client's work bound and name what came back.
+  // The host's facts for one archive: its restore's SHA-256 (within the client's work bound) and its one
+  // frame as the client reads it. The Prism classifies the structure and compares the restore itself.
   async function judge(act, uorc, archive, label) {
-    const s = structureOf(uorc, archive, uorc.standardBases);
-    let restore = 'failed', bytes = null;
-    try {
-      bytes = uorc.decompress(archive);
-      restore = (await kappa.labelOf(bytes)) === label ? 'same' : 'differs';
-    } catch { restore = 'failed'; }
-    const k = bytes && restore === 'same' ? (await kappa.admit(label, bytes)).outcome : 'refuse';
-    const line = `${act} ${halted()} ${s.seal} ${s.format} ${s.scope} ${s.objects} ${restore} ${k === 'admit' ? 'admit' : 'other'}`;
+    let frames = [], bytes = null, restored = 'failed';
+    try { const info = uorc.inspect(archive); frames = Array.isArray(info) ? info : []; } catch { frames = []; }
+    try { bytes = uorc.decompress(archive); restored = hex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes))); } catch { bytes = null; restored = 'failed'; }
+    const f = frames.length === 1 ? frames[0] : {};
+    const basis = f.basis === null ? 'none' : (uorc.standardBases ?? []).includes(f.basis) ? 'standard' : 'other';
+    const k = (await kappa.admit(label, bytes)).outcome;
+    const line = `judge ${act} ${halted()} ${k} ${label.split(':')[1] || '-'} ${restored} ${frames.length} ${f.integrity_ok ?? '-'} ${f.format ?? '-'} ${f.profile ?? '-'} ${f.scope ?? '-'} ${basis} ${f.objects ?? '-'}`;
     return { answer: await decide.uorc(line), bytes };
   }
 
