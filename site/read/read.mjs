@@ -13,10 +13,7 @@ import * as pin from "./guest.mjs";
 // ./guest.mjs): checked and compiled once, when this module loads, then asked
 // synchronously. Its answers: "line" the JSON of one content line (null when
 // it is none), "cards" each card unfolded (RFC 6350 3.2), NUL-separated.
-const guest = pin.GUESTS?.vcard ?? pin.GUEST;
-const url = new URL(guest.path, new URL("./guest.mjs", import.meta.url));
-const bytes = url.protocol === "file:" ? await (await import("node:fs/promises")).readFile(url) : new Uint8Array(await (await fetch(url)).arrayBuffer());
-const ask = await pin.openGuestSync(bytes, guest.sha256);
+const ask = await pin.opened(pin.GUESTS?.vcard ?? pin.GUEST);
 // A request beyond the guest's limits traps it; that is its refusal, "invalid".
 export const vcard = (request) => { try { return ask(request); } catch (error) { if (error instanceof WebAssembly.RuntimeError) return "invalid"; throw error; } };
 // A line beyond the guest's request limit reads as none ("invalid").
