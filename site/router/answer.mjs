@@ -13,6 +13,7 @@ import { relativeOf, sequence, spanOf } from "../time/time.mjs";
 import { everyOf, rhythms, sourceOf } from "../time/rhythm.mjs";
 import { nearness } from "./meaning.mjs";
 import * as pin from "../message/guest.mjs";
+import * as turns from "../turn/guest.mjs";
 
 const S = PROVIDERS.sentence;
 const RANK = ["public", "internal", "confidential", "restricted"];
@@ -20,8 +21,11 @@ const higher = (a, b) => (RANK.indexOf(b) > RANK.indexOf(a) ? b : a);
 // Every sentence is a Unicode MessageFormat 2 message of the sentence provider
 // (app/specs/router/spec.json), formatted by the message guest (app/src/PrismMessage.lex.tex),
 // dates and times too: a part named `at` is an instant, said in the wall time this browser keeps then.
-const guest = new URL(pin.GUESTS.message.path, new URL("../message/guest.mjs", import.meta.url));
-const format = await pin.openGuestSync(guest.protocol === "file:" ? await (await import("node:fs/promises")).readFile(guest) : new Uint8Array(await (await fetch(guest)).arrayBuffer()), pin.GUESTS.message.sha256);
+const format = await pin.opened(pin.GUESTS.message);
+// A turn is kept as its record (app/src/PrismTurn.lex.tex): what was said as W3C EMMA, and the
+// turn as W3C PROV with what the reply drew on and the turn before; null when a checker refuses it.
+const record = await turns.opened(turns.GUEST);
+export const recordOf = (prompt, said, now, after = null) => record(["record", `base ${new URL("../", import.meta.url)}`, `now ${now} ${new Date(now).toISOString()}`, ...(after ? [`after ${after}`] : []), `prompt ${JSON.stringify(prompt)}`, `reply ${JSON.stringify(said.sentences.join("\n"))}`, ...(said.cited ?? []).map((item) => `cited ${item.address}`)].join("\n")).replace(/^(refused|invalid)[^]*$/u, "") || null;
 // A value longer than a sentence can carry is cut; the item it cites holds the rest.
 const zone = (at) => { const m = -new Date(at).getTimezoneOffset(), a = Math.abs(m); return `${m < 0 ? "-" : "+"}${String(Math.trunc(a / 60)).padStart(2, "0")}:${String(a % 60).padStart(2, "0")}`; };
 const cut = (value) => { const text = String(value ?? ""); return text.length > S.lead * 2 ? `${text.slice(0, S.lead * 2)}…` : text; };

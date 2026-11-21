@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import { GUESTS, openGuest } from './guest.mjs';
 import { HOLON, CURATE, FACETS, BANDS, RULE30, CLAIM } from './table.mjs';
 import { rule30, lane, dominance, measure, kpiOf, tunableWord, floorOf, propose, neighbours, makeObserver, memoryKeep, claimForm, claimLabel } from './holon.mjs';
-import { GUEST as KAPPA_GUEST, openGuest as openKappa } from '../kappa/guest.mjs';
+import { GUEST as KAPPA_GUEST, opened as openKappa } from '../kappa/guest.mjs';
 import { makeKappa } from '../kappa/kappa.mjs';
 
 const here = new URL('./', import.meta.url);
@@ -22,8 +22,7 @@ for (const [name, g] of Object.entries(GUESTS)) {
   checks += 1;
   guests[name] = await openGuest(bytes, g.sha256);
 }
-const kappaBytes = new Uint8Array(await readFile(new URL(`../kappa/${KAPPA_GUEST.path}`, here)));
-const kappa = makeKappa({ decide: await openKappa(kappaBytes, KAPPA_GUEST.sha256) });
+const kappa = makeKappa({ decide: await openKappa(KAPPA_GUEST) });
 
 // HL-01 and HL-02: every request of each facet against its mirror and its guarantees.
 function every(facet) {
