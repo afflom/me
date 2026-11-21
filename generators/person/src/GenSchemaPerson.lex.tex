@@ -436,9 +436,9 @@ definition{
 
 definition{
   name: spxNone,
-  parameters: [col : Nat],
+  parameters: [col : Nat, usual : Bytes],
   result: Bytes,
-  body: (if (col <? 3) then 0x2222 else (GenIcf::icfText "0"))
+  body: (if (col <? 3) then 0x2222 else (if (col =? 3) then (GenIcf::icfText "6") else usual))
 }
 
 definition{
@@ -458,11 +458,11 @@ definition{
 
 definition{
   name: spxMoreChain,
-  parameters: [rows : Bytes, i : Nat, left : Nat, col : Nat, fuel : Nat],
+  parameters: [rows : Bytes, i : Nat, left : Nat, col : Nat, usual : Bytes, fuel : Nat],
   result: Bytes,
   body: (match fuel
-    | Nat.zero => (spxNone col)
-    | Nat.succ rest => (if (((GenIcf::icfLen rows) <=? i) || (left =? 0)) then (spxNone col) else (let e : Nat := (GenIcfTree::trLineEnd rows i); (let line : Bytes := (GenIcf::icfSlice rows i e); (GenIcf::icfJoin (GenIcf::icfText "(if (index =? ") (GenIcf::icfJoin (spxWord line 0) (GenIcf::icfJoin (GenIcf::icfText ") then ") (GenIcf::icfJoin (spxValue line col) (GenIcf::icfJoin (GenIcf::icfText " else ") (GenIcf::icfJoin (spxMoreChain rows (e + 1) (prim subtract left 1 : Nat) col rest) (GenIcf::icfText ")"))))))))))),
+    | Nat.zero => (spxNone col usual)
+    | Nat.succ rest => (if (((GenIcf::icfLen rows) <=? i) || (left =? 0)) then (spxNone col usual) else (let e : Nat := (GenIcfTree::trLineEnd rows i); (let line : Bytes := (GenIcf::icfSlice rows i e); (if (GenIcfTree::trSame (spxValue line col) (spxNone col usual)) then (spxMoreChain rows (e + 1) (prim subtract left 1 : Nat) col usual rest) else (GenIcf::icfJoin (GenIcf::icfText "(if (index =? ") (GenIcf::icfJoin (spxWord line 0) (GenIcf::icfJoin (GenIcf::icfText ") then ") (GenIcf::icfJoin (spxValue line col) (GenIcf::icfJoin (GenIcf::icfText " else ") (GenIcf::icfJoin (spxMoreChain rows (e + 1) (prim subtract left 1 : Nat) col usual rest) (GenIcf::icfText ")")))))))))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
@@ -479,40 +479,47 @@ definition{
 }
 
 definition{
+  name: spxDef,
+  parameters: [title : Bytes, kind : Bytes, value : Bytes],
+  result: Bytes,
+  body: (let one : Bytes := (GenIcf::icfJoin (GenIcf::icfText "definition{name: personMore") (GenIcf::icfJoin title (GenIcf::icfJoin (GenIcf::icfText ", parameters: [index : Nat], result: ") (GenIcf::icfJoin kind (GenIcf::icfJoin (GenIcf::icfText ", body: ") (GenIcf::icfJoin value (GenIcf::icfText "}"))))))); (if ((GenIcf::icfLen one) <=? 100) then (GenIcf::icfJoin one (GenIcf::icfText "\n\n")) else (GenIcf::icfJoin (GenIcf::icfText "definition{\n  name: personMore") (GenIcf::icfJoin title (GenIcf::icfJoin (GenIcf::icfText ",\n  parameters: [index : Nat],\n  result: ") (GenIcf::icfJoin kind (GenIcf::icfJoin (GenIcf::icfText ",\n  body: ") (GenIcf::icfJoin value (GenIcf::icfText "\n}\n\n")))))))))
+}
+
+definition{
   name: spxColParts,
-  parameters: [rows : Bytes, i : Nat, p : Nat, col : Nat, acc : Bytes, fuel : Nat],
+  parameters: [rows : Bytes, i : Nat, p : Nat, col : Nat, usual : Bytes, acc : Bytes, fuel : Nat],
   result: Bytes,
   body: (match fuel
     | Nat.zero => acc
-    | Nat.succ rest => (if ((GenIcf::icfLen rows) <=? i) then acc else (spxColParts rows (GenVocabNames::vnxSkip rows i 30 30) (p + 1) col (GenIcf::icfJoin acc (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfText "definition{\n  name: personMore") (GenIcf::icfJoin (spxTitle col) (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfText "Part") (GenIcfLean::ilxDecimal p 20)) (GenIcf::icfJoin (GenIcf::icfText ",\n  parameters: [index : Nat],\n  result: ") (GenIcf::icfJoin (spxType col) (GenIcf::icfText ",\n  body: ")))))) (GenIcf::icfJoin (spxMoreChain rows i 30 col 30) (GenIcf::icfText "\n}\n\n")))) rest))),
+    | Nat.succ rest => (if ((GenIcf::icfLen rows) <=? i) then acc else (spxColParts rows (GenVocabNames::vnxSkip rows i 30 30) (p + 1) col usual (GenIcf::icfJoin acc (spxDef (GenIcf::icfJoin (spxTitle col) (GenIcf::icfJoin (GenIcf::icfText "Part") (GenIcfLean::ilxDecimal p 20))) (spxType col) (spxMoreChain rows i 30 col usual 30))) rest))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
   name: spxColTop,
-  parameters: [rows : Bytes, i : Nat, p : Nat, col : Nat, fuel : Nat],
+  parameters: [rows : Bytes, i : Nat, p : Nat, col : Nat, usual : Bytes, fuel : Nat],
   result: Bytes,
   body: (match fuel
-    | Nat.zero => (spxNone col)
-    | Nat.succ rest => (if ((GenIcf::icfLen rows) <=? i) then (spxNone col) else (let sp : Nat := (GenIcf::icfStopAt rows i (GenIcf::icfLen rows) 32 (GenIcf::icfLen rows)); (GenIcf::icfJoin (GenIcf::icfText "(if (index <? ") (GenIcf::icfJoin (GenIcfLean::ilxDecimal ((GenIcfLean::ilxNumberFrom rows i sp 0 20) + (spxPartLen rows i 30 0 30)) 20) (GenIcf::icfJoin (GenIcf::icfText ") then (personMore") (GenIcf::icfJoin (spxTitle col) (GenIcf::icfJoin (GenIcf::icfText "Part") (GenIcf::icfJoin (GenIcfLean::ilxDecimal p 20) (GenIcf::icfJoin (GenIcf::icfText " index) else ") (GenIcf::icfJoin (spxColTop rows (GenVocabNames::vnxSkip rows i 30 30) (p + 1) col rest) (GenIcf::icfText ")")))))))))))),
+    | Nat.zero => (spxNone col usual)
+    | Nat.succ rest => (if ((GenIcf::icfLen rows) <=? i) then (spxNone col usual) else (let sp : Nat := (GenIcf::icfStopAt rows i (GenIcf::icfLen rows) 32 (GenIcf::icfLen rows)); (GenIcf::icfJoin (GenIcf::icfText "(if (index <? ") (GenIcf::icfJoin (GenIcfLean::ilxDecimal ((GenIcfLean::ilxNumberFrom rows i sp 0 20) + (spxPartLen rows i 30 0 30)) 20) (GenIcf::icfJoin (GenIcf::icfText ") then (personMore") (GenIcf::icfJoin (spxTitle col) (GenIcf::icfJoin (GenIcf::icfText "Part") (GenIcf::icfJoin (GenIcfLean::ilxDecimal p 20) (GenIcf::icfJoin (GenIcf::icfText " index) else ") (GenIcf::icfJoin (spxColTop rows (GenVocabNames::vnxSkip rows i 30 30) (p + 1) col usual rest) (GenIcf::icfText ")")))))))))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
   name: spxCol,
-  parameters: [rows : Bytes, col : Nat],
+  parameters: [rows : Bytes, col : Nat, usual : Bytes],
   result: Bytes,
-  body: (GenIcf::icfJoin (spxColParts rows 0 0 col 0x ((GenIcf::icfLen rows) + 1)) (GenIcf::icfJoin (GenIcf::icfJoin (GenIcf::icfText "definition{\n  name: personMore") (GenIcf::icfJoin (spxTitle col) (GenIcf::icfJoin 0x (GenIcf::icfJoin (GenIcf::icfText ",\n  parameters: [index : Nat],\n  result: ") (GenIcf::icfJoin (spxType col) (GenIcf::icfText ",\n  body: ")))))) (GenIcf::icfJoin (spxColTop rows 0 0 col ((GenIcf::icfLen rows) + 1)) (GenIcf::icfText "\n}\n\n")))),
+  body: (GenIcf::icfJoin (spxColParts rows 0 0 col usual 0x ((GenIcf::icfLen rows) + 1)) (spxDef (spxTitle col) (spxType col) (spxColTop rows 0 0 col usual ((GenIcf::icfLen rows) + 1)))),
   axioms: [Quot.sound, propext]
 }
 
 definition{
   name: moreModule,
-  parameters: [rows : Bytes],
+  parameters: [rows : Bytes, floor : Bytes],
   result: Bytes,
-  body: (GenIcf::icfJoin (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "begin{lexlean}{Foundation.Person.V1.More}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "useglossary{lexlean.std.bool@1.2.0}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "useglossary{lexlean.std.nat@1.2.0}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "useglossary{prism.arch@1.0.0}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "title{Person model}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfText "begin{semanticmodule}\n")))))))))))) (GenIcf::icfJoin (spxCol rows 0) (GenIcf::icfJoin (spxCol rows 1) (GenIcf::icfJoin (spxCol rows 2) (GenIcf::icfJoin (spxCol rows 3) (GenIcf::icfJoin (spxCol rows 4) (GenIcf::icfJoin (GenIcf::icfText "definition{name: personMoreFirst, parameters: [], result: Nat, body: ") (GenIcf::icfJoin (spxWord (GenIcf::icfSlice rows 0 (GenIcfTree::trLineEnd rows 0)) 0) (GenIcf::icfJoin (GenIcf::icfText "}\n\ndefinition{name: personMoreCount, parameters: [], result: Nat, body: ") (GenIcf::icfJoin (GenIcfLean::ilxDecimal (spxLines rows 0 0 ((GenIcf::icfLen rows) + 1)) 20) (GenIcf::icfJoin (GenIcf::icfText "}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "end{semanticmodule}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfText "end{lexlean}\n"))))))))))))))),
+  body: (let usual : Bytes := (GenIcf::icfSlice floor 0 (GenIcfTree::trLineEnd floor 0)); (GenIcf::icfJoin (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "begin{lexlean}{Foundation.Person.V1.More}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "useglossary{lexlean.std.bool@1.2.0}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "useglossary{lexlean.std.nat@1.2.0}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "useglossary{prism.arch@1.0.0}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "title{Person model}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfText "begin{semanticmodule}\n")))))))))))) (GenIcf::icfJoin (spxCol rows 0 usual) (GenIcf::icfJoin (spxCol rows 1 usual) (GenIcf::icfJoin (spxCol rows 2 usual) (GenIcf::icfJoin (spxCol rows 3 usual) (GenIcf::icfJoin (spxCol rows 4 usual) (GenIcf::icfJoin (GenIcf::icfText "definition{name: personMoreFirst, parameters: [], result: Nat, body: ") (GenIcf::icfJoin (spxWord (GenIcf::icfSlice rows 0 (GenIcfTree::trLineEnd rows 0)) 0) (GenIcf::icfJoin (GenIcf::icfText "}\n\ndefinition{name: personMoreCount, parameters: [], result: Nat, body: ") (GenIcf::icfJoin (GenIcfLean::ilxDecimal (spxLines rows 0 0 ((GenIcf::icfLen rows) + 1)) 20) (GenIcf::icfJoin (GenIcf::icfText "}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfJoin (GenIcf::icfText "end{semanticmodule}\n") (GenIcf::icfJoin 0x5c (GenIcf::icfText "end{lexlean}\n")))))))))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}
