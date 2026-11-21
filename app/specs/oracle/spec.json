@@ -139,6 +139,10 @@
       "why": "How often a source writes is measured by site/time/rhythm.mjs, which is held to the instances RFC 5545 section 3.8.5.3 lists for its recurrence rules (test/time/rhythm.test.mjs). No pinned specification gives several messages from one sender that keep a cycle (RFC 5322 Appendix A has at most three times from one sender), and a public mailing-list archive would bring real people's timing into the repository, which the no-PII rule keeps out even with names replaced. So the chat's sentence for such a sender is tested only on a rhythm handed to it, until a specification publishes such an exchange."
     },
     {
+      "kind": "a dialogue act written as DiAML",
+      "why": "ISO 24617-2 defines the Dialogue Act Markup Language (a dialogueAct with its xml:id, target, sender, addressee, dimension, communicativeFunction and dependence attributes), but no openly licensed source gives its form with cases a gate could hold: the schema is in ISO 24617-2 itself, which is not freely published; the corpus annotated in it, DialogBank, states no licence and is kept out of the repository (its source is held); the AMI Meeting Corpus marks acts in NXT stand-off XML with its own classes, which the published mapping turns into labels and not into DiAML's form; and the fragments printed in the standard's papers are a few examples, not accepted and refused cases. So a turn's act is kept as an attribute of its PROV record, and no DiAML is written, until such a source is pinned."
+    },
+    {
       "kind": "card number",
       "why": "No published specification gives example card numbers: ISO/IEC 7812-1, which defines the issuer prefix and the Luhn check digit, is not freely published, and the networks' test numbers are on their own changing pages. The card detector (site/google/ingest.mjs) has no oracle test until one is pinned."
     },
