@@ -1504,10 +1504,9 @@ if "--fit-acts" in args:
 # the tests that read them (test/oracle/intent.test.mjs); written outside it.
 # They are downloaded, so it needs --fetch.
 if "--held" in args:
-    out = pathlib.Path(args[args.index("--held") + 1])
     rows = [row for source in SPEC["sources"] if source.get("held") for row in dialogue_examples(fetch(source), source)]
-    out.write_text("\n".join(rows) + "\n", encoding="utf-8")
-    print(f"oracle: {len(rows)} held examples to {out}")
+    pathlib.Path(args[args.index("--held") + 1]).write_text("\n".join(rows) + "\n", encoding="utf-8")
+    print(f"oracle: {len(rows)} held examples written")
     sys.exit(0)
 
 corpus, texts = [], {}

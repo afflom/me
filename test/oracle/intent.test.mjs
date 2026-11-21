@@ -30,8 +30,7 @@ import { serve } from "./examples.mjs";
 
 const { chromium } = createRequire(import.meta.url)("playwright");
 const read = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), "utf8"));
-const record = read("../../app/specs/product/quality/QR-16.json");
-const threshold = Object.fromEntries(record.measures.map((m) => [m.key, m.threshold]));
+const threshold = Object.fromEntries(read("../../app/specs/product/quality/QR-16.json").measures.map((m) => [m.key, m.threshold]));
 const { corpus } = read("corpus.json");
 const acts = corpus.filter((e) => e.kind === "act").map((e) => e.expect);
 const line = async (text) => judge(Object.fromEntries(FIELDS.map(([name], i) => [name, text.split(" ")[i + 1]])));
