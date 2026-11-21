@@ -1,0 +1,19 @@
+{"name":"snapshot-refusal/ijson","examples":[
+["canonical\n[0.4e00669999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999969999999006]","not I-JSON"],
+["canonical\n[-1e+9999]","not I-JSON"],
+["canonical\n[1.5e+9999]","not I-JSON"],
+["canonical\n[-123123e100000]","not I-JSON"],
+["canonical\n[123123e100000]","not I-JSON"],
+["canonical\n{\"\\uDFAA\":0}","not I-JSON"],
+["canonical\n[\"\\uDADA\"]","not I-JSON"],
+["canonical\n[\"\\uD888\\u1234\"]","not I-JSON"],
+["canonical\n[\"\\uD800\\n\"]","not I-JSON"],
+["canonical\n[\"\\uDd1ea\"]","not I-JSON"],
+["canonical\n[\"\\uD800\\uD800\\n\"]","not I-JSON"],
+["canonical\n[\"\\ud800\"]","not I-JSON"],
+["canonical\n[\"\\ud800abc\"]","not I-JSON"],
+["canonical\n[\"\\uDd1e\\uD834\"]","not I-JSON"],
+["canonical\n[\"\\uDFAA\"]","not I-JSON"],
+["canonical\n{\"a\":\"b\",\"a\":\"c\"}","not I-JSON"],
+["canonical\n{\"a\":\"b\",\"a\":\"b\"}","not I-JSON"]
+]}

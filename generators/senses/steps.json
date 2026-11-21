@@ -1,5 +1,5 @@
 {
-  "comment": "The steps of the senses program (generators/senses/), run in order by tools/generators/run.sh: the senses' schedule and time zone cases from RFC 5545 at its pinned bytes, and ST-01's inventory of the W3C Turtle test suite from its manifest.",
+  "comment": "The steps of the senses program (generators/senses/), run in order by tools/generators/run.sh: the senses' schedule and time zone cases from RFC 5545 at its pinned bytes, their identity case from the first whole card of RFC 6350, ST-01's inventory of the W3C Turtle test suite from its manifest, and ST-01's inventory of FIPS 180-4 SHA-256 and the digest guest's cases from NIST's CAVP files.",
   "steps": [
     {
       "generator": "sensesevents",
@@ -20,6 +20,41 @@
       "split": "app/specs/standards/upstream/turtle-manifest.ttl",
       "breakBefore": "^<#",
       "output": "test/standards/generated/w3c-turtle-1.1.jsonl"
+    },
+    {
+      "generator": "digestreqs",
+      "inputs": [
+        "app/specs/oracle/nist-cavp-sha256/SHA256ShortMsg.rsp"
+      ],
+      "output": "test/standards/generated/nist-fips-180-4-shortmsg.jsonl"
+    },
+    {
+      "generator": "digestreqs",
+      "inputs": [
+        "app/specs/oracle/nist-cavp-sha256/SHA256Monte.rsp"
+      ],
+      "output": "test/standards/generated/nist-fips-180-4-monte.jsonl"
+    },
+    {
+      "generator": "digestspec",
+      "inputs": [
+        "app/specs/oracle/nist-cavp-sha256/SHA256ShortMsg.rsp"
+      ],
+      "output": "app/specs/digest/spec.json"
+    },
+    {
+      "generator": "sensescards",
+      "split": "app/specs/standards/texts/763c63b28fb9050111ee4878ea605e9e61ba2cb9f3c316bbbba936eda0dd1980",
+      "breakBefore": "^[0-9]+[.][0-9.]*[.]? ",
+      "output": ".gen/senses-cards"
+    },
+    {
+      "generator": "sensesidentity",
+      "inputs": [
+        ".gen/senses-cards",
+        "app/specs/senses/clocks.json"
+      ],
+      "output": "app/specs/senses/identity/spec.json"
     }
   ]
 }
