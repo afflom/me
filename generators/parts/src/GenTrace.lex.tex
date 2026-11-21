@@ -25,6 +25,14 @@ definition{
 }
 
 definition{
+  name: trSpec,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let kept : Bytes := (trF archive ".gen/pt-spec"); (if ((Foundation.Bytes::byteLength kept) =? 0) then (trF archive "app/specs/parts/spec.json") else kept)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: trNl,
   parameters: [x : Bytes],
   result: Bytes,
@@ -310,7 +318,7 @@ definition{
   name: trOnePart,
   parameters: [archive : Bytes],
   result: Bytes,
-  body: (let one : Bytes := (trF archive ".gen/pt-parts"); (Foundation.Json::span one 0 (Check::lineEndOf one 0 (trLen one)))),
+  body: (let ids : Bytes := (trF archive ".gen/pt-part"); (let one : Bytes := (if ((Foundation.Bytes::byteLength ids) =? 0) then (trF archive ".gen/pt-parts") else ids); (Foundation.Json::span one 0 (Check::lineEndOf one 0 (trLen one))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -318,7 +326,7 @@ definition{
   name: ptGround,
   parameters: [archive : Bytes],
   result: Bytes,
-  body: (let p : Bytes := (trOnePart archive); (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (let k : Bytes := (trStratumOf spec (Check::elemStart spec (trStrata spec)) p (trLen spec)); (if ((trLen k) =? 0) then 0x else (Check::cat (cons p (cons 0x20 (cons k (cons 0x0a (nil Bytes)))))))))),
+  body: (let p : Bytes := (trOnePart archive); (let spec : Bytes := (trSpec archive); (let k : Bytes := (trStratumOf spec (Check::elemStart spec (trStrata spec)) p (trLen spec)); (if ((trLen k) =? 0) then 0x else (Check::cat (cons p (cons 0x20 (cons k (cons 0x0a (nil Bytes)))))))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -392,7 +400,7 @@ definition{
   name: strataReasons,
   parameters: [archive : Bytes],
   result: Bytes,
-  body: (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (trStrataFrom spec (Check::elemStart spec (trStrata spec)) (trKeysOf spec "agency") (trKeysOf spec "boundaries") (trKeysOf spec "regimes") 0x (trLen spec))),
+  body: (let spec : Bytes := (trSpec archive); (trStrataFrom spec (Check::elemStart spec (trStrata spec)) (trKeysOf spec "agency") (trKeysOf spec "boundaries") (trKeysOf spec "regimes") 0x (trLen spec))),
   axioms: [Quot.sound, propext]
 }
 
@@ -492,7 +500,7 @@ definition{
   name: journeyReasons,
   parameters: [archive : Bytes],
   result: Bytes,
-  body: (let s : Bytes := (trJourneyFile archive); (let j : (Option Nat) := (Foundation.Json::root s); (let k : Bytes := (Check::plain s (Check::key s j "key")); (let who : Bytes := (Foundation.Bytes::appendBytes (Check::u "journey ") k); (let a : (Option Nat) := (Check::key s j "answers"); (let w : (Option Nat) := (Check::key s j "when"); (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (Check::cat (cons (if (Check::nonempty s a) then 0x else (trSay "" who " answers no concern" 0x "")) (cons (if (Check::nonempty s a) then (trAnswersFrom s (Check::elemStart s a) (trF archive ".gen/pt-concerns") who 0x (trLen s)) else 0x) (cons (if (Check::nonempty s w) then 0x else (trSay "" who " names no regime it happens in" 0x "")) (cons (if (Check::nonempty s w) then (trNotInFrom s (Check::elemStart s w) (trKeysOf spec "regimes") who " happens in " ", which is no regime" 0x (trLen s)) else 0x) (nil Bytes))))))))))))),
+  body: (let s : Bytes := (trJourneyFile archive); (let j : (Option Nat) := (Foundation.Json::root s); (let k : Bytes := (Check::plain s (Check::key s j "key")); (let who : Bytes := (Foundation.Bytes::appendBytes (Check::u "journey ") k); (let a : (Option Nat) := (Check::key s j "answers"); (let w : (Option Nat) := (Check::key s j "when"); (let spec : Bytes := (trSpec archive); (Check::cat (cons (if (Check::nonempty s a) then 0x else (trSay "" who " answers no concern" 0x "")) (cons (if (Check::nonempty s a) then (trAnswersFrom s (Check::elemStart s a) (trF archive ".gen/pt-concerns") who 0x (trLen s)) else 0x) (cons (if (Check::nonempty s w) then 0x else (trSay "" who " names no regime it happens in" 0x "")) (cons (if (Check::nonempty s w) then (trNotInFrom s (Check::elemStart s w) (trKeysOf spec "regimes") who " happens in " ", which is no regime" 0x (trLen s)) else 0x) (nil Bytes))))))))))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -606,7 +614,7 @@ definition{
   name: traceReasons,
   parameters: [archive : Bytes],
   result: Bytes,
-  body: (let ps : Bytes := (trProduct archive); (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (let map : Bytes := (trF archive ".gen/pt-concerns"); (let always : (Option Nat) := (Check::key ps (Foundation.Json::root ps) "always"); (let answered : Bytes := (Check::cat (cons (Check::restWords (trF archive ".gen/pt-answers")) (cons (trToks (Check::restWords (trF archive ".gen/pt-answers"))) (cons (trListAnswersFrom ps (Check::elemStart ps always) 0x (trLen ps)) (cons (trListAnswersFrom spec (Check::elemStart spec (trStrata spec)) 0x (trLen spec)) (nil Bytes)))))); (let owed : (Option Nat) := (Check::key spec (Check::key spec (Foundation.Json::root spec) "debt") "concerns"); (Check::cat (cons (trAlwaysFrom ps (Check::elemStart ps always) map 0x (trLen ps)) (cons (trBuilderFrom spec (Check::elemStart spec (trStrata spec)) map 0x (trLen spec)) (cons (trUnansweredFrom (Check::firstWords map) 0 0x answered (Check::keys spec owed) 0x ((trLen map) + 1)) (cons (trOwedFrom spec (Check::memberStart spec owed) (Check::firstWords map) answered 0x (trLen spec)) (nil Bytes)))))))))))),
+  body: (let ps : Bytes := (trProduct archive); (let spec : Bytes := (trSpec archive); (let map : Bytes := (trF archive ".gen/pt-concerns"); (let always : (Option Nat) := (Check::key ps (Foundation.Json::root ps) "always"); (let answered : Bytes := (Check::cat (cons (Check::restWords (trF archive ".gen/pt-answers")) (cons (trToks (Check::restWords (trF archive ".gen/pt-answers"))) (cons (trListAnswersFrom ps (Check::elemStart ps always) 0x (trLen ps)) (cons (trListAnswersFrom spec (Check::elemStart spec (trStrata spec)) 0x (trLen spec)) (nil Bytes)))))); (let owed : (Option Nat) := (Check::key spec (Check::key spec (Foundation.Json::root spec) "debt") "concerns"); (Check::cat (cons (trAlwaysFrom ps (Check::elemStart ps always) map 0x (trLen ps)) (cons (trBuilderFrom spec (Check::elemStart spec (trStrata spec)) map 0x (trLen spec)) (cons (trUnansweredFrom (Check::firstWords map) 0 0x answered (Check::keys spec owed) 0x ((trLen map) + 1)) (cons (trOwedFrom spec (Check::memberStart spec owed) (Check::firstWords map) answered 0x (trLen spec)) (nil Bytes)))))))))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -758,7 +766,7 @@ definition{
   name: ptCarried,
   parameters: [archive : Bytes],
   result: Bytes,
-  body: (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (trCarriedFrom spec (Check::elemStart spec (trStrata spec)) (trF archive ".gen/pt-ground") (trF archive ".gen/pt-parts") 0x (trLen spec))),
+  body: (let spec : Bytes := (trSpec archive); (trCarriedFrom spec (Check::elemStart spec (trStrata spec)) (trF archive ".gen/pt-ground") (trF archive ".gen/pt-parts") 0x (trLen spec))),
   axioms: [Quot.sound, propext]
 }
 
@@ -905,7 +913,7 @@ definition{
   name: proofParts,
   parameters: [archive : Bytes],
   result: Bytes,
-  body: (let ground : Bytes := (trF archive ".gen/pt-ground"); (trProofPartsFrom ground 0 (trF archive "app/specs/parts/spec.json") 0x ((trLen ground) + 1))),
+  body: (let ground : Bytes := (trF archive ".gen/pt-ground"); (trProofPartsFrom ground 0 (trSpec archive) 0x ((trLen ground) + 1))),
   axioms: [Quot.sound, propext]
 }
 
@@ -1009,7 +1017,7 @@ definition{
   name: ptCertificate,
   parameters: [archive : Bytes],
   result: Bytes,
-  body: (let p : Bytes := (trOnePart archive); (let ground : Bytes := (trF archive ".gen/pt-ground"); (let sk : Bytes := (trHolderOfFrom ground p 0 0x ((trLen ground) + 1)); (if ((trLen sk) =? 0) then 0x else (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (let so : (Option Nat) := (Check::withField spec (trStrata spec) "key" sk); (let answers : Bytes := (trF archive ".gen/pt-answers"); (let jl : Bytes := (trLines (trFilter (trGather (trF archive ".gen/pt-serves") p) (Check::firstWords answers))); (let wa : (Option Nat) := (Check::key spec so "who"); (let agency : (Option Nat) := (Check::key spec (Foundation.Json::root spec) "agency"); (let prod : Nat := (trPrimesFrom spec (Check::elemStart spec wa) agency 1 (trLen spec)); (let full : Nat := (trFullFrom spec (Check::elemStart spec agency) 1 (trLen spec)); (let wh : (Option Nat) := (Check::key spec so "where"); (let how : Bool := ((Check::inLines (trF archive ".gen/pt-checked") p) || ((Check::isText spec wh) && (Check::same (Check::str spec wh) (Check::u "kernel")))); (let miss : Bytes := (Check::cat (cons (trMiss (not (Check::nonempty spec (Check::key spec so "what"))) "what") (cons (trMiss (((trBlank (trGatherIn answers jl)) && (not (Check::nonempty spec (Check::key spec so "answers")))) || (not (Check::nonempty spec (Check::key spec so "without")))) "why") (cons (trMiss ((not (Check::nonempty spec wa)) || ((prod <? 2) || (not ((prim subtract full (prim multiply prod (prim quotient full prod 0 : Nat) : Nat) : Nat) =? 0)))) "who") (cons (trMiss (not (Check::oneOf spec wh (trKeysOf spec "boundaries"))) "where") (cons (trMiss ((not (Check::nonempty spec (Check::key spec so "when"))) && (trBlank (trGatherIn (trF archive ".gen/pt-when") jl))) "when") (cons (trMiss (not how) "how") (nil Bytes)))))))); (if ((trLen miss) =? 0) then 0x else (trNl (Foundation.Bytes::appendBytes p miss)))))))))))))))))),
+  body: (let p : Bytes := (trOnePart archive); (let ground : Bytes := (trF archive ".gen/pt-ground"); (let sk : Bytes := (trHolderOfFrom ground p 0 0x ((trLen ground) + 1)); (if ((trLen sk) =? 0) then 0x else (let spec : Bytes := (trSpec archive); (let so : (Option Nat) := (Check::withField spec (trStrata spec) "key" sk); (let answers : Bytes := (trF archive ".gen/pt-answers"); (let jl : Bytes := (trLines (trFilter (trGather (trF archive ".gen/pt-serves") p) (Check::firstWords answers))); (let wa : (Option Nat) := (Check::key spec so "who"); (let agency : (Option Nat) := (Check::key spec (Foundation.Json::root spec) "agency"); (let prod : Nat := (trPrimesFrom spec (Check::elemStart spec wa) agency 1 (trLen spec)); (let full : Nat := (trFullFrom spec (Check::elemStart spec agency) 1 (trLen spec)); (let wh : (Option Nat) := (Check::key spec so "where"); (let how : Bool := ((Check::inLines (trF archive ".gen/pt-checked") p) || ((Check::isText spec wh) && (Check::same (Check::str spec wh) (Check::u "kernel")))); (let miss : Bytes := (Check::cat (cons (trMiss (not (Check::nonempty spec (Check::key spec so "what"))) "what") (cons (trMiss (((trBlank (trGatherIn answers jl)) && (not (Check::nonempty spec (Check::key spec so "answers")))) || (not (Check::nonempty spec (Check::key spec so "without")))) "why") (cons (trMiss ((not (Check::nonempty spec wa)) || ((prod <? 2) || (not ((prim subtract full (prim multiply prod (prim quotient full prod 0 : Nat) : Nat) : Nat) =? 0)))) "who") (cons (trMiss (not (Check::oneOf spec wh (trKeysOf spec "boundaries"))) "where") (cons (trMiss ((not (Check::nonempty spec (Check::key spec so "when"))) && (trBlank (trGatherIn (trF archive ".gen/pt-when") jl))) "when") (cons (trMiss (not how) "how") (nil Bytes)))))))); (if ((trLen miss) =? 0) then 0x else (trNl (Foundation.Bytes::appendBytes p miss)))))))))))))))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -1101,7 +1109,7 @@ definition{
   name: debtReasons,
   parameters: [archive : Bytes],
   result: Bytes,
-  body: (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (let debt : (Option Nat) := (Check::key spec (Foundation.Json::root spec) "debt"); (let owed : Bytes := (trF archive ".gen/pt-debt"); (let unserved : (Option Nat) := (Check::key spec debt "journeys"); (let missing : Bytes := (trF archive ".gen/pt-missing"); (let ground : Bytes := (trF archive ".gen/pt-ground"); (let js : Bytes := (Check::firstWords (trF archive ".gen/pt-answers")); (let served : Bytes := (trToks (Check::restWords (trF archive ".gen/pt-serves"))); (Check::cat (cons (trMissingFrom missing 0 owed 0x ((trLen missing) + 1)) (cons (trOwedPartsFrom owed 0 ground missing 0x ((trLen owed) + 1)) (cons (trJourneysDebtFrom js 0 spec unserved served (trF archive ".gen/pt-works") 0x ((trLen js) + 1)) (cons (trUnknownJourneysFrom spec (Check::memberStart spec unserved) js 0x (trLen spec)) (nil Bytes)))))))))))))),
+  body: (let spec : Bytes := (trSpec archive); (let debt : (Option Nat) := (Check::key spec (Foundation.Json::root spec) "debt"); (let owed : Bytes := (trF archive ".gen/pt-debt"); (let unserved : (Option Nat) := (Check::key spec debt "journeys"); (let missing : Bytes := (trF archive ".gen/pt-missing"); (let ground : Bytes := (trF archive ".gen/pt-ground"); (let js : Bytes := (Check::firstWords (trF archive ".gen/pt-answers")); (let served : Bytes := (trToks (Check::restWords (trF archive ".gen/pt-serves"))); (Check::cat (cons (trMissingFrom missing 0 owed 0x ((trLen missing) + 1)) (cons (trOwedPartsFrom owed 0 ground missing 0x ((trLen owed) + 1)) (cons (trJourneysDebtFrom js 0 spec unserved served (trF archive ".gen/pt-works") 0x ((trLen js) + 1)) (cons (trUnknownJourneysFrom spec (Check::memberStart spec unserved) js 0x (trLen spec)) (nil Bytes)))))))))))))),
   axioms: [Quot.sound, propext]
 }
 
