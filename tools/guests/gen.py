@@ -15,18 +15,17 @@ straight to that dispatch. tools/guests/build.sh builds each stale project in
 the locked SDK with no network (lexlean lock, fmt, lock, verify, then prismpm
 build) and records `.prism/build/<id>/core-wasm/*.wasm`.
 
-app/specs/guests/<facet>/<id>.lock.json holds, for that guest, the SHA-256 of the project `write`
-lays out (every input byte the build reads) and of the wasm built from it.
-`check` fails when a guest's modules, vectors or limits changed since it was
-built, when its wasm is not the one recorded, or when its pin says otherwise:
-no guest the page runs is older than the model. Each site/<facet>/guest.mjs
-is written from the spec and lock by generators/guests (GN-01).
+app/specs/guests/<facet>/<id>.lock.json holds the SHA-256 of the project `write` lays out (every input byte the build reads) and of the wasm built from it.
+`check` fails when a guest's modules, vectors or limits changed since it was built, when its wasm is not the one recorded, when its pin says otherwise, or
+when that wasm, opened as the page opens it, does not give every acceptance vector its answer (a build can pass vectors its wasm then traps on, #204).
+Each site/<facet>/guest.mjs is written from the spec and lock by generators/guests (GN-01).
 """
 import hashlib
 import json
 import pathlib
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 
@@ -37,16 +36,17 @@ GUESTS = {g["id"]: g for p, g in FILES.items() if not p.name.endswith(".lock.jso
 LOCKS = {g["id"]: p.with_name(f"{g['id']}.lock.json") for p, g in FILES.items() if not p.name.endswith(".lock.json")}
 
 
-def pascal(s):
-    return "".join(w[:1].upper() + w[1:] for w in re.split(r"[^A-Za-z0-9]+", s) if w)
-
-
 def vectors(g):
     """The acceptance vectors: the prompt's examples, or a raw-request spec's."""
     v = g["vectors"]
     if v.startswith("spec:"):
         return [tuple(e) for p in v[5:].split("+") for e in json.loads((APP / f"specs/{p}/spec.json").read_text())["examples"]]
     return [(e["request"], e["response"]) for e in json.loads((APP / f"prompts/{v}.prompt.json").read_text())["app"]["examples"]]
+
+
+def held(g):
+    # Every request the build holds the guest to: its vectors, then the empty, the over-long and the over-allocated one.
+    return vectors(g) + [("", "invalid"), ("x" * (limits(g)[0] + 1), "invalid"), ("x" * limits(g)[2], "invalid")]
 
 
 def limits(g):
@@ -80,18 +80,15 @@ def write(gid, out):
             if (APP / "src" / name).exists():
                 shutil.copy(APP / "src" / name, out / "src" / name)
                 files.append(f"src/{name}")
-    appm = pascal(gid) + "App"
+    appm = "".join(w[:1].upper() + w[1:] for w in re.split(r"[^A-Za-z0-9]+", gid) if w) + "App"
     toml = (APP / "lexlean.toml").read_text()
     start = toml.index("entrypoints = [")
-    end = toml.index("]\n", start) + 2
-    entries = sorted([f"src/{appm}.lex.tex", *files])
-    (out / "lexlean.toml").write_text(toml[:start] + "entrypoints = [" + ", ".join(f'"{e}"' for e in entries) + "]\n" + toml[end:])
+    (out / "lexlean.toml").write_text(toml[:start] + "entrypoints = [" + ", ".join(f'"{e}"' for e in sorted([f"src/{appm}.lex.tex", *files])) + "]\n" + toml[toml.index("]\n", start) + 2:])
     req, resp, alloc = limits(g)
     h = lambda s: "0x" + s.encode().hex()
     vec = "(nil Foundation.View.Text.V1.Model::AcceptanceVector)"
-    for r, a in reversed(vectors(g) + [("", "invalid"), ("x" * (req + 1), "invalid"), ("x" * alloc, "invalid")]):
+    for r, a in reversed(held(g)):
         vec = f"(cons (record Foundation.View.Text.V1.Model::AcceptanceVector {{request := {h(r)}, response := {h(a)}}}) {vec})"
-    module = g["dispatch"].split("::")[0]
     name = f"prism-{gid}"
     (out / f"src/{appm}.lex.tex").write_text(rf"""\begin{{lexlean}}{{{appm}}}
 \useglossary{{lexlean.std.bool@1.2.0}}
@@ -99,7 +96,7 @@ def write(gid, out):
 \useglossary{{prism.arch@1.0.0}}
 \importmodule{{Foundation.Bytes}}
 \importmodule{{Foundation.View.Text.V1.Model}}
-{"\\importmodule{Foundation.View.Text.V2.Model}" + chr(10) if v2 else ""}\importmodule{{{module}}}
+{"\\importmodule{Foundation.View.Text.V2.Model}" + chr(10) if v2 else ""}\importmodule{{{g["dispatch"].split("::")[0]}}}
 \title{{Text application model}}
 \begin{{semanticmodule}}
 definition{{
@@ -153,6 +150,7 @@ def pin_line(g):
     sys.exit(f"{g['pin']} pins no {base}")
 
 
+REPLAY = 'import{readFileSync as f}from"node:fs";import{openGuestSync as o}from"./site/read/guest.mjs";for(const[id,w,h,vs]of JSON.parse(f(0,"utf8"))){const ask=await o(f(w),h);for(const[r,a]of vs){let got;try{got=ask(r)}catch(e){got="trap: "+e.message}if(got!==a)console.log(`${id}: its wasm answers ${JSON.stringify(r.slice(0,80))} with ${JSON.stringify(got.slice(0,80))}, its vector says ${JSON.stringify(a.slice(0,80))}`)}}'
 HELD = {gid: FILES[p] for gid, p in LOCKS.items() if p in FILES}
 
 
@@ -190,6 +188,9 @@ def main(argv):
             print(f"{gid}: {'; '.join(p)}")
         if bad:
             sys.exit("stale guests: rebuild with tools/guests/build.sh")
+        ran = subprocess.run(["node", "--input-type=module", "-e", REPLAY], input=json.dumps([[gid, g["wasm"], sha(ROOT / g["wasm"]), held(g)] for gid, g in GUESTS.items()]), text=True, capture_output=True, cwd=ROOT)
+        if ran.returncode or ran.stdout:
+            sys.exit(ran.stdout + ran.stderr[-600:] + "GU-01: a guest's wasm does not answer as its vectors say")
         print(f"guests: {len(GUESTS)} current")
     else:
         sys.exit(__doc__)
