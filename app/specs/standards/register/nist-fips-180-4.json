@@ -38,6 +38,10 @@
   "ShortMsg": {
    "suite": "crates/conformance/tests/guests.rs",
    "how": "every message of NIST's CAVP file SHA256ShortMsg.rsp, byte for byte as NIST publishes it (app/specs/oracle/nist-cavp-sha256/lock.json), is in an acceptance vector of the digest guest (app/specs/digest/spec.json, written by generators/senses digestspec), which names a message's Len only when the SHA-256 it computes is the MD the file gives; prismpm build runs the vectors and GU-01 holds the pinned wasm to them"
+  },
+  "Monte": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "every checkpoint of NIST's CAVP file SHA256Monte.rsp, byte for byte as NIST publishes it (app/specs/oracle/nist-cavp-sha256/lock.json), is in an acceptance vector of the digest-monte guest (app/specs/digest/monte/spec.json, written by generators/senses digestmonte), which names a checkpoint's COUNT only when the MD it reaches by the SHAVS Monte Carlo procedure, 1000 digests from the checkpoint before, is the MD the file gives; prismpm build runs the vectors and GU-01 holds the pinned wasm to them"
   }
  }
 }
