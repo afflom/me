@@ -1,16 +1,13 @@
 import { readFileSync } from "node:fs";
-// The synthetic person: a day of mail and calendar on their device, and
-// nothing real. The device answers the page the way the person's installed
-// Prism extension does (site/extension/background.js: each item names its declared
-// service and route), so the day arrives with no
-// gesture, as it does for the person. Every address is at example.org.
+// The synthetic person: a day of mail and calendar on their device, and nothing real. The device answers the page
+// the way the person's installed Prism extension does (site/extension/background.js: each item names its declared
+// service and route), so the day arrives with no gesture, as it does for the person. Every address is at example.org.
 const pad = (n) => String(n).padStart(2, "0");
 const utc = (d) => `${d.getUTCFullYear()}${pad(d.getUTCMonth() + 1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}00Z`;
 const day = (days, hour, minute = 0) => { const d = new Date(); d.setUTCDate(d.getUTCDate() + days); d.setUTCHours(hour, minute, 0, 0); return d; };
 
 export function today(now = new Date()) {
-  // The meeting runs from a few minutes from now to the end of today (UTC),
-  // so it is ahead of the person whenever the walk runs.
+  // The meeting runs from a few minutes from now to the end of today (UTC), so it is ahead of the person.
   const start = new Date(Math.min(now.getTime() + 5 * 60000, day(0, 23, 50).getTime()));
   const end = day(0, 23, 59);
   const event = (uid, from, to, summary, location, attendee) => [
@@ -43,6 +40,9 @@ export function today(now = new Date()) {
 
 // Installs the person's device on a browser context before any page runs.
 export async function device(context) {
+  // In the last half hour of the day (UTC) the device's clock is held at 23:30, so the meeting is ahead for the whole walk.
+  const late = Date.now() > day(0, 23, 30), now = late ? day(0, 23, 30) : new Date();
+  if (late) await context.clock.install({ time: now });
   // The stand-in answers with the version the page writes (app/specs/source/services.json).
   await context.addInitScript((version) => { window.__prismExtensionVersion = version; }, JSON.parse(readFileSync(new URL("../../app/specs/source/services.json", import.meta.url), "utf8")).extension.version);
   await context.addInitScript((items) => {
@@ -52,5 +52,5 @@ export async function device(context) {
       if (event.data.prism === "hello") answer({ prism: "extension", version: window.__prismExtensionVersion });
       if (event.data.prism === "pull") answer({ prism: "items", id: event.data.id, items: [true, "yes"].includes(event.data.halted) ? [] : items });
     });
-  }, today());
+  }, today(now));
 }
