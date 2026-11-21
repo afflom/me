@@ -106,10 +106,32 @@ definition{
 }
 
 definition{
+  name: dgChain,
+  parameters: [a : Bytes, b : Bytes, c : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => c
+    | Nat.succ rest => (dgChain b c (Sha256::sha256 (prim append a (prim append b c : Bytes) : Bytes)) rest)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: dgMonteFrom,
+  parameters: [s : Bytes, i : Nat, seed : Bytes, count : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (prim append acc 0x0a : Bytes)
+    | Nat.succ rest => (if ((dgLen s) <? (i + 1)) then (prim append acc 0x0a : Bytes) else (let e : Nat := (dgLineEnd s i (dgLen s)); (let z : Nat := (if ((i <? e) && ((dgAt s (prim subtract e 1 : Nat)) =? 13)) then (prim subtract e 1 : Nat) else e); (if (dgMatch s i (prim utf8_encode "Seed = " : Bytes)) then (dgMonteFrom s (e + 1) (dgUnhex s (i + 7) 32 0x 33) count acc rest) else (if (dgMatch s i (prim utf8_encode "COUNT = " : Bytes)) then (dgMonteFrom s (e + 1) seed (dgCut s (i + 8) z) acc rest) else (if (dgMatch s i (prim utf8_encode "MD = " : Bytes)) then (if ((dgLen seed) =? 0) then (dgMonteFrom s (e + 1) (dgUnhex s (i + 5) 32 0x 33) 0x acc rest) else (let r : Bytes := (dgChain seed seed seed 1000); (if (((dgLen count) =? 0) || (not (dgSame (Sha256::shaHexFrom r 0 32 0x) (dgCut s (i + 5) z)))) then (prim append (prim utf8_encode "fail " : Bytes) (prim append count 0x0a : Bytes) : Bytes) else (dgMonteFrom s (e + 1) r 0x (prim append acc (prim append 0x20 count : Bytes) : Bytes) rest)))) else (dgMonteFrom s (e + 1) seed count acc rest)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
   name: prismDigestDispatch,
   parameters: [s : Bytes],
   result: Bytes,
-  body: (let nl : Nat := (dgLineEnd s 0 (dgLen s)); (let verb : Bytes := (dgSlice s 0 nl); (let body : Bytes := (dgSlice s (nl + 1) (prim subtract (dgLen s) (nl + 1) : Nat)); (if (((dgLen s) =? 0) || (6144 <? (dgLen s))) then (prim utf8_encode "invalid" : Bytes) else (if (dgSame verb (prim utf8_encode "hex" : Bytes)) then (prim append (Sha256::sha256Hex body) 0x0a : Bytes) else (if (dgSame verb (prim utf8_encode "cavp" : Bytes)) then (dgCavpFrom body 0 0x 0x (prim utf8_encode "pass" : Bytes) (dgLen body)) else (prim utf8_encode "refused: say hex or cavp" : Bytes))))))),
+  body: (let nl : Nat := (dgLineEnd s 0 (dgLen s)); (let verb : Bytes := (dgSlice s 0 nl); (let body : Bytes := (dgSlice s (nl + 1) (prim subtract (dgLen s) (nl + 1) : Nat)); (if (((dgLen s) =? 0) || (6144 <? (dgLen s))) then (prim utf8_encode "invalid" : Bytes) else (if (dgSame verb (prim utf8_encode "hex" : Bytes)) then (prim append (Sha256::sha256Hex body) 0x0a : Bytes) else (if (dgSame verb (prim utf8_encode "cavp" : Bytes)) then (dgCavpFrom body 0 0x 0x (prim utf8_encode "pass" : Bytes) (dgLen body)) else (if (dgSame verb (prim utf8_encode "monte" : Bytes)) then (dgMonteFrom body 0 0x 0x (prim utf8_encode "pass" : Bytes) (dgLen body)) else (prim utf8_encode "refused: say hex, cavp or monte" : Bytes)))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}
