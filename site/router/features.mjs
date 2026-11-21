@@ -86,6 +86,10 @@ export function asksQuestion(text) {
   return words.length > 0 && (t.endsWith("?") || PROVIDERS.intent.question.slice(0, 7).includes(words[0]));
 }
 
+// A line as the dimension heads (PROVIDERS.intent.heads) read it: lower case, no punctuation
+// but apostrophes, the form their fit's corpora share (Mezza et al., COLING 2018, 4.1).
+export const plain = (text) => text.toLowerCase().replace(/[^\p{L}\p{N}'\s]/gu, " ").replace(/\s+/g, " ").trim();
+
 // Whether the intent head (PROVIDERS.intent.head, fit on the AMI Meeting
 // Corpus, QR-16) reads a meaning vector as a task.
 export function headTask(vector) {
