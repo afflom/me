@@ -7,6 +7,7 @@
 \importmodule{GenRec}
 \importmodule{GenNames}
 \importmodule{GenReplay}
+\importmodule{GenStore}
 \importmodule{GenSuite}
 \importmodule{Foundation.Tar}
 \importmodule{Foundation.View.Text.V1.Model}
@@ -84,10 +85,18 @@ definition{
 }
 
 definition{
+  name: dispatchStore,
+  parameters: [name : Bytes, archive : Bytes],
+  result: Bytes,
+  body: (if (Foundation.Tar::sameBytes name 0x73746f72657461626c65) then (written (GenStore::gsTableOf archive)) else (if (Foundation.Tar::sameBytes name 0x73746f72656361636865) then (written (GenStore::gsCacheOf archive)) else (if (Foundation.Tar::sameBytes name 0x73746f7265766563746f7273) then (written (GenStore::gsVectors archive 0x7b226e616d65223a227265636f726473)) else (dispatchReplay name archive)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: dispatchNames,
   parameters: [name : Bytes, archive : Bytes],
   result: Bytes,
-  body: (if (Foundation.Tar::sameBytes name 0x6e616d656361736573) then (written (GenNames::gnCases archive)) else (if (Foundation.Tar::sameBytes name 0x6e616d6573) then (written (GenSuite::jsVectors archive 0x7b226e616d65223a22736e617073686f742d6e616d65)) else (dispatchReplay name archive))),
+  body: (if (Foundation.Tar::sameBytes name 0x6e616d656361736573) then (written (GenNames::gnCases archive)) else (if (Foundation.Tar::sameBytes name 0x6e616d6573) then (written (GenSuite::jsVectors archive 0x7b226e616d65223a22736e617073686f742d6e616d65)) else (dispatchStore name archive))),
   axioms: [Quot.sound, propext]
 }
 
