@@ -41,8 +41,10 @@ export async function route({ source, values, line, halted, now = Date.now(), le
   if (!out.parties.some((p) => !p.robot)) out.parties.push(...(out.mentioned ?? []));
   out.party = out.parties[0]?.name ?? null;
   out.domains = domainsFor(out.intent, out.start);
-  // Words said to the Prism are a dialogue act in a dimension (ISO 24617-2): feedback on what was last said when the head fit for that reads so, else the task.
-  if (source === "note" && out.meaning) out.act = headTask(await learned.meaning.read(plain(values.text)), PROVIDERS.intent.heads.autoFeedback) ? "autoFeedback" : "task";
+  // Words said to the Prism are a dialogue act in a dimension (ISO 24617-2): a social obligation (a greeting, thanks) by the provider's own words, feedback on what was last said when the head fit for that reads so, else the task.
+  const said = plain(values.text ?? ""), social = PROVIDERS.intent.social;
+  if (source === "note" && said && (social.phrases.includes(said) || said.split(" ").every((word) => social.words.includes(word)))) out.act = "socialObligationsManagement";
+  else if (source === "note" && out.meaning) out.act = headTask(await learned.meaning.read(said), PROVIDERS.intent.heads.autoFeedback) ? "autoFeedback" : "task";
   return out;
 }
 

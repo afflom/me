@@ -5,7 +5,7 @@
 // bytes whose SHA-256 is not the pinned one are refused before they compile.
 
 export const GUESTS = {
-  ask: { path: 'guest/ask.wasm', sha256: '38d8ffb6b2131297470e305c1f5d908774f019ae209a38755c5407696812e12e' },
+  ask: { path: 'guest/ask.wasm', sha256: 'a1da3a66c40229fc558cef31655289910a022d6a87be1a4f190d75e6bb00af7a' },
   curate: { path: 'guest/curate.wasm', sha256: '461fe49cf6e105cebfbe9cad1a446f095286887240fb21a32286a6a0e2cc0e7e' },
   dest: { path: 'guest/dest.wasm', sha256: 'aeecfe69b3a5a858dceacc620a028f4d03f021d829016d564c73239d6c913fb0' },
   google: { path: 'guest/google.wasm', sha256: '063cf827337258a3fbdd6f9383aace28b07e02c592219debd077f104992fc51e' },

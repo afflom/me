@@ -4,7 +4,7 @@
 
 ## Purpose
 
-Prism Ask: Decides what the Prism does with words the owner says to it: tell the time, answer from what is held, take feedback as heard, offer to keep them where they land in time, or look for them in what is held and offer to keep them, and nothing while the Prism is paused.
+Prism Ask: Decides what the Prism does with words the owner says to it: tell the time, greet back, answer from what is held, take feedback as heard, offer to keep them where they land in time, or look for them in what is held and offer to keep them, and nothing while the Prism is paused.
 
 ## Requirements
 
@@ -30,7 +30,7 @@ Verified: to be proved by Lean for every request (INV-002, theorem `inv002Holds`
 
 - **WHEN** the request is `no not keeps question no some task` (an acceptance example)
 - **THEN** the answer SHALL NOT be `keep`
-- **AND** the app answers `answer`, decided by REQ-006
+- **AND** the app answers `answer`, decided by REQ-007
 
 ### Requirement: Never keep when box is asks
 
@@ -42,7 +42,7 @@ Verified: to be proved by Lean for every request (INV-003, theorem `inv003Holds`
 
 - **WHEN** the request is `no not asks fact no some task` (an acceptance example)
 - **THEN** the answer SHALL NOT be `keep`
-- **AND** the app answers `answer`, decided by REQ-004
+- **AND** the app answers `answer`, decided by REQ-005
 
 ### Requirement: Never look when box is asks
 
@@ -54,7 +54,7 @@ Verified: to be proved by Lean for every request (INV-004, theorem `inv004Holds`
 
 - **WHEN** the request is `no not asks fact no some task` (an acceptance example)
 - **THEN** the answer SHALL NOT be `look`
-- **AND** the app answers `answer`, decided by REQ-004
+- **AND** the app answers `answer`, decided by REQ-005
 
 ### Requirement: Never answer when held is none
 
@@ -66,7 +66,7 @@ Verified: to be proved by Lean for every request (INV-005, theorem `inv005Holds`
 
 - **WHEN** the request is `no not keeps question no none task` (an acceptance example)
 - **THEN** the answer SHALL NOT be `answer`
-- **AND** the app answers `empty`, decided by REQ-005
+- **AND** the app answers `empty`, decided by REQ-006
 
 ### Requirement: Never look when held is none
 
@@ -78,11 +78,11 @@ Verified: to be proved by Lean for every request (INV-006, theorem `inv006Holds`
 
 - **WHEN** the request is `no not keeps question no none task` (an acceptance example)
 - **THEN** the answer SHALL NOT be `look`
-- **AND** the app answers `empty`, decided by REQ-005
+- **AND** the app answers `empty`, decided by REQ-006
 
-### Requirement: Always keep when halted is no and clock is not and box is keeps and timed is yes and intent is task
+### Requirement: Always keep when halted is no and clock is not and box is keeps and timed is yes and intent is task and act is not social
 
-The app SHALL answer `keep` when halted is no and clock is not and box is keeps and timed is yes and intent is task, because a task that lands in time is offered to keep.
+The app SHALL answer `keep` when halted is no and clock is not and box is keeps and timed is yes and intent is task and act is not social, because a task that lands in time, and is not a greeting, is offered to keep.
 
 Verified: to be proved by Lean for every request (INV-007, theorem `inv007Holds`).
 
@@ -90,7 +90,7 @@ Verified: to be proved by Lean for every request (INV-007, theorem `inv007Holds`
 
 - **WHEN** the request is `no not keeps task yes some task` (an acceptance example)
 - **THEN** the answer SHALL be `keep`
-- **AND** the app answers `keep`, decided by REQ-008
+- **AND** the app answers `keep`, decided by REQ-009
 
 ### Requirement: Never heard when intent is question
 
@@ -102,7 +102,7 @@ Verified: to be proved by Lean for every request (INV-008, theorem `inv008Holds`
 
 - **WHEN** the request is `no not keeps question no some task` (an acceptance example)
 - **THEN** the answer SHALL NOT be `heard`
-- **AND** the app answers `answer`, decided by REQ-006
+- **AND** the app answers `answer`, decided by REQ-007
 
 ### Requirement: Never heard when act is task
 
@@ -114,7 +114,7 @@ Verified: to be proved by Lean for every request (INV-009, theorem `inv009Holds`
 
 - **WHEN** the request is `no not keeps question no some task` (an acceptance example)
 - **THEN** the answer SHALL NOT be `heard`
-- **AND** the app answers `answer`, decided by REQ-006
+- **AND** the app answers `answer`, decided by REQ-007
 
 ### Requirement: Never heard when timed is yes
 
@@ -126,7 +126,55 @@ Verified: to be proved by Lean for every request (INV-010, theorem `inv010Holds`
 
 - **WHEN** the request is `no not keeps task yes some task` (an acceptance example)
 - **THEN** the answer SHALL NOT be `heard`
-- **AND** the app answers `keep`, decided by REQ-008
+- **AND** the app answers `keep`, decided by REQ-009
+
+### Requirement: Never keep when act is social
+
+The app SHALL NOT answer `keep` when act is social, because a greeting is never taken for something to keep.
+
+Verified: to be proved by Lean for every request (INV-011, theorem `inv011Holds`).
+
+#### Scenario: INV-011 holds
+
+- **WHEN** the request is `no not keeps fact no none social` (an acceptance example)
+- **THEN** the answer SHALL NOT be `keep`
+- **AND** the app answers `greet`, decided by REQ-003
+
+### Requirement: Never look when act is social
+
+The app SHALL NOT answer `look` when act is social, because a greeting is never looked for in what is held.
+
+Verified: to be proved by Lean for every request (INV-012, theorem `inv012Holds`).
+
+#### Scenario: INV-012 holds
+
+- **WHEN** the request is `no not keeps fact no none social` (an acceptance example)
+- **THEN** the answer SHALL NOT be `look`
+- **AND** the app answers `greet`, decided by REQ-003
+
+### Requirement: Never heard when act is social
+
+The app SHALL NOT answer `heard` when act is social, because a greeting is never taken for feedback.
+
+Verified: to be proved by Lean for every request (INV-013, theorem `inv013Holds`).
+
+#### Scenario: INV-013 holds
+
+- **WHEN** the request is `no not keeps fact no none social` (an acceptance example)
+- **THEN** the answer SHALL NOT be `heard`
+- **AND** the app answers `greet`, decided by REQ-003
+
+### Requirement: Never empty when act is social
+
+The app SHALL NOT answer `empty` when act is social, because a greeting is answered even over nothing held.
+
+Verified: to be proved by Lean for every request (INV-014, theorem `inv014Holds`).
+
+#### Scenario: INV-014 holds
+
+- **WHEN** the request is `no not keeps fact no none social` (an acceptance example)
+- **THEN** the answer SHALL NOT be `empty`
+- **AND** the app answers `greet`, decided by REQ-003
 
 ### Requirement: REQ-001 paused when halted is yes
 
@@ -150,82 +198,93 @@ Verified: tested by the acceptance vectors (`rule2`).
 - **WHEN** the request is `no asked keeps question no some task` (an acceptance example)
 - **THEN** the answer SHALL be `clock`, decided by REQ-002
 
-### Requirement: REQ-003 empty when box is asks and held is none
+### Requirement: REQ-003 greet when act is social
 
-The app SHALL answer `empty` when box is asks and held is none and no earlier rule matches, because a box that only asks, over nothing held, leads to connecting.
+The app SHALL answer `greet` when act is social and no earlier rule matches, because a greeting or thanks is answered in kind, not kept or looked for.
 
 Verified: tested by the acceptance vectors (`rule3`).
 
 #### Scenario: REQ-003 decides
 
-- **WHEN** the request is `no not asks task yes none task` (an acceptance example)
-- **THEN** the answer SHALL be `empty`, decided by REQ-003
+- **WHEN** the request is `no not keeps fact no none social` (an acceptance example)
+- **THEN** the answer SHALL be `greet`, decided by REQ-003
 
-### Requirement: REQ-004 answer when box is asks
+### Requirement: REQ-004 empty when box is asks and held is none
 
-The app SHALL answer `answer` when box is asks and no earlier rule matches, because a box that only asks answers every prompt as a question.
+The app SHALL answer `empty` when box is asks and held is none and no earlier rule matches, because a box that only asks, over nothing held, leads to connecting.
 
 Verified: tested by the acceptance vectors (`rule4`).
 
 #### Scenario: REQ-004 decides
 
-- **WHEN** the request is `no not asks fact no some task` (an acceptance example)
-- **THEN** the answer SHALL be `answer`, decided by REQ-004
+- **WHEN** the request is `no not asks task yes none task` (an acceptance example)
+- **THEN** the answer SHALL be `empty`, decided by REQ-004
 
-### Requirement: REQ-005 empty when intent is question and held is none
+### Requirement: REQ-005 answer when box is asks
 
-The app SHALL answer `empty` when intent is question and held is none and no earlier rule matches, because a question over nothing held leads to connecting.
+The app SHALL answer `answer` when box is asks and no earlier rule matches, because a box that only asks answers every prompt as a question.
 
 Verified: tested by the acceptance vectors (`rule5`).
 
 #### Scenario: REQ-005 decides
 
-- **WHEN** the request is `no not keeps question no none task` (an acceptance example)
-- **THEN** the answer SHALL be `empty`, decided by REQ-005
+- **WHEN** the request is `no not asks fact no some task` (an acceptance example)
+- **THEN** the answer SHALL be `answer`, decided by REQ-005
 
-### Requirement: REQ-006 answer when intent is question
+### Requirement: REQ-006 empty when intent is question and held is none
 
-The app SHALL answer `answer` when intent is question and no earlier rule matches, because a question is answered from what is held.
+The app SHALL answer `empty` when intent is question and held is none and no earlier rule matches, because a question over nothing held leads to connecting.
 
 Verified: tested by the acceptance vectors (`rule6`).
 
 #### Scenario: REQ-006 decides
 
-- **WHEN** the request is `no not keeps question no some task` (an acceptance example)
-- **THEN** the answer SHALL be `answer`, decided by REQ-006
+- **WHEN** the request is `no not keeps question no none task` (an acceptance example)
+- **THEN** the answer SHALL be `empty`, decided by REQ-006
 
-### Requirement: REQ-007 heard when act is autofeedback and intent is fact and timed is no
+### Requirement: REQ-007 answer when intent is question
 
-The app SHALL answer `heard` when act is autofeedback and intent is fact and timed is no and no earlier rule matches, because feedback on what was said is not a note to keep or words to look for.
+The app SHALL answer `answer` when intent is question and no earlier rule matches, because a question is answered from what is held.
 
 Verified: tested by the acceptance vectors (`rule7`).
 
 #### Scenario: REQ-007 decides
 
-- **WHEN** the request is `no not keeps fact no some autofeedback` (an acceptance example)
-- **THEN** the answer SHALL be `heard`, decided by REQ-007
+- **WHEN** the request is `no not keeps question no some task` (an acceptance example)
+- **THEN** the answer SHALL be `answer`, decided by REQ-007
 
-### Requirement: REQ-008 keep when timed is yes
+### Requirement: REQ-008 heard when act is autofeedback and intent is fact and timed is no
 
-The app SHALL answer `keep` when timed is yes and no earlier rule matches, because words that land in time are something to keep, at that time.
+The app SHALL answer `heard` when act is autofeedback and intent is fact and timed is no and no earlier rule matches, because feedback on what was said is not a note to keep or words to look for.
 
 Verified: tested by the acceptance vectors (`rule8`).
 
 #### Scenario: REQ-008 decides
 
-- **WHEN** the request is `no not keeps task yes some task` (an acceptance example)
-- **THEN** the answer SHALL be `keep`, decided by REQ-008
+- **WHEN** the request is `no not keeps fact no some autofeedback` (an acceptance example)
+- **THEN** the answer SHALL be `heard`, decided by REQ-008
 
-### Requirement: REQ-009 keep when held is none
+### Requirement: REQ-009 keep when timed is yes
 
-The app SHALL answer `keep` when held is none and no earlier rule matches, because with nothing held, what is not a question can only be kept.
+The app SHALL answer `keep` when timed is yes and no earlier rule matches, because words that land in time are something to keep, at that time.
 
 Verified: tested by the acceptance vectors (`rule9`).
 
 #### Scenario: REQ-009 decides
 
-- **WHEN** the request is `no not keeps fact no none task` (an acceptance example)
+- **WHEN** the request is `no not keeps task yes some task` (an acceptance example)
 - **THEN** the answer SHALL be `keep`, decided by REQ-009
+
+### Requirement: REQ-010 keep when held is none
+
+The app SHALL answer `keep` when held is none and no earlier rule matches, because with nothing held, what is not a question can only be kept.
+
+Verified: tested by the acceptance vectors (`rule10`).
+
+#### Scenario: REQ-010 decides
+
+- **WHEN** the request is `no not keeps fact no none task` (an acceptance example)
+- **THEN** the answer SHALL be `keep`, decided by REQ-010
 
 ### Requirement: Otherwise look
 
@@ -240,18 +299,18 @@ Verified: tested by the acceptance vectors.
 
 ### Requirement: The first matching rule decides
 
-The app SHALL try REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009 in that order, and the first rule that matches SHALL decide.
+The app SHALL try REQ-001, REQ-002, REQ-003, REQ-004, REQ-005, REQ-006, REQ-007, REQ-008, REQ-009, REQ-010 in that order, and the first rule that matches SHALL decide.
 
 Verified: tested by the acceptance vectors.
 
 #### Scenario: Two rules match
 
 - **WHEN** the request is `no not keeps question no none task` (an acceptance example)
-- **THEN** the answer SHALL be `empty`, decided by REQ-005, the earlier rule
+- **THEN** the answer SHALL be `empty`, decided by REQ-006, the earlier rule
 
 ### Requirement: Request and answers
 
-The app SHALL read one request as one line of 7 fields separated by single spaces, in this order, and SHALL answer exactly one of `paused`, `clock`, `empty`, `answer`, `heard`, `keep`, `look`, or `invalid` for anything else.
+The app SHALL read one request as one line of 7 fields separated by single spaces, in this order, and SHALL answer exactly one of `paused`, `clock`, `greet`, `empty`, `answer`, `heard`, `keep`, `look`, or `invalid` for anything else.
 
 | Field | Accepts | Means |
 | --- | --- | --- |
@@ -261,12 +320,13 @@ The app SHALL read one request as one line of 7 fields separated by single space
 | `intent` | `question`, `task`, `event`, `fact` | the router's intent reader's answer for the words |
 | `timed` | `no`, `yes` | whether the router's time reader found when the words land |
 | `held` | `some`, `none` | whether the owner holds anything unsealed to answer from |
-| `act` | `task`, `autofeedback` | the dimension of the words as a dialogue act (ISO 24617-2), read by the router's act head: the task itself, or feedback on what the Prism last said |
+| `act` | `task`, `autofeedback`, `social` | the dimension of the words as a dialogue act (ISO 24617-2), as the router reads it: the task itself, feedback on what the Prism last said, or a social obligation (a greeting, thanks) |
 
 | Answer | Means |
 | --- | --- |
 | `paused` | say nothing from what is held: the Prism is paused |
 | `clock` | tell the time and date from the Prism's own clock |
+| `greet` | say what can be asked and how things stand: nothing is looked for and nothing is offered to keep |
 | `empty` | say nothing has arrived yet and offer to connect |
 | `answer` | answer from what is held, naming what it drew on |
 | `heard` | take the words as heard: nothing is looked for and nothing is offered to keep |
@@ -303,6 +363,12 @@ Verified: reading a request is tested, not proved.
 - `no not asks fact no some autofeedback` gives `answer`
 - `no asked keeps fact no some autofeedback` gives `clock`
 - `yes not keeps fact no some autofeedback` gives `paused`
+- `no not keeps fact no none social` gives `greet`
+- `no not keeps fact no some social` gives `greet`
+- `no not keeps event yes some social` gives `greet`
+- `no not asks fact no none social` gives `greet`
+- `no asked keeps fact no some social` gives `clock`
+- `yes not keeps fact no some social` gives `paused`
 
 ## What is proved and what is tested
 

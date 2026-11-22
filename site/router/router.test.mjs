@@ -111,6 +111,7 @@ assert.deepEqual(empty.offers, [{ kind: "connect" }], "and leads to connecting")
 const hello = await only("hello");
 assert.match(hello.sentences[0], /^Ask about your day/u, "a greeting is answered with what to ask");
 assert.equal(hello.sentences.length, 3, "and how things stand");
+assert.deepEqual((await answer("hello", { items: [], line: boundaryLine, halted: () => "no" })).offers, [{ kind: "connect" }], "over nothing held a greeting leads to connecting and is not offered to keep");
 const mailed = await only("who emailed me?");
 assert.match(mailed.sentences[0], /^Robin Example wrote /u, "naming mail answers with the newest messages");
 const calendar = await only("what's on my calendar?");

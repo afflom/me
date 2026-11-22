@@ -1476,6 +1476,34 @@ definition{
 }
 
 definition{
+  name: acceptPrismAskINV011,
+  parameters: [],
+  result: String,
+  body: "PrismAskProofs::inv011Holds"
+}
+
+definition{
+  name: acceptPrismAskINV012,
+  parameters: [],
+  result: String,
+  body: "PrismAskProofs::inv012Holds"
+}
+
+definition{
+  name: acceptPrismAskINV013,
+  parameters: [],
+  result: String,
+  body: "PrismAskProofs::inv013Holds"
+}
+
+definition{
+  name: acceptPrismAskINV014,
+  parameters: [],
+  result: String,
+  body: "PrismAskProofs::inv014Holds"
+}
+
+definition{
   name: featurePrismBoundaryRule1,
   parameters: [],
   result: Foundation.Arch::Feature,
@@ -4419,49 +4447,56 @@ definition{
   name: featurePrismAskRule3,
   parameters: [],
   result: Foundation.Arch::Feature,
-  body: (record Foundation.Arch::Feature {statement := "when box is asks and held is none then empty", calls := (cons "PrismAsk::prismAskRule3" (cons "PrismAsk::prismAskJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+  body: (record Foundation.Arch::Feature {statement := "when act is social then greet", calls := (cons "PrismAsk::prismAskRule3" (cons "PrismAsk::prismAskJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
 }
 
 definition{
   name: featurePrismAskRule4,
   parameters: [],
   result: Foundation.Arch::Feature,
-  body: (record Foundation.Arch::Feature {statement := "when box is asks then answer", calls := (cons "PrismAsk::prismAskRule4" (cons "PrismAsk::prismAskJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+  body: (record Foundation.Arch::Feature {statement := "when box is asks and held is none then empty", calls := (cons "PrismAsk::prismAskRule4" (cons "PrismAsk::prismAskJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
 }
 
 definition{
   name: featurePrismAskRule5,
   parameters: [],
   result: Foundation.Arch::Feature,
-  body: (record Foundation.Arch::Feature {statement := "when intent is question and held is none then empty", calls := (cons "PrismAsk::prismAskRule5" (cons "PrismAsk::prismAskJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+  body: (record Foundation.Arch::Feature {statement := "when box is asks then answer", calls := (cons "PrismAsk::prismAskRule5" (cons "PrismAsk::prismAskJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
 }
 
 definition{
   name: featurePrismAskRule6,
   parameters: [],
   result: Foundation.Arch::Feature,
-  body: (record Foundation.Arch::Feature {statement := "when intent is question then answer", calls := (cons "PrismAsk::prismAskRule6" (cons "PrismAsk::prismAskJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+  body: (record Foundation.Arch::Feature {statement := "when intent is question and held is none then empty", calls := (cons "PrismAsk::prismAskRule6" (cons "PrismAsk::prismAskJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
 }
 
 definition{
   name: featurePrismAskRule7,
   parameters: [],
   result: Foundation.Arch::Feature,
-  body: (record Foundation.Arch::Feature {statement := "when act is autofeedback and intent is fact and timed is no then heard", calls := (cons "PrismAsk::prismAskRule7" (cons "PrismAsk::prismAskJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+  body: (record Foundation.Arch::Feature {statement := "when intent is question then answer", calls := (cons "PrismAsk::prismAskRule7" (cons "PrismAsk::prismAskJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
 }
 
 definition{
   name: featurePrismAskRule8,
   parameters: [],
   result: Foundation.Arch::Feature,
-  body: (record Foundation.Arch::Feature {statement := "when timed is yes then keep", calls := (cons "PrismAsk::prismAskRule8" (cons "PrismAsk::prismAskJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+  body: (record Foundation.Arch::Feature {statement := "when act is autofeedback and intent is fact and timed is no then heard", calls := (cons "PrismAsk::prismAskRule8" (cons "PrismAsk::prismAskJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
 }
 
 definition{
   name: featurePrismAskRule9,
   parameters: [],
   result: Foundation.Arch::Feature,
-  body: (record Foundation.Arch::Feature {statement := "when held is none then keep", calls := (cons "PrismAsk::prismAskRule9" (cons "PrismAsk::prismAskJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+  body: (record Foundation.Arch::Feature {statement := "when timed is yes then keep", calls := (cons "PrismAsk::prismAskRule9" (cons "PrismAsk::prismAskJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
+}
+
+definition{
+  name: featurePrismAskRule10,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "when held is none then keep", calls := (cons "PrismAsk::prismAskRule10" (cons "PrismAsk::prismAskJudge" (nil String))), acceptance := (cons "Prism::application" (nil String))})
 }
 
 definition{
@@ -4524,7 +4559,7 @@ definition{
   name: featurePrismAskINV007,
   parameters: [],
   result: Foundation.Arch::Feature,
-  body: (record Foundation.Arch::Feature {statement := "always when halted is no and clock is not and box is keeps and timed is yes and intent is task then keep", calls := (cons "PrismAsk::prismAskJudge" (nil String)), acceptance := (cons "Features::acceptPrismAskINV007" (nil String))})
+  body: (record Foundation.Arch::Feature {statement := "always when halted is no and clock is not and box is keeps and timed is yes and intent is task and act is not social then keep", calls := (cons "PrismAsk::prismAskJudge" (nil String)), acceptance := (cons "Features::acceptPrismAskINV007" (nil String))})
 }
 
 definition{
@@ -4546,6 +4581,34 @@ definition{
   parameters: [],
   result: Foundation.Arch::Feature,
   body: (record Foundation.Arch::Feature {statement := "never when timed is yes then heard", calls := (cons "PrismAsk::prismAskJudge" (nil String)), acceptance := (cons "Features::acceptPrismAskINV010" (nil String))})
+}
+
+definition{
+  name: featurePrismAskINV011,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when act is social then keep", calls := (cons "PrismAsk::prismAskJudge" (nil String)), acceptance := (cons "Features::acceptPrismAskINV011" (nil String))})
+}
+
+definition{
+  name: featurePrismAskINV012,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when act is social then look", calls := (cons "PrismAsk::prismAskJudge" (nil String)), acceptance := (cons "Features::acceptPrismAskINV012" (nil String))})
+}
+
+definition{
+  name: featurePrismAskINV013,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when act is social then heard", calls := (cons "PrismAsk::prismAskJudge" (nil String)), acceptance := (cons "Features::acceptPrismAskINV013" (nil String))})
+}
+
+definition{
+  name: featurePrismAskINV014,
+  parameters: [],
+  result: Foundation.Arch::Feature,
+  body: (record Foundation.Arch::Feature {statement := "never when act is social then empty", calls := (cons "PrismAsk::prismAskJudge" (nil String)), acceptance := (cons "Features::acceptPrismAskINV014" (nil String))})
 }
 
 definition{
@@ -4818,14 +4881,14 @@ definition{
   name: journeyPrismAskUser,
   parameters: [],
   result: Foundation.Arch::Journey,
-  body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderUser", steps := (cons "Features::featurePrismAskRule1" (cons "Features::featurePrismAskRule2" (cons "Features::featurePrismAskRule3" (cons "Features::featurePrismAskRule4" (cons "Features::featurePrismAskRule5" (cons "Features::featurePrismAskRule6" (cons "Features::featurePrismAskRule7" (cons "Features::featurePrismAskRule8" (cons "Features::featurePrismAskRule9" (cons "Features::featurePrismAskOtherwise" (nil String)))))))))))})
+  body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderUser", steps := (cons "Features::featurePrismAskRule1" (cons "Features::featurePrismAskRule2" (cons "Features::featurePrismAskRule3" (cons "Features::featurePrismAskRule4" (cons "Features::featurePrismAskRule5" (cons "Features::featurePrismAskRule6" (cons "Features::featurePrismAskRule7" (cons "Features::featurePrismAskRule8" (cons "Features::featurePrismAskRule9" (cons "Features::featurePrismAskRule10" (cons "Features::featurePrismAskOtherwise" (nil String))))))))))))})
 }
 
 definition{
   name: journeyPrismAskVerifier,
   parameters: [],
   result: Foundation.Arch::Journey,
-  body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderVerifier", steps := (cons "Features::featurePrismAskRefuseMalformed" (cons "Features::featurePrismAskINV001" (cons "Features::featurePrismAskINV002" (cons "Features::featurePrismAskINV003" (cons "Features::featurePrismAskINV004" (cons "Features::featurePrismAskINV005" (cons "Features::featurePrismAskINV006" (cons "Features::featurePrismAskINV007" (cons "Features::featurePrismAskINV008" (cons "Features::featurePrismAskINV009" (cons "Features::featurePrismAskINV010" (nil String))))))))))))})
+  body: (record Foundation.Arch::Journey {actor := "Architecture::stakeholderVerifier", steps := (cons "Features::featurePrismAskRefuseMalformed" (cons "Features::featurePrismAskINV001" (cons "Features::featurePrismAskINV002" (cons "Features::featurePrismAskINV003" (cons "Features::featurePrismAskINV004" (cons "Features::featurePrismAskINV005" (cons "Features::featurePrismAskINV006" (cons "Features::featurePrismAskINV007" (cons "Features::featurePrismAskINV008" (cons "Features::featurePrismAskINV009" (cons "Features::featurePrismAskINV010" (cons "Features::featurePrismAskINV011" (cons "Features::featurePrismAskINV012" (cons "Features::featurePrismAskINV013" (cons "Features::featurePrismAskINV014" (nil String))))))))))))))))})
 }
 \end{semanticmodule}
 \end{lexlean}
