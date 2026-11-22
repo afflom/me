@@ -177,6 +177,10 @@
     {
       "kind": "greetings, thanks and apologies said to the Prism",
       "why": "ISO 24617-2 puts them in its social obligations management dimension. The chat's dimension heads (app/specs/router/spec.json providers.intent.heads) are fit and measured on the AMI Meeting Corpus through the published mapping of Mezza et al. (COLING 2018, Table 7), which maps no AMI act to that dimension; the corpora that mark it (Switchboard through Fang et al. 2012, DialogBank) carry no open licence and are kept out of the repository. So no head reads these acts: the chat still knows a greeting by the sentence provider's greet words (site/router/answer.mjs), untested by any oracle, until an openly licensed corpus marks the dimension."
+    },
+    {
+      "kind": "an origin server's answer to If-Match, to If-None-Match \"*\" on an unsafe method, and to several preconditions at once",
+      "why": "RFC 9110 sections 13.1.1, 13.1.2 and 13.2.2 state these for the store of kept records (app/src/PrismRecords.lex.tex), which implements them, but no external suite states the expected answers. Checked on 22 Nov 2026: http-tests/cache-tests at 3942fbf, the HTTP working group's test material, drives a cache and states If-None-Match on GET only (its 5 required or optimal cases are the records guest's vectors; no test sends If-Match or expects 412); web-platform-tests at 42e2740, fetch/api/request/request-cache-default-conditional.any.js and fetch/http-cache, state whether a browser cache forwards a conditional request and expect no server status for it (the answers come from the tests' own server helpers, which are not expectations); the W3C LDP test suite at 8e79368 expects 412 for a failed If-Match on PUT, but its test tags hold spaces, which RFC 9110's entity-tag grammar refuses. So 12 requirements of rfc9110 stay in the debt until a suite states them."
     }
   ],
   "unsourced": [

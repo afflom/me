@@ -1,0 +1,19 @@
+{
+  "comment": "The HTTP caching test suite's entity-tag conditional request tests, byte for byte at the pinned commit: the validation oracle for evaluating If-None-Match against a held entity tag (RFC 9110 sections 8.8.3.2 and 13.1.2). The suite states each case for a cache holding a fresh response; RFC 9110 section 13.1.2 gives a cache and an origin server the same evaluation. Held here: every test that the suite marks required or optimal and that states a held ETag, a received If-None-Match and an expected status, with no other request condition (5 distinct cases; the tests the suite marks 'check' record behaviour it does not require and are left out). generators/transition's storecache reads the cases from the file; generators/snapshot's lockcheck holds the file and the licence to the hashes below.",
+  "source": "https://github.com/http-tests/cache-tests",
+  "commit": "3942fbfe1f6d23406e55b4120cde61da98080539",
+  "licence": "BSD-3-Clause",
+  "standard": "RFC 9110 HTTP Semantics, IETF; RFC 9111 HTTP Caching, IETF",
+  "files": [
+    {
+      "path": "app/specs/oracle/cache-tests/LICENSE",
+      "url": "https://raw.githubusercontent.com/http-tests/cache-tests/3942fbfe1f6d23406e55b4120cde61da98080539/LICENSE",
+      "sha256": "09a07f4c81274651d1d132547733114ecdd68033e42b713c371f1ebaba6de36a"
+    },
+    {
+      "path": "app/specs/oracle/cache-tests/tests/conditional-etag.mjs",
+      "url": "https://raw.githubusercontent.com/http-tests/cache-tests/3942fbfe1f6d23406e55b4120cde61da98080539/tests/conditional-etag.mjs",
+      "sha256": "27bea4b335423f811477b95fa2f417eeaf8cbc25053da542b790c8df1c96c32e"
+    }
+  ]
+}

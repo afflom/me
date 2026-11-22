@@ -126,6 +126,27 @@
         ".gen/name-cases"
       ],
       "output": "app/specs/snapshot-name/spec.json"
+    },
+    {
+      "generator": "storetable",
+      "split": "app/specs/standards/texts/21c1cdce6ab0e5509b04d84a28000836c7a087cf786efe6f04877ebfff47232a",
+      "breakBefore": "^([0-9]+([.][0-9]+)*|Appendix [A-Z]([.][0-9]+)*|[A-Z]([.][0-9]+)+)[.]?[[:blank:]]+[^[:blank:]]",
+      "output": ".gen/store-table"
+    },
+    {
+      "generator": "storecache",
+      "inputs": [
+        "app/specs/oracle/cache-tests/tests/conditional-etag.mjs"
+      ],
+      "output": ".gen/store-cache"
+    },
+    {
+      "generator": "storevectors",
+      "inputs": [
+        ".gen/store-table",
+        ".gen/store-cache"
+      ],
+      "output": "app/specs/records/spec.json"
     }
   ]
 }
