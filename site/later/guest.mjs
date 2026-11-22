@@ -15,7 +15,7 @@ export const GUESTS = {
   model: { path: 'guest/model.wasm', sha256: 'c169a69492dbf18b035c23e956f6c22c558f3adc037cf6594d1b55c8d6f4b6d5' },
   r4: { path: 'guest/r4.wasm', sha256: '498fd26b1d071f54f8d0efe2616927846eef71632a4e49a83bce6c73967912e8' },
   resonance: { path: 'guest/resonance.wasm', sha256: '96df0cd7c0180455050632f2fa3e99081e79448a5908eeb11451d7dcdbbf7ed1' },
-  route: { path: 'guest/route.wasm', sha256: 'a38beb5444057e1ba99d19de6b664214f4731ac1fb833bbf03031a0b21dab265' },
+  route: { path: 'guest/route.wasm', sha256: '4ebcd98246fd2b087884ba759e468ad7182460877fb9806c9b18dff8d0c84459' },
   router: { path: 'guest/router.wasm', sha256: '732c68c2c347b50ccf2e27503df0d5b94c13b36c974e99ae8cb9c68cdee10170' },
 };
 
