@@ -148,10 +148,14 @@ model does not sanction.
 | `PA-04` | `build` | The app never answers look when box is asks |
 | `PA-05` | `build` | The app never answers answer when held is none |
 | `PA-06` | `build` | The app never answers look when held is none |
-| `PA-07` | `build` | The app always answers keep when halted is no and clock is not and box is keeps and timed is yes and intent is task |
+| `PA-07` | `build` | The app always answers keep when halted is no and clock is not and box is keeps and timed is yes and intent is task and act is not social |
 | `PA-08` | `build` | The app never answers heard when intent is question |
 | `PA-09` | `build` | The app never answers heard when act is task |
 | `PA-10` | `build` | The app never answers heard when timed is yes |
+| `PA-11` | `build` | The app never answers keep when act is social |
+| `PA-12` | `build` | The app never answers look when act is social |
+| `PA-13` | `build` | The app never answers heard when act is social |
+| `PA-14` | `build` | The app never answers empty when act is social |
 
 ## prism_boundary
 

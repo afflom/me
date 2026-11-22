@@ -16,8 +16,7 @@ import * as pin from "../message/guest.mjs";
 import * as turns from "../turn/guest.mjs";
 import * as senses from "../senses/guest.mjs";
 
-const S = PROVIDERS.sentence;
-const RANK = ["public", "internal", "confidential", "restricted"];
+const S = PROVIDERS.sentence, RANK = ["public", "internal", "confidential", "restricted"];
 const higher = (a, b) => (RANK.indexOf(b) > RANK.indexOf(a) ? b : a);
 // Every sentence is a Unicode MessageFormat 2 message of the sentence provider
 // (app/specs/router/spec.json), formatted by the message guest (app/src/PrismMessage.lex.tex),
@@ -66,8 +65,7 @@ const end = (text) => (/[.?!…]$/u.test(text) ? text : `${text}.`);
 // its sender writes (site/time/rhythm.mjs); for an event revised since, that
 // this is an earlier version of it.
 export function sentenceOf(item, me = null, { now = null, order = null, rhythm = null } = {}) {
-  const what = whatOf(item), place = order?.get(item.address), lead = item.labels?.lead ?? "";
-  const kind = item.media === "message" || item.media === "contactCard" ? item.media : item.media === "calendar" || item.start != null ? "calendar" : "note";
+  const what = whatOf(item), place = order?.get(item.address), lead = item.labels?.lead ?? "", kind = item.media === "message" || item.media === "contactCard" ? item.media : item.media === "calendar" || item.start != null ? "calendar" : "note";
   const mine = me?.addresses?.some((a) => (item.who ?? "").toLowerCase().includes(a.toLowerCase())), often = kind !== "message" || mine ? null : rhythm?.get(sourceOf(item));
   const said = kind !== "message" ? {} : { turn: place?.of > 1 ? fill("turn", place) : "", after: Number.isFinite(place?.after) ? fill("after", { after: spanOf(place.after) }) : "", lead: lead && lead.toLowerCase() !== what.toLowerCase() ? fill("lead", { lead }) : "", rhythm: often ? fill("rhythm", { every: everyOf(often), per: often.per }) : "" };
   return fill("item", { kind, what, who: (kind === "message" && mine ? me.name : null) ?? item.who, when: whenOf(item.at, item.allDay, now), where: item.where, earlier: place && !place.current ? "yes" : "", ...said });
@@ -91,10 +89,10 @@ export async function answer(prompt, options) {
   const held = items.filter((item) => !item.sealed);
   // What to do with the words is the Prism Ask decision's (app/specs/ask/spec.json,
   // PrismAsk in LexLean), asked of the root guest: the page only carries it out.
-  const request = [halted(), asksNow(text, termsOf(text)) ? "asked" : "not", keep ? "keeps" : "asks", mapped.intent ?? "fact", mapped.start != null ? "yes" : "no", held.length ? "some" : "none", after && mapped.act === "autoFeedback" ? "autofeedback" : "task"], decided = (await line(`ask ${request.join(" ")}`)).trim();
-  const stands = (going) => going.map(([frame, item, edge]) => fill(frame, { what: item.title, when: whenOf(item[edge], item.allDay, now) }));
-  const going = decided === "clock" ? await schedule(held, now) : [], cited = going.map(([, item]) => item);
+  const request = [halted(), asksNow(text, termsOf(text)) ? "asked" : "not", keep ? "keeps" : "asks", mapped.intent ?? "fact", mapped.start != null ? "yes" : "no", held.length ? "some" : "none", mapped.act === "socialObligationsManagement" ? "social" : after && mapped.act === "autoFeedback" ? "autofeedback" : "task"], decided = (await line(`ask ${request.join(" ")}`)).trim();
+  const stands = (going) => going.map(([frame, item, edge]) => fill(frame, { what: item.title, when: whenOf(item[edge], item.allDay, now) })), going = decided === "clock" ? await schedule(held, now) : [], cited = going.map(([, item]) => item);
   if (decided === "clock") return { sentences: [fill("now", { at: new Date(now).toISOString() }), ...stands(going)].map(end), sources: cited, cited, offers: [], mapped };
+  if (decided === "greet" && !held.length) return { sentences: [end(fill("help"))], sources: [], offers: [{ kind: S.offers.empty }], mapped };
   if (decided === "heard") return { sentences: [end(fill("heard"))], sources: [], offers: [], mapped };
   if (decided === "keep") return { sentences: [keptSentence(text, mapped)], sources: [], offers: [{ kind: "keep" }], mapped };
   if (decided === "look") {
@@ -102,18 +100,16 @@ export async function answer(prompt, options) {
     return { ...asked, offers: [...asked.offers, { kind: "keep" }] };
   }
   if (decided === "empty") return { sentences: [`${fill("empty")}.`], sources: [], offers: [{ kind: S.offers.empty }], mapped };
-  if (decided !== "answer") return { ...none, mapped };
+  if (decided !== "answer" && decided !== "greet") return { ...none, mapped };
   // The kind of thing it names (mail, calendar, notes), the words it is after,
   // and whether it only greets or asks how things stand.
-  const words = text.toLowerCase().match(/[\p{L}]+/gu) ?? [];
-  const kind = Object.keys(S.kinds).find((k) => words.some((w) => S.kinds[k].includes(w))) ?? null, ofKind = (item) => (kind === "calendar" ? item.media === "calendar" || item.start != null : item.media === kind && item.start == null);
-  const terms = termsOf(text).filter((t) => !Object.values(S.kinds).flat().includes(t)), greets = terms.every((t) => S.greet.includes(t) || S.overview.includes(t));
+  const words = text.toLowerCase().match(/[\p{L}]+/gu) ?? [], kind = Object.keys(S.kinds).find((k) => words.some((w) => S.kinds[k].includes(w))) ?? null, ofKind = (item) => (kind === "calendar" ? item.media === "calendar" || item.start != null : item.media === kind && item.start == null);
+  const terms = termsOf(text).filter((t) => !Object.values(S.kinds).flat().includes(t)), greets = decided === "greet" || terms.every((t) => S.greet.includes(t) || S.overview.includes(t));
   // The words that name what is asked about, without the ones that only ask how things stand.
-  const named = terms.filter((t) => !S.overview.includes(t) && !S.greet.includes(t));
-  const span = windowOf(text, now);
+  const named = terms.filter((t) => !S.overview.includes(t) && !S.greet.includes(t)), span = windowOf(text, now);
   // What the ask means, near what each item means (PROVIDERS.meaning), as well as the words they share.
   const near = PROVIDERS.meaning?.near ?? 1, close = (item) => (mapped.meaning && item.meaning ? nearness(mapped.meaning, item.meaning) : 0);
-  let used = drawOn(items, text, { now, vector: mapped.meaning, near, facetsOf: meaning?.facets ?? null });
+  let used = decided === "greet" ? [] : drawOn(items, text, { now, vector: mapped.meaning, near, facetsOf: meaning?.facets ?? null });
   let lead = [], many = Boolean(span), seen = [];
   if (kind && !span) {
     // Mail and notes newest first; the calendar from what is next.
@@ -124,7 +120,7 @@ export async function answer(prompt, options) {
     if (!used.length) lead = [fill("unmatched", { what: words.find((w) => S.kinds[kind].includes(w)) })];
   }
   if (!used.length) {
-    if (!lead.length) lead = greets ? (terms.some((t) => S.greet.includes(t)) || !terms.length ? [fill("help")] : []) : [fill("unmatched", { what: terms.join(" ") || text })];
+    if (!lead.length) lead = greets ? (decided === "greet" || terms.some((t) => S.greet.includes(t)) || !terms.length ? [fill("help")] : []) : [fill("unmatched", { what: terms.join(" ") || text })];
     // How things stand opens with the senses' observation: what is under way and what comes next.
     const under = await schedule(held, now);
     lead.push(...stands(under));

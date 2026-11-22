@@ -51,7 +51,7 @@ fn pinned(breaks: &str, condition: &str, theorem: &str) {
 fn prism_ask_pa_01() {
     pinned(
         "breaksInv001",
-        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request halted) =? (PrismAsk::prismAskHaltedYes))) && (not ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerPaused))))",
+        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 3)) && ((project request halted) =? (PrismAsk::prismAskHaltedYes))) && (not ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerPaused))))",
         "inv001Holds",
     );
 }
@@ -61,7 +61,7 @@ fn prism_ask_pa_01() {
 fn prism_ask_pa_02() {
     pinned(
         "breaksInv002",
-        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request intent) =? (PrismAsk::prismAskIntentQuestion))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerKeep)))",
+        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 3)) && ((project request intent) =? (PrismAsk::prismAskIntentQuestion))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerKeep)))",
         "inv002Holds",
     );
 }
@@ -71,7 +71,7 @@ fn prism_ask_pa_02() {
 fn prism_ask_pa_03() {
     pinned(
         "breaksInv003",
-        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request box) =? (PrismAsk::prismAskBoxAsks))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerKeep)))",
+        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 3)) && ((project request box) =? (PrismAsk::prismAskBoxAsks))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerKeep)))",
         "inv003Holds",
     );
 }
@@ -81,7 +81,7 @@ fn prism_ask_pa_03() {
 fn prism_ask_pa_04() {
     pinned(
         "breaksInv004",
-        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request box) =? (PrismAsk::prismAskBoxAsks))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerLook)))",
+        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 3)) && ((project request box) =? (PrismAsk::prismAskBoxAsks))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerLook)))",
         "inv004Holds",
     );
 }
@@ -91,7 +91,7 @@ fn prism_ask_pa_04() {
 fn prism_ask_pa_05() {
     pinned(
         "breaksInv005",
-        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request held) =? (PrismAsk::prismAskHeldNone))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerAnswer)))",
+        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 3)) && ((project request held) =? (PrismAsk::prismAskHeldNone))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerAnswer)))",
         "inv005Holds",
     );
 }
@@ -101,17 +101,17 @@ fn prism_ask_pa_05() {
 fn prism_ask_pa_06() {
     pinned(
         "breaksInv006",
-        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request held) =? (PrismAsk::prismAskHeldNone))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerLook)))",
+        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 3)) && ((project request held) =? (PrismAsk::prismAskHeldNone))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerLook)))",
         "inv006Holds",
     );
 }
 
-/// `PA-07`: The app always answers keep when halted is no and clock is not and box is keeps and timed is yes and intent is task
+/// `PA-07`: The app always answers keep when halted is no and clock is not and box is keeps and timed is yes and intent is task and act is not social
 #[test]
 fn prism_ask_pa_07() {
     pinned(
         "breaksInv007",
-        "body: ((((((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request halted) =? (PrismAsk::prismAskHaltedNo))) && ((project request clock) =? (PrismAsk::prismAskClockNot))) && ((project request box) =? (PrismAsk::prismAskBoxKeeps))) && ((project request timed) =? (PrismAsk::prismAskTimedYes))) && ((project request intent) =? (PrismAsk::prismAskIntentTask))) && (not ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerKeep))))",
+        "body: (((((((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 3)) && ((project request halted) =? (PrismAsk::prismAskHaltedNo))) && ((project request clock) =? (PrismAsk::prismAskClockNot))) && ((project request box) =? (PrismAsk::prismAskBoxKeeps))) && ((project request timed) =? (PrismAsk::prismAskTimedYes))) && ((project request intent) =? (PrismAsk::prismAskIntentTask))) && (not ((project request act) =? (PrismAsk::prismAskActSocial)))) && (not ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerKeep))))",
         "inv007Holds",
     );
 }
@@ -121,7 +121,7 @@ fn prism_ask_pa_07() {
 fn prism_ask_pa_08() {
     pinned(
         "breaksInv008",
-        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request intent) =? (PrismAsk::prismAskIntentQuestion))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerHeard)))",
+        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 3)) && ((project request intent) =? (PrismAsk::prismAskIntentQuestion))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerHeard)))",
         "inv008Holds",
     );
 }
@@ -131,7 +131,7 @@ fn prism_ask_pa_08() {
 fn prism_ask_pa_09() {
     pinned(
         "breaksInv009",
-        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request act) =? (PrismAsk::prismAskActTask))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerHeard)))",
+        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 3)) && ((project request act) =? (PrismAsk::prismAskActTask))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerHeard)))",
         "inv009Holds",
     );
 }
@@ -141,7 +141,47 @@ fn prism_ask_pa_09() {
 fn prism_ask_pa_10() {
     pinned(
         "breaksInv010",
-        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request timed) =? (PrismAsk::prismAskTimedYes))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerHeard)))",
+        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 3)) && ((project request timed) =? (PrismAsk::prismAskTimedYes))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerHeard)))",
         "inv010Holds",
+    );
+}
+
+/// `PA-11`: The app never answers keep when act is social
+#[test]
+fn prism_ask_pa_11() {
+    pinned(
+        "breaksInv011",
+        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 3)) && ((project request act) =? (PrismAsk::prismAskActSocial))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerKeep)))",
+        "inv011Holds",
+    );
+}
+
+/// `PA-12`: The app never answers look when act is social
+#[test]
+fn prism_ask_pa_12() {
+    pinned(
+        "breaksInv012",
+        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 3)) && ((project request act) =? (PrismAsk::prismAskActSocial))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerLook)))",
+        "inv012Holds",
+    );
+}
+
+/// `PA-13`: The app never answers heard when act is social
+#[test]
+fn prism_ask_pa_13() {
+    pinned(
+        "breaksInv013",
+        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 3)) && ((project request act) =? (PrismAsk::prismAskActSocial))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerHeard)))",
+        "inv013Holds",
+    );
+}
+
+/// `PA-14`: The app never answers empty when act is social
+#[test]
+fn prism_ask_pa_14() {
+    pinned(
+        "breaksInv014",
+        "body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 3)) && ((project request act) =? (PrismAsk::prismAskActSocial))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerEmpty)))",
+        "inv014Holds",
     );
 }

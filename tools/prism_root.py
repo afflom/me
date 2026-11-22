@@ -92,6 +92,7 @@ VECTORS = [
  ("ask no not keeps task yes some task", "keep"),
  ("ask yes not keeps question no some task", "paused"),
  ("ask no not keeps fact no some autofeedback", "heard"),
+ ("ask no not keeps fact no none social", "greet"),
  ("router", "invalid request"),
  ("kappa sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 match", "admit sha256 0 32"),
  ("kappa sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 mismatch", "mismatch"),
