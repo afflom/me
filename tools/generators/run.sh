@@ -34,15 +34,15 @@ digest() { # digest PROGRAM
 }
 if [ "$mode" = --lock ]; then digest "$2" > "generators/$2/lock.json"; echo "pinned generators/$2"; exit 0; fi
 if [ "$mode" = --check ]; then
+  # A check that passed holds for the same tree: every tracked and untracked file, by content.
+  # Three conformance suites and two workflows ask; only the first of a tree does the work.
+  kept=target/gn-01-$(git ls-files -co --exclude-standard -z | xargs -0 sha256sum 2>&1 | sha256sum | cut -c1-64)
+  if [ -e "$kept" ]; then echo "GN-01: held for this tree by an earlier check"; exit 0; fi
   for lock in generators/*/lock.json; do
     p=$(basename "$(dirname "$lock")")
-    if ! digest "$p" | cmp -s - "$lock"; then
-      echo "GN-01: generators/$p changed since its program was built: run SDK=(image) tools/generators/build.sh $p" >&2; exit 1
-    fi
+    digest "$p" | cmp -s - "$lock" || { echo "GN-01: generators/$p changed since its program was built: run SDK=(image) tools/generators/build.sh $p" >&2; exit 1; }
     for f in $(cd generators/foundation && find . -type f | sort); do
-      if ! cmp -s "generators/foundation/$f" "generators/$p/src/Foundation/$f"; then
-        echo "GN-01: generators/$p/src/Foundation/$f is not generators/foundation/$f" >&2; exit 1
-      fi
+      cmp -s "generators/foundation/$f" "generators/$p/src/Foundation/$f" || { echo "GN-01: generators/$p/src/Foundation/$f is not generators/foundation/$f" >&2; exit 1; }
     done
   done
   # A program's cases/ are planted defects it must keep answering the same way:
@@ -173,3 +173,4 @@ for f in "$steps_file" "generators/$program"/steps/*.json; do [ ! -e "$f" ] || j
   echo "$out" >> "$work/made"
 done
 done
+if [ "$mode" = --check ]; then mkdir -p target; : > "$kept"; fi
