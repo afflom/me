@@ -15,6 +15,18 @@
    "sha256": "0cbc33433411fce12f39c784b92c3ab6c507558a75eb43ab8e8410e1fdfd3951"
   },
   {
+   "assert": "376",
+   "section": "3.8",
+   "file": "376/test376.txml",
+   "sha256": "cfee1e23e8605869fa6394a90c3471c67e408965d73bd46a9698d0a7d317f153"
+  },
+  {
+   "assert": "378",
+   "section": "3.9",
+   "file": "378/test378.txml",
+   "sha256": "ee0ad94f380e296c57395e469aa1307929dd4593609e3666cde7df70e58f549d"
+  },
+  {
    "assert": "580",
    "section": "3.10",
    "file": "580/test580.txml",
@@ -100,6 +112,14 @@
   ],
   [
    "<?xml version=\"1.0\"?>\r\n\r\n<!-- test that we generate done.state.id when all a parallel state's children are in final states -->\r\n\r\n<scxml initial=\"p0\" conf:datamodel=\"\"  version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\r\n  <datamodel>\r\n    <data conf:id=\"1\" conf:expr=\"0\"/>\r\n    </datamodel>\r\n<parallel id=\"p0\">\r\n  <onentry>\r\n   <send event=\"timeout\" delay=\"2s\"/>\r\n   <raise event=\"e1\"/>\r\n   <raise event=\"e2\"/>\r\n   </onentry>\r\n   <!-- record that we get the first done event -->\r\n   <transition event=\"done.state.p0s1\">\r\n     <assign conf:location=\"1\" conf:expr=\"1\"/>\r\n     </transition>\r\n   <!-- we should get the second done event before done.state.p0 -->\r\n   <transition event=\"done.state.p0s2\" target=\"s1\"/>\r\n   <transition event=\"timeout\" conf:targetfail=\"\"/>\r\n\r\n   \r\n   <state id=\"p0s1\" initial=\"p0s11\">\r\n    <state id=\"p0s11\">\r\n      <transition event=\"e1\" target=\"p0s1final\"/>\r\n      </state>\r\n    <final id=\"p0s1final\"/>\r\n   </state>\r\n   \r\n  <state id=\"p0s2\" initial=\"p0s21\">\r\n    <state id=\"p0s21\">\r\n       <transition event=\"e2\" target=\"p0s2final\"/>\r\n     </state>\r\n    <final id=\"p0s2final\"/>\r\n   </state>\r\n  \r\n </parallel>\r\n \r\n <state id=\"s1\">\r\n  <!-- if we get done.state.p0, success -->\r\n  <transition event=\"done.state.p0\" conf:idVal=\"1=1\" conf:targetpass=\"\"/>\r\n  <transition event=\"*\" conf:targetfail=\"\"/>\r\n  </state>\r\n   \r\n   <conf:pass/>\r\n   <conf:fail/>\r\n\r\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that each onentry handler is a separate block.  The <send> of event1 will cause an error but\n the increment to var1 should happen anyways -->\n\n\n<scxml  conf:datamodel=\"\"  version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"1\"/>\n </datamodel>\n       \n<state id=\"s0\">\n  <onentry>\n    <send conf:illegalTarget=\"\" event=\"event1\"/>\n    </onentry>\n  <onentry>\n    <conf:incrementID id=\"1\"/>\n    </onentry>\n    \n  <transition  conf:idVal=\"1=2\" conf:targetpass=\"\"/>\n  <transition  conf:targetfail=\"\"/>\n\n</state>\n \n<conf:pass/>\n<conf:fail/>\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that each onexithandler is a separate block.  The <send> of event1 will cause an error but\n the increment to var1 should happen anyways -->\n\n\n<scxml  version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"1\"/>\n </datamodel>\n       \n<state id=\"s0\">\n  <onexit>\n    <send conf:illegalTarget=\"\" event=\"event1\"/>\n    </onexit>\n  <onexit>\n    <conf:incrementID id=\"1\"/>\n    </onexit>\n    \n<transition target=\"s1\"/>\n</state>\n\n<state id=\"s1\">\n  <transition  conf:idVal=\"1=2\" conf:targetpass=\"\"/>\n  <transition  conf:targetfail=\"\"/>\n</state>\n \n<conf:pass/>\n<conf:fail/>\n</scxml>",
    "pass"
   ],
   [

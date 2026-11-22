@@ -27,6 +27,12 @@
    "sha256": "33371adfa42c536ffb46664230782d6f83a18399f92461336d80fd2934206dba"
   },
   {
+   "assert": "159",
+   "section": "4.9",
+   "file": "159/test159.txml",
+   "sha256": "999d7422a19eae32643c1bc879dfa37071270ce5b86ba2e1622fff6f229eb8a3"
+  },
+  {
    "assert": "277",
    "section": "5.3",
    "file": "277/test277.txml",
@@ -138,6 +144,10 @@
   ],
   [
    "<?xml version=\"1.0\"?>\n\n<!-- test that executable content executes in document order.  if event1 occurs then event2, succeed, otherwise fail -->\n\n<scxml initial=\"s0\" conf:datamodel=\"\"  version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"0\"/>\n  </datamodel>\n  \n<state id=\"s0\">\n  <onentry>\n   <raise event=\"event1\"/>\n   <raise event=\"event2\"/>\n    </onentry>\n  <transition event=\"event1\"  target=\"s1\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n </state>\n \n<state id=\"s1\">\n  <transition event=\"event2\"  conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n </state>\n   \n   <conf:pass/>\n   <conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that any error raised by an element of executable content causes all subsequent elements to be skipped.\nThe send tag will raise an error so var1 should not be incremented.  If it is fail, otherwise succeed -->\n\n<scxml initial=\"s0\" conf:datamodel=\"\" version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"0\"/>\n  </datamodel>\n  \n<state id=\"s0\">\n  <onentry>\n   <send event=\"thisWillFail\" conf:illegalTarget=\"\"/>\n   <conf:incrementID id=\"1\"/>\n    </onentry>\n  <transition conf:idVal=\"1=1\"  conf:targetfail=\"\"/>\n  <transition conf:targetpass=\"\"/>\n </state>\n\n   \n   <conf:pass/>\n   <conf:fail/>\n\n</scxml>",
    "pass"
   ],
   [
