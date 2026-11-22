@@ -1,0 +1,138 @@
+{
+ "name": "scxml/delay",
+ "comment": "IRP tests of SCXML 1.0 that turn on delayed <send> and <cancel> (sections 3.10, 3.13, 6.2, 6.3, 6.4): a delay written in the document or held in a variable, cancelling by send id, and a finished session's undelivered delayed events being dropped, pinned by SHA-256 as W3C serves it under the IRP base that app/specs/scxml/spec.json pins, each answered by the id of the top-level <final> state the document halts in. The conf: terms are read with the meaning the pinned confEcma.xsl gives each.",
+ "tests": [
+  {
+   "assert": "579",
+   "section": "3.10",
+   "file": "579/test579.txml",
+   "sha256": "ef9c08043f9b78561e45e82a7bbfcaf93a68f55aea4f932bdf067c9efca7d452"
+  },
+  {
+   "assert": "409",
+   "section": "3.13",
+   "file": "409/test409.txml",
+   "sha256": "8627e43f06618c43e976e691a0c1467313cabc6ab6cf98f10053620fb6cdb944"
+  },
+  {
+   "assert": "422",
+   "section": "3.13",
+   "file": "422/test422.txml",
+   "sha256": "95768be6483e0f449f9a996b07f73c78ff70d095cb56dd74e574cfdd5a8bcbc7"
+  },
+  {
+   "assert": "423",
+   "section": "3.13",
+   "file": "423/test423.txml",
+   "sha256": "02af5762c37be7bb564d75a7fd3f8fb2bd17215a0a2487806ba3abc38209aa20"
+  },
+  {
+   "assert": "175",
+   "section": "6.2",
+   "file": "175/test175.txml",
+   "sha256": "02f11e8e8d6733aaef5bb0da4a145eeda974e8780a54d167de97022963aaa7ed"
+  },
+  {
+   "assert": "185",
+   "section": "6.2",
+   "file": "185/test185.txml",
+   "sha256": "7f21cd79bc06ed568e98022472772636d5ca1cabb19db2e38ceb467d79bc39c6"
+  },
+  {
+   "assert": "187",
+   "section": "6.2",
+   "file": "187/test187.txml",
+   "sha256": "6243f60eeb6c11c31721be00518c1bd58b3e8fe4df04ae04823de3ed36be0191"
+  },
+  {
+   "assert": "207",
+   "section": "6.3",
+   "file": "207/test207.txml",
+   "sha256": "62d298651807041240e782cd607eca95ad81c1aaab9ce42c97ef3aa8f304e5db"
+  },
+  {
+   "assert": "208",
+   "section": "6.3",
+   "file": "208/test208.txml",
+   "sha256": "e21a36a4032374ffaf43e9b9653c6f55cff158f29cda9bc5eedab986ad99707c"
+  },
+  {
+   "assert": "210",
+   "section": "6.3",
+   "file": "210/test210.txml",
+   "sha256": "2fa999ac38eb86e706ad34bf6cc2a8c1e39dea62e9b2b98df3bfe595bd18dea5"
+  },
+  {
+   "assert": "236",
+   "section": "6.4",
+   "file": "236/test236.txml",
+   "sha256": "09074f930d03313fe7e6f48bca149022b85ebbd13e65eacd0df694317049c886"
+  },
+  {
+   "assert": "237",
+   "section": "6.4",
+   "file": "237/test237.txml",
+   "sha256": "87a1e88fbf88a9e5080083becd648b3b553e375944959c78b2f26b93106f3cf6"
+  },
+  {
+   "assert": "252",
+   "section": "6.4",
+   "file": "252/test252.txml",
+   "sha256": "83eb027d59b4f557be80c73a8d58dfe7bbe440c4bd999bb5c385244548ec997b"
+  }
+ ],
+ "examples": [
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that default history content is executed correctly.   The Process MUST execute any executable content in the transition after the parent state's onentry handlers, and, in the case where the history pseudo-state is the target of an <initial> transition, \nthe executable content inside the <initial> transition.  However the Processor MUST\nexecute this content only if there is no stored history.  Once the history state's\nparent state has been visited and exited, the default history content must not be executed -->\n\n\n<scxml  version=\"1.0\" initial=\"s0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n       \n<state id=\"s0\">\n\t<datamodel>\n\t\t  <data conf:id=\"1\" conf:expr=\"0\"/>\n\t\t</datamodel>\n\t<initial>\n\t\t <transition target=\"sh1\">\n\t\t \t<raise event=\"event2\"/>\n\t\t \t</transition>\n\t\t \t</initial>\n  <onentry>\n  \t<send conf:delay=\"1\" event=\"timeout\"/>\n    <raise event=\"event1\"/>\n    </onentry>\n  <onexit>\n  \t<conf:incrementID id=\"1\"/>\n  \t</onexit>\n <history id=\"sh1\">\n \t  <transition target=\"s01\">\n \t  \t <raise event=\"event3\"/>\n \t  \t</transition>\n  \t</history>\n  \t\n  \t<state id=\"s01\">\n  \t\t<transition event=\"event1\" target=\"s02\"/>\n  \t\t<transition event=\"*\" conf:targetfail=\"\"/>\n  \t\t</state>\n  \t\t\n  <state id=\"s02\">\n  \t<transition event=\"event2\" target=\"s03\"/>\n  \t<transition event=\"*\" conf:targetfail=\"\"/>\n  \t\t\t</state>\n  <state id=\"s03\">\n  \t\n  \t<transition conf:idVal=\"1=0\" event=\"event3\" target=\"s0\"/>\n  \t<transition conf:idVal=\"1=1\" event=\"event1\" target=\"s2\"/>\n  \t<transition event=\"*\" conf:targetfail=\"\"/>\n  \t</state>\n</state> \n\n<state id=\"s2\">\n\t<transition event=\"event2\" target=\"s3\"/>\n\t<transition event=\"*\" conf:targetfail=\"\"/>\n\n\t</state>   \n\n<state id=\"s3\">\n\t<transition event=\"event3\" conf:targetfail=\"\"/>\n\t<transition event=\"timeout\" conf:targetpass=\"\"/>\n\t</state>\n\n \n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that states are removed from the active states list as they are exited.  When s01's onexit handler\nfires, s011 should not be on the active state list, so in(S011) should be false, and event1 should not\nbe raised.  Therefore the timeout should fire to indicate success   -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n     \n<state id=\"s0\" initial=\"s01\">\n  <onentry>\n    <send event=\"timeout\" conf:delay=\"1\"/>\n    </onentry>\n  \n  <transition event=\"timeout\" conf:targetpass=\"\"/> \n  <transition event=\"event1\" conf:targetfail=\"\"/>\n  \n  <state id=\"s01\" initial=\"s011\">\n    <onexit>\n     <if conf:inState=\"s011\">\n       <raise event=\"event1\"/>\n       </if>\n       </onexit>\n       \n    <state id=\"s011\">\n      <transition target=\"s02\"/>\n      </state>\n  </state> <!-- end s01 -->\n\n<state id=\"s02\"/>\n\n</state> <!-- end s0 -->\n \n<conf:pass/>\n<conf:fail/>\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- Test that at the end of a macrostep, the processor executes all invokes in states\nthat have been entered and not exited during the step.  (The invokes are supposed to be executed\nin document order, but we can test that since each invocation is separate and they may take\ndifferent amounts to time to start up.)  In this case, there are three invoke statements,\nin states s1, s11 and s12.  Each invoked process returns an event named after its parent state.\nThe invokes in s1 and s12 should execute, but not the one\nin s11. So we should receive invokeS1, invokeS12, but not invokeS12.  Furthermore, when the timeout fires, var1 should equal 2.-->\n\n<scxml version=\"1.0\" initial=\"s1\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n\t <data conf:id=\"1\" conf:expr=\"0\"/>\n\t</datamodel>\n <state id=\"s1\" initial=\"s11\">\n \t <onentry>\n \t \t<send event=\"timeout\" conf:delay=\"2\"/>\n \t \t</onentry>\n \t   <transition event=\"invokeS1 invokeS12\">\n \t   \t<conf:incrementID id=\"1\"/>\n \t   \t</transition>\n \t   \t<transition event=\"invokeS11\" conf:targetfail=\"\"/>\n \t  \n \t  <transition event=\"timeout\" conf:idVal=\"1=2\" conf:targetpass=\"\"/>\n \t  <transition event=\"timeout\" conf:targetfail=\"\"/>\n     <invoke>\n     \t  <content>\n        <!-- when invoked, send 'foo' to parent, then terminate.   -->\n          <scxml initial=\"sub0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n            <state id=\"sub0\">\n            \t <onentry>\n                <send target=\"#_parent\" event=\"invokeS1\"/>\n               </onentry>\n                <transition target=\"subFinal0\"/>\n              </state>\n           <final id=\"subFinal0\"/>\n        </scxml>\n      </content>\n     \t </invoke>\n     \n   <state id=\"s11\">\n   \t<invoke>\n   \t\t    \t  <content>\n        <!-- when invoked, send 'foo' to parent, then terminate.   -->\n          <scxml initial=\"sub1\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n            <state id=\"sub1\">\n           \t <onentry>\n                <send target=\"#_parent\" event=\"invokeS11\"/>\n               </onentry>\n                <transition target=\"subFinal1\"/>\n              </state>\n           <final id=\"subFinal1\"/>\n            </scxml>\n      </content>\n      </invoke>\n   \t  <transition target=\"s12\"/>\n   \t</state>\n  <state id=\"s12\">\n  \t<invoke>\n     <content>\n        <!-- when invoked, send 'foo' to parent, then terminate.   -->\n          <scxml initial=\"sub2\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n            <state id=\"sub2\">\n            \t <onentry>\n                <send target=\"#_parent\" event=\"invokeS12\"/>\n               </onentry>\n                <transition target=\"subFinal2\"/>\n              </state>\n           <final id=\"subFinal2\"/>\n            </scxml>\n      </content>\n  \t\t</invoke>\n  \t</state>\n </state>\n     \n \n<conf:pass/>\n<conf:fail/>\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that we keep pulling external events off the queue till we find one that matches a transition. -->\n\n<scxml  initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n     \n <state id=\"s0\">\n  <onentry>\n    <send event=\"externalEvent1\"/>\n    <send event=\"externalEvent2\" conf:delay=\"1\"/>\n    <raise event=\"internalEvent\"/>\n    </onentry>\n    <!-- in this state we should process only internalEvent -->\n   <transition event=\"internalEvent\" target=\"s1\"/>\n    <transition event=\"*\" conf:targetfail=\"\"/>\n   </state>\n   \n <state id=\"s1\">\n <!-- in this state we ignore externalEvent1 and wait for externalEvent2 -->\n   <transition event=\"externalEvent2\" conf:targetpass=\"\"/>\n   <transition event=\"internalEvent\" conf:targetfail=\"\"/>\n   </state>  \n   \n   \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that delayexpr uses the current value of var1, not its initial value\n(If it uses the initial value, event2 will be generated first, before event1.  If it uses the current value, \nevent1 will be raised first.  Succeed if event1 occurs before event2, otherwise fail -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:quoteExpr=\"0s\"/>\n  </datamodel>\n  \n<state id=\"s0\">\n  <onentry>\n   <assign conf:location=\"1\" conf:quoteExpr=\"1s\"/>\n   <send conf:delayFromVar=\"1\" event=\"event2\"/>\n   <send conf:delay=\".5\" event=\"event1\"/>\n    </onentry>\n    \n  <transition event=\"event1\"  target=\"s1\"/>\n  <transition event=\"event2\" conf:targetfail=\"\"/>\n </state>\n\n<state id=\"s1\">\n  <transition event=\"event2\"  conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n  </state>\n   \n   <conf:pass/>\n   <conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that <send> respects the delay specification.  If it does, event1 arrives before event2\n and we pass.  Otherwise we fail  -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n  \n<state id=\"s0\">\n  <onentry>\n   <send event=\"event2\" conf:delay=\"1\"/>\n   <send event=\"event1\"/>\n    </onentry>\n    \n  <transition event=\"event1\" target=\"s1\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n </state>\n\n<state id=\"s1\">\n  <transition event=\"event2\" conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n  </state>\n       \n   <conf:pass/>\n   <conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that delayed <send> is not sent if the sending session terminates.  In this case,\na subscript is invoked which sends the event childToParent delayed by 1 second, and then terminates.  The\nparent session, should not receive childToParent. If it does, we fail.  Otherwise the \n10 sec timer expires and we pass -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n  \n<state id=\"s0\" >\n    <onentry>\n      <send event=\"timeout\" conf:delay=\"1\"/>\n      </onentry>\n    <invoke type=\"scxml\" >\n    <content>\n      <!-- exit before the delayed send can execute -->\n         <scxml initial=\"sub0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n           <state id=\"sub0\">\n              <onentry>\n                <send event=\"childToParent\" target=\"#_parent\" conf:delay=\".5\"/>\n            </onentry>\n          <transition  target=\"subFinal\"/>\n          </state>\n      <final id=\"subFinal\"/>\n    </scxml>\n    </content>\n   </invoke>\n   \n    <transition event=\"childToParent\" conf:targetfail=\"\"/>\n    <transition event=\"timeout\" conf:targetpass=\"\"/>\n</state>\n\n   <conf:pass/>\n   <conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that that we can't  cancel an event in another session.  We invoke a child process.  It notifies\nus when it has generated a delayed event with sendid foo.  We try to cancel foo.  The child  process sends us event\n event success if the event is not cancelled, event fail otherwise.  This doesn't test that there is absolutely no way to cancel an event\nraised in another session, but the spec doesn't define any way to refer to an event in another process  -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n   \n<state id=\"s0\" initial=\"s01\">\n  <onentry>\n    <send event=\"timeout\" conf:delay=\"2\"/>\n    </onentry>\n  <invoke type=\"scxml\">\n    <content>\n    <!-- when invoked, we raise a delayed event1 with sendid 'foo' and notify our parent.  Then we wait.\n      If event1 occurs, the parent hasn't succeeded in canceling it and we return pass.  If event2 occurs\n      it means event1 was canceled (because event2 is delayed longer than event1) and we return 'fail'.  -->\n\n\n         <scxml initial=\"sub0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n           <state id=\"sub0\">\n            <onentry>\n             <send event=\"event1\" id=\"foo\" conf:delay=\"1\"/>\n              <send event=\"event2\" conf:delay=\"1.5\"/>\n              <send target=\"#_parent\" event=\"childToParent\"/>\n              </onentry>\n \n               <transition event=\"event1\" target=\"subFinal\">\n                   <send target=\"#_parent\" event=\"pass\"/>\n                   </transition>\n               <transition event=\"*\" target=\"subFinal\">\n                      <send target=\"#_parent\" event=\"fail\"/>\n              </transition>\n \n               </state>\n            <final id=\"subFinal\"/>\n           </scxml>\n    </content>\n    </invoke>\n  \n  <state id=\"s01\">\n    <transition event=\"childToParent\" target=\"s02\">\n      <cancel sendid=\"foo\"/>\n      </transition>\n   </state>\n   \n <state id=\"s02\">\n  <transition event=\"pass\" conf:targetpass=\"\"/>\n  <transition event=\"fail\" conf:targetfail=\"\"/>\n  <transition event=\"timeout\" conf:targetfail=\"\"/>\n </state>\n \n</state>\n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that cancel works.  We cancel delayed event1.  If cancel works, we get event2 first and pass.  If\nwe get event1 or an error first, cancel didn't work and we fail.  -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n   \n<state id=\"s0\">\n  <onentry>\n   <send  id=\"foo\" event=\"event1\" conf:delay=\"1\"/>\n   <send event=\"event2\" conf:delay=\"1.5\"/>\n   <cancel sendid=\"foo\"/>\n    </onentry>\n\n  <transition event=\"event2\" conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n \n </state>\n\n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that sendidexpr works with cancel.  If it takes the most recent value of var1, it should cancel \ndelayed event1.  Thus we get event2 first and pass.  If we get event1 or an error first, cancel didn't work and we fail.  -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:quoteExpr=\"bar\"/>\n  </datamodel>\n   \n<state id=\"s0\">\n  <onentry>\n   <send  id=\"foo\" event=\"event1\" conf:delay=\"1\"/>\n   <send event=\"event2\" conf:delay=\"1.5\"/>\n   <assign conf:location=\"1\" conf:quoteExpr=\"foo\"/>\n   <cancel conf:sendIDExpr=\"1\"/>\n    </onentry>\n\n  <transition event=\"event2\" conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n \n </state>\n\n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that done.invoke.id event is the last event we receive.  the invoked process sends childToParent\nin the exit handler of its final state.  We should get it before the done.invoke, and we should get no\nevents after the done.invoke.  Hence timeout indicates success   -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n     \n<state id=\"s0\">\n  <onentry>\n    <send event=\"timeout\" conf:delay=\"2\"/>\n    </onentry>\n  <invoke type=\"http://www.w3.org/TR/scxml/\">\n    <content>\n      <scxml initial=\"subFinal\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n       <final id=\"subFinal\">\n          <onexit>\n           <send target=\"#_parent\" event=\"childToParent\"/>\n            </onexit>\n           </final>\n         </scxml>\n      </content>\n      </invoke>\n \n  <transition event=\"childToParent\" target=\"s1\"/>    \n  <transition event=\"done.invoke\" conf:targetfail=\"\"/>\n</state>\n\n<state id=\"s1\">\n  <!-- here we should get done.invoke -->\n  <transition event=\"done.invoke\" target=\"s2\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n  </state>\n  \n<state id=\"s2\">\n  <transition event=\"timeout\" conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n  </state>   \n \n<conf:pass/>\n<conf:fail/>\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that cancelling works. invoked child sleeps for two seconds, then terminates.  We\nsleep for 1 sec in s0, then move to s1.  This should cause the invocation to get cancelled.\nIf we receive done.invoke, the invocation wasn't cancelled, and we fail. If we receive no events by\nthe time timeout2 fires, success   -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n     \n<state id=\"s0\">\n  <onentry>\n    <send event=\"timeout1\" conf:delay=\"1\"/>\n    </onentry>\n  <invoke type=\"http://www.w3.org/TR/scxml/\">\n    <content>\n      <!-- when invoked, sleep for 2 secs then terminate.  Parent will try to cancel this session -->\n         <scxml initial=\"sub0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n           <state id=\"sub0\">\n            <onentry>\n              <send event=\"timeout\" conf:delay=\"2\"/>\n                </onentry>\n               <transition event=\"timeout\" target=\"subFinal\"/>\n                </state>   \n            <final id=\"subFinal\"/>\n         </scxml>\n         </content>\n          </invoke>\n \n  <transition event=\"timeout1\" target=\"s1\"/>    \n\n</state>\n\n<state id=\"s1\">\n    <onentry>\n    <send event=\"timeout2\" conf:delay=\"1.5\"/>\n    </onentry>\n  <!-- here we should NOT get done.invoke -->\n  <transition event=\"done.invoke\" conf:targetfail=\"\"/>\n  <transition event=\"*\" conf:targetpass=\"\"/>\n  </state>\n \n<conf:pass/>\n<conf:fail/>\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that we don't process any events received from the invoked process once it is cancelled.  child\nprocess tries to send us childToParent in an onexit handler.  If we get it, we fail.  \ntimeout indicates success.   -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n     \n<state id=\"s0\" initial=\"s01\">\n  <onentry>\n    <send event=\"timeout\" conf:delay=\"1\"/>\n    </onentry>\n    \n    <transition event=\"timeout\" conf:targetpass=\"\"/>\n    <transition event=\"childToParent\" conf:targetfail=\"\"/>\n    <transition event=\"done.invoke\" conf:targetfail=\"\"/>\n    \n    <state id=\"s01\">\n      <onentry>\n        <send event=\"foo\"/>\n        </onentry>\n   \n     <invoke type=\"http://www.w3.org/TR/scxml/\">\n       <content>\n         <scxml initial=\"sub0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n              <state id=\"sub0\">\n             <onentry>\n             <send event=\"timeout\" conf:delay=\".5\"/>\n             </onentry> \n            <transition event=\"timeout\" target=\"subFinal\"/>\n               <onexit>\n               <send target=\"#_parent\" event=\"childToParent\"/>\n            </onexit>\n          </state>  \n          <final id=\"subFinal\"/>\n          </scxml>\n       </content>\n      </invoke>\n      \n     <!-- this transition will cause the invocation to be cancelled -->\n     <transition event=\"foo\" target=\"s02\"/>\n   </state>\n   \n   <state id=\"s02\"/>\n   \n</state>\n \n<conf:pass/>\n<conf:fail/>\n</scxml>",
+   "pass"
+  ]
+ ]
+}
