@@ -79,7 +79,8 @@ fn resonance_rs_01() {
 fn resonance_rs_02() {
     let module = read("site/resonance/resonance.mjs");
     assert!(
-        module.contains("await line(`resonance ${lineOf(request)}`)")
+        module.contains("await line(`resonance ${Object.values(request).join(' ')}`)")
+            && module.contains("await sense(read, tunables, raw, {")
             && module.contains("await line(`learn ${b.belief} ${b.weight} ${signal}`)"),
         "RS-02: every answer and every learning step is the root guest's"
     );
