@@ -2,10 +2,10 @@
 
 The root routes a request "<facet> <rest>" to the facet module's
 `dispatch rest`, and proves one `routes<Facet>` theorem per facet plus
-`refusesUnknownFacet`. To add a facet: append (keyword, Module, dispatch name) to FACETS,
-add vectors for it below (one or two: the root's vector list nests one level per
-vector, and 117 overflowed the SDK's IR reader while 107 passes), raise the limits if its requests or answers are
-larger, then run
+`refusesUnknownFacet`. To add a facet: append (keyword, Module, dispatch name) to FACETS.
+If a first visit asks it, add it to FIRST with a vector or two below (the list nests one level per
+vector) and raise the limits if its requests or answers are larger; if not, give it a guest,
+app/specs/guests/later/later-<keyword>.json, built by tools/guests/build.sh. Then run
 
     python3 -I tools/prism_root.py app/src
     (cd app && lexlean fmt && lexlean lock)
@@ -20,7 +20,7 @@ with the facet (prismBoundaryJudge, PrismBoundaryRequest).
 The guest allocation must stay at least twice the request maximum, and one
 vector must be exactly the allocation long (prismpm PP2009).
 """
-import sys
+import os, re, sys
 FACETS = [
     ("boundary", "PrismBoundary", "prismBoundaryDispatch"),
     ("learn", "PrismLearning", "prismLearningDispatch"),
@@ -45,6 +45,8 @@ FACETS = [
     ("ask", "PrismAsk", "prismAskDispatch"),
 ]
 REQ_MAX, RESP_MAX, ALLOC = 1107, 16384, 2214
+# What a first visit asks: the application answers these through `firstRoute` and carries only their modules. Every other facet has its own guest (app/specs/guests/later/later-<keyword>.json, PM-01), which the page fetches when a line first names it; `route` is the whole of both.
+FIRST = ("boundary", "store", "restore", "when", "folder", "host", "source", "kappa", "uorc")
 h = lambda s: "0x" + (s if isinstance(s, bytes) else s.encode()).hex()
 VECTORS = [
  ("boundary public none browser none no no", "allow"),
@@ -58,40 +60,9 @@ VECTORS = [
  ("store allow present mismatch ok", "refuse"),
  ("restore present known valid derived value", "restore"),
  ("restore present known broken derived value", "refuse"),
- ("r4 inprism match match none allow", "answer"),
- ("r4 inprism match mismatch none allow", "refuse"),
- ("google gmail read readonly fresh none no", "fetch"),
- ("google gmail read readonly fresh none yes", "refuse"),
- ("google other read readonly fresh owner no", "refuse"),
- ("google gmail write readonly fresh none no", "ask"),
- ("google calendar read readonly expired none no", "consent"),
- ("googlelink unprovisioned provision operator matches no", "registered"),
- ("googlelink registered consent owner matches no", "granted"),
- ("googlelink registered consent prism matches no", "refuse"),
- ("googlelink granted sync prism differs no", "unprovisioned"),
- ("googlelink syncing sync prism matches yes", "revoked"),
- ("dest owner allow grounded none seen calm quiet normal no", "hold"),
- ("dest mail ask grounded none seen calm open normal no", "draft"),
- ("dest mail allow grounded owner seen calm open normal no", "deliver"),
  ("dest", "invalid request"),
- ("model locked onnx match match granted no", "run"),
- ("model locked onnx missing match granted no", "fetch"),
- ("model locked onnx match match ungranted no", "ask"),
- ("model locked onnx match match granted yes", "refuse"),
- ("model unlocked gguf match match granted no", "refuse"),
  ("model", "invalid request"),
- ("resonance dwell calm near day consolidated open no", "chorus"),
- ("resonance open calm near night inferred open no", "whisper"),
- ("resonance dismiss calm near day confirmed open no", "recede"),
- ("resonance dwell calm near day confirmed open yes", "rest"),
- ("resonance dwell calm near day confirmed open", "invalid"),
  ("resonance", "invalid request"),
- ("router note text time compiled no", "map"),
- ("router calendar start time absent no", "direct"),
- ("router note text time mismatch no", "refuse"),
- ("ask no not keeps task yes some task", "keep"),
- ("ask yes not keeps question no some task", "paused"),
- ("ask no not keeps fact no some autofeedback", "heard"),
  ("router", "invalid request"),
  ("kappa sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 match", "admit sha256 0 32"),
  ("kappa sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9 mismatch", "mismatch"),
@@ -105,20 +76,8 @@ VECTORS = [
  ("uorc keep no ok known standard one same", "invalid"),
  ("uorc", "invalid request"),
  ("uorc ", "invalid request"),
- ("holon no held owner yes none met", "hold"),
- ("holon no held owner yes high met", "reconcile"),
- ("holon no held owner yes some met", "curate"),
- ("holon no regressed owner yes none met", "restore"),
- ("holon yes held owner yes some missed", "refuse"),
- ("holon no held owner yes none", "invalid"),
  ("holon", "invalid request"),
  ("holon ", "invalid request"),
- ("curate no yes admit zero owner kept explore yes dominates new", "adopt"),
- ("curate no yes admit zero owner kept explore yes dominates known", "recall"),
- ("curate no yes admit zero owner kept explore yes incomparable new", "keep"),
- ("curate no yes admit some owner kept explore yes dominates new", "keep"),
- ("curate no yes other zero owner kept explore yes dominates new", "refuse"),
- ("curate no yes admit zero owner kept explore yes dominates", "invalid"),
  ("curate", "invalid request"),
  ("curate ", "invalid request"),
  ("folder granted mbox read small no", "read"),
@@ -136,15 +95,7 @@ VECTORS = [
  ("x" * (REQ_MAX + 1), "invalid request"),
  ("x" * ALLOC, "invalid request"),
 ]
-# The route facet's own vectors live beside it, in PrismRoute.lex.tex
-# (routeVectors); the root replays each with the facet keyword in front.
-import os as _os, re as _re
-_route = open(_os.path.join(sys.argv[1], "PrismRoute.lex.tex")).read()
-_route = _route[_route.index("name: routeVectors"):]
-VECTORS += [(b"route " + bytes.fromhex(q), bytes.fromhex(r))
-            for q, r in _re.findall(r"request := 0x([0-9a-f]*), response := 0x([0-9a-f]*)", _route)]
-out = []
-w = out.append
+out = []; w = out.append
 w(r"""\begin{lexlean}{Prism}
 \useglossary{lexlean.std.bool@1.2.0}
 \useglossary{lexlean.std.nat@1.2.0}
@@ -219,46 +170,41 @@ definition{
 }
 
 """ % body)
-body = "(refusal)"
+body = first = "(refusal)"
 for k, m, d in reversed(FACETS):
     body = "(if (facet =? (facet%s)) then (%s::%s rest) else %s)" % (k.capitalize(), m, d, body)
-w("""definition{
-  name: route,
+    first = "(if ((facet%s) =? facet) then (%s::%s rest) else %s)" % (k.capitalize(), m, d, first) if k in FIRST else first
+for name, table in (("firstRoute", first), ("route", body)):
+    w("""definition{
+  name: %s,
   parameters: [facet : Nat, rest : Bytes],
   result: Bytes,
   body: %s,
   axioms: [Quot.sound, propext]
 }
 
-definition{
+""" % (name, table))
+w("""definition{
   name: dispatch,
   parameters: [value : Bytes],
   result: Bytes,
-  body: (if (%d <? (Foundation.Bytes::byteLength value)) then (refusal) else (if ((Foundation.Bytes::byteLength (restOf value)) =? 0) then (refusal) else (route (facetOf value) (restOf value)))),
+  body: (if (%d <? (Foundation.Bytes::byteLength value)) then (refusal) else (if ((Foundation.Bytes::byteLength (restOf value)) =? 0) then (refusal) else (firstRoute (facetOf value) (restOf value)))),
   axioms: [Quot.sound, propext]
 }
 
-""" % (body, REQ_MAX))
-proofs = []
-for k, m, d in FACETS:
-    proofs.append("""theorem{
-  name: routes%s,
+""" % REQ_MAX)
+F = [(k.capitalize(), m, d) for k, m, d in FACETS]
+proved = [("first" + K, "(firstRoute (facet%s) rest) = (route (facet%s) rest)" % (K, K)) for K, _, _ in F if K.lower() in FIRST]
+proved += [("routes" + K, "(route (facet%s) rest) = (%s::%s rest)" % (K, m, d)) for K, m, d in F]
+proofs = ["""theorem{
+  name: %s,
   parameters: [rest : Bytes],
-  statement: ((route (facet%s) rest) = (%s::%s rest)),
+  statement: (%s),
   proof: reflexivity{},
   axioms: [Quot.sound, propext]
 }
 
-""" % (k.capitalize(), k.capitalize(), m, d))
-proofs.append("""theorem{
-  name: refusesUnknownFacet,
-  parameters: [rest : Bytes],
-  statement: ((route (facetUnknown) rest) = (refusal)),
-  proof: reflexivity{},
-  axioms: [Quot.sound, propext]
-}
-
-""")
+""" % each for each in proved + [("refusesUnknownFacet", "(route (facetUnknown) rest) = (refusal)")]]
 # The vectors go in chunks of CHUNK, each its own definition ending in the
 # next, so no one body nests deeper than LexLean's semantic-module JSON reader
 # allows (LLT4001 "recursion limit exceeded" past about 60 conses).
@@ -286,10 +232,9 @@ w("""definition{
 \\end{semanticmodule}
 \\end{lexlean}
 """ % (vec, REQ_MAX, RESP_MAX, ALLOC))
-import os, re
 open(os.path.join(sys.argv[1], "Prism.lex.tex"), "w").write("".join(out))
 body = "".join(proofs)
-body = re.sub(r"\((facet\w+|refusal)\)", r"(Prism::\1)", body).replace("(route ", "(Prism::route ")
+body = re.sub(r"\((facet\w+|refusal)\)", r"(Prism::\1)", body).replace("(route ", "(Prism::route ").replace("(firstRoute ", "(Prism::firstRoute ")
 head = "\\begin{lexlean}{PrismProofs}\n\\useglossary{lexlean.std.bool@1.2.0}\n\\useglossary{lexlean.std.nat@1.2.0}\n\\useglossary{prism.arch@1.0.0}\n\\importmodule{Foundation.Bytes}\n\\importmodule{Prism}\n"
 head += "".join("\\importmodule{%s}\n" % m for m in sorted(m for _, m, _ in FACETS))
 head += "\\title{Text application model}\n\\begin{semanticmodule}\n"
