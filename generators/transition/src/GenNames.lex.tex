@@ -1,0 +1,139 @@
+\begin{lexlean}{GenNames}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Tar}
+\importmodule{GenPatch}
+\importmodule{GenRec}
+\importmodule{GenSuite}
+\importmodule{Sha256}
+\title{Name example reader}
+\begin{semanticmodule}
+definition{
+  name: gnFindFrom,
+  parameters: [s : Bytes, pat : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (GenPatch::jpLen s)
+    | Nat.succ rest => (if ((GenPatch::jpLen s) <? (i + (GenPatch::jpLen pat))) then (GenPatch::jpLen s) else (if (GenPatch::jpSame (GenPatch::jpSpan s i (i + (GenPatch::jpLen pat))) pat) then i else (gnFindFrom s pat (i + 1) rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: gnFind,
+  parameters: [s : Bytes, pat : Bytes, i : Nat],
+  result: Nat,
+  body: (gnFindFrom s pat i ((GenPatch::jpLen s) + 1)),
+  axioms: [propext]
+}
+
+definition{
+  name: gnEndFrom,
+  parameters: [s : Bytes, i : Nat, wide : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((GenPatch::jpLen s) <? (i + 1)) then i else (let c : Nat := (GenPatch::jpAt s i); (if ((c =? 10) || ((c =? 32) && ((wide =? 0) || ((GenPatch::jpAt s (i + 1)) =? 32)))) then i else (gnEndFrom s (i + 1) wide rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: gnTok,
+  parameters: [s : Bytes, i : Nat, wide : Nat],
+  result: Bytes,
+  body: (GenPatch::jpSpan s i (gnEndFrom s i wide ((GenPatch::jpLen s) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gnSkip,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (((GenPatch::jpAt s i) =? 32) || ((GenPatch::jpAt s i) =? 124)) then (gnSkip s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: gnNextLine,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: ((gnFind s 0x0a i) + 1),
+  axioms: [propext]
+}
+
+definition{
+  name: gnHexRun,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let c : Nat := (GenPatch::jpAt s i); (if (c =? 32) then (gnHexRun s (i + 1) acc rest) else (if ((c =? 10) || (c =? 0)) then acc else (gnHexRun s (i + 1) (GenPatch::jpCat acc (GenPatch::jpSpan s i (i + 1))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: gnIsDump,
+  parameters: [s : Bytes, i : Nat],
+  result: Bool,
+  body: ((GenPatch::jpIsDigit (GenPatch::jpAt s i)) && ((GenPatch::jpIsDigit (GenPatch::jpAt s (i + 6))) && ((GenPatch::jpAt s (i + 7)) =? 32))),
+  axioms: [Quot.sound, propext]
+}
+
+structure{
+  name: GnDump,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: hex, type: Bytes}, {name: pos, type: Nat}]
+}
+
+definition{
+  name: gnDumpFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: GnDump,
+  body: (match fuel
+    | Nat.zero => (record GnDump {hex := acc, pos := i})
+    | Nat.succ rest => (let at : Nat := (gnSkip s i 80); (if (gnIsDump s at) then (gnDumpFrom s (gnNextLine s at) (gnHexRun s (at + 8) acc 80) rest) else (record GnDump {hex := acc, pos := i})))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: gnPair,
+  parameters: [req : Bytes, resp : Bytes],
+  result: Bytes,
+  body: (GenPatch::jpCat (GenRec::rvPair req resp) 0x0a),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gnExamples,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let q : Nat := (gnFind s 0x74686520746578742022 0); (let t : Bytes := (Sha256::shaHexFrom (GenPatch::jpSpan s (q + 10) (gnFind s 0x22 (q + 10))) 0 (prim subtract (gnFind s 0x22 (q + 10)) (q + 10) : Nat) 0x); (let a1 : Nat := (gnFind s 0x6e693a2f2f2f7368612d3235363b q); (let n1 : Bytes := (gnTok s a1 0); (let a2 : Nat := (gnFind s 0x6e693a2f2f6578616d706c652e636f6d2f a1); (let n2 : Bytes := (gnTok s a2 0); (let a3 : Nat := (gnFind s 0x687474703a2f2f6578616d706c652e636f6d2f2e77656c6c2d6b6e6f776e2f6e692f7368612d3235362f a2); (let w : Bytes := (GenPatch::jpCat (gnTok s a3 0) (gnTok s (gnSkip s (gnNextLine s a3) 80) 0)); (let a4 : Nat := (gnFind s 0x382e322e20205075626c6963204b6579 a3); (let a5 : Nat := (gnFind s 0x3030303030303020 a4); (let d1 : GnDump := (gnDumpFrom s a5 0x 64); (let k : Bytes := (project d1 hex); (let d2 : GnDump := (gnDumpFrom s (gnFind s 0x3030303030303020 (project d1 pos)) 0x 64); (let dg : Bytes := (project d2 hex); (let a6 : Nat := (gnFind s 0x7c205552493a (project d2 pos)); (let u : Bytes := (gnTok s (gnFind s 0x6e693a2f2f2f a6) 0); (let a7 : Nat := (gnFind s 0x7c2055524c205365676d656e743a a6); (let seg : Bytes := (gnTok s (gnSkip s (gnNextLine s a7) 80) 0); (let a8 : Nat := (gnFind s 0x537569746520494420307830333a a7); (let bin : Bytes := (gnTok s (gnSkip s (gnNextLine s a8) 80) 1); (let h120 : Bytes := (gnTok s (gnFind s 0x6e69683a7368612d3235362d3132303b a8) 0); (let h32 : Bytes := (gnTok s (gnFind s 0x6e69683a7368612d3235362d33323b a8) 0); (let h3 : Bytes := (gnTok s (gnFind s 0x6e69683a333b a8) 0); (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x6e690a t) n1) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x636865636b0a (GenPatch::jpCat n1 (GenPatch::jpCat 0x0a t))) 0x76616c6964) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x636865636b0a (GenPatch::jpCat n2 (GenPatch::jpCat 0x0a t))) 0x76616c6964) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x6d617463680a (GenPatch::jpCat n1 (GenPatch::jpCat 0x0a n2))) 0x73616d65) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x77656c6c6b6e6f776e0a n2) w) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x636865636b0a (GenPatch::jpCat w (GenPatch::jpCat 0x0a t))) 0x76616c6964) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x6e690a k) u) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x7365676d656e740a u) seg) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x6e69680a (GenPatch::jpCat 0x7368612d3235362d3332 (GenPatch::jpCat 0x0a k))) h32) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x636865636b0a (GenPatch::jpCat u (GenPatch::jpCat 0x0a k))) 0x76616c6964) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x636865636b0a (GenPatch::jpCat seg (GenPatch::jpCat 0x0a k))) 0x76616c6964) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x636865636b0a (GenPatch::jpCat bin (GenPatch::jpCat 0x0a k))) 0x76616c6964) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x636865636b0a (GenPatch::jpCat h120 (GenPatch::jpCat 0x0a k))) 0x76616c6964) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x636865636b0a (GenPatch::jpCat h32 (GenPatch::jpCat 0x0a k))) 0x76616c6964) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x636865636b0a (GenPatch::jpCat h3 (GenPatch::jpCat 0x0a k))) 0x76616c6964) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x6d617463680a (GenPatch::jpCat bin (GenPatch::jpCat 0x0a h120))) 0x73616d65) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x6d617463680a (GenPatch::jpCat h120 (GenPatch::jpCat 0x0a h3))) 0x73616d65) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x6d617463680a (GenPatch::jpCat u (GenPatch::jpCat 0x0a seg))) 0x73616d65) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x6d617463680a (GenPatch::jpCat (GenPatch::jpCat 0x7368613235363a dg) (GenPatch::jpCat 0x0a u))) 0x73616d65) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x6d617463680a (GenPatch::jpCat h32 (GenPatch::jpCat 0x0a h120))) 0x646966666572656e74) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x6d617463680a (GenPatch::jpCat u (GenPatch::jpCat 0x0a h120))) 0x646966666572656e74) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x6d617463680a (GenPatch::jpCat n1 (GenPatch::jpCat 0x0a u))) 0x646966666572656e74) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x636865636b0a (GenPatch::jpCat n1 (GenPatch::jpCat 0x0a k))) 0x6d69736d61746368) (GenPatch::jpCat (gnPair (GenPatch::jpCat 0x636865636b0a (GenPatch::jpCat u (GenPatch::jpCat 0x0a t))) 0x6d69736d61746368) (gnPair (GenPatch::jpCat 0x636865636b0a (GenPatch::jpCat h32 (GenPatch::jpCat 0x0a t))) 0x6d69736d61746368)))))))))))))))))))))))))))))))))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gnCt,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let a : Nat := (gnFind s 0x3f63743d 0); (if (a <? (GenPatch::jpLen s)) then (let b : Nat := (gnFind s 0x6e693a2f2f2f (prim subtract a 40 : Nat)); (let name : Bytes := (gnTok s b 0); (gnPair (GenPatch::jpCat 0x63740a name) (GenPatch::jpSpan name ((prim subtract a b : Nat) + 4) (GenPatch::jpLen name))))) else 0x)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gnCases,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (GenSuite::jsBody archive); (GenPatch::jpCat (gnCt s) (if ((gnFind s 0x74686520746578742022 0) <? (GenPatch::jpLen s)) then (gnExamples s) else 0x))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

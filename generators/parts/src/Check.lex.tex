@@ -116,10 +116,155 @@ definition{
 }
 
 definition{
+  name: ckTokEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then i else (if (((Foundation.Tar::byteOr s i) =? 32) || ((Foundation.Tar::byteOr s i) =? 10)) then i else (ckTokEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ckNthLine,
+  parameters: [t : Bytes, p : Nat, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let e : Nat := (lineEndOf t p (Foundation.Bytes::byteLength t)); (if (n =? 0) then (Foundation.Json::span t p e) else (ckNthLine t (e + 1) (prim subtract n 1 : Nat) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ckLineNo,
+  parameters: [t : Bytes, x : Bytes, p : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 9999999
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength t) <? (p + 1)) then 9999999 else (let e : Nat := (lineEndOf t p (Foundation.Bytes::byteLength t)); (if (((prim subtract e p : Nat) =? (Foundation.Bytes::byteLength x)) && (startsAt t p x)) then n else (ckLineNo t x (e + 1) (n + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ckDigit,
+  parameters: [d : Nat],
+  result: Bytes,
+  body: (if (d =? 0) then 0x30 else (if (d =? 1) then 0x31 else (if (d =? 2) then 0x32 else (if (d =? 3) then 0x33 else (if (d =? 4) then 0x34 else (if (d =? 5) then 0x35 else (if (d =? 6) then 0x36 else (if (d =? 7) then 0x37 else (if (d =? 8) then 0x38 else 0x39)))))))))
+}
+
+definition{
+  name: ckDec,
+  parameters: [n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (n <? 10) then (ckDigit n) else (Foundation.Bytes::appendBytes (ckDec (prim quotient n 10 0 : Nat) rest) (ckDigit (prim remainder n 10 0 : Nat))))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: ckDigits,
+  parameters: [s : Bytes, i : Nat, e : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if (e <? (i + 1)) then true else (let b : Nat := (Foundation.Tar::byteOr s i); (if ((47 <? b) && (b <? 58)) then (ckDigits s (i + 1) e rest) else false)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ckNatIn,
+  parameters: [s : Bytes, i : Nat, e : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (e <? (i + 1)) then acc else (ckNatIn s (i + 1) e ((prim multiply acc 10 : Nat) + (prim subtract (Foundation.Tar::byteOr s i) 48 : Nat)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ckSep,
+  parameters: [s : Bytes, e : Nat],
+  result: Bytes,
+  body: (if (e <? (Foundation.Bytes::byteLength s)) then (Foundation.Json::span s e (e + 1)) else 0x)
+}
+
+definition{
+  name: ckUnpackFrom,
+  parameters: [index : Bytes, s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then acc else (let e : Nat := (ckTokEnd s i (Foundation.Bytes::byteLength s)); (ckUnpackFrom index s (e + 1) (cat (cons acc (cons (if ((((Foundation.Tar::byteOr s i) =? 64) && ((i + 1) <? e)) && (ckDigits s (i + 1) e 9)) then (ckNthLine index 0 (ckNatIn s (i + 1) e 0 9) ((Foundation.Bytes::byteLength index) + 1)) else (Foundation.Json::span s i e)) (cons (ckSep s e) (nil Bytes))))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ckPackTok,
+  parameters: [index : Bytes, tok : Bytes],
+  result: Bytes,
+  body: (let n : Nat := (if ((Foundation.Bytes::byteLength tok) =? 0) then 9999999 else (ckLineNo index tok 0 0 ((Foundation.Bytes::byteLength index) + 1))); (if (n =? 9999999) then tok else (Foundation.Bytes::appendBytes 0x40 (ckDec n 9)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ckPackFrom,
+  parameters: [index : Bytes, s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then acc else (let e : Nat := (ckTokEnd s i (Foundation.Bytes::byteLength s)); (ckPackFrom index s (e + 1) (cat (cons acc (cons (ckPackTok index (Foundation.Json::span s i e)) (cons (ckSep s e) (nil Bytes))))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ckPacked,
+  parameters: [path : Bytes],
+  result: Bool,
+  body: ((startsAt path 0 (u ".gen/")) && ((not (same path (u ".gen/pt-parts"))) && ((not (same path (u ".gen/pt-index"))) && (not (same path (u ".gen/pt-spec")))))),
+  axioms: [propext]
+}
+
+definition{
+  name: ckIndex,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (match (Foundation.Tar::find archive (u ".gen/pt-index"))
+    | Option.none => 0x
+    | Option.some b => b),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ckSeal,
+  parameters: [archive : Bytes, output : Bytes, content : Bytes],
+  result: Bytes,
+  body: (let index : Bytes := (ckIndex archive); (if ((ckPacked output) && (0 <? (Foundation.Bytes::byteLength index))) then (ckPackFrom index content 0 0x ((Foundation.Bytes::byteLength content) + 1)) else content)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ckOpen,
+  parameters: [archive : Bytes, path : Bytes, content : Bytes],
+  result: Bytes,
+  body: (let index : Bytes := (ckIndex archive); (if (((ckPacked path) && (0 <? (Foundation.Bytes::byteLength index))) && (contains content 0x40)) then (ckUnpackFrom index content 0 0x ((Foundation.Bytes::byteLength content) + 1)) else content)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: file,
   parameters: [archive : Bytes, path : Bytes],
   result: Bytes,
-  body: (match (Foundation.Tar::find archive path) | Option.none => 0x | Option.some b => b),
+  body: (match (Foundation.Tar::find archive path)
+    | Option.none => 0x
+    | Option.some b => (ckOpen archive path b)),
   axioms: [Quot.sound, propext]
 }
 
