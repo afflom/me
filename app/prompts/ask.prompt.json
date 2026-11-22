@@ -1,12 +1,12 @@
 {
   "schema": "prism/prompt/1",
-  "goal": "Decides what the Prism does with words the owner says to it: tell the time, answer from what is held, take feedback as heard, offer to keep them where they land in time, or look for them in what is he",
+  "goal": "Decides what the Prism does with words the owner says to it: tell the time, greet back, answer from what is held, take feedback as heard, offer to keep them where they land in time, or look for them i",
   "pattern": "decisionTable",
   "repository": "afflom/me",
   "app": {
     "name": "prism-ask",
     "title": "Prism Ask",
-    "purpose": "Decides what the Prism does with words the owner says to it: tell the time, answer from what is held, take feedback as heard, offer to keep them where they land in time, or look for them in what is held and offer to keep them, and nothing while the Prism is paused.",
+    "purpose": "Decides what the Prism does with words the owner says to it: tell the time, greet back, answer from what is held, take feedback as heard, offer to keep them where they land in time, or look for them in what is held and offer to keep them, and nothing while the Prism is paused.",
     "fields": [
       {
         "name": "halted",
@@ -69,14 +69,16 @@
         "kind": "choice",
         "values": [
           "task",
-          "autofeedback"
+          "autofeedback",
+          "social"
         ],
-        "means": "the dimension of the words as a dialogue act (ISO 24617-2), read by the router's act head: the task itself, or feedback on what the Prism last said"
+        "means": "the dimension of the words as a dialogue act (ISO 24617-2), as the router reads it: the task itself, feedback on what the Prism last said, or a social obligation (a greeting, thanks)"
       }
     ],
     "outcomes": [
       "paused",
       "clock",
+      "greet",
       "empty",
       "answer",
       "heard",
@@ -86,6 +88,7 @@
     "meanings": {
       "paused": "say nothing from what is held: the Prism is paused",
       "clock": "tell the time and date from the Prism's own clock",
+      "greet": "say what can be asked and how things stand: nothing is looked for and nothing is offered to keep",
       "empty": "say nothing has arrived yet and offer to connect",
       "answer": "answer from what is held, naming what it drew on",
       "heard": "take the words as heard: nothing is looked for and nothing is offered to keep",
@@ -123,6 +126,19 @@
         "id": "REQ-003",
         "when": [
           {
+            "field": "act",
+            "op": "is",
+            "value": "social"
+          }
+        ],
+        "then": "greet",
+        "says": "when act is social then greet",
+        "why": "a greeting or thanks is answered in kind, not kept or looked for"
+      },
+      {
+        "id": "REQ-004",
+        "when": [
+          {
             "field": "box",
             "op": "is",
             "value": "asks"
@@ -138,7 +154,7 @@
         "why": "a box that only asks, over nothing held, leads to connecting"
       },
       {
-        "id": "REQ-004",
+        "id": "REQ-005",
         "when": [
           {
             "field": "box",
@@ -151,7 +167,7 @@
         "why": "a box that only asks answers every prompt as a question"
       },
       {
-        "id": "REQ-005",
+        "id": "REQ-006",
         "when": [
           {
             "field": "intent",
@@ -169,7 +185,7 @@
         "why": "a question over nothing held leads to connecting"
       },
       {
-        "id": "REQ-006",
+        "id": "REQ-007",
         "when": [
           {
             "field": "intent",
@@ -182,7 +198,7 @@
         "why": "a question is answered from what is held"
       },
       {
-        "id": "REQ-007",
+        "id": "REQ-008",
         "when": [
           {
             "field": "act",
@@ -205,7 +221,7 @@
         "why": "feedback on what was said is not a note to keep or words to look for"
       },
       {
-        "id": "REQ-008",
+        "id": "REQ-009",
         "when": [
           {
             "field": "timed",
@@ -218,7 +234,7 @@
         "why": "words that land in time are something to keep, at that time"
       },
       {
-        "id": "REQ-009",
+        "id": "REQ-010",
         "when": [
           {
             "field": "held",
@@ -346,11 +362,16 @@
             "field": "intent",
             "op": "is",
             "value": "task"
+          },
+          {
+            "field": "act",
+            "op": "is not",
+            "value": "social"
           }
         ],
         "then": "keep",
-        "says": "always when halted is no and clock is not and box is keeps and timed is yes and intent is task then keep",
-        "why": "a task that lands in time is offered to keep"
+        "says": "always when halted is no and clock is not and box is keeps and timed is yes and intent is task and act is not social then keep",
+        "why": "a task that lands in time, and is not a greeting, is offered to keep"
       },
       {
         "id": "INV-008",
@@ -393,6 +414,62 @@
         "then": "heard",
         "says": "never when timed is yes then heard",
         "why": "words that land in time are never only heard"
+      },
+      {
+        "id": "INV-011",
+        "kind": "never",
+        "when": [
+          {
+            "field": "act",
+            "op": "is",
+            "value": "social"
+          }
+        ],
+        "then": "keep",
+        "says": "never when act is social then keep",
+        "why": "a greeting is never taken for something to keep"
+      },
+      {
+        "id": "INV-012",
+        "kind": "never",
+        "when": [
+          {
+            "field": "act",
+            "op": "is",
+            "value": "social"
+          }
+        ],
+        "then": "look",
+        "says": "never when act is social then look",
+        "why": "a greeting is never looked for in what is held"
+      },
+      {
+        "id": "INV-013",
+        "kind": "never",
+        "when": [
+          {
+            "field": "act",
+            "op": "is",
+            "value": "social"
+          }
+        ],
+        "then": "heard",
+        "says": "never when act is social then heard",
+        "why": "a greeting is never taken for feedback"
+      },
+      {
+        "id": "INV-014",
+        "kind": "never",
+        "when": [
+          {
+            "field": "act",
+            "op": "is",
+            "value": "social"
+          }
+        ],
+        "then": "empty",
+        "says": "never when act is social then empty",
+        "why": "a greeting is answered even over nothing held"
       }
     ],
     "examples": [
@@ -474,6 +551,30 @@
       },
       {
         "request": "yes not keeps fact no some autofeedback",
+        "response": "paused"
+      },
+      {
+        "request": "no not keeps fact no none social",
+        "response": "greet"
+      },
+      {
+        "request": "no not keeps fact no some social",
+        "response": "greet"
+      },
+      {
+        "request": "no not keeps event yes some social",
+        "response": "greet"
+      },
+      {
+        "request": "no not asks fact no none social",
+        "response": "greet"
+      },
+      {
+        "request": "no asked keeps fact no some social",
+        "response": "clock"
+      },
+      {
+        "request": "yes not keeps fact no some social",
         "response": "paused"
       }
     ]

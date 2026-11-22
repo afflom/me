@@ -1001,6 +1001,23 @@ export const SPEC = {
             -0.2785
           ]
         }
+      },
+      "social": {
+        "comment": "The words and phrases the router takes for a social obligation (ISO 24617-2 social obligations management: a greeting, thanks). Owed to a measured head: no openly licensed corpus marks the dimension (app/specs/oracle/spec.json gaps), so these are a list and no oracle tests them.",
+        "words": [
+          "hello",
+          "hi",
+          "hey",
+          "thanks",
+          "thank",
+          "you"
+        ],
+        "phrases": [
+          "good morning",
+          "good afternoon",
+          "good evening",
+          "good night"
+        ]
       }
     },
     "party": {
@@ -1158,12 +1175,7 @@ export const SPEC = {
         ]
       },
       "greet": [
-        "hello",
-        "hi",
-        "hey",
-        "help",
-        "thanks",
-        "thank"
+        "help"
       ],
       "overview": [
         "day",
