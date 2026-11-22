@@ -3,8 +3,14 @@
   "wasm": "site/dest/guest/dest.wasm",
   "pin": "site/dest/guest.mjs",
   "modules": [
-    "PrismDest"
+    "PrismDest",
+    "PrismDestRoute"
   ],
-  "dispatch": "PrismDest::prismDestDispatch",
-  "vectors": "dest"
+  "dispatch": "PrismDestRoute::destRouteDispatch",
+  "vectors": "dest",
+  "limits": [
+    512,
+    128,
+    1024
+  ]
 }
