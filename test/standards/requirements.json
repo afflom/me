@@ -7968,6 +7968,104 @@
    "text": "That is, stream- and schema-based parsing MUST treat subtypes as \"pure\" (immutable) JSON string types and perform the actual conversion to the designated native type in a subsequent step."
   }
  ],
+ "rfc9110": [
+  {
+   "id": "rfc9110-13.1.1-0848bf44",
+   "kind": "may",
+   "ref": "RFC 9110 13.1.1",
+   "text": "Alternatively, if the request is a state-changing operation that appears to have already been applied to the selected representation, the origin server MAY respond with a 2xx (Successful) status code (i.e., the change requested by the user agent has already succeeded, but the user agent might not be aware of it, perhaps because the prior response was lost or an equivalent change was made by some other user agent)."
+  },
+  {
+   "id": "rfc9110-13.1.1-268aaec2",
+   "kind": "must",
+   "ref": "RFC 9110 13.1.1",
+   "text": "When an origin server receives a request that selects a representation and that request includes an If-Match header field, the origin server MUST evaluate the If-Match condition per Section 13.2 prior to performing the method."
+  },
+  {
+   "id": "rfc9110-13.1.1-88ef441f",
+   "kind": "may",
+   "ref": "RFC 9110 13.1.1",
+   "text": "A client MAY send an If-Match header field in a GET request to indicate that it would prefer a 412 (Precondition Failed) response if the selected representation does not match."
+  },
+  {
+   "id": "rfc9110-13.1.1-8f7ca689",
+   "kind": "must",
+   "ref": "RFC 9110 13.1.1",
+   "text": "An origin server that evaluates an If-Match condition MUST NOT perform the requested method if the condition evaluates to false."
+  },
+  {
+   "id": "rfc9110-13.1.1-b4c35f87",
+   "kind": "may",
+   "ref": "RFC 9110 13.1.1",
+   "text": "A cache or intermediary MAY ignore If-Match because its interoperability features are only necessary for an origin server."
+  },
+  {
+   "id": "rfc9110-13.1.1-bb701244",
+   "kind": "must",
+   "ref": "RFC 9110 13.1.1",
+   "text": "An origin server MUST use the strong comparison function when comparing entity tags for If-Match (Section 8.8.3.2), since the client intends this precondition to prevent the method from being applied if there have been any changes to the representation data."
+  },
+  {
+   "id": "rfc9110-13.1.1-dd87bdcc",
+   "kind": "may",
+   "ref": "RFC 9110 13.1.1",
+   "text": "Instead, the origin server MAY indicate that the conditional request failed by responding with a 412 (Precondition Failed) status code."
+  },
+  {
+   "id": "rfc9110-13.1.2-687caaf2",
+   "kind": "must",
+   "ref": "RFC 9110 13.1.2",
+   "text": "When an origin server receives a request that selects a representation and that request includes an If-None-Match header field, the origin server MUST evaluate the If-None-Match condition per Section 13.2 prior to performing the method."
+  },
+  {
+   "id": "rfc9110-13.1.2-c1137000",
+   "kind": "should",
+   "ref": "RFC 9110 13.1.2",
+   "text": "When a client desires to update one or more stored responses that have entity tags, the client SHOULD generate an If-None-Match header field containing a list of those entity tags when making a GET request; this allows recipient servers to send a 304 (Not Modified) response to indicate when one of those stored responses matches the selected representation."
+  },
+  {
+   "id": "rfc9110-13.1.2-ccb73127",
+   "kind": "must",
+   "ref": "RFC 9110 13.1.2",
+   "text": "An origin server that evaluates an If-None-Match condition MUST NOT perform the requested method if the condition evaluates to false; instead, the origin server MUST respond with either a) the 304 (Not Modified) status code if the request method is GET or HEAD or b) the 412 (Precondition Failed) status code for all other request methods."
+  },
+  {
+   "id": "rfc9110-13.1.2-f6759583",
+   "kind": "must",
+   "ref": "RFC 9110 13.1.2",
+   "text": "A recipient MUST use the weak comparison function when comparing entity tags for If-None-Match (Section 8.8.3.2), since weak entity tags can be used for cache validation even if there have been changes to the representation data."
+  },
+  {
+   "id": "rfc9110-13.2.2-6e0aa078",
+   "kind": "must",
+   "ref": "RFC 9110 13.2.2",
+   "text": "A recipient cache or origin server MUST evaluate the request preconditions defined by this specification in the following order:"
+  },
+  {
+   "id": "rfc9110-15.3.1-17893c71",
+   "kind": "should",
+   "ref": "RFC 9110 15.3.1",
+   "text": "In 200 responses to GET or HEAD, an origin server SHOULD send any available validator fields (Section 8.8) for the selected representation, with both a strong entity tag and a Last-Modified date being preferred."
+  },
+  {
+   "id": "rfc9110-8.8.3-7c4e95c0",
+   "kind": "must",
+   "ref": "RFC 9110 8.8.3",
+   "text": "If an origin server provides an entity tag for a representation and the generation of that entity tag does not satisfy all of the characteristics of a strong validator (Section 8.8.1), then the origin server MUST mark the entity tag as weak by prefixing its opaque value with \"W/\" (case-sensitive)."
+  },
+  {
+   "id": "rfc9110-8.8.3-929bf463",
+   "kind": "may",
+   "ref": "RFC 9110 8.8.3",
+   "text": "A sender MAY send the ETag field in a trailer section (see Section 6.5)."
+  },
+  {
+   "id": "rfc9110-8.8.3.1-9840b43c",
+   "kind": "should",
+   "ref": "RFC 9110 8.8.3.1",
+   "text": "An origin server SHOULD send an ETag for any selected representation for which detection of changes can be reasonably and consistently determined, since the entity tag's use in conditional requests and evaluating cache freshness ([CACHING]) can substantially reduce unnecessary transfers and significantly improve service availability, scalability, and reliability."
+  }
+ ],
  "rfc9554": [
   {
    "id": "rfc9554-2.1-17a21ce6",
