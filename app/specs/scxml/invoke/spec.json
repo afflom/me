@@ -1,0 +1,98 @@
+{
+ "name": "scxml/invoke",
+ "comment": "IRP tests of SCXML 1.0 sections 5.10, 6.2 and 6.4 on the type of a <send> or <invoke> held in a variable or unsupported, the id of an invocation (written to idlocation, carried as invokeid on what the invoked session sends its parent and on done.invoke), and the origintype of an event, pinned by SHA-256 as W3C serves it under the IRP base that app/specs/scxml/spec.json pins, each answered by the id of the top-level <final> state the document halts in. The conf: terms are read with the meaning the pinned confEcma.xsl gives each.",
+ "tests": [
+  {
+   "assert": "338",
+   "section": "5.10",
+   "file": "338/test338.txml",
+   "sha256": "89d87e09c8b3d2ffe2f2ae7e322ac6a55a1f4de8d8f80d8dec0299336f32ed02"
+  },
+  {
+   "assert": "174",
+   "section": "6.2",
+   "file": "174/test174.txml",
+   "sha256": "6cd58b4549c1cc9cd49c8d189f609ee5bf396390dacc0584c7035b3703e35269"
+  },
+  {
+   "assert": "198",
+   "section": "6.2",
+   "file": "198/test198.txml",
+   "sha256": "0b298d46b07b1d3443682d1df4e9e12c556a3e507f7b0ea2122a76bfc3a5f526"
+  },
+  {
+   "assert": "199",
+   "section": "6.2",
+   "file": "199/test199.txml",
+   "sha256": "7569b8cde01a73359235a2b71243b21afd4e45da078cfb09d89ec134bf705bfc"
+  },
+  {
+   "assert": "215",
+   "section": "6.4",
+   "file": "215/test215.txml",
+   "sha256": "b3c5f21848641e1b5db2b0157473137634f59e351750ecb4eea5074b21f3fcd2"
+  },
+  {
+   "assert": "223",
+   "section": "6.4",
+   "file": "223/test223.txml",
+   "sha256": "00ec2b19293498a3f5fe075f5786e2d96dc7e249b708b0bad88816cfe67fed88"
+  },
+  {
+   "assert": "224",
+   "section": "6.4",
+   "file": "224/test224.txml",
+   "sha256": "b646836b5c08d23b3243cf6f705de8db95d7b242f168e9a931534fc125a35b1a"
+  },
+  {
+   "assert": "225",
+   "section": "6.4",
+   "file": "225/test225.txml",
+   "sha256": "53786014b5d15cfe6ab6438a82df2fbbaf19fbb441130a40110b572d5185503c"
+  },
+  {
+   "assert": "228",
+   "section": "6.4",
+   "file": "228/test228.txml",
+   "sha256": "b91ccfcfbb43a2f4df6a8b3f8bec8eaa77cc0f52708308ef70600f02766edeb8"
+  }
+ ],
+ "examples": [
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that invokeid is set correctly in events received from an invoked process.  timeout event catches the \ncase where the invoke doesn't work correctly -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\"/>\n  <data conf:id=\"2\"/>\n  </datamodel>\n  \n   <state id=\"s0\">\n      <onentry>\n        <send event=\"timeout\" delay=\"2s\"/>\n        </onentry>\n     <invoke conf:idlocation=\"1\" type=\"http://www.w3.org/TR/scxml/\" >\n     <content>\n       <scxml initial=\"sub0\" version=\"1.0\" conf:datamodel=\"\"  name=\"machineName\">     \n       <final id=\"sub0\">\n         <onentry>\n            <send target=\"#_parent\" event=\"event1\"/>\n        </onentry>\n        </final>\n       </scxml>\n      </content>\n    </invoke>\n       <transition event=\"event1\" target=\"s1\">\n         <assign conf:location=\"2\" conf:eventField=\"invokeid\"/>\n         </transition>\n       <transition event=\"event0\" conf:targetfail=\"\"/>\n   </state>\n\n<state id=\"s1\">\n  <transition conf:VarEqVar=\"1 2\" conf:targetpass=\"\"/>\n  <transition conf:targetfail=\"\"/>\n  </state>\n  \n   <conf:pass/>\n   <conf:fail/>\n   \n\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that typeexpr uses the current value of var1, not its initial value\n(If it uses the initial value, it will generate an error.  If it uses the current value, event1 will be raised  -->\n\n<scxml initial=\"s0\" conf:datamodel=\"\"  version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:invalidSendTypeExpr=\"\"/>\n  </datamodel>\n  \n<state id=\"s0\">\n  <onentry>\n   <assign conf:location=\"1\" conf:quoteExpr=\"http://www.w3.org/TR/scxml/#SCXMLEventProcessor\"/>\n   <send conf:typeExpr=\"1\" event=\"event1\"/>\n    </onentry>\n    \n  <transition event=\"event1\"  conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n </state>\n\n   \n   <conf:pass/>\n   <conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that if type is not provided <send> uses the scxml event i/o processor.  The only way to tell\nwhat processor was used is to look at the origintype of the resulting event  -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n<state id=\"s0\">\n  <onentry>\n   <send  event=\"event1\"/>\n   <send event=\"timeout\"/>\n    </onentry>\n\n  \n  <transition event=\"event1\" conf:originTypeEq=\"http://www.w3.org/TR/scxml/#SCXMLEventProcessor\" conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n </state>\n \n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that using an invalid send type results in error.execution -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n<state id=\"s0\">\n  <onentry>\n   <send conf:invalidSendType=\"\" event=\"event1\"/>\n   <send event=\"timeout\"/>\n    </onentry>\n \n \n  <transition event=\"error.execution\" conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n </state>\n \n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that typexpr is evaluated at runtime.  If the original value of var1 is used, the invocation\nwill fail (test215sub1.scxml is not of type 'foo', even if the platform supports foo as a type).  If\nthe runtime value is used, the invocation will succeed -->\n\n\n<scxml initial=\"s0\" conf:datamodel=\"\" version=\"1.0\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n<datamodel>\n  <data conf:id=\"1\" conf:quoteExpr=\"foo\"/>\n   </datamodel> \n   \n<state id=\"s0\" >\n  <onentry>\n    <send event=\"timeout\" delay=\"5s\"/>\n    <assign conf:location=\"1\" conf:quoteExpr=\"http://www.w3.org/TR/scxml/\"/>\n    </onentry>\n  <invoke conf:typeExpr=\"1\">\n    <content>\n        <!-- when invoked, terminate returning done.invoke. This proves that the invocation succeeded.   -->\n        <scxml initial=\"subFinal\" conf:datamodel=\"\"  version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n      <final id=\"subFinal\"/>\n        </scxml>\n    </content>\n    </invoke>\n  <transition event=\"done.invoke\" conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/> \n</state>\n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that idlocation is supported.   -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n <datamodel>\n   <data conf:id=\"1\"/>\n   </datamodel>\n     \n<state id=\"s0\" >\n  <onentry>\n    <send event=\"timeout\" delay=\"1s\"/>\n    </onentry>\n     <invoke type=\"http://www.w3.org/TR/scxml/\" conf:idlocation=\"1\">\n     <content>\n     <!-- when invoked, terminate returning done.invoke. This proves that the invocation succeeded.   -->\n       <scxml initial=\"subFinal\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n       <final id=\"subFinal\"/>\n        </scxml>\n       </content>\n    </invoke>\n  <transition event=\"*\" target=\"s1\"/>\n</state>\n\n<state id=\"s1\">\n  <transition conf:isBound=\"1\" conf:targetpass=\"\"/>\n  <transition conf:targetfail=\"\"/>\n  </state>\n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that the automatically generated id has the form stateid.platformid.   -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n <datamodel>\n   <data conf:id=\"1\"/>\n   <data conf:id=\"2\" conf:quoteExpr=\"s0.\"/>\n   </datamodel>\n     \n<state id=\"s0\" >\n  <onentry>\n    <send event=\"timeout\" delay=\"1s\"/>\n    </onentry>\n <invoke type=\"http://www.w3.org/TR/scxml/\" conf:idlocation=\"1\">\n    <content> \n    <!-- when invoked, terminate returning done.invoke. This proves that the invocation succeeded.   -->\n      <scxml version=\"1.0\" initial=\"subFinal\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n      <final id=\"subFinal\"/>\n      </scxml>\n     </content>\n    </invoke>\n\n  <transition event=\"*\" target=\"s1\"/>\n</state>\n\n<state id=\"s1\">\n  <transition conf:varPrefix=\"2 1\" conf:targetpass=\"\"/>\n  <transition conf:targetfail=\"\"/>\n  </state>\n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that the automatically generated id is unique, we call invoke twice and compare the ids.   -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n <datamodel>\n   <data conf:id=\"1\"/>\n   <data conf:id=\"2\"/>\n   </datamodel>\n     \n<state id=\"s0\" >\n  <onentry>\n    <send event=\"timeout\" delay=\"1s\"/>\n    </onentry>\n\n   <invoke type=\"http://www.w3.org/TR/scxml/\" conf:idlocation=\"1\">\n      <content>\n      <scxml initial=\"subFinal1\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n         <final id=\"subFinal1\"/>\n        </scxml>\n     </content>\n     </invoke>\n   <invoke type=\"http://www.w3.org/TR/scxml/\" conf:idlocation=\"2\" >\n      <content>\n      <scxml initial=\"subFinal2\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n         <final id=\"subFinal2\"/>\n        </scxml>\n     </content>\n     </invoke>\n\n  <transition event=\"*\" target=\"s1\"/>\n</state>\n\n<state id=\"s1\">\n  <transition conf:VarEqVar=\"1 2\" conf:targetfail=\"\"/>\n  <transition conf:targetpass=\"\"/>\n  </state>\n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that the invokeid is included in events returned from the invoked process.   -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n <datamodel>\n   <data conf:id=\"1\"/>\n   </datamodel>\n     \n<state id=\"s0\" >\n  <onentry>\n    <send event=\"timeout\" delay=\"3s\"/>\n    </onentry>\n \n  <invoke type=\"http://www.w3.org/TR/scxml/\" id=\"foo\">\n   <content>\n     <scxml initial=\"subFinal\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n      <final id=\"subFinal\"/>\n       </scxml>\n    </content>\n    </invoke>\n\n  <transition event=\"done.invoke\" target=\"s1\">\n    <assign conf:location=\"1\" conf:eventField=\"invokeid\"/>\n    </transition>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n</state>\n\n<state id=\"s1\">\n  <transition conf:idQuoteVal=\"1=foo\" conf:targetpass=\"\"/>\n  <transition conf:targetfail=\"\"/>\n</state>\n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ]
+ ]
+}

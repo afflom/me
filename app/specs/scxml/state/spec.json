@@ -57,6 +57,24 @@
    "sha256": "686ccf633cc4a3d1f2e7f4ba58d3219065699eca151916e1b5bf898b961cd4c5"
   },
   {
+   "assert": "403",
+   "section": "3.13",
+   "file": "403/test403a.txml",
+   "sha256": "2d7e031e8806d857ddd68d56800734a4fad01040e737f4f6261cb17d4f0421d4"
+  },
+  {
+   "assert": "403",
+   "section": "3.13",
+   "file": "403/test403b.txml",
+   "sha256": "cc63512c5f18907c2de0199742c74166d6e8ef8f89a0167ab31128f3187624e0"
+  },
+  {
+   "assert": "403",
+   "section": "3.13",
+   "file": "403/test403c.txml",
+   "sha256": "24ea2011eb60435431903c6091b4d29800a9f73b9ce7614c599b68106c5f80fd"
+  },
+  {
    "assert": "407",
    "section": "3.13",
    "file": "407/test407.txml",
@@ -140,6 +158,18 @@
   ],
   [
    "<?xml version=\"1.0\"?>\n<!-- the assertion that errors are 'like any other event' is pretty broad, but we can check that they\nare pulled off the internal queue in order, and that prefix matching works on them.  -->\n\n\n<scxml  initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n       \n<state id=\"s0\" initial=\"s01\">\n  <onentry>\n     <!-- catch the failure case -->\n     <send event=\"timeout\" delay=\"1s\"/>\n    </onentry>\n  <transition event=\"timeout\" conf:targetfail=\"\"/>\n\n <state id=\"s01\">\n   <onentry>\n   <!-- the first internal event.  The error will be the second, and event2 will be the third -->\n      <raise event=\"event1\"/>\n     <!-- assigning to a non-existent location should raise an error -->\n    <assign conf:invalidLocation=\"\" conf:expr=\"2\"/> \n   </onentry>\n       \n  <transition  event=\"event1\" target=\"s02\">\n    <raise event=\"event2\"/>\n    </transition>\n  <transition  event=\"*\" conf:targetfail=\"\"/>\n </state>\n \n<state id=\"s02\">\n  <transition event=\"error\" target=\"s03\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n  </state>\n  \n<state id=\"s03\">\n  <transition event=\"event2\" conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n  </state>\n\n</state>\n \n<conf:pass/>\n<conf:fail/>\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test one part of 'optimal enablement' meaning that of all transitions that are enabled, we chose the ones\nin child states over parent states, and use document order to break ties. We have\na parent state s0 with two children, s01 and s02. In s01, we test that a) if\na transition in the child matches, we don't consider matches in the parent and b)\nthat if two transitions match in any state, we take the first in document order.\nIn s02 we test that we take a transition in the parent if there is no\nmatching transition in the child. -->\n\n\n<scxml  initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n       \n<state id=\"s0\" initial=\"s01\">\n  <onentry>\n     <!-- catch the failure case -->\n     <send event=\"timeout\" delay=\"1s\"/>\n    </onentry>\n  <transition event=\"timeout\" conf:targetfail=\"\"/>\n  <transition event=\"event1\"  conf:targetfail=\"\"/>\n  <transition event=\"event2\" conf:targetpass=\"\"/>\n\n <state id=\"s01\">\n   <onentry>\n   <!-- this should be caught by the first transition in this state, taking us to S02 -->\n      <raise event=\"event1\"/>\n   </onentry>\n       \n  <transition  event=\"event1\" target=\"s02\"/>\n  <transition  event=\"*\" conf:targetfail=\"\"/>\n </state>\n \n<state id=\"s02\">\n  <onentry>\n  <!-- since the local transition has a cond that evaluates to false this should be caught by a \n    transition in the parent state, taking us to pass -->\n    <raise event=\"event2\"/>\n    </onentry>\n  <transition event=\"event1\" conf:targetfail=\"\"/>\n  <transition event=\"event2\" conf:false=\"\" conf:targetfail=\"\"/>\n  </state>\n\n</state>\n \n<conf:pass/>\n<conf:fail/>\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that 'optimally enabled set' really is a set, specifically that if a transition is optimally enabled in\ntwo different states, it is taken only once.  --> \n\n\n<scxml  initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n  <datamodel>\n   <data conf:id=\"1\" conf:expr=\"0\"/>\n   </datamodel>\n   \n<state id=\"s0\" initial=\"p0\">\n  <!-- this transition should never be taken because a transition in a lower state should\n  always be selected -->\n  <transition event=\"event1\">\n    <conf:incrementID id=\"1\"/>\n      </transition>\n   \n     \n   \n <parallel id=\"p0\">\n\n  <onentry>\n     <raise event=\"event1\"/>\n     <raise event=\"event2\"/>\n    </onentry>\n    \n    <!-- this transition will be selected by both states p0s1 and p0s2, but should be executed only once -->\n    <transition event=\"event1\">\n      <conf:incrementID id=\"1\"/>\n      </transition>\n      \n <state id=\"p0s1\">\n   <transition event=\"event2\" conf:idVal=\"1=1\" conf:targetpass=\"\"/>\n   <transition event=\"event2\" conf:targetfail=\"\"/>\n   </state>\n   \n <state id=\"p0s2\"/>  \n \n</parallel>\n</state>\n\n<conf:pass/>\n<conf:fail/>\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test 'optimally enabled set', specifically that preemption works correctly --> \n\n\n<scxml  initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n  <datamodel>\n   <data conf:id=\"1\" expr=\"0\"/>\n   </datamodel>\n   \n<state id=\"s0\" initial=\"p0\">\n  <onentry>\n     <raise event=\"event1\"/>\n     <send event=\"timeout\" delay=\"1s\"/>\n    </onentry>\n  <transition event=\"event2\" conf:targetfail=\"\"/>   \n  <transition event=\"timeout\" conf:targetfail=\"\"/>\n   \n <parallel id=\"p0\">\n \t\n \t<state id=\"p0s1\">\n \t\t<transition event=\"event1\"/>\n \t\t<transition event=\"event2\"/>\n \t\t</state>\n \n <state id=\"p0s2\">\n   <transition event=\"event1\" target=\"p0s1\">\n     <raise event=\"event2\"/>\n     </transition>\n     \n   </state>\n   \n <state id=\"p0s3\">\n   <!-- this transition should be blocked by the one in p0s2-->\n   <transition event=\"event1\" conf:targetfail=\"\"/>\n   <!-- this transition will preempt the one that p0s2 inherits\n   from an ancestor  -->\n   <transition event=\"event2\" target=\"s1\"/>\n\n   </state> \n\n<state id=\"p0s4\">\n\t<!-- this transition never gets preempted, should fire twice -->\n\t<transition event=\"*\">\n\t\t<conf:incrementID id=\"1\"/>\n\t\t</transition>\n\t</state> \n \n</parallel>\n</state>\n\n<state id=\"s1\">\n  <transition conf:idVal=\"1=2\" conf:targetpass=\"\"/>\n  <transition conf:targetfail=\"\"/>\n  </state>\n\n<conf:pass/>\n<conf:fail/>\n</scxml>",
    "pass"
   ],
   [
