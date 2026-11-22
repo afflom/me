@@ -53,9 +53,9 @@ for (const [name, facet] of [['holon', HOLON], ['curate', CURATE]]) {
 }
 
 // HL-03: the observer.
-for (const [from, to] of RULE30.vectors) ok(rule30(BigInt(from)) === BigInt(to), `rule30(${from}) = ${to}`);
-ok(rule30(0n) === rule30(BigInt(RULE30.seed)), 'the all-zero register is seeded first');
-const l = lane(0xff_ffn, 0);
+for (const [from, to] of RULE30.vectors) ok((await rule30(BigInt(from))) === BigInt(to), `rule30(${from}) = ${to}`);
+ok((await rule30(0n)) === (await rule30(BigInt(RULE30.seed))), 'the all-zero register is seeded first');
+const l = await lane(0xff_ffn, 0);
 ok(l.pick === 15 && l.up && l.steps === 4, 'lane bits');
 ok(dominance({ dissonant: 1, missed: 0, interruptions: 0 }, { dissonant: 2, missed: 0, interruptions: 0 }) === 'dominates', 'dominates');
 ok(dominance({ dissonant: 1, missed: 0, interruptions: 0 }, { dissonant: 1, missed: 0, interruptions: 0 }) === 'equal', 'equal');
@@ -165,7 +165,7 @@ const off = memoryKeep();
 off.save({ facets: { resonance: { register: RULE30.seed, params: { near: 8, gap: 1 }, ledger: [] } } });
 ok(JSON.stringify(makeObserver({ decide, kappa, replay, keep: off, facets: [engine] }).params('resonance')) === JSON.stringify(floorOf(engine)), 'an off-step state is not run');
 ok(tunableWord(engine, { near: 17, gap: 2 }) === 'no' && tunableWord(engine, { near: 8 }) === 'no' && tunableWord(engine, { near: 8, gap: 2, x: 1 }) === 'no', 'tunable word');
-for (let g = 0; g < RULE30.lanes; g++) ok(tunableWord(engine, propose(engine, floorOf(engine), rule30(BigInt(RULE30.seed)), g)) === 'yes', `lane ${g} stays in bounds`);
+for (let g = 0; g < RULE30.lanes; g++) ok(tunableWord(engine, await propose(engine, floorOf(engine), await rule30(BigInt(RULE30.seed)), g)) === 'yes', `lane ${g} stays in bounds`);
 ok(neighbours(engine, floorOf(engine)).length === 4, 'one-step neighbours');
 
 // Answers the observer does not expect are never obeyed.

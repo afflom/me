@@ -1,0 +1,140 @@
+\begin{lexlean}{PrismHolonRegister}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\importmodule{PrismHolon}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: holonRegisterStart,
+  parameters: [s : Bytes, i : Nat, k : Nat],
+  result: Nat,
+  body: (match k
+    | Nat.zero => i
+    | Nat.succ rest => (holonRegisterStart s ((PrismHolon::prismHolonFieldEnd s i (Foundation.Bytes::byteLength s)) + 1) rest)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: k
+}
+
+definition{
+  name: holonRegisterWord,
+  parameters: [s : Bytes, k : Nat],
+  result: Bytes,
+  body: (let a : Nat := (holonRegisterStart s 0 k); (PrismHolon::prismHolonSliceOf s a (prim subtract (PrismHolon::prismHolonFieldEnd s a (Foundation.Bytes::byteLength s)) a : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonRegisterNat,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (PrismHolon::prismHolonByteAt s i)
+      | Option.none => acc
+      | Option.some d => (if (d =? 32) then acc else (holonRegisterNat s (i + 1) ((prim multiply acc 16 : Nat) + (if (d <? 58) then (prim subtract d 48 : Nat) else (prim subtract d 87 : Nat))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: holonRegisterDigitsFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => (match (PrismHolon::prismHolonByteAt s i)
+      | Option.none => true
+      | Option.some d => (d =? 32))
+    | Nat.succ rest => (match (PrismHolon::prismHolonByteAt s i)
+      | Option.none => true
+      | Option.some d => (if (d =? 32) then true else ((((47 <? d) && (d <? 58)) || ((96 <? d) && (d <? 103))) && (holonRegisterDigitsFrom s (i + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: holonRegisterDigits,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match (PrismHolon::prismHolonByteAt s i)
+    | Option.none => false
+    | Option.some d => ((if (d =? 32) then false else true) && (holonRegisterDigitsFrom s i fuel))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonRegisterPow,
+  parameters: [k : Nat],
+  result: Nat,
+  body: (match k
+    | Nat.zero => 1
+    | Nat.succ rest => (prim multiply 2 (holonRegisterPow rest) : Nat)),
+  axioms: [],
+  recursive_argument: k
+}
+
+definition{
+  name: holonRegisterBit,
+  parameters: [s : Nat, i : Nat],
+  result: Nat,
+  body: (prim remainder (prim quotient s (holonRegisterPow i) 0 : Nat) 2 0 : Nat),
+  axioms: []
+}
+
+definition{
+  name: holonRegisterCell,
+  parameters: [s : Nat, i : Nat],
+  result: Nat,
+  body: (let o : Nat := (if (((holonRegisterBit s i) + (holonRegisterBit s (prim remainder (i + 63) 64 0 : Nat))) =? 0) then 0 else 1); (if ((holonRegisterBit s (prim remainder (i + 1) 64 0 : Nat)) =? o) then 0 else (holonRegisterPow i))),
+  axioms: []
+}
+
+definition{
+  name: holonRegisterNext,
+  parameters: [s : Nat, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => ((holonRegisterCell s i) + (holonRegisterNext s (i + 1) rest))),
+  axioms: [],
+  recursive_argument: fuel
+}
+
+definition{
+  name: holonRegisterHex,
+  parameters: [n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let d : Bytes := (PrismHolon::prismHolonSliceOf 0x30313233343536373839616263646566 (prim remainder n 16 0 : Nat) 1); (if (n <? 16) then d else (Foundation.Bytes::appendBytes (holonRegisterHex (prim quotient n 16 0 : Nat) rest) d)))),
+  axioms: [],
+  recursive_argument: fuel
+}
+
+definition{
+  name: holonRegisterStep,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (let s : Nat := (holonRegisterNat value (holonRegisterStart value 0 1) 0 16); (holonRegisterHex (holonRegisterNext (if (s =? 0) then (holonRegisterNat value (holonRegisterStart value 0 2) 0 16) else s) 0 64) 16)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonRegisterLane,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (let b : Nat := (prim remainder (prim quotient (holonRegisterNat value (holonRegisterStart value 0 1) 0 16) (holonRegisterPow (prim multiply 16 (holonRegisterNat value (holonRegisterStart value 0 2) 0 16) : Nat)) 0 : Nat) 256 0 : Nat); (Foundation.Bytes::appendBytes (holonRegisterHex (prim remainder b 16 0 : Nat) 16) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (holonRegisterHex (prim remainder (prim quotient b 16 0 : Nat) 2 0 : Nat) 16) (Foundation.Bytes::appendBytes 0x20 (holonRegisterHex ((prim remainder (prim quotient b 32 0 : Nat) 4 0 : Nat) + 1) 16)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonRegisterDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (160 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (if (prim equal (holonRegisterWord value 0) 0x73746570 : Bool) then (if ((holonRegisterDigits value (holonRegisterStart value 0 1) 16) && (holonRegisterDigits value (holonRegisterStart value 0 2) 16)) then (holonRegisterStep value) else 0x696e76616c6964) else (if (prim equal (holonRegisterWord value 0) 0x6c616e65 : Bool) then (if (((holonRegisterDigits value (holonRegisterStart value 0 1) 16) && (holonRegisterDigits value (holonRegisterStart value 0 2) 16)) && ((holonRegisterNat value (holonRegisterStart value 0 2) 0 16) <? 4)) then (holonRegisterLane value) else 0x696e76616c6964) else (PrismHolon::prismHolonDispatch value)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

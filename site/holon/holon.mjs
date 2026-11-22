@@ -20,24 +20,19 @@
 
 import { HOLON, CURATE, FACETS, BANDS, GESTURES, OBJECTIVES, RULE30, CLAIM } from './table.mjs';
 
-const MASK = (1n << 64n) - 1n;
-const SEED = BigInt(RULE30.seed);
 const te = new TextEncoder();
 
-// One step of the 64-cell cyclic Rule-30 register: next(i) = cell(i + 1) XOR
-// (cell(i) OR cell(i - 1)) on Z/64Z, the all-zero register seeded first.
-export function rule30(state) {
-  let s = BigInt(state) & MASK;
-  if (s === 0n) s = SEED;
-  const left = ((s >> 1n) | (s << 63n)) & MASK;
-  const right = ((s << 1n) | (s >> 63n)) & MASK;
-  return (left ^ (s | right)) & MASK;
-}
-
-// Lane g of a stepped register: which tunable, which way, how many steps.
-export function lane(register, g) {
-  const byte = Number((BigInt(register) >> BigInt(16 * g)) & 0xffn);
-  return { pick: byte & 0x0f, up: (byte & 0x10) !== 0, steps: ((byte >> 5) & 0x03) + 1 };
+// The 64-cell cyclic Rule-30 register is the holon guest's (PrismHolonRegister):
+// its step, next(i) = cell(i + 1) XOR (cell(i) OR cell(i - 1)) on Z/64Z with the
+// all-zero register seeded first, and lane g of a stepped register (which
+// tunable, which way, how many steps).
+let reader = null;
+const guestRead = async (text) => (await (reader ??= import('./guest.mjs').then((m) => m.opened(m.GUESTS.holon))))(text);
+const cells = (state) => BigInt.asUintN(64, BigInt(state)).toString(16);
+export const rule30 = async (state, read = guestRead) => BigInt(`0x${await read(`step ${cells(state)} ${cells(RULE30.seed)}`)}`);
+export async function lane(register, g, read = guestRead) {
+  const [pick, up, steps] = (await read(`lane ${cells(register)} ${g}`)).split(' ').map((word) => parseInt(word, 16));
+  return { pick, up: up === 1, steps };
 }
 
 // a against b on objectives that are each minimized.
@@ -104,8 +99,8 @@ export const floorOf = (facet) => Object.fromEntries(facet.tunable.map((t) => [t
 const clamp = (t, v) => Math.min(t.max, Math.max(t.min, v));
 
 // A Rule-30 hypothesis: one lane moves one tunable by one to four steps.
-export function propose(facet, params, register, g) {
-  const { pick, up, steps } = lane(register, g);
+export async function propose(facet, params, register, g, read) {
+  const { pick, up, steps } = await lane(register, g, read);
   const t = facet.tunable[pick % facet.tunable.length];
   return { ...params, [t.name]: clamp(t, params[t.name] + (up ? 1 : -1) * steps * t.step) };
 }
@@ -147,7 +142,7 @@ function expect(answer, allowed) {
 // apply(facetId, params): hand adopted parameters to the facet that runs them.
 // admissible(facetId, params): the facet's own check beyond bounds and step
 //   (the resonance engine's paramsOf also keeps the hours of the day in order).
-export function makeObserver({ decide, kappa, replay, keep = memoryKeep(), halted = () => 'no', apply = () => {}, admissible = () => true, facets = FACETS }) {
+export function makeObserver({ decide, kappa, replay, read, keep = memoryKeep(), halted = () => 'no', apply = () => {}, admissible = () => true, facets = FACETS }) {
   const window = [];
   let since = 0;
   const loaded = keep.load() ?? {};
@@ -234,11 +229,11 @@ export function makeObserver({ decide, kappa, replay, keep = memoryKeep(), halte
       }
       if (best) candidates.push([best.c, 'reconcile']);
     } else {
-      s.register = String(rule30(s.register));
+      s.register = String(await rule30(s.register, read));
       for (let g = 0; g < RULE30.lanes; g++) candidates.push([g, 'explore']);
     }
     for (const [c, move] of candidates) {
-      const candidate = move === 'explore' ? propose(f, s.params, s.register, c) : c;
+      const candidate = move === 'explore' ? await propose(f, s.params, s.register, c, read) : c;
       const out = await weigh(f, s, candidate, move, runs, signals, evidence);
       outcomes.push(out);
       if (out.answer === 'adopt' || out.answer === 'recall') {
