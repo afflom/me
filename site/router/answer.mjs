@@ -168,3 +168,31 @@ export function overview(held, now = Date.now(), observed = false) {
   const events = held.filter((i) => i.media === "calendar" || i.start != null).sort((a, b) => upcoming(a, b, now)), newest = (media) => held.filter((i) => i.media === media && i.start == null).sort((a, b) => b.at - a.at)[0];
   return [observed ? null : events[0], newest("message"), newest("plainText")].filter(Boolean);
 }
+
+// A turn as the chat shows it: what was asked and what was said, one sentence per item on its own line, the
+// items the sentences say as links that open their rows, and the offers. The card hands in what it draws with.
+export function shown(prompt, said, { element, rowOf, words, offer, say }) {
+  const node = element("div", { className: "pr-turn" }, element("p", { className: "pr-you", textContent: prompt }), element("p", { className: "pr-said", textContent: said.sentences.join("\n") })), rows = said.sources.map(rowOf);
+  // The sentences link to the items they say; the list beneath holds all that was found.
+  const links = (said.cited ?? said.sources).filter((item) => said.sources.includes(item)).map((item) => {
+    const link = element("a", { href: "#", className: "pr-source", textContent: item.title || item.who || "—" });
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+      const row = rows[said.sources.indexOf(item)];
+      if (row.querySelector(".pr-open")?.getAttribute("aria-expanded") === "false") row.querySelector(".pr-open").click();
+      row.scrollIntoView({ block: "nearest" });
+    });
+    return link;
+  });
+  // One offer per person: a reply to someone who wrote twice is one reply, and it names them.
+  const offered = new Set(), offers = (said.offers ?? []).map(({ kind, item }) => {
+    const label = { reply: words.reply, done: words.done, keep: words.keep, connect: words.connect }[kind], whom = item?.who || item?.from || "";
+    if (!label || offered.has(`${kind}|${whom}`)) return null;
+    offered.add(`${kind}|${whom}`);
+    const button = element("button", { type: "button", className: "pr-offer", textContent: kind === "reply" && item?.who ? `${label} · ${item.who}` : label });
+    button.addEventListener("click", () => { button.disabled = true; offer(kind, item, prompt).catch((error) => say(error?.message ?? String(error), "bad")); });
+    return button;
+  }).filter(Boolean);
+  node.append(...(links.length ? [element("p", { className: "pr-sources" }, ...links)] : []), ...(offers.length ? [element("div", { className: "pr-offers" }, ...offers)] : []));
+  return { node, rows };
+}
