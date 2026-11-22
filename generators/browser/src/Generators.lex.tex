@@ -73,7 +73,11 @@ definition{
     | Option.none => (refused 0x6e65656473202e67656e2f62726f777365722d696e64657820616e642074686520616461707465722074686520746172676574206e616d6573)
     | Option.some reasons => (if ((Foundation.Bytes::byteLength reasons) =? 0) then (written 0x) else (refused reasons))) else (if (Foundation.Tar::sameBytes name 0x62726f7773657270726f6265) then (match (GenBrowser::brProbe archive)
     | Option.none => (refused 0x6e65656473202e67656e2f62726f777365722d696e646578)
-    | Option.some file => (written file)) else 0x696e76616c6964)))))))))))),
+    | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x646576696365666f726d617473) then (match (GenBrowser::brDeviceFormats archive true)
+    | Option.none => (refused 0x6e65656473206170702f7372632f507269736d4465766963652e6c65782e746578)
+    | Option.some reasons => (if ((Foundation.Bytes::byteLength reasons) =? 0) then (match (GenBrowser::brDeviceFormats archive false)
+      | Option.none => 0x696e76616c6964
+      | Option.some file => (written file)) else (refused reasons))) else 0x696e76616c6964))))))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

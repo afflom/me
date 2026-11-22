@@ -1,10 +1,17 @@
 {
   "id": "folder",
   "wasm": "site/device/guest/folder.wasm",
-  "pin": "site/device/device.mjs",
+  "pin": "site/device/guest.mjs",
   "modules": [
-    "PrismFolder"
+    "PrismFolder",
+    "PrismFolderRead"
   ],
-  "dispatch": "PrismFolder::prismFolderDispatch",
-  "vectors": "folder"
+  "dispatch": "PrismFolderRead::folderReadDispatch",
+  "vectors": "in:PrismFolderRead::folderReadVectors",
+  "limits": [
+    256,
+    64,
+    512
+  ],
+  "as": "folder"
 }
