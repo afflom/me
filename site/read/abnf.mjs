@@ -20,7 +20,7 @@ import { GUEST as ICAL, opened as openedIcal } from "../calendar/guest.mjs";
 
 const encoder = new TextEncoder();
 // Each grammar's guest, by the grammar's key: checked and compiled once, here.
-const asks = { mail: await opened(GUESTS.mail), ical: await openedIcal(ICAL) };
+const asks = { mail: await opened(GUESTS.mail), ical: await openedIcal(ICAL), rfc3339: await import("../rfc3339/guest.mjs").then((m) => m.opened(m.GUEST)) };
 
 export function abnf({ rules, key }) {
   const names = Object.keys(rules).sort();

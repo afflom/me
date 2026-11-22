@@ -7,6 +7,7 @@
 \importmodule{GenTurtle}
 \importmodule{GenDigest}
 \importmodule{GenIdentity}
+\importmodule{GenRfc3339}
 \importmodule{Foundation.Tar}
 \importmodule{Foundation.View.Text.V1.Model}
 \importmodule{Foundation.View.Text.V3.Model}
@@ -84,7 +85,15 @@ definition{
     | Option.none => (refused 0x6e65656473202e67656e2f73656e7365732d636172647320776974682061206361726420616e64206170702f73706563732f73656e7365732f636c6f636b732e6a736f6e20776974682061206261736520616e64206120636c6f636b)
     | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x6469676573746d6f6e7465) then (match (GenDigest::digMonte archive)
     | Option.none => (refused 0x6e65656473206170702f73706563732f6f7261636c652f6e6973742d636176702d7368613235362f5348413235364d6f6e74652e72737020776974682069747320434f554e54203d2030)
-    | Option.some file => (written file)) else 0x696e76616c6964))))))))))))))),
+    | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x726663333333396578616d706c6573) then (match (GenRfc3339::rfExamples archive)
+    | Option.none => (refused 0x6e65656473205246432033333339206174206974732070696e6e6564206279746573)
+    | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x726663333333396361736573) then (match (GenRfc3339::rfCases archive)
+    | Option.none => (refused 0x6e65656473202e67656e2f726663333333392d6578616d706c6573207769746820746865206578616d706c6573206f662052464320333333392073656374696f6e20352e38)
+    | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x7266633333333972657173) then (match (GenRfc3339::rfReqs archive)
+    | Option.none => (refused 0x6e65656473202e67656e2f726663333333392d6578616d706c6573207769746820746865206578616d706c6573206f662052464320333333392073656374696f6e20352e38)
+    | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x73656e7365736c6f63616c) then (match (GenRfc3339::rfLocal archive)
+    | Option.none => (refused 0x6e65656473202e67656e2f726663333333392d6578616d706c6573207769746820746865206578616d706c652052464320333333392073656374696f6e20352e3820676976657320696e2055544320746f6f)
+    | Option.some file => (written file)) else 0x696e76616c6964))))))))))))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

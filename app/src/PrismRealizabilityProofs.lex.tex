@@ -1100,7 +1100,7 @@ theorem{
 theorem{
   name: realizabilityAskActMatters,
   parameters: [],
-  statement: ((((PrismAsk::prismAskJudge (record PrismAsk::PrismAskRequest {halted := (PrismAsk::prismAskHaltedNo), clock := (PrismAsk::prismAskClockNot), box := (PrismAsk::prismAskBoxKeeps), intent := (PrismAsk::prismAskIntentFact), timed := (PrismAsk::prismAskTimedNo), held := (PrismAsk::prismAskHeldSome), act := (PrismAsk::prismAskActTask)})) =? (PrismAsk::prismAskAnswerLook)) && ((PrismAsk::prismAskJudge (record PrismAsk::PrismAskRequest {halted := (PrismAsk::prismAskHaltedNo), clock := (PrismAsk::prismAskClockNot), box := (PrismAsk::prismAskBoxKeeps), intent := (PrismAsk::prismAskIntentFact), timed := (PrismAsk::prismAskTimedNo), held := (PrismAsk::prismAskHeldSome), act := (PrismAsk::prismAskActAutofeedback)})) =? (PrismAsk::prismAskAnswerHeard))) = true),
+  statement: ((((PrismAsk::prismAskJudge (record PrismAsk::PrismAskRequest {halted := (PrismAsk::prismAskHaltedNo), clock := (PrismAsk::prismAskClockNot), box := (PrismAsk::prismAskBoxKeeps), intent := (PrismAsk::prismAskIntentQuestion), timed := (PrismAsk::prismAskTimedNo), held := (PrismAsk::prismAskHeldSome), act := (PrismAsk::prismAskActTask)})) =? (PrismAsk::prismAskAnswerAnswer)) && ((PrismAsk::prismAskJudge (record PrismAsk::PrismAskRequest {halted := (PrismAsk::prismAskHaltedNo), clock := (PrismAsk::prismAskClockNot), box := (PrismAsk::prismAskBoxKeeps), intent := (PrismAsk::prismAskIntentQuestion), timed := (PrismAsk::prismAskTimedNo), held := (PrismAsk::prismAskHeldSome), act := (PrismAsk::prismAskActSocial)})) =? (PrismAsk::prismAskAnswerGreet))) = true),
   proof: reflexivity{},
   axioms: []
 }

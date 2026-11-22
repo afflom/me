@@ -2,10 +2,41 @@
  "key": "rfc3339",
  "title": "RFC 3339 Date and Time on the Internet: Timestamps",
  "issuer": "IETF",
- "text": null,
- "unpinned": "pinning with the bcp14 extractor",
- "governs": [],
+ "text": {
+  "url": "https://www.rfc-editor.org/rfc/rfc3339.txt",
+  "sha256": "9ab2b8864a85dca73a88f49b0927bc7bc85f596926e4fd1890905777924e700a"
+ },
+ "inventories": [
+  {
+   "generated": "test/standards/generated/rfc3339.jsonl",
+   "vendored": "app/specs/standards/texts/9ab2b8864a85dca73a88f49b0927bc7bc85f596926e4fd1890905777924e700a",
+   "source": {
+    "url": "https://www.rfc-editor.org/rfc/rfc3339.txt",
+    "sha256": "9ab2b8864a85dca73a88f49b0927bc7bc85f596926e4fd1890905777924e700a"
+   }
+  },
+  {
+   "generated": "test/standards/generated/rfc3339-examples.jsonl",
+   "vendored": "app/specs/standards/texts/9ab2b8864a85dca73a88f49b0927bc7bc85f596926e4fd1890905777924e700a",
+   "source": {
+    "url": "https://www.rfc-editor.org/rfc/rfc3339.txt",
+    "sha256": "9ab2b8864a85dca73a88f49b0927bc7bc85f596926e4fd1890905777924e700a"
+   }
+  }
+ ],
+ "governs": [
+  "app/src/PrismRfc3339.lex.tex",
+  "app/src/PrismGrammarRfc3339.lex.tex",
+  "site/read/grammar/rfc3339.mjs",
+  "site/rfc3339/guest.mjs"
+ ],
  "realizedBy": [
   "ST-01"
- ]
+ ],
+ "enforcedByKind": {
+  "Example": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "each thing RFC 3339 section 5.8 tells of its own examples (an example in UTC, the example it calls equivalent to a date-time in UTC, the two it calls the same leap second) is an acceptance vector of the rfc3339 guest (app/specs/rfc3339/spec.json, written by generators/senses rfc3339cases from the pinned text), which reads a date-time by the RFC's section 5.6 grammar and section 5.7 restrictions and tells its instant in UTC; GU-01 replays the pinned wasm over the vectors"
+  }
+ }
 }

@@ -115,6 +115,66 @@
         ".gen/schemaorg-person-names"
       ],
       "output": "app/src/PersonSchemaPin.lex.tex"
+    },
+    {
+      "generator": "schemaranges",
+      "split": "app/specs/standards/texts/0a4b8c4c910fc831ec8695196510973390906a5ee34dc6b862dfec4d21a12f74",
+      "breakBefore": "^    [{]$",
+      "inputs": [
+        ".gen/schemaorg-person-names"
+      ],
+      "output": ".gen/schemaorg-person-ranges"
+    },
+    {
+      "generator": "modelbase",
+      "split": "app/src/Foundation/Person/V1/Model.lex.tex",
+      "breakBefore": "^definition[{]$",
+      "output": ".gen/person-model-base"
+    },
+    {
+      "generator": "vocabcopy",
+      "each": {
+        "file": "app/specs/vocab/spec.json",
+        "array": ".propertyFloors"
+      },
+      "output": ".gen/person-floors"
+    },
+    {
+      "generator": "vocabcopy",
+      "each": {
+        "file": "app/specs/vocab/spec.json",
+        "array": ".anchors"
+      },
+      "output": ".gen/person-anchors"
+    },
+    {
+      "generator": "personfloor",
+      "each": {
+        "file": "app/specs/vocab/spec.json",
+        "array": ".domains"
+      },
+      "inputs": [
+        ".gen/person-anchors"
+      ],
+      "output": ".gen/person-floor"
+    },
+    {
+      "generator": "personmorerows",
+      "inputs": [
+        ".gen/schemaorg-person-ranges",
+        ".gen/person-model-base",
+        ".gen/person-floors",
+        ".gen/person-floor"
+      ],
+      "output": ".gen/person-more-rows"
+    },
+    {
+      "generator": "personmore",
+      "inputs": [
+        ".gen/person-more-rows",
+        ".gen/person-floor"
+      ],
+      "output": "app/src/Foundation/Person/V1/More.lex.tex"
     }
   ]
 }

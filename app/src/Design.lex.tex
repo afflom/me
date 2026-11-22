@@ -2324,6 +2324,13 @@ definition{
 }
 
 definition{
+  name: processPrismAskRule10,
+  parameters: [],
+  result: Foundation.Arch::SystemProcess,
+  body: (record Foundation.Arch::SystemProcess {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
   name: processPrismAskOtherwise,
   parameters: [],
   result: Foundation.Arch::SystemProcess,
@@ -3424,6 +3431,13 @@ definition{
 
 definition{
   name: statePrismAskAnsweredClock,
+  parameters: [],
+  result: Foundation.Arch::SystemState,
+  body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismAskPrismAskGuest"})
+}
+
+definition{
+  name: statePrismAskAnsweredGreet,
   parameters: [],
   result: Foundation.Arch::SystemState,
   body: (record Foundation.Arch::SystemState {owner := "Architecture::componentPrismAskPrismAskGuest"})
@@ -9744,6 +9758,13 @@ definition{
 }
 
 definition{
+  name: stPrismAskAnsweredGreet,
+  parameters: [],
+  result: Foundation.Arch::UmlState,
+  body: (record Foundation.Arch::UmlState {view := "Design::viewPrismAskUmlStates", state := "Design::statePrismAskAnsweredGreet", initial := false})
+}
+
+definition{
   name: stPrismAskAnsweredEmpty,
   parameters: [],
   result: Foundation.Arch::UmlState,
@@ -12288,42 +12309,42 @@ definition{
   name: trPrismAskRule3,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 4, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredEmpty", trigger := "Design::processPrismAskRule3"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 4, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredGreet", trigger := "Design::processPrismAskRule3"})
 }
 
 definition{
   name: trPrismAskRule4,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 5, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredAnswer", trigger := "Design::processPrismAskRule4"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 5, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredEmpty", trigger := "Design::processPrismAskRule4"})
 }
 
 definition{
   name: trPrismAskRule5,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 6, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredEmpty", trigger := "Design::processPrismAskRule5"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 6, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredAnswer", trigger := "Design::processPrismAskRule5"})
 }
 
 definition{
   name: trPrismAskRule6,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 7, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredAnswer", trigger := "Design::processPrismAskRule6"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 7, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredEmpty", trigger := "Design::processPrismAskRule6"})
 }
 
 definition{
   name: trPrismAskRule7,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 8, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredHeard", trigger := "Design::processPrismAskRule7"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 8, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredAnswer", trigger := "Design::processPrismAskRule7"})
 }
 
 definition{
   name: trPrismAskRule8,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 9, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredKeep", trigger := "Design::processPrismAskRule8"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 9, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredHeard", trigger := "Design::processPrismAskRule8"})
 }
 
 definition{
@@ -12334,66 +12355,80 @@ definition{
 }
 
 definition{
+  name: trPrismAskRule10,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 11, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredKeep", trigger := "Design::processPrismAskRule10"})
+}
+
+definition{
   name: trPrismAskOtherwise,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 11, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredLook", trigger := "Design::processPrismAskOtherwise"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 12, source := "Design::statePrismAskDeciding", target := "Design::statePrismAskAnsweredLook", trigger := "Design::processPrismAskOtherwise"})
 }
 
 definition{
   name: trPrismAskResetPaused,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 12, source := "Design::statePrismAskAnsweredPaused", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 13, source := "Design::statePrismAskAnsweredPaused", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
 }
 
 definition{
   name: trPrismAskResetClock,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 13, source := "Design::statePrismAskAnsweredClock", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 14, source := "Design::statePrismAskAnsweredClock", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
+}
+
+definition{
+  name: trPrismAskResetGreet,
+  parameters: [],
+  result: Foundation.Arch::UmlTransition,
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 15, source := "Design::statePrismAskAnsweredGreet", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
 }
 
 definition{
   name: trPrismAskResetEmpty,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 14, source := "Design::statePrismAskAnsweredEmpty", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 16, source := "Design::statePrismAskAnsweredEmpty", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
 }
 
 definition{
   name: trPrismAskResetAnswer,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 15, source := "Design::statePrismAskAnsweredAnswer", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 17, source := "Design::statePrismAskAnsweredAnswer", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
 }
 
 definition{
   name: trPrismAskResetHeard,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 16, source := "Design::statePrismAskAnsweredHeard", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 18, source := "Design::statePrismAskAnsweredHeard", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
 }
 
 definition{
   name: trPrismAskResetKeep,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 17, source := "Design::statePrismAskAnsweredKeep", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 19, source := "Design::statePrismAskAnsweredKeep", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
 }
 
 definition{
   name: trPrismAskResetLook,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 18, source := "Design::statePrismAskAnsweredLook", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 20, source := "Design::statePrismAskAnsweredLook", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
 }
 
 definition{
   name: trPrismAskResetRefused,
   parameters: [],
   result: Foundation.Arch::UmlTransition,
-  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 19, source := "Design::statePrismAskRefused", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
+  body: (record Foundation.Arch::UmlTransition {view := "Design::viewPrismAskUmlStates", order := 21, source := "Design::statePrismAskRefused", target := "Design::statePrismAskIdle", trigger := "Design::processPrismAskEncodeAnswer"})
 }
 \end{semanticmodule}
 \end{lexlean}

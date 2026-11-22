@@ -1,0 +1,111 @@
+\begin{lexlean}{Foundation.Person.V1.More}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\title{Person model}
+\begin{semanticmodule}
+definition{
+  name: personMoreNamePart0,
+  parameters: [index : Nat],
+  result: String,
+  body: (if (index =? 63) then "additionalName" else (if (index =? 64) then "additionalType" else (if (index =? 65) then "agentInteractionStatistic" else (if (index =? 66) then "alternateName" else (if (index =? 67) then "award" else (if (index =? 68) then "awards" else (if (index =? 69) then "birthPlace" else (if (index =? 70) then "brand" else (if (index =? 71) then "callSign" else (if (index =? 72) then "children" else (if (index =? 73) then "colleague" else (if (index =? 74) then "colleagues" else (if (index =? 75) then "contactPoints" else (if (index =? 76) then "deathDate" else (if (index =? 77) then "deathPlace" else (if (index =? 78) then "description" else (if (index =? 79) then "disambiguatingDescription" else (if (index =? 80) then "duns" else (if (index =? 81) then "faxNumber" else (if (index =? 82) then "follows" else (if (index =? 83) then "funder" else (if (index =? 84) then "funding" else (if (index =? 85) then "gender" else (if (index =? 86) then "globalLocationNumber" else (if (index =? 87) then "hasCertification" else (if (index =? 88) then "hasOfferCatalog" else (if (index =? 89) then "hasPOS" else (if (index =? 90) then "height" else (if (index =? 91) then "honorificPrefix" else (if (index =? 92) then "honorificSuffix" else ""))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: personMoreNamePart1,
+  parameters: [index : Nat],
+  result: String,
+  body: (if (index =? 93) then "identifier" else (if (index =? 94) then "image" else (if (index =? 95) then "interactionStatistic" else (if (index =? 96) then "isicV4" else (if (index =? 97) then "lifeEvent" else (if (index =? 98) then "mainEntityOfPage" else (if (index =? 99) then "makesOffer" else (if (index =? 100) then "memberOf" else (if (index =? 101) then "naics" else (if (index =? 102) then "netWorth" else (if (index =? 103) then "owner" else (if (index =? 104) then "owns" else (if (index =? 105) then "parent" else (if (index =? 106) then "parents" else (if (index =? 107) then "performerIn" else (if (index =? 108) then "potentialAction" else (if (index =? 109) then "pronouns" else (if (index =? 110) then "publishingPrinciples" else (if (index =? 111) then "relatedTo" else (if (index =? 112) then "seeks" else (if (index =? 113) then "sibling" else (if (index =? 114) then "siblings" else (if (index =? 115) then "skills" else (if (index =? 116) then "sponsor" else (if (index =? 117) then "spouse" else (if (index =? 118) then "subjectOf" else (if (index =? 119) then "taxID" else (if (index =? 120) then "vatID" else (if (index =? 121) then "weight" else (if (index =? 122) then "workLocation" else ""))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: personMoreName,
+  parameters: [index : Nat],
+  result: String,
+  body: (if (index <? 93) then (personMoreNamePart0 index) else (if (index <? 123) then (personMoreNamePart1 index) else ""))
+}
+
+definition{
+  name: personMorePhrasePart0,
+  parameters: [index : Nat],
+  result: String,
+  body: (if (index =? 63) then "additional name" else (if (index =? 64) then "additional type" else (if (index =? 65) then "agent interaction statistic" else (if (index =? 66) then "alternate name" else (if (index =? 67) then "award" else (if (index =? 68) then "awards" else (if (index =? 69) then "birth place" else (if (index =? 70) then "brand" else (if (index =? 71) then "call sign" else (if (index =? 72) then "children" else (if (index =? 73) then "colleague" else (if (index =? 74) then "colleagues" else (if (index =? 75) then "contact points" else (if (index =? 76) then "death date" else (if (index =? 77) then "death place" else (if (index =? 78) then "description" else (if (index =? 79) then "disambiguating description" else (if (index =? 80) then "duns" else (if (index =? 81) then "fax number" else (if (index =? 82) then "follows" else (if (index =? 83) then "funder" else (if (index =? 84) then "funding" else (if (index =? 85) then "gender" else (if (index =? 86) then "global location number" else (if (index =? 87) then "has certification" else (if (index =? 88) then "has offer catalog" else (if (index =? 89) then "has pos" else (if (index =? 90) then "height" else (if (index =? 91) then "honorific prefix" else (if (index =? 92) then "honorific suffix" else ""))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: personMorePhrasePart1,
+  parameters: [index : Nat],
+  result: String,
+  body: (if (index =? 93) then "identifier" else (if (index =? 94) then "image" else (if (index =? 95) then "interaction statistic" else (if (index =? 96) then "isic v4" else (if (index =? 97) then "life event" else (if (index =? 98) then "main entity of page" else (if (index =? 99) then "makes offer" else (if (index =? 100) then "member of" else (if (index =? 101) then "naics" else (if (index =? 102) then "net worth" else (if (index =? 103) then "owner" else (if (index =? 104) then "owns" else (if (index =? 105) then "parent" else (if (index =? 106) then "parents" else (if (index =? 107) then "performer in" else (if (index =? 108) then "potential action" else (if (index =? 109) then "pronouns" else (if (index =? 110) then "publishing principles" else (if (index =? 111) then "related to" else (if (index =? 112) then "seeks" else (if (index =? 113) then "sibling" else (if (index =? 114) then "siblings" else (if (index =? 115) then "skills" else (if (index =? 116) then "sponsor" else (if (index =? 117) then "spouse" else (if (index =? 118) then "subject of" else (if (index =? 119) then "tax id" else (if (index =? 120) then "vat id" else (if (index =? 121) then "weight" else (if (index =? 122) then "work location" else ""))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: personMorePhrase,
+  parameters: [index : Nat],
+  result: String,
+  body: (if (index <? 93) then (personMorePhrasePart0 index) else (if (index <? 123) then (personMorePhrasePart1 index) else ""))
+}
+
+definition{
+  name: personMoreRangePart0,
+  parameters: [index : Nat],
+  result: String,
+  body: (if (index =? 63) then "Text" else (if (index =? 64) then "Text" else (if (index =? 65) then "InteractionCounter" else (if (index =? 66) then "Text" else (if (index =? 67) then "Text" else (if (index =? 68) then "Text" else (if (index =? 69) then "Place" else (if (index =? 70) then "Brand" else (if (index =? 71) then "Text" else (if (index =? 72) then "Person" else (if (index =? 73) then "URL" else (if (index =? 74) then "Person" else (if (index =? 75) then "ContactPoint" else (if (index =? 76) then "Date" else (if (index =? 77) then "Place" else (if (index =? 78) then "Text" else (if (index =? 79) then "Text" else (if (index =? 80) then "Text" else (if (index =? 81) then "Text" else (if (index =? 82) then "Person" else (if (index =? 83) then "Organization" else (if (index =? 84) then "Grant" else (if (index =? 85) then "Text" else (if (index =? 86) then "Text" else (if (index =? 87) then "Certification" else (if (index =? 88) then "OfferCatalog" else (if (index =? 89) then "Place" else (if (index =? 90) then "Distance" else (if (index =? 91) then "Text" else (if (index =? 92) then "Text" else ""))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: personMoreRangePart1,
+  parameters: [index : Nat],
+  result: String,
+  body: (if (index =? 93) then "Text" else (if (index =? 94) then "URL" else (if (index =? 95) then "InteractionCounter" else (if (index =? 96) then "Text" else (if (index =? 97) then "Event" else (if (index =? 98) then "URL" else (if (index =? 99) then "Offer" else (if (index =? 100) then "MemberProgramTier" else (if (index =? 101) then "Text" else (if (index =? 102) then "MonetaryAmount" else (if (index =? 103) then "Organization" else (if (index =? 104) then "Thing" else (if (index =? 105) then "Person" else (if (index =? 106) then "Person" else (if (index =? 107) then "Event" else (if (index =? 108) then "Action" else (if (index =? 109) then "Text" else (if (index =? 110) then "URL" else (if (index =? 111) then "Person" else (if (index =? 112) then "Demand" else (if (index =? 113) then "Person" else (if (index =? 114) then "Person" else (if (index =? 115) then "Text" else (if (index =? 116) then "Organization" else (if (index =? 117) then "Person" else (if (index =? 118) then "CreativeWork" else (if (index =? 119) then "Text" else (if (index =? 120) then "Text" else (if (index =? 121) then "Mass" else (if (index =? 122) then "ContactPoint" else ""))))))))))))))))))))))))))))))
+}
+
+definition{
+  name: personMoreRange,
+  parameters: [index : Nat],
+  result: String,
+  body: (if (index <? 93) then (personMoreRangePart0 index) else (if (index <? 123) then (personMoreRangePart1 index) else ""))
+}
+
+definition{
+  name: personMoreKindPart0,
+  parameters: [index : Nat],
+  result: Nat,
+  body: (if (index =? 63) then 0 else (if (index =? 64) then 0 else (if (index =? 66) then 0 else (if (index =? 67) then 0 else (if (index =? 68) then 0 else (if (index =? 71) then 0 else (if (index =? 73) then 3 else (if (index =? 76) then 4 else (if (index =? 78) then 0 else (if (index =? 79) then 0 else (if (index =? 80) then 0 else (if (index =? 81) then 0 else (if (index =? 85) then 0 else (if (index =? 86) then 0 else (if (index =? 91) then 0 else (if (index =? 92) then 0 else 6))))))))))))))))
+}
+
+definition{
+  name: personMoreKindPart1,
+  parameters: [index : Nat],
+  result: Nat,
+  body: (if (index =? 93) then 0 else (if (index =? 94) then 3 else (if (index =? 96) then 0 else (if (index =? 98) then 3 else (if (index =? 101) then 0 else (if (index =? 109) then 0 else (if (index =? 110) then 3 else (if (index =? 115) then 0 else (if (index =? 119) then 0 else (if (index =? 120) then 0 else 6))))))))))
+}
+
+definition{
+  name: personMoreKind,
+  parameters: [index : Nat],
+  result: Nat,
+  body: (if (index <? 93) then (personMoreKindPart0 index) else (if (index <? 123) then (personMoreKindPart1 index) else 6))
+}
+
+definition{
+  name: personMoreLabelPart0,
+  parameters: [index : Nat],
+  result: Nat,
+  body: (if (index =? 80) then 1 else 2)
+}
+
+definition{name: personMoreLabelPart1, parameters: [index : Nat], result: Nat, body: 2}
+
+definition{
+  name: personMoreLabel,
+  parameters: [index : Nat],
+  result: Nat,
+  body: (if (index <? 93) then (personMoreLabelPart0 index) else (if (index <? 123) then (personMoreLabelPart1 index) else 2))
+}
+
+definition{name: personMoreFirst, parameters: [], result: Nat, body: 63}
+
+definition{name: personMoreCount, parameters: [], result: Nat, body: 60}
+\end{semanticmodule}
+\end{lexlean}

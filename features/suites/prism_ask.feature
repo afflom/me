@@ -1,7 +1,7 @@
 Feature: prism_ask
 
   This repository's Prism application, in app/, built by the Prism-DevRel
-  builder from its prompt set: Decides what the Prism does with words the owner says to it: tell the time, answer from what is held, take feedback as heard, offer to keep them where they land in time, or look for them in what is held and offer to keep them, and nothing while the Prism is paused.
+  builder from its prompt set: Decides what the Prism does with words the owner says to it: tell the time, greet back, answer from what is held, take feedback as heard, offer to keep them where they land in time, or look for them in what is held and offer to keep them, and nothing while the Prism is paused.
 
   @PA-01 @build
   Scenario: The app always answers paused when halted is yes
@@ -40,7 +40,7 @@ Feature: prism_ask
     Then no request meets breaksInv006
 
   @PA-07 @build
-  Scenario: The app always answers keep when halted is no and clock is not and box is keeps and timed is yes and intent is task
+  Scenario: The app always answers keep when halted is no and clock is not and box is keeps and timed is yes and intent is task and act is not social
     Given the model in app/src/PrismAsk.lex.tex
     When the Lean kernel checks inv007Holds during prismpm verify
     Then no request meets breaksInv007
@@ -62,3 +62,27 @@ Feature: prism_ask
     Given the model in app/src/PrismAsk.lex.tex
     When the Lean kernel checks inv010Holds during prismpm verify
     Then no request meets breaksInv010
+
+  @PA-11 @build
+  Scenario: The app never answers keep when act is social
+    Given the model in app/src/PrismAsk.lex.tex
+    When the Lean kernel checks inv011Holds during prismpm verify
+    Then no request meets breaksInv011
+
+  @PA-12 @build
+  Scenario: The app never answers look when act is social
+    Given the model in app/src/PrismAsk.lex.tex
+    When the Lean kernel checks inv012Holds during prismpm verify
+    Then no request meets breaksInv012
+
+  @PA-13 @build
+  Scenario: The app never answers heard when act is social
+    Given the model in app/src/PrismAsk.lex.tex
+    When the Lean kernel checks inv013Holds during prismpm verify
+    Then no request meets breaksInv013
+
+  @PA-14 @build
+  Scenario: The app never answers empty when act is social
+    Given the model in app/src/PrismAsk.lex.tex
+    When the Lean kernel checks inv014Holds during prismpm verify
+    Then no request meets breaksInv014
