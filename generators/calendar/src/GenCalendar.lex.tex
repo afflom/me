@@ -392,7 +392,7 @@ definition{
   result: Bool,
   body: (match fuel
     | Nat.zero => false
-    | Nat.succ rest => (if ((calLen g) <? (i + 1)) then false else (if ((calStartsAt g i (calU "*(")) && (calStartsAt g (calSkipSpace g (i + 2)) (calU "\",\""))) then true else (calManyFrom g (i + 1) rest)))),
+    | Nat.succ rest => (if ((calLen g) <? (i + 1)) then false else (if ((calStartsAt g i 0x2a28) && (calStartsAt g (calSkipSpace g (i + 2)) (calU "\",\""))) then true else (calManyFrom g (i + 1) rest)))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
@@ -1267,6 +1267,13 @@ definition{
 }
 
 definition{
+  name: calSuiteOccurs,
+  parameters: [],
+  result: Bytes,
+  body: (calApp (calApp (calApp (calApp (calApp (calU "// The sentences of RFC 5545 on how often the members of a list rule may occur (app/specs/calendar/sentences.json, occurs):\n") (calU "// the reader's occurrence check is asked with rule names alone, and answers as the class the sentence gives each member says.\n")) (calApp (calU "const { occurs, breaches } = JSON.parse(readFileSync('app/specs/calendar/sentences.json', 'utf8'));\n") (calApp (calU "for (const { id, rule, members, class: given } of occurs) {\n") (calU "  test('occurrence ' + id, () => {\n")))) (calApp (calApp (calU "    const needed = grammar.counts(rule, []).map((line) => line.split(' ')[1]);\n") (calU "    assert.deepEqual(grammar.counts(rule, needed), []);\n")) (calApp (calU "    for (const member of members) {\n") (calApp (calU "      const twice = given === 'N' ? [] : [given + ' ' + member + ' 2'];\n") (calU "      if (given === 'R1') assert.deepEqual([grammar.counts(rule, needed.filter((name) => name !== member)), grammar.counts(rule, [...needed, member])], [['R1 ' + member + ' 0'], twice]);\n"))))) (calApp (calApp (calApp (calU "      else assert.deepEqual([grammar.counts(rule, [...needed, member]), grammar.counts(rule, [...needed, member, member])], [[], twice]);\n") (calU "    }\n")) (calApp (calU "  });\n") (calApp (calU "}\n") (calU "// The examples under the same check. A component's members are its own lines, those of no component inside it, each as\n")))) (calApp (calApp (calU "// the rule of its property when that rule derives it, else as x-prop or iana-prop by its name; a property's parameter\n") (calApp (calU "// lists are read off its derivation. An alarm's list depends on its ACTION, which no rule states, so alarms are left out.\n") (calU "test('the examples keep to the occurrence rules, but for the breaches listed', () => {\n"))) (calApp (calU "  const lists = new Set(occurs.map((entry) => entry.rule));\n") (calApp (calU "  const listOf = (rule, deep = 2) => (lists.has(rule) ? rule : deep ? ical.rules[rule].flat(Infinity).filter((part) => ical.rules[part]).map((part) => listOf(part, deep - 1)).find(Boolean) : null);\n") (calU "  const seen = new Set();\n")))))) (calApp (calApp (calApp (calApp (calU "  const note = (rule, members) => grammar.counts(rule, members).forEach((line) => seen.add(rule + ' ' + line));\n") (calU "  const walk = (tree) => {\n")) (calApp (calU "    if (lists.has(tree.rule)) note(tree.rule, tree.kids.map((kid) => kid.rule));\n") (calApp (calU "    tree.kids.forEach(walk);\n") (calU "  };\n")))) (calApp (calApp (calU "  const ruleFor = (line, name = line.split(':')[0].split(';')[0].toUpperCase()) => (derives(ruleOf.property(name), line + CRLF) ? ruleOf.property(name) : name.slice(0, 2) === 'X-' ? 'x-prop' : 'iana-prop');\n") (calU "  for (const [rule, text] of wholes) {\n")) (calApp (calU "    const [first, ...rest] = text.split(CRLF).filter(Boolean);\n") (calApp (calU "    if (first.toUpperCase().slice(0, 6) !== 'BEGIN:') walk(grammar.match(rule, text));\n") (calU "    else if (first.toUpperCase() !== 'BEGIN:VALARM') {\n"))))) (calApp (calApp (calApp (calU "      let depth = 0;\n") (calU "      const own = rest.slice(0, -1).filter((line) => {\n")) (calApp (calU "        const edge = ['BEGIN:', 'END:'].indexOf(line.toUpperCase().slice(0, line.indexOf(':') + 1));\n") (calApp (calU "        if (edge === 1) depth -= 1;\n") (calU "        return edge === 0 ? !(depth += 1) : edge < 0 && !depth;\n")))) (calApp (calApp (calU "      });\n") (calApp (calU "      note(listOf(rule), own.map((line) => ruleFor(line)));\n") (calU "    }\n"))) (calApp (calU "  }\n") (calApp (calU "  assert.deepEqual([...seen].sort(), [...breaches].sort());\n") (calU "});\n")))))))
+}
+
+definition{
   name: suiteText,
   parameters: [archive : Bytes],
   result: (Option Bytes),
@@ -1278,7 +1285,117 @@ definition{
         | Option.none => (ctor Option.none [Bytes])
         | Option.some hitsA => (match (Foundation.Tar::find archive (calU ".gen/ical-found-tip"))
           | Option.none => (ctor Option.none [Bytes])
-          | Option.some hitsB => (let hits : Bytes := (calApp hitsA hitsB); (let pin : (Option Nat) := (Foundation.Json::memberAt spec (Foundation.Json::root spec) (calU "registry")); (let standard : Bytes := (Foundation.Json::textAt spec (Foundation.Json::memberAt spec pin (calU "standard"))); (let apart : Bytes := (calApp3 0x3b (Foundation.Json::textAt spec (Foundation.Json::memberAt spec pin (calU "apart"))) 0x3b); (let seen : Bytes := (calApp 0x0a hits); (let recs : Bytes := (calRecords iana 0 standard 0x false 0x 0x 0x 0x ((calLen iana) + 1)); (let fuel : Nat := ((calLen recs) + 1); (ctor Option.some [Bytes] (calCat5 (calU "written\n") (calApp3 (calU "// Generated by generators/calendar/src/GenCalendar.lex.tex from the IANA iCalendar Element Registries and the examples\n// of RFC 5545 and RFC 5546 (test/standards/generated/rfc5545-examples.txt, rfc5546-examples.txt), pinned in\n// app/specs/calendar/spec.json and the standards register. Do not edit.\n// Each test enforces one registered element (ST-01): the examples the two RFCs give for it derive from the element's\n// own rule of RFC 5545's grammar, through the page's LexLean reader (the grammar-ical guest, site/read/abnf.mjs). An example\n// the grammar refuses must be one the spec lists under 'slips', and every slip listed must be refused.\nimport assert from 'node:assert/strict';\nimport { readFileSync } from 'node:fs';\nimport test from 'node:test';\nimport ical from '../site/read/grammar/ical.mjs';\nimport { abnf, all, first } from '../site/read/abnf.mjs';\n\nconst CRLF = String.fromCharCode(13, 10);\nconst grammar = abnf(ical);\nconst slips = JSON.parse(readFileSync('app/specs/calendar/spec.json', 'utf8')).slips.map((slip) => slip.line);\n// The examples as content lines: X opens one, F and G continue it (a fold; G keeps a space), C is a remark beside it,\n// as is what follows two spaces and a semicolon, or the ==> that opens the instances a rule gives; a remark ends the line.\n// P and Q stand for a row left out because it holds a number shaped like a telephone number, or an address at a domain\n// that is not reserved for examples (neither is kept in the repository): P opened a line and Q continued one, and that example is not read.\nconst rows = [];\nfor (const row of ['rfc5545', 'rfc5546'].flatMap((key) => readFileSync('test/standards/generated/' + key + '-examples.txt', 'utf8').split(String.fromCharCode(10)).filter(Boolean))) {\n  const [mark, sec, ...words] = row.split(' ');\n  if (mark === 'X' || mark === 'P') rows.push({ sec, line: words.join(' ').split('  ;')[0].trimEnd(), held: mark === 'P' });\n  else if (mark === 'Q') rows.at(-1).held = true;\n  else if (mark === 'C' || words[0] === '==>') rows.at(-1).shut = true;\n  else if (!rows.at(-1).shut) rows.at(-1).line += (mark === 'G' ? ' ' : '') + words.join(' ');\n}\n") (calU "const lines = rows.filter((row) => !row.held);\nconst lit = (part) => (part && part[0] === 'lit' ? part[1].toUpperCase() : '');\nconst rules = Object.entries(ical.rules).filter(([, rule]) => rule[0] === 'seq');\nconst ruleOf = {\n  property: (name) => rules.find(([, rule]) => lit(rule[1]) === name && lit(rule[2]) !== '=')?.[0],\n  parameter: (name) => rules.find(([, rule]) => lit(rule[1]) === name && lit(rule[2]) === '=')?.[0],\n  component: (name) => rules.find(([, rule]) => lit(rule[1]) === 'BEGIN' && lit(rule[3]) === name)?.[0],\n  // A value type's rule has its name, unless a property has it too: then it is the rule that property's value refers to.\n  value: (name) => (ruleOf.property(name) ? ical.rules[ruleOf.property(name)].filter((part) => part[0] === 'ref').at(-2)[1] : name.toLowerCase()),\n};\nconst derives = (rule, text) => Boolean(rule && grammar.match(rule, text));\nconst read = new Map();\nconst lineOf = (line) => read.get(line) ?? read.set(line, grammar.match('contentline', line + CRLF)).get(line);\nlet found;\nconst params = () => (found ??= lines.flatMap(({ line }) => all(lineOf(line), 'param').map((param) => ({ name: first(param, 'param-name').text.toUpperCase(), text: param.text, line }))));\nconst named = (name) => lines.filter(({ line }) => [name + ':', name + ';'].includes(line.slice(0, name.length + 1).toUpperCase()));\nconst refused = new Set();\n// Every example of the element derives from its rule, or is a slip; at least one derives.\nfunction each(examples, rule, text) {\n  const good = examples.filter((example) => derives(rule, text(example)) || !refused.add(example.line));\n  assert.ok(rule && good.length, 'no example derives from ' + rule);\n}\n") (calU "function reads(kind, name, sec) {\n  const [field, value] = name.split('=');\n  if (kind === 'property') each(named(name), ruleOf.property(name), ({ line }) => line + CRLF);\n  else if (kind === 'parameter') each(params().filter((param) => param.name === name), ruleOf.parameter(name), (param) => param.text);\n  else if (kind === 'enum' && ruleOf.parameter(field)) each(params().filter((param) => param.text.toUpperCase().split(',').join('=').split('=').slice(1).includes(value) && param.name === field), ruleOf.parameter(field), (param) => param.text);\n  else if (kind === 'enum') each(named(field).filter(({ line }) => line.toUpperCase() === field + ':' + value), ruleOf.property(field), ({ line }) => line + CRLF);\n  else if (kind === 'value') assert.ok(lines.some(({ sec: its, line }) => its === sec && (derives(ruleOf.value(name), line) || derives(ruleOf.value(name), first(lineOf(line), 'value')?.text ?? CRLF))), 'no example of section ' + sec + ' derives from ' + ruleOf.value(name));\n  else {\n    // A component's examples: each run of lines from its BEGIN to its END, whole, unless it holds a slip.\n    const blocks = [];\n    for (const { line } of lines) {\n      if (line.toUpperCase() === 'BEGIN:' + name) blocks.push({ line: '', open: true });\n      if (blocks.at(-1)?.open) blocks.at(-1).line += line + CRLF;\n      if (line.toUpperCase() === 'END:' + name && blocks.length) blocks.at(-1).open = false;\n    }\n    each(blocks.filter((block) => !block.open && !slips.some((slip) => block.line.split(CRLF).includes(slip))), ruleOf.component(name), (block) => block.line);\n  }\n}\n\n")) (calSuiteEnumsFrom recs 0 standard seen apart (calSuiteGroupsFrom recs 0 standard seen apart 0x fuel) fuel) (calApp (calU "// The sentences of RFC 5545 that its grammar states (app/specs/calendar/sentences.json): the rule that states one\n") (calApp (calU "// takes what the sentence allows and refuses what it forbids. The standards register names this suite for each of them.\n") (calApp (calU "const sentences = JSON.parse(readFileSync('app/specs/calendar/sentences.json', 'utf8')).sentences;\n") (calApp (calU "for (const { id, rule, takes, refuses } of sentences) {\n") (calApp (calU "  test('sentence ' + id, () => {\n") (calApp (calU "    assert.ok(ical.rules[rule] && takes.length + refuses.length, 'nothing to hold ' + rule + ' to');\n") (calApp (calU "    for (const text of takes) assert.ok(derives(rule, text), rule + ' takes ' + JSON.stringify(text));\n") (calApp (calU "    for (const text of refuses) assert.ok(!derives(rule, text), rule + ' refuses ' + JSON.stringify(text));\n") (calApp (calU "  });\n") (calApp (calU "}\n") (calApp (calU "test('the register names this suite for exactly the sentences listed', () => {\n") (calApp (calU "  const named = Object.entries(JSON.parse(readFileSync('app/specs/standards/register/rfc5545.json', 'utf8')).enforcedBy);\n") (calApp (calU "  assert.deepEqual(named.filter(([, entry]) => entry.suite === 'test/calendar.registry.test.mjs').map(([id]) => id).sort(), sentences.map(({ id }) => id).sort());\n") (calApp (calU "});\n") (calU "test('the examples the grammar refuses are the slips the specification lists', () => assert.deepEqual([...refused].sort(), [...slips].sort()));\n"))))))))))))))) 0x))))))))))))),
+          | Option.some hitsB => (let hits : Bytes := (calApp hitsA hitsB); (let pin : (Option Nat) := (Foundation.Json::memberAt spec (Foundation.Json::root spec) (calU "registry")); (let standard : Bytes := (Foundation.Json::textAt spec (Foundation.Json::memberAt spec pin (calU "standard"))); (let apart : Bytes := (calApp3 0x3b (Foundation.Json::textAt spec (Foundation.Json::memberAt spec pin (calU "apart"))) 0x3b); (let seen : Bytes := (calApp 0x0a hits); (let recs : Bytes := (calRecords iana 0 standard 0x false 0x 0x 0x 0x ((calLen iana) + 1)); (let fuel : Nat := ((calLen recs) + 1); (ctor Option.some [Bytes] (calCat5 (calU "written\n") (calApp3 (calU "// Generated by generators/calendar/src/GenCalendar.lex.tex from the IANA iCalendar Element Registries and the examples\n// of RFC 5545 and RFC 5546 (test/standards/generated/rfc5545-examples.txt, rfc5546-examples.txt), pinned in\n// app/specs/calendar/spec.json and the standards register. Do not edit.\n// Each test enforces one registered element (ST-01): the examples the two RFCs give for it derive from the element's\n// own rule of RFC 5545's grammar, through the page's LexLean reader (the grammar-ical guest, site/read/abnf.mjs). An example\n// the grammar refuses must be one the spec lists under 'slips', and every slip listed must be refused.\nimport assert from 'node:assert/strict';\nimport { readFileSync } from 'node:fs';\nimport test from 'node:test';\nimport ical from '../site/read/grammar/ical.mjs';\nimport { abnf, all, first } from '../site/read/abnf.mjs';\n\nconst CRLF = String.fromCharCode(13, 10);\nconst grammar = abnf(ical);\nconst slips = JSON.parse(readFileSync('app/specs/calendar/spec.json', 'utf8')).slips.map((slip) => slip.line);\n// The examples as content lines: X opens one, F and G continue it (a fold; G keeps a space), C is a remark beside it,\n// as is what follows two spaces and a semicolon, or the ==> that opens the instances a rule gives; a remark ends the line.\n// P and Q stand for a row left out because it holds a number shaped like a telephone number, or an address at a domain\n// that is not reserved for examples (neither is kept in the repository): P opened a line and Q continued one, and that example is not read.\nconst rows = [];\nfor (const row of ['rfc5545', 'rfc5546'].flatMap((key) => readFileSync('test/standards/generated/' + key + '-examples.txt', 'utf8').split(String.fromCharCode(10)).filter(Boolean))) {\n  const [mark, sec, ...words] = row.split(' ');\n  if (mark === 'X' || mark === 'P') rows.push({ sec, line: words.join(' ').split('  ;')[0].trimEnd(), held: mark === 'P' });\n  else if (mark === 'Q') rows.at(-1).held = true;\n  else if (mark === 'C' || words[0] === '==>') rows.at(-1).shut = true;\n  else if (!rows.at(-1).shut) rows.at(-1).line += (mark === 'G' ? ' ' : '') + words.join(' ');\n}\n") (calU "const lines = rows.filter((row) => !row.held);\nconst lit = (part) => (part && part[0] === 'lit' ? part[1].toUpperCase() : '');\nconst rules = Object.entries(ical.rules).filter(([, rule]) => rule[0] === 'seq');\nconst ruleOf = {\n  property: (name) => rules.find(([, rule]) => lit(rule[1]) === name && lit(rule[2]) !== '=')?.[0],\n  parameter: (name) => rules.find(([, rule]) => lit(rule[1]) === name && lit(rule[2]) === '=')?.[0],\n  component: (name) => rules.find(([, rule]) => lit(rule[1]) === 'BEGIN' && lit(rule[3]) === name)?.[0],\n  // A value type's rule has its name, unless a property has it too: then it is the rule that property's value refers to.\n  value: (name) => (ruleOf.property(name) ? ical.rules[ruleOf.property(name)].filter((part) => part[0] === 'ref').at(-2)[1] : name.toLowerCase()),\n};\nconst derives = (rule, text) => Boolean(rule && grammar.match(rule, text));\nconst read = new Map();\nconst lineOf = (line) => read.get(line) ?? read.set(line, grammar.match('contentline', line + CRLF)).get(line);\nlet found;\nconst params = () => (found ??= lines.flatMap(({ line }) => all(lineOf(line), 'param').map((param) => ({ name: first(param, 'param-name').text.toUpperCase(), text: param.text, line }))));\nconst named = (name) => lines.filter(({ line }) => [name + ':', name + ';'].includes(line.slice(0, name.length + 1).toUpperCase()));\nconst refused = new Set();\n// Each example that derives from its element's rule, with the rule: what the occurrence check below is given.\nconst wholes = [];\n// Every example of the element derives from its rule, or is a slip; at least one derives.\nfunction each(examples, rule, text) {\n  const good = examples.filter((example) => derives(rule, text(example)) || !refused.add(example.line));\n  for (const example of good) wholes.push([rule, text(example)]);\n  assert.ok(rule && good.length, 'no example derives from ' + rule);\n}\n") (calU "function reads(kind, name, sec) {\n  const [field, value] = name.split('=');\n  if (kind === 'property') each(named(name), ruleOf.property(name), ({ line }) => line + CRLF);\n  else if (kind === 'parameter') each(params().filter((param) => param.name === name), ruleOf.parameter(name), (param) => param.text);\n  else if (kind === 'enum' && ruleOf.parameter(field)) each(params().filter((param) => param.text.toUpperCase().split(',').join('=').split('=').slice(1).includes(value) && param.name === field), ruleOf.parameter(field), (param) => param.text);\n  else if (kind === 'enum') each(named(field).filter(({ line }) => line.toUpperCase() === field + ':' + value), ruleOf.property(field), ({ line }) => line + CRLF);\n  else if (kind === 'value') assert.ok(lines.some(({ sec: its, line }) => its === sec && (derives(ruleOf.value(name), line) || derives(ruleOf.value(name), first(lineOf(line), 'value')?.text ?? CRLF))), 'no example of section ' + sec + ' derives from ' + ruleOf.value(name));\n  else {\n    // A component's examples: each run of lines from its BEGIN to its END, whole, unless it holds a slip.\n    const blocks = [];\n    for (const { line } of lines) {\n      if (line.toUpperCase() === 'BEGIN:' + name) blocks.push({ line: '', open: true });\n      if (blocks.at(-1)?.open) blocks.at(-1).line += line + CRLF;\n      if (line.toUpperCase() === 'END:' + name && blocks.length) blocks.at(-1).open = false;\n    }\n    each(blocks.filter((block) => !block.open && !slips.some((slip) => block.line.split(CRLF).includes(slip))), ruleOf.component(name), (block) => block.line);\n  }\n}\n\n")) (calSuiteEnumsFrom recs 0 standard seen apart (calSuiteGroupsFrom recs 0 standard seen apart 0x fuel) fuel) (calApp (calU "// The sentences of RFC 5545 that its grammar states (app/specs/calendar/sentences.json): the rule that states one\n") (calApp (calU "// takes what the sentence allows and refuses what it forbids. The standards register names this suite for each of them.\n") (calApp (calU "const sentences = JSON.parse(readFileSync('app/specs/calendar/sentences.json', 'utf8')).sentences;\n") (calApp (calU "for (const { id, rule, takes, refuses } of sentences) {\n") (calApp (calU "  test('sentence ' + id, () => {\n") (calApp (calU "    assert.ok(ical.rules[rule] && takes.length + refuses.length, 'nothing to hold ' + rule + ' to');\n") (calApp (calU "    for (const text of takes) assert.ok(derives(rule, text), rule + ' takes ' + JSON.stringify(text));\n") (calApp (calU "    for (const text of refuses) assert.ok(!derives(rule, text), rule + ' refuses ' + JSON.stringify(text));\n") (calApp (calU "  });\n") (calApp (calU "}\n") (calApp (calSuiteOccurs) (calApp (calU "test('the register names this suite for exactly the sentences listed', () => {\n") (calApp (calU "  const named = Object.entries(JSON.parse(readFileSync('app/specs/standards/register/rfc5545.json', 'utf8')).enforcedBy);\n") (calApp (calU "  assert.deepEqual(named.filter(([, entry]) => entry.suite === 'test/calendar.registry.test.mjs').map(([id]) => id).sort(), [...sentences, ...occurs].map(({ id }) => id).sort());\n") (calApp (calU "});\n") (calU "test('the examples the grammar refuses are the slips the specification lists', () => assert.deepEqual([...refused].sort(), [...slips].sort()));\n")))))))))))))))) 0x))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calCountIdentEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((calLen s) <? (i + 1)) then i else (let b : Nat := (calAt s i); (if ((calIsLower b) || ((calIsDigit b) || (b =? 45))) then (calCountIdentEnd s (i + 1) rest) else i)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calCountClass,
+  parameters: [c : Bytes],
+  result: Bytes,
+  body: (if (calHolds c (calU "SHOULD NOT occur more than once")) then (calU "S1") else (if (calHolds c (calU "MUST NOT occur more than once")) then (if (calHolds c (calU "REQUIRED")) then (if (calHolds c (calU " if ")) then 0x else (calU "R1")) else (if ((calHolds c (calU "OPTIONAL")) && (not (calHolds c (calU "if one")))) then (calU "O1") else 0x)) else (if (((calHolds c (calU "MAY occur more than once")) && (not (calHolds c (calU "REQUIRED")))) && (not (calHolds c (calU "MUST occur")))) then (calU "N") else 0x))),
+  axioms: [propext]
+}
+
+definition{
+  name: calCountTokensFrom,
+  parameters: [l : Bytes, i : Nat, lead : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((calLen l) <? (i + 1)) then acc else (let b : Nat := (calAt l i); (if (b =? 34) then (calCountTokensFrom l ((calFind l (i + 1) 34) + 1) lead acc rest) else (if (calIsLower b) then (let e : Nat := (calCountIdentEnd l i (calLen l)); (calCountTokensFrom l e lead (calCat5 acc lead (calCut l i e) 0x0a 0x) rest)) else (calCountTokensFrom l (i + 1) lead acc rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calCountWalk,
+  parameters: [b : Bytes, i : Nat, rule : Bytes, cls : Bytes, com : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((calLen b) <? (i + 1)) then acc else (let l : Bytes := (calLineAt b i); (let n : Nat := (calNextLine b i); (let a : Nat := (calSkipSpace l 0); (if ((calLen l) <? (a + 1)) then (calCountWalk b n rule cls com acc rest) else (let e : Nat := (calCountIdentEnd l a (calLen l)); (let p : Nat := (calSkipSpace l e); (if (((calIsLower (calAt l a)) && (e <? p)) && (((calAt l p) =? 61) && ((calAt l (p + 1)) =? 32))) then (calCountWalk b n (if ((calStartsAt l (p + 2) 0x2a28) || (calStartsAt l (p + 2) 0x22424547494e22)) then (calCut l a e) else 0x) 0x 0x acc rest) else (if (((calLen rule) =? 0) || (a <? 5)) then (calCountWalk b n 0x 0x 0x acc rest) else (if ((calAt l a) =? 59) then (let t : Bytes := (calTrim (calCut l (a + 1) (calLen l))); (calCountWalk b n rule cls (if ((calLen t) =? 0) then com else (calApp3 com 0x20 t)) acc rest)) else (if ((calAt l a) =? 41) then (calCountWalk b n 0x 0x 0x acc rest) else (let now : Bytes := (if ((calLen com) =? 0) then cls else (calCountClass com)); (calCountWalk b n rule now 0x (if ((calLen now) =? 0) then acc else (calCountTokensFrom l a (calCat5 rule 0x20 now 0x20 0x) acc (calLen l))) rest)))))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: countRows,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (calOnlyFile archive)
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some piece => (let text : Bytes := (calUnpaginate piece); (ctor Option.some [Bytes] (calCountWalk text 0 0x 0x 0x 0x ((calLen text) + 1))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: calHexDigit,
+  parameters: [d : Nat],
+  result: Bytes,
+  body: (calCut (calU "0123456789abcdef") d (d + 1))
+}
+
+definition{
+  name: calHexFrom,
+  parameters: [s : Bytes, i : Nat, stop : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (stop <? (i + 1)) then acc else (let b : Nat := (calAt s i); (calHexFrom s (i + 1) stop (calApp acc (calApp (calHexDigit (prim quotient b 16 0 : Nat)) (calHexDigit (prim remainder b 16 0 : Nat)))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: calDecimalFrom,
+  parameters: [n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (n <? 10) then (calHexDigit n) else (calApp (calDecimalFrom (prim quotient n 10 0 : Nat) rest) (calHexDigit (prim remainder n 10 0 : Nat))))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: calCountTree,
+  parameters: [lo : Nat, hi : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if (hi =? (lo + 1)) then (calApp3 (calU "(icalCountsChunk") (calDecimalFrom lo 32) 0x29) else (let mid : Nat := (prim quotient (lo + hi) 2 0 : Nat); (calCat5 (calU "(Foundation.Bytes::appendBytes ") (calCountTree lo mid rest) 0x20 (calCountTree mid hi rest) 0x29)))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: calCountChunkDefs,
+  parameters: [rows : Bytes, i : Nat, n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((calLen rows) <? (i + 1)) then acc else (let stop : Nat := (if ((calLen rows) <? (i + 256)) then (calLen rows) else (i + 256)); (calCountChunkDefs rows (i + 256) (n + 1) (calApp acc (calCat5 0x646566696e6974696f6e7b0a20206e616d653a206963616c436f756e74734368756e6b (calDecimalFrom n 32) 0x2c0a2020706172616d65746572733a205b5d2c0a2020726573756c743a2042797465732c0a2020626f64793a203078 (calHexFrom rows i stop 0x (calLen rows)) 0x0a7d0a0a)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: countsModule,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (calU ".gen/ical-counts"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some rows => (let m : Nat := (prim quotient ((calLen rows) + 255) 256 0 : Nat); (ctor Option.some [Bytes] (calCat5 0x5c626567696e7b6c65786c65616e7d7b507269736d4963616c436f756e74735461626c657d0a5c757365676c6f73736172797b6c65786c65616e2e7374642e626f6f6c40312e322e307d0a5c757365676c6f73736172797b6c65786c65616e2e7374642e6e617440312e322e307d0a5c757365676c6f73736172797b707269736d2e6172636840312e302e307d0a5c696d706f72746d6f64756c657b466f756e646174696f6e2e42797465737d0a5c7469746c657b54657874206170706c69636174696f6e206d6f64656c7d0a5c626567696e7b73656d616e7469636d6f64756c657d0a (calCountChunkDefs rows 0 0 0x m) 0x646566696e6974696f6e7b0a20206e616d653a206963616c436f756e74732c0a2020706172616d65746572733a205b5d2c0a2020726573756c743a2042797465732c0a2020626f64793a20 (calCountTree 0 m (m + 1)) 0x0a7d0a5c656e647b73656d616e7469636d6f64756c657d0a5c656e647b6c65786c65616e7d0a)))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

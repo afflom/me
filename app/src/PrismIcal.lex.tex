@@ -1,0 +1,117 @@
+\begin{lexlean}{PrismIcal}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Abnf}
+\importmodule{PrismGrammarIcal}
+\importmodule{PrismIcalCountsTable}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: icAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => 0
+    | Option.some b => (prim to_nat b : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{name: icLen, parameters: [s : Bytes], result: Nat, body: (prim length s : Nat)}
+
+definition{
+  name: icCut,
+  parameters: [s : Bytes, a : Nat, b : Nat],
+  result: Bytes,
+  body: (match (prim slice s a (prim subtract b a : Nat) : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: icSame,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bool,
+  body: (prim equal (prim compare_bytes a b : Ordering) (prim compare_bytes 0x00 0x00 : Ordering) : Bool),
+  axioms: [propext]
+}
+
+definition{
+  name: icUntil,
+  parameters: [s : Bytes, i : Nat, mark : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((icLen s) <? (i + 1)) then i else (if ((icAt s i) =? mark) then i else (icUntil s (i + 1) mark rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: icTimesFrom,
+  parameters: [req : Bytes, i : Nat, member : Bytes, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if ((icLen req) <? (i + 1)) then n else (let e : Nat := (icUntil req i 10 (icLen req)); (icTimesFrom req (e + 1) member (if (icSame (icCut req i e) member) then (n + 1) else n) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: icDecimal,
+  parameters: [n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let d : Bytes := (icCut (prim utf8_encode "0123456789" : Bytes) (prim remainder n 10 0 : Nat) ((prim remainder n 10 0 : Nat) + 1)); (if (n <? 10) then d else (prim append (icDecimal (prim quotient n 10 0 : Nat) rest) d : Bytes)))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: icBreaks,
+  parameters: [cls : Bytes, n : Nat],
+  result: Bool,
+  body: (if (icSame cls (prim utf8_encode "R1" : Bytes)) then (not (n =? 1)) else (if ((icSame cls (prim utf8_encode "O1" : Bytes)) || (icSame cls (prim utf8_encode "S1" : Bytes))) then (1 <? n) else false)),
+  axioms: [propext]
+}
+
+definition{
+  name: icFaultsFrom,
+  parameters: [tab : Bytes, i : Nat, rule : Bytes, req : Bytes, m : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((icLen tab) <? (i + 1)) then acc else (let e : Nat := (icUntil tab i 10 (icLen tab)); (let a : Nat := (icUntil tab i 32 (icLen tab)); (let b : Nat := (icUntil tab (a + 1) 32 (icLen tab)); (if ((b <? e) && (icSame (icCut tab i a) rule)) then (let cls : Bytes := (icCut tab (a + 1) b); (let member : Bytes := (icCut tab (b + 1) e); (let n : Nat := (icTimesFrom req m member 0 ((icLen req) + 1)); (icFaultsFrom tab (e + 1) rule req m (if (icBreaks cls n) then (prim append acc (prim append (icCut tab (a + 1) e) (prim append 0x20 (prim append (icDecimal n 20) 0x0a : Bytes) : Bytes) : Bytes) : Bytes) else acc) rest)))) else (icFaultsFrom tab (e + 1) rule req m acc rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: icKnownFrom,
+  parameters: [tab : Bytes, i : Nat, rule : Bytes, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((icLen tab) <? (i + 1)) then false else (let e : Nat := (icUntil tab i 10 (icLen tab)); (if (icSame (icCut tab i (icUntil tab i 32 (icLen tab))) rule) then true else (icKnownFrom tab (e + 1) rule rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: icAnswer,
+  parameters: [req : Bytes, r : Nat],
+  result: Bytes,
+  body: (let tab : Bytes := (PrismIcalCountsTable::icalCounts); (let f : Nat := (icUntil req r 10 (icLen req)); (let rule : Bytes := (icCut req r f); (if (((icLen req) <? (f + 1)) || (not ((icAt req (prim subtract (icLen req) 1 : Nat)) =? 10))) then (prim utf8_encode "invalid" : Bytes) else (if (not (icKnownFrom tab 0 rule (icLen tab))) then (prim utf8_encode "unknown\n" : Bytes) else (let faults : Bytes := (icFaultsFrom tab 0 rule req (f + 1) 0x (icLen tab)); (if ((icLen faults) =? 0) then (prim utf8_encode "ok\n" : Bytes) else faults))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismIcalDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (icSame (icCut value 0 7) (prim utf8_encode "counts\n" : Bytes)) then (icAnswer value 7) else (PrismGrammarIcal::prismGrammarIcalDispatch value)),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

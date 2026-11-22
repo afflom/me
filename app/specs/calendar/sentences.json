@@ -1,5 +1,5 @@
 {
- "comment": "The requirement sentences of RFC 5545 that its grammar states (grammar key ical in app/specs/grammar/spec.json), each with the rule that states it, what that rule takes and what it refuses. Every string is printed in the RFC (the examples of the sentence's section; 3.3.5 and 3.3.12 print the forms they forbid), or is a character the sentence names, alone or escaped as it says, or is the section's example without the quotation marks the sentence requires. The suite (test/calendar.registry.test.mjs, written by generators/calendar) holds the reader to each, and the standards register names the suite for exactly these ids. Kept apart from spec.json, which is a generator input bounded in size.",
+ "comment": "The requirement sentences of RFC 5545 that its grammar states (grammar key ical in app/specs/grammar/spec.json), each with the rule that states it, what that rule takes and what it refuses. Every string is printed in the RFC (the examples of the sentence's section; 3.3.5 and 3.3.12 print the forms they forbid), or is a character the sentence names, alone or escaped as it says, or is the section's example without the quotation marks the sentence requires. The suite (test/calendar.registry.test.mjs, written by generators/calendar) holds the reader to each, and the standards register names the suite for exactly these ids. Kept apart from spec.json, which is a generator input bounded in size. occurs: the sentences that say how often the members of a list rule may occur, each with the rule, the class the sentence gives (R1 required and once, O1 optional and at most once, S1 should be at most once, N any number of times) and the members it gives it to, as RFC 5545 prints them under the sentence. The reader's occurrence check (the calendar guest, app/src/PrismIcal.lex.tex, against the table generators/calendar writes from the same comments) is asked with rule names alone: the required members, then with the member left out, once more or twice more, and must answer as the class says. breaches: what the check finds in the components and property lines of the two RFCs' own examples; the suite requires exactly these. The two listed are VFREEBUSY examples of RFC 5545 section 3.6.4 that leave out UID, one of them DTSTAMP too, though the section's own rule requires both; errata were not checked.",
  "sentences": [
   {
    "id": "rfc5545-3.1.1-b5ddb6e8",
@@ -197,5 +197,745 @@
     "0500"
    ]
   }
+ ],
+ "occurs": [
+  {
+   "id": "rfc5545-3.6-d8299928",
+   "rule": "calprops",
+   "class": "R1",
+   "members": [
+    "prodid",
+    "version"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6-110616a8",
+   "rule": "calprops",
+   "class": "O1",
+   "members": [
+    "calscale",
+    "method"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6-db2bce31",
+   "rule": "calprops",
+   "class": "N",
+   "members": [
+    "x-prop",
+    "iana-prop"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.1-37eed0be",
+   "rule": "eventprop",
+   "class": "R1",
+   "members": [
+    "dtstamp",
+    "uid"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.1-ebf2c6ea",
+   "rule": "eventprop",
+   "class": "O1",
+   "members": [
+    "class",
+    "created",
+    "description",
+    "geo",
+    "last-mod",
+    "location",
+    "organizer",
+    "priority",
+    "seq",
+    "status",
+    "summary",
+    "transp",
+    "url",
+    "recurid"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.1-916fb467",
+   "rule": "eventprop",
+   "class": "S1",
+   "members": [
+    "rrule"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.1-cded943e",
+   "rule": "eventprop",
+   "class": "N",
+   "members": [
+    "attach",
+    "attendee",
+    "categories",
+    "comment",
+    "contact",
+    "exdate",
+    "rstatus",
+    "related",
+    "resources",
+    "rdate",
+    "x-prop",
+    "iana-prop"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.2-e4c0037f",
+   "rule": "todoprop",
+   "class": "R1",
+   "members": [
+    "dtstamp",
+    "uid"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.2-481abd68",
+   "rule": "todoprop",
+   "class": "O1",
+   "members": [
+    "class",
+    "completed",
+    "created",
+    "description",
+    "dtstart",
+    "geo",
+    "last-mod",
+    "location",
+    "organizer",
+    "percent",
+    "priority",
+    "recurid",
+    "seq",
+    "status",
+    "summary",
+    "url"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.2-916fb467",
+   "rule": "todoprop",
+   "class": "S1",
+   "members": [
+    "rrule"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.2-cded943e",
+   "rule": "todoprop",
+   "class": "N",
+   "members": [
+    "attach",
+    "attendee",
+    "categories",
+    "comment",
+    "contact",
+    "exdate",
+    "rstatus",
+    "related",
+    "resources",
+    "rdate",
+    "x-prop",
+    "iana-prop"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.3-e4c0037f",
+   "rule": "jourprop",
+   "class": "R1",
+   "members": [
+    "dtstamp",
+    "uid"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.3-9f97519a",
+   "rule": "jourprop",
+   "class": "O1",
+   "members": [
+    "class",
+    "created",
+    "dtstart",
+    "last-mod",
+    "organizer",
+    "recurid",
+    "seq",
+    "status",
+    "summary",
+    "url"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.3-916fb467",
+   "rule": "jourprop",
+   "class": "S1",
+   "members": [
+    "rrule"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.3-33c8d45c",
+   "rule": "jourprop",
+   "class": "N",
+   "members": [
+    "attach",
+    "attendee",
+    "categories",
+    "comment",
+    "contact",
+    "description",
+    "exdate",
+    "related",
+    "rdate",
+    "rstatus",
+    "x-prop",
+    "iana-prop"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.4-7656df36",
+   "rule": "fbprop",
+   "class": "R1",
+   "members": [
+    "dtstamp",
+    "uid"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.4-5beced16",
+   "rule": "fbprop",
+   "class": "R1",
+   "members": [
+    "dtstamp",
+    "uid"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.4-412ef8a1",
+   "rule": "fbprop",
+   "class": "O1",
+   "members": [
+    "contact",
+    "dtstart",
+    "dtend",
+    "organizer",
+    "url"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.4-f9d94e2c",
+   "rule": "fbprop",
+   "class": "N",
+   "members": [
+    "attendee",
+    "comment",
+    "freebusy",
+    "rstatus",
+    "x-prop",
+    "iana-prop"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.5-33e4e216",
+   "rule": "timezonec",
+   "class": "R1",
+   "members": [
+    "tzid"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.5-f270e21a",
+   "rule": "timezonec",
+   "class": "O1",
+   "members": [
+    "last-mod",
+    "tzurl"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.5-36884400",
+   "rule": "timezonec",
+   "class": "N",
+   "members": [
+    "x-prop",
+    "iana-prop"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.5-f79b1362",
+   "rule": "tzprop",
+   "class": "R1",
+   "members": [
+    "dtstart",
+    "tzoffsetto",
+    "tzoffsetfrom"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.5-916fb467",
+   "rule": "tzprop",
+   "class": "S1",
+   "members": [
+    "rrule"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.5-6f0154ac",
+   "rule": "tzprop",
+   "class": "N",
+   "members": [
+    "comment",
+    "rdate",
+    "tzname",
+    "x-prop",
+    "iana-prop"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.6-093f38e5",
+   "rule": "audioprop",
+   "class": "R1",
+   "members": [
+    "action",
+    "trigger"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.6-72791c1d",
+   "rule": "audioprop",
+   "class": "R1",
+   "members": [
+    "action",
+    "trigger"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.6-cc76de54",
+   "rule": "audioprop",
+   "class": "O1",
+   "members": [
+    "attach"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.6-54135e36",
+   "rule": "audioprop",
+   "class": "N",
+   "members": [
+    "x-prop",
+    "iana-prop"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.6-7f669b9e",
+   "rule": "dispprop",
+   "class": "R1",
+   "members": [
+    "action",
+    "description",
+    "trigger"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.6-54135e36-2",
+   "rule": "dispprop",
+   "class": "N",
+   "members": [
+    "x-prop",
+    "iana-prop"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.6-c2ead509",
+   "rule": "emailprop",
+   "class": "R1",
+   "members": [
+    "action",
+    "description",
+    "trigger",
+    "summary"
+   ]
+  },
+  {
+   "id": "rfc5545-3.6.6-4b04075e",
+   "rule": "emailprop",
+   "class": "N",
+   "members": [
+    "attach",
+    "x-prop",
+    "iana-prop"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.1.1-4fe92ee5",
+   "rule": "attachparam",
+   "class": "O1",
+   "members": [
+    "fmttypeparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.1.1-8061c044",
+   "rule": "attachparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.1.2-34508265",
+   "rule": "catparam",
+   "class": "O1",
+   "members": [
+    "languageparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.1.2-8061c044",
+   "rule": "catparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.1.4-fc8704fc",
+   "rule": "commparam",
+   "class": "O1",
+   "members": [
+    "altrepparam",
+    "languageparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.1.4-8061c044",
+   "rule": "commparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.1.5-fc8704fc",
+   "rule": "descparam",
+   "class": "O1",
+   "members": [
+    "altrepparam",
+    "languageparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.1.5-8061c044",
+   "rule": "descparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.1.7-fc8704fc",
+   "rule": "locparam",
+   "class": "O1",
+   "members": [
+    "altrepparam",
+    "languageparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.1.7-8061c044",
+   "rule": "locparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.1.10-fc8704fc",
+   "rule": "resrcparam",
+   "class": "O1",
+   "members": [
+    "altrepparam",
+    "languageparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.1.10-8061c044",
+   "rule": "resrcparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.1.12-fc8704fc",
+   "rule": "summparam",
+   "class": "O1",
+   "members": [
+    "altrepparam",
+    "languageparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.1.12-8061c044",
+   "rule": "summparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.2.2-fc8704fc",
+   "rule": "dtendparam",
+   "class": "O1",
+   "members": [
+    "tzidparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.2.2-8061c044",
+   "rule": "dtendparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.2.3-fc8704fc",
+   "rule": "dueparam",
+   "class": "O1",
+   "members": [
+    "tzidparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.2.3-8061c044",
+   "rule": "dueparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.2.4-fc8704fc",
+   "rule": "dtstparam",
+   "class": "O1",
+   "members": [
+    "tzidparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.2.4-8061c044",
+   "rule": "dtstparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.2.6-34508265",
+   "rule": "fbparam",
+   "class": "O1",
+   "members": [
+    "fbtypeparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.2.6-8061c044",
+   "rule": "fbparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.3.2-34508265",
+   "rule": "tznparam",
+   "class": "O1",
+   "members": [
+    "languageparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.3.2-8061c044",
+   "rule": "tznparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.4.1-fc8704fc",
+   "rule": "attparam",
+   "class": "O1",
+   "members": [
+    "cutypeparam",
+    "memberparam",
+    "roleparam",
+    "partstatparam",
+    "rsvpparam",
+    "deltoparam",
+    "delfromparam",
+    "sentbyparam",
+    "cnparam",
+    "dirparam",
+    "languageparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.4.1-8061c044",
+   "rule": "attparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.4.2-fc8704fc",
+   "rule": "contparam",
+   "class": "O1",
+   "members": [
+    "altrepparam",
+    "languageparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.4.2-8061c044",
+   "rule": "contparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.4.3-fc8704fc",
+   "rule": "orgparam",
+   "class": "O1",
+   "members": [
+    "cnparam",
+    "dirparam",
+    "sentbyparam",
+    "languageparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.4.3-8061c044",
+   "rule": "orgparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.4.4-fc8704fc",
+   "rule": "ridparam",
+   "class": "O1",
+   "members": [
+    "tzidparam",
+    "rangeparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.4.4-8061c044",
+   "rule": "ridparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.4.5-34508265",
+   "rule": "relparam",
+   "class": "O1",
+   "members": [
+    "reltypeparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.4.5-8061c044",
+   "rule": "relparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.5.1-fc8704fc",
+   "rule": "exdtparam",
+   "class": "O1",
+   "members": [
+    "tzidparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.5.1-8061c044",
+   "rule": "exdtparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.5.2-fc8704fc",
+   "rule": "rdtparam",
+   "class": "O1",
+   "members": [
+    "tzidparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.5.2-8061c044",
+   "rule": "rdtparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.6.3-fc8704fc",
+   "rule": "trigrel",
+   "class": "O1",
+   "members": [
+    "trigrelparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.6.3-8061c044",
+   "rule": "trigrel",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.6.3-8061c044-2",
+   "rule": "trigabs",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.8.3-34508265",
+   "rule": "rstatparam",
+   "class": "O1",
+   "members": [
+    "languageparam"
+   ]
+  },
+  {
+   "id": "rfc5545-3.8.8.3-8061c044",
+   "rule": "rstatparam",
+   "class": "N",
+   "members": [
+    "other-param"
+   ]
+  }
+ ],
+ "breaches": [
+  "fbprop R1 dtstamp 0",
+  "fbprop R1 uid 0"
  ]
 }

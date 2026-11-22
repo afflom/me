@@ -42,9 +42,12 @@ let found;
 const params = () => (found ??= lines.flatMap(({ line }) => all(lineOf(line), 'param').map((param) => ({ name: first(param, 'param-name').text.toUpperCase(), text: param.text, line }))));
 const named = (name) => lines.filter(({ line }) => [name + ':', name + ';'].includes(line.slice(0, name.length + 1).toUpperCase()));
 const refused = new Set();
+// Each example that derives from its element's rule, with the rule: what the occurrence check below is given.
+const wholes = [];
 // Every example of the element derives from its rule, or is a slip; at least one derives.
 function each(examples, rule, text) {
   const good = examples.filter((example) => derives(rule, text(example)) || !refused.add(example.line));
+  for (const example of good) wholes.push([rule, text(example)]);
   assert.ok(rule && good.length, 'no example derives from ' + rule);
 }
 function reads(kind, name, sec) {
@@ -300,8 +303,50 @@ for (const { id, rule, takes, refuses } of sentences) {
     for (const text of refuses) assert.ok(!derives(rule, text), rule + ' refuses ' + JSON.stringify(text));
   });
 }
+// The sentences of RFC 5545 on how often the members of a list rule may occur (app/specs/calendar/sentences.json, occurs):
+// the reader's occurrence check is asked with rule names alone, and answers as the class the sentence gives each member says.
+const { occurs, breaches } = JSON.parse(readFileSync('app/specs/calendar/sentences.json', 'utf8'));
+for (const { id, rule, members, class: given } of occurs) {
+  test('occurrence ' + id, () => {
+    const needed = grammar.counts(rule, []).map((line) => line.split(' ')[1]);
+    assert.deepEqual(grammar.counts(rule, needed), []);
+    for (const member of members) {
+      const twice = given === 'N' ? [] : [given + ' ' + member + ' 2'];
+      if (given === 'R1') assert.deepEqual([grammar.counts(rule, needed.filter((name) => name !== member)), grammar.counts(rule, [...needed, member])], [['R1 ' + member + ' 0'], twice]);
+      else assert.deepEqual([grammar.counts(rule, [...needed, member]), grammar.counts(rule, [...needed, member, member])], [[], twice]);
+    }
+  });
+}
+// The examples under the same check. A component's members are its own lines, those of no component inside it, each as
+// the rule of its property when that rule derives it, else as x-prop or iana-prop by its name; a property's parameter
+// lists are read off its derivation. An alarm's list depends on its ACTION, which no rule states, so alarms are left out.
+test('the examples keep to the occurrence rules, but for the breaches listed', () => {
+  const lists = new Set(occurs.map((entry) => entry.rule));
+  const listOf = (rule, deep = 2) => (lists.has(rule) ? rule : deep ? ical.rules[rule].flat(Infinity).filter((part) => ical.rules[part]).map((part) => listOf(part, deep - 1)).find(Boolean) : null);
+  const seen = new Set();
+  const note = (rule, members) => grammar.counts(rule, members).forEach((line) => seen.add(rule + ' ' + line));
+  const walk = (tree) => {
+    if (lists.has(tree.rule)) note(tree.rule, tree.kids.map((kid) => kid.rule));
+    tree.kids.forEach(walk);
+  };
+  const ruleFor = (line, name = line.split(':')[0].split(';')[0].toUpperCase()) => (derives(ruleOf.property(name), line + CRLF) ? ruleOf.property(name) : name.slice(0, 2) === 'X-' ? 'x-prop' : 'iana-prop');
+  for (const [rule, text] of wholes) {
+    const [first, ...rest] = text.split(CRLF).filter(Boolean);
+    if (first.toUpperCase().slice(0, 6) !== 'BEGIN:') walk(grammar.match(rule, text));
+    else if (first.toUpperCase() !== 'BEGIN:VALARM') {
+      let depth = 0;
+      const own = rest.slice(0, -1).filter((line) => {
+        const edge = ['BEGIN:', 'END:'].indexOf(line.toUpperCase().slice(0, line.indexOf(':') + 1));
+        if (edge === 1) depth -= 1;
+        return edge === 0 ? !(depth += 1) : edge < 0 && !depth;
+      });
+      note(listOf(rule), own.map((line) => ruleFor(line)));
+    }
+  }
+  assert.deepEqual([...seen].sort(), [...breaches].sort());
+});
 test('the register names this suite for exactly the sentences listed', () => {
   const named = Object.entries(JSON.parse(readFileSync('app/specs/standards/register/rfc5545.json', 'utf8')).enforcedBy);
-  assert.deepEqual(named.filter(([, entry]) => entry.suite === 'test/calendar.registry.test.mjs').map(([id]) => id).sort(), sentences.map(({ id }) => id).sort());
+  assert.deepEqual(named.filter(([, entry]) => entry.suite === 'test/calendar.registry.test.mjs').map(([id]) => id).sort(), [...sentences, ...occurs].map(({ id }) => id).sort());
 });
 test('the examples the grammar refuses are the slips the specification lists', () => assert.deepEqual([...refused].sort(), [...slips].sort()));

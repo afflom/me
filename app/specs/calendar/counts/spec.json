@@ -1,0 +1,17 @@
+{
+ "comment": "Acceptance vectors of the calendar guest's occurrence check (app/src/PrismIcal.lex.tex against app/src/PrismIcalCountsTable.lex.tex, which generators/calendar writes from the occurrence comments of RFC 5545's list rules). A request is the word counts, a list rule of RFC 5545 and the rules of the properties a component holds, one per line; the answer is ok, or one line per breach: the class the rule gives the property (R1 required and once, O1 optional and at most once, S1 should be at most once), the property's rule and how often it occurs. The first request is the first VEVENT example of RFC 5545 section 3.6.1 as its grammar derives it (uid, dtstamp, dtstart, dtend, summary, class, categories); the second holds its UID twice and the third leaves its DTSTAMP out, the two things the section's sentence on dtstamp and uid forbids.",
+ "examples": [
+  [
+   "counts\neventprop\nuid\ndtstamp\ndtstart\ndtend\nsummary\nclass\ncategories\n",
+   "ok\n"
+  ],
+  [
+   "counts\neventprop\nuid\nuid\ndtstamp\ndtstart\ndtend\nsummary\nclass\ncategories\n",
+   "R1 uid 2\n"
+  ],
+  [
+   "counts\neventprop\nuid\ndtstart\ndtend\nsummary\nclass\ncategories\n",
+   "R1 dtstamp 0\n"
+  ]
+ ]
+}

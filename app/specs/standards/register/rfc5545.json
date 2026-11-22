@@ -35,7 +35,9 @@
   "site/calendar/registry.mjs",
   "site/read/grammar/ical.mjs",
   "site/calendar/guest.mjs",
-  "app/src/PrismGrammarIcal.lex.tex"
+  "app/src/PrismGrammarIcal.lex.tex",
+  "app/src/PrismIcal.lex.tex",
+  "app/src/PrismIcalCountsTable.lex.tex"
  ],
  "realizedBy": [
   "ST-01"
@@ -116,6 +118,310 @@
   "rfc5545-3.3.14-76eeb5ee": {
    "suite": "test/calendar.registry.test.mjs",
    "how": "the grammar rule utc-offset takes what the sentence allows and refuses what it forbids (app/specs/calendar/sentences.json)"
+  },
+  "rfc5545-3.6-d8299928": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for calprops as the sentence's class R1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6-110616a8": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for calprops as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6-db2bce31": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for calprops as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.1-37eed0be": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for eventprop as the sentence's class R1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.1-ebf2c6ea": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for eventprop as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.1-916fb467": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for eventprop as the sentence's class S1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.1-cded943e": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for eventprop as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.2-e4c0037f": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for todoprop as the sentence's class R1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.2-481abd68": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for todoprop as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.2-916fb467": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for todoprop as the sentence's class S1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.2-cded943e": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for todoprop as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.3-e4c0037f": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for jourprop as the sentence's class R1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.3-9f97519a": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for jourprop as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.3-916fb467": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for jourprop as the sentence's class S1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.3-33c8d45c": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for jourprop as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.4-7656df36": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for fbprop as the sentence's class R1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.4-5beced16": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for fbprop as the sentence's class R1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.4-412ef8a1": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for fbprop as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.4-f9d94e2c": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for fbprop as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.5-33e4e216": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for timezonec as the sentence's class R1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.5-f270e21a": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for timezonec as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.5-36884400": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for timezonec as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.5-f79b1362": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for tzprop as the sentence's class R1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.5-916fb467": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for tzprop as the sentence's class S1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.5-6f0154ac": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for tzprop as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.6-093f38e5": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for audioprop as the sentence's class R1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.6-72791c1d": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for audioprop as the sentence's class R1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.6-cc76de54": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for audioprop as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.6-54135e36": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for audioprop as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.6-7f669b9e": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for dispprop as the sentence's class R1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.6-54135e36-2": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for dispprop as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.6-c2ead509": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for emailprop as the sentence's class R1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.6.6-4b04075e": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for emailprop as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.1.1-4fe92ee5": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for attachparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.1.1-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for attachparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.1.2-34508265": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for catparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.1.2-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for catparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.1.4-fc8704fc": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for commparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.1.4-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for commparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.1.5-fc8704fc": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for descparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.1.5-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for descparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.1.7-fc8704fc": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for locparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.1.7-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for locparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.1.10-fc8704fc": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for resrcparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.1.10-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for resrcparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.1.12-fc8704fc": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for summparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.1.12-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for summparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.2.2-fc8704fc": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for dtendparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.2.2-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for dtendparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.2.3-fc8704fc": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for dueparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.2.3-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for dueparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.2.4-fc8704fc": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for dtstparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.2.4-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for dtstparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.2.6-34508265": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for fbparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.2.6-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for fbparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.3.2-34508265": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for tznparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.3.2-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for tznparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.4.1-fc8704fc": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for attparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.4.1-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for attparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.4.2-fc8704fc": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for contparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.4.2-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for contparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.4.3-fc8704fc": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for orgparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.4.3-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for orgparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.4.4-fc8704fc": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for ridparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.4.4-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for ridparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.4.5-34508265": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for relparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.4.5-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for relparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.5.1-fc8704fc": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for exdtparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.5.1-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for exdtparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.5.2-fc8704fc": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for rdtparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.5.2-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for rdtparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.6.3-fc8704fc": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for trigrel as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.6.3-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for trigrel as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.6.3-8061c044-2": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for trigabs as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.8.3-34508265": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for rstatparam as the sentence's class O1 says (app/specs/calendar/sentences.json, occurs)"
+  },
+  "rfc5545-3.8.8.3-8061c044": {
+   "suite": "test/calendar.registry.test.mjs",
+   "how": "the reader's occurrence check answers for rstatparam as the sentence's class N says (app/specs/calendar/sentences.json, occurs)"
   }
  }
 }
