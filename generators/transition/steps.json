@@ -1,5 +1,5 @@
 {
-  "comment": "The steps of the transition program (generators/transition/), run in order by tools/generators/run.sh. Each step reads json-patch-tests tests.json and walks its cases as one history: a case that states an expected document is a transition from its document by its patch, chained to the transition before it. transitions and transitionsmore write the acceptance vectors of the snapshot guest's transition request (cases 1 to 36, and the rest): the W3C PROV record the case must give, whose addresses are those of the case's own document, patch and expected document; 'the state does not change' where the expected document is the document; 'the patch does not apply' where the case states an error. provtransitions and provtransitionsmore write the same records as acceptance vectors of the PROV-CONSTRAINTS checker (guest prov), each to be answered valid. GenPatch, GenJcs and Sha256 are the modules of generators/snapshot, byte for byte. jsonsuitesums writes the SHA256SUMS of the JSONTestSuite files held under app/specs/oracle/json-test-suite, one request per file. refusalcase writes, for one of those files, the acceptance vector of the snapshot guest's canonical request over the file's text, to be answered 'not I-JSON'; refusals, refusalsmore and refusalsijson gather them: the files the suite says a parser must refuse (n_, in two halves), and the lone surrogates, overflowing numbers and duplicated names that RFC 8785 requires refused.",
+  "comment": "The steps of the transition program (generators/transition/), run in order by tools/generators/run.sh. Each step reads json-patch-tests tests.json and walks its cases as one history: a case that states an expected document is a transition from its document by its patch, chained to the transition before it. transitions and transitionsmore write the acceptance vectors of the snapshot guest's transition request (cases 1 to 36, and the rest): the W3C PROV record the case must give, whose addresses are those of the case's own document, patch and expected document; 'the state does not change' where the expected document is the document; 'the patch does not apply' where the case states an error. provtransitions and provtransitionsmore write the same records as acceptance vectors of the PROV-CONSTRAINTS checker (guest prov), each to be answered valid. GenPatch, GenJcs and Sha256 are the modules of generators/snapshot, byte for byte. jsonsuitesums writes the SHA256SUMS of the JSONTestSuite files held under app/specs/oracle/json-test-suite, one request per file. refusalcase writes, for one of those files, the acceptance vector of the snapshot guest's canonical request over the file's text, to be answered 'not I-JSON'; refusals, refusalsmore and refusalsijson gather them: the files the suite says a parser must refuse (n_, in two halves), and the lone surrogates, overflowing numbers and duplicated names that RFC 8785 requires refused. replays, replaysmore, replaysthird and replaysrest write the acceptance vectors of the snapshot guest's replay request over the same history (cases 1 to 36, 37 to 58, 59 to 80, and the rest): each case's document, patch and previous transition with the record it must have, answered by the case's expected document in canonical form (or by the refusal, where the case does not move the state or states an error, asked with the record kept before it). replaysstale asks each moving case of the first 36 with the record of the transition before it, to be answered 'the record does not match'. A request over the guest's 2048 bytes is left out.",
   "steps": [
     {
       "generator": "transitions",
@@ -78,6 +78,41 @@
         ".gen/refusal-cases-ijson"
       ],
       "output": "app/specs/snapshot-refusal/ijson/spec.json"
+    },
+    {
+      "generator": "replays",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/snapshot-replay/spec.json"
+    },
+    {
+      "generator": "replaysmore",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/snapshot-replay/more/spec.json"
+    },
+    {
+      "generator": "replaysthird",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/snapshot-replay/third/spec.json"
+    },
+    {
+      "generator": "replaysrest",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/snapshot-replay/rest/spec.json"
+    },
+    {
+      "generator": "replaysstale",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/snapshot-replay/stale/spec.json"
     }
   ]
 }
