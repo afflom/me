@@ -1186,10 +1186,60 @@ definition{
 }
 
 definition{
+  name: rzFilledFrom,
+  parameters: [s : Bytes, i : Nat, k : String, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone s i) then acc else (rzFilledFrom s (Check::elemNext s i) k (if (Check::nonempty s (Check::key s (ctor Option.some [Nat] i) k)) then (acc + 1) else acc) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzMeantFrom,
+  parameters: [s : Bytes, i : Nat, meanings : (Option Nat), acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone s i) then acc else (rzMeantFrom s (Check::elemNext s i) meanings (if (Check::nonempty s (Check::keyBytes s meanings (Check::str s (ctor Option.some [Nat] i)))) then (acc + 1) else acc) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzGuards,
+  parameters: [s : Bytes],
+  result: (Option Nat),
+  body: (match (rzTop s "properties")
+    | Option.none => (rzTop s "guarantees")
+    | Option.some v => (ctor Option.some [Nat] v)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzOf,
+  parameters: [have : Nat, need : Nat],
+  result: Bytes,
+  body: (Check::cat (cons (rzNum have) (cons (Check::u " of ") (cons (rzNum need) (nil Bytes))))),
+  axioms: []
+}
+
+definition{
+  name: rzDescLines,
+  parameters: [s : Bytes, d : Bytes],
+  result: Bytes,
+  body: (let fs : (Option Nat) := (rzFields s); (let outs : (Option Nat) := (rzTop s "outcomes"); (let rules : (Option Nat) := (rzTop s "rules"); (let g : (Option Nat) := (rzGuards s); (let means : Nat := (rzFilledFrom s (Check::elemStart s fs) "means" 0 (rzLen s)); (let meant : Nat := (rzMeantFrom s (Check::elemStart s outs) (rzTop s "meanings") 0 (rzLen s)); (let nr : Nat := (Foundation.Json::countAt s rules); (let ng : Nat := (Foundation.Json::countAt s g); (let whys : Nat := ((rzFilledFrom s (Check::elemStart s rules) "why" 0 (rzLen s)) + (rzFilledFrom s (Check::elemStart s g) "why" 0 (rzLen s))); (let closing : Bool := (match rules
+    | Option.none => (Check::nonempty s (rzTop s "purpose"))
+    | Option.some v => (Check::nonempty s (rzTop s "otherwiseWhy"))); (Check::cat (cons (rzSay d "vocabulary" (rzOf (means + meant) ((Foundation.Json::countAt s fs) + (Foundation.Json::countAt s outs)))) (cons (rzSay d "authority" (rzOf (if closing then (whys + 1) else whys) ((nr + ng) + 1))) (cons (rzSay d "guards" (rzNum ng)) (nil Bytes))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: rzFactsOf,
   parameters: [s : Bytes, d : Bytes],
   result: Bytes,
-  body: (let k : Bytes := (rzKinds s); (let rs : Bytes := (rzCompile s); (let ids : Bytes := (rzIds s); (let dm : Bytes := (rzDoms s); (let off : Bytes := (rzOffs dm); (let nf : Nat := (rzLen k); (let n : Nat := (rzCountFrom dm off 0 nf 1 (nf + 1)); (let tree : Bool := (rzIsTree s); (let nr : Nat := (rzLinesFrom ids 0 0 ((rzLen ids) + 1)); (let m : Nat := (Foundation.Json::countAt s (rzExs s)); (let bad : Bytes := (rzBad s k rs dm off 0 n (n + 1)); (let no : Nat := (Foundation.Json::countAt s (rzTop s "outcomes")); (Check::cat (cons (rzSay d "points" (Check::cat (cons (rzNum n) (cons (Check::u " longest ") (cons (rzNum (rzLongest s k dm off 0 n 0 (n + 1))) (nil Bytes)))))) (cons (if ((rzLen bad) =? 0) then 0x else (rzSay d "bad" bad)) (cons (rzUnanswered s d k rs dm off 0 no n 0x (no + 1)) (cons (rzWitnesses s d k rs dm off 0 n 0x (nf + 1)) (cons (rzLiveness s d k rs dm off ids tree 0 (if tree then nr else (prim subtract nr 1 : Nat)) n 0x (nr + 1)) (cons (if (rzReads s) then (rzSay d "agree" (Check::u "0 of 0")) else (Foundation.Bytes::appendBytes (rzExLines s d k rs 0 m 0x (m + 1)) (rzSay d "agree" (rzExCount s k rs 0 m 0 0 (m + 1))))) (nil Bytes)))))))))))))))))))),
+  body: (let k : Bytes := (rzKinds s); (let rs : Bytes := (rzCompile s); (let ids : Bytes := (rzIds s); (let dm : Bytes := (rzDoms s); (let off : Bytes := (rzOffs dm); (let nf : Nat := (rzLen k); (let n : Nat := (rzCountFrom dm off 0 nf 1 (nf + 1)); (let tree : Bool := (rzIsTree s); (let nr : Nat := (rzLinesFrom ids 0 0 ((rzLen ids) + 1)); (let m : Nat := (Foundation.Json::countAt s (rzExs s)); (let bad : Bytes := (rzBad s k rs dm off 0 n (n + 1)); (let no : Nat := (Foundation.Json::countAt s (rzTop s "outcomes")); (Check::cat (cons (rzSay d "points" (Check::cat (cons (rzNum n) (cons (Check::u " longest ") (cons (rzNum (rzLongest s k dm off 0 n 0 (n + 1))) (nil Bytes)))))) (cons (if ((rzLen bad) =? 0) then 0x else (rzSay d "bad" bad)) (cons (rzUnanswered s d k rs dm off 0 no n 0x (no + 1)) (cons (rzWitnesses s d k rs dm off 0 n 0x (nf + 1)) (cons (rzLiveness s d k rs dm off ids tree 0 (if tree then nr else (prim subtract nr 1 : Nat)) n 0x (nr + 1)) (cons (if (rzReads s) then (rzSay d "agree" (Check::u "0 of 0")) else (Foundation.Bytes::appendBytes (rzExLines s d k rs 0 m 0x (m + 1)) (rzSay d "agree" (rzExCount s k rs 0 m 0 0 (m + 1))))) (cons (rzDescLines s d) (nil Bytes))))))))))))))))))))),
   axioms: [Quot.sound, propext]
 }
 
