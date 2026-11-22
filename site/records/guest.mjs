@@ -38,9 +38,24 @@ export async function openGuest(bytes, sha256) {
   };
 }
 
+// The same, answered synchronously once the one asynchronous step (check and
+// compile) is done, by one instance kept and put back as it began before each
+// request: its memory above the stack as first instantiated, and what it grew
+// by zero. An instance a request trapped is dropped. So no state carries over,
+// and reading thousands of fields does not leave thousands of instances.
+export async function openGuestSync(bytes, sha256) {
+  const module = await compile(bytes, sha256);
+  let x = null, first = null, from = 0;
+  return (line) => {
+    if (x) { const memory = new Uint8Array(x.memory.buffer); memory.set(first, from); memory.fill(0, from + first.length); }
+    else { x = new WebAssembly.Instance(module, {}).exports; from = Number(x.__stack_high?.value ?? 0); first = new Uint8Array(x.memory.buffer).slice(from); }
+    try { return run(x, line); } catch (error) { x = null; throw error; }
+  };
+}
+
 // The guest as this module serves it: its bytes read from beside this file
 // under Node and fetched from beside it in a browser, then opened as above.
-export async function opened(guest, open = openGuest) {
+export async function opened(guest, open = openGuestSync) {
   const at = new URL(guest.path, import.meta.url);
   return open(at.protocol === "file:" ? await (await import("node:fs/promises")).readFile(at) : new Uint8Array(await (await fetch(at)).arrayBuffer()), guest.sha256);
 }
