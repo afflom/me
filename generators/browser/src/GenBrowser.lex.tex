@@ -341,5 +341,157 @@ definition{
     | Option.some s => (let rows : Bytes := (brDeviceRows archive s 0 problems 64); (ctor Option.some [Bytes] (if problems then rows else (brCat3 (brU "// Written by GenBrowser (deviceformats) from deviceFormats in app/src/PrismDevice.lex.tex:\n// each file extension a media type's IANA registration states, the format it is\n// judged as, the kind of item it holds and the content type an item is kept under.\n\nexport const FORMATS = [\n") rows (brU "];\n")))))),
   axioms: [Quot.sound, propext]
 }
+
+definition{
+  name: gtFile,
+  parameters: [archive : Bytes, s : Bytes, k : Nat],
+  result: Bytes,
+  body: (match (Foundation.Tar::find archive (brNthPath s 0 k (Foundation.Bytes::byteLength s)))
+    | Option.none => 0x
+    | Option.some file => file),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gtAnchor,
+  parameters: [file : Bytes, a : Bytes],
+  result: Nat,
+  body: (let n : Nat := (Foundation.Bytes::byteLength file); (let p : Nat := (brFindFrom file (Foundation.Bytes::appendBytes (brU "\"href\": \"") (Foundation.Bytes::appendBytes a (brU "\""))) 0 n); (if (p <? n) then p else (brFindFrom file (Foundation.Bytes::appendBytes (brU "\"name\": \"") (Foundation.Bytes::appendBytes a (brU "\""))) 0 n)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gtUnitEnd,
+  parameters: [file : Bytes, p : Nat],
+  result: Nat,
+  body: (brFindFrom file (brU "\n    {\n") p (Foundation.Bytes::byteLength file)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gtCited,
+  parameters: [file : Bytes, a : Bytes, c : Bytes],
+  result: Bool,
+  body: (let n : Nat := (Foundation.Bytes::byteLength file); (let p : Nat := (gtAnchor file a); ((p <? n) && ((brFindFrom file c p n) <? (gtUnitEnd file p))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gtOwn,
+  parameters: [file : Bytes, iface : Bytes, member : Bytes, a : Bytes],
+  result: Bool,
+  body: (let n : Nat := (Foundation.Bytes::byteLength file); (let long : Nat := (brFindFrom file (Foundation.Bytes::appendBytes (brU "\"name\": \"") (Foundation.Bytes::appendBytes iface (Foundation.Bytes::appendBytes (brU "/") (Foundation.Bytes::appendBytes member (brU "("))))) 0 n); (let named : Nat := (if (long <? n) then long else (brFindFrom file (Foundation.Bytes::appendBytes (brU "\"name\": \"") (Foundation.Bytes::appendBytes member (brU "("))) 0 n)); ((named <? n) && ((brFindFrom file (Foundation.Bytes::appendBytes (brU "\"href\": \"") (Foundation.Bytes::appendBytes a (brU "\""))) named n) <? (gtUnitEnd file named)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gtSeenRows,
+  parameters: [
+    archive : Bytes,
+    s : Bytes,
+    i : Nat,
+    e : Nat,
+    iface : Bytes,
+    member : Bytes,
+    lead : Bool,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength s); (let h : Nat := (brFindFrom s (brU "record BrowserStatement {source := ") i n); (if (e <? (h + 1)) then 0x else (let r : Nat := (h + 35); (let re : Nat := (brDigitEnd s r n n); (let qa : Nat := (brByteEnd s re n 34 n); (let a : Bytes := (brStrOr s qa); (let c : Bytes := (brStrOr s (brNextStr s qa)); (let file : Bytes := (gtFile archive s (brNatFrom s r re 0 (prim subtract re r : Nat))); (Foundation.Bytes::appendBytes (if (gtCited file a c) then (Foundation.Bytes::appendBytes (brU "S ") (Foundation.Bytes::appendBytes a (Foundation.Bytes::appendBytes (brU " ") (Foundation.Bytes::appendBytes c (brU "\n"))))) else 0x) (Foundation.Bytes::appendBytes (if (lead && (gtOwn file iface member a)) then (Foundation.Bytes::appendBytes (brU "F ") (Foundation.Bytes::appendBytes iface (Foundation.Bytes::appendBytes (brU " ") (Foundation.Bytes::appendBytes member (brU "\n"))))) else 0x) (gtSeenRows archive s (h + 1) e iface member false rest))))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: gtSeen,
+  parameters: [archive : Bytes, s : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength s); (let g : Nat := (brFindFrom s (brU "record BrowserGate {iface := ") i n); (if (n <? (g + 1)) then 0x else (let e : Nat := (brFindFrom s (brU "record BrowserGate {iface := ") (g + 1) n); (let iface : Bytes := (brStrOr s (g + 29)); (let member : Bytes := (brStrOr s (brNextStr s (g + 29))); (Foundation.Bytes::appendBytes (gtSeenRows archive s g e iface member true 16) (gtSeen archive s (g + 1) rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brGateSeen,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (brU "app/src/PrismBrowserGates.lex.tex"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (ctor Option.some [Bytes] (gtSeen archive s 0 32))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gtNum,
+  parameters: [s : Bytes, g : Nat, key : Bytes],
+  result: Nat,
+  body: (let n : Nat := (Foundation.Bytes::byteLength s); (let r : Nat := ((brFindFrom s key g n) + (Foundation.Bytes::byteLength key)); (let re : Nat := (brDigitEnd s r n n); (brNatFrom s r re 0 (prim subtract re r : Nat))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gtStmtProblems,
+  parameters: [
+    seen : Bytes,
+    s : Bytes,
+    g : Nat,
+    i : Nat,
+    e : Nat,
+    who : Bytes,
+    lead : Bool,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength s); (let h : Nat := (brFindFrom s (brU "record BrowserStatement {source := ") i n); (if (e <? (h + 1)) then 0x else (let r : Nat := (h + 35); (let re : Nat := (brDigitEnd s r n n); (let qa : Nat := (brByteEnd s re n 34 n); (let a : Bytes := (brStrOr s qa); (let c : Bytes := (brStrOr s (brNextStr s qa)); (Foundation.Bytes::appendBytes (if (brContains seen (Foundation.Bytes::appendBytes (brU "S ") (Foundation.Bytes::appendBytes a (Foundation.Bytes::appendBytes (brU " ") (Foundation.Bytes::appendBytes c (brU "\n")))))) then 0x else (Foundation.Bytes::appendBytes who (Foundation.Bytes::appendBytes (brU ": the algorithm ") (Foundation.Bytes::appendBytes a (Foundation.Bytes::appendBytes (brU " does not cite ") (Foundation.Bytes::appendBytes c (brU "\n"))))))) (Foundation.Bytes::appendBytes (if (lead || (brContains (Foundation.Json::span s g h) (Foundation.Bytes::appendBytes (brU "\"") (Foundation.Bytes::appendBytes a (brU "\""))))) then 0x else (Foundation.Bytes::appendBytes who (Foundation.Bytes::appendBytes (brU ": nothing before it cites the algorithm ") (Foundation.Bytes::appendBytes a (brU "\n"))))) (gtStmtProblems seen s g (h + 1) e who false rest)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: gtGates,
+  parameters: [
+    seen : Bytes,
+    index : Bytes,
+    registry : Bytes,
+    s : Bytes,
+    i : Nat,
+    problems : Bool,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength s); (let g : Nat := (brFindFrom s (brU "record BrowserGate {iface := ") i n); (if (n <? (g + 1)) then 0x else (let e : Nat := (brFindFrom s (brU "record BrowserGate {iface := ") (g + 1) n); (let iface : Bytes := (brStrOr s (g + 29)); (let member : Bytes := (brStrOr s (brNextStr s (g + 29))); (Foundation.Bytes::appendBytes (let who : Bytes := (Foundation.Bytes::appendBytes iface (Foundation.Bytes::appendBytes (brU ".") member)); (let perm : Bytes := (brStrOr s ((brFindFrom s (brU "permission := ") g n) + 14)); (let act : Bool := ((gtNum s g (brU "activation := ")) =? 1); (let reg : Bool := ((gtNum s g (brU "registered := ")) =? 1); (let cited : Bytes := (Foundation.Json::span s (brFindFrom s (brU "statements := ") g n) e); (let waits : Bool := (brContains cited (brU "https://html.spec.whatwg.org/multipage/interaction.html#transient-activation")); (let listed : Bool := ((0 <? (Foundation.Bytes::byteLength perm)) && (brContains registry (Foundation.Bytes::appendBytes (brU "\"") (Foundation.Bytes::appendBytes perm (brU "\""))))); (if problems then (Foundation.Bytes::appendBytes (if (brContains index (Foundation.Bytes::appendBytes (brU "\nM ") (Foundation.Bytes::appendBytes iface (Foundation.Bytes::appendBytes (brU " ") (Foundation.Bytes::appendBytes member (brU " ")))))) then 0x else (Foundation.Bytes::appendBytes who (brU " is not a member PrismBrowser models\n"))) (Foundation.Bytes::appendBytes (if (brContains seen (Foundation.Bytes::appendBytes (brU "F ") (Foundation.Bytes::appendBytes iface (Foundation.Bytes::appendBytes (brU " ") (Foundation.Bytes::appendBytes member (brU "\n")))))) then 0x else (Foundation.Bytes::appendBytes who (brU ": its first citation is not the algorithm its specification gives for it\n"))) (Foundation.Bytes::appendBytes (if act then (if waits then 0x else (Foundation.Bytes::appendBytes who (brU " is said to wait for the owner, and no citation reaches transient activation\n"))) else (if waits then (Foundation.Bytes::appendBytes who (brU ": a citation reaches transient activation, and it is not said to wait for the owner\n")) else 0x)) (Foundation.Bytes::appendBytes (if ((0 <? (Foundation.Bytes::byteLength perm)) && (not (brContains cited perm))) then (Foundation.Bytes::appendBytes who (Foundation.Bytes::appendBytes (brU ": no citation names the permission ") (Foundation.Bytes::appendBytes perm (brU "\n")))) else 0x) (Foundation.Bytes::appendBytes (if reg then (if listed then 0x else (Foundation.Bytes::appendBytes who (Foundation.Bytes::appendBytes (brU ": the Permissions Registry does not list ") (Foundation.Bytes::appendBytes perm (brU "\n"))))) else (if listed then (Foundation.Bytes::appendBytes who (Foundation.Bytes::appendBytes (brU ": the Permissions Registry lists ") (Foundation.Bytes::appendBytes perm (brU "\n")))) else 0x)) (gtStmtProblems seen s g g e who true 16)))))) else (Foundation.Bytes::appendBytes who (Foundation.Bytes::appendBytes (if act then (brU " waits for the owner") else 0x) (Foundation.Bytes::appendBytes (if (0 <? (Foundation.Bytes::byteLength perm)) then (Foundation.Bytes::appendBytes (brU " under ") (Foundation.Bytes::appendBytes perm (if reg then (brU " (registered)") else (brU " (not in the registry)")))) else 0x) (brU "\n")))))))))))) (gtGates seen index registry s (g + 1) problems rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: gtOr,
+  parameters: [archive : Bytes, path : Bytes],
+  result: Bytes,
+  body: (match (Foundation.Tar::find archive path) | Option.none => 0x | Option.some file => file),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: brGates,
+  parameters: [archive : Bytes, problems : Bool],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (brU "app/src/PrismBrowserGates.lex.tex"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (match (Foundation.Tar::find archive (brU ".gen/browser-index"))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some index => (match (Foundation.Tar::find archive (brU "app/specs/oracle/permissions-registry/index.html"))
+        | Option.none => (ctor Option.none [Bytes])
+        | Option.some registry => (ctor Option.some [Bytes] (gtGates (Foundation.Bytes::appendBytes (gtOr archive (brU ".gen/gate-seen-0")) (Foundation.Bytes::appendBytes (gtOr archive (brU ".gen/gate-seen-1")) (gtOr archive (brU ".gen/gate-seen-2")))) index registry s 0 problems 32))))),
+  axioms: [Quot.sound, propext]
+}
 \end{semanticmodule}
 \end{lexlean}
