@@ -5,6 +5,7 @@
 \importmodule{Foundation.Bytes}
 \importmodule{GenPatch}
 \importmodule{GenRec}
+\importmodule{GenReplay}
 \importmodule{GenSuite}
 \importmodule{Foundation.Tar}
 \importmodule{Foundation.View.Text.V1.Model}
@@ -64,6 +65,24 @@ definition{
 }
 
 definition{
+  name: dispatchReplay,
+  parameters: [name : Bytes, archive : Bytes],
+  result: Bytes,
+  body: (if (Foundation.Tar::sameBytes name 0x7265706c617973) then (match (GenReplay::rpVectors archive 0 0 36 0x7b226e616d65223a22736e617073686f742d7265706c6179)
+    | Option.none => (refused 0x746865206f7261636c652066696c65206973206e6f7420696e2074686520726571756573740a)
+    | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x7265706c6179736d6f7265) then (match (GenReplay::rpVectors archive 0 36 58 0x7b226e616d65223a22736e617073686f742d7265706c61792f6d6f7265)
+    | Option.none => (refused 0x746865206f7261636c652066696c65206973206e6f7420696e2074686520726571756573740a)
+    | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x7265706c6179737468697264) then (match (GenReplay::rpVectors archive 0 58 80 0x7b226e616d65223a22736e617073686f742d7265706c61792f7468697264)
+    | Option.none => (refused 0x746865206f7261636c652066696c65206973206e6f7420696e2074686520726571756573740a)
+    | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x7265706c61797372657374) then (match (GenReplay::rpVectors archive 0 80 4096 0x7b226e616d65223a22736e617073686f742d7265706c61792f72657374)
+    | Option.none => (refused 0x746865206f7261636c652066696c65206973206e6f7420696e2074686520726571756573740a)
+    | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x7265706c6179737374616c65) then (match (GenReplay::rpVectors archive 1 0 36 0x7b226e616d65223a22736e617073686f742d7265706c61792f7374616c65)
+    | Option.none => (refused 0x746865206f7261636c652066696c65206973206e6f7420696e2074686520726571756573740a)
+    | Option.some v => (written v)) else 0x696e76616c6964))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: dispatchSuite,
   parameters: [name : Bytes, archive : Bytes],
   result: Bytes,
@@ -71,7 +90,7 @@ definition{
     | Option.none => (refused 0x746865207265717565737420646f6573206e6f74206361727279206f6e652066696c65206f66207468652070617273696e672073756974650a)
     | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x7265667573616c63617365) then (match (GenSuite::jsRefusal archive)
     | Option.none => (refused 0x746865207265717565737420646f6573206e6f74206361727279206f6e652066696c65206f66207468652070617273696e672073756974650a)
-    | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x7265667573616c73) then (written (GenSuite::jsVectors archive 0x7b226e616d65223a22736e617073686f742d7265667573616c)) else (if (Foundation.Tar::sameBytes name 0x7265667573616c736d6f7265) then (written (GenSuite::jsVectors archive 0x7b226e616d65223a22736e617073686f742d7265667573616c2f6d6f7265)) else (if (Foundation.Tar::sameBytes name 0x7265667573616c73696a736f6e) then (written (GenSuite::jsVectors archive 0x7b226e616d65223a22736e617073686f742d7265667573616c2f696a736f6e)) else 0x696e76616c6964))))),
+    | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x7265667573616c73) then (written (GenSuite::jsVectors archive 0x7b226e616d65223a22736e617073686f742d7265667573616c)) else (if (Foundation.Tar::sameBytes name 0x7265667573616c736d6f7265) then (written (GenSuite::jsVectors archive 0x7b226e616d65223a22736e617073686f742d7265667573616c2f6d6f7265)) else (if (Foundation.Tar::sameBytes name 0x7265667573616c73696a736f6e) then (written (GenSuite::jsVectors archive 0x7b226e616d65223a22736e617073686f742d7265667573616c2f696a736f6e)) else (dispatchReplay name archive)))))),
   axioms: [Quot.sound, propext]
 }
 
