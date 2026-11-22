@@ -28,6 +28,78 @@
 \title{Text application model}
 \begin{semanticmodule}
 theorem{
+  name: firstBoundary,
+  parameters: [rest : Bytes],
+  statement: ((Prism::firstRoute (Prism::facetBoundary) rest) = (Prism::route (Prism::facetBoundary) rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: firstWhen,
+  parameters: [rest : Bytes],
+  statement: ((Prism::firstRoute (Prism::facetWhen) rest) = (Prism::route (Prism::facetWhen) rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: firstStore,
+  parameters: [rest : Bytes],
+  statement: ((Prism::firstRoute (Prism::facetStore) rest) = (Prism::route (Prism::facetStore) rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: firstRestore,
+  parameters: [rest : Bytes],
+  statement: ((Prism::firstRoute (Prism::facetRestore) rest) = (Prism::route (Prism::facetRestore) rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: firstFolder,
+  parameters: [rest : Bytes],
+  statement: ((Prism::firstRoute (Prism::facetFolder) rest) = (Prism::route (Prism::facetFolder) rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: firstHost,
+  parameters: [rest : Bytes],
+  statement: ((Prism::firstRoute (Prism::facetHost) rest) = (Prism::route (Prism::facetHost) rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: firstSource,
+  parameters: [rest : Bytes],
+  statement: ((Prism::firstRoute (Prism::facetSource) rest) = (Prism::route (Prism::facetSource) rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: firstKappa,
+  parameters: [rest : Bytes],
+  statement: ((Prism::firstRoute (Prism::facetKappa) rest) = (Prism::route (Prism::facetKappa) rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
+  name: firstUorc,
+  parameters: [rest : Bytes],
+  statement: ((Prism::firstRoute (Prism::facetUorc) rest) = (Prism::route (Prism::facetUorc) rest)),
+  proof: reflexivity{},
+  axioms: [Quot.sound, propext]
+}
+
+theorem{
   name: routesBoundary,
   parameters: [rest : Bytes],
   statement: ((Prism::route (Prism::facetBoundary) rest) = (PrismBoundary::prismBoundaryDispatch rest)),
