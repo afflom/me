@@ -5,6 +5,7 @@
 \importmodule{Foundation.Bytes}
 \importmodule{GenPatch}
 \importmodule{GenRec}
+\importmodule{GenNames}
 \importmodule{GenReplay}
 \importmodule{GenSuite}
 \importmodule{Foundation.Tar}
@@ -83,6 +84,14 @@ definition{
 }
 
 definition{
+  name: dispatchNames,
+  parameters: [name : Bytes, archive : Bytes],
+  result: Bytes,
+  body: (if (Foundation.Tar::sameBytes name 0x6e616d656361736573) then (written (GenNames::gnCases archive)) else (if (Foundation.Tar::sameBytes name 0x6e616d6573) then (written (GenSuite::jsVectors archive 0x7b226e616d65223a22736e617073686f742d6e616d65)) else (dispatchReplay name archive))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: dispatchSuite,
   parameters: [name : Bytes, archive : Bytes],
   result: Bytes,
@@ -90,7 +99,7 @@ definition{
     | Option.none => (refused 0x746865207265717565737420646f6573206e6f74206361727279206f6e652066696c65206f66207468652070617273696e672073756974650a)
     | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x7265667573616c63617365) then (match (GenSuite::jsRefusal archive)
     | Option.none => (refused 0x746865207265717565737420646f6573206e6f74206361727279206f6e652066696c65206f66207468652070617273696e672073756974650a)
-    | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x7265667573616c73) then (written (GenSuite::jsVectors archive 0x7b226e616d65223a22736e617073686f742d7265667573616c)) else (if (Foundation.Tar::sameBytes name 0x7265667573616c736d6f7265) then (written (GenSuite::jsVectors archive 0x7b226e616d65223a22736e617073686f742d7265667573616c2f6d6f7265)) else (if (Foundation.Tar::sameBytes name 0x7265667573616c73696a736f6e) then (written (GenSuite::jsVectors archive 0x7b226e616d65223a22736e617073686f742d7265667573616c2f696a736f6e)) else (dispatchReplay name archive)))))),
+    | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x7265667573616c73) then (written (GenSuite::jsVectors archive 0x7b226e616d65223a22736e617073686f742d7265667573616c)) else (if (Foundation.Tar::sameBytes name 0x7265667573616c736d6f7265) then (written (GenSuite::jsVectors archive 0x7b226e616d65223a22736e617073686f742d7265667573616c2f6d6f7265)) else (if (Foundation.Tar::sameBytes name 0x7265667573616c73696a736f6e) then (written (GenSuite::jsVectors archive 0x7b226e616d65223a22736e617073686f742d7265667573616c2f696a736f6e)) else (dispatchNames name archive)))))),
   axioms: [Quot.sound, propext]
 }
 
