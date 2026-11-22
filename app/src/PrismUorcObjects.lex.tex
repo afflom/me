@@ -1,0 +1,45 @@
+\begin{lexlean}{PrismUorcObjects}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\importmodule{PrismUorc}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: uorcObjectsStart,
+  parameters: [s : Bytes, i : Nat, k : Nat],
+  result: Nat,
+  body: (match k
+    | Nat.zero => i
+    | Nat.succ rest => (uorcObjectsStart s ((PrismUorc::prismUorcFieldEnd s i (Foundation.Bytes::byteLength s)) + 1) rest)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: k
+}
+
+definition{
+  name: uorcObjectsWord,
+  parameters: [s : Bytes, k : Nat],
+  result: Bytes,
+  body: (let a : Nat := (uorcObjectsStart s 0 k); (PrismUorc::prismUorcSliceOf s a (prim subtract (PrismUorc::prismUorcFieldEnd s a (Foundation.Bytes::byteLength s)) a : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcObjectsLine,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (let one : Bool := (prim equal (uorcObjectsWord value 6) 0x31 : Bool); (Foundation.Bytes::appendBytes (uorcObjectsWord value 1) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (uorcObjectsWord value 2) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if (one && (prim equal (uorcObjectsWord value 7) 0x74727565 : Bool)) then 0x6f6b else 0x62726f6b656e) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if ((prim equal (uorcObjectsWord value 8) 0x32 : Bool) && (prim equal (uorcObjectsWord value 9) 0x31 : Bool)) then 0x6b6e6f776e else 0x6f74686572) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if ((prim equal (uorcObjectsWord value 10) 0x73656c662d636f6e7461696e6564 : Bool) && (prim equal (uorcObjectsWord value 11) 0x6e6f6e65 : Bool)) then 0x73656c66 else (if ((prim equal (uorcObjectsWord value 10) 0x636f6e646974696f6e616c : Bool) && (prim equal (uorcObjectsWord value 11) 0x7374616e64617264 : Bool)) then 0x7374616e64617264 else 0x6f74686572)) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if (one && (prim equal (uorcObjectsWord value 12) 0x31 : Bool)) then 0x6f6e65 else 0x6d616e79) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if (prim equal (uorcObjectsWord value 5) 0x6661696c6564 : Bool) then 0x6661696c6564 else (if (((Foundation.Bytes::byteLength (uorcObjectsWord value 4)) =? 64) && (prim equal (uorcObjectsWord value 5) (uorcObjectsWord value 4) : Bool)) then 0x73616d65 else 0x64696666657273)) (Foundation.Bytes::appendBytes 0x20 (if (prim equal (uorcObjectsWord value 3) 0x61646d6974 : Bool) then 0x61646d6974 else 0x6f74686572)))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: uorcObjectsDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (260 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (if (prim equal (uorcObjectsWord value 0) 0x6a75646765 : Bool) then (uorcObjectsLine value) else (PrismUorc::prismUorcDispatch value))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

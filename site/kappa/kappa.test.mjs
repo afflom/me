@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { GUEST, opened } from './guest.mjs';
 import { AXES, FIELDS, ANSWERS, GUARANTEES, EXAMPLES, MAX_LINE, NAMED, read, judge, answer as mirror } from './table.mjs';
-import { makeKappa, labelOf, digestWord, parseAnswer } from './kappa.mjs';
+import { makeKappa } from './kappa.mjs';
 
 const kappa = await opened(GUEST);
 
@@ -75,6 +75,7 @@ for (const bad of ['', 'match', `sha256:${'a'.repeat(64)}`, `sha256:${'a'.repeat
 // KP-02: the adapter re-derives digests in the browser and admits only on the guest's word.
 const decide = kappa;
 const facet = makeKappa({ decide });
+const labelOf = facet.labelOf;
 const object = new TextEncoder().encode('hello world');
 ok((await labelOf(object)) === 'sha256:b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9', 'kappa-registry blob_kappa_is_sha256');
 ok((await labelOf(object, 'sha512')).startsWith('sha512:309ecc489c12d6eb'), 'sha512 label');
@@ -93,19 +94,19 @@ for (const wire of ['sha256', 'sha512']) {
   const flipped = object.slice();
   flipped[0] ^= 1;
   ok((await facet.admit(label, flipped)).outcome === 'mismatch', `a flipped bit on ${wire} is refused`);
-  ok((await digestWord(label, null)) === 'uncomputed', `no bytes on ${wire}`);
+  const bare = await facet.admit(label, null);
+  ok(bare.outcome === 'unverified' && bare.sha256 === undefined, `no bytes on ${wire}`);
 }
 ok((await facet.admit('blake3:d74981efa70a0c880b8d8c1985d075dbcbf679b99a5f9914e5aaf96b831a9e24', object)).outcome === 'unverified', 'an axis the host cannot compute is never admitted');
 ok((await facet.admit('sha1:2aae6c35c94fcfb415dbe95f408b9ce91ee846ed', object)).outcome === 'unverified', 'SHA-1 is never admitted without collision detection');
 ok((await facet.admit('sha256:abcd', object)).outcome === 'digits', 'a short digest is refused');
 ok((await facet.admit('md5:d41d8cd98f00b204e9800998ecf8427e', object)).outcome === 'unknownaxis', 'an unknown axis is refused');
 ok((await facet.admit((await labelOf(object)).toUpperCase().replace('SHA256', 'sha256'), object)).outcome === 'badhex', 'uppercase hex is refused');
-// An answer the adapter does not expect is a refusal, never an admission.
-for (const text of ['admit', 'admit sha256 0', 'admit sha256 1 32', 'admit sha256 0 32 x', 'admit md5 0 16', 'ADMIT sha256 0 32', 'mismatch sha256']) {
-  ok(parseAnswer(text).outcome !== 'admit' || false, `unexpected answer ${text}`);
+// An answer that is not the guest's protocol is a refusal, never an admission.
+for (const text of ['admit sha256 0 32', 'done', 'done - admit sha256 0 32 x', 'need fetch https://example.invalid', 'need']) {
+  const liar = makeKappa({ decide: async () => text });
+  ok((await liar.admit(await labelOf(object), object)).outcome !== 'admit', `unexpected answer ${text}`);
 }
-const liar = makeKappa({ decide: async () => 'admit sha512 0 32' });
-ok((await liar.admit(await labelOf(object), object)).outcome === 'invalid', 'a malformed admission is not obeyed');
 ok(NAMED.every((a) => ANSWERS.includes(a)), 'named answers are answers');
 
 console.log(`kappa: ${checks} checks, ${total} requests`);

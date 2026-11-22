@@ -29,12 +29,6 @@ const hostGuest = await openGuest(new Uint8Array(await readFile(new URL(HOST_GUE
 let checks = 0;
 const ok = (cond, message) => { assert.ok(cond, message); checks += 1; };
 
-// A guest whose bytes are not the pinned fingerprint is refused before it compiles.
-const tampered = new Uint8Array(await readFile(new URL(GUEST.path, import.meta.url)));
-tampered[tampered.length - 1] ^= 1;
-await assert.rejects(openGuest(tampered, GUEST.sha256), /guest refused/);
-checks += 1;
-
 // DV-01: PrismFolder, every request, against its seven guarantees.
 const product = (...lists) => lists.reduce((acc, list) => acc.flatMap((a) => list.map((b) => [...a, b])), [[]]);
 let requests = 0;

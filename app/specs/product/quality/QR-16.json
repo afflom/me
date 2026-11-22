@@ -3,7 +3,7 @@
   "name": "What a line asks of me",
   "characteristic": "functional suitability",
   "subcharacteristic": "functional correctness",
-  "says": "the router reads whether a line asks a question, sets a task or gives a fact as the AMI Meeting Corpus's annotators marked its dialogue act, under ISO 24617-2's general-purpose functions",
+  "says": "the router reads whether a line asks a question, sets a task or gives a fact as the AMI Meeting Corpus's annotators marked its dialogue act, under ISO 24617-2's general-purpose functions; and whether a line is feedback on what was just said, as AMI's Backchannel acts are under the published mapping of AMI's classes to ISO 24617-2",
   "measures": [
     {
       "key": "question-found",
@@ -24,6 +24,20 @@
       "says": "percent of its Inform acts the router reads as a fact (an untimed event counted as one)",
       "direction": "atLeast",
       "threshold": 90,
+      "gate": "test/oracle/intent.test.mjs"
+    },
+    {
+      "key": "feedback-found",
+      "says": "percent of the AMI scenario test partition's Backchannel acts the autoFeedback head (PROVIDERS.intent.heads) reads as feedback, once the meaning model has opened",
+      "direction": "atLeast",
+      "threshold": 95,
+      "gate": "test/oracle/intent.test.mjs"
+    },
+    {
+      "key": "feedback-kept",
+      "says": "percent of its other mapped acts (Inform, Elicit, Suggest, Offer) that head does not read as feedback",
+      "direction": "atLeast",
+      "threshold": 97,
       "gate": "test/oracle/intent.test.mjs"
     }
   ]

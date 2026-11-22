@@ -8,6 +8,7 @@
 \importmodule{GenIcfModule}
 \importmodule{GenIcfLean}
 \importmodule{GenVocabNames}
+\importmodule{GenSchemaPerson}
 \importmodule{Foundation.Tar}
 \importmodule{Foundation.View.Text.V1.Model}
 \importmodule{Foundation.View.Text.V3.Model}
@@ -79,7 +80,23 @@ definition{
     | Option.none => (refused (GenIcf::icfText "needs .gen/icf-tree"))
     | Option.some summaries => (let why : Bytes := (GenIcfTree::check summaries); (if (0 <? (Foundation.Bytes::byteLength why)) then (refused why) else (written (GenIcf::icfText "the ICF's structure holds across every entity\n"))))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "icfunique")) then (match (Foundation.Tar::find archive (GenIcf::icfText ".gen/icf-ids"))
     | Option.none => (refused (GenIcf::icfText "needs .gen/icf-ids"))
-    | Option.some keys => (let why : Bytes := (GenIcfTree::unique keys); (if (0 <? (Foundation.Bytes::byteLength why)) then (refused why) else (written (GenIcf::icfText "every entity of the ICF is in it once\n"))))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "icflean")) then (match (Foundation.Tar::find archive (GenIcf::icfText "app/specs/oracle/icf/SimpleTabulation-ICF-en.txt"))
+    | Option.some keys => (let why : Bytes := (GenIcfTree::unique keys); (if (0 <? (Foundation.Bytes::byteLength why)) then (refused why) else (written (GenIcf::icfText "every entity of the ICF is in it once\n"))))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "schemaparents")) then (match (GenSchemaPerson::schemaSource archive)
+    | Option.none => (refused (GenIcf::icfText "needs the pinned vocabulary"))
+    | Option.some vocabulary => (written (GenSchemaPerson::schemaParents vocabulary 0x))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "schemaroots")) then (match (Foundation.Tar::find archive (GenIcf::icfText ".gen/schemaorg-person-types"))
+    | Option.none => (refused (GenIcf::icfText "needs .gen/schemaorg-person-types"))
+    | Option.some types => (match (GenSchemaPerson::schemaSource archive)
+      | Option.none => (refused (GenIcf::icfText "needs the pinned vocabulary"))
+      | Option.some vocabulary => (let why : Bytes := (GenSchemaPerson::schemaOrphans vocabulary types); (if (0 <? (Foundation.Bytes::byteLength why)) then (refused why) else (written (GenSchemaPerson::schemaRoots vocabulary types)))))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "schemanames")) then (match (Foundation.Tar::find archive (GenIcf::icfText ".gen/schemaorg-person-types"))
+    | Option.none => (refused (GenIcf::icfText "needs .gen/schemaorg-person-types"))
+    | Option.some types => (match (GenSchemaPerson::schemaSource archive)
+      | Option.none => (refused (GenIcf::icfText "needs the pinned vocabulary"))
+      | Option.some vocabulary => (written (GenSchemaPerson::schemaNames vocabulary types)))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "schemareqs")) then (match (Foundation.Tar::find archive (GenIcf::icfText ".gen/schemaorg-person-names"))
+    | Option.none => (refused (GenIcf::icfText "needs .gen/schemaorg-person-names"))
+    | Option.some names => (written (GenSchemaPerson::schemaReqs names))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "schemapin")) then (match (Foundation.Tar::find archive (GenIcf::icfText ".gen/schemaorg-person-names"))
+    | Option.none => (refused (GenIcf::icfText "needs .gen/schemaorg-person-names"))
+    | Option.some names => (written (GenSchemaPerson::schemaPin names))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "icfreqs")) then (match (Foundation.Tar::find archive (GenIcf::icfText "app/specs/oracle/icf/SimpleTabulation-ICF-en.txt"))
+    | Option.none => (refused (GenIcf::icfText "needs app/specs/oracle/icf/SimpleTabulation-ICF-en.txt"))
+    | Option.some tabulation => (written (GenIcfLean::reqRows tabulation))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "icflean")) then (match (Foundation.Tar::find archive (GenIcf::icfText "app/specs/oracle/icf/SimpleTabulation-ICF-en.txt"))
     | Option.none => (refused (GenIcf::icfText "needs app/specs/oracle/icf/SimpleTabulation-ICF-en.txt"))
     | Option.some tabulation => (written (GenIcfLean::leanRows tabulation))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "icfleannames")) then (match (Foundation.Tar::find archive (GenIcf::icfText "app/specs/oracle/icf/SimpleTabulation-ICF-en.txt"))
     | Option.none => (refused (GenIcf::icfText "needs app/specs/oracle/icf/SimpleTabulation-ICF-en.txt"))
@@ -93,7 +110,7 @@ definition{
     | Option.none => (refused (GenIcf::icfText "needs .gen/vocab-name-names"))
     | Option.some names => (written (GenVocabNames::vocabNameEnd names))) else (if (Foundation.Tar::sameBytes name (GenIcf::icfText "icfmodule")) then (match (Foundation.Tar::find archive (GenIcf::icfText "app/specs/oracle/spec.json"))
     | Option.none => (refused (GenIcf::icfText "needs app/specs/oracle/spec.json"))
-    | Option.some spec => (if (Foundation.Tar::sameBytes (GenIcfModule::icfModuleKey spec) (GenIcf::icfText "icf")) then (written (GenIcfModule::icfModule spec)) else (refused (GenIcf::icfText "the oracle's first classification is not the ICF\n")))) else 0x696e76616c6964))))))))))))))))))),
+    | Option.some spec => (if (Foundation.Tar::sameBytes (GenIcfModule::icfModuleKey spec) (GenIcf::icfText "icf")) then (written (GenIcfModule::icfModule spec)) else (refused (GenIcf::icfText "the oracle's first classification is not the ICF\n")))) else 0x696e76616c6964))))))))))))))))))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

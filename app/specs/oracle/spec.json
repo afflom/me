@@ -139,6 +139,10 @@
       "why": "How often a source writes is measured by site/time/rhythm.mjs, which is held to the instances RFC 5545 section 3.8.5.3 lists for its recurrence rules (test/time/rhythm.test.mjs). No pinned specification gives several messages from one sender that keep a cycle (RFC 5322 Appendix A has at most three times from one sender), and a public mailing-list archive would bring real people's timing into the repository, which the no-PII rule keeps out even with names replaced. So the chat's sentence for such a sender is tested only on a rhythm handed to it, until a specification publishes such an exchange."
     },
     {
+      "kind": "a dialogue act written as DiAML",
+      "why": "ISO 24617-2 defines the Dialogue Act Markup Language (a dialogueAct with its xml:id, target, sender, addressee, dimension, communicativeFunction and dependence attributes), but no openly licensed source gives its form with cases a gate could hold: the schema is in ISO 24617-2 itself, which is not freely published; the corpus annotated in it, DialogBank, states no licence and is kept out of the repository (its source is held); the AMI Meeting Corpus marks acts in NXT stand-off XML with its own classes, which the published mapping turns into labels and not into DiAML's form; and the fragments printed in the standard's papers are a few examples, not accepted and refused cases. So a turn's act is kept as an attribute of its PROV record, and no DiAML is written, until such a source is pinned."
+    },
+    {
       "kind": "card number",
       "why": "No published specification gives example card numbers: ISO/IEC 7812-1, which defines the issuer prefix and the Luhn check digit, is not freely published, and the networks' test numbers are on their own changing pages. The card detector (site/google/ingest.mjs) has no oracle test until one is pinned."
     },
@@ -156,7 +160,7 @@
     },
     {
       "kind": "the senses' observations",
-      "why": "The senses guest (app/src/PrismSenses.lex.tex) is held to W3C's SOSA ontology and the Recommendation's example graphs through its 'check' verb, and its 'flat' verb to RFC 5545's own examples: given the RFC's events, it names the time zone and chooses the event under way and the next one at pinned clocks (app/specs/senses/observed/spec.json). No source verifies the rest yet: local time, identity, the functioning profile, place and location, and the N-Triples form of 'observe'. app/specs/senses/spec.json 'gaps' names the oracle each is to be derived from (IANA tz test data, RFC 3339, RFC 6350, WHO ICF, Geolocation)."
+      "why": "The senses guest (app/src/PrismSenses.lex.tex) is held to W3C's SOSA ontology and the Recommendation's example graphs through its 'check' verb, and its 'flat' verb to RFC 5545's own examples: given the RFC's events, it names the time zone and chooses the event under way and the next one at pinned clocks (app/specs/senses/observed/spec.json). The address of the person's card is held to the first whole card of RFC 6350 and FIPS 180-4 (app/specs/senses/identity/spec.json). No source verifies the rest yet: local time, the functioning profile, place and location, and the N-Triples form of 'observe'. app/specs/senses/spec.json 'gaps' names the oracle each is to be derived from (IANA tz test data, RFC 3339, WHO ICF, Geolocation)."
     },
     {
       "kind": "a Web Annotation Set with no id",
@@ -169,6 +173,10 @@
     {
       "kind": "provenance rules no W3C case turns on",
       "why": "The prov guest is held to the 166 PROV-N cases of W3C's PROV-CONSTRAINTS suite (app/specs/prov/spec.json). Switching a numbered rule off changes a case's verdict only for Inference 19 and Constraints 23 to 29, 42, 45, 52, 54, 55 and 56; the other 42 rules are implemented with no oracle test and are ST-01 debt (app/specs/standards/debt/w3c-prov-constraints.json). No case repeats a bundle identifier or passes the guest's bounds, and no source gives the PROV-N of one of the Prism's own turns."
+    },
+    {
+      "kind": "greetings, thanks and apologies said to the Prism",
+      "why": "ISO 24617-2 puts them in its social obligations management dimension. The chat's dimension heads (app/specs/router/spec.json providers.intent.heads) are fit and measured on the AMI Meeting Corpus through the published mapping of Mezza et al. (COLING 2018, Table 7), which maps no AMI act to that dimension; the corpora that mark it (Switchboard through Fang et al. 2012, DialogBank) carry no open licence and are kept out of the repository. So no head reads these acts: the chat still knows a greeting by the sentence provider's greet words (site/router/answer.mjs), untested by any oracle, until an openly licensed corpus marks the dimension."
     }
   ],
   "unsourced": [

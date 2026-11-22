@@ -327,13 +327,14 @@ export default async function start({ app, reason, $ }) {
     return;
   }
 
-  // The root guest: "<facet> <rest>" in, the facet's answer out. The guest takes
-  // no imports and each request runs alone, so the same line has the same
-  // answer: it is asked once and remembered. The runtime starts an instance for
-  // every request, and the browser can refuse one more before it has let the
-  // earlier ones go; a line refused so is asked again a moment later.
-  const ask = async (text, tries = 4) => { try { return decoder.decode(await app.dispatch(encoder.encode(text))).trim(); } catch (error) { if (tries < 2 || !/out of memory/i.test(String(error?.message ?? error))) throw error; await new Promise((again) => setTimeout(again, 250)); return ask(text, tries - 1); } };
-  const asked = new Map();
+  // The root guest: "<facet> <rest>" in, the facet's answer out. It answers what a first visit
+  // asks; a line it refuses goes to the guest of the facet it names, fetched then. None takes
+  // imports and each request runs alone, so the same line has the same answer: it is asked once
+  // and remembered. The runtime starts an instance for every request, and the browser can refuse one
+  // more before it has let the earlier ones go; a line refused so is asked again a moment later.
+  const ask = async (text, tries = 4) => { try { const said = decoder.decode(await app.dispatch(encoder.encode(text))).trim(); return said === 'invalid request' ? beyond(text) : said; } catch (error) { if (tries < 2 || !/out of memory/i.test(String(error?.message ?? error))) throw error; await new Promise((again) => setTimeout(again, 250)); return ask(text, tries - 1); } };
+  const asked = new Map(), later = new Map();
+  const beyond = async (text, cut = text.indexOf(' '), word = text.slice(0, cut), rest = text.slice(cut + 1)) => { const pins = await import('./later/guest.mjs'); if (cut < 1 || !rest || !Object.hasOwn(pins.GUESTS, word)) return 'invalid request'; if (!later.has(word)) later.set(word, pins.opened(pins.GUESTS[word]).catch((error) => { later.delete(word); throw error; })); return (await (await later.get(word))(rest)).trim(); };
   const line = (text) => asked.get(text) ?? (asked.size > 4096 && asked.clear(), asked.set(text, ask(text).catch((error) => { asked.delete(text); throw error; })).get(text));
 
   // The vault: kept in this browser, every keep and read decided by the app.
@@ -1408,7 +1409,7 @@ export default async function start({ app, reason, $ }) {
       // sentences from what is held, under the Boundary, with what it drew on.
       const [{ answer, recordOf }] = await Promise.all([import("./router/answer.mjs"), notesKept]);
       // A question is answered; anything else the person says is offered to keep, in its place and time.
-      const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: true, meaning: haltedNow ? null : meaningRead() });
+      const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: true, meaning: haltedNow ? null : meaningRead(), after: turned });
       drawn.replaceChildren();
       if (said.sentences.length) { turn(prompt, said, recordOf); say("", "idle"); $("pr-prompt").value = ""; }
       else if (haltedNow) say(WORDS.halted, "bad");

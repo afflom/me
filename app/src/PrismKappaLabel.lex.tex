@@ -115,12 +115,60 @@ definition{
 }
 
 definition{
-  name: kappaLabelDispatch,
+  name: kappaLabelJudgeLine,
   parameters: [value : Bytes],
   result: Bytes,
   body: (if (146 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (match (kappaLabelDecode value)
     | Option.none => 0x696e76616c6964
     | Option.some request => (kappaLabelEncodeAnswer (PrismKappa::prismKappaJudge request) (project request axis)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kappaLabelAskHost,
+  parameters: [axis : Bytes],
+  result: Bytes,
+  body: (if (prim equal axis 0x736861323536 : Bool) then 0x5348412d323536 else (if (prim equal axis 0x736861353132 : Bool) then 0x5348412d353132 else 0x))
+}
+
+definition{
+  name: kappaLabelAskNeed,
+  parameters: [host : Bytes],
+  result: Bytes,
+  body: (if ((Foundation.Bytes::byteLength host) =? 0) then 0x6e65656420736b6970 else (Foundation.Bytes::appendBytes 0x6e6565642064696765737420 host))
+}
+
+definition{
+  name: kappaLabelAskDone,
+  parameters: [label : Bytes, derived : Bytes, secondary : Bytes],
+  result: Bytes,
+  body: (let n : Nat := (Foundation.Bytes::byteLength label); (let c : Nat := (kappaLabelStopAt label 58 0 n); (let word : Bytes := (if (prim equal derived 0x2d : Bool) then 0x756e636f6d7075746564 else (if (prim equal derived (kappaLabelSliceOf label (c + 1) (prim subtract n (c + 1) : Nat)) : Bool) then 0x6d61746368 else 0x6d69736d61746368)); (Foundation.Bytes::appendBytes (Foundation.Bytes::appendBytes 0x646f6e6520 (if (prim equal secondary 0x2d : Bool) then 0x2d else (Foundation.Bytes::appendBytes 0x7368613235363a secondary))) (Foundation.Bytes::appendBytes 0x20 (kappaLabelJudgeLine (Foundation.Bytes::appendBytes label (Foundation.Bytes::appendBytes 0x20 word)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kappaLabelAskAdmit,
+  parameters: [s : Bytes, a : Nat, n : Nat],
+  result: Bytes,
+  body: (let e : Nat := (kappaLabelStopAt s 32 a n); (let label : Bytes := (kappaLabelSliceOf s a (prim subtract e a : Nat)); (if (e <? n) then (let b : Nat := (e + 1); (let f : Nat := (kappaLabelStopAt s 32 b n); (if (f <? n) then (let c : Nat := (f + 1); (if ((kappaLabelStopAt s 32 c n) <? n) then 0x696e76616c6964 else (kappaLabelAskDone label (kappaLabelSliceOf s c (prim subtract n c : Nat)) (kappaLabelSliceOf s b (prim subtract f b : Nat))))) else (let axis : Bytes := (kappaLabelSliceOf label 0 (kappaLabelStopAt label 58 0 (Foundation.Bytes::byteLength label))); (if (prim equal axis 0x736861323536 : Bool) then (kappaLabelAskDone label (kappaLabelSliceOf s b (prim subtract n b : Nat)) (kappaLabelSliceOf s b (prim subtract n b : Nat))) else (kappaLabelAskNeed (kappaLabelAskHost axis))))))) else 0x6e65656420646967657374205348412d323536))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kappaLabelAskLabel,
+  parameters: [s : Bytes, a : Nat, n : Nat],
+  result: Bytes,
+  body: (let e : Nat := (kappaLabelStopAt s 32 a n); (let wire : Bytes := (kappaLabelSliceOf s a (prim subtract e a : Nat)); (let host : Bytes := (kappaLabelAskHost wire); (match (kappaLabelParseAxis wire)
+    | Option.none => (Foundation.Bytes::appendBytes 0x726566757365206b617070612e6178697320756e6b6e6f776e206178697320 wire)
+    | Option.some known => (if ((Foundation.Bytes::byteLength host) =? 0) then (Foundation.Bytes::appendBytes 0x726566757365206b617070612e686f737420746869732062726f7773657220646f6573206e6f7420636f6d7075746520 wire) else (if (e <? n) then (Foundation.Bytes::appendBytes 0x646f6e6520 (Foundation.Bytes::appendBytes wire (Foundation.Bytes::appendBytes 0x3a (kappaLabelSliceOf s (e + 1) (prim subtract n (e + 1) : Nat))))) else (kappaLabelAskNeed host))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: kappaLabelDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (let n : Nat := (Foundation.Bytes::byteLength value); (let e : Nat := (kappaLabelStopAt value 32 0 n); (if (338 <? n) then 0x696e76616c6964 else (if ((e <? n) && (prim equal (kappaLabelSliceOf value 0 e) 0x61646d6974 : Bool)) then (kappaLabelAskAdmit value (e + 1) n) else (if ((e <? n) && (prim equal (kappaLabelSliceOf value 0 e) 0x6c6162656c : Bool)) then (kappaLabelAskLabel value (e + 1) n) else (kappaLabelJudgeLine value)))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

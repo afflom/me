@@ -2,13 +2,32 @@
  "key": "schemaorg-person",
  "title": "Schema.org Person",
  "issuer": "Schema.org",
- "text": null,
- "unpinned": "the vocabulary's Person properties need pinning with an extractor (schemaorg-current-https.jsonld)",
+ "text": {
+  "url": "https://schema.org/version/30.1/schemaorg-current-https.jsonld",
+  "sha256": "0a4b8c4c910fc831ec8695196510973390906a5ee34dc6b862dfec4d21a12f74"
+ },
+ "inventories": [
+  {
+   "generated": "test/standards/generated/schemaorg-person.jsonl",
+   "vendored": "app/specs/standards/texts/0a4b8c4c910fc831ec8695196510973390906a5ee34dc6b862dfec4d21a12f74",
+   "source": {
+    "url": "https://schema.org/version/30.1/schemaorg-current-https.jsonld",
+    "sha256": "0a4b8c4c910fc831ec8695196510973390906a5ee34dc6b862dfec4d21a12f74"
+   }
+  }
+ ],
  "governs": [
   "app/src/PersonSchema.lex.tex",
+  "app/src/PersonSchemaPin.lex.tex",
   "app/src/VocabNames.lex.tex"
  ],
  "realizedBy": [
   "ST-01"
- ]
+ ],
+ "enforcedByKind": {
+  "property": {
+   "suite": "crates/conformance/tests/person.rs",
+   "how": "every property that release 30.1 of Schema.org gives a Person or its parent Thing is read from the pinned schemaorg-current-https.jsonld by generators/person into app/src/PersonSchemaPin.lex.tex (GN-01 holds it), and the theorems schemaOrgReleasePropertiesModelled, registerHoldsRelease and releaseHoldsRegister of app/src/PersonProofs.lex.tex, which the Lean kernel checks when prismpm verify runs on app/, prove each one is a property of the Person model and of the vocabulary register"
+  }
+ }
 }

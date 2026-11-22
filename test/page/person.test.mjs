@@ -163,12 +163,13 @@ test("the owner brings content in, every place shows it, Today and Ask answer fr
     }
     assert.deepEqual(empty, [], `places with nothing after every feeder ran: ${empty.join(", ")}`);
     // The mail is in Messages, and its sender in People.
+    // A place draws its list after the click, so each is given time to show it.
+    const lists = (text) => page.waitForFunction((t) => document.getElementById("pr-list").innerText.includes(t), text, { timeout: 10000 }).then(() => true, () => false);
     await page.click('.pr-go[data-place="conversations"]');
-    assert.ok((await page.locator("#pr-list").innerText()).includes(titleOf(MAIL)));
+    assert.ok(await lists(titleOf(MAIL)), "the mail is not in Messages");
     await page.click('.pr-go[data-place="people"]');
-    const people = await page.locator("#pr-list").innerText();
-    assert.ok(people.includes(expectOf(MAIL).who), "the mail's sender is not in People");
-    assert.ok(people.includes(titleOf(CARD)), "the contact card is not in People");
+    assert.ok(await lists(expectOf(MAIL).who), "the mail's sender is not in People");
+    assert.ok(await lists(titleOf(CARD)), "the contact card is not in People");
 
     // Ask answers from what is kept, at once, without a model.
     const ask = async (question, expect, status = false) => {
