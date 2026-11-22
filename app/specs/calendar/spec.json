@@ -1,5 +1,5 @@
 {
- "comment": "The calendar reader's two sources, kept at their pinned bytes (the registries at app/specs/calendar/upstream/icalendar.xml, RFC 5545 among the standard texts at app/specs/standards/texts/<sha256>). generators/calendar's GenCalendar reads them (generators/pipeline.json) into site/calendar/registry.mjs, every element IANA registers for the standard with what the standard's section 3 says of it, and into ST-01's inventory of those elements (test/standards/generated/iana-icalendar.json). examples: the grammar-ical guest's acceptance vectors (app/specs/guests/spec.json): a request is a rule's place among the ical grammar's rules in sorted order, a space and the text; the answer is \"none\" or each rule the derivation went through as rule,start,end,depth in octets. The texts are RFC 5545's own (3.3.5's DATE-TIME, 3.8.2.4's DTSTART, 3.8.5.3's last-work-day rule, and a date RFC 5545 does not write). registry.apart: the elements the enforcing suite (test/calendar.registry.test.mjs, written by GenCalendar's icalsuite from RFC 5545's own section 3 examples, test/standards/generated/rfc5545-examples.txt) leaves in ST-01's debt though the RFC gives examples of them: ATTACH, whose rule as RFC 5545 prints it puts CRLF inside its second alternative only, so it derives none of its own URI examples, and no verified erratum corrects it. CONTACT is apart too: each of its examples holds a telephone number, so none is kept (below). slips: the example lines of RFC 5545 section 3 that the RFC's own grammar does not derive, each as printed (unfolded) with the section it is in and why; the suite refuses any other, and requires each of these to be refused. An example row that holds a number shaped like a telephone number is left out of the examples file (PV-01 keeps such numbers out of the repository), and with it its whole example; one of those, a CONTACT line of 3.8.4.2, is a slip too (its ALTREP URI holds a backslash).",
+ "comment": "The calendar reader's two sources, kept at their pinned bytes (the registries at app/specs/calendar/upstream/icalendar.xml, RFC 5545 among the standard texts at app/specs/standards/texts/<sha256>). generators/calendar's GenCalendar reads them (generators/pipeline.json) into site/calendar/registry.mjs, every element IANA registers for the standard with what the standard's section 3 says of it, and into ST-01's inventory of those elements (test/standards/generated/iana-icalendar.json). examples: the grammar-ical guest's acceptance vectors (app/specs/guests/spec.json): a request is a rule's place among the ical grammar's rules in sorted order, a space and the text; the answer is \"none\" or each rule the derivation went through as rule,start,end,depth in octets. The texts are RFC 5545's own (3.3.5's DATE-TIME, 3.8.2.4's DTSTART, 3.8.5.3's last-work-day rule, and a date RFC 5545 does not write). registry.apart: the elements the enforcing suite (test/calendar.registry.test.mjs, written by GenCalendar's icalsuite from RFC 5545's own section 3 examples, test/standards/generated/rfc5545-examples.txt) leaves in ST-01's debt though the RFC gives examples of them: ATTACH, whose rule as RFC 5545 prints it puts CRLF inside its second alternative only, so it derives none of its own URI examples, and no verified erratum corrects it. CONTACT is apart too: each of its examples holds a telephone number, so none is kept (below). slips: the example lines of RFC 5545 (sections 3 and 4) and of RFC 5546 section 4 (test/standards/generated/rfc5546-examples.txt; those carry \"standard\": \"RFC 5546\") that RFC 5545's grammar does not derive, each as printed (unfolded) with the section it is in and why; a component example that holds one of them is not read as that component; the suite refuses any other, and requires each of these to be refused. An example row that holds a number shaped like a telephone number, or (RFC 5546, 4.4.1) an address at a domain not reserved for examples, is left out of the examples file (PV-01 keeps such numbers out of the repository), and with it its whole example; one of those, a CONTACT line of 3.8.4.2, is a slip too (its ALTREP URI holds a backslash).",
  "registry": {
   "key": "iana-icalendar",
   "title": "IANA iCalendar Element Registries (components, properties, parameters, value data types and their values)",
@@ -49,6 +49,66 @@
    "section": "3.8.5.2",
    "line": "RDATE;VALUE=DATE:19970101,19970120,19970217,1997042119970526,19970704,19970901,19971014,19971128,19971129,19971225",
    "why": "The example folds after 19970421 without the comma that separates two dates, so unfolded the two run together."
+  },
+  {
+   "standard": "RFC 5546",
+   "section": "4.2.1",
+   "line": "DTEND:19970701T2100000Z",
+   "why": "A date-time's time is six digits (3.3.5, 3.3.12); the example has seven."
+  },
+  {
+   "standard": "RFC 5546",
+   "section": "4.2.1",
+   "line": "ATTENDEE;RSVP=FALSE;CUTYPE=ROOM:conf_big@example.com",
+   "why": "ATTENDEE's value is a cal-address, a URI (3.3.3); the example has no scheme."
+  },
+  {
+   "standard": "RFC 5546",
+   "section": "4.2.4",
+   "line": "COMMENT:Sorry, I cannot change this meeting time",
+   "why": "TEXT takes a comma only escaped (3.3.11: TSAFE-CHAR leaves out the comma); the example writes it bare."
+  },
+  {
+   "standard": "RFC 5546",
+   "section": "4.2.7",
+   "line": "COMMENT:Sorry, I will be out of town at that time.",
+   "why": "TEXT takes a comma only escaped (3.3.11: TSAFE-CHAR leaves out the comma); the example writes it bare."
+  },
+  {
+   "standard": "RFC 5546",
+   "section": "4.2.9",
+   "line": "ATTENDEE;CUTYPE=INDIVIDUAL;mailto:a@example.com",
+   "why": "A semicolon opens a parameter, which is a name, an equals sign and a value (3.1); the example writes a semicolon where the colon before the value belongs."
+  },
+  {
+   "standard": "RFC 5546",
+   "section": "4.4.1",
+   "line": "ATTENDEE;ROLE=CHAIR;PARTSTAT=ACCEPTED;CUTYPE=INDIVIDUAL:a@example.com",
+   "why": "ATTENDEE's value is a cal-address, a URI (3.3.3); the example has no scheme."
+  },
+  {
+   "standard": "RFC 5546",
+   "section": "4.4.5",
+   "line": "LOCATION:Building 32, Microsoft, Seattle, WA",
+   "why": "TEXT takes a comma only escaped (3.3.11: TSAFE-CHAR leaves out the comma); the example writes it bare."
+  },
+  {
+   "standard": "RFC 5546",
+   "section": "4.4.5",
+   "line": "RECURRENCE-ID;THISANDFUTURE:19970901T210000Z",
+   "why": "A parameter is a name, an equals sign and a value (3.1; 3.2.13: RANGE=THISANDFUTURE); the example gives the value alone."
+  },
+  {
+   "standard": "RFC 5546",
+   "section": "4.6",
+   "line": "DESCRIPTION:The editors meeting was held on October 1, 1997.Details are in the attached document.",
+   "why": "TEXT takes a comma only escaped (3.3.11: TSAFE-CHAR leaves out the comma); the example writes it bare."
+  },
+  {
+   "standard": "RFC 5546",
+   "section": "4.7.2",
+   "line": "RDATE;VALUE=PERIOD:19970819T210000Z/199700819T220000Z",
+   "why": "A period's end is a date-time, whose date is eight digits (3.3.4, 3.3.9); the example has nine."
   }
  ]
 }
