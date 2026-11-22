@@ -1,0 +1,53 @@
+\begin{lexlean}{PrismDestRoute}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\importmodule{PrismDest}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: destRouteStart,
+  parameters: [s : Bytes, i : Nat, k : Nat],
+  result: Nat,
+  body: (match k
+    | Nat.zero => i
+    | Nat.succ rest => (destRouteStart s ((PrismDest::prismDestFieldEnd s i (Foundation.Bytes::byteLength s)) + 1) rest)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: k
+}
+
+definition{
+  name: destRouteWord,
+  parameters: [s : Bytes, k : Nat],
+  result: Bytes,
+  body: (let a : Nat := (destRouteStart s 0 k); (PrismDest::prismDestSliceOf s a (prim subtract (PrismDest::prismDestFieldEnd s a (Foundation.Bytes::byteLength s)) a : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: destRouteBoundary,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes (if (prim equal (destRouteWord value 2) 0x2d : Bool) then 0x636f6e666964656e7469616c else (destRouteWord value 2)) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if (prim equal (destRouteWord value 3) 0x2d : Bool) then 0x6e6f6e65 else (destRouteWord value 3)) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if (prim equal (destRouteWord value 1) 0x36663737366536353732 : Bool) then 0x62726f77736572 else 0x6f7574626f756e64) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (destRouteWord value 4) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if (prim equal (destRouteWord value 5) 0x2d : Bool) then 0x6e6f else (destRouteWord value 5)) (Foundation.Bytes::appendBytes 0x20 (destRouteWord value 6))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: destRouteRequest,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes (if ((((prim equal (destRouteWord value 2) 0x616c6c6f77 : Bool) || (prim equal (destRouteWord value 2) 0x61736b : Bool)) || (prim equal (destRouteWord value 2) 0x686173686f6e6c79 : Bool)) || (prim equal (destRouteWord value 2) 0x64656e79 : Bool)) then 0x else 0x72656675736520) (Foundation.Bytes::appendBytes (if (prim equal (destRouteWord value 1) 0x36663737366536353732 : Bool) then 0x6f776e6572 else (if (prim equal (destRouteWord value 1) 0x36333631366336353665363436313732 : Bool) then 0x63616c656e646172 else (if (prim equal (destRouteWord value 1) 0x3664363136393663 : Bool) then 0x6d61696c else (if (prim equal (destRouteWord value 1) 0x37303663363137343636366637323664 : Bool) then 0x706c6174666f726d else 0x6f74686572)))) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (destRouteWord value 2) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if ((prim equal (destRouteWord value 3) 0x796573 : Bool) || (prim equal (destRouteWord value 4) 0x36663737366536353732 : Bool)) then 0x67726f756e646564 else 0x6f727068616e) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (destRouteWord value 5) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if (((prim equal (destRouteWord value 5) 0x6e6f6e65 : Bool) && (prim equal (destRouteWord value 6) 0x2d : Bool)) || (prim equal (destRouteWord value 6) (destRouteWord value 7) : Bool)) then 0x7365656e else 0x6368616e676564) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (destRouteWord value 8) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (destRouteWord value 9) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if (prim equal (destRouteWord value 10) 0x373537323637363536653734 : Bool) then 0x757267656e74 else 0x6e6f726d616c) (Foundation.Bytes::appendBytes 0x20 (destRouteWord value 11)))))))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: destRouteDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (512 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (if (prim equal (destRouteWord value 0) 0x626f756e64 : Bool) then (destRouteBoundary value) else (if (prim equal (destRouteWord value 0) 0x726f757465 : Bool) then (destRouteRequest value) else (PrismDest::prismDestDispatch value)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
