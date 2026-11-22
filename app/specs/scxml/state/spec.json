@@ -1,0 +1,158 @@
+{
+ "name": "scxml/state",
+ "comment": "IRP tests of SCXML 1.0 section 3 (the core constructs) that need variables or conditions, pinned by SHA-256 as W3C serves it under the IRP base that app/specs/scxml/spec.json pins, each answered by the id of the top-level <final> state the document halts in. Variables, conditions, <assign> and <if> are read as the IRP states them in its conf: vocabulary, with the meaning the pinned confEcma.xsl gives each term: numbers in decimal digits, strings, the array of test 551 as an opaque object, and system variable names; any other expression cannot be evaluated and raises error.execution.",
+ "tests": [
+  {
+   "assert": "372",
+   "section": "3.7",
+   "file": "372/test372.txml",
+   "sha256": "401041fa748852653254b84e1734866e878fe80a85fef4bf75827cbf823b3333"
+  },
+  {
+   "assert": "570",
+   "section": "3.7",
+   "file": "570/test570.txml",
+   "sha256": "0cbc33433411fce12f39c784b92c3ab6c507558a75eb43ab8e8410e1fdfd3951"
+  },
+  {
+   "assert": "580",
+   "section": "3.10",
+   "file": "580/test580.txml",
+   "sha256": "affc4e53e3fa42d12089d87870a931a92486bfdc5f5b8073cbe1f9e5e4b5f8cd"
+  },
+  {
+   "assert": "388",
+   "section": "3.10",
+   "file": "388/test388.txml",
+   "sha256": "29629f44cf3769c2957132e0a24e6a6ecff7ef62e106ccebee47f933805d3f29"
+  },
+  {
+   "assert": "396",
+   "section": "3.12",
+   "file": "396/test396.txml",
+   "sha256": "29e76b12de70c16038270c95ac6185fc5043229134d1a79a42e854c07bd42974"
+  },
+  {
+   "assert": "401",
+   "section": "3.12",
+   "file": "401/test401.txml",
+   "sha256": "1d46ea9674301179cf32273b2ed6b385e9ce5ed1e312c8706ea080bddf3c4c8a"
+  },
+  {
+   "assert": "402",
+   "section": "3.12",
+   "file": "402/test402.txml",
+   "sha256": "686ccf633cc4a3d1f2e7f4ba58d3219065699eca151916e1b5bf898b961cd4c5"
+  },
+  {
+   "assert": "407",
+   "section": "3.13",
+   "file": "407/test407.txml",
+   "sha256": "6ef20daba1e61a1cf48f5caf9b8bd71a7c8c23f6a2869f1b81698d37398d1ee7"
+  },
+  {
+   "assert": "411",
+   "section": "3.13",
+   "file": "411/test411.txml",
+   "sha256": "3703d4e4a82d13ca263ecf959534ecbb9b40e24d805052094d89c5391d973b19"
+  },
+  {
+   "assert": "413",
+   "section": "3.13",
+   "file": "413/test413.txml",
+   "sha256": "a31f5eefc251aae89e297477937de2959d6b9b02f729156ac48fe302250206d0"
+  },
+  {
+   "assert": "503",
+   "section": "3.13",
+   "file": "503/test503.txml",
+   "sha256": "a20b3a03c6ef2174d26c1bb2797f8ae06a2e48490978199e0af1fad0116a4b57"
+  },
+  {
+   "assert": "504",
+   "section": "3.13",
+   "file": "504/test504.txml",
+   "sha256": "2d3d390e1c6e5349095d3ffb2cfdaf0967f8c96184cd99514b4a1c3b7a918e81"
+  },
+  {
+   "assert": "505",
+   "section": "3.13",
+   "file": "505/test505.txml",
+   "sha256": "bee628c8b7187609544039e2bd3ea6b64cb9f3b32e9e898360abd4707161fdb6"
+  },
+  {
+   "assert": "506",
+   "section": "3.13",
+   "file": "506/test506.txml",
+   "sha256": "074670d17bc06ce17d15d052fd1c6b9d6c305fe489d75fdde594018551c13b40"
+  },
+  {
+   "assert": "533",
+   "section": "3.13",
+   "file": "533/test533.txml",
+   "sha256": "4112dac6cc83a0a8fb4f58a5b24082bbecaadc0ca69267bd9c1c8afab55bb225"
+  }
+ ],
+ "examples": [
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that entering a final state generates done.state.parentid after executing the onentry elements.  \nVar1 should be set to 2 (but not 3) by the time the event is raised -->\n\n\n<scxml  conf:datamodel=\"\"  version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"1\"/>\n  </datamodel>\n       \n<state id=\"s0\" initial=\"s0final\">\n  <onentry>\n    <send event=\"timeout\" delay=\"1s\"/>\n    </onentry>\n  <transition event=\"done.state.s0\" conf:idVal=\"1=2\" conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n  \n  <final id=\"s0final\">\n    <onentry>\n     <assign conf:location=\"1\" conf:expr=\"2\"/>\n     </onentry>\n    <onexit>\n     <assign conf:location=\"1\" conf:expr=\"3\"/>\n     </onexit>\n     </final>\n</state>\n\n \n<conf:pass/>\n<conf:fail/>\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\r\n\r\n<!-- test that we generate done.state.id when all a parallel state's children are in final states -->\r\n\r\n<scxml initial=\"p0\" conf:datamodel=\"\"  version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\r\n  <datamodel>\r\n    <data conf:id=\"1\" conf:expr=\"0\"/>\r\n    </datamodel>\r\n<parallel id=\"p0\">\r\n  <onentry>\r\n   <send event=\"timeout\" delay=\"2s\"/>\r\n   <raise event=\"e1\"/>\r\n   <raise event=\"e2\"/>\r\n   </onentry>\r\n   <!-- record that we get the first done event -->\r\n   <transition event=\"done.state.p0s1\">\r\n     <assign conf:location=\"1\" conf:expr=\"1\"/>\r\n     </transition>\r\n   <!-- we should get the second done event before done.state.p0 -->\r\n   <transition event=\"done.state.p0s2\" target=\"s1\"/>\r\n   <transition event=\"timeout\" conf:targetfail=\"\"/>\r\n\r\n   \r\n   <state id=\"p0s1\" initial=\"p0s11\">\r\n    <state id=\"p0s11\">\r\n      <transition event=\"e1\" target=\"p0s1final\"/>\r\n      </state>\r\n    <final id=\"p0s1final\"/>\r\n   </state>\r\n   \r\n  <state id=\"p0s2\" initial=\"p0s21\">\r\n    <state id=\"p0s21\">\r\n       <transition event=\"e2\" target=\"p0s2final\"/>\r\n     </state>\r\n    <final id=\"p0s2final\"/>\r\n   </state>\r\n  \r\n </parallel>\r\n \r\n <state id=\"s1\">\r\n  <!-- if we get done.state.p0, success -->\r\n  <transition event=\"done.state.p0\" conf:idVal=\"1=1\" conf:targetpass=\"\"/>\r\n  <transition event=\"*\" conf:targetfail=\"\"/>\r\n  </state>\r\n   \r\n   <conf:pass/>\r\n   <conf:fail/>\r\n\r\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that a history state never ends up part of the configuration -->\n\n\n<scxml  version=\"1.0\" initial=\"p1\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\t<datamodel>\n\t\t  <data conf:id=\"1\" conf:expr=\"0\"/>\n\t\t</datamodel>\n\t\n<parallel id=\"p1\">\n  <onentry>\n  \t<send delay=\"2s\" event=\"timeout\"/>\n    </onentry>\n   \n   \n  <state id=\"s0\">\n <transition conf:inState=\"sh1\"  conf:targetfail=\"\"/>\n <transition event=\"timeout\" conf:targetfail=\"\"/>\n  \t</state>\n \n           \n<state id=\"s1\">\n\t<initial>\n\t\t <transition target=\"sh1\"/>\n\t\t \t</initial>\n\n\n <history id=\"sh1\">\n \t  <transition target=\"s11\"/>\n   \t</history>\n  \t\n  \t<state id=\"s11\">\n  \t\t<transition conf:inState=\"sh1\"  conf:targetfail=\"\"/>\n  \t\t<transition target=\"s12\"/>\n  \t\t</state>\n  \t\t\n  \t<state id=\"s12\"/>\n  <transition conf:inState=\"sh1\"  conf:targetfail=\"\"/>\n <transition conf:idVal=\"1=0\" target=\"sh1\"/>\n <transition conf:idVal=\"1=1\"  conf:targetpass=\"\"/>\n   <onexit>\n  \t<conf:incrementID id=\"1\"/>\n  \t</onexit>\n </state>\n \n\n </parallel>\n \n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that history states works correctly.  The counter Var1 counts how many times\nwe have entered s0.  The initial state is s012.  We then transition to s1, which transitions\nto s0's deep history state.  entering.s012 should be raised, otherwise failure.  Then we transition\nto s02, which transitions to s0's shallow history state.  That should have value s01, and its initial\nstate is s011, so we should get entering.s011, otherwise failure.-->\n\n\n<scxml  version=\"1.0\" initial=\"s012\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"0\"/>\n  </datamodel>\n       \n<state id=\"s0\" initial=\"s01\">\n  <onentry>\n    <conf:incrementID id=\"1\"/>\n    </onentry>\n    \n  <!-- the first time through, go to s1, setting  a timer just in case something hangs -->\n  <transition event=\"entering.s012\" conf:idVal=\"1=1\" target=\"s1\">\n     <send event=\"timeout\" delay=\"2s\"/>\n     </transition>\n  \n  <!-- the second time, we should get entering.s012.  If so, go to s2, otherwise fail -->\n  <transition event=\"entering.s012\" conf:idVal=\"1=2\" target=\"s2\"/>\n    <transition event=\"entering\" conf:idVal=\"1=2\" conf:targetfail=\"\"/>\n    \n  <!-- the third time we should get entering-s011. If so, pass, otherwise fail -->\n  <transition event=\"entering.s011\" conf:idVal=\"1=3\" conf:targetpass=\"\"/>\n  <transition event=\"entering\" conf:idVal=\"1=3\" conf:targetfail=\"\"/>\n \n <!-- if we timeout, the state machine is hung somewhere, so fail -->\n <transition event=\"timeout\" conf:targetfail=\"\"/>\n  \n  <history type=\"shallow\" id=\"s0HistShallow\">\n    <transition target=\"s02\"/>\n    </history>\n  <history type=\"deep\" id=\"s0HistDeep\">\n    <transition target=\"s022\"/>\n    </history>\n  <state id=\"s01\" initial=\"s011\">\n    <state id=\"s011\">\n       <onentry>\n         <raise event=\"entering.s011\"/>\n         </onentry>\n    </state>\n    <state id=\"s012\">\n      <onentry>\n       <raise event=\"entering.s012\"/>\n        </onentry>\n    </state>\n  </state>\n <state id=\"s02\" initial=\"s021\">\n     <state id=\"s021\">\n       <onentry>\n         <raise event=\"entering.s021\"/>\n         </onentry>\n    </state>\n    <state id=\"s022\">\n      <onentry>\n       <raise event=\"entering.s022\"/>\n        </onentry>\n    </state>\n  </state>\n \n</state>\n\n\n<state id=\"s1\">\n  <transition  target=\"s0HistDeep\"/>\n</state>\n\n<state id=\"s2\">\n  <transition  target=\"s0HistShallow\"/>\n</state>\n \n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that the value in _event.name matches the event name used to match against transitions  -->\n\n\n<scxml  conf:datamodel=\"\"  version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n       \n<state id=\"s0\">\n  <onentry>\n    <raise event=\"foo\"/>\n    </onentry>\n\n    \n  <transition  event=\"foo\" conf:eventNameVal=\"foo\" conf:targetpass=\"\"/>\n  <transition  event=\"foo\" conf:targetfail=\"\"/>\n\n</state>\n \n<conf:pass/>\n<conf:fail/>\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that errors go in the internal event queue.  We send ourselves an external event foo, then perform\nand operation that raises an error. Then check that the error event is processed first, even though\nit was raised second  -->\n\n\n<scxml  initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n       \n<state id=\"s0\">\n  <onentry>\n     <send event=\"foo\"/>\n     <!-- assigning to a non-existent location should raise an error -->\n    <assign conf:invalidLocation=\"\" conf:expr=\"2\"/>\n    </onentry>\n\n    \n  <transition  event=\"foo\" conf:targetfail=\"\"/>\n  <transition  event=\"error\" conf:targetpass=\"\"/>\n\n</state>\n \n<conf:pass/>\n<conf:fail/>\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- the assertion that errors are 'like any other event' is pretty broad, but we can check that they\nare pulled off the internal queue in order, and that prefix matching works on them.  -->\n\n\n<scxml  initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n       \n<state id=\"s0\" initial=\"s01\">\n  <onentry>\n     <!-- catch the failure case -->\n     <send event=\"timeout\" delay=\"1s\"/>\n    </onentry>\n  <transition event=\"timeout\" conf:targetfail=\"\"/>\n\n <state id=\"s01\">\n   <onentry>\n   <!-- the first internal event.  The error will be the second, and event2 will be the third -->\n      <raise event=\"event1\"/>\n     <!-- assigning to a non-existent location should raise an error -->\n    <assign conf:invalidLocation=\"\" conf:expr=\"2\"/> \n   </onentry>\n       \n  <transition  event=\"event1\" target=\"s02\">\n    <raise event=\"event2\"/>\n    </transition>\n  <transition  event=\"*\" conf:targetfail=\"\"/>\n </state>\n \n<state id=\"s02\">\n  <transition event=\"error\" target=\"s03\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n  </state>\n  \n<state id=\"s03\">\n  <transition event=\"event2\" conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n  </state>\n\n</state>\n \n<conf:pass/>\n<conf:fail/>\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- a simple test that onexit handlers work. var1 should be incremented when we leave s0 -->\n\n\n<scxml  initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n <data conf:id=\"1\" conf:expr=\"0\"/>\n </datamodel>\n       \n<state id=\"s0\">\n  <onexit>\n     <conf:incrementID id=\"1\"/>\n    </onexit>\n  <transition target=\"s1\"/>\n</state>\n\n<state id=\"s1\">\n  <transition conf:idVal=\"1=1\" conf:targetpass=\"\"/>\n  <transition conf:targetfail=\"\"/>\n</state>\n \n<conf:pass/>\n<conf:fail/>\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that states are added to the active states list as they are entered and before onentry handlers\nare executed.  When s0's onentry handler fires we should not be in s01.  But when s01's onentry handler\nfires, we should be in s01.  Therefore event1 should not fire, but event2 should.  Either event1 or\ntimeout also indicates failure  -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n     \n<state id=\"s0\" initial=\"s01\">\n  <onentry>\n    <send event=\"timeout\" delay=\"1s\"/>\n    <if conf:inState=\"s01\">\n      <raise event=\"event1\"/>\n      </if>\n    </onentry>\n  \n  <transition event=\"timeout\" conf:targetfail=\"\"/> \n  <transition event=\"event1\" conf:targetfail=\"\"/>\n  <transition event=\"event2\" conf:targetpass=\"\"/>\n  \n  <state id=\"s01\" >\n    <onentry>\n     <if conf:inState=\"s01\">\n       <raise event=\"event2\"/>\n       </if>\n       </onentry>\n  </state> \n\n</state> <!-- end s0 -->\n \n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that the state machine is put into the configuration specified by the initial element, without regard\nto any other defaults.  we should start off in s2p111 and s2p122.  the atomic\nstates we should not enter all have immediate transitions to failure in them -->\n\n\n<scxml initial=\"s2p112 s2p122\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n <state id=\"s1\">\n   <transition conf:targetfail=\"\"/>\n   </state>\n       \n<state id=\"s2\" initial=\"s2p1\">\n\n<parallel id=\"s2p1\">\n  <!-- this transition will be triggered only if we end up in an illegal configuration where we're in\n  either s2p112 or s2p122, but not both of them -->\n  <transition conf:targetfail=\"\"/>\n  \n  <state id=\"s2p11\" initial=\"s2p111\" >\n    <state id=\"s2p111\">\n      <transition conf:targetfail=\"\"/>\n    </state>\n    \n    <state id=\"s2p112\">\n      <transition conf:inState=\"s2p122\" conf:targetpass=\"\"/>\n      </state>\n\n  </state> <!-- end s2p11 -->\n  \n  <state id=\"s2p12\" initial=\"s2p121\">\n    <state id=\"s2p121\">\n       <transition conf:targetfail=\"\"/>\n     </state>\n    \n    <state id=\"s2p122\">\n      <transition conf:inState=\"s2p112\" conf:targetpass=\"\"/>\n    </state>\n  </state>\n  \n</parallel>\n\n</state>  <!-- end s2 -->\n \n \n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that a targetless transition does not exit and reenter its source state -->\n\n<scxml  initial=\"s1\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"0\"/>  <!-- how often we have exited s2 -->\n  <data conf:id=\"2\" conf:expr=\"0\"/>  <!-- how often the targetless transition in s2 has been executed -->\n  </datamodel>\n    \n <state id=\"s1\">\n   <onentry>\n    <raise event=\"foo\"/>\n    <raise event=\"bar\"/>\n    </onentry>\n   <transition target=\"s2\"/>\n   </state>\n  \n <state id=\"s2\">\n   <onexit>\n   <conf:incrementID id=\"1\"/>\n   </onexit>\n   <transition event=\"foo\">\n     <conf:incrementID id=\"2\"/>\n     </transition>\n   <!-- make sure the transition on foo was actually taken --> \n  <transition event=\"bar\" conf:idVal=\"2=1\" target=\"s3\"/>\n  <transition event=\"bar\" conf:targetfail=\"\"/>\n  </state>\n  \n  <state id=\"s3\">\n  <!-- make sure that s2 was exited only once -->\n    <transition conf:idVal=\"1=1\" conf:targetpass=\"\"/>\n    <transition conf:targetfail=\"\"/>\n    </state> \n  \n\n<conf:pass/>\n<conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that an external transition exits all states up the the LCCA -->\n\n<scxml  initial=\"s1\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"0\"/>  <!-- how often we have exited p -->\n  <data conf:id=\"2\" conf:expr=\"0\"/>  <!-- how often we have exited ps1 -->\n  <data conf:id=\"3\" conf:expr=\"0\"/>  <!-- how often we have exited ps2 -->\n  <data conf:id=\"4\" conf:expr=\"0\"/>  <!-- how often the transition for foo has been taken -->\n  <data conf:id=\"5\" conf:expr=\"0\"/>  <!-- how often we have exited s2  -->\n  </datamodel>\n    \n <state id=\"s1\">\n   <onentry>\n    <raise event=\"foo\"/>\n    <raise event=\"bar\"/>\n    </onentry>\n   <transition target=\"p\"/>\n   </state>\n   \n<state id=\"s2\">\n\t <onexit>\n\t \t<conf:incrementID id=\"5\"/>\n\t \t</onexit>\n\n<parallel id=\"p\">\n  <onexit>\n    <conf:incrementID id=\"1\"/>\n    </onexit>\n  <transition event=\"foo\" target=\"ps1\">\n     <conf:incrementID id=\"4\"/>\n     </transition>\n     \n   <!-- make sure the transition on foo was actually taken --> \n  <transition event=\"bar\" conf:idVal=\"4=1\" target=\"s3\"/>\n  <transition event=\"bar\" conf:targetfail=\"\"/>\n  \n <state id=\"ps1\">\n   <onexit>\n   <conf:incrementID id=\"2\"/>\n   </onexit>\n  </state>\n  <state id=\"ps2\">\n   <onexit>\n   <conf:incrementID id=\"3\"/>\n   </onexit>\n  </state>\n</parallel>\n</state>\n  \n<state id=\"s3\">\n  <!-- make sure that p was exited twice -->\n    <transition conf:idVal=\"1=2\" target=\"s4\"/>\n    <transition conf:targetfail=\"\"/>\n </state> \n \n<state id=\"s4\">\n  <!-- make sure that ps1 was exited twice -->\n    <transition conf:idVal=\"2=2\" target=\"s5\"/>\n    <transition conf:targetfail=\"\"/>\n </state> \n  \n<state id=\"s5\">\n  <!-- make sure that ps2 was exited twice -->\n    <transition conf:idVal=\"3=2\" target=\"s6\"/>\n    <transition conf:targetfail=\"\"/>\n </state>\n \n<state id=\"s6\">\n\t<!-- make sure that s1 was exited once -->\n\t<transition conf:idVal=\"5=1\" conf:targetpass=\"\"/>\n\t<transition conf:targetfail=\"\"/>\n\t</state>\n  \n<conf:pass/>\n<conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that an internal transition does not exit its source state -->\n\n<scxml  initial=\"s1\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"0\"/>  <!-- how often we have exited s1 -->\n  <data conf:id=\"2\" conf:expr=\"0\"/>  <!-- how often we have exited s11 -->\n  <data conf:id=\"3\" conf:expr=\"0\"/>  <!-- how often the transition for foo has been taken -->\n  </datamodel>\n    \n <state id=\"s1\">\n   <onentry>\n    <raise event=\"foo\"/>\n    <raise event=\"bar\"/>\n    </onentry>\n  <onexit>\n    <conf:incrementID id=\"1\"/>\n    </onexit>\n  <transition event=\"foo\" type=\"internal\" target=\"s11\">\n     <conf:incrementID id=\"3\"/>\n     </transition>\n     \n   <!-- make sure the transition on foo was actually taken --> \n  <transition event=\"bar\" conf:idVal=\"3=1\" target=\"s2\"/>\n  <transition event=\"bar\" conf:targetfail=\"\"/>\n  \n <state id=\"s11\">\n   <onexit>\n   <conf:incrementID id=\"2\"/>\n   </onexit>\n  </state>\n </state>\n  \n<state id=\"s2\">\n  <!-- make sure that s1 was exited once -->\n    <transition conf:idVal=\"1=1\" target=\"s3\"/>\n    <transition conf:targetfail=\"\"/>\n </state> \n \n  \n<state id=\"s3\">\n  <!-- make sure that s11 was exited twice -->\n    <transition conf:idVal=\"2=2\" conf:targetpass=\"\"/>\n    <transition conf:targetfail=\"\"/>\n </state>\n  \n<conf:pass/>\n<conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that an internal transition whose targets are not proper descendants of its source state\nbehaves like an external transition -->\n\n<scxml  initial=\"s1\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"0\"/>  <!-- how often we have exited s2 -->\n  <data conf:id=\"2\" conf:expr=\"0\"/>  <!-- how often we have exited s21 -->\n  <data conf:id=\"3\" conf:expr=\"0\"/>  <!-- how often the transition for foo has been taken -->\n  </datamodel>\n    \n <state id=\"s1\">\n   <onentry>\n    <raise event=\"foo\"/>\n    <raise event=\"bar\"/>\n    </onentry>\n   <transition target=\"s2\"/>\n   </state>\n\n<state id=\"s2\" initial=\"s21\">\n  <onexit>\n    <conf:incrementID id=\"1\"/>\n    </onexit>\n  <transition event=\"foo\" type=\"internal\" target=\"s2\">\n     <conf:incrementID id=\"3\"/>\n     </transition>\n     \n   <!-- make sure the transition on foo was actually taken --> \n  <transition event=\"bar\" conf:idVal=\"3=1\" target=\"s3\"/>\n  <transition event=\"bar\" conf:targetfail=\"\"/>\n  \n <state id=\"s21\">\n   <onexit>\n   <conf:incrementID id=\"2\"/>\n   </onexit>\n  </state>\n\n</state>\n  \n<state id=\"s3\">\n  <!-- make sure that s2 was exited twice -->\n    <transition conf:idVal=\"1=2\" target=\"s4\"/>\n    <transition conf:targetfail=\"\"/>\n </state> \n \n<state id=\"s4\">\n  <!-- make sure that s21 was exited twice -->\n    <transition conf:idVal=\"2=2\" conf:targetpass=\"\"/>\n    <transition conf:targetfail=\"\"/>\n </state> \n  \n  \n<conf:pass/>\n<conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that an internal transition whose source state is not compound does  exit its source state -->\n\n<scxml  initial=\"s1\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"0\"/>  <!-- how often we have exited p -->\n  <data conf:id=\"2\" conf:expr=\"0\"/>  <!-- how often we have exited ps1 -->\n  <data conf:id=\"3\" conf:expr=\"0\"/>  <!-- how often we have exited ps2 -->\n  <data conf:id=\"4\" conf:expr=\"0\"/>  <!-- how often the transition for foo has been taken -->\n  </datamodel>\n    \n <state id=\"s1\">\n   <onentry>\n    <raise event=\"foo\"/>\n    <raise event=\"bar\"/>\n    </onentry>\n   <transition target=\"p\"/>\n   </state>\n\n<parallel id=\"p\">\n  <onexit>\n    <conf:incrementID id=\"1\"/>\n    </onexit>\n  <transition event=\"foo\" type=\"internal\" target=\"ps1\">\n     <conf:incrementID id=\"4\"/>\n     </transition>\n     \n   <!-- make sure the transition on foo was actually taken --> \n  <transition event=\"bar\" conf:idVal=\"4=1\" target=\"s2\"/>\n  <transition event=\"bar\" conf:targetfail=\"\"/>\n  \n <state id=\"ps1\">\n   <onexit>\n   <conf:incrementID id=\"2\"/>\n   </onexit>\n  </state>\n  <state id=\"ps2\">\n   <onexit>\n   <conf:incrementID id=\"3\"/>\n   </onexit>\n  </state>\n</parallel>\n  \n<state id=\"s2\">\n  <!-- make sure that p was exited twice -->\n    <transition conf:idVal=\"1=2\" target=\"s3\"/>\n    <transition conf:targetfail=\"\"/>\n </state> \n \n<state id=\"s3\">\n  <!-- make sure that ps1 was exited twice -->\n    <transition conf:idVal=\"2=2\" target=\"s4\"/>\n    <transition conf:targetfail=\"\"/>\n </state> \n  \n<state id=\"s4\">\n  <!-- make sure that ps2 was exited twice -->\n    <transition conf:idVal=\"3=2\" conf:targetpass=\"\"/>\n    <transition conf:targetfail=\"\"/>\n </state>\n  \n<conf:pass/>\n<conf:fail/>\n     \n</scxml>",
+   "pass"
+  ]
+ ]
+}
