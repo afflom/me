@@ -1361,39 +1361,12 @@ export default async function start({ app, reason, $ }) {
     }
   }
   let turned = null;
-  function turn(prompt, said, recordOf) {
-    // A turn is what was asked and what was said, together; one sentence per item, each on its own line.
-    const node = element("div", { className: "pr-turn" }, element("p", { className: "pr-you", textContent: prompt }), element("p", { className: "pr-said", textContent: said.sentences.join("\n") }));
+  function turn(prompt, said, { recordOf, shown }) {
+    const { node, rows } = shown(prompt, said, { element, rowOf, words: WORDS, offer, say });
     chat.append(node);
     // Its record (EMMA and PROV) is kept with it, and names the turn before it.
     const at = Date.now(); node.record = recordOf(prompt, said, at, turned); turned = node.record ? at : turned;
-    const rows = said.sources.map(rowOf);
     drawn.replaceChildren(...rows);
-    // The sentences link to the items they say; the list beneath holds all that was found.
-    const links = (said.cited ?? said.sources).filter((item) => said.sources.includes(item)).map((item) => {
-      const link = element("a", { href: "#", className: "pr-source", textContent: item.title || item.who || "—" });
-      link.addEventListener("click", (event) => {
-        event.preventDefault();
-        const row = rows[said.sources.indexOf(item)];
-        if (row.querySelector(".pr-open")?.getAttribute("aria-expanded") === "false") row.querySelector(".pr-open").click();
-        row.scrollIntoView({ block: "nearest" });
-      });
-      return link;
-    });
-    // One offer per person: a reply to someone who wrote twice is one reply, and it names them.
-    const offered = new Set();
-    const offers = (said.offers ?? []).map(({ kind, item }) => {
-      const label = { reply: WORDS.reply, done: WORDS.done, keep: WORDS.keep, connect: WORDS.connect }[kind];
-      if (!label) return null;
-      const whom = item?.who || item?.from || "";
-      if (offered.has(`${kind}|${whom}`)) return null;
-      offered.add(`${kind}|${whom}`);
-      const button = element("button", { type: "button", className: "pr-offer", textContent: kind === "reply" && item?.who ? `${label} · ${item.who}` : label });
-      button.addEventListener("click", () => { button.disabled = true; offer(kind, item, prompt).catch((error) => say(error?.message ?? String(error), "bad")); });
-      return button;
-    }).filter(Boolean);
-    node.append(...(links.length ? [element("p", { className: "pr-sources" }, ...links)] : []), ...(offers.length ? [element("div", { className: "pr-offers" }, ...offers)] : []));
-    // Shown once it is whole, so the decision it offers is in view with it.
     node.scrollIntoView({ block: "nearest" });
   }
   out.style.whiteSpace = "pre-line";
@@ -1405,13 +1378,11 @@ export default async function start({ app, reason, $ }) {
     if (!prompt) return;
     $("pr-ask-go").disabled = true;
     try {
-      // The person's words go through the R4 router; a question is answered in
-      // sentences from what is held, under the Boundary, with what it drew on.
-      const [{ answer, recordOf }] = await Promise.all([import("./router/answer.mjs"), notesKept]);
-      // A question is answered; anything else the person says is offered to keep, in its place and time.
+      // What to do with the words is the router's answer (router/answer.mjs): the card shows it as a turn.
+      const [{ answer, recordOf, shown }] = await Promise.all([import("./router/answer.mjs"), notesKept]);
       const said = await answer(prompt, { items: haltedNow ? [] : items, line, halted, me: meNow(), keep: true, meaning: haltedNow ? null : meaningRead(), after: turned });
       drawn.replaceChildren();
-      if (said.sentences.length) { turn(prompt, said, recordOf); say("", "idle"); $("pr-prompt").value = ""; }
+      if (said.sentences.length) { turn(prompt, said, { recordOf, shown }); say("", "idle"); $("pr-prompt").value = ""; }
       else if (haltedNow) say(WORDS.halted, "bad");
       else if (said.refused) say(WORDS["answer.asks"], "warn");
       else say(WORDS["answer.none"], "");
