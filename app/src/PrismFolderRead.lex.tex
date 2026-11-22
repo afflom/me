@@ -1,0 +1,91 @@
+\begin{lexlean}{PrismFolderRead}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\importmodule{PrismFolder}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: folderReadAbout,
+  parameters: [],
+  result: String,
+  body: "Reads the facts the device adapter (site/device/device.mjs) meets in the browser into the request PrismFolder judges, and PrismFolder's answer into the count the adapter keeps. grant: the File System Access permission state of a handle (granted, prompt, denied), none for no handle and plain for a handle that carries no permission (a picked or dropped file), as PrismFolder's grant. list, file, item: the request for listing a folder, reading a file of a size, and keeping one item of a size; a file or item over 33554432 bytes is large, except a mailbox file, which is read as a stream. enter: whether a folder inside a granted folder is walked (fewer than six levels down, and its name does not begin with a full stop). count: the tally a folder, a file, an item or a kept item adds to. Anything else is PrismFolder's own request."
+}
+
+definition{name: folderReadLimit, parameters: [], result: Nat, body: 33554432}
+
+definition{name: folderReadDepth, parameters: [], result: Nat, body: 6}
+
+definition{
+  name: folderReadStart,
+  parameters: [s : Bytes, i : Nat, k : Nat],
+  result: Nat,
+  body: (match k
+    | Nat.zero => i
+    | Nat.succ rest => (folderReadStart s ((PrismFolder::prismFolderFieldEnd s i (Foundation.Bytes::byteLength s)) + 1) rest)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: k
+}
+
+definition{
+  name: folderReadWord,
+  parameters: [s : Bytes, k : Nat],
+  result: Bytes,
+  body: (let a : Nat := (folderReadStart s 0 k); (PrismFolder::prismFolderSliceOf s a (prim subtract (PrismFolder::prismFolderFieldEnd s a (Foundation.Bytes::byteLength s)) a : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderReadGrant,
+  parameters: [state : Bytes],
+  result: Bytes,
+  body: (if ((prim equal state 0x6772616e746564 : Bool) || (prim equal state 0x706c61696e : Bool)) then 0x6772616e746564 else (if (prim equal state 0x70726f6d7074 : Bool) then 0x70726f6d7074 else (if (prim equal state 0x6e6f6e65 : Bool) then 0x6e6f6e65 else 0x7265766f6b6564)))
+}
+
+definition{
+  name: folderReadBulk,
+  parameters: [size : Bytes, streamed : Bool],
+  result: Bytes,
+  body: (match (PrismFolder::prismFolderParseNumber size)
+    | Option.none => 0x756e6b6e6f776e
+    | Option.some n => (if ((not streamed) && ((folderReadLimit) <? n)) then 0x6c61726765 else 0x736d616c6c)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderReadEnter,
+  parameters: [depth : Bytes, lead : Bytes],
+  result: Bytes,
+  body: (match (PrismFolder::prismFolderParseNumber depth)
+    | Option.none => 0x6e6f
+    | Option.some n => (match (PrismFolder::prismFolderParseNumber lead)
+      | Option.none => 0x6e6f
+      | Option.some c => (if ((n <? (folderReadDepth)) && (not (c =? 46))) then 0x796573 else 0x6e6f))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderReadCount,
+  parameters: [stage : Bytes, answer : Bytes],
+  result: Bytes,
+  body: (if (prim equal stage 0x666f6c646572 : Bool) then (if (prim equal answer 0x72656164 : Bool) then 0x72656164 else (if (prim equal answer 0x61736b : Bool) then 0x61736b else 0x726566757365)) else (if (prim equal stage 0x66696c65 : Bool) then (if (prim equal answer 0x72656164 : Bool) then 0x66696c6573 else (if (prim equal answer 0x736b6970 : Bool) then 0x736b6970 else 0x726566757365)) else (if (prim equal stage 0x6974656d : Bool) then (if (prim equal answer 0x72656164 : Bool) then 0x72656164 else 0x736b6970) else (if (prim equal stage 0x6b657074 : Bool) then (if (prim equal answer 0x73746f7265 : Bool) then 0x73746f7265 else (if (prim equal answer 0x73746f726568617368 : Bool) then 0x73746f726568617368 else (if (prim equal answer 0x61736b : Bool) then 0x61736b else (if (prim equal answer 0x736b6970 : Bool) then 0x736b6970 else 0x726566757365)))) else 0x696e76616c6964))))
+}
+
+definition{
+  name: folderReadDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (256 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (if (prim equal (folderReadWord value 0) 0x6772616e74 : Bool) then (folderReadGrant (folderReadWord value 1)) else (if (prim equal (folderReadWord value 0) 0x6c697374 : Bool) then (Foundation.Bytes::appendBytes (folderReadGrant (folderReadWord value 1)) (Foundation.Bytes::appendBytes 0x206f74686572206c69737420736d616c6c20 (folderReadWord value 2))) else (if (prim equal (folderReadWord value 0) 0x66696c65 : Bool) then (Foundation.Bytes::appendBytes (folderReadGrant (folderReadWord value 1)) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (folderReadWord value 2) (Foundation.Bytes::appendBytes 0x207265616420 (Foundation.Bytes::appendBytes (folderReadBulk (folderReadWord value 3) (prim equal (folderReadWord value 2) 0x6d626f78 : Bool)) (Foundation.Bytes::appendBytes 0x20 (folderReadWord value 4))))))) else (if (prim equal (folderReadWord value 0) 0x6974656d : Bool) then (Foundation.Bytes::appendBytes 0x6772616e74656420 (Foundation.Bytes::appendBytes (folderReadWord value 1) (Foundation.Bytes::appendBytes 0x207265616420 (Foundation.Bytes::appendBytes (folderReadBulk (folderReadWord value 2) false) (Foundation.Bytes::appendBytes 0x20 (folderReadWord value 3)))))) else (if (prim equal (folderReadWord value 0) 0x656e746572 : Bool) then (folderReadEnter (folderReadWord value 1) (folderReadWord value 2)) else (if (prim equal (folderReadWord value 0) 0x636f756e74 : Bool) then (folderReadCount (folderReadWord value 1) (folderReadWord value 2)) else (PrismFolder::prismFolderDispatch value)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: folderReadVectors,
+  parameters: [],
+  result: (List Foundation.View.Text.V1.Model::AcceptanceVector),
+  body: (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x6772616e74206772616e746564, response := 0x6772616e746564}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x6772616e7420706c61696e, response := 0x6772616e746564}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x6772616e742070726f6d7074, response := 0x70726f6d7074}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x6772616e742064656e696564, response := 0x7265766f6b6564}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x6772616e74206e6f6e65, response := 0x6e6f6e65}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x6772616e74, response := 0x7265766f6b6564}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x6c697374206772616e746564206e6f, response := 0x6772616e746564206f74686572206c69737420736d616c6c206e6f}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x6c6973742064656e69656420796573, response := 0x7265766f6b6564206f74686572206c69737420736d616c6c20796573}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x66696c65206772616e74656420656d6c203333353534343332206e6f, response := 0x6772616e74656420656d6c207265616420736d616c6c206e6f}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x66696c65206772616e74656420656d6c203333353534343333206e6f, response := 0x6772616e74656420656d6c2072656164206c61726765206e6f}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x66696c652070726f6d7074206d626f78203939393939393939393939206e6f, response := 0x70726f6d7074206d626f78207265616420736d616c6c206e6f}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x66696c6520706c61696e207663662078206e6f, response := 0x6772616e74656420766366207265616420756e6b6e6f776e206e6f}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x6974656d20696373203132206e6f, response := 0x6772616e74656420696373207265616420736d616c6c206e6f}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x6974656d206d626f7820333335353434333320796573, response := 0x6772616e746564206d626f782072656164206c6172676520796573}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x656e7465722030203937, response := 0x796573}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x656e7465722035203937, response := 0x796573}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x656e7465722036203937, response := 0x6e6f}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x656e7465722030203436, response := 0x6e6f}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x656e7465722030204e614e, response := 0x6e6f}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x656e7465722078203937, response := 0x6e6f}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x636f756e7420666f6c6465722072656164, response := 0x72656164}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x636f756e7420666f6c6465722061736b, response := 0x61736b}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x636f756e7420666f6c64657220736b6970, response := 0x726566757365}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x636f756e7420666f6c64657220696e76616c69642072657175657374, response := 0x726566757365}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x636f756e742066696c652072656164, response := 0x66696c6573}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x636f756e742066696c6520736b6970, response := 0x736b6970}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x636f756e742066696c652061736b, response := 0x726566757365}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x636f756e74206974656d2072656164, response := 0x72656164}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x636f756e74206974656d20726566757365, response := 0x736b6970}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x636f756e74206b6570742073746f7265, response := 0x73746f7265}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x636f756e74206b6570742073746f726568617368, response := 0x73746f726568617368}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x636f756e74206b6570742061736b, response := 0x61736b}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x636f756e74206b65707420736b6970, response := 0x736b6970}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x636f756e74206b65707420756e646566696e6564, response := 0x726566757365}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x636f756e74206f746865722072656164, response := 0x696e76616c6964}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x6772616e74656420656d6c207265616420736d616c6c206e6f, response := 0x72656164}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x6772616e746564206f74686572207265616420736d616c6c206e6f, response := 0x736b6970}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x70726f6d7074206f74686572206c69737420736d616c6c206e6f, response := 0x61736b}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x6772616e74656420656d6c20777269746520736d616c6c206e6f, response := 0x726566757365}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x6772616e74656420656d6c207265616420736d616c6c20796573, response := 0x726566757365}) (cons (record Foundation.View.Text.V1.Model::AcceptanceVector {request := 0x6e6f6e73656e7365, response := 0x696e76616c6964}) (nil Foundation.View.Text.V1.Model::AcceptanceVector))))))))))))))))))))))))))))))))))))))))))
+}
+\end{semanticmodule}
+\end{lexlean}
