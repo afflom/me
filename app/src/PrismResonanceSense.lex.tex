@@ -1,0 +1,81 @@
+\begin{lexlean}{PrismResonanceSense}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\importmodule{PrismResonance}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: resonanceSenseStart,
+  parameters: [s : Bytes, i : Nat, k : Nat],
+  result: Nat,
+  body: (match k
+    | Nat.zero => i
+    | Nat.succ rest => (resonanceSenseStart s ((PrismResonance::prismResonanceFieldEnd s i (Foundation.Bytes::byteLength s)) + 1) rest)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: k
+}
+
+definition{
+  name: resonanceSenseWord,
+  parameters: [s : Bytes, k : Nat],
+  result: Bytes,
+  body: (let a : Nat := (resonanceSenseStart s 0 k); (PrismResonance::prismResonanceSliceOf s a (prim subtract (PrismResonance::prismResonanceFieldEnd s a (Foundation.Bytes::byteLength s)) a : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceSenseNat,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (PrismResonance::prismResonanceByteAt s i)
+      | Option.none => acc
+      | Option.some d => (if (d =? 32) then acc else (resonanceSenseNat s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: resonanceSenseDigitsFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (match (PrismResonance::prismResonanceByteAt s i)
+      | Option.none => true
+      | Option.some d => (if (d =? 32) then true else (((47 <? d) && (d <? 58)) && (resonanceSenseDigitsFrom s (i + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: resonanceSenseDigits,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match (PrismResonance::prismResonanceByteAt s i)
+    | Option.none => false
+    | Option.some d => ((if (d =? 32) then false else true) && (resonanceSenseDigitsFrom s i fuel))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceSenseLine,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes (if ((prim equal (resonanceSenseWord value 1) 0x6f70656e : Bool) && (if ((resonanceSenseNat value (resonanceSenseStart value 0 3) 0 20) <? (resonanceSenseNat value (resonanceSenseStart value 0 9) 0 20)) then false else true)) then 0x6477656c6c else (resonanceSenseWord value 1)) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if ((prim equal (resonanceSenseWord value 1) 0x7374696c6c : Bool) || (if ((resonanceSenseNat value (resonanceSenseStart value 0 2) 0 20) <? (resonanceSenseNat value (resonanceSenseStart value 0 10) 0 20)) then false else true)) then 0x7374696c6c else (if ((resonanceSenseNat value (resonanceSenseStart value 0 2) 0 20) <? (resonanceSenseNat value (resonanceSenseStart value 0 11) 0 20)) then 0x68757272696564 else 0x63616c6d)) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if (prim equal (resonanceSenseWord value 4) 0x2d : Bool) then 0x666172 else (if ((resonanceSenseNat value (resonanceSenseStart value 0 4) 0 20) <? ((prim multiply (resonanceSenseNat value (resonanceSenseStart value 0 12) 0 20) 3600000 : Nat) + 1)) then 0x6e656172 else 0x666172)) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (if ((if ((resonanceSenseNat value (resonanceSenseStart value 0 5) 0 20) <? (resonanceSenseNat value (resonanceSenseStart value 0 16) 0 20)) then false else true) || ((resonanceSenseNat value (resonanceSenseStart value 0 5) 0 20) <? (resonanceSenseNat value (resonanceSenseStart value 0 13) 0 20))) then 0x6e69676874 else (if ((resonanceSenseNat value (resonanceSenseStart value 0 5) 0 20) <? (resonanceSenseNat value (resonanceSenseStart value 0 14) 0 20)) then 0x6461776e else (if ((resonanceSenseNat value (resonanceSenseStart value 0 5) 0 20) <? (resonanceSenseNat value (resonanceSenseStart value 0 15) 0 20)) then 0x646179 else 0x6475736b))) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (resonanceSenseWord value 6) (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (resonanceSenseWord value 7) (Foundation.Bytes::appendBytes 0x20 (resonanceSenseWord value 8))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceSenseDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (320 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (if (prim equal (resonanceSenseWord value 0) 0x73656e7365 : Bool) then (if ((((((((((((resonanceSenseDigits value (resonanceSenseStart value 0 2) 20) && (resonanceSenseDigits value (resonanceSenseStart value 0 3) 20)) && (resonanceSenseDigits value (resonanceSenseStart value 0 5) 20)) && (resonanceSenseDigits value (resonanceSenseStart value 0 9) 20)) && (resonanceSenseDigits value (resonanceSenseStart value 0 10) 20)) && (resonanceSenseDigits value (resonanceSenseStart value 0 11) 20)) && (resonanceSenseDigits value (resonanceSenseStart value 0 12) 20)) && (resonanceSenseDigits value (resonanceSenseStart value 0 13) 20)) && (resonanceSenseDigits value (resonanceSenseStart value 0 14) 20)) && (resonanceSenseDigits value (resonanceSenseStart value 0 15) 20)) && (resonanceSenseDigits value (resonanceSenseStart value 0 16) 20)) && ((prim equal (resonanceSenseWord value 4) 0x2d : Bool) || (resonanceSenseDigits value (resonanceSenseStart value 0 4) 20))) then (resonanceSenseLine value) else 0x696e76616c6964) else (PrismResonance::prismResonanceDispatch value))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

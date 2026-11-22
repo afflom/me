@@ -126,11 +126,11 @@ ok(e.gesture === 'open', 'tuned dwell applies from the next gesture');
 res.tune(DEFAULTS);
 
 // Replay: the same answers, pure, under a candidate's tunables.
-const r0 = replay(DEFAULTS, events);
+const r0 = await replay(DEFAULTS, events);
 ok(r0.defect === 0 && r0.brought > 0 && r0.dissonant === 1 && r0.interruptions === 0, `replay ${JSON.stringify(r0)}`);
 const dismissedAfterBloom = [...events.slice(0, 1), { ...events[0], raw: { ...events[0].raw, kind: 'dismiss' } }];
-ok(replay(DEFAULTS, dismissedAfterBloom).dissonant === 1, 'dismissing what was brought forward is dissonance');
-const longer = replay({ ...DEFAULTS, dwellMs: 8000 }, events.slice(0, 1));
+ok((await replay(DEFAULTS, dismissedAfterBloom)).dissonant === 1, 'dismissing what was brought forward is dissonance');
+const longer = await replay({ ...DEFAULTS, dwellMs: 8000 }, events.slice(0, 1));
 ok(longer.brought === 0, 'a longer dwell threshold brings less forward');
 
 console.log(`resonance: ${checks} checks`);
