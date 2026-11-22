@@ -1,0 +1,188 @@
+{
+ "name": "scxml/system",
+ "comment": "IRP tests of SCXML 1.0 section 5.10 (system variables): _sessionid, _name, _ioprocessors and _event with its name, type, sendid, origin, origintype and invokeid fields, pinned by SHA-256 as W3C serves it under the IRP base that app/specs/scxml/spec.json pins, each answered by the id of the top-level <final> state the document halts in. The conf: terms are read with the meaning the pinned confEcma.xsl gives each.",
+ "tests": [
+  {
+   "assert": "318",
+   "section": "5.10",
+   "file": "318/test318.txml",
+   "sha256": "8c8d87fc18dd5757523bb5e6e4b0a538e7cc3873a3b849e874f456e86c3be730"
+  },
+  {
+   "assert": "319",
+   "section": "5.10",
+   "file": "319/test319.txml",
+   "sha256": "403e143c34b6bda1c61a3a7f204131a6502dfb8a15e3cb7b7cb572dd0b495261"
+  },
+  {
+   "assert": "321",
+   "section": "5.10",
+   "file": "321/test321.txml",
+   "sha256": "af1e4360e84d788d25a28dc8a95172e67d6056e5c8d7f411ee751a3d426e192c"
+  },
+  {
+   "assert": "322",
+   "section": "5.10",
+   "file": "322/test322.txml",
+   "sha256": "7ebb88687c5edef2722de6871a050e670f7dacc72056b8776efeae4939c870f7"
+  },
+  {
+   "assert": "323",
+   "section": "5.10",
+   "file": "323/test323.txml",
+   "sha256": "2bbe71399f47832fa397430a31b3e6298ccd01ac8f4008863ca5e0400f38524f"
+  },
+  {
+   "assert": "324",
+   "section": "5.10",
+   "file": "324/test324.txml",
+   "sha256": "971b4071c21d01dbcfa374816cbc55f74225ebbb0ddd337c6b19324baf59ab56"
+  },
+  {
+   "assert": "325",
+   "section": "5.10",
+   "file": "325/test325.txml",
+   "sha256": "593bfd985fb58cf99822784ccd92ef9ac9cdeca5af02ec0fe134ea4d88974268"
+  },
+  {
+   "assert": "326",
+   "section": "5.10",
+   "file": "326/test326.txml",
+   "sha256": "cad3fdf44a23415410d0407521f40536eb974b5b5a5cd1881bb72194fce51234"
+  },
+  {
+   "assert": "329",
+   "section": "5.10",
+   "file": "329/test329.txml",
+   "sha256": "bb69893e31c8929f7883b2330d4efa1ef8ca39a4b944a92a5b1cd485fe8f5354"
+  },
+  {
+   "assert": "330",
+   "section": "5.10",
+   "file": "330/test330.txml",
+   "sha256": "58781af5ca201e7e9ac9b6f6fe45180ade26e74f39919f7bf685ca1410a13dd8"
+  },
+  {
+   "assert": "331",
+   "section": "5.10",
+   "file": "331/test331.txml",
+   "sha256": "f2a74257a7eb9a08a1d3c009e6e1afb8996e41d935336f917d418d5028a644f6"
+  },
+  {
+   "assert": "332",
+   "section": "5.10",
+   "file": "332/test332.txml",
+   "sha256": "69f1c06ea9529958fac030c578da138211056da0a8ca80df104fafb354c1047c"
+  },
+  {
+   "assert": "333",
+   "section": "5.10",
+   "file": "333/test333.txml",
+   "sha256": "db3cde688012597e4b43b1fb2ed76b4c6414cfeaf2c96834da931c7000e737e4"
+  },
+  {
+   "assert": "335",
+   "section": "5.10",
+   "file": "335/test335.txml",
+   "sha256": "d196a32ea054dc57c08441811706496da391c81cb008fb9d543306eb265f7629"
+  },
+  {
+   "assert": "336",
+   "section": "5.10",
+   "file": "336/test336.txml",
+   "sha256": "53f21a94c28a58a24087c48abd8c101fab66a1ee398565dbd50d33a79a5259d6"
+  },
+  {
+   "assert": "337",
+   "section": "5.10",
+   "file": "337/test337.txml",
+   "sha256": "7c4adf08f6eb422228a37b84ce12c6057778b68de986a76afb1adb5afe50f104"
+  },
+  {
+   "assert": "339",
+   "section": "5.10",
+   "file": "339/test339.txml",
+   "sha256": "4742476e40e1d86ad163c9619679a492d447eff96926d8b6a2be7b110e1b6fec"
+  },
+  {
+   "assert": "342",
+   "section": "5.10",
+   "file": "342/test342.txml",
+   "sha256": "315ddf37e27ccbe0503fabe3f629ee4e3f47dfbdd72c2f90ba15bb6da2dd70a7"
+  }
+ ],
+ "examples": [
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that _event stays bound during the onexit and entry into the next state -->\n\n<scxml initial=\"s0\" version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" conf:datamodel=\"\"  name=\"machineName\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n <data conf:id=\"1\"/>\n </datamodel>\n     \n <state id=\"s0\">\n   <onentry>\n     <raise event=\"foo\"/>\n   </onentry>\n   <transition event=\"foo\" target=\"s1\"/> \n   </state>\n   \n <state id=\"s1\">\n  <onentry>\n    <raise event=\"bar\"/>\n    <!-- _event should still be bound to 'foo' at this point -->\n    <assign conf:location=\"1\" conf:eventName=\"\"/>\n    </onentry>\n   <transition  conf:idQuoteVal=\"1=foo\" conf:targetpass=\"\"/> \n   <transition conf:targetfail=\"\"/>\n   </state>\n   \n    \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that _event is not bound before any event has been raised -->\n\n<scxml initial=\"s0\" conf:datamodel=\"\" version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\"\n name=\"machineName\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n <state id=\"s0\">\n   <onentry>\n     <if conf:systemVarIsBound=\"_event\">\n       <raise event=\"bound\"/>\n       <else/>\n         <raise event=\"unbound\"/>\n     </if>\n   </onentry>\n   <transition event=\"unbound\" conf:targetpass=\"\"/>\n   <transition event=\"bound\" conf:targetfail=\"\"/> \n\n   </state>\n   \n    \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that _sessionid is bound on startup -->\n\n<scxml initial=\"s0\" conf:datamodel=\"\" version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\"  name=\"machineName\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:systemVarExpr=\"_sessionid\"/>\n  </datamodel>\n     \n <state id=\"s0\">\n<transition conf:isBound=\"1\" conf:targetpass=\"\"/> \n   <transition conf:true=\"\" conf:targetfail=\"\"/>\n   </state>\n   \n    \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that _sessionid remains bound to the same value throught the session.  this means that it can't\nbe assigned to  -->\n\n<scxml initial=\"s0\" conf:datamodel=\"\"  version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" name=\"machineName\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:systemVarExpr=\"_sessionid\"/>\n  <data conf:id=\"2\"/>\n  </datamodel>\n     \n <state id=\"s0\">\n   <transition  target=\"s1\"/>\n\n   </state>\n   \n <state id=\"s1\">\n   <onentry>\n    <assign conf:systemVarLocation=\"_sessionid\" conf:quoteExpr=\"otherName\"/>\n    <raise event=\"foo\"/>\n    </onentry>\n \n   <transition event=\"error.execution\" target=\"s2\"/>\n   <transition event=\"*\" conf:targetfail=\"\"/>\n   </state>\n   \n <state id=\"s2\">\n \n   <transition conf:idSystemVarVal=\"1=_sessionid\" conf:targetpass=\"\"/>\n   <transition conf:targetfail=\"\"/>\n   </state>  \n   \n   \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that _name is bound on startup -->\n\n<scxml initial=\"s0\" version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" conf:datamodel=\"\"  name=\"machineName\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:systemVarExpr=\"_name\"/>\n  </datamodel>\n     \n <state id=\"s0\">\n<transition conf:isBound=\"1\" conf:targetpass=\"\"/> \n   <transition conf:true=\"\" conf:targetfail=\"\"/>\n   </state>\n   \n    \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that _name stays bound till the session ends.  This means that it cannot be assigned to -->\n\n<scxml initial=\"s0\" version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" conf:datamodel=\"\"  name=\"machineName\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n     \n <state id=\"s0\">\n   <transition conf:nameVarVal=\"machineName\" target=\"s1\"/>\n    <transition conf:targetfail=\"\"/>\n   </state>\n   \n <state id=\"s1\">\n   <onentry>\n    <assign conf:systemVarLocation=\"_name\" expr=\"'otherName'\"/>\n    </onentry>\n   <transition conf:nameVarVal=\"machineName\" conf:targetpass=\"\"/>\n   <transition conf:targetfail=\"\"/>\n   </state>  \n   \n   \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that _ioprocessors is bound at startup.  I'm not sure how to test for a set value or\nhow to test that the entries in it do represent I/O processors, since the set that each implementation\nsupports may be different.  Suggestions welcome -->\n\n<scxml initial=\"s0\" conf:datamodel=\"\" version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" name=\"machineName\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:systemVarExpr=\"_ioprocessors\"/>\n  </datamodel>\n\n\n <state id=\"s0\">\n    <transition conf:isBound=\"1\" conf:targetpass=\"\"/> \n   <transition  conf:targetfail=\"\"/>\n   </state>\n   \n    \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that _ioprocessors stays bound till the session ends.  This means that it cannot be assigned to -->\n<scxml initial=\"s0\" conf:datamodel=\"\"  version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" name=\"machineName\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:systemVarExpr=\"_ioprocessors\"/>\n  <data conf:id=\"2\"/>\n  </datamodel>\n\n <state id=\"s0\">\n    <transition conf:isBound=\"1\" target=\"s1\"/> \n   <transition conf:true=\"\" conf:targetfail=\"\"/>\n   </state> \n      \n   \n <state id=\"s1\">\n   <onentry>\n    <assign conf:systemVarLocation=\"_ioprocessors\" conf:quoteExpr=\"otherName\"/>\n    <raise event=\"foo\"/>\n    </onentry>\n \n   <transition event=\"error.execution\" target=\"s2\"/>\n   <transition event=\"*\" conf:targetfail=\"\"/>\n   </state>\n   \n <state id=\"s2\">\n   <onentry>\n     <assign conf:location=\"2\" conf:systemVarExpr=\"_ioprocessors\"/>\n     </onentry>\n   <transition conf:VarEqVarStruct=\"1 2\" conf:targetpass=\"\"/>\n   <transition conf:targetfail=\"\"/>\n   </state>  \n   \n   \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<!-- test that none of the system variables can be modified -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\" xmlns=\"http://www.w3.org/2005/07/scxml\" name=\"machineName\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n   <datamodel>\n     <data conf:id=\"1\"/>\n     <data conf:id=\"2\"/>\n     <data conf:id=\"3\"/>\n     <data conf:id=\"4\"/>\n     </datamodel>\n        \n <state id=\"s0\">\n   <onentry>\n     <!-- get _event bound so we can use it in s1-->\n     <raise event=\"foo\"/>\n     <assign conf:location=\"1\" conf:systemVarExpr=\"_sessionid\"/>\n     <assign conf:systemVarLocation=\"_sessionid\" conf:invalidSessionID=\"\"/>\n   </onentry>\n\n   <transition event=\"foo\" conf:idSystemVarVal=\"1=_sessionid\" target=\"s1\"/>\n   <transition event=\"*\" conf:targetfail=\"\"/>\n   </state>\n   \n <state id=\"s1\">\n  <onentry>\n     <assign conf:location=\"2\" conf:systemVarExpr=\"_event\"/>\n     <assign conf:systemVarLocation=\"_event\" expr=\"27\"/>\n    </onentry>\n   <transition conf:idSystemVarVal=\"2=_event\" target=\"s2\"/>\n   <transition  conf:targetfail=\"\"/>\n   </state>  \n   \n<state id=\"s2\">\n  <onentry>\n     <assign conf:location=\"3\" conf:systemVarExpr=\"_name\"/>\n     <assign conf:systemVarLocation=\"_name\" expr=\"27\"/>\n    </onentry>\n   <transition conf:idSystemVarVal=\"3=_name\" target=\"s3\"/>\n   <transition conf:targetfail=\"\"/>\n   </state> \n\n   \n<state id=\"s3\">\n  <onentry>\n     <assign conf:location=\"4\" conf:systemVarExpr=\"_ioprocessors\"/>\n     <assign conf:systemVarLocation=\"_ioprocessors\" expr=\"27\"/>\n    </onentry>\n   <transition conf:idSystemVarVal=\"4=_ioprocessors\" conf:targetpass=\"\"/>\n   <transition conf:targetfail=\"\"/>\n   </state>  \n   \n   \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- check that the required fields are present in both internal and external events -->\n\n<scxml version=\"1.0\" initial=\"s0\" conf:datamodel=\"\"  name=\"machineName\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n     \n <state id=\"s0\">\n   <onentry>\n     <raise event=\"foo\"/>\n   </onentry>\n   <transition event=\"foo\"  conf:eventFieldsAreBound=\"\" target=\"s1\"/> \n      <transition event=\"*\" conf:targetfail=\"\"/> \n   </state>\n   \n <state id=\"s1\">\n   <onentry>\n     <send event=\"foo\"/>\n   </onentry>\n   <transition event=\"foo\"  conf:eventFieldsAreBound=\"\" conf:targetpass=\"\"/> \n      <transition event=\"*\" conf:targetfail=\"\"/> \n   </state>\n   \n    \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<scxml version=\"1.0\" conf:datamodel=\"\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\" initial=\"s0\" name=\"machineName\">\n\n<!-- test that _event.type is set correctly for internal, platform, and external events -->\n<datamodel>\n <data conf:id=\"1\"/>\n </datamodel>\n     \n <state id=\"s0\">\n   <onentry>\n   <!-- internal event -->\n     <raise event=\"foo\"/>\n   </onentry>\n   <transition event=\"foo\"  target=\"s1\"> \n     <assign conf:location=\"1\" conf:eventType=\"\"/>\n     </transition>\n      <transition event=\"*\" target=\"fail\"/> \n   </state>\n\n<state id=\"s1\">\n  <transition conf:idQuoteVal=\"1=internal\" target=\"s2\"/>\n  <transition conf:targetfail=\"\"/>\n  </state>\n   \n<state id=\"s2\">\n   <onentry>\n   <!-- this will generate an error, which is a platform event -->\n     <assign conf:invalidLocation=\"\" conf:expr=\"1\"/>\n   </onentry>\n   <transition event=\"error\"  target=\"s3\">\n     <assign conf:location=\"1\" conf:eventType=\"\"/>\n     </transition> \n      <transition event=\"*\" target=\"fail\"/>\n   </state>\n   \n<state id=\"s3\">\n  <transition conf:idQuoteVal=\"1=platform\" target=\"s4\"/>\n  <transition conf:targetfail=\"\"/>\n  </state>\n   \n <state id=\"s4\">\n   <onentry>\n   <!-- external event -->\n     <send event=\"foo\"/>\n   </onentry>\n   <transition event=\"foo\"  target=\"s5\">\n   <assign conf:location=\"1\" conf:eventType=\"\"/>\n     </transition>   \n      <transition event=\"*\" target=\"fail\"/>\n   </state>\n   \n<state id=\"s5\">\n  <transition conf:idQuoteVal=\"1=external\" conf:targetpass=\"\"/>\n  <transition conf:targetfail=\"\"/>\n  </state>\n   \n    \n  <conf:pass/>\n  <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that sendid is present in error events triggered by send errors -->\n\n<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" initial=\"s0\" conf:datamodel=\"\"  name=\"machineName\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n <datamodel>\n   <data conf:id=\"1\"/>\n    <data conf:id=\"2\"/>\n   </datamodel>    \n\n   \n <state id=\"s0\">\n   <onentry>\n   <!-- this will raise an error and also store the sendid in var1 -->\n     <send conf:illegalTarget=\"\" event=\"foo\" conf:idlocation=\"1\"/>\n   </onentry>\n   <transition event=\"error\"   target=\"s1\">\n   <!-- get the sendid out of the error event -->\n       <assign conf:location=\"2\" conf:eventSendid=\"\"/>\n       </transition>\n      <transition event=\"*\" conf:targetfail=\"\"/> \n   </state>\n   \n<state id=\"s1\">\n<!-- make sure that the sendid in the error event matches the one generated when send executed -->\n  <transition conf:VarEqVar=\"1 2\" conf:targetpass=\"\"/>\n  <transition conf:targetfail=\"\"/>\n  </state>\n      \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- make sure sendid is blank in a non-error event -->\n\n<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" initial=\"s0\" conf:datamodel=\"\"  name=\"machineName\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">  \n   \n <state id=\"s0\">\n   <onentry>\n     <send  event=\"foo\"/>\n   </onentry>\n   <transition event=\"foo\"  conf:eventFieldHasNoValue=\"sendid\" conf:targetpass=\"\"/>\n      <transition event=\"*\" conf:targetfail=\"\"/> \n   </state>\n   \n\n      \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that origin field is blank for internal events -->\n\n<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" initial=\"s0\" conf:datamodel=\"\"  name=\"machineName\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">  \n   \n <state id=\"s0\">\n   <onentry>\n     <raise  event=\"foo\"/>\n   </onentry>\n   <transition event=\"foo\"  conf:eventFieldHasNoValue=\"origin\" conf:targetpass=\"\"/>\n      <transition event=\"*\" conf:targetfail=\"\"/> \n   </state>\n   \n\n      \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that the origin field of an external event contains a URL that lets you send back to the originator.  In\nthis case it's the same session, so if we get bar we succeed -->\n\n<scxml initial=\"s0\" conf:datamodel=\"\" version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" name=\"machineName\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">  \n   \n <state id=\"s0\">\n   <onentry>\n     <send  event=\"foo\"/>\n   </onentry>\n   <transition event=\"foo\"   target=\"s1\">\n     <conf:sendToSender name=\"bar\"/>\n      </transition>\n      <transition event=\"*\" conf:targetfail=\"\"/> \n   </state>\n   \n<state id=\"s1\">\n  <onentry>\n    <send event=\"baz\"/>\n    </onentry>\n  <transition event=\"bar\" conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n  </state>\n      \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that origintype is blank on internal events -->\n\n<scxml initial=\"s0\" conf:datamodel=\"\"  version=\"1.0\" name=\"machineName\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">  \n   \n <state id=\"s0\">\n   <onentry>\n     <raise  event=\"foo\"/>\n   </onentry>\n   <transition event=\"foo\"  conf:eventFieldHasNoValue=\"origintype\" conf:targetpass=\"\"/>\n      <transition event=\"*\" conf:targetfail=\"\"/> \n   </state>\n   \n\n      \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that invokeid is blank in an event that wasn't returned from an invoked process -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" name=\"machineName\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">  \n   \n <state id=\"s0\">\n   <onentry>\n     <raise  event=\"foo\"/>\n   </onentry>\n   <transition event=\"foo\"  conf:eventFieldHasNoValue=\"invokeid\" conf:targetpass=\"\"/>\n      <transition event=\"*\" conf:targetfail=\"\"/> \n   </state>\n   \n\n      \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that eventexpr works and sets the name field of the resulting event -->\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\"  name=\"machineName\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">  \n <datamodel>\n   <data conf:id=\"1\" conf:quoteExpr=\"foo\"/>\n   <data conf:id=\"2\"/>\n   </datamodel>\n     \n <state id=\"s0\">\n   <onentry>\n     <send  conf:eventExpr=\"1\"/>\n   </onentry>\n   <transition event=\"foo\" target=\"s1\">\n      <assign conf:location=\"2\" conf:eventField=\"name\"/>\n      </transition>\n      <transition event=\"*\" conf:targetfail=\"\"/> \n   </state>\n   \n<state id=\"s1\">\n  <transition conf:VarEqVar=\"1 2\" conf:targetpass=\"\"/>\n   <transition conf:targetfail=\"\"/>\n   </state>\n      \n   <conf:pass/>\n   <conf:fail/>\n     \n</scxml>",
+   "pass"
+  ]
+ ]
+}
