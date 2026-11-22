@@ -15,6 +15,7 @@ import { nearness } from "./meaning.mjs";
 import * as pin from "../message/guest.mjs";
 import * as turns from "../turn/guest.mjs";
 import * as senses from "../senses/guest.mjs";
+import * as reads from "../read/guest.mjs";
 
 const S = PROVIDERS.sentence, RANK = ["public", "internal", "confidential", "restricted"];
 const higher = (a, b) => (RANK.indexOf(b) > RANK.indexOf(a) ? b : a);
@@ -27,7 +28,7 @@ const format = await pin.opened(pin.GUESTS.message);
 // thing whose title the reply quotes, placed where it is quoted (in code points), and on the prompt the dimension
 // the router read it in as a dialogue act (ISO 24617-2), when it read one; null when a checker refuses it.
 const record = await turns.opened(turns.GUEST);
-export const recordOf = (prompt, said, now, after = null) => record(["record", `base ${new URL("../", import.meta.url)}`, `now ${now} ${new Date(now).toISOString()}`, ...(after ? [`after ${after}`] : []), `prompt ${JSON.stringify(prompt)}`, `reply ${JSON.stringify(said.sentences.join("\n"))}`, ...(said.mapped?.act ? [`act ${said.mapped.act}`] : []), ...(said.cited ?? []).map((item, i, all) => ((n, size) => ((at) => `cited ${item.address}${at < 0 ? "" : ` ${size(said.sentences.slice(0, n).map((line) => `${line}\n`).join("") + said.sentences[n].slice(0, at))} ${size(said.sentences.slice(0, n).map((line) => `${line}\n`).join("") + said.sentences[n].slice(0, at) + item.title)}`}`)(item.title ? said.sentences[n]?.indexOf(item.title) ?? -1 : -1))(said.sentences.length - all.length - (said.cut ? 1 : 0) + i, (text) => [...text].length))].join("\n")).replace(/^(refused|invalid)[^]*$/u, "") || null;
+export const recordOf = (prompt, said, now, after = null) => record(["record", `base ${new URL("../", import.meta.url)}`, `now ${now} ${new Date(now).toISOString()}`, ...(after ? [`after ${after}`] : []), `prompt ${JSON.stringify(prompt)}`, `reply ${JSON.stringify(said.sentences.join("\n"))}`, ...(said.mapped?.act ? [`act ${said.mapped.act}`] : []), ...(said.mapped?.identity ? [`identity ${said.mapped.identity}`] : []), ...(said.cited ?? []).map((item, i, all) => ((n, size) => ((at) => `cited ${item.address}${at < 0 ? "" : ` ${size(said.sentences.slice(0, n).map((line) => `${line}\n`).join("") + said.sentences[n].slice(0, at))} ${size(said.sentences.slice(0, n).map((line) => `${line}\n`).join("") + said.sentences[n].slice(0, at) + item.title)}`}`)(item.title ? said.sentences[n]?.indexOf(item.title) ?? -1 : -1))(said.sentences.length - all.length - (said.cut ? 1 : 0) + i, (text) => [...text].length))].join("\n")).replace(/^(refused|invalid)[^]*$/u, "") || null;
 // What is under way and what comes next is the senses guest's observation (app/src/PrismSenses.lex.tex,
 // SOSA) of the calendar items held that have not ended: the page hands it their times and says what it names.
 const sense = await senses.opened(senses.GUEST), second = (at) => `${new Date(at).toISOString().slice(0, 19)}Z`;
@@ -35,9 +36,11 @@ async function schedule(items, now) {
   const open = items.filter((item) => item.media === "calendar" && item.end > now).sort((x, y) => x.at - y.at).slice(0, S.held), seen = await sense(["flat", `base ${new URL("../", import.meta.url)}`, `now ${second(now)}`, ...open.map((item) => `held ${second(item.at)} ${second(item.end)} ${item.address}`), ""].join("\n"));
   return [["under", "scheduleNow", "end"], ["next", "scheduleNext", "at"]].map(([frame, name, edge]) => [frame, open.find((item) => item.address === seen.match(new RegExp(`^${name} \\S+ (.+)$`, "m"))?.[1]), edge]).filter(([, item]) => item);
 }
+// Who is speaking is the senses' observation too: the person as they declared themselves, written as a vCard
+// (RFC 6350) by the vcard guest, is observed as that card's address, which the turn's record keeps.
+const written = await reads.opened(reads.GUESTS.vcard), whoIs = async (me, now, card = me?.names?.length || me?.addresses?.length ? written(["write", me.names[0] ?? "", ...me.addresses.map((address) => `email ${address}`)].join("\n")) : "") => (card.startsWith("BEGIN") ? (await sense(`flat\nbase ${new URL("../", import.meta.url)}\nnow ${second(now)}\ncard ${new TextEncoder().encode(card).length}\n${card}`)).match(/^identity (sha256:[0-9a-f]{64})$/m)?.[1] ?? null : null);
 // A value longer than a sentence can carry is cut; the item it cites holds the rest.
-const zone = (at) => { const m = -new Date(at).getTimezoneOffset(), a = Math.abs(m); return `${m < 0 ? "-" : "+"}${String(Math.trunc(a / 60)).padStart(2, "0")}:${String(a % 60).padStart(2, "0")}`; };
-const cut = (value) => { const text = String(value ?? ""); return text.length > S.lead * 2 ? `${text.slice(0, S.lead * 2)}…` : text; };
+const zone = (at) => { const m = -new Date(at).getTimezoneOffset(), a = Math.abs(m); return `${m < 0 ? "-" : "+"}${String(Math.trunc(a / 60)).padStart(2, "0")}:${String(a % 60).padStart(2, "0")}`; }, cut = (value) => { const text = String(value ?? ""); return text.length > S.lead * 2 ? `${text.slice(0, S.lead * 2)}…` : text; };
 function fill(key, parts = {}) {
   const [errors, ...text] = format(`format\n${JSON.stringify({ src: S.frames[key], bidiIsolation: "none", params: Object.entries(parts).map(([name, value]) => ({ name, value: cut(value) })), ...(parts.at ? { timeZone: zone(parts.at) } : {}) })}`).split("\n");
   if (errors) throw Object.assign(new Error(`the ${key} sentence does not format: ${errors}`), { code: "message.format" });
@@ -65,8 +68,7 @@ const end = (text) => (/[.?!…]$/u.test(text) ? text : `${text}.`);
 // its sender writes (site/time/rhythm.mjs); for an event revised since, that
 // this is an earlier version of it.
 export function sentenceOf(item, me = null, { now = null, order = null, rhythm = null } = {}) {
-  const what = whatOf(item), place = order?.get(item.address), lead = item.labels?.lead ?? "", kind = item.media === "message" || item.media === "contactCard" ? item.media : item.media === "calendar" || item.start != null ? "calendar" : "note";
-  const mine = me?.addresses?.some((a) => (item.who ?? "").toLowerCase().includes(a.toLowerCase())), often = kind !== "message" || mine ? null : rhythm?.get(sourceOf(item));
+  const what = whatOf(item), place = order?.get(item.address), lead = item.labels?.lead ?? "", kind = item.media === "message" || item.media === "contactCard" ? item.media : item.media === "calendar" || item.start != null ? "calendar" : "note", mine = me?.addresses?.some((a) => (item.who ?? "").toLowerCase().includes(a.toLowerCase())), often = kind !== "message" || mine ? null : rhythm?.get(sourceOf(item));
   const said = kind !== "message" ? {} : { turn: place?.of > 1 ? fill("turn", place) : "", after: Number.isFinite(place?.after) ? fill("after", { after: spanOf(place.after) }) : "", lead: lead && lead.toLowerCase() !== what.toLowerCase() ? fill("lead", { lead }) : "", rhythm: often ? fill("rhythm", { every: everyOf(often), per: often.per }) : "" };
   return fill("item", { kind, what, who: (kind === "message" && mine ? me.name : null) ?? item.who, when: whenOf(item.at, item.allDay, now), where: item.where, earlier: place && !place.current ? "yes" : "", ...said });
 }
@@ -86,6 +88,7 @@ export async function answer(prompt, options) {
   if (!text) return none;
   const mapped = await route({ source: "note", values: { text }, line, halted, now, learned: meaning ? { meaning } : {} });
   if (mapped.refused) return { ...none, mapped };
+  mapped.identity = await whoIs(me, now);
   const held = items.filter((item) => !item.sealed);
   // What to do with the words is the Prism Ask decision's (app/specs/ask/spec.json,
   // PrismAsk in LexLean), asked of the root guest: the page only carries it out.
@@ -113,8 +116,7 @@ export async function answer(prompt, options) {
   let lead = [], many = Boolean(span), seen = [];
   if (kind && !span) {
     // Mail and notes newest first; the calendar from what is next.
-    const matched = used.filter(ofKind);
-    const latest = held.filter(ofKind).sort((a, b) => (kind === "calendar" ? upcoming(a, b, now) : b.at - a.at));
+    const matched = used.filter(ofKind), latest = held.filter(ofKind).sort((a, b) => (kind === "calendar" ? upcoming(a, b, now) : b.at - a.at));
     used = matched.length && terms.length ? matched : latest;
     many = true;
     if (!used.length) lead = [fill("unmatched", { what: words.find((w) => S.kinds[kind].includes(w)) })];
@@ -136,16 +138,14 @@ export async function answer(prompt, options) {
   }
   // A span, a kind or an overview answers with several; a name or a topic with
   // everything that names it; otherwise the best match.
-  const naming = many ? [] : used.filter((item) => mentions(item, named)), told = many ? used.slice(0, S.most) : naming.length > 1 ? naming.slice(0, S.most) : used.slice(0, 1);
-  const order = sequence(held), rhythm = rhythms(held);
+  const naming = many ? [] : used.filter((item) => mentions(item, named)), told = many ? used.slice(0, S.most) : naming.length > 1 ? naming.slice(0, S.most) : used.slice(0, 1), order = sequence(held), rhythm = rhythms(held);
   const sentences = [...lead.map((s) => `${s}.`), ...told.map((item) => end(sentenceOf(item, me, { now, order, rhythm })))];
   // Everything held that names the asked words is found: the sentences say
   // the few, and the list beneath holds those first, then the rest, newest first.
   // Asked only words the readers pass over (a kind, a weekday, "should"), those words are what is sought.
   const bare = wordsOf(text), sought = named.length ? named : bare.length && bare.every((w) => !S.greet.includes(w) && !S.overview.includes(w)) ? bare : [];
   // What names the asked words comes before what is only near in meaning, then newest first, then by address: an order that does not depend on how the items came in.
-  const says = (item) => Number(sought.length > 0 && mentions(item, sought));
-  const found = sought.length || mapped.meaning ? held.filter((item) => (!kind || !named.length || ofKind(item)) && ((sought.length && mentions(item, sought)) || close(item) >= near)).sort((a, b) => says(b) - says(a) || (b.at ?? 0) - (a.at ?? 0) || (a.address < b.address ? -1 : 1)) : [];
+  const says = (item) => Number(sought.length > 0 && mentions(item, sought)), found = sought.length || mapped.meaning ? held.filter((item) => (!kind || !named.length || ofKind(item)) && ((sought.length && mentions(item, sought)) || close(item) >= near)).sort((a, b) => says(b) - says(a) || (b.at ?? 0) - (a.at ?? 0) || (a.address < b.address ? -1 : 1)) : [];
   const offers = told.flatMap((item) => {
     const k = S.offers[item.media === "message" ? "message" : item.media === "plainText" ? "note" : ""];
     return k ? [{ kind: k, item }] : [];
