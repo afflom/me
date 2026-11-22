@@ -141,6 +141,9 @@ const turned = recordOf("what did Joel say?", { ...told, cited: told.cited.map((
 assert.match(turned, /^<emma:emma [^]*emma:tokens="what did Joel say\?"[^]*<\/emma:emma>\ndocument\n[^]*wasInformedBy\(/u);
 for (const item of told.cited) assert.ok(turned.includes(`wasDerivedFrom(me:reply-${WEDNESDAY}, me:k1-${item.address})`), `the record does not name ${item.address}`);
 assert.equal((await (await import("../turn/guest.mjs")).opened((await import("../turn/guest.mjs")).GUEST))(`check\n${turned}`), "accepted");
+// Who is speaking is kept too: the card the vcard guest's own vector writes from RFC 6350's addresses, by its SHA-256, as an entity the turn used.
+const [[wrote, card]] = JSON.parse(readFileSync(new URL("../../app/specs/vcard/spec.json", import.meta.url), "utf8")).examples.filter(([request]) => request.startsWith("write\n\n")), self = await answer("what did Joel say?", { items: [asking, review], me: { names: [], addresses: wrote.split("\n").slice(2).map((line) => line.slice(6)) }, line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
+assert.ok(recordOf("what did Joel say?", { ...self, cited: [] }, WEDNESDAY).includes(`used(me:turn-${WEDNESDAY}, me:sha256-${createHash("sha256").update(card).digest("hex")}, -)`), "the record does not name who was speaking");
 // Each thing whose title the reply quotes is cited where it is quoted: a Web Annotation on the reply's text, addressed by its SHA-256.
 const quoted = turned.split("endDocument\n")[1].split("\n").map((line) => JSON.parse(line)), replied = told.sentences.join("\n");
 assert.deepEqual(quoted.map((note) => [note.body.source, note.target.source, [...replied].slice(note.target.selector.start, note.target.selector.end).join("")]), told.cited.map((item) => [`k1:${item.address}`, `sha256:${createHash("sha256").update(replied).digest("hex")}`, item.title]));
