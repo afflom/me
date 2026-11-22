@@ -8,7 +8,7 @@ they keep (`openVault({ objects })`).
 
 | File | Holds |
 | --- | --- |
-| `objects.mjs` | `loadClient()`, `makeObjects({ client, decide, halted })`, `structureOf`, `rootDecide(dispatch)` |
+| `objects.mjs` | `loadClient()`, `makeObjects({ client, decide, halted })`, `rootDecide(dispatch)` |
 | `uorc.lock.json` | the pinned release asset, the files it serves and the standard basis its archives name |
 | `client/` | written by `bootstrap/uorc-objects.mjs` in pages.yml, never committed |
 | `guest.mjs`, `guest/uorc.wasm` | the standalone guest, built by `tools/guests/build.sh` (GU-01), pinned by SHA-256 |
