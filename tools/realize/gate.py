@@ -6,7 +6,8 @@
 It reads app/specs/realizability/spec.json, every facet spec named there, and
 test/realize/<facet>.txt: what the LexLean program generators/realize answers
 over each spec's whole request space (its witness pairs, the rules or leaves
-that change an answer, the answers outside the outcomes, and the examples).
+that change an answer, the answers outside the outcomes, the examples, and how
+many of its words and reasons are given).
 It refuses the Prism unless:
 
   sensitivity  every field of every spec changes some answer: there is a
@@ -105,6 +106,12 @@ class Spec:
         """The facts of one kind, each split at its tabs."""
         head = f"{self.dir} {word} "
         return [line[len(head):].split("\t") for line in self.facts if line.startswith(head)]
+
+    def pair(self, word):
+        """A fact `have of need`, as two numbers."""
+        (counts,), = self.told(word)
+        have, _, need = counts.split(" ")
+        return int(have), int(need)
 
     def point(self, line):
         return tuple(int(v) if self.is_number(f) else v for f, v in zip(self.fields, line.split(" ")))
@@ -216,15 +223,11 @@ def audit():
         for (b,) in s.told("dead"):
             fail.append(f"{where}: {'rule' if s.shape == 'rules' else 'leaf'} {b} changes no answer")
         branches = len(live) + len(s.told("dead"))
-        (counts,), = s.told("agree")
-        agree, _, valid = counts.split(" ")
-        agree, valid = int(agree), int(valid)
+        agree, valid = s.pair("agree")
         for q, r, a in s.told("wrong"):
             fail.append(f"{where}: example `{q}` says {r!r}, the spec answers {a!r}")
         for q, r in s.told("stray"):
             fail.append(f"{where}: example `{q}` is not a request of this spec, yet says {r!r}")
-        meanings = s.raw.get("meanings", {})
-        means = sum(1 for f in s.fields if f.get("means")) + sum(1 for o in s.outcomes if meanings.get(o))
         reads = MODEL.get("reads", {}).get(d, {})
         composed_need, composed_have = 0, 0
         for f in s.fields:
@@ -240,16 +243,7 @@ def audit():
                     fail.append(f"{where}: field `{f['name']}` reads {declared}, but its values are not {declared}'s outcomes")
                 else:
                     fail.append(f"{where}: field `{f['name']}` takes {others[0]}'s outcomes; name it under reads.{d}")
-        guards = s.raw.get("properties", s.raw.get("guarantees", []))
-        rules = s.raw.get("rules", [])
-        why_need = len(rules) + len(guards)
-        why_have = sum(1 for r in rules if r.get("why")) + sum(1 for g in guards if g.get("why"))
-        if s.shape == "tree":
-            why_need += 1
-            why_have += 1 if s.raw.get("purpose") else 0
-        else:
-            why_need += 1
-            why_have += 1 if s.raw.get("otherwiseWhy") else 0
+        (guards,), = s.told("guards")
         longest = len(s.keyword.encode()) + 1 + longest_line
         names, faults = projection(s)
         fail += [f"{where}: {m}" for m in faults]
@@ -258,15 +252,15 @@ def audit():
         digest = hashlib.sha256((SPECS / d / "spec.json").read_bytes()).hexdigest()
         desc = {
             "identity": (facet_code, 1),
-            "vocabulary": (means, len(s.fields) + len(s.outcomes)),
+            "vocabulary": s.pair("vocabulary"),
             "capability": (len(reached), len(s.outcomes)),
             "interfaceSpec": (len(witnesses), len(s.fields)),
             "composition": (composed_have, composed_need),
             "dynamics": (len(live), branches),
             "fidelity": (agree, valid),
             "resources": (REQ_MAX, longest),
-            "authority": (why_have, why_need),
-            "evidence": (theorem_count(s.module), len(guards)),
+            "authority": s.pair("authority"),
+            "evidence": (theorem_count(s.module), int(guards)),
             "projection": (projected, len(s.fields)),
         }
         for e in ("vocabulary", "authority"):
