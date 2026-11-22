@@ -83,7 +83,11 @@ definition{
     | Option.none => (refused 0x6e65656473205246432035353436)
     | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x6963616c746970666f756e64) then (match (GenCalendar::presenceTip archive)
     | Option.none => (refused 0x6e65656473202e67656e2f6963616c2d69616e612c206170702f73706563732f63616c656e6461722f737065632e6a736f6e20616e6420746865206578616d706c6573)
-    | Option.some file => (written file)) else 0x696e76616c6964)))))))))))))))),
+    | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x6963616c636f756e74726f7773) then (match (GenCalendar::countRows archive)
+    | Option.none => (refused 0x6e65656473205246432035353435)
+    | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x6963616c636f756e7473) then (match (GenCalendar::countsModule archive)
+    | Option.none => (refused 0x6e65656473202e67656e2f6963616c2d636f756e7473)
+    | Option.some file => (written file)) else 0x696e76616c6964)))))))))))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

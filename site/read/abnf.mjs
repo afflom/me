@@ -47,10 +47,12 @@ export function abnf({ rules, key }) {
     },
     // Every rule a derivation went through, by name.
     rulesOf(tree, out = new Set()) {
-      if (tree) out.add(tree.rule);
-      for (const kid of tree?.kids ?? []) this.rulesOf(kid, out);
+      for (const kid of tree ? (out.add(tree.rule), tree.kids) : []) this.rulesOf(kid, out);
       return out;
     },
+    // How a list rule's members keep to the occurrence its specification gives each (the ical guest; app/src/PrismIcal.lex.tex):
+    // nothing, or a line per breach, "R1 uid 2" (required once), "O1 class 2" (optional, at most once), "S1 rrule 2" (should be at most once).
+    counts: (rule, members) => asks[key](`counts\n${rule}\n${members.map((member) => member + "\n").join("")}`).split("\n").filter((line) => line && line !== "ok"),
   };
 }
 
