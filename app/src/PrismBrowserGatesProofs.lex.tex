@@ -1,0 +1,57 @@
+\begin{lexlean}{PrismBrowserGatesProofs}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{PrismBrowserGates}
+\importmodule{PrismHost}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: browserGateCited,
+  parameters: [rows : (List PrismBrowserGates::BrowserStatement)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => (((project row source) <? (PrismBrowserGates::browserGateSourceCount)) && (browserGateCited rest))),
+  recursive_argument: rows
+}
+
+definition{
+  name: browserGateHasCitation,
+  parameters: [rows : (List PrismBrowserGates::BrowserStatement)],
+  result: Bool,
+  body: (match rows | List.nil => false | List.cons row rest => true)
+}
+
+definition{
+  name: browserGateWaits,
+  parameters: [surface : Nat, present : Nat, halted : Nat],
+  result: Bool,
+  body: (not ((PrismHost::prismHostJudge (record PrismHost::PrismHostRequest {surface := surface, present := present, act := (PrismHost::prismHostActNone), grant := (PrismHost::prismHostGrantNone), halted := halted})) =? (PrismHost::prismHostAnswerUse)))
+}
+
+definition{
+  name: browserGateHeld,
+  parameters: [gate : PrismBrowserGates::BrowserGate],
+  result: Bool,
+  body: (((browserGateHasCitation (project gate statements)) && (browserGateCited (project gate statements))) && ((((project gate activation) =? 0) || (9 <? ((project gate surface) + 1))) || ((((browserGateWaits (project gate surface) 0 0) && (browserGateWaits (project gate surface) 0 1)) && (browserGateWaits (project gate surface) 1 0)) && (browserGateWaits (project gate surface) 1 1))))
+}
+
+definition{
+  name: browserGatesHeld,
+  parameters: [rows : (List PrismBrowserGates::BrowserGate)],
+  result: Bool,
+  body: (match rows
+    | List.nil => true
+    | List.cons row rest => ((browserGateHeld row) && (browserGatesHeld rest))),
+  recursive_argument: rows
+}
+
+theorem{
+  name: browserGatedSurfacesWaitForTheOwner,
+  parameters: [],
+  statement: ((browserGatesHeld (PrismBrowserGates::browserGates)) = true),
+  proof: decide{}
+}
+\end{semanticmodule}
+\end{lexlean}

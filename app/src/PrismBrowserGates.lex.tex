@@ -1,0 +1,52 @@
+\begin{lexlean}{PrismBrowserGates}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: browserGatesAbout,
+  parameters: [],
+  result: String,
+  body: "What gates the browser members the Prism calls: a member that works only on the owner's own act (transient activation, HTML), and a member that works only under a permission. Each gate cites the member's own specification, algorithm by algorithm: the algorithm W3C webref extracts for the member (webref ed/algorithms at 960814a, kept under app/specs/oracle/web-algorithms), then what that algorithm cites, down to the step that names transient activation or the permission. generators/browser refuses a citation that is not in the pinned algorithm, a chain whose next algorithm nothing before it cites, an activation or permission the citations do not reach, and a member PrismBrowser does not model (GN-01). registered says whether the W3C Permissions Registry (kept under app/specs/oracle/permissions-registry at 722c061) lists the permission: it lists neither file-system nor persistent-storage, which their own specifications define. surface is PrismHost's surface the member opens (9 for none): PrismBrowserGatesProofs proves PrismHost never uses such a surface on its own when the member waits for the owner's act and the browser keeps no grant."
+}
+
+structure{
+  name: BrowserStatement,
+  type_parameters: [],
+  parameters: [],
+  fields: [{name: source, type: Nat}, {name: algorithm, type: String}, {name: cites, type: String}]
+}
+
+structure{
+  name: BrowserGate,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: iface, type: String},
+    {name: member, type: String},
+    {name: surface, type: Nat},
+    {name: activation, type: Nat},
+    {name: permission, type: String},
+    {name: registered, type: Nat},
+    {name: statements, type: (List BrowserStatement)}
+  ]
+}
+
+definition{
+  name: browserGateSources,
+  parameters: [],
+  result: (List String),
+  body: (cons "app/specs/oracle/web-algorithms/file-system-access/algorithms.json" (cons "app/specs/oracle/web-algorithms/contact-picker/algorithms.json" (cons "app/specs/oracle/web-algorithms/storage/algorithms.json" (cons "app/specs/oracle/permissions-registry/index.html" (nil String)))))
+}
+
+definition{name: browserGateSourceCount, parameters: [], result: Nat, body: 4}
+
+definition{
+  name: browserGates,
+  parameters: [],
+  result: (List BrowserGate),
+  body: (cons (record BrowserGate {iface := "Window", member := "showDirectoryPicker", surface := 0, activation := 1, permission := "file-system", registered := 0, statements := (cons (record BrowserStatement {source := 0, algorithm := "https://wicg.github.io/file-system-access/#dom-window-showdirectorypicker", cites := "https://wicg.github.io/file-system-access/#is-allowed-to-show-a-file-picker"}) (cons (record BrowserStatement {source := 0, algorithm := "https://wicg.github.io/file-system-access/#is-allowed-to-show-a-file-picker", cites := "https://html.spec.whatwg.org/multipage/interaction.html#transient-activation"}) (cons (record BrowserStatement {source := 0, algorithm := "https://wicg.github.io/file-system-access/#dom-window-showdirectorypicker", cites := "https://wicg.github.io/file-system-access/#dom-permissionname-file-system"}) (nil BrowserStatement))))}) (cons (record BrowserGate {iface := "FileSystemHandle", member := "requestPermission", surface := 0, activation := 1, permission := "file-system", registered := 0, statements := (cons (record BrowserStatement {source := 0, algorithm := "https://wicg.github.io/file-system-access/#dom-filesystemhandle-requestpermission", cites := "https://wicg.github.io/file-system-access/#requesting-file-system-permission"}) (cons (record BrowserStatement {source := 0, algorithm := "https://wicg.github.io/file-system-access/#requesting-file-system-permission", cites := "https://wicg.github.io/file-system-access/#dom-permissionname-file-system"}) (cons (record BrowserStatement {source := 0, algorithm := "https://wicg.github.io/file-system-access/#requesting-file-system-permission", cites := "permission request algorithm"}) (cons (record BrowserStatement {source := 0, algorithm := "permission request algorithm", cites := "https://html.spec.whatwg.org/multipage/interaction.html#transient-activation"}) (nil BrowserStatement)))))}) (cons (record BrowserGate {iface := "FileSystemHandle", member := "queryPermission", surface := 9, activation := 0, permission := "file-system", registered := 0, statements := (cons (record BrowserStatement {source := 0, algorithm := "https://wicg.github.io/file-system-access/#dom-filesystemhandle-querypermission", cites := "https://wicg.github.io/file-system-access/#querying-file-system-permission"}) (cons (record BrowserStatement {source := 0, algorithm := "https://wicg.github.io/file-system-access/#querying-file-system-permission", cites := "https://wicg.github.io/file-system-access/#dom-permissionname-file-system"}) (nil BrowserStatement)))}) (cons (record BrowserGate {iface := "ContactsManager", member := "select", surface := 4, activation := 1, permission := "", registered := 0, statements := (cons (record BrowserStatement {source := 1, algorithm := "https://w3c.github.io/contact-picker/#dom-contactsmanager-select", cites := "https://html.spec.whatwg.org/multipage/interaction.html#transient-activation"}) (nil BrowserStatement))}) (cons (record BrowserGate {iface := "StorageManager", member := "persist", surface := 9, activation := 0, permission := "persistent-storage", registered := 0, statements := (cons (record BrowserStatement {source := 2, algorithm := "https://storage.spec.whatwg.org/#dom-storagemanager-persist", cites := "<code>persistent-storage</code>"}) (nil BrowserStatement))}) (nil BrowserGate))))))
+}
+\end{semanticmodule}
+\end{lexlean}

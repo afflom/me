@@ -24,6 +24,45 @@
       "output": "site/device/formats.mjs"
     },
     {
+      "generator": "browsergateseen",
+      "split": "app/specs/oracle/web-algorithms/file-system-access/algorithms.json",
+      "breakBefore": "^    [{]$",
+      "inputs": [
+        "app/src/PrismBrowserGates.lex.tex"
+      ],
+      "output": ".gen/gate-seen-0"
+    },
+    {
+      "generator": "browsergateseen",
+      "split": "app/specs/oracle/web-algorithms/contact-picker/algorithms.json",
+      "breakBefore": "^    [{]$",
+      "inputs": [
+        "app/src/PrismBrowserGates.lex.tex"
+      ],
+      "output": ".gen/gate-seen-1"
+    },
+    {
+      "generator": "browsergateseen",
+      "split": "app/specs/oracle/web-algorithms/storage/algorithms.json",
+      "breakBefore": "^    [{]$",
+      "inputs": [
+        "app/src/PrismBrowserGates.lex.tex"
+      ],
+      "output": ".gen/gate-seen-2"
+    },
+    {
+      "generator": "browsergates",
+      "inputs": [
+        ".gen/browser-index",
+        ".gen/gate-seen-0",
+        ".gen/gate-seen-1",
+        ".gen/gate-seen-2",
+        "app/specs/oracle/permissions-registry/index.html",
+        "app/src/PrismBrowserGates.lex.tex"
+      ],
+      "output": ".gen/browser-gates"
+    },
+    {
       "generator": "browseridl",
       "inputs": [
         ".gen/browser-index",
