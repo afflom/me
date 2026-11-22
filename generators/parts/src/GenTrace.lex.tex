@@ -1098,10 +1098,18 @@ definition{
 }
 
 definition{
-  name: debtReasons,
+  name: debtPartReasons,
   parameters: [archive : Bytes],
   result: Bytes,
-  body: (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (let debt : (Option Nat) := (Check::key spec (Foundation.Json::root spec) "debt"); (let owed : Bytes := (trF archive ".gen/pt-debt"); (let unserved : (Option Nat) := (Check::key spec debt "journeys"); (let missing : Bytes := (trF archive ".gen/pt-missing"); (let ground : Bytes := (trF archive ".gen/pt-ground"); (let js : Bytes := (Check::firstWords (trF archive ".gen/pt-answers")); (let served : Bytes := (trToks (Check::restWords (trF archive ".gen/pt-serves"))); (Check::cat (cons (trMissingFrom missing 0 owed 0x ((trLen missing) + 1)) (cons (trOwedPartsFrom owed 0 ground missing 0x ((trLen owed) + 1)) (cons (trJourneysDebtFrom js 0 spec unserved served (trF archive ".gen/pt-works") 0x ((trLen js) + 1)) (cons (trUnknownJourneysFrom spec (Check::memberStart spec unserved) js 0x (trLen spec)) (nil Bytes)))))))))))))),
+  body: (let owed : Bytes := (trF archive ".gen/pt-debt"); (let missing : Bytes := (trF archive ".gen/pt-missing"); (Check::cat (cons (trMissingFrom missing 0 owed 0x ((trLen missing) + 1)) (cons (trOwedPartsFrom owed 0 (trF archive ".gen/pt-ground") missing 0x ((trLen owed) + 1)) (nil Bytes)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: debtJourneyReasons,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let spec : Bytes := (trF archive "app/specs/parts/spec.json"); (let unserved : (Option Nat) := (Check::key spec (Check::key spec (Foundation.Json::root spec) "debt") "journeys"); (let js : Bytes := (Check::firstWords (trF archive ".gen/pt-answers")); (Check::cat (cons (trJourneysDebtFrom js 0 spec unserved (trToks (Check::restWords (trF archive ".gen/pt-serves"))) (trF archive ".gen/pt-works") 0x ((trLen js) + 1)) (cons (trUnknownJourneysFrom spec (Check::memberStart spec unserved) js 0x (trLen spec)) (nil Bytes))))))),
   axioms: [Quot.sound, propext]
 }
 
