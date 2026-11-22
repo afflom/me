@@ -6,8 +6,8 @@
 It reads app/specs/realizability/spec.json, every facet spec named there, and
 test/realize/<facet>.txt: what the LexLean program generators/realize answers
 over each spec's whole request space (its witness pairs, the rules or leaves
-that change an answer, the answers outside the outcomes, the examples, and how
-many of its words and reasons are given).
+that change an answer, the answers outside the outcomes, the examples, how many
+of its words and reasons are given, and which fields read another facet).
 It refuses the Prism unless:
 
   sensitivity  every field of every spec changes some answer: there is a
@@ -46,6 +46,8 @@ SPECS = ROOT / "app/specs"
 SRC = ROOT / "app/src"
 MOD = "PrismRealizability"
 FACTS = ROOT / "test/realize"
+# What the program says of every facet's reads of another facet's outcomes (its rzcomp step).
+COMPOSED = (FACTS / "composition.txt").read_text(encoding="utf-8").splitlines() if (FACTS / "composition.txt").exists() else []
 ELEMENTS = ["identity", "vocabulary", "capability", "interfaceSpec", "composition", "dynamics",
             "fidelity", "resources", "authority", "evidence", "projection"]
 
@@ -97,7 +99,7 @@ class Spec:
         self.outcomes = self.raw["outcomes"]
         self.shape = "rules" if "rules" in self.raw else "tree"
         path = FACTS / f"{d}.txt"
-        self.facts = path.read_text(encoding="utf-8").splitlines() if path.exists() else None
+        self.facts = path.read_text(encoding="utf-8").splitlines() + COMPOSED if path.exists() else None
 
     def is_number(self, f):
         return f.get("kind") == "number"
@@ -186,7 +188,6 @@ def audit():
     specs = load()
     fail = []
     out = {}
-    outcome_sets = {d: set(s.outcomes) for d, s in specs.items()}
     routed = [k for k, _ in FACETS]
     for k in routed:
         if k not in MODEL["facets"].values() and k not in MODEL.get("unspecified", {}):
@@ -202,6 +203,9 @@ def audit():
             continue
         if s.facts is None:
             fail.append(f"{where}: test/realize/{d}.txt is missing: give it a step in generators/realize/steps.json and run tools/generators/run.sh")
+            continue
+        if not s.told("composition"):
+            fail.append(f"{where}: test/realize/composition.txt says nothing of it: give it an rzterms step in generators/realize/steps.json and run tools/generators/run.sh")
             continue
         (counts,), = s.told("points")
         points, _, longest_line = counts.split(" ")
@@ -228,21 +232,7 @@ def audit():
             fail.append(f"{where}: example `{q}` says {r!r}, the spec answers {a!r}")
         for q, r in s.told("stray"):
             fail.append(f"{where}: example `{q}` is not a request of this spec, yet says {r!r}")
-        reads = MODEL.get("reads", {}).get(d, {})
-        composed_need, composed_have = 0, 0
-        for f in s.fields:
-            if s.is_number(f):
-                continue
-            others = [o for o, outs in outcome_sets.items() if o != d and set(f["values"]) == outs]
-            declared = reads.get(f["name"])
-            if others or declared:
-                composed_need += 1
-                if declared in others:
-                    composed_have += 1
-                elif declared:
-                    fail.append(f"{where}: field `{f['name']}` reads {declared}, but its values are not {declared}'s outcomes")
-                else:
-                    fail.append(f"{where}: field `{f['name']}` takes {others[0]}'s outcomes; name it under reads.{d}")
+        fail += [f"{where}: " + "\t".join(why) for why in s.told("flaw")]
         (guards,), = s.told("guards")
         longest = len(s.keyword.encode()) + 1 + longest_line
         names, faults = projection(s)
@@ -255,7 +245,7 @@ def audit():
             "vocabulary": s.pair("vocabulary"),
             "capability": (len(reached), len(s.outcomes)),
             "interfaceSpec": (len(witnesses), len(s.fields)),
-            "composition": (composed_have, composed_need),
+            "composition": s.pair("composition"),
             "dynamics": (len(live), branches),
             "fidelity": (agree, valid),
             "resources": (REQ_MAX, longest),

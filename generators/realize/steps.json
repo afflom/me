@@ -1,5 +1,5 @@
 {
-  "comment": "The steps of the realize program (generators/realize/), run in order by tools/generators/run.sh. Each step answers one decision spec of app/specs/realizability/spec.json over its whole request space (an each over the empty path stages the spec itself, compact): its witness pairs, live rules, totality and examples (RZ-01). A step reads repository files and the .gen/ outputs of this program's earlier steps only.",
+  "comment": "The steps of the realize program (generators/realize/), run in order by tools/generators/run.sh. Each step answers one decision spec of app/specs/realizability/spec.json over its whole request space (an each over the empty path stages the spec itself, compact): its witness pairs, live rules, totality and examples (RZ-01). A step reads repository files and the .gen/ outputs of this program's earlier steps only. Then each spec's outcomes and the values of its fields are gathered into .gen/rz-terms (one step per spec, each after the last), and rzcomp answers composition from them and the realizability model's reads: for every facet, how many of the fields that take another facet's outcomes say so, and each flaw in words (test/realize/composition.txt).",
   "steps": [
     {
       "generator": "rzfacts",
@@ -160,6 +160,193 @@
         "array": ""
       },
       "output": "test/realize/ask.txt"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/boundary/spec.json",
+        "array": ""
+      },
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/learning/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/chronology/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/vault-store/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/vault-restore/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/r4/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/google/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/google-link/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/dest/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/folder/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/host/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/holon/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/curate/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/kappa/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/source/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/uorc/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/resonance/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/router/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/models/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzterms",
+      "each": {
+        "file": "app/specs/ask/spec.json",
+        "array": ""
+      },
+      "after": ".gen/rz-terms",
+      "output": ".gen/rz-terms"
+    },
+    {
+      "generator": "rzcomp",
+      "inputs": [
+        ".gen/rz-terms",
+        "app/specs/realizability/spec.json"
+      ],
+      "output": "test/realize/composition.txt"
     }
   ]
 }
