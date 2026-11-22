@@ -1280,7 +1280,7 @@ export default async function start({ app, reason, $ }) {
         kept = await d.source.folders().catch(() => []);
         const plan = await d.ask({ grant: { folder: kept.some((f) => f.grant === "granted") ? "kept" : "none", extension: extensionGrant() } });
         const shown = (surface) => plan[surface] === "offer" || plan[surface] === "use";
-        row.state.textContent = kept.length ? kept.map((f) => f.name).join(", ") : WORDS["device.none"];
+        row.state.textContent = kept.length ? kept.map((f) => f.grant === "revoked" ? `${f.name}: ${WORDS["device.taken"]}` : f.name).join(", ") : WORDS["device.none"];
         row.done(kept.length > 0 || items.length > 0 || servicesShown);
         addFolder.hidden = !shown("folder");
         filesLabel.hidden = !shown("files");

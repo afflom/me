@@ -183,15 +183,15 @@ export function makeObserver({ decide, kappa, replay, keep = memoryKeep(), halte
   const tunableOf = (f, params) => (tunableWord(f, params) === 'yes' && admissible(f.id, params) ? 'yes' : 'no');
   const UNRUN = { dissonant: Infinity, missed: Infinity, interruptions: Infinity, defect: Infinity };
 
-  function score(f, params, signals) {
+  async function score(f, params, signals) {
     if (tunableOf(f, params) === 'no') return UNRUN;
-    const r = replay(params, signals);
+    const r = await replay(params, signals);
     return { dissonant: r.dissonant, missed: r.missed, interruptions: r.interruptions, defect: r.defect };
   }
 
   async function weigh(f, s, candidate, move, runs, signals, evidence) {
-    const scored = score(f, candidate, signals);
-    const floor = score(f, floorOf(f), signals);
+    const scored = await score(f, candidate, signals);
+    const floor = await score(f, floorOf(f), signals);
     const form = claimForm(f, candidate, scored, move);
     const label = await claimLabel(form);
     const admitted = (await kappa.admit(label, te.encode(form))).outcome === 'admit' ? 'admit' : 'other';
@@ -220,14 +220,14 @@ export function makeObserver({ decide, kappa, replay, keep = memoryKeep(), halte
       apply(f.id, s.params);
       return [{ answer: 'restore' }];
     }
-    let runs = score(f, s.params, signals);
+    let runs = await score(f, s.params, signals);
     const candidates = [];
     if (verdict === 'reconcile') {
       // The one step that most lowers the owner's dismissals (ties: fewer
       // interruptions, then fewer missed, then spec order).
       let best = null;
       for (const c of neighbours(f, s.params)) {
-        const sc = score(f, c, signals);
+        const sc = await score(f, c, signals);
         const key = [sc.dissonant, sc.interruptions, sc.missed];
         const first = best ? key.findIndex((v, i) => v !== best.key[i]) : -1;
         if (!best || (first >= 0 && key[first] < best.key[first])) best = { c, key };
@@ -261,8 +261,8 @@ export function makeObserver({ decide, kappa, replay, keep = memoryKeep(), halte
       let floor = 'held';
       const s = state.facets[f.id];
       if (s) {
-        const now = score(f, s.params, ofFacet(f));
-        if (dominance(score(f, floorOf(f), ofFacet(f)), now) === 'dominates') floor = 'regressed';
+        const now = await score(f, s.params, ofFacet(f));
+        if (dominance(await score(f, floorOf(f), ofFacet(f)), now) === 'dominates') floor = 'regressed';
       }
       rows.push({ f, kind: f.kind, floor: f.floor, kpi: b.kpi, request: { halted: halted(), floor, signal: b.signal, tunable: f.tunable.length ? 'yes' : 'no', dissonance: b.dissonance, kpi: b.met } });
     }

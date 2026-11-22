@@ -14,12 +14,11 @@
 // snapshot in this browser (restore(persist(S)) = S, or nothing is restored).
 // A snapshot holds vault addresses (opaque HMACs), states and weights: no content.
 
-import { ANSWERS, GUARANTEES, LEARNING, SIGNALS, START, TUNABLE, judge, line as lineOf } from './table.mjs';
+import { ANSWERS, FIELDS, GUARANTEES, LEARNING, SIGNALS, START, TUNABLE, judge } from './table.mjs';
 
 export const DEFAULTS = Object.freeze(Object.fromEntries(TUNABLE.map((t) => [t.name, t.initial])));
 export const GESTURES = ['open', 'keep', 'dismiss', 'still'];
 export const BROUGHT = ['bloom', 'chorus'];
-const HOUR = 3600000;
 const STATES = ['inferred', 'consolidated', 'confirmed', 'rejected'];
 const LEARNED = Object.keys(LEARNING);
 
@@ -44,14 +43,14 @@ export function paramsOf(candidate = {}) {
   return out;
 }
 
-// The request's fields from what the browser saw. raw = {kind, gapMs, dwellMs, at, itemAt, hour}.
-export function derive(params, raw) {
-  const gesture = raw.kind === 'open' && raw.dwellMs >= params.dwellMs ? 'dwell' : raw.kind;
-  const pace = gesture === 'still' || raw.gapMs >= params.calmGapMs ? 'still' : raw.gapMs < params.hurriedGapMs ? 'hurried' : 'calm';
-  const salience = raw.itemAt && Math.abs(raw.itemAt - raw.at) <= params.nearHours * HOUR ? 'near' : 'far';
-  const h = raw.hour;
-  const phase = h >= params.nightHour || h < params.dawnHour ? 'night' : h < params.dayHour ? 'dawn' : h < params.duskHour ? 'day' : 'dusk';
-  return { gesture, pace, salience, phase };
+// The request's fields from what the browser saw, read by the resonance guest
+// (PrismResonanceSense). raw = {kind, gapMs, dwellMs, at, itemAt, hour}; rest = {belief, attention, halted}.
+let reader = null;
+const guestRead = async (text) => (await (reader ??= import('./guest.mjs').then((m) => m.opened(m.GUEST))))(text);
+const whole = (ms) => Math.max(0, Math.floor(ms));
+async function sense(read, p, raw, rest) {
+  const words = (await read(`sense ${raw.kind} ${whole(raw.gapMs)} ${whole(raw.dwellMs)} ${raw.itemAt ? Math.abs(raw.itemAt - raw.at) : '-'} ${raw.hour} ${rest.belief} ${rest.attention} ${rest.halted} ${p.dwellMs} ${p.calmGapMs} ${p.hurriedGapMs} ${p.nearHours} ${p.dawnHour} ${p.dayHour} ${p.duskHour} ${p.nightHour}`)).trim().split(' ');
+  return Object.fromEntries(FIELDS.map(([name], i) => [name, words[i]]));
 }
 
 // --- Anamnesis: the learned beliefs as one sealed, canonical snapshot. ---
@@ -90,7 +89,7 @@ export async function restore(text) {
 
 // line: the root guest ("<facet> <rest>" -> answer). halted/attention: the
 // owner's switches. keep: {get() -> text|null, set(text)} for the snapshot.
-export async function makeResonance({ line, halted = () => 'no', attention = () => 'open', keep = null, params = DEFAULTS, now = () => Date.now(), hourOf = (at) => new Date(at).getHours() }) {
+export async function makeResonance({ line, read = guestRead, halted = () => 'no', attention = () => 'open', keep = null, params = DEFAULTS, now = () => Date.now(), hourOf = (at) => new Date(at).getHours() }) {
   let tunables = paramsOf(params);
   const listeners = new Set();
   const beliefs = (keep && (await restore(keep.get() ?? ''))) || new Map();
@@ -119,10 +118,9 @@ export async function makeResonance({ line, halted = () => 'no', attention = () 
     const at = now();
     const raw = { kind, gapMs: last ? at - last : tunables.calmGapMs, dwellMs, at, itemAt: item?.at ?? 0, hour: hourOf(at) };
     last = at;
-    const fields = derive(tunables, raw);
     const { belief } = beliefOf(item?.address ?? '');
-    const request = { ...fields, belief, attention: attention(), halted: halted() };
-    const said = (await line(`resonance ${lineOf(request)}`)).trim();
+    const request = await sense(read, tunables, raw, { belief, attention: attention(), halted: halted() });
+    const said = (await line(`resonance ${Object.values(request).join(' ')}`)).trim();
     const answer = ANSWERS.includes(said) ? said : 'rest';
     const signal = SIGNALS[answer];
     const learned = signal && item?.address ? await learn(item.address, signal) : 'none';
@@ -153,13 +151,13 @@ export async function makeResonance({ line, halted = () => 'no', attention = () 
 // --- Replay: the same loop, pure, for the curator's candidates. ---
 // signals: events as onResonance emitted them (their raw facts are replayed
 // under the candidate's tunables; belief, attention and halted as they were).
-export function replay(params, signals) {
+export async function replay(params, signals, read = guestRead) {
   const p = paramsOf(params);
   const brought = new Map();
   const quiet = new Map();
   let out = { brought: 0, dissonant: 0, missed: 0, interruptions: 0, defect: 0 };
   for (const s of signals) {
-    const r = { ...derive(p, s.raw), belief: s.belief, attention: s.attention, halted: s.halted };
+    const r = await sense(read, p, s.raw, s);
     const answer = judge(r);
     for (const g of GUARANTEES) {
       if (!g.when.every(([f, v]) => r[f] === v)) continue;
