@@ -1,0 +1,201 @@
+{
+ "comment": "The requirement sentences of RFC 5545 that its grammar states (grammar key ical in app/specs/grammar/spec.json), each with the rule that states it, what that rule takes and what it refuses. Every string is printed in the RFC (the examples of the sentence's section; 3.3.5 and 3.3.12 print the forms they forbid), or is a character the sentence names, alone or escaped as it says, or is the section's example without the quotation marks the sentence requires. The suite (test/calendar.registry.test.mjs, written by generators/calendar) holds the reader to each, and the standards register names the suite for exactly these ids. Kept apart from spec.json, which is a generator input bounded in size.",
+ "sentences": [
+  {
+   "id": "rfc5545-3.1.1-b5ddb6e8",
+   "rule": "paramtext",
+   "takes": [],
+   "refuses": [
+    ":",
+    ";",
+    ","
+   ]
+  },
+  {
+   "id": "rfc5545-3.2-c219b7b4",
+   "rule": "quoted-string",
+   "takes": [
+    "\":\"",
+    "\";\"",
+    "\",\""
+   ],
+   "refuses": []
+  },
+  {
+   "id": "rfc5545-3.2-973e9c44",
+   "rule": "param-value",
+   "takes": [],
+   "refuses": [
+    "\"",
+    "\"\"\""
+   ]
+  },
+  {
+   "id": "rfc5545-3.2.1-9b57fdfc",
+   "rule": "altrepparam",
+   "takes": [
+    "ALTREP=\"CID:part3.msg.970415T083000@example.com\""
+   ],
+   "refuses": [
+    "ALTREP=CID:part3.msg.970415T083000@example.com"
+   ]
+  },
+  {
+   "id": "rfc5545-3.3.13-5369c531",
+   "rule": "altrepparam",
+   "takes": [
+    "ALTREP=\"CID:part3.msg.970415T083000@example.com\""
+   ],
+   "refuses": [
+    "ALTREP=CID:part3.msg.970415T083000@example.com"
+   ]
+  },
+  {
+   "id": "rfc5545-3.2.4-6d19d3fd",
+   "rule": "delfromparam",
+   "takes": [
+    "DELEGATED-FROM=\"mailto:jsmith@example.com\""
+   ],
+   "refuses": [
+    "DELEGATED-FROM=mailto:jsmith@example.com"
+   ]
+  },
+  {
+   "id": "rfc5545-3.2.5-6d19d3fd",
+   "rule": "deltoparam",
+   "takes": [
+    "DELEGATED-TO=\"mailto:jdoe@example.com\",\"mailto:jqpublic@example.com\""
+   ],
+   "refuses": [
+    "DELEGATED-TO=mailto:jdoe@example.com,mailto:jqpublic@example.com"
+   ]
+  },
+  {
+   "id": "rfc5545-3.2.11-6d19d3fd",
+   "rule": "memberparam",
+   "takes": [
+    "MEMBER=\"mailto:ietf-calsch@example.org\""
+   ],
+   "refuses": [
+    "MEMBER=mailto:ietf-calsch@example.org"
+   ]
+  },
+  {
+   "id": "rfc5545-3.2.18-6d19d3fd",
+   "rule": "sentbyparam",
+   "takes": [
+    "SENT-BY=\"mailto:sray@example.com\""
+   ],
+   "refuses": [
+    "SENT-BY=mailto:sray@example.com"
+   ]
+  },
+  {
+   "id": "rfc5545-3.3.5-11eabbda",
+   "rule": "date-time",
+   "takes": [
+    "19980118T230000",
+    "19980119T070000Z"
+   ],
+   "refuses": [
+    "19980119T230000-0800"
+   ]
+  },
+  {
+   "id": "rfc5545-3.3.12-939aeb67",
+   "rule": "time",
+   "takes": [
+    "230000",
+    "070000Z"
+   ],
+   "refuses": [
+    "230000-0800"
+   ]
+  },
+  {
+   "id": "rfc5545-3.3.11-80690693",
+   "rule": "text",
+   "takes": [
+    "\\n",
+    "\\N"
+   ],
+   "refuses": [
+    "\n"
+   ]
+  },
+  {
+   "id": "rfc5545-3.3.11-27a70f9c",
+   "rule": "text",
+   "takes": [
+    "\\\\",
+    "\\;",
+    "\\,"
+   ],
+   "refuses": [
+    "\\",
+    ";",
+    ","
+   ]
+  },
+  {
+   "id": "rfc5545-3.3.11-55a06dfc",
+   "rule": "text",
+   "takes": [
+    "\\\\"
+   ],
+   "refuses": [
+    "\\"
+   ]
+  },
+  {
+   "id": "rfc5545-3.3.11-0f437a77",
+   "rule": "text",
+   "takes": [
+    "\\,"
+   ],
+   "refuses": [
+    ","
+   ]
+  },
+  {
+   "id": "rfc5545-3.3.11-51539cfe",
+   "rule": "text",
+   "takes": [
+    "\\;"
+   ],
+   "refuses": [
+    ";"
+   ]
+  },
+  {
+   "id": "rfc5545-3.3.11-88986390",
+   "rule": "text",
+   "takes": [
+    ":"
+   ],
+   "refuses": [
+    "\\:"
+   ]
+  },
+  {
+   "id": "rfc5545-3.3.14-870f6eb3",
+   "rule": "utc-offset",
+   "takes": [
+    "+0100"
+   ],
+   "refuses": [
+    "0100"
+   ]
+  },
+  {
+   "id": "rfc5545-3.3.14-76eeb5ee",
+   "rule": "utc-offset",
+   "takes": [
+    "-0500"
+   ],
+   "refuses": [
+    "0500"
+   ]
+  }
+ ]
+}
