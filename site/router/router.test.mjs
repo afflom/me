@@ -188,6 +188,9 @@ assert.ok(findLost.length <= 0, `find-missing: ${findLost.length} (${findLost.sl
 const pinned = Date.parse(JSON.parse(readFileSync(new URL("../../app/specs/senses/clocks.json", import.meta.url), "utf8")).clocks[0]);
 const timed = await answer("what time is it", { items: kept, line: boundaryLine, halted: () => "no", now: pinned, keep: false });
 assert.ok(timed.cited[0]?.at <= pinned && timed.cited[0].end > pinned && /^“.+” is under way until /u.test(timed.sentences[1]), timed.sentences.join(" "));
+// How the day stands, at that clock, opens with the same observation and cites the same event.
+const day = await answer("what else is happening", { items: kept.filter((item) => item.media === "calendar"), line: boundaryLine, halted: () => "no", now: pinned, keep: false });
+assert.ok(day.sentences[0] === timed.sentences[1] && day.cited[0] === timed.cited[0] && day.sources[0] === timed.cited[0], day.sentences.join(" "));
 const conference = await answer("conference", { items: held.map((h) => h.item), line: boundaryLine, halted: () => "no", now: WEDNESDAY, keep: false });
 assert.ok(conference.sources.length > 3 && conference.sentences.length <= 3, "while the sentences say only a few");
 assert.ok(conference.cited.every((item) => conference.sources.includes(item)), "and what they say is in the list");
