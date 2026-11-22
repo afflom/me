@@ -29,9 +29,12 @@ mode=${1:-write}
 # A program is pinned to its sources: a change to generators/<program>/ needs build.sh.
 digest() { # digest PROGRAM
   sources=$(git ls-files --others --cached --exclude-standard "generators/$1" | grep -v -e "^generators/$1/bin/" -e "^generators/$1/lock.json$" -e "^generators/$1/steps.json$" -e "^generators/$1/steps/" | sort)
-  printf '{\n  "comment": "Written by tools/generators/build.sh. GN-01 fails when generators/%s or its program no longer match.",\n  "sources": "%s",\n  "program": "%s"\n}\n' \
-    "$1" "$(sha256sum $sources | sha256sum | cut -c1-64)" "$(sha256sum "generators/$1/bin/prism-generators" | cut -c1-64)"
+  printf '{\n  "comment": "Written by tools/generators/build.sh. GN-01 fails when generators/%s or its program, for either machine, no longer match.",\n  "sources": "%s",\n  "program": "%s",\n  "aarch64": "%s"\n}\n' \
+    "$1" "$(sha256sum $sources | sha256sum | cut -c1-64)" "$(sha256sum "generators/$1/bin/prism-generators" | cut -c1-64)" \
+    "$(sha256sum "generators/$1/bin/prism-generators.aarch64" | cut -c1-64)"
 }
+# One build writes the program for both machines the gates run on; each runs its own.
+case $(uname -m) in aarch64|arm64) exe=prism-generators.aarch64 ;; *) exe=prism-generators ;; esac
 if [ "$mode" = --lock ]; then digest "$2" > "generators/$2/lock.json"; echo "pinned generators/$2"; exit 0; fi
 if [ "$mode" = --check ]; then
   for lock in generators/*/lock.json; do
@@ -50,7 +53,7 @@ if [ "$mode" = --check ]; then
   for req in generators/*/cases/*.request; do
     [ -e "$req" ] || continue
     p=$(echo "$req" | cut -d/ -f2)
-    if ! "generators/$p/bin/prism-generators" run "$req" 2>&1 | cmp -s - "${req%.request}.report"; then
+    if ! "generators/$p/bin/$exe" run "$req" 2>&1 | cmp -s - "${req%.request}.report"; then
       echo "GN-01: generators/$p no longer answers $req with ${req%.request}.report" >&2; exit 1
     fi
   done
@@ -75,7 +78,7 @@ run() { # run GENERATOR OUTPUT STAGE PATHS... -> appends the written file to $wo
   if [ "$size" -gt "$bound" ]; then
     echo "GN-01: $gen for $out: request of $size bytes exceeds the bound $bound; split its input" >&2; exit 1
   fi
-  if ! "generators/$program/bin/prism-generators" run "$work/request" > "$work/report"; then
+  if ! "generators/$program/bin/$exe" run "$work/request" > "$work/report"; then
     echo "GN-01: $gen for $out: $(head -c 400 "$work/report")" >&2; exit 1
   fi
   tail -c +9 "$work/report" >> "$work/out"

@@ -40,7 +40,7 @@ const program = (generator, files) => {
   for (const [path, bytes] of files) mkdirSync(join(stage, dirname(path)), { recursive: true }), writeFileSync(join(stage, path), bytes);
   const tar = spawnSync("tar", ["--format=ustar", "--sort=name", "--mtime=@0", "--owner=0", "--group=0", "--numeric-owner", "-b", "1", "-cf", "-", "-C", stage, ...files.map(([p]) => p)]);
   writeFileSync(join(stage, "request"), Buffer.concat([Buffer.from(`${generator} out\n`), tar.stdout]));
-  const run = spawnSync("generators/person/bin/prism-generators", ["run", join(stage, "request")]);
+  const run = spawnSync(`generators/person/bin/prism-generators${process.arch === "arm64" ? ".aarch64" : ""}`, ["run", join(stage, "request")]);
   rmSync(stage, { recursive: true, force: true });
   const report = run.stdout.toString("utf8");
   return report.startsWith("written\n") ? { out: report.slice(8) } : { why: report };
