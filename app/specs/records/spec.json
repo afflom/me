@@ -1,0 +1,15 @@
+{"name":"records","examples":[
+["compare\nstrong\nW/\"1\"\nW/\"1\"","no match"],
+["compare\nweak\nW/\"1\"\nW/\"1\"","match"],
+["compare\nstrong\nW/\"1\"\nW/\"2\"","no match"],
+["compare\nweak\nW/\"1\"\nW/\"2\"","no match"],
+["compare\nstrong\nW/\"1\"\n\"1\"","no match"],
+["compare\nweak\nW/\"1\"\n\"1\"","match"],
+["compare\nstrong\n\"1\"\n\"1\"","match"],
+["compare\nweak\n\"1\"\n\"1\"","match"],
+["respond\nGET\n\"abcdef\"\n\n\"abcdef\"","304"],
+["respond\nGET\nW/\"abcdef\"\n\nW/\"abcdef\"","304"],
+["respond\nGET\n\"abcdef\"\n\n\"abcdef\", \"1234\", \"5678\"","304"],
+["respond\nGET\n\"abcdef\"\n\n\"1234\", \"abcdef\", \"5678\"","304"],
+["respond\nGET\n\"abcdef\"\n\n\"1234\", \"5678\", \"abcdef\"","304"]
+]}

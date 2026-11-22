@@ -101,6 +101,16 @@
       "output": ".gen/lock-json-test-suite"
     },
     {
+      "generator": "lockcheck",
+      "inputs": [
+        "app/specs/oracle/media-types/application-mbox.txt",
+        "app/specs/oracle/media-types/lock.json",
+        "app/specs/oracle/media-types/text-calendar.txt",
+        "app/specs/oracle/media-types/text-vcard.txt"
+      ],
+      "output": ".gen/lock-media-types"
+    },
+    {
       "generator": "snapshotvectors",
       "inputs": [
         "app/specs/oracle/json-canonicalization/input/arrays.json",
@@ -126,6 +136,15 @@
         "app/specs/oracle/json-patch-tests/tests.json"
       ],
       "output": "app/specs/snapshot-patch/spec.json"
+    },
+    {
+      "generator": "lockcheck",
+      "inputs": [
+        "app/specs/oracle/cache-tests/LICENSE",
+        "app/specs/oracle/cache-tests/tests/conditional-etag.mjs",
+        "app/specs/oracle/cache-tests/lock.json"
+      ],
+      "output": ".gen/lock-cache-tests"
     }
   ]
 }

@@ -10,26 +10,18 @@
 // as Google Takeout, Proton's export, Apple and Thunderbird write them.
 //
 // This file moves bytes and reports facts; it decides nothing. Before every
-// list and every read it asks the proved PrismFolder guest, through `decide`,
-//   "<grant> <format> <action> <bulk> <halted>"
-// and acts only on `read`. It never asks to write: the browser's handle is
+// list and every read it gives the facts to the reader in front of PrismFolder
+// (app/src/PrismFolderRead.lex.tex, through `read`), asks the proved PrismFolder
+// guest the request the reader states, through `decide`, and acts only on `read`. It never asks to write: the browser's handle is
 // opened read-only. Each item goes to `ingest` (google/ingest.mjs): the
 // detectors, then vault.put, which makes the Boundary call.
 
-// The standalone build of app/src/PrismFolder.lex.tex the Node suite runs
-// (device.test.mjs); the page asks the same module through the Prism root.
-export const GUEST = { path: 'guest/folder.wasm', sha256: 'b8b3429d5838113b9da2bb6cbb6f0437e8076b2c54ff614e952967000a7211ec' };
-// And of app/src/PrismHost.lex.tex, for the same suite.
-// And of app/src/PrismSource.lex.tex.
-export const SOURCE_GUEST = { path: 'guest/source.wasm', sha256: '3eb18b9c693628c7b91459112095908ee1ae7801f3cd0c62236dddfbf2a82e2b' };
-export const HOST_GUEST = { path: 'guest/host.wasm', sha256: '7c641243d6cfb2037d52e8a2a74086cd108634374f2827cb9f8b411faf11a601' };
-
-export const LIMIT = 32 * 1024 * 1024; // one read at a time, at most
-const DEPTH = 6;
 const DB = 'prism-device';
 const encoder = new TextEncoder();
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
 import { isZip, zipEntries } from './zip.mjs';
+import { FORMATS } from './formats.mjs';
+export { FORMATS };
 import { exportItems, exportKind } from '../source/exports.mjs';
 import { mboxSeparator, headerLines, readField } from '../read/mail.mjs';
 import { lines, parts } from '../time/recur.mjs';
@@ -37,19 +29,17 @@ import { lines, parts } from '../time/recur.mjs';
 const sha256 = async (bytes) => hex(new Uint8Array(await crypto.subtle.digest('SHA-256', bytes)));
 const fail = (code, message) => Object.assign(new Error(message ?? code), { code });
 
-// The format of a file, from its name and the folder it sits in.
+// The format of a file, from its name and the folder it sits in: an extension
+// a media type's registration states (formats.mjs, written from
+// app/src/PrismDevice.lex.tex), a message file, or a Maildir message.
 export function formatOf(name, parent = '') {
   const lower = name.toLowerCase();
-  if (/\.(mbox|mbx)$/.test(lower)) return 'mbox';
-  if (lower.endsWith('.eml')) return 'eml';
-  if (/\.(ics|ical|ifb)$/.test(lower)) return 'ics';
-  if (/\.(vcf|vcard)$/.test(lower)) return 'vcf';
-  if ((parent === 'cur' || parent === 'new') && !lower.startsWith('.')) return 'maildir';
-  return 'other';
+  const stated = FORMATS.find(([extension]) => lower.endsWith(`.${extension}`))?.[1] ?? (lower.endsWith('.eml') ? 'eml' : null);
+  return stated ?? ((parent === 'cur' || parent === 'new') && !lower.startsWith('.') ? 'maildir' : 'other');
 }
 
-const MEDIA = { mbox: 'message', eml: 'message', maildir: 'message', ics: 'calendar', vcf: 'contactCard' };
-const TYPE = { message: 'message/rfc822', calendar: 'text/calendar', contactCard: 'text/vcard' };
+const MEDIA = { ...Object.fromEntries(FORMATS.map(([, format, media]) => [format, media])), eml: 'message', maildir: 'message' };
+const TYPE = Object.fromEntries(FORMATS.map(([, , media, type]) => [media, type]));
 
 // mbox (RFC 4155): each message begins at a separator line, read by its
 // grammar (site/read/mail.mjs), at the start or after the empty line that ends
@@ -133,13 +123,10 @@ export function contactItems(text, vcard) {
   });
 }
 
-// The browser's word for a handle's permission, as the guest's `grant`.
-async function grantOf(handle) {
-  if (!handle) return 'none';
-  if (typeof handle.queryPermission !== 'function') return 'granted';
-  const state = await handle.queryPermission({ mode: 'read' });
-  return state === 'granted' ? 'granted' : state === 'prompt' ? 'prompt' : 'revoked';
-}
+// The browser's word for a handle's permission; the reader gives PrismFolder's `grant` for it.
+const stateOf = async (handle) => (!handle ? 'none' : typeof handle.queryPermission !== 'function' ? 'plain' : handle.queryPermission({ mode: 'read' }));
+let reader = null;
+const guestRead = async (text) => (await (reader ??= import('./guest.mjs').then((m) => m.opened(m.GUESTS.folder))))(text);
 
 // The handles the owner granted, kept in this browser.
 export function handleStore(indexed = globalThis.indexedDB) {
@@ -180,6 +167,7 @@ export function handleStore(indexed = globalThis.indexedDB) {
 
 // openDevice: the device as a source.
 //   decide(line) -> 'read' | 'ask' | 'skip' | 'refuse'   (PrismFolder, through the root)
+//   read(line)                                           (PrismFolderRead: the folder guest, opened on first use)
 //   ingest({envelope, frame, bytes}) -> outcome          (google/ingest.mjs ingestInto)
 //   vcard(request) -> answer                             (the vcard guest, read/read.mjs)
 //   store                                                (handleStore)
@@ -188,11 +176,12 @@ export function handleStore(indexed = globalThis.indexedDB) {
 // `source` is PrismSource's answer for "<service> <route> <act>" (with the
 // halted word appended here); without it no service's download is read.
 // `arrived(service, kept)` hears how many items of a service's download were kept.
-export function openDevice({ decide, ingest, vcard, source = async () => 'refuse', arrived = () => {}, store = handleStore(), halted = () => 'no', now = () => Date.now(), lanes = 1 }) {
+export function openDevice({ decide, read = guestRead, ingest, vcard, source = async () => 'refuse', arrived = () => {}, store = handleStore(), halted = () => 'no', now = () => Date.now(), lanes = 1 }) {
   if (typeof decide !== 'function') throw fail('device.decide', 'openDevice needs decide (the PrismFolder guest)');
   if (typeof ingest !== 'function') throw fail('device.ingest', 'openDevice needs ingest');
   if (typeof vcard !== 'function') throw fail('device.vcard', 'openDevice needs vcard (the vcard guest, site/read/read.mjs)');
-  const ask = async (grant, format, action, bulk) => decide(`${grant} ${format} ${action} ${bulk} ${halted()}`);
+  // What a folder, a file or an item adds to the tally: `read` (a file: `files`) is the go-ahead.
+  const ask = async (stage, facts) => read(`count ${stage} ${await decide(await read(`${facts} ${halted()}`))}`);
 
   // Items are kept on as many lanes as the host rule allows.
   const running = new Set();
@@ -211,7 +200,8 @@ export function openDevice({ decide, ingest, vcard, source = async () => 'refuse
     const media = MEDIA[format];
     const bytes = encoder.encode(text);
     if (!bytes.length) return;
-    if ((await ask('granted', format, 'read', bytes.length > LIMIT ? 'large' : 'small')) !== 'read') { tally.skip += 1; return; }
+    const said = await ask('item', `item ${format} ${bytes.length}`);
+    if (said !== 'read') { tally[said] += 1; return; }
     const digest = await sha256(bytes);
     const envelope = { source: 'file', media, size: bytes.length, digest };
     const frame = {
@@ -224,18 +214,15 @@ export function openDevice({ decide, ingest, vcard, source = async () => 'refuse
       prismlabel: 'confidential',
     };
     const result = await ingest({ envelope, frame, bytes });
-    const outcome = typeof result === 'string' ? result : result?.outcome;
-    tally[outcome in tally ? outcome : 'refuse'] += 1;
+    tally[await read(`count kept ${typeof result === 'string' ? result : result?.outcome}`)] += 1;
   }
 
   // One file, already granted: split into items and keep each.
   async function readFile(file, format, grant, tally) {
-    const streamed = format === 'mbox';
-    const bulk = !streamed && file.size > LIMIT ? 'large' : 'small';
-    const answer = await ask(grant, format, 'read', bulk);
-    if (answer !== 'read') { tally[answer === 'skip' ? 'skip' : 'refuse'] += 1; return; }
-    tally.files += 1;
-    if (streamed) {
+    const said = await ask('file', `file ${grant} ${format} ${file.size}`);
+    tally[said] += 1;
+    if (said !== 'files') return;
+    if (format === 'mbox') {
       for await (const message of mboxMessages(file.stream())) await lane(() => keep(format, message, tally));
       return;
     }
@@ -246,10 +233,10 @@ export function openDevice({ decide, ingest, vcard, source = async () => 'refuse
   }
 
   async function walk(dir, grant, tally, depth, seen) {
-    if ((await ask(grant, 'other', 'list', 'small')) !== 'read') return;
+    if ((await ask('folder', `list ${grant}`)) !== 'read') return;
     for await (const [name, entry] of dir.entries()) {
       if (entry.kind === 'directory') {
-        if (depth < DEPTH && !name.startsWith('.')) await walk(entry, grant, tally, depth + 1, seen);
+        if ((await read(`enter ${depth} ${name.charCodeAt(0)}`)) === 'yes') await walk(entry, grant, tally, depth + 1, seen);
         continue;
       }
       const format = formatOf(name, dir.name);
@@ -299,7 +286,7 @@ export function openDevice({ decide, ingest, vcard, source = async () => 'refuse
   return {
     // The folders the owner granted, each with the browser's current word for it.
     async folders() {
-      return Promise.all((await store.all()).map(async (f) => ({ id: f.id, name: f.handle.name, grant: await grantOf(f.handle) })));
+      return Promise.all((await store.all()).map(async (f) => ({ id: f.id, name: f.handle.name, grant: await read(`grant ${await stateOf(f.handle)}`) })));
     },
     // The owner's press: the browser's picker, read-only.
     async addFolder(picker = globalThis.showDirectoryPicker) {
@@ -312,7 +299,7 @@ export function openDevice({ decide, ingest, vcard, source = async () => 'refuse
     },
     // The owner's press, after the browser let a grant lapse.
     async allow() {
-      for (const f of await store.all()) if ((await grantOf(f.handle)) === 'prompt') await f.handle.requestPermission?.({ mode: 'read' });
+      for (const f of await store.all()) if ((await stateOf(f.handle)) === 'prompt') await f.handle.requestPermission?.({ mode: 'read' });
     },
     async forget(id) {
       await store.remove(id);
@@ -321,9 +308,9 @@ export function openDevice({ decide, ingest, vcard, source = async () => 'refuse
     async readFolders() {
       const tally = tallyOf();
       for (const f of await store.all()) {
-        const grant = await grantOf(f.handle);
-        const answer = await ask(grant, 'other', 'list', 'small');
-        if (answer !== 'read') { tally[answer === 'ask' ? 'ask' : 'refuse'] += 1; continue; }
+        const grant = await stateOf(f.handle);
+        const said = await ask('folder', `list ${grant}`);
+        if (said !== 'read') { tally[said] += 1; continue; }
         const seen = new Set(f.seen ?? []);
         await walk(f.handle, grant, tally, 0, seen);
         await drained();

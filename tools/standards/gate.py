@@ -121,8 +121,8 @@ def text_pin(standard, oracle):
 def generated(standard, inv, refusals):
     """An inventory a LexLean generator writes: its source is vendored at the
     pinned bytes, and the requirements file is a GN-01 output of that source."""
-    key, source = standard["key"], inv["source"]
-    vendored, path = ROOT / inv["vendored"], ROOT / inv["generated"]
+    key, source, vendored, path = standard["key"], inv["source"], ROOT / inv["vendored"], ROOT / inv["generated"]
+    refusals.extend(f"{key}: an inventory of chosen 'sections' must say in 'scope' why the others do not apply" for _ in [0] if "sections" in inv and not inv.get("scope"))
     if not vendored.exists() or hashlib.sha256(vendored.read_bytes()).hexdigest() != source["sha256"]:
         refusals.append(f"{key}: {inv['vendored']} is not {source['url']} at the pinned {source['sha256']}")
         return []

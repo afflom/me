@@ -1,0 +1,129 @@
+\begin{lexlean}{GenStore}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Tar}
+\importmodule{GenPatch}
+\importmodule{GenRec}
+\importmodule{GenNames}
+\importmodule{GenSuite}
+\title{Store vector reader}
+\begin{semanticmodule}
+definition{
+  name: gsTrimStart,
+  parameters: [s : Bytes, a : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => a
+    | Nat.succ rest => (if ((Foundation.Tar::byteOr s a) =? 32) then (gsTrimStart s (a + 1) rest) else a)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: gsTrimEnd,
+  parameters: [s : Bytes, a : Nat, b : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => b
+    | Nat.succ rest => (if ((a <? b) && ((Foundation.Tar::byteOr s (prim subtract b 1 : Nat)) =? 32)) then (gsTrimEnd s a (prim subtract b 1 : Nat) rest) else b)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: gsCell,
+  parameters: [s : Bytes, bar : Nat],
+  result: Bytes,
+  body: (let a : Nat := (gsTrimStart s (bar + 1) 80); (GenPatch::jpSpan s a (gsTrimEnd s a (GenNames::gnFind s 0x7c (bar + 1)) 80))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gsRowAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Bool,
+  body: ((GenPatch::jpSame (GenPatch::jpSpan s i (i + 5)) 0x2020207c20) && (((Foundation.Tar::byteOr s (i + 5)) =? 34) || (((Foundation.Tar::byteOr s (i + 5)) =? 87) && ((Foundation.Tar::byteOr s (i + 6)) =? 47)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gsRow,
+  parameters: [s : Bytes, i : Nat],
+  result: Bytes,
+  body: (let p1 : Nat := (GenNames::gnFind s 0x7c (i + 4)); (let p2 : Nat := (GenNames::gnFind s 0x7c (p1 + 1)); (let p3 : Nat := (GenNames::gnFind s 0x7c (p2 + 1)); (let tags : Bytes := (GenPatch::jpCat (gsCell s (i + 3)) (GenPatch::jpCat 0x0a (gsCell s p1))); (GenPatch::jpCat (GenNames::gnPair (GenPatch::jpCat 0x636f6d706172650a7374726f6e670a tags) (gsCell s p2)) (GenNames::gnPair (GenPatch::jpCat 0x636f6d706172650a7765616b0a tags) (gsCell s p3))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gsTable,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenPatch::jpLen s) <? (i + 1)) then acc else (gsTable s (GenNames::gnNextLine s i) (if (gsRowAt s i) then (GenPatch::jpCat acc (gsRow s i)) else acc) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: gsTableOf,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (GenSuite::jsBody archive); (gsTable s 0 0x ((GenPatch::jpLen s) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gsHas,
+  parameters: [s : Bytes, pat : Bytes, i : Nat, n : Nat],
+  result: Bool,
+  body: ((GenNames::gnFind s pat i) <? n),
+  axioms: [propext]
+}
+
+definition{
+  name: gsValue,
+  parameters: [s : Bytes, a : Nat],
+  result: Bytes,
+  body: (GenPatch::jpSpan s a (GenNames::gnFind s 0x275d a)),
+  axioms: [propext]
+}
+
+definition{
+  name: gsBlock,
+  parameters: [s : Bytes, i : Nat, n : Nat],
+  result: Bytes,
+  body: (let e : Nat := (GenNames::gnFind s 0x5b2745546167272c2027 i); (let q : Nat := (GenNames::gnFind s 0x5b2749662d4e6f6e652d4d61746368272c2027 i); (let x : Nat := (GenNames::gnFind s 0x65787065637465645f7374617475733a20 i); (if (((gsHas s 0x6b696e643a2027636865636b27 i n) || ((gsHas s 0x49662d4d6f6469666965642d53696e6365 i n) || (gsHas s 0x275661727927 i n))) || ((not (e <? q)) || ((not (q <? n)) || (not (x <? n))))) then 0x else (GenNames::gnPair (GenPatch::jpCat 0x726573706f6e640a4745540a (GenPatch::jpCat (gsValue s (e + 10)) (GenPatch::jpCat 0x0a0a (gsValue s (q + 19))))) (GenPatch::jpSpan s (x + 17) (x + 20))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gsBlocks,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((GenPatch::jpLen s) <? (i + 1)) then acc else (let n : Nat := (GenNames::gnFind s 0x0a20202020202069643a2027 (i + 1)); (gsBlocks s n (GenPatch::jpCat acc (gsBlock s i n)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: gsCacheOf,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let s : Bytes := (GenSuite::jsBody archive); (gsBlocks s (GenNames::gnFind s 0x0a20202020202069643a2027 0) 0x 4096)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: gsVectors,
+  parameters: [archive : Bytes, head : Bytes],
+  result: Bytes,
+  body: (let n : Nat := (Foundation.Tar::entrySize archive 0); (let next : Nat := (512 + (Foundation.Tar::padded n)); (let s : Bytes := (GenPatch::jpCat (GenPatch::jpSpan archive 512 (512 + n)) (GenPatch::jpSpan archive (next + 512) ((next + 512) + (Foundation.Tar::entrySize archive next)))); (GenPatch::jpCat head (GenPatch::jpCat 0x222c226578616d706c6573223a5b0a (GenPatch::jpCat (GenSuite::jsLines s 0 0x ((GenPatch::jpLen s) + 1)) 0x0a5d7d0a)))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

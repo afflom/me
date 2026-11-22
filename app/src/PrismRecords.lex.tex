@@ -1,0 +1,214 @@
+\begin{lexlean}{PrismRecords}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: rcAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => 0
+    | Option.some b => (prim to_nat b : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{name: rcLen, parameters: [s : Bytes], result: Nat, body: (prim length s : Nat)}
+
+definition{
+  name: rcSlice,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes)) | Option.none => 0x | Option.some b => b)
+}
+
+definition{
+  name: rcCut,
+  parameters: [s : Bytes, a : Nat, b : Nat],
+  result: Bytes,
+  body: (rcSlice s a (prim subtract b a : Nat))
+}
+
+definition{
+  name: rcSame,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bool,
+  body: (prim equal (prim compare_bytes a b : Ordering) (prim compare_bytes 0x00 0x00 : Ordering) : Bool),
+  axioms: [propext]
+}
+
+definition{
+  name: rcEol,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((rcLen s) <? (i + 1)) then i else (if ((rcAt s i) =? 10) then i else (rcEol s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rcLine,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (rcEol s i ((rcLen s) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rcOws,
+  parameters: [s : Bytes, i : Nat, commas : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((((rcAt s i) =? 32) || ((rcAt s i) =? 9)) || ((commas =? 1) && ((rcAt s i) =? 44))) then (rcOws s (i + 1) commas rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rcEtagc,
+  parameters: [c : Nat],
+  result: Bool,
+  body: ((c =? 33) || (((34 <? c) && (c <? 127)) || (127 <? c)))
+}
+
+definition{
+  name: rcQuoteEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if (rcEtagc (rcAt s i)) then (rcQuoteEnd s (i + 1) rest) else (if ((rcAt s i) =? 34) then (i + 1) else 0))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rcTagEnd,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (let j : Nat := (if (rcSame (rcSlice s i 2) 0x572f) then (i + 2) else i); (if ((rcAt s j) =? 34) then (rcQuoteEnd s (j + 1) (rcLen s)) else 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rcTagOk,
+  parameters: [t : Bytes],
+  result: Bool,
+  body: ((0 <? (rcLen t)) && ((rcTagEnd t 0) =? (rcLen t))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rcOpaque,
+  parameters: [t : Bytes],
+  result: Bytes,
+  body: (if ((rcAt t 0) =? 87) then (rcCut t 2 (rcLen t)) else t),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rcCmp,
+  parameters: [mode : Nat, a : Bytes, b : Bytes],
+  result: Bool,
+  body: (if (mode =? 1) then ((not ((rcAt a 0) =? 87)) && ((not ((rcAt b 0) =? 87)) && (rcSame a b))) else (rcSame (rcOpaque a) (rcOpaque b))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rcList,
+  parameters: [s : Bytes, i : Nat, cur : Bytes, mode : Nat, found : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 2
+    | Nat.succ rest => (let j : Nat := (rcOws s i 1 (rcLen s)); (if ((rcLen s) <? (j + 1)) then found else (let k : Nat := (rcTagEnd s j); (if (k =? 0) then 2 else (let m : Nat := (rcOws s k 0 (rcLen s)); (if (((rcLen s) <? (m + 1)) || ((rcAt s m) =? 44)) then (rcList s m cur mode (if (rcCmp mode (rcCut s j k) cur) then 1 else found) rest) else 2))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rcIfMatch,
+  parameters: [cur : Bytes, f : Bytes],
+  result: Nat,
+  body: (if (rcSame f 0x2a) then (if (0 <? (rcLen cur)) then 1 else 0) else (rcList f 0 cur 1 0 ((rcLen f) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rcIfNone,
+  parameters: [cur : Bytes, f : Bytes],
+  result: Nat,
+  body: (if (rcSame f 0x2a) then (if (0 <? (rcLen cur)) then 0 else 1) else (let r : Nat := (rcList f 0 cur 0 0 ((rcLen f) + 1)); (if (r =? 2) then 2 else (if (r =? 1) then 0 else 1)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rcTchar,
+  parameters: [c : Nat],
+  result: Bool,
+  body: ((((47 <? c) && (c <? 58)) || (((64 <? c) && (c <? 91)) || ((93 <? c) && (c <? 123)))) || (((c =? 33) || (((34 <? c) && (c <? 40)) || ((c =? 42) || (c =? 43)))) || ((c =? 45) || ((c =? 46) || ((c =? 124) || (c =? 126))))))
+}
+
+definition{
+  name: rcToken,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((rcLen s) <? (i + 1)) then true else ((rcTchar (rcAt s i)) && (rcToken s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rcAnswer,
+  parameters: [method : Bytes, a : Nat, b : Nat],
+  result: Bytes,
+  body: (if ((a =? 2) || (b =? 2)) then 0x6d616c666f726d6564 else (if (a =? 0) then 0x343132 else (if (b =? 0) then (if ((rcSame method 0x474554) || (rcSame method 0x48454144)) then 0x333034 else 0x343132) else 0x706572666f726d))),
+  axioms: [propext]
+}
+
+definition{
+  name: rcRespondOf,
+  parameters: [method : Bytes, cur : Bytes, im : Bytes, inm : Bytes],
+  result: Bytes,
+  body: (if (((rcLen method) =? 0) || ((not (rcToken method 0 (rcLen method))) || ((0 <? (rcLen cur)) && (not (rcTagOk cur))))) then 0x6d616c666f726d6564 else (rcAnswer method (if ((rcLen im) =? 0) then 1 else (rcIfMatch cur im)) (if ((rcLen inm) =? 0) then 1 else (rcIfNone cur inm)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rcRespond,
+  parameters: [p : Bytes],
+  result: Bytes,
+  body: (let a : Nat := (rcLine p 0); (let b : Nat := (rcLine p (a + 1)); (let c : Nat := (rcLine p (b + 1)); (if (((rcLen p) <? (c + 1)) || ((rcLine p (c + 1)) <? (rcLen p))) then 0x6d616c666f726d6564 else (rcRespondOf (rcCut p 0 a) (rcCut p (a + 1) b) (rcCut p (b + 1) c) (rcCut p (c + 1) (rcLen p))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rcCompareOf,
+  parameters: [fn : Bytes, a : Bytes, b : Bytes],
+  result: Bytes,
+  body: (if ((not ((rcSame fn 0x7374726f6e67) || (rcSame fn 0x7765616b))) || ((not (rcTagOk a)) || (not (rcTagOk b)))) then 0x6d616c666f726d6564 else (if (rcCmp (if (rcSame fn 0x7374726f6e67) then 1 else 0) a b) then 0x6d61746368 else 0x6e6f206d61746368)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rcCompare,
+  parameters: [p : Bytes],
+  result: Bytes,
+  body: (let a : Nat := (rcLine p 0); (let b : Nat := (rcLine p (a + 1)); (if (((rcLen p) <? (b + 1)) || ((rcLine p (b + 1)) <? (rcLen p))) then 0x6d616c666f726d6564 else (rcCompareOf (rcCut p 0 a) (rcCut p (a + 1) b) (rcCut p (b + 1) (rcLen p)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismRecordsDispatch,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (if (2048 <? (rcLen s)) then 0x696e76616c6964 else (let e : Nat := (rcLine s 0); (let op : Bytes := (rcCut s 0 e); (let p : Bytes := (rcCut s (e + 1) (rcLen s)); (if (rcSame op 0x636f6d70617265) then (rcCompare p) else (if (rcSame op 0x726573706f6e64) then (rcRespond p) else 0x696e76616c6964)))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

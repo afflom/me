@@ -255,21 +255,78 @@ definition{
 }
 
 definition{
+  name: bcRegisterFrom,
+  parameters: [archive : Bytes, header : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((bcAt archive header) =? 0) then 0x else (let size : Nat := (Foundation.Tar::entrySize archive header); (if (bcEqAt (Foundation.Tar::entryName archive header) 0 (bcU "app/specs/standards/register/")) then (bcSpan archive (header + 512) ((header + 512) + size)) else (bcRegisterFrom archive ((header + 512) + (Foundation.Tar::padded size)) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcIndexFrom,
+  parameters: [s : Bytes, i : Nat, pat : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (bcLen s)
+    | Nat.succ rest => (if ((bcLen s) <? (i + (bcLen pat))) then (bcLen s) else (if (bcEqAt s i pat) then i else (bcIndexFrom s (i + 1) pat rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcOnly,
+  parameters: [entry : Bytes],
+  result: Bytes,
+  body: (let a : Nat := (bcIndexFrom entry 0 0x2273656374696f6e7322 ((bcLen entry) + 1)); (if (a <? (bcLen entry)) then (let b : Nat := (bcIndexFrom entry a 0x5b ((bcLen entry) + 1)); (bcSpan entry b ((bcIndexFrom entry b 0x5d ((bcLen entry) + 1)) + 1))) else 0x)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcCoveredFrom,
+  parameters: [only : Bytes, sec : Bytes, k : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((bcLen sec) <? k) then false else (if ((((bcLen sec) =? k) || ((bcAt sec k) =? 46)) && (bcHas only 0 (bcLen only) (bcCat (cons 0x22 (cons (bcSpan sec 0 k) (cons 0x22 (nil Bytes))))))) then true else (bcCoveredFrom only sec (k + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bcOutside,
+  parameters: [only : Bytes, sec : Bytes],
+  result: Bool,
+  body: ((0 <? (bcLen only)) && (not (bcCoveredFrom only sec 1 ((bcLen sec) + 1)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bcAbove,
+  parameters: [only : Bytes, sec : Bytes],
+  result: Bytes,
+  body: (if (bcHas only 0 (bcLen only) (bcCat (cons 0x22 (cons sec (cons 0x2e (nil Bytes)))))) then 0x3d else 0x),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: bcExcludedFrom,
-  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  parameters: [s : Bytes, i : Nat, only : Bytes, acc : Bytes, fuel : Nat],
   result: Bytes,
   body: (match fuel
     | Nat.zero => acc
-    | Nat.succ rest => (if ((bcLen s) <? (i + 1)) then acc else (let n : Nat := (bcLineEnd s i (bcLen s)); (let e : Nat := (bcLineStop s i n); (let t : Nat := (bcHeadEnd s i e); (if ((0 <? t) && (bcTitleExcluded s t e)) then (bcExcludedFrom s (n + 1) (bcCat (cons acc (cons (bcSpan s (bcSecStart s i) t) (cons 0x0a (nil Bytes))))) rest) else (bcExcludedFrom s (n + 1) acc rest))))))),
+    | Nat.succ rest => (if ((bcLen s) <? (i + 1)) then acc else (let n : Nat := (bcLineEnd s i (bcLen s)); (let e : Nat := (bcLineStop s i n); (let t : Nat := (bcHeadEnd s i e); (if ((0 <? t) && (bcTitleExcluded s t e)) then (bcExcludedFrom s (n + 1) only (bcCat (cons acc (cons (bcSpan s (bcSecStart s i) t) (cons 0x0a (nil Bytes))))) rest) else (if ((0 <? t) && (bcOutside only (bcSpan s (bcSecStart s i) t))) then (bcExcludedFrom s (n + 1) only (bcCat (cons acc (cons (bcSpan s (bcSecStart s i) t) (cons (bcAbove only (bcSpan s (bcSecStart s i) t)) (cons 0x0a (nil Bytes)))))) rest) else (bcExcludedFrom s (n + 1) only acc rest)))))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
   name: bcExcluded,
-  parameters: [piece : Bytes],
+  parameters: [piece : Bytes, only : Bytes],
   result: Bytes,
-  body: (bcExcludedFrom piece 0 0x (bcLen piece)),
+  body: (bcExcludedFrom piece 0 only 0x (bcLen piece)),
   axioms: [Quot.sound, propext]
 }
 
@@ -500,7 +557,7 @@ definition{
   result: Bool,
   body: (match fuel
     | Nat.zero => false
-    | Nat.succ rest => (if ((bcLen list) <? (i + 1)) then false else (let e : Nat := (bcLineEnd list i (bcLen list)); (let m : Nat := (prim subtract e i : Nat); (if ((0 <? m) && ((bcEqAt sec 0 (bcSpan list i e)) && (((bcLen sec) =? m) || ((m <? (bcLen sec)) && ((bcAt sec m) =? 46))))) then true else (bcListedFrom sec list (e + 1) rest)))))),
+    | Nat.succ rest => (if ((bcLen list) <? (i + 1)) then false else (let e : Nat := (bcLineEnd list i (bcLen list)); (let x : Nat := (if ((i <? e) && ((bcAt list (prim subtract e 1 : Nat)) =? 61)) then 1 else 0); (let m : Nat := (prim subtract (prim subtract e i : Nat) x : Nat); (if ((0 <? m) && ((bcEqAt sec 0 (bcSpan list i (i + m))) && (((bcLen sec) =? m) || ((x =? 0) && ((m <? (bcLen sec)) && ((bcAt sec m) =? 46)))))) then true else (bcListedFrom sec list (e + 1) rest))))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
@@ -585,7 +642,7 @@ definition{
   result: (Option Bytes),
   body: (match fuel
     | Nat.zero => (ctor Option.none [Bytes])
-    | Nat.succ rest => (if ((bcAt archive header) =? 0) then (ctor Option.none [Bytes]) else (let name : Bytes := (Foundation.Tar::entryName archive header); (let size : Nat := (Foundation.Tar::entrySize archive header); (if (bcEqAt name 0 0x2e67656e2f) then (bcTextFrom archive ((header + 512) + (Foundation.Tar::padded size)) rest) else (Foundation.Bytes::sliceBytes archive (header + 512) size)))))),
+    | Nat.succ rest => (if ((bcAt archive header) =? 0) then (ctor Option.none [Bytes]) else (let name : Bytes := (Foundation.Tar::entryName archive header); (let size : Nat := (Foundation.Tar::entrySize archive header); (if ((bcEqAt name 0 0x2e67656e2f) || (bcEqAt name 0 (bcU "app/specs/standards/register/"))) then (bcTextFrom archive ((header + 512) + (Foundation.Tar::padded size)) rest) else (Foundation.Bytes::sliceBytes archive (header + 512) size)))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
@@ -604,7 +661,7 @@ definition{
   result: Bytes,
   body: (match (bcFirst archive)
     | Option.none => (bcRefused (bcU "no input text"))
-    | Option.some piece => (bcWritten (bcExcluded piece))),
+    | Option.some piece => (bcWritten (bcExcluded piece (bcOnly (bcRegisterFrom archive 0 (prim quotient (bcLen archive) 512 0 : Nat)))))),
   axioms: [Quot.sound, propext]
 }
 
