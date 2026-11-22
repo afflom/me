@@ -1738,10 +1738,406 @@ definition{
 }
 
 definition{
+  name: nmB64Char,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (jpSpan 0x4142434445464748494a4b4c4d4e4f505152535455565758595a6162636465666768696a6b6c6d6e6f707172737475767778797a303132333435363738392d5f n (n + 1))
+}
+
+definition{
+  name: nmB64From,
+  parameters: [d : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((jpLen d) <? (i + 1)) then acc else (if ((jpLen d) <? (i + 2)) then (jpCat acc (jpCat (nmB64Char (prim quotient (jpAt d i) 4 0 : Nat)) (nmB64Char ((prim multiply (prim remainder (jpAt d i) 4 0 : Nat) 16 : Nat) + (prim quotient (jpAt d (i + 1)) 16 0 : Nat))))) else (if ((jpLen d) <? (i + 3)) then (jpCat acc (jpCat (jpCat (nmB64Char (prim quotient (jpAt d i) 4 0 : Nat)) (nmB64Char ((prim multiply (prim remainder (jpAt d i) 4 0 : Nat) 16 : Nat) + (prim quotient (jpAt d (i + 1)) 16 0 : Nat)))) (nmB64Char ((prim multiply (prim remainder (jpAt d (i + 1)) 16 0 : Nat) 4 : Nat) + (prim quotient (jpAt d (i + 2)) 64 0 : Nat))))) else (nmB64From d (i + 3) (jpCat acc (jpCat (jpCat (nmB64Char (prim quotient (jpAt d i) 4 0 : Nat)) (nmB64Char ((prim multiply (prim remainder (jpAt d i) 4 0 : Nat) 16 : Nat) + (prim quotient (jpAt d (i + 1)) 16 0 : Nat)))) (jpCat (nmB64Char ((prim multiply (prim remainder (jpAt d (i + 1)) 16 0 : Nat) 4 : Nat) + (prim quotient (jpAt d (i + 2)) 64 0 : Nat))) (nmB64Char (prim remainder (jpAt d (i + 2)) 64 0 : Nat))))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: nmB64,
+  parameters: [d : Bytes],
+  result: Bytes,
+  body: (nmB64From d 0 0x ((jpLen d) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmB64Val,
+  parameters: [c : Nat],
+  result: Nat,
+  body: (if ((64 <? c) && (c <? 91)) then (prim subtract c 65 : Nat) else (if ((96 <? c) && (c <? 123)) then (prim subtract c 71 : Nat) else (if ((47 <? c) && (c <? 58)) then (c + 4) else (if (c =? 45) then 62 else (if (c =? 95) then 63 else 64)))))
+}
+
+definition{
+  name: nmUnb64From,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((jpLen s) <? (i + 2)) then acc else (if ((jpLen s) <? (i + 3)) then (jpCat acc (jpByte (prim remainder ((prim multiply (nmB64Val (jpAt s i)) 4 : Nat) + (prim quotient (nmB64Val (jpAt s (i + 1))) 16 0 : Nat)) 256 0 : Nat))) else (if ((jpLen s) <? (i + 4)) then (jpCat acc (jpCat (jpByte (prim remainder ((prim multiply (nmB64Val (jpAt s i)) 4 : Nat) + (prim quotient (nmB64Val (jpAt s (i + 1))) 16 0 : Nat)) 256 0 : Nat)) (jpByte (prim remainder ((prim multiply (prim remainder (nmB64Val (jpAt s (i + 1))) 16 0 : Nat) 16 : Nat) + (prim quotient (nmB64Val (jpAt s (i + 2))) 4 0 : Nat)) 256 0 : Nat)))) else (nmUnb64From s (i + 4) (jpCat acc (jpCat (jpByte (prim remainder ((prim multiply (nmB64Val (jpAt s i)) 4 : Nat) + (prim quotient (nmB64Val (jpAt s (i + 1))) 16 0 : Nat)) 256 0 : Nat)) (jpCat (jpByte (prim remainder ((prim multiply (prim remainder (nmB64Val (jpAt s (i + 1))) 16 0 : Nat) 16 : Nat) + (prim quotient (nmB64Val (jpAt s (i + 2))) 4 0 : Nat)) 256 0 : Nat)) (jpByte (prim remainder ((prim multiply (prim remainder (nmB64Val (jpAt s (i + 2))) 4 0 : Nat) 64 : Nat) + (nmB64Val (jpAt s (i + 3)))) 256 0 : Nat))))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: nmUnb64,
+  parameters: [s : Bytes],
+  result: (Option Bytes),
+  body: (let d : Bytes := (nmUnb64From s 0 0x ((jpLen s) + 1)); (if ((0 <? (jpLen s)) && (jpSame (nmB64 d) s)) then (ctor Option.some [Bytes] d) else (ctor Option.none [Bytes]))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmBitsName,
+  parameters: [a : Bytes],
+  result: Nat,
+  body: (if (jpSame a 0x7368612d323536) then 256 else (if (jpSame a 0x7368612d3235362d313238) then 128 else (if (jpSame a 0x7368612d3235362d313230) then 120 else (if (jpSame a 0x7368612d3235362d3936) then 96 else (if (jpSame a 0x7368612d3235362d3634) then 64 else (if (jpSame a 0x7368612d3235362d3332) then 32 else 0)))))),
+  axioms: [propext]
+}
+
+definition{
+  name: nmBitsSuite,
+  parameters: [n : Nat],
+  result: Nat,
+  body: (if (n =? 1) then 256 else (if (n =? 2) then 128 else (if (n =? 3) then 120 else (if (n =? 4) then 96 else (if (n =? 5) then 64 else (if (n =? 6) then 32 else 0))))))
+}
+
+definition{
+  name: nmSuite,
+  parameters: [bits : Nat],
+  result: Nat,
+  body: (if (bits =? 256) then 1 else (if (bits =? 128) then 2 else (if (bits =? 120) then 3 else (if (bits =? 96) then 4 else (if (bits =? 64) then 5 else (if (bits =? 32) then 6 else 0))))))
+}
+
+definition{
+  name: nmAlg,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (if (n =? 1) then 0x7368612d323536 else (if (n =? 2) then 0x7368612d3235362d313238 else (if (n =? 3) then 0x7368612d3235362d313230 else (if (n =? 4) then 0x7368612d3235362d3936 else (if (n =? 5) then 0x7368612d3235362d3634 else (if (n =? 6) then 0x7368612d3235362d3332 else 0x))))))
+}
+
+definition{
+  name: nmBitsAny,
+  parameters: [a : Bytes],
+  result: Nat,
+  body: (let b : Nat := (nmBitsName a); (if (0 <? b) then b else (if ((jpLen a) =? 1) then (nmBitsSuite (prim subtract (jpAt a 0) 48 : Nat)) else 0))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmFind,
+  parameters: [s : Bytes, c : Nat, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (jpLen s)
+    | Nat.succ rest => (if ((jpLen s) <? (i + 1)) then (jpLen s) else (if ((jpAt s i) =? c) then i else (nmFind s c (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: nmAt,
+  parameters: [s : Bytes, c : Nat, i : Nat],
+  result: Nat,
+  body: (nmFind s c i ((jpLen s) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmStrip,
+  parameters: [s : Bytes, c : Nat, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((jpLen s) <? (i + 1)) then acc else (nmStrip s c (i + 1) (if ((jpAt s i) =? c) then acc else (jpCat acc (jpSpan s i (i + 1)))) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: nmHexOk,
+  parameters: [x : Bytes],
+  result: Bool,
+  body: (((0 <? (jpLen x)) && ((prim remainder (jpLen x) 2 0 : Nat) =? 0)) && (snLowHex x 0 (jpLen x))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmUnhex,
+  parameters: [x : Bytes],
+  result: Bytes,
+  body: (snUnhexFrom x 0 (prim quotient (jpLen x) 2 0 : Nat) 0x ((prim quotient (jpLen x) 2 0 : Nat) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmLuhnFrom,
+  parameters: [x : Bytes, k : Nat, f : Nat, sum : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => sum
+    | Nat.succ rest => (if (k =? 0) then sum else (let a : Nat := (prim multiply f (jpHex (jpAt x (prim subtract k 1 : Nat))) : Nat); (nmLuhnFrom x (prim subtract k 1 : Nat) (prim subtract 3 f : Nat) (sum + ((prim quotient a 16 0 : Nat) + (prim remainder a 16 0 : Nat))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: nmLuhn,
+  parameters: [x : Bytes],
+  result: Bytes,
+  body: (jpHexDigit (prim remainder (prim subtract 16 (prim remainder (nmLuhnFrom x (jpLen x) 2 0 ((jpLen x) + 1)) 16 0 : Nat) : Nat) 16 0 : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmSized,
+  parameters: [bits : Nat, val : Bytes],
+  result: (Option Bytes),
+  body: (if ((0 <? bits) && ((prim multiply (jpLen val) 8 : Nat) =? bits)) then (ctor Option.some [Bytes] (jpCat (jpByte (nmSuite bits)) val)) else (ctor Option.none [Bytes]))
+}
+
+definition{
+  name: nmOf,
+  parameters: [bits : Nat, data : Bytes],
+  result: Bytes,
+  body: (jpCat (jpByte (nmSuite bits)) (jpSpan (Sha256::sha256 data) 0 (prim quotient bits 8 0 : Nat))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmNoQuery,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (jpSpan s 0 (nmAt s 63 0)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmAlgVal,
+  parameters: [s : Bytes],
+  result: (Option Bytes),
+  body: (let semi : Nat := (nmAt s 59 0); (if ((jpLen s) <? (semi + 1)) then (ctor Option.none [Bytes]) else (match (nmUnb64 (jpSpan s (semi + 1) (jpLen s)))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some d => (nmSized (nmBitsName (jpSpan s 0 semi)) d)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmNi,
+  parameters: [s : Bytes],
+  result: (Option Bytes),
+  body: (let slash : Nat := (nmAt s 47 5); (if ((jpLen s) <? (slash + 1)) then (ctor Option.none [Bytes]) else (nmAlgVal (nmNoQuery (jpSpan s (slash + 1) (jpLen s)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmHttp,
+  parameters: [s : Bytes, start : Nat],
+  result: (Option Bytes),
+  body: (let slash : Nat := (nmAt s 47 start); (if (jpSame (jpSpan s slash (slash + 16)) 0x2f2e77656c6c2d6b6e6f776e2f6e692f) then (let tail : Bytes := (nmNoQuery (jpSpan s (slash + 16) (jpLen s))); (let cut : Nat := (nmAt tail 47 0); (if ((jpLen tail) <? (cut + 1)) then (ctor Option.none [Bytes]) else (match (nmUnb64 (jpSpan tail (cut + 1) (jpLen tail)))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some d => (nmSized (nmBitsName (jpSpan tail 0 cut)) d))))) else (ctor Option.none [Bytes]))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmNihVal,
+  parameters: [bits : Nat, x : Bytes, digit : Bytes, given : Nat],
+  result: (Option Bytes),
+  body: (if ((nmHexOk x) && ((given =? 0) || (jpSame digit (nmLuhn x)))) then (nmSized bits (nmUnhex x)) else (ctor Option.none [Bytes])),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmNihRest,
+  parameters: [alg : Bytes, tail : Bytes],
+  result: (Option Bytes),
+  body: (let cut : Nat := (nmAt tail 59 0); (let sep : Bytes := (jpSpan tail 0 cut); (nmNihVal (nmBitsAny alg) (nmStrip sep 45 0 0x ((jpLen sep) + 1)) (jpSpan tail (cut + 1) (jpLen tail)) (if (cut <? (jpLen tail)) then 1 else 0)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmNih,
+  parameters: [s : Bytes],
+  result: (Option Bytes),
+  body: (let semi : Nat := (nmAt s 59 4); (if ((jpLen s) <? (semi + 1)) then (ctor Option.none [Bytes]) else (nmNihRest (jpSpan s 4 semi) (jpSpan s (semi + 1) (jpLen s))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmAddr,
+  parameters: [s : Bytes],
+  result: (Option Bytes),
+  body: (if (snIsAddr s) then (ctor Option.some [Bytes] (jpCat (jpByte 1) (nmUnhex (jpSpan s 7 71)))) else (ctor Option.none [Bytes])),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmBinHex,
+  parameters: [s : Bytes],
+  result: (Option Bytes),
+  body: (let x : Bytes := (nmStrip s 32 0 0x ((jpLen s) + 1)); (if (nmHexOk x) then (let d : Bytes := (nmUnhex x); (nmSized (nmBitsSuite (prim remainder (jpAt d 0) 64 0 : Nat)) (jpSpan d 1 (jpLen d)))) else (ctor Option.none [Bytes]))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmPre,
+  parameters: [s : Bytes, p : Bytes],
+  result: Bool,
+  body: (jpSame (jpSpan s 0 (jpLen p)) p),
+  axioms: [propext]
+}
+
+definition{
+  name: nmParseMore,
+  parameters: [s : Bytes],
+  result: (Option Bytes),
+  body: (if (nmPre s 0x7368613235363a) then (nmAddr s) else (if ((nmAt s 59 0) <? (jpLen s)) then (nmAlgVal (nmNoQuery s)) else (nmBinHex s))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmParse,
+  parameters: [s : Bytes],
+  result: (Option Bytes),
+  body: (if (nmPre s 0x6e693a2f2f) then (nmNi s) else (if (nmPre s 0x6e69683a) then (nmNih s) else (if (nmPre s 0x687474703a2f2f) then (nmHttp s 7) else (if (nmPre s 0x68747470733a2f2f) then (nmHttp s 8) else (nmParseMore s))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmData,
+  parameters: [x : Bytes],
+  result: (Option Bytes),
+  body: (if ((jpLen x) =? 0) then (ctor Option.some [Bytes] 0x) else (if (nmHexOk x) then (ctor Option.some [Bytes] (nmUnhex x)) else (ctor Option.none [Bytes]))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmHexOf,
+  parameters: [bits : Nat, data : Bytes],
+  result: Bytes,
+  body: (jpSpan (Sha256::sha256Hex data) 0 (prim quotient bits 4 0 : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snNameNi,
+  parameters: [p : Bytes],
+  result: Bytes,
+  body: (match (nmData p)
+    | Option.none => 0x696e76616c6964
+    | Option.some d => (jpCat 0x6e693a2f2f2f7368612d3235363b (nmB64 (Sha256::sha256 d)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snNameNih,
+  parameters: [p : Bytes],
+  result: Bytes,
+  body: (let e : Nat := (snEol p 0); (let alg : Bytes := (jpSpan p 0 e); (let bits : Nat := (nmBitsAny alg); (if (bits =? 0) then 0x696e76616c6964 else (match (nmData (jpSpan p (e + 1) (jpLen p)))
+    | Option.none => 0x696e76616c6964
+    | Option.some d => (let x : Bytes := (nmHexOf bits d); (jpCat 0x6e69683a (jpCat alg (jpCat 0x3b (jpCat x (jpCat 0x3b (nmLuhn x)))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snNameBinary,
+  parameters: [p : Bytes],
+  result: Bytes,
+  body: (let e : Nat := (snEol p 0); (let bits : Nat := (nmBitsAny (jpSpan p 0 e)); (if (bits =? 0) then 0x696e76616c6964 else (match (nmData (jpSpan p (e + 1) (jpLen p)))
+    | Option.none => 0x696e76616c6964
+    | Option.some d => (jpCat (jpHexDigit (prim quotient (nmSuite bits) 16 0 : Nat)) (jpCat (jpHexDigit (prim remainder (nmSuite bits) 16 0 : Nat)) (nmHexOf bits d))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snNameSegment,
+  parameters: [p : Bytes],
+  result: Bytes,
+  body: (match (nmParse p)
+    | Option.none => 0x6d616c666f726d6564
+    | Option.some b => (jpCat (nmAlg (jpAt b 0)) (jpCat 0x3b (nmB64 (jpSpan b 1 (jpLen b)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snNameWellKnown,
+  parameters: [p : Bytes],
+  result: Bytes,
+  body: (if (nmPre p 0x6e693a2f2f) then (match (nmNi p)
+    | Option.none => 0x6d616c666f726d6564
+    | Option.some b => (let slash : Nat := (nmAt p 47 5); (if (slash =? 5) then 0x6e6f20617574686f72697479 else (let tail : Bytes := (jpSpan p (slash + 1) (jpLen p)); (let semi : Nat := (nmAt tail 59 0); (jpCat 0x687474703a2f2f (jpCat (jpSpan p 5 slash) (jpCat 0x2f2e77656c6c2d6b6e6f776e2f6e692f (jpCat (jpSpan tail 0 semi) (jpCat 0x2f (jpSpan tail (semi + 1) (jpLen tail)))))))))))) else 0x6d616c666f726d6564),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snNameMatch,
+  parameters: [p : Bytes],
+  result: Bytes,
+  body: (let e : Nat := (snEol p 0); (match (nmParse (jpSpan p 0 e))
+    | Option.none => 0x6d616c666f726d6564
+    | Option.some a => (match (nmParse (jpSpan p (e + 1) (jpLen p)))
+      | Option.none => 0x6d616c666f726d6564
+      | Option.some b => (if (jpSame a b) then 0x73616d65 else 0x646966666572656e74)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snNameCheck,
+  parameters: [p : Bytes],
+  result: Bytes,
+  body: (let e : Nat := (snEol p 0); (match (nmParse (jpSpan p 0 e))
+    | Option.none => 0x6d616c666f726d6564
+    | Option.some a => (match (nmData (jpSpan p (e + 1) (jpLen p)))
+      | Option.none => 0x696e76616c6964
+      | Option.some d => (if (jpSame a (nmOf (nmBitsSuite (jpAt a 0)) d)) then 0x76616c6964 else 0x6d69736d61746368)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: nmCtFrom,
+  parameters: [q : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x6e6f6e65
+    | Nat.succ rest => (if ((jpLen q) <? (i + 1)) then 0x6e6f6e65 else (let amp : Nat := (nmAt q 38 i); (if (jpSame (jpSpan q i (i + 3)) 0x63743d) then (jpSpan q (i + 3) amp) else (nmCtFrom q (amp + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: snNameCt,
+  parameters: [p : Bytes],
+  result: Bytes,
+  body: (match (nmParse p)
+    | Option.none => 0x6d616c666f726d6564
+    | Option.some b => (nmCtFrom p ((nmAt p 63 0) + 1) ((jpLen p) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snNamesMore,
+  parameters: [op : Bytes, p : Bytes],
+  result: Bytes,
+  body: (if (jpSame op 0x77656c6c6b6e6f776e) then (snNameWellKnown p) else (if (jpSame op 0x6d61746368) then (snNameMatch p) else (if (jpSame op 0x636865636b) then (snNameCheck p) else (if (jpSame op 0x6374) then (snNameCt p) else 0x696e76616c6964)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: snNames,
+  parameters: [op : Bytes, p : Bytes],
+  result: Bytes,
+  body: (if (jpSame op 0x6e69) then (snNameNi p) else (if (jpSame op 0x6e6968) then (snNameNih p) else (if (jpSame op 0x62696e617279) then (snNameBinary p) else (if (jpSame op 0x7365676d656e74) then (snNameSegment p) else (snNamesMore op p))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: prismSnapshotDispatch,
   parameters: [s : Bytes],
   result: Bytes,
-  body: (if (2048 <? (jpLen s)) then 0x696e76616c6964 else (let e : Nat := (snEol s 0); (let op : Bytes := (jpSpan s 0 e); (let p : Bytes := (jpSpan s (e + 1) (jpLen s)); (if (jpSame op 0x63616e6f6e6963616c) then (snCanonical p) else (if (jpSame op 0x61646472657373) then (snAddress p) else (if (jpSame op 0x6170706c79) then (snApply p) else (if (jpSame op 0x736861323536) then (snDigest p) else (if (jpSame op 0x7472616e736974696f6e) then (snTransition p) else (if (jpSame op 0x7265706c6179) then (snReplay p) else 0x696e76616c6964)))))))))),
+  body: (if (2048 <? (jpLen s)) then 0x696e76616c6964 else (let e : Nat := (snEol s 0); (let op : Bytes := (jpSpan s 0 e); (let p : Bytes := (jpSpan s (e + 1) (jpLen s)); (if (jpSame op 0x63616e6f6e6963616c) then (snCanonical p) else (if (jpSame op 0x61646472657373) then (snAddress p) else (if (jpSame op 0x6170706c79) then (snApply p) else (if (jpSame op 0x736861323536) then (snDigest p) else (if (jpSame op 0x7472616e736974696f6e) then (snTransition p) else (if (jpSame op 0x7265706c6179) then (snReplay p) else (snNames op p))))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}
