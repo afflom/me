@@ -4,6 +4,9 @@
 \useglossary{prism.arch@1.0.0}
 \importmodule{PrismEmma}
 \importmodule{PrismProv}
+\importmodule{Sha256}
+\importmodule{PrismAnnotation}
+\importmodule{PrismCite}
 \title{Text application model}
 \begin{semanticmodule}
 definition{name: tnLen, parameters: [s : Bytes], result: Nat, body: (prim length s : Nat)}
@@ -217,6 +220,59 @@ definition{
 }
 
 definition{
+  name: tnA,
+  parameters: [v : Bytes],
+  result: Bytes,
+  body: (tnCut v 0 (tnSpace v 0 (tnLen v))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnB,
+  parameters: [v : Bytes],
+  result: Bytes,
+  body: (let a : Nat := ((tnSpace v 0 (tnLen v)) + 1); (tnCut v a (tnSpace v a (tnLen v)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnC,
+  parameters: [v : Bytes],
+  result: Bytes,
+  body: (let a : Nat := ((tnSpace v 0 (tnLen v)) + 1); (let b : Nat := ((tnSpace v a (tnLen v)) + 1); (tnCut v b (tnLen v)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnNum,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((tnLen s) <? (i + 1)) then acc else (tnNum s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract (tnAt s i) 48 : Nat)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnDec,
+  parameters: [n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (n <? 10) then (prim append (tnByte (48 + n)) acc : Bytes) else (tnDec (prim quotient n 10 0 : Nat) (prim append (tnByte (48 + (prim remainder n 10 0 : Nat))) acc : Bytes) rest))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnPlaced,
+  parameters: [v : Bytes],
+  result: Bool,
+  body: (((tnLen (tnA v)) =? (tnLen v)) || ((tnDigits (tnB v)) && ((tnDigits (tnC v)) && ((tnNum (tnB v) 0 0 16) <? ((tnNum (tnC v) 0 0 16) + 1))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: tnName,
   parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
   result: Bytes,
@@ -233,7 +289,7 @@ definition{
   result: Bytes,
   body: (match fuel
     | Nat.zero => acc
-    | Nat.succ rest => (let j : Nat := (tnFind s i 0x6369746564 (tnLen s)); (if (j =? 0) then acc else (let e : Nat := (tnEol s j (tnLen s)); (let n : Bytes := (tnName (tnCut s j e) 0 0x (prim subtract e j : Nat)); (tnCited s (e + 1) ms (prim append acc (prim append 0x656e74697479286d653a (prim append n (prim append 0x290a75736564286d653a7475726e2d (prim append ms (prim append 0x2c206d653a (prim append n (prim append 0x2c202d290a7761734465726976656446726f6d286d653a7265706c792d (prim append ms (prim append 0x2c206d653a (prim append n 0x290a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) rest)))))),
+    | Nat.succ rest => (let j : Nat := (tnFind s i 0x6369746564 (tnLen s)); (if (j =? 0) then acc else (let e : Nat := (tnEol s j (tnLen s)); (let a : Bytes := (tnA (tnCut s j e)); (let n : Bytes := (tnName a 0 0x (tnLen a)); (tnCited s (e + 1) ms (prim append acc (prim append 0x656e74697479286d653a (prim append n (prim append 0x290a75736564286d653a7475726e2d (prim append ms (prim append 0x2c206d653a (prim append n (prim append 0x2c202d290a7761734465726976656446726f6d286d653a7265706c792d (prim append ms (prim append 0x2c206d653a (prim append n 0x290a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) rest))))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
@@ -244,17 +300,69 @@ definition{
   result: Bool,
   body: (match fuel
     | Nat.zero => true
-    | Nat.succ rest => (let j : Nat := (tnFind s i 0x6369746564 (tnLen s)); (if (j =? 0) then true else (let e : Nat := (tnEol s j (tnLen s)); (if (tnAddr (tnCut s j e)) then (tnCitedOk s (e + 1) rest) else false))))),
+    | Nat.succ rest => (let j : Nat := (tnFind s i 0x6369746564 (tnLen s)); (if (j =? 0) then true else (let e : Nat := (tnEol s j (tnLen s)); (if ((tnAddr (tnA (tnCut s j e))) && (tnPlaced (tnCut s j e))) then (tnCitedOk s (e + 1) rest) else false))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
 
 definition{
   name: tnTurn,
-  parameters: [s : Bytes, base : Bytes, ms : Bytes, at0 : Bytes, after : Bytes, reply : Bytes],
+  parameters: [
+    s : Bytes,
+    base : Bytes,
+    ms : Bytes,
+    at0 : Bytes,
+    after : Bytes,
+    reply : Bytes,
+    act : Bytes
+  ],
   result: Bytes,
-  body: (prim append 0x646f63756d656e740a707265666978206d65203c (prim append base (prim append 0x3e0a (prim append 0x6167656e74286d653a6d652c205b70726f763a747970653d2770726f763a506572736f6e275d290a6167656e74286d653a707269736d2c205b70726f763a747970653d2770726f763a536f6674776172654167656e74275d290a61637465644f6e426568616c664f66286d653a707269736d2c206d653a6d65290a (prim append 0x656e74697479286d653a70726f6d70742d (prim append ms (prim append 0x290a656e74697479286d653a7265706c792d (prim append ms (prim append 0x2c205b70726f763a76616c75653d (prim append reply (prim append 0x5d290a (prim append 0x6163746976697479286d653a7475726e2d (prim append ms (prim append 0x2c20 (prim append at0 (prim append 0x2c202d290a (prim append 0x77617341747472696275746564546f286d653a70726f6d70742d (prim append ms (prim append 0x2c206d653a6d65290a7761734173736f63696174656457697468286d653a7475726e2d (prim append ms (prim append 0x2c206d653a707269736d2c202d290a (prim append 0x75736564286d653a7475726e2d (prim append ms (prim append 0x2c206d653a70726f6d70742d (prim append ms (prim append 0x2c20 (prim append at0 (prim append 0x290a (prim append 0x77617347656e6572617465644279286d653a7265706c792d (prim append ms (prim append 0x2c206d653a7475726e2d (prim append ms (prim append 0x2c202d290a7761734465726976656446726f6d286d653a7265706c792d (prim append ms (prim append 0x2c206d653a70726f6d70742d (prim append ms (prim append 0x290a77617341747472696275746564546f286d653a7265706c792d (prim append ms (prim append 0x2c206d653a707269736d290a (prim append (tnCited s 0 ms 0x (tnLen s)) (prim append (if ((tnLen after) =? 0) then 0x else (prim append 0x6163746976697479286d653a7475726e2d (prim append after (prim append 0x290a776173496e666f726d65644279286d653a7475726e2d (prim append ms (prim append 0x2c206d653a7475726e2d (prim append after 0x290a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes)) 0x656e64446f63756d656e74 : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes),
+  body: (prim append 0x646f63756d656e740a707265666978206d65203c (prim append base (prim append 0x3e0a (prim append 0x6167656e74286d653a6d652c205b70726f763a747970653d2770726f763a506572736f6e275d290a6167656e74286d653a707269736d2c205b70726f763a747970653d2770726f763a536f6674776172654167656e74275d290a61637465644f6e426568616c664f66286d653a707269736d2c206d653a6d65290a (prim append 0x656e74697479286d653a70726f6d70742d (prim append ms (prim append (if ((tnLen act) =? 0) then 0x else (prim append 0x2c205b6d653a64696d656e73696f6e3d22 (prim append act 0x225d : Bytes) : Bytes)) (prim append 0x290a656e74697479286d653a7265706c792d (prim append ms (prim append 0x2c205b70726f763a76616c75653d (prim append reply (prim append 0x5d290a (prim append 0x6163746976697479286d653a7475726e2d (prim append ms (prim append 0x2c20 (prim append at0 (prim append 0x2c202d290a (prim append 0x77617341747472696275746564546f286d653a70726f6d70742d (prim append ms (prim append 0x2c206d653a6d65290a7761734173736f63696174656457697468286d653a7475726e2d (prim append ms (prim append 0x2c206d653a707269736d2c202d290a (prim append 0x75736564286d653a7475726e2d (prim append ms (prim append 0x2c206d653a70726f6d70742d (prim append ms (prim append 0x2c20 (prim append at0 (prim append 0x290a (prim append 0x77617347656e6572617465644279286d653a7265706c792d (prim append ms (prim append 0x2c206d653a7475726e2d (prim append ms (prim append 0x2c202d290a7761734465726976656446726f6d286d653a7265706c792d (prim append ms (prim append 0x2c206d653a70726f6d70742d (prim append ms (prim append 0x290a77617341747472696275746564546f286d653a7265706c792d (prim append ms (prim append 0x2c206d653a707269736d290a (prim append (tnCited s 0 ms 0x (tnLen s)) (prim append (if ((tnLen after) =? 0) then 0x else (prim append 0x6163746976697479286d653a7475726e2d (prim append after (prim append 0x290a776173496e666f726d65644279286d653a7475726e2d (prim append ms (prim append 0x2c206d653a7475726e2d (prim append after 0x290a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes)) 0x656e64446f63756d656e74 : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes),
   axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tnRaw,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((tnLen s) <? ((i + 1) + 1)) then acc else (if ((tnAt s i) =? 92) then (let n : Nat := (tnAt s (i + 1)); (tnRaw s (i + 2) (prim append acc (if (n =? 110) then (tnByte 10) else (if (n =? 114) then (tnByte 13) else (if (n =? 116) then (tnByte 9) else (tnByte n)))) : Bytes) rest)) else (tnRaw s (i + 1) (prim append acc (tnCut s i (i + 1)) : Bytes) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnCp,
+  parameters: [s : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((tnLen s) <? (i + 1)) then i else (if ((128 <? ((tnAt s i) + 1)) && ((tnAt s i) <? 192)) then (tnCp s (i + 1) n rest) else (if (n =? 0) then i else (tnCp s (i + 1) (prim subtract n 1 : Nat) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnNotes,
+  parameters: [s : Bytes, i : Nat, addr : Bytes, text : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let j : Nat := (tnFind s i 0x6369746564 (tnLen s)); (if (j =? 0) then acc else (let e : Nat := (tnEol s j (tnLen s)); (let v : Bytes := (tnCut s j e); (if ((tnLen (tnA v)) =? (tnLen v)) then (tnNotes s (e + 1) addr text acc rest) else (let a : Nat := (tnCp text 0 (tnNum (tnB v) 0 0 16) ((tnLen text) + 1)); (let b : Nat := (tnCp text 0 (tnNum (tnC v) 0 0 16) ((tnLen text) + 1)); (let exact : Bytes := (tnCut text a b); (let got : Bytes := (PrismCite::prismCiteDispatch (prim append addr (prim append 0x0a (prim append (tnB v) (prim append 0x20 (prim append (tnC v) (prim append 0x20 (prim append (tnA v) (prim append 0x20 (prim append (tnDec (tnLen exact) 0x 20) (prim append 0x0a (prim append exact 0x0a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes)); (if ((tnLen got) <? 9) then 0x696e76616c6964 else (tnNotes s (e + 1) addr text (prim append acc (prim append 0x0a (tnCut got 1 (prim subtract (tnLen got) 1 : Nat)) : Bytes) : Bytes) rest)))))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tnNoted,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((tnLen s) <? (i + 1)) then true else (let e : Nat := (tnEol s i (tnLen s)); (if ((e =? i) || (tnSame (PrismAnnotation::prismAnnotationDispatch (prim append 0x616e6e6f746174696f6e4d757374730a (tnCut s i e) : Bytes)) 0x6f6b)) then (tnNoted s (e + 1) rest) else false)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
 }
 
 definition{
@@ -269,7 +377,7 @@ definition{
   name: tnRecord,
   parameters: [s : Bytes],
   result: Bytes,
-  body: (let base : Bytes := (tnVal s 0x62617365); (let now : Bytes := (tnVal s 0x6e6f77); (let k : Nat := (tnSpace now 0 (tnLen now)); (let ms : Bytes := (tnCut now 0 k); (let at0 : Bytes := (tnCut now (k + 1) (tnLen now)); (let after : Bytes := (tnVal s 0x6166746572); (let prompt : Bytes := (tnVal s 0x70726f6d7074); (let reply : Bytes := (tnVal s 0x7265706c79); (if (not (tnIri base)) then 0x726566757365643a2062617365206973206e6f742061206e616d65737061636520495249 else (if (not ((tnDigits ms) && (tnInstant at0))) then 0x726566757365643a206e6f77206973206e6f74206d696c6c697365636f6e647320616e6420616e20696e7374616e74 else (if (not (((tnLen after) =? 0) || (tnDigits after))) then 0x726566757365643a206166746572206973206e6f74206d696c6c697365636f6e6473 else (if (not ((tnIsStr prompt) && (tnIsStr reply))) then 0x726566757365643a2070726f6d707420616e64207265706c7920617265206e6f7420737472696e6773 else (if (not (tnCitedOk s 0 (tnLen s))) then 0x726566757365643a20612063697465642061646472657373206973206e6f7420616e2061646472657373 else (let said : Bytes := (tnSaid ms prompt); (let turn : Bytes := (tnTurn s base ms at0 after reply); (let why : Bytes := (tnJudge said turn); (if ((tnLen why) =? 0) then (prim append said (prim append 0x0a turn : Bytes) : Bytes) else why))))))))))))))))),
+  body: (let base : Bytes := (tnVal s 0x62617365); (let now : Bytes := (tnVal s 0x6e6f77); (let k : Nat := (tnSpace now 0 (tnLen now)); (let ms : Bytes := (tnCut now 0 k); (let at0 : Bytes := (tnCut now (k + 1) (tnLen now)); (let after : Bytes := (tnVal s 0x6166746572); (let prompt : Bytes := (tnVal s 0x70726f6d7074); (let reply : Bytes := (tnVal s 0x7265706c79); (let act : Bytes := (tnVal s 0x616374); (if (not (tnIri base)) then 0x726566757365643a2062617365206973206e6f742061206e616d65737061636520495249 else (if (not ((tnDigits ms) && (tnInstant at0))) then 0x726566757365643a206e6f77206973206e6f74206d696c6c697365636f6e647320616e6420616e20696e7374616e74 else (if (not (((tnLen after) =? 0) || (tnDigits after))) then 0x726566757365643a206166746572206973206e6f74206d696c6c697365636f6e6473 else (if (not ((tnIsStr prompt) && (tnIsStr reply))) then 0x726566757365643a2070726f6d707420616e64207265706c7920617265206e6f7420737472696e6773 else (if (not (tnCitedOk s 0 (tnLen s))) then 0x726566757365643a20612063697465642061646472657373206973206e6f7420616e2061646472657373 else (if (not (((tnLen act) =? 0) || ((tnSame act 0x7461736b) || (tnSame act 0x6175746f466565646261636b)))) then 0x726566757365643a20616374206973206e6f7420612064696d656e73696f6e2074686520726f75746572207265616473 else (let said : Bytes := (tnSaid ms prompt); (let turn : Bytes := (tnTurn s base ms at0 after reply act); (let why : Bytes := (tnJudge said turn); (if (0 <? (tnLen why)) then why else (let text : Bytes := (tnRaw reply 1 0x (tnLen reply)); (let notes : Bytes := (tnNotes s 0 (prim append 0x7368613235363a (Sha256::sha256Hex text) : Bytes) text 0x (tnLen s)); (if (tnSame notes 0x696e76616c6964) then 0x726566757365643a2061206369746174696f6e206973206e6f7420612057656220416e6e6f746174696f6e else (prim append said (prim append 0x0a (prim append turn notes : Bytes) : Bytes) : Bytes))))))))))))))))))))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -285,10 +393,21 @@ definition{
 }
 
 definition{
+  name: tnEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (tnLen s)
+    | Nat.succ rest => (if ((tnLen s) <? (i + 1)) then (tnLen s) else (if (tnKw s i 0x0a656e64446f63756d656e740a) then (i + 12) else (tnEnd s (i + 1) rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
   name: tnCheck,
   parameters: [s : Bytes],
   result: Bytes,
-  body: (let e : Nat := (tnClose s 0 (tnLen s)); (let why : Bytes := (if (e =? 0) then 0x726566757365643a2077686174207761732073616964206973206e6f7420454d4d41 else (tnJudge (tnCut s 0 e) (tnCut s (e + 1) (tnLen s)))); (if ((tnLen why) =? 0) then 0x6163636570746564 else why))),
+  body: (let e : Nat := (tnClose s 0 (tnLen s)); (let p : Nat := (tnEnd s e (tnLen s)); (let why : Bytes := (if (e =? 0) then 0x726566757365643a2077686174207761732073616964206973206e6f7420454d4d41 else (tnJudge (tnCut s 0 e) (tnCut s (e + 1) p))); (if (0 <? (tnLen why)) then why else (if (tnNoted s (p + 1) (tnLen s)) then 0x6163636570746564 else 0x726566757365643a2061206369746174696f6e206973206e6f7420612057656220416e6e6f746174696f6e))))),
   axioms: [Quot.sound, propext]
 }
 

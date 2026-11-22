@@ -56,6 +56,11 @@
       "output": "app/src/PersonIcf.lex.tex"
     },
     {
+      "generator": "icfreqs",
+      "split": "app/specs/oracle/icf/SimpleTabulation-ICF-en.txt",
+      "output": "test/standards/generated/who-icf.jsonl"
+    },
+    {
       "generator": "vocabnames",
       "split": "site/vocab/register.json",
       "output": ".gen/vocab-name-rows"
@@ -72,6 +77,44 @@
       ],
       "after": ".gen/vocab-name-rows",
       "output": "app/src/VocabNames.lex.tex"
+    },
+    {
+      "generator": "schemaparents",
+      "split": "app/specs/standards/texts/0a4b8c4c910fc831ec8695196510973390906a5ee34dc6b862dfec4d21a12f74",
+      "breakBefore": "^    [{]$",
+      "output": ".gen/schemaorg-person-types"
+    },
+    {
+      "generator": "schemaroots",
+      "split": "app/specs/standards/texts/0a4b8c4c910fc831ec8695196510973390906a5ee34dc6b862dfec4d21a12f74",
+      "breakBefore": "^    [{]$",
+      "inputs": [
+        ".gen/schemaorg-person-types"
+      ],
+      "output": ".gen/schemaorg-person-roots"
+    },
+    {
+      "generator": "schemanames",
+      "split": "app/specs/standards/texts/0a4b8c4c910fc831ec8695196510973390906a5ee34dc6b862dfec4d21a12f74",
+      "breakBefore": "^    [{]$",
+      "inputs": [
+        ".gen/schemaorg-person-types"
+      ],
+      "output": ".gen/schemaorg-person-names"
+    },
+    {
+      "generator": "schemareqs",
+      "inputs": [
+        ".gen/schemaorg-person-names"
+      ],
+      "output": "test/standards/generated/schemaorg-person.jsonl"
+    },
+    {
+      "generator": "schemapin",
+      "inputs": [
+        ".gen/schemaorg-person-names"
+      ],
+      "output": "app/src/PersonSchemaPin.lex.tex"
     }
   ]
 }

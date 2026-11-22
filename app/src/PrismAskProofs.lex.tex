@@ -9,7 +9,7 @@ definition{
   name: breaksInv001,
   parameters: [request : PrismAsk::PrismAskRequest],
   result: Bool,
-  body: (((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request halted) =? (PrismAsk::prismAskHaltedYes))) && (not ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerPaused))))
+  body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request halted) =? (PrismAsk::prismAskHaltedYes))) && (not ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerPaused))))
 }
 
 theorem{
@@ -18,9 +18,12 @@ theorem{
   statement: ((breaksInv001 request) = false),
   proof: linear_arithmetic{
     definitions: [
+      PrismAsk::prismAskActAutofeedback,
+      PrismAsk::prismAskActTask,
       PrismAsk::prismAskAnswerAnswer,
       PrismAsk::prismAskAnswerClock,
       PrismAsk::prismAskAnswerEmpty,
+      PrismAsk::prismAskAnswerHeard,
       PrismAsk::prismAskAnswerKeep,
       PrismAsk::prismAskAnswerLook,
       PrismAsk::prismAskAnswerPaused,
@@ -46,7 +49,9 @@ theorem{
       PrismAsk::prismAskRule5Misses,
       PrismAsk::prismAskRule6,
       PrismAsk::prismAskRule7,
+      PrismAsk::prismAskRule7Misses,
       PrismAsk::prismAskRule8,
+      PrismAsk::prismAskRule9,
       PrismAsk::prismAskTimedNo,
       PrismAsk::prismAskTimedYes,
       breaksInv001
@@ -59,7 +64,7 @@ definition{
   name: breaksInv002,
   parameters: [request : PrismAsk::PrismAskRequest],
   result: Bool,
-  body: (((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request intent) =? (PrismAsk::prismAskIntentQuestion))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerKeep)))
+  body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request intent) =? (PrismAsk::prismAskIntentQuestion))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerKeep)))
 }
 
 theorem{
@@ -68,9 +73,12 @@ theorem{
   statement: ((breaksInv002 request) = false),
   proof: linear_arithmetic{
     definitions: [
+      PrismAsk::prismAskActAutofeedback,
+      PrismAsk::prismAskActTask,
       PrismAsk::prismAskAnswerAnswer,
       PrismAsk::prismAskAnswerClock,
       PrismAsk::prismAskAnswerEmpty,
+      PrismAsk::prismAskAnswerHeard,
       PrismAsk::prismAskAnswerKeep,
       PrismAsk::prismAskAnswerLook,
       PrismAsk::prismAskAnswerPaused,
@@ -96,7 +104,9 @@ theorem{
       PrismAsk::prismAskRule5Misses,
       PrismAsk::prismAskRule6,
       PrismAsk::prismAskRule7,
+      PrismAsk::prismAskRule7Misses,
       PrismAsk::prismAskRule8,
+      PrismAsk::prismAskRule9,
       PrismAsk::prismAskTimedNo,
       PrismAsk::prismAskTimedYes,
       breaksInv002
@@ -109,7 +119,7 @@ definition{
   name: breaksInv003,
   parameters: [request : PrismAsk::PrismAskRequest],
   result: Bool,
-  body: (((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request box) =? (PrismAsk::prismAskBoxAsks))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerKeep)))
+  body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request box) =? (PrismAsk::prismAskBoxAsks))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerKeep)))
 }
 
 theorem{
@@ -118,9 +128,12 @@ theorem{
   statement: ((breaksInv003 request) = false),
   proof: linear_arithmetic{
     definitions: [
+      PrismAsk::prismAskActAutofeedback,
+      PrismAsk::prismAskActTask,
       PrismAsk::prismAskAnswerAnswer,
       PrismAsk::prismAskAnswerClock,
       PrismAsk::prismAskAnswerEmpty,
+      PrismAsk::prismAskAnswerHeard,
       PrismAsk::prismAskAnswerKeep,
       PrismAsk::prismAskAnswerLook,
       PrismAsk::prismAskAnswerPaused,
@@ -146,7 +159,9 @@ theorem{
       PrismAsk::prismAskRule5Misses,
       PrismAsk::prismAskRule6,
       PrismAsk::prismAskRule7,
+      PrismAsk::prismAskRule7Misses,
       PrismAsk::prismAskRule8,
+      PrismAsk::prismAskRule9,
       PrismAsk::prismAskTimedNo,
       PrismAsk::prismAskTimedYes,
       breaksInv003
@@ -159,7 +174,7 @@ definition{
   name: breaksInv004,
   parameters: [request : PrismAsk::PrismAskRequest],
   result: Bool,
-  body: (((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request box) =? (PrismAsk::prismAskBoxAsks))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerLook)))
+  body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request box) =? (PrismAsk::prismAskBoxAsks))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerLook)))
 }
 
 theorem{
@@ -168,9 +183,12 @@ theorem{
   statement: ((breaksInv004 request) = false),
   proof: linear_arithmetic{
     definitions: [
+      PrismAsk::prismAskActAutofeedback,
+      PrismAsk::prismAskActTask,
       PrismAsk::prismAskAnswerAnswer,
       PrismAsk::prismAskAnswerClock,
       PrismAsk::prismAskAnswerEmpty,
+      PrismAsk::prismAskAnswerHeard,
       PrismAsk::prismAskAnswerKeep,
       PrismAsk::prismAskAnswerLook,
       PrismAsk::prismAskAnswerPaused,
@@ -196,7 +214,9 @@ theorem{
       PrismAsk::prismAskRule5Misses,
       PrismAsk::prismAskRule6,
       PrismAsk::prismAskRule7,
+      PrismAsk::prismAskRule7Misses,
       PrismAsk::prismAskRule8,
+      PrismAsk::prismAskRule9,
       PrismAsk::prismAskTimedNo,
       PrismAsk::prismAskTimedYes,
       breaksInv004
@@ -209,7 +229,7 @@ definition{
   name: breaksInv005,
   parameters: [request : PrismAsk::PrismAskRequest],
   result: Bool,
-  body: (((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request held) =? (PrismAsk::prismAskHeldNone))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerAnswer)))
+  body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request held) =? (PrismAsk::prismAskHeldNone))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerAnswer)))
 }
 
 theorem{
@@ -218,9 +238,12 @@ theorem{
   statement: ((breaksInv005 request) = false),
   proof: linear_arithmetic{
     definitions: [
+      PrismAsk::prismAskActAutofeedback,
+      PrismAsk::prismAskActTask,
       PrismAsk::prismAskAnswerAnswer,
       PrismAsk::prismAskAnswerClock,
       PrismAsk::prismAskAnswerEmpty,
+      PrismAsk::prismAskAnswerHeard,
       PrismAsk::prismAskAnswerKeep,
       PrismAsk::prismAskAnswerLook,
       PrismAsk::prismAskAnswerPaused,
@@ -246,7 +269,9 @@ theorem{
       PrismAsk::prismAskRule5Misses,
       PrismAsk::prismAskRule6,
       PrismAsk::prismAskRule7,
+      PrismAsk::prismAskRule7Misses,
       PrismAsk::prismAskRule8,
+      PrismAsk::prismAskRule9,
       PrismAsk::prismAskTimedNo,
       PrismAsk::prismAskTimedYes,
       breaksInv005
@@ -259,7 +284,7 @@ definition{
   name: breaksInv006,
   parameters: [request : PrismAsk::PrismAskRequest],
   result: Bool,
-  body: (((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request held) =? (PrismAsk::prismAskHeldNone))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerLook)))
+  body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request held) =? (PrismAsk::prismAskHeldNone))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerLook)))
 }
 
 theorem{
@@ -268,9 +293,12 @@ theorem{
   statement: ((breaksInv006 request) = false),
   proof: linear_arithmetic{
     definitions: [
+      PrismAsk::prismAskActAutofeedback,
+      PrismAsk::prismAskActTask,
       PrismAsk::prismAskAnswerAnswer,
       PrismAsk::prismAskAnswerClock,
       PrismAsk::prismAskAnswerEmpty,
+      PrismAsk::prismAskAnswerHeard,
       PrismAsk::prismAskAnswerKeep,
       PrismAsk::prismAskAnswerLook,
       PrismAsk::prismAskAnswerPaused,
@@ -296,7 +324,9 @@ theorem{
       PrismAsk::prismAskRule5Misses,
       PrismAsk::prismAskRule6,
       PrismAsk::prismAskRule7,
+      PrismAsk::prismAskRule7Misses,
       PrismAsk::prismAskRule8,
+      PrismAsk::prismAskRule9,
       PrismAsk::prismAskTimedNo,
       PrismAsk::prismAskTimedYes,
       breaksInv006
@@ -309,7 +339,7 @@ definition{
   name: breaksInv007,
   parameters: [request : PrismAsk::PrismAskRequest],
   result: Bool,
-  body: (((((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request halted) =? (PrismAsk::prismAskHaltedNo))) && ((project request clock) =? (PrismAsk::prismAskClockNot))) && ((project request box) =? (PrismAsk::prismAskBoxKeeps))) && ((project request timed) =? (PrismAsk::prismAskTimedYes))) && ((project request intent) =? (PrismAsk::prismAskIntentTask))) && (not ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerKeep))))
+  body: ((((((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request halted) =? (PrismAsk::prismAskHaltedNo))) && ((project request clock) =? (PrismAsk::prismAskClockNot))) && ((project request box) =? (PrismAsk::prismAskBoxKeeps))) && ((project request timed) =? (PrismAsk::prismAskTimedYes))) && ((project request intent) =? (PrismAsk::prismAskIntentTask))) && (not ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerKeep))))
 }
 
 theorem{
@@ -318,9 +348,12 @@ theorem{
   statement: ((breaksInv007 request) = false),
   proof: linear_arithmetic{
     definitions: [
+      PrismAsk::prismAskActAutofeedback,
+      PrismAsk::prismAskActTask,
       PrismAsk::prismAskAnswerAnswer,
       PrismAsk::prismAskAnswerClock,
       PrismAsk::prismAskAnswerEmpty,
+      PrismAsk::prismAskAnswerHeard,
       PrismAsk::prismAskAnswerKeep,
       PrismAsk::prismAskAnswerLook,
       PrismAsk::prismAskAnswerPaused,
@@ -346,10 +379,177 @@ theorem{
       PrismAsk::prismAskRule5Misses,
       PrismAsk::prismAskRule6,
       PrismAsk::prismAskRule7,
+      PrismAsk::prismAskRule7Misses,
       PrismAsk::prismAskRule8,
+      PrismAsk::prismAskRule9,
       PrismAsk::prismAskTimedNo,
       PrismAsk::prismAskTimedYes,
       breaksInv007
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv008,
+  parameters: [request : PrismAsk::PrismAskRequest],
+  result: Bool,
+  body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request intent) =? (PrismAsk::prismAskIntentQuestion))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerHeard)))
+}
+
+theorem{
+  name: inv008Holds,
+  parameters: [request : PrismAsk::PrismAskRequest],
+  statement: ((breaksInv008 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismAsk::prismAskActAutofeedback,
+      PrismAsk::prismAskActTask,
+      PrismAsk::prismAskAnswerAnswer,
+      PrismAsk::prismAskAnswerClock,
+      PrismAsk::prismAskAnswerEmpty,
+      PrismAsk::prismAskAnswerHeard,
+      PrismAsk::prismAskAnswerKeep,
+      PrismAsk::prismAskAnswerLook,
+      PrismAsk::prismAskAnswerPaused,
+      PrismAsk::prismAskBoxAsks,
+      PrismAsk::prismAskBoxKeeps,
+      PrismAsk::prismAskClockAsked,
+      PrismAsk::prismAskClockNot,
+      PrismAsk::prismAskHaltedNo,
+      PrismAsk::prismAskHaltedYes,
+      PrismAsk::prismAskHeldNone,
+      PrismAsk::prismAskHeldSome,
+      PrismAsk::prismAskIntentEvent,
+      PrismAsk::prismAskIntentFact,
+      PrismAsk::prismAskIntentQuestion,
+      PrismAsk::prismAskIntentTask,
+      PrismAsk::prismAskJudge,
+      PrismAsk::prismAskRule1,
+      PrismAsk::prismAskRule2,
+      PrismAsk::prismAskRule3,
+      PrismAsk::prismAskRule3Misses,
+      PrismAsk::prismAskRule4,
+      PrismAsk::prismAskRule5,
+      PrismAsk::prismAskRule5Misses,
+      PrismAsk::prismAskRule6,
+      PrismAsk::prismAskRule7,
+      PrismAsk::prismAskRule7Misses,
+      PrismAsk::prismAskRule8,
+      PrismAsk::prismAskRule9,
+      PrismAsk::prismAskTimedNo,
+      PrismAsk::prismAskTimedYes,
+      breaksInv008
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv009,
+  parameters: [request : PrismAsk::PrismAskRequest],
+  result: Bool,
+  body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request act) =? (PrismAsk::prismAskActTask))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerHeard)))
+}
+
+theorem{
+  name: inv009Holds,
+  parameters: [request : PrismAsk::PrismAskRequest],
+  statement: ((breaksInv009 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismAsk::prismAskActAutofeedback,
+      PrismAsk::prismAskActTask,
+      PrismAsk::prismAskAnswerAnswer,
+      PrismAsk::prismAskAnswerClock,
+      PrismAsk::prismAskAnswerEmpty,
+      PrismAsk::prismAskAnswerHeard,
+      PrismAsk::prismAskAnswerKeep,
+      PrismAsk::prismAskAnswerLook,
+      PrismAsk::prismAskAnswerPaused,
+      PrismAsk::prismAskBoxAsks,
+      PrismAsk::prismAskBoxKeeps,
+      PrismAsk::prismAskClockAsked,
+      PrismAsk::prismAskClockNot,
+      PrismAsk::prismAskHaltedNo,
+      PrismAsk::prismAskHaltedYes,
+      PrismAsk::prismAskHeldNone,
+      PrismAsk::prismAskHeldSome,
+      PrismAsk::prismAskIntentEvent,
+      PrismAsk::prismAskIntentFact,
+      PrismAsk::prismAskIntentQuestion,
+      PrismAsk::prismAskIntentTask,
+      PrismAsk::prismAskJudge,
+      PrismAsk::prismAskRule1,
+      PrismAsk::prismAskRule2,
+      PrismAsk::prismAskRule3,
+      PrismAsk::prismAskRule3Misses,
+      PrismAsk::prismAskRule4,
+      PrismAsk::prismAskRule5,
+      PrismAsk::prismAskRule5Misses,
+      PrismAsk::prismAskRule6,
+      PrismAsk::prismAskRule7,
+      PrismAsk::prismAskRule7Misses,
+      PrismAsk::prismAskRule8,
+      PrismAsk::prismAskRule9,
+      PrismAsk::prismAskTimedNo,
+      PrismAsk::prismAskTimedYes,
+      breaksInv009
+    ]
+  },
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: breaksInv010,
+  parameters: [request : PrismAsk::PrismAskRequest],
+  result: Bool,
+  body: ((((((((((project request halted) <? 2) && ((project request clock) <? 2)) && ((project request box) <? 2)) && ((project request intent) <? 4)) && ((project request timed) <? 2)) && ((project request held) <? 2)) && ((project request act) <? 2)) && ((project request timed) =? (PrismAsk::prismAskTimedYes))) && ((PrismAsk::prismAskJudge request) =? (PrismAsk::prismAskAnswerHeard)))
+}
+
+theorem{
+  name: inv010Holds,
+  parameters: [request : PrismAsk::PrismAskRequest],
+  statement: ((breaksInv010 request) = false),
+  proof: linear_arithmetic{
+    definitions: [
+      PrismAsk::prismAskActAutofeedback,
+      PrismAsk::prismAskActTask,
+      PrismAsk::prismAskAnswerAnswer,
+      PrismAsk::prismAskAnswerClock,
+      PrismAsk::prismAskAnswerEmpty,
+      PrismAsk::prismAskAnswerHeard,
+      PrismAsk::prismAskAnswerKeep,
+      PrismAsk::prismAskAnswerLook,
+      PrismAsk::prismAskAnswerPaused,
+      PrismAsk::prismAskBoxAsks,
+      PrismAsk::prismAskBoxKeeps,
+      PrismAsk::prismAskClockAsked,
+      PrismAsk::prismAskClockNot,
+      PrismAsk::prismAskHaltedNo,
+      PrismAsk::prismAskHaltedYes,
+      PrismAsk::prismAskHeldNone,
+      PrismAsk::prismAskHeldSome,
+      PrismAsk::prismAskIntentEvent,
+      PrismAsk::prismAskIntentFact,
+      PrismAsk::prismAskIntentQuestion,
+      PrismAsk::prismAskIntentTask,
+      PrismAsk::prismAskJudge,
+      PrismAsk::prismAskRule1,
+      PrismAsk::prismAskRule2,
+      PrismAsk::prismAskRule3,
+      PrismAsk::prismAskRule3Misses,
+      PrismAsk::prismAskRule4,
+      PrismAsk::prismAskRule5,
+      PrismAsk::prismAskRule5Misses,
+      PrismAsk::prismAskRule6,
+      PrismAsk::prismAskRule7,
+      PrismAsk::prismAskRule7Misses,
+      PrismAsk::prismAskRule8,
+      PrismAsk::prismAskRule9,
+      PrismAsk::prismAskTimedNo,
+      PrismAsk::prismAskTimedYes,
+      breaksInv010
     ]
   },
   axioms: [Quot.sound, propext]

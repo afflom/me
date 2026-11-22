@@ -1,0 +1,79 @@
+\begin{lexlean}{GenIdentity}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{GenSenses}
+\importmodule{GenDigest}
+\importmodule{Sha256}
+\title{Identity case generator}
+\begin{semanticmodule}
+definition{
+  name: idScan,
+  parameters: [
+    s : Bytes,
+    i : Nat,
+    ind : Nat,
+    on : Bool,
+    fn : Bool,
+    cur : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then acc else (let e : Nat := (GenSenses::senFind s i 0x0a (Foundation.Bytes::byteLength s)); (let a : Nat := (GenSenses::senSkip s i (Foundation.Bytes::byteLength s)); (if (GenSenses::senIs s a e 0x424547494e3a5643415244) then (idScan s (e + 1) (prim subtract a i : Nat) true false 0x424547494e3a56434152440d0a acc rest) else (if (not on) then (idScan s (e + 1) ind on fn cur acc rest) else (if (not ((i + ind) <? e)) then (idScan s (e + 1) ind false fn 0x acc rest) else (if (GenSenses::senIs s (i + ind) e 0x454e443a5643415244) then (idScan s (e + 1) ind false fn 0x (if fn then (GenSenses::senCat (cons acc (cons cur (cons 0x454e443a56434152440d0a (nil Bytes))))) else acc) rest) else (idScan s (e + 1) ind on (fn || (GenSenses::senStartsAt s (i + ind) 0x464e3a)) (GenSenses::senCat (cons cur (cons (Foundation.Json::span s (i + ind) e) (cons 0x0d0a (nil Bytes))))) acc rest))))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: idCards,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (GenSenses::senU "app/specs/standards/texts/763c63b28fb9050111ee4878ea605e9e61ba2cb9f3c316bbbba936eda0dd1980"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (ctor Option.some [Bytes] (idScan s 0 0 false false 0x 0x (Foundation.Bytes::byteLength s)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: idExample,
+  parameters: [base : Bytes, now : Bytes, card : Bytes],
+  result: Bytes,
+  body: (GenSenses::senCat (cons 0x202020205b22666c61745c6e6261736520 (cons base (cons 0x5c6e6e6f7720 (cons now (cons 0x5c6e6361726420 (cons (GenDigest::digDec (Foundation.Bytes::byteLength card)) (cons 0x5c6e (cons (GenDigest::digEsc card 0 (Foundation.Bytes::byteLength card) 0x (Foundation.Bytes::byteLength card)) (cons 0x222c20226964656e74697479207368613235363a (cons (Sha256::sha256Hex card) (cons 0x5c6e225d (nil Bytes))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: idPlain,
+  parameters: [v : Bytes],
+  result: Bool,
+  body: ((not ((Foundation.Bytes::byteLength v) =? 0)) && (((GenSenses::senFind v 0 0x22 (Foundation.Bytes::byteLength v)) =? (Foundation.Bytes::byteLength v)) && ((GenSenses::senFind v 0 0x5c (Foundation.Bytes::byteLength v)) =? (Foundation.Bytes::byteLength v)))),
+  axioms: [propext]
+}
+
+definition{
+  name: idFile,
+  parameters: [base : Bytes, now : Bytes, card : Bytes],
+  result: (Option Bytes),
+  body: (if (((idPlain base) && (idPlain now)) && (not ((Foundation.Bytes::byteLength card) =? 0))) then (ctor Option.some [Bytes] (GenSenses::senCat (cons 0x7b0a202022636f6d6d656e74223a2022 (cons 0x5772697474656e2062792067656e657261746f72732f73656e736573202873656e7365736964656e74697479292066726f6d205246432036333530206174206974732070696e6e656420627974657320616e64206170702f73706563732f73656e7365732f636c6f636b732e6a736f6e3a20646f206e6f7420656469742e20546865206578616d706c6520697320612027666c6174272072657175657374206f66207468652073656e736573206775657374207468617420656e6473207769746820612063617264 (cons 0x2c20616e642069747320616e737765722e20546865206361726420697320746865206669727374207643617264205246432036333530207072696e74732077686f6c65207769746820616e20464e206c696e65202873656374696f6e20362e312e34292c20697473206c696e657320776974686f757420746865206578616d706c65277320696e64656e746174696f6e20616e6420656e6465642062792043524c462061732073656374696f6e20332e3220736179732e2054686520616e73776572206973207468 (cons 0x652063617264277320616464726573733a207368613235363a20616e6420746865205348412d323536202846495053203138302d3429206f66206974732062797465732c20636f6d707574656420686572652061706172742066726f6d207468652067756573742062792074686520536861323536206d6f64756c6520746861742067656e657261746f72732f736e617073686f7420686f6c647320746f204e495354277320434156502066696c65732e (cons 0x222c0a2020226578616d706c6573223a205b0a (cons (idExample base now card) (cons 0x0a20205d0a7d0a (nil Bytes)))))))))) else (ctor Option.none [Bytes])),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: idSpec,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (GenSenses::senU "app/specs/senses/clocks.json"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some c => (match (Foundation.Tar::find archive (GenSenses::senU ".gen/senses-cards"))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some s => (idFile (Foundation.Json::textAt c (Foundation.Json::memberAt c (Foundation.Json::root c) 0x62617365)) (Foundation.Json::textAt c (Foundation.Json::elementAt c (Foundation.Json::memberAt c (Foundation.Json::root c) 0x636c6f636b73) 0)) (Foundation.Json::span s 0 ((GenSenses::senFind s 0 0x454e443a56434152440d0a (Foundation.Bytes::byteLength s)) + 11))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
