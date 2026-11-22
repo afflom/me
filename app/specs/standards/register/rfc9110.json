@@ -28,8 +28,17 @@
    "scope": "The store of kept records acts as an origin server for conditional requests only, and RFC 9110 section 2.2 sets conformance by the role a participant takes: entity tags and their comparison, the If-Match and If-None-Match preconditions, their evaluation, and the status codes the store answers with."
   }
  ],
- "governs": [],
+ "governs": [
+  "app/src/PrismRecords.lex.tex",
+  "site/records/guest.mjs"
+ ],
  "realizedBy": [
   "ST-01"
- ]
+ ],
+ "enforcedBy": {
+  "rfc9110-13.1.2-f6759583": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "http-tests/cache-tests conditional-etag-weak-respond (a held ETag W/\"abcdef\" and a received If-None-Match W/\"abcdef\" answer 304) with RFC 9110 Table 3 (the same pair is no match by the strong function and a match by the weak one): respond answers 304, so the weak function is the one used; prismpm build runs every acceptance vector of the records guest (app/specs/records/spec.json, written from the RFC's table and the suite's file by generators/transition's storetable, storecache and storevectors), and tools/guests/gen.py check holds its wasm to the build"
+  }
+ }
 }
