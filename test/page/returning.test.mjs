@@ -4,40 +4,28 @@
 //    and an Add files feeder opens the device's file picker.
 // 2. A browser that kept an earlier deploy gets this one: with the kept cache
 //    named for another version, the page drops it and loads fresh, once.
+// 3. A folder the browser took back says so: File System Access answers
+//    queryPermission with "denied" for a handle the page kept, and the folder's
+//    row names it apart from one never added.
 // pages.yml runs it on the assembled page and again on the published page.
 // usage: NODE_PATH="$(npm root --global)" [PAGE_SITE=dir | PAGE_URL=url] node --test test/page/returning.test.mjs
 import assert from "node:assert/strict";
-import { createReadStream, existsSync } from "node:fs";
-import { createServer } from "node:http";
-import { createRequire } from "node:module";
-import { extname, join, resolve } from "node:path";
+import { mkdtempSync } from "node:fs";
+import { tmpdir } from "node:os";
 import test from "node:test";
+import { chromium, serve, surface } from "../product/harness.mjs";
 
-const { chromium } = createRequire(import.meta.url)("playwright");
-const site = resolve(process.env.PAGE_SITE ?? "site");
-const published = process.env.PAGE_URL;
-const types = { ".html": "text/html", ".mjs": "text/javascript", ".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".wasm": "application/wasm", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2", ".webmanifest": "application/manifest+json" };
-
-async function open(run) {
-  const server = createServer((request, response) => {
-    let path = decodeURIComponent(new URL(request.url, "http://localhost").pathname).replace(/^\/me\//, "/");
-    if (path.endsWith("/")) path += "index.html";
-    const file = resolve(join(site, path));
-    if (!file.startsWith(site) || !existsSync(file)) return response.writeHead(404).end();
-    response.writeHead(200, { "content-type": types[extname(file)] ?? "application/octet-stream" });
-    createReadStream(file).pipe(response);
-  });
-  if (!published) await new Promise((done) => server.listen(0, "127.0.0.1", done));
-  const browser = await chromium.launch();
+async function open(run, profile) {
+  const server = await serve();
+  // Only a profile on disk keeps a folder's handle.
+  const context = profile ? await chromium.launchPersistentContext(profile) : await (await chromium.launch()).newContext();
   try {
-    const context = await browser.newContext();
     const page = await context.newPage();
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    const url = published ?? `http://127.0.0.1:${server.address().port}/me/`;
-    await run({ page, url, errors });
+    await run({ page, url: server.url, errors, context });
   } finally {
-    await browser.close();
+    await (context.browser() ?? context).close();
     server.close();
   }
 }
@@ -105,4 +93,28 @@ test("a browser that kept an earlier deploy loads this one (CO-05)", async () =>
     assert.equal(await page.evaluate(() => sessionStorage.getItem("me.healed")), served);
     assert.deepEqual(errors, [], `page errors: ${errors.join(" | ")}`);
   });
+});
+
+test("a kept folder the browser took back says so (CO-05)", async () => {
+  await open(async ({ page, url, errors, context }) => {
+    // The picker hands over a folder of the page's own private file system; the browser's answer for it is the test's to set.
+    await context.addInitScript(() => {
+      window.showDirectoryPicker = async () => (await navigator.storage.getDirectory()).getDirectoryHandle("kept", { create: true });
+      FileSystemHandle.prototype.queryPermission = async () => localStorage.getItem("test.grant") ?? "granted";
+    });
+    await page.goto(url);
+    await ready(page);
+    await page.locator('.pr-go[data-place="boundary"]').evaluate((button) => button.click());
+    const row = page.locator("#pr-settings .pr-setting", { has: page.locator("button", { hasText: surface.words["device.folder"] }) });
+    const says = (text) => row.locator(".pr-state", { hasText: text }).waitFor({ state: "attached", timeout: 30000 });
+    await says(surface.words["device.none"]);
+    await row.locator("button", { hasText: surface.words["device.folder"] }).evaluate((button) => button.click());
+    await says(/^kept$/);
+    await page.evaluate(() => localStorage.setItem("test.grant", "denied"));
+    await page.reload();
+    await ready(page);
+    await page.locator('.pr-go[data-place="boundary"]').evaluate((button) => button.click());
+    await says(`kept: ${surface.words["device.taken"]}`);
+    assert.deepEqual(errors, [], `page errors: ${errors.join(" | ")}`);
+  }, mkdtempSync(`${tmpdir()}/prism-`));
 });
