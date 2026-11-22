@@ -123,20 +123,6 @@ def load():
     return {d: Spec(d, keyword) for d, keyword in MODEL["facets"].items()}
 
 
-def coherence_facets():
-    """The coherence registry's facets, through tools/specs/record.py when it
-    is there (it assembles the per-facet files), else inline."""
-    path = SPECS / "coherence/spec.json"
-    record = ROOT / "tools/specs/record.py"
-    if record.exists():
-        import importlib.util
-        spec = importlib.util.spec_from_file_location("record", record)
-        mod = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(mod)
-        return mod.load(str(path))["facets"]
-    return json.loads(path.read_text())["facets"]
-
-
 def theorem_count(module):
     p = SRC / f"{module}Proofs.lex.tex"
     return len(re.findall(r"^theorem\{", p.read_text(), re.M)) if p.exists() else 0
@@ -262,45 +248,16 @@ def audit():
         if longest > REQ_MAX:
             fail.append(f"{where}: a request of {longest} bytes exceeds the root's maximum {REQ_MAX}")
         out[d] = {"spec": s, "desc": desc, "digest": digest, "witnesses": witnesses, "points": points, "names": names}
-    # Settings: the coherence registry says which facets a setting drives;
-    # this model says which of their fields. Every field bound must be a
-    # sensitive field of a facet the registry has the setting drive, and
-    # every facet the registry has it drive must have a field bound.
-    surface = json.loads((SPECS / "surface/spec.json").read_text())
-    keys = [x["key"] for x in surface["settings"]]
-    bindings = MODEL.get("settings", {})
-    dir_of = {kw: d for d, kw in MODEL["facets"].items()}
-    registry = {}
-    for f in coherence_facets():
-        for k in f.get("drives", {}).get("settings", []):
-            registry.setdefault(k, set()).add(f.get("line", f["key"]))
-    bound = 0
-    for k in keys:
-        drives = bindings.get(k, [])
-        ok = True
-        for d, field in drives:
-            if d not in out or field not in [n for n, _ in out[d]["witnesses"]]:
-                fail.append(f"setting `{k}` drives {d}.{field}, which is not a sensitive field of a facet")
-                ok = False
-            elif MODEL["facets"][d] not in registry.get(k, set()):
-                fail.append(f"setting `{k}` binds {d}.{field}, but the coherence registry does not have `{MODEL['facets'][d]}` drive `{k}`")
-                ok = False
-        for kw in sorted(registry.get(k, set())):
-            d = dir_of.get(kw)
-            if not any(b == d for b, _ in drives):
-                fail.append(f"the coherence registry has `{kw}` drive setting `{k}`, but no field of it is bound under settings.{k}")
-                ok = False
-        if not drives:
-            fail.append(f"setting `{k}` drives no field of any facet")
-        elif ok:
-            bound += 1
-    for k in bindings:
-        if k not in keys:
-            fail.append(f"settings.{k} is not a setting of the surface")
-    # The person's view is the page: say which proven settings it draws,
-    # so "proven" never reads as "what the person handles" (PD-03).
-    seen = [x["name"] for x in surface["settings"] if x.get("viewpoint") == "person"]
-    return fail, out, (bound, len(keys), seen)
+    # Settings: generators/realize answers them from the surface, the coherence
+    # registry and this model (test/realize/settings.txt, held by GN-01): how
+    # many settings drive a sensitive field of every facet the registry has
+    # them drive, each flaw in words, and which the person sees (PD-03).
+    path = FACTS / "settings.txt"
+    if not path.exists():
+        return fail + ["test/realize/settings.txt is missing: run tools/generators/run.sh"], out, (0, 0, [])
+    told = {w: [l[len(w) + 10:] for l in path.read_text(encoding="utf-8").splitlines() if l.startswith(f"settings {w} ")] for w in ("bound", "seen", "flaw")}
+    bound, _, count = told["bound"][0].split(" ")
+    return fail + told["flaw"], out, (int(bound), int(count), told["seen"])
 
 
 def camel(d):
