@@ -1,0 +1,328 @@
+\begin{lexlean}{PrismRfc3339}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Abnf}
+\importmodule{PrismGrammarRfc3339}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: r3At,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => 0
+    | Option.some b => (prim to_nat b : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3Len,
+  parameters: [s : Bytes],
+  result: Nat,
+  body: (prim length s : Nat)
+}
+
+definition{
+  name: r3Slice,
+  parameters: [s : Bytes, start : Nat, count : Nat],
+  result: Bytes,
+  body: (match (prim slice s start count : (Option Bytes))
+    | Option.none => 0x
+    | Option.some b => b)
+}
+
+definition{
+  name: r3Cut,
+  parameters: [s : Bytes, a : Nat, b : Nat],
+  result: Bytes,
+  body: (r3Slice s a (prim subtract b a : Nat))
+}
+
+definition{
+  name: r3Same,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bool,
+  body: (prim equal (prim compare_bytes a b : Ordering) (prim compare_bytes 0x00 0x00 : Ordering) : Bool),
+  axioms: [propext]
+}
+
+definition{
+  name: r3Digit,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (r3Slice (prim utf8_encode "0123456789" : Bytes) (prim remainder n 10 0 : Nat) 1)
+}
+
+definition{
+  name: r3Two,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (prim append (r3Digit (prim quotient n 10 0 : Nat)) (r3Digit n) : Bytes)
+}
+
+definition{
+  name: r3Four,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (prim append (r3Two (prim quotient n 100 0 : Nat)) (r3Two (prim remainder n 100 0 : Nat)) : Bytes)
+}
+
+definition{
+  name: r3N,
+  parameters: [v : Bytes, i : Nat],
+  result: Nat,
+  body: (prim subtract (r3At v i) 48 : Nat),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3N2,
+  parameters: [v : Bytes, i : Nat],
+  result: Nat,
+  body: ((prim multiply (r3N v i) 10 : Nat) + (r3N v (i + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3LineEndFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((r3Len s) <? (i + 1)) then i else (if ((r3At s i) =? 10) then i else (r3LineEndFrom s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: r3LineEnd,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (r3LineEndFrom s i (r3Len s)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3Derived,
+  parameters: [v : Bytes],
+  result: Bool,
+  body: (not (r3Same (Abnf::abnfAnswer (PrismGrammarRfc3339::prismGrammarRfc3339Table) (PrismGrammarRfc3339::prismGrammarRfc3339Memo) (prim append (prim utf8_encode "3 " : Bytes) v : Bytes) 100000) (prim utf8_encode "none" : Bytes))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3Year,
+  parameters: [v : Bytes],
+  result: Nat,
+  body: ((prim multiply (r3N2 v 0) 100 : Nat) + (r3N2 v 2)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3Month,
+  parameters: [v : Bytes],
+  result: Nat,
+  body: (r3N2 v 5),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3Day,
+  parameters: [v : Bytes],
+  result: Nat,
+  body: (r3N2 v 8),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3Hour,
+  parameters: [v : Bytes],
+  result: Nat,
+  body: (r3N2 v 11),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3Minute,
+  parameters: [v : Bytes],
+  result: Nat,
+  body: (r3N2 v 14),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3Second,
+  parameters: [v : Bytes],
+  result: Nat,
+  body: (r3N2 v 17),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3Numbered,
+  parameters: [v : Bytes],
+  result: Bool,
+  body: (let z : Nat := (r3At v (prim subtract (r3Len v) 1 : Nat)); (not ((z =? 90) || (z =? 122)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3OffsetAt,
+  parameters: [v : Bytes],
+  result: Nat,
+  body: (if (r3Numbered v) then (prim subtract (r3Len v) 6 : Nat) else (prim subtract (r3Len v) 1 : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3OffsetHour,
+  parameters: [v : Bytes],
+  result: Nat,
+  body: (if (r3Numbered v) then (r3N2 v ((r3OffsetAt v) + 1)) else 0),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3OffsetMinute,
+  parameters: [v : Bytes],
+  result: Nat,
+  body: (if (r3Numbered v) then (r3N2 v ((r3OffsetAt v) + 4)) else 0),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3Behind,
+  parameters: [v : Bytes],
+  result: Bool,
+  body: ((r3Numbered v) && ((r3At v (r3OffsetAt v)) =? 45)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3Leap,
+  parameters: [y : Nat],
+  result: Bool,
+  body: (((prim remainder y 4 0 : Nat) =? 0) && ((not ((prim remainder y 100 0 : Nat) =? 0)) || ((prim remainder y 400 0 : Nat) =? 0)))
+}
+
+definition{
+  name: r3MonthDays,
+  parameters: [y : Nat, m : Nat],
+  result: Nat,
+  body: (if (m =? 2) then (if (r3Leap y) then 29 else 28) else (if ((m =? 4) || ((m =? 6) || ((m =? 9) || (m =? 11)))) then 30 else 31))
+}
+
+definition{
+  name: r3Days,
+  parameters: [y : Nat, m : Nat, d : Nat],
+  result: Nat,
+  body: (let yy : Nat := (if (m <? 3) then (y + 399) else (y + 400)); (let yoe : Nat := (prim remainder yy 400 0 : Nat); (let mp : Nat := (prim remainder (m + 9) 12 0 : Nat); (let doy : Nat := (prim subtract ((prim quotient ((prim multiply 153 mp : Nat) + 2) 5 0 : Nat) + d) 1 : Nat); (let doe : Nat := ((prim subtract ((prim multiply yoe 365 : Nat) + (prim quotient yoe 4 0 : Nat)) (prim quotient yoe 100 0 : Nat) : Nat) + doy); ((prim multiply (prim quotient yy 400 0 : Nat) 146097 : Nat) + doe))))))
+}
+
+definition{
+  name: r3Date,
+  parameters: [days : Nat],
+  result: Bytes,
+  body: (let doe : Nat := (prim remainder days 146097 0 : Nat); (let yoe : Nat := (prim quotient (prim subtract ((prim subtract doe (prim quotient doe 1460 0 : Nat) : Nat) + (prim quotient doe 36524 0 : Nat)) (prim quotient doe 146096 0 : Nat) : Nat) 365 0 : Nat); (let doy : Nat := (prim subtract doe (prim subtract ((prim multiply 365 yoe : Nat) + (prim quotient yoe 4 0 : Nat)) (prim quotient yoe 100 0 : Nat) : Nat) : Nat); (let mp : Nat := (prim quotient ((prim multiply 5 doy : Nat) + 2) 153 0 : Nat); (let d : Nat := ((prim subtract doy (prim quotient ((prim multiply 153 mp : Nat) + 2) 5 0 : Nat) : Nat) + 1); (let m : Nat := (if (mp <? 10) then (mp + 3) else (prim subtract mp 9 : Nat)); (let yy : Nat := (((prim multiply (prim quotient days 146097 0 : Nat) 400 : Nat) + yoe) + (if (m <? 3) then 1 else 0)); (if ((yy <? 400) || (10399 <? yy)) then 0x else (prim append (r3Four (prim subtract yy 400 : Nat)) (prim append 0x2d (prim append (r3Two m) (prim append 0x2d (r3Two d) : Bytes) : Bytes) : Bytes) : Bytes)))))))))
+}
+
+definition{
+  name: r3UtcMinutes,
+  parameters: [v : Bytes],
+  result: Nat,
+  body: (let here : Nat := (((prim multiply (r3Days (r3Year v) (r3Month v) (r3Day v)) 1440 : Nat) + (prim multiply (r3Hour v) 60 : Nat)) + (r3Minute v)); (let off : Nat := ((prim multiply (r3OffsetHour v) 60 : Nat) + (r3OffsetMinute v)); (if (r3Behind v) then (here + off) else (prim subtract here off : Nat)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3LeapPlace,
+  parameters: [v : Bytes],
+  result: Bool,
+  body: (let u : Nat := (r3UtcMinutes v); (let date : Bytes := (r3Date (prim quotient u 1440 0 : Nat)); (((prim remainder u 1440 0 : Nat) =? 1439) && ((r3Same (r3Slice date 4 6) (prim utf8_encode "-06-30" : Bytes)) || (r3Same (r3Slice date 4 6) (prim utf8_encode "-12-31" : Bytes)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3Fields,
+  parameters: [v : Bytes],
+  result: Bytes,
+  body: (if (((r3Month v) =? 0) || (12 <? (r3Month v))) then (prim utf8_encode "its month is not 01 to 12" : Bytes) else (if (((r3Day v) =? 0) || ((r3MonthDays (r3Year v) (r3Month v)) <? (r3Day v))) then (prim utf8_encode "its day is not a day of its month" : Bytes) else (if (23 <? (r3Hour v)) then (prim utf8_encode "its hour is not 00 to 23" : Bytes) else (if (59 <? (r3Minute v)) then (prim utf8_encode "its minute is not 00 to 59" : Bytes) else (if ((23 <? (r3OffsetHour v)) || (59 <? (r3OffsetMinute v))) then (prim utf8_encode "its offset is not hours 00 to 23 and minutes 00 to 59" : Bytes) else (if (60 <? (r3Second v)) then (prim utf8_encode "its second is not 00 to 60" : Bytes) else (if ((r3Len (r3Date (prim quotient (r3UtcMinutes v) 1440 0 : Nat))) =? 0) then (prim utf8_encode "in UTC its year is not 0000 to 9999" : Bytes) else (if (((r3Second v) =? 60) && (not (r3LeapPlace v))) then (prim utf8_encode "its second 60 is not the last of June or of December in UTC" : Bytes) else 0x)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3Wrong,
+  parameters: [v : Bytes],
+  result: Bytes,
+  body: (if (r3Derived v) then (r3Fields v) else (prim utf8_encode "it is not a date-time of RFC 3339 section 5.6" : Bytes)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3Is,
+  parameters: [v : Bytes],
+  result: Bool,
+  body: ((r3Len (r3Wrong v)) =? 0),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3TrimFrom,
+  parameters: [v : Bytes, e : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => e
+    | Nat.succ rest => (let b : Nat := (r3At v (prim subtract e 1 : Nat)); (if (b =? 48) then (r3TrimFrom v (prim subtract e 1 : Nat) rest) else (if (b =? 46) then (prim subtract e 1 : Nat) else e)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: r3Seconds,
+  parameters: [v : Bytes],
+  result: Bytes,
+  body: (if ((r3OffsetAt v) =? 19) then (r3Slice v 17 2) else (r3Cut v 17 (r3TrimFrom v (r3OffsetAt v) (r3Len v)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3Utc,
+  parameters: [v : Bytes],
+  result: Bytes,
+  body: (let u : Nat := (r3UtcMinutes v); (let m : Nat := (prim remainder u 1440 0 : Nat); (prim append (r3Date (prim quotient u 1440 0 : Nat)) (prim append 0x54 (prim append (r3Two (prim quotient m 60 0 : Nat)) (prim append 0x3a (prim append (r3Two (prim remainder m 60 0 : Nat)) (prim append 0x3a (prim append (r3Seconds v) 0x5a : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3Refused,
+  parameters: [why : Bytes],
+  result: Bytes,
+  body: (prim append (prim utf8_encode "refused: " : Bytes) (prim append why 0x0a : Bytes) : Bytes)
+}
+
+definition{
+  name: r3AnswerUtc,
+  parameters: [v : Bytes],
+  result: Bytes,
+  body: (let w : Bytes := (r3Wrong v); (if ((r3Len w) =? 0) then (prim append (r3Utc v) 0x0a : Bytes) else (r3Refused w))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r3AnswerSame,
+  parameters: [a : Bytes, b : Bytes],
+  result: Bytes,
+  body: (let wa : Bytes := (r3Wrong a); (let wb : Bytes := (r3Wrong b); (if (not ((r3Len wa) =? 0)) then (r3Refused wa) else (if (not ((r3Len wb) =? 0)) then (r3Refused wb) else (if (r3Same (r3Utc a) (r3Utc b)) then (prim append (prim utf8_encode "same" : Bytes) 0x0a : Bytes) else (prim append (prim utf8_encode "differ" : Bytes) 0x0a : Bytes)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: prismRfc3339Dispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (let n : Nat := (r3Len value); (let e : Nat := (r3LineEnd value 0); (let verb : Bytes := (r3Slice value 0 e); (let f : Nat := (r3LineEnd value (e + 1)); (let g : Nat := (r3LineEnd value (f + 1)); (if ((n =? 0) || (256 <? n)) then (prim utf8_encode "invalid" : Bytes) else (if ((47 <? (r3At value 0)) && ((r3At value 0) <? 58)) then (Abnf::abnfAnswer (PrismGrammarRfc3339::prismGrammarRfc3339Table) (PrismGrammarRfc3339::prismGrammarRfc3339Memo) value 100000) else (if ((r3Same verb (prim utf8_encode "utc" : Bytes)) && ((f + 1) =? n)) then (r3AnswerUtc (r3Cut value (e + 1) f)) else (if ((r3Same verb (prim utf8_encode "same" : Bytes)) && ((f <? g) && ((g + 1) =? n))) then (r3AnswerSame (r3Cut value (e + 1) f) (r3Cut value (f + 1) g)) else (prim append (prim utf8_encode "refused: say utc and a date-time, or same and two, each on its own line" : Bytes) 0x0a : Bytes)))))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

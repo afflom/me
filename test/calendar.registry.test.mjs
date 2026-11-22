@@ -290,4 +290,18 @@ test('enum STATUS=IN-PROCESS', () => reads('enum', 'STATUS=IN-PROCESS', '3.8.1.1
 test('enum STATUS=NEEDS-ACTION', () => reads('enum', 'STATUS=NEEDS-ACTION', '3.8.1.11'));
 // enforces: rfc5545-enum-STATUS-TENTATIVE
 test('enum STATUS=TENTATIVE', () => reads('enum', 'STATUS=TENTATIVE', '3.8.1.11'));
+// The sentences of RFC 5545 that its grammar states (app/specs/calendar/sentences.json): the rule that states one
+// takes what the sentence allows and refuses what it forbids. The standards register names this suite for each of them.
+const sentences = JSON.parse(readFileSync('app/specs/calendar/sentences.json', 'utf8')).sentences;
+for (const { id, rule, takes, refuses } of sentences) {
+  test('sentence ' + id, () => {
+    assert.ok(ical.rules[rule] && takes.length + refuses.length, 'nothing to hold ' + rule + ' to');
+    for (const text of takes) assert.ok(derives(rule, text), rule + ' takes ' + JSON.stringify(text));
+    for (const text of refuses) assert.ok(!derives(rule, text), rule + ' refuses ' + JSON.stringify(text));
+  });
+}
+test('the register names this suite for exactly the sentences listed', () => {
+  const named = Object.entries(JSON.parse(readFileSync('app/specs/standards/register/rfc5545.json', 'utf8')).enforcedBy);
+  assert.deepEqual(named.filter(([, entry]) => entry.suite === 'test/calendar.registry.test.mjs').map(([id]) => id).sort(), sentences.map(({ id }) => id).sort());
+});
 test('the examples the grammar refuses are the slips the specification lists', () => assert.deepEqual([...refused].sort(), [...slips].sort()));
