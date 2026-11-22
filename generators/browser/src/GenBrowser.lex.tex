@@ -283,5 +283,63 @@ definition{
     | Option.some index => (let n : Nat := (Foundation.Bytes::byteLength index); (ctor Option.some [Bytes] (brCat3 (brCat3 (brU "// Written by GenBrowser (browserprobe) from browserReaches in app/src/PrismBrowser.lex.tex.\n// Each reach is a surface, a way, and a path of members from the global object;\n// every member on a path is in the model, pinned to its Web IDL and its Chrome support.\n\n") (brU "export const SURFACES = [") (brSurfaceList index 0 0x n)) (brCat3 (brU "];\n\nconst REACHES = [\n") (brReachRows index 0 n) (brU "];\n\n")) (brU "const reach = (g, path) => path.reduce((at, step) => at?.[step], g) != null;\n\n// What this browser reports, surface by surface: yes when, for one of a surface's\n// ways, every path of that way reaches a value.\nexport function probed(g = globalThis) {\n  const ways = Object.fromEntries(SURFACES.map((surface) => [surface, new Map()]));\n  for (const [surface, way, path] of REACHES) ways[surface].set(way, (ways[surface].get(way) ?? true) && reach(g, path));\n  return Object.fromEntries(SURFACES.map((surface) => [surface, [...ways[surface].values()].some(Boolean) ? 'yes' : 'no']));\n}\n"))))),
   axioms: [Quot.sound, propext]
 }
+
+definition{
+  name: brStrOr,
+  parameters: [s : Bytes, q : Nat],
+  result: Bytes,
+  body: (match (Foundation.Json::text s q) | Option.none => 0x | Option.some b => b),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: brNextStr,
+  parameters: [s : Bytes, q : Nat],
+  result: Nat,
+  body: (let n : Nat := (Foundation.Bytes::byteLength s); (brByteEnd s ((Foundation.Json::stringEnd s (q + 1)) + 1) n 34 n)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: brNthPath,
+  parameters: [s : Bytes, i : Nat, k : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength s); (let q : Nat := (brFindFrom s (brU "\"app/specs/oracle/") i n); (if (n <? (q + 1)) then 0x else (if (k =? 0) then (brStrOr s q) else (brNthPath s (q + 1) (prim subtract k 1 : Nat) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brDeviceRow,
+  parameters: [archive : Bytes, s : Bytes, q1 : Nat, problems : Bool],
+  result: Bytes,
+  body: (let n : Nat := (Foundation.Bytes::byteLength s); (let q2 : Nat := (brNextStr s q1); (let q3 : Nat := (brNextStr s q2); (let q4 : Nat := (brNextStr s q3); (let r : Nat := ((brFindFrom s (brU "registration := ") q4 n) + 16); (let re : Nat := (brDigitEnd s r n n); (let q5 : Nat := (brByteEnd s re n 34 n); (let path : Bytes := (brNthPath s 0 (brNatFrom s r re 0 (prim subtract re r : Nat)) n); (let held : Bool := (match (Foundation.Tar::find archive path)
+    | Option.none => false
+    | Option.some file => (brContains file (brStrOr s q5))); (if problems then (if held then 0x else (brCat3 (brU "the extension ") (brStrOr s q1) (brCat3 (brU " is not stated as PrismDevice quotes it by its registration ") path (brU "\n")))) else (brCat3 (brCat3 (brU "  ['") (brStrOr s q1) (brU "', '")) (brCat3 (brStrOr s q2) (brU "', '") (brStrOr s q3)) (brCat3 (brU "', '") (brStrOr s q4) (brU "'],\n"))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: brDeviceRows,
+  parameters: [archive : Bytes, s : Bytes, i : Nat, problems : Bool, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let n : Nat := (Foundation.Bytes::byteLength s); (let hit : Nat := (brFindFrom s (brU "record DeviceFormat {extension := ") i n); (if (n <? (hit + 1)) then 0x else (Foundation.Bytes::appendBytes (brDeviceRow archive s (hit + 34) problems) (brDeviceRows archive s (hit + 34) problems rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: brDeviceFormats,
+  parameters: [archive : Bytes, problems : Bool],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (brU "app/src/PrismDevice.lex.tex"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (let rows : Bytes := (brDeviceRows archive s 0 problems 64); (ctor Option.some [Bytes] (if problems then rows else (brCat3 (brU "// Written by GenBrowser (deviceformats) from deviceFormats in app/src/PrismDevice.lex.tex:\n// each file extension a media type's IANA registration states, the format it is\n// judged as, the kind of item it holds and the content type an item is kept under.\n\nexport const FORMATS = [\n") rows (brU "];\n")))))),
+  axioms: [Quot.sound, propext]
+}
 \end{semanticmodule}
 \end{lexlean}

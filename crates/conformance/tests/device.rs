@@ -80,14 +80,14 @@ fn device_dv_01() {
     );
     let page = read("site/device/device.mjs");
     assert_eq!(
-        page.matches("decide(`").count(),
+        page.matches("await decide(await read(`").count(),
         1,
         "DV-01: one place asks PrismFolder"
     );
     assert!(
-        page.contains("!== 'read') { tally.skip += 1; return; }")
-            && page.contains("if (answer !== 'read') { tally[answer === 'skip' ? 'skip' : 'refuse'] += 1; return; }")
-            && page.contains("if ((await ask(grant, 'other', 'list', 'small')) !== 'read') return;"),
+        page.contains("if (said !== 'read') { tally[said] += 1; return; }")
+            && page.contains("if (said !== 'files') return;")
+            && page.contains("if ((await ask('folder', `list ${grant}`)) !== 'read') return;"),
         "DV-01: every list and every read acts only on read"
     );
     let root = read("tools/prism_root.py");

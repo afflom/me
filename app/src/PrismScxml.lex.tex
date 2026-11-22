@@ -23,7 +23,8 @@ structure{
     {name: posts, type: Bytes},
     {name: cancels, type: Bytes},
     {name: kids, type: Bytes},
-    {name: spawns, type: Bytes}
+    {name: spawns, type: Bytes},
+    {name: data, type: Bytes}
   ]
 }
 
@@ -50,7 +51,8 @@ structure{
     {name: started, type: Bool},
     {name: outcome, type: Bytes},
     {name: cancelled, type: Bool},
-    {name: forward, type: Bool}
+    {name: forward, type: Bool},
+    {name: data, type: Bytes}
   ]
 }
 
@@ -246,7 +248,7 @@ definition{
   name: sxKindOf,
   parameters: [n : Bytes],
   result: Nat,
-  body: (if (sxSame n (prim utf8_encode "scxml" : Bytes)) then 1 else (if (sxSame n (prim utf8_encode "state" : Bytes)) then 2 else (if (sxSame n (prim utf8_encode "parallel" : Bytes)) then 3 else (if (sxSame n (prim utf8_encode "final" : Bytes)) then 4 else (if (sxSame n (prim utf8_encode "history" : Bytes)) then 5 else (if (sxSame n (prim utf8_encode "initial" : Bytes)) then 6 else (if (sxSame n (prim utf8_encode "transition" : Bytes)) then 7 else (if (sxSame n (prim utf8_encode "onentry" : Bytes)) then 8 else (if (sxSame n (prim utf8_encode "onexit" : Bytes)) then 9 else (if (sxSame n (prim utf8_encode "raise" : Bytes)) then 10 else (if (sxSame n (prim utf8_encode "send" : Bytes)) then 11 else (if (sxSame n (prim utf8_encode "invoke" : Bytes)) then 12 else (if (sxSame n (prim utf8_encode "content" : Bytes)) then 13 else 0))))))))))))),
+  body: (if (sxSame n (prim utf8_encode "scxml" : Bytes)) then 1 else (if (sxSame n (prim utf8_encode "state" : Bytes)) then 2 else (if (sxSame n (prim utf8_encode "parallel" : Bytes)) then 3 else (if (sxSame n (prim utf8_encode "final" : Bytes)) then 4 else (if (sxSame n (prim utf8_encode "history" : Bytes)) then 5 else (if (sxSame n (prim utf8_encode "initial" : Bytes)) then 6 else (if (sxSame n (prim utf8_encode "transition" : Bytes)) then 7 else (if (sxSame n (prim utf8_encode "onentry" : Bytes)) then 8 else (if (sxSame n (prim utf8_encode "onexit" : Bytes)) then 9 else (if (sxSame n (prim utf8_encode "raise" : Bytes)) then 10 else (if (sxSame n (prim utf8_encode "send" : Bytes)) then 11 else (if (sxSame n (prim utf8_encode "invoke" : Bytes)) then 12 else (if (sxSame n (prim utf8_encode "content" : Bytes)) then 13 else (if (sxSame n (prim utf8_encode "datamodel" : Bytes)) then 14 else (if (sxSame n (prim utf8_encode "data" : Bytes)) then 15 else (if (sxSame n (prim utf8_encode "assign" : Bytes)) then 16 else (if (sxSame n (prim utf8_encode "if" : Bytes)) then 17 else (if (sxSame n (prim utf8_encode "elseif" : Bytes)) then 18 else (if (sxSame n (prim utf8_encode "else" : Bytes)) then 19 else (if (sxSame n (prim utf8_encode "conf:incrementID" : Bytes)) then 20 else 0)))))))))))))))))))),
   axioms: [propext]
 }
 
@@ -736,70 +738,70 @@ definition{
   name: sxSetConfig,
   parameters: [r : SxRun, v : Bytes],
   result: SxRun,
-  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := v, hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns)})
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := v, hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns), data := (project r data)})
 }
 
 definition{
   name: sxSetHist,
   parameters: [r : SxRun, v : Bytes],
   result: SxRun,
-  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := v, internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns)})
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := v, internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns), data := (project r data)})
 }
 
 definition{
   name: sxSetInternal,
   parameters: [r : SxRun, v : Bytes],
   result: SxRun,
-  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := v, toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns)})
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := v, toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns), data := (project r data)})
 }
 
 definition{
   name: sxSetToinvoke,
   parameters: [r : SxRun, v : Bytes],
   result: SxRun,
-  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := v, running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns)})
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := v, running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns), data := (project r data)})
 }
 
 definition{
   name: sxSetRunning,
   parameters: [r : SxRun, v : Bool],
   result: SxRun,
-  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := v, outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns)})
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := v, outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns), data := (project r data)})
 }
 
 definition{
   name: sxSetOutcome,
   parameters: [r : SxRun, v : Bytes],
   result: SxRun,
-  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := v, posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns)})
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := v, posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns), data := (project r data)})
 }
 
 definition{
   name: sxSetPosts,
   parameters: [r : SxRun, v : Bytes],
   result: SxRun,
-  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := v, cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns)})
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := v, cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns), data := (project r data)})
 }
 
 definition{
   name: sxSetCancels,
   parameters: [r : SxRun, v : Bytes],
   result: SxRun,
-  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := v, kids := (project r kids), spawns := (project r spawns)})
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := v, kids := (project r kids), spawns := (project r spawns), data := (project r data)})
 }
 
 definition{
   name: sxSetKids,
   parameters: [r : SxRun, v : Bytes],
   result: SxRun,
-  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := v, spawns := (project r spawns)})
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := v, spawns := (project r spawns), data := (project r data)})
 }
 
 definition{
   name: sxSetSpawns,
   parameters: [r : SxRun, v : Bytes],
   result: SxRun,
-  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := v})
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := v, data := (project r data)})
 }
 
 definition{
@@ -958,6 +960,223 @@ definition{
 }
 
 definition{
+  name: sxDigits,
+  parameters: [v : Bytes, i : Nat, acc : Nat, scale : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let b : Nat := (sxAt v i); (if ((b <? 48) || (57 <? b)) then acc else (sxDigits v (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract b 48 : Nat)) scale rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxDigitsEnd,
+  parameters: [v : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let b : Nat := (sxAt v i); (if (((b <? 48) || (57 <? b)) || ((sxLen v) <? (i + 1))) then i else (sxDigitsEnd v (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxEventRow,
+  parameters: [name : Bytes],
+  result: Bytes,
+  body: (prim append (sxU16 (sxLen name)) name : Bytes)
+}
+
+definition{
+  name: sxSetData,
+  parameters: [r : SxRun, v : Bytes],
+  result: SxRun,
+  body: (record SxRun {doc := (project r doc), tab := (project r tab), root := (project r root), sid := (project r sid), parent := (project r parent), config := (project r config), hist := (project r hist), internal := (project r internal), toinvoke := (project r toinvoke), running := (project r running), outcome := (project r outcome), posts := (project r posts), cancels := (project r cancels), kids := (project r kids), spawns := (project r spawns), data := v})
+}
+
+definition{
+  name: sxVarAt,
+  parameters: [d : Bytes, name : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => (sxLen d)
+    | Nat.succ rest => (if ((sxLen d) <? (i + 4)) then (sxLen d) else (let nl : Nat := (sxG16 d i); (let vl : Nat := (sxG16 d ((i + 2) + nl)); (if (sxSame (sxSlice d (i + 2) nl) name) then i else (sxVarAt d name (((i + 4) + nl) + vl) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxVarHas,
+  parameters: [d : Bytes, name : Bytes],
+  result: Bool,
+  body: ((sxVarAt d name 0 (sxLen d)) <? (sxLen d)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxVarGet,
+  parameters: [d : Bytes, name : Bytes],
+  result: Bytes,
+  body: (let i : Nat := (sxVarAt d name 0 (sxLen d)); (let nl : Nat := (sxG16 d i); (if (i <? (sxLen d)) then (sxSlice d ((i + 4) + nl) (sxG16 d ((i + 2) + nl))) else 0x))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxVarPut,
+  parameters: [d : Bytes, name : Bytes, v : Bytes],
+  result: Bytes,
+  body: (let i : Nat := (sxVarAt d name 0 (sxLen d)); (let nl : Nat := (sxG16 d i); (let row : Bytes := (prim append (sxEventRow name) (sxEventRow v) : Bytes); (if (i <? (sxLen d)) then (prim append (sxSlice d 0 i) (prim append row (sxFrom d (((i + 4) + nl) + (sxG16 d ((i + 2) + nl)))) : Bytes) : Bytes) else (prim append d row : Bytes))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxDeclared,
+  parameters: [r : SxRun, name : Bytes],
+  result: Bool,
+  body: (sxVarHas (project r data) name),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxGet,
+  parameters: [r : SxRun, name : Bytes],
+  result: Bytes,
+  body: (sxVarGet (project r data) name),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxPut,
+  parameters: [r : SxRun, name : Bytes, v : Bytes],
+  result: SxRun,
+  body: (sxSetData r (sxVarPut (project r data) name v)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxIsDigits,
+  parameters: [v : Bytes],
+  result: Bool,
+  body: ((0 <? (sxLen v)) && ((sxDigitsEnd v 0 (sxLen v)) =? (sxLen v))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxNum,
+  parameters: [v : Bytes],
+  result: Nat,
+  body: (sxDigits v 0 0 1 (sxLen v)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxDecimal,
+  parameters: [n : Nat],
+  result: Bytes,
+  body: (sxDecFrom n 0x 80)
+}
+
+definition{
+  name: sxNumber,
+  parameters: [v : Bytes],
+  result: Bytes,
+  body: (prim append 0x01 (sxDecimal (sxNum v)) : Bytes),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxText,
+  parameters: [v : Bytes],
+  result: Bytes,
+  body: (prim append 0x02 v : Bytes)
+}
+
+definition{
+  name: sxTruthy,
+  parameters: [v : Bytes],
+  result: Bool,
+  body: (let k : Nat := (sxAt v 0); (if (k =? 1) then (not ((sxNum (sxFrom v 1)) =? 0)) else (if (k =? 2) then (1 <? (sxLen v)) else (if (k =? 3) then true else false)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxBit01,
+  parameters: [b : Bool],
+  result: Nat,
+  body: (if b then 1 else 0)
+}
+
+definition{
+  name: sxEvalText,
+  parameters: [r : SxRun, v : Bytes],
+  result: (Option Bytes),
+  body: (if (sxIsDigits v) then (ctor Option.some [Bytes] (sxNumber v)) else (if (((sxAt v 0) =? 95) && (sxDeclared r v)) then (ctor Option.some [Bytes] (sxGet r v)) else (ctor Option.none [Bytes]))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxValueOf,
+  parameters: [r : SxRun, e : Nat],
+  result: (Option Bytes),
+  body: (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (if (sxHas s t e (prim utf8_encode "conf:illegalExpr" : Bytes)) then (ctor Option.none [Bytes]) else (match (sxAttr s t e (prim utf8_encode "conf:expr" : Bytes))
+    | Option.none => (match (sxAttr s t e (prim utf8_encode "conf:varExpr" : Bytes))
+    | Option.none => (match (sxAttr s t e (prim utf8_encode "conf:quoteExpr" : Bytes))
+    | Option.none => (match (sxAttr s t e (prim utf8_encode "conf:systemVarExpr" : Bytes))
+    | Option.none => (ctor Option.some [Bytes] 0x00)
+    | Option.some v4 => (sxEvalText r v4))
+    | Option.some v3 => (ctor Option.some [Bytes] (sxText v3)))
+    | Option.some v2 => (if (sxDeclared r v2) then (ctor Option.some [Bytes] (sxGet r v2)) else (ctor Option.none [Bytes])))
+    | Option.some v1 => (sxEvalText r v1))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxCompare,
+  parameters: [a : Nat, b : Nat, op : Nat, eq : Bool],
+  result: Nat,
+  body: (if (op =? 61) then (sxBit01 (a =? b)) else (if (op =? 60) then (sxBit01 ((a <? b) || (eq && (a =? b)))) else (if (op =? 62) then (sxBit01 ((b <? a) || (eq && (a =? b)))) else 2)))
+}
+
+definition{
+  name: sxIdVal,
+  parameters: [r : SxRun, v : Bytes],
+  result: Nat,
+  body: (let ie : Nat := (sxDigitsEnd v 0 (sxLen v)); (let name : Bytes := (sxSlice v 0 ie); (let ent : Bool := ((sxAt v ie) =? 38); (let op : Nat := (if ent then (if (sxStartsAt v ie (prim utf8_encode "&lt;" : Bytes)) then 60 else (if (sxStartsAt v ie (prim utf8_encode "&gt;" : Bytes)) then 62 else 0)) else (sxAt v ie)); (let oe : Nat := (if ent then (ie + 4) else (ie + 1)); (let eq : Bool := ((not (op =? 61)) && ((sxAt v oe) =? 61)); (let rhs : Bytes := (sxFrom v (if eq then (oe + 1) else oe)); (let val : Bytes := (sxGet r name); (let body : Bytes := (sxFrom val 1); (if ((ie =? 0) || ((not (sxDeclared r name)) || (not (sxIsDigits rhs)))) then 2 else (if (((sxAt val 0) =? 1) || (((sxAt val 0) =? 2) && (sxIsDigits body))) then (sxCompare (sxNum body) (sxNum rhs) op eq) else 0))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxVarEq,
+  parameters: [r : SxRun, v : Bytes],
+  result: Nat,
+  body: (let ae : Nat := (sxDigitsEnd v 0 (sxLen v)); (let a : Bytes := (sxSlice v 0 ae); (let bs : Nat := (sxSkipWs v ae (sxLen v)); (let b : Bytes := (sxFrom v bs); (if ((sxDeclared r a) && (sxDeclared r b)) then (sxBit01 ((not ((sxAt (sxGet r a) 0) =? 5)) && (sxSame (sxGet r a) (sxGet r b)))) else 2))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxCond,
+  parameters: [r : SxRun, e : Nat],
+  result: Nat,
+  body: (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (if (sxHas s t e (prim utf8_encode "conf:true" : Bytes)) then 1 else (if (sxHas s t e (prim utf8_encode "conf:false" : Bytes)) then 0 else (if (sxHas s t e (prim utf8_encode "conf:nonBoolean" : Bytes)) then 2 else (match (sxAttr s t e (prim utf8_encode "conf:inState" : Bytes))
+    | Option.none => (match (sxAttr s t e (prim utf8_encode "conf:idVal" : Bytes))
+    | Option.none => (match (sxAttr s t e (prim utf8_encode "conf:isBound" : Bytes))
+    | Option.none => (match (sxAttr s t e (prim utf8_encode "conf:unboundVar" : Bytes))
+    | Option.none => (match (sxAttr s t e (prim utf8_encode "conf:VarEqVar" : Bytes))
+    | Option.none => (match (sxAttr s t e (prim utf8_encode "conf:eventNameVal" : Bytes))
+    | Option.none => (if (sxHas s t e (prim utf8_encode "cond" : Bytes)) then 0 else 1)
+    | Option.some v6 => (sxBit01 (sxSame (sxGet r (prim utf8_encode "_event.name" : Bytes)) (sxText v6))))
+    | Option.some v5 => (sxVarEq r v5))
+    | Option.some v4 => (sxBit01 (not ((sxDeclared r v4) && (not ((sxAt (sxGet r v4) 0) =? 0))))))
+    | Option.some v3 => (if (sxDeclared r v3) then (sxBit01 (sxTruthy (sxGet r v3))) else 2))
+    | Option.some v2 => (sxIdVal r v2))
+    | Option.some v1 => (match (sxById s t (project r root) v1)
+      | Option.none => 0
+      | Option.some x => (sxBit01 (sxMem (project r config) x))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: sxEventMatchFrom,
   parameters: [v : Bytes, i : Nat, name : Bytes, fuel : Nat],
   result: Bool,
@@ -969,12 +1188,20 @@ definition{
 }
 
 definition{
+  name: sxEnabledCode,
+  parameters: [r : SxRun, tr : Nat, has : Bool, name : Bytes],
+  result: Nat,
+  body: (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (if (match (sxAttr s t tr (prim utf8_encode "event" : Bytes))
+    | Option.none => (not has)
+    | Option.some v => (has && (sxEventMatchFrom v 0 name (sxLen v)))) then (sxCond r tr) else 0))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: sxEnabledOne,
   parameters: [r : SxRun, tr : Nat, has : Bool, name : Bytes],
   result: Bool,
-  body: (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (if (sxHas s t tr (prim utf8_encode "cond" : Bytes)) then false else (match (sxAttr s t tr (prim utf8_encode "event" : Bytes))
-    | Option.none => (not has)
-    | Option.some v => (has && (sxEventMatchFrom v 0 name (sxLen v))))))),
+  body: ((sxEnabledCode r tr has name) =? 1),
   axioms: [Quot.sound, propext]
 }
 
@@ -1048,13 +1275,6 @@ definition{
 }
 
 definition{
-  name: sxEventRow,
-  parameters: [name : Bytes],
-  result: Bytes,
-  body: (prim append (sxU16 (sxLen name)) name : Bytes)
-}
-
-definition{
   name: sxRaise,
   parameters: [r : SxRun, name : Bytes],
   result: SxRun,
@@ -1096,28 +1316,6 @@ definition{
 }
 
 definition{
-  name: sxDigits,
-  parameters: [v : Bytes, i : Nat, acc : Nat, scale : Nat, fuel : Nat],
-  result: Nat,
-  body: (match fuel
-    | Nat.zero => acc
-    | Nat.succ rest => (let b : Nat := (sxAt v i); (if ((b <? 48) || (57 <? b)) then acc else (sxDigits v (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract b 48 : Nat)) scale rest)))),
-  axioms: [Quot.sound, propext],
-  recursive_argument: fuel
-}
-
-definition{
-  name: sxDigitsEnd,
-  parameters: [v : Bytes, i : Nat, fuel : Nat],
-  result: Nat,
-  body: (match fuel
-    | Nat.zero => i
-    | Nat.succ rest => (let b : Nat := (sxAt v i); (if (((b <? 48) || (57 <? b)) || ((sxLen v) <? (i + 1))) then i else (sxDigitsEnd v (i + 1) rest)))),
-  axioms: [Quot.sound, propext],
-  recursive_argument: fuel
-}
-
-definition{
   name: sxPow10,
   parameters: [n : Nat, acc : Nat, fuel : Nat],
   result: Nat,
@@ -1152,14 +1350,130 @@ definition{
 }
 
 definition{
+  name: sxErrPickFrom,
+  parameters: [r : SxRun, l : Bytes, i : Nat, has : Bool, name : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (if ((sxSize l) <? (i + 1)) then 0 else (let c : Nat := (sxEnabledCode r (sxNth l i) has name); (if (c =? 1) then 1 else ((if (c =? 2) then 2 else 0) + (sxErrPickFrom r l (i + 1) has name rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxErrClimb,
+  parameters: [r : SxRun, st : Nat, has : Bool, name : Bytes, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (let t : Bytes := (project r tab); (if ((sxKind t st) =? 1) then 0 else (let p : Nat := (sxErrPickFrom r (sxChildrenOf t st 7) 0 has name (sxCount t)); (if ((prim remainder p 2 0 : Nat) =? 1) then (prim quotient p 2 0 : Nat) else ((prim quotient p 2 0 : Nat) + (sxErrClimb r (sxParent t st) has name rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxErrSelect,
+  parameters: [r : SxRun, i : Nat, has : Bool, name : Bytes, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let c : Bytes := (project r config); (if ((sxSize c) <? (i + 1)) then acc else (sxErrSelect r (i + 1) has name (acc + (if (sxIsAtomic (project r tab) (sxNth c i)) then (sxErrClimb r (sxNth c i) has name (sxCount (project r tab))) else 0)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxRaiseN,
+  parameters: [r : SxRun, n : Nat, fuel : Nat],
+  result: SxRun,
+  body: (match fuel
+    | Nat.zero => r
+    | Nat.succ rest => (match n
+      | Nat.zero => r
+      | Nat.succ m => (sxRaiseN (sxRaise r (prim utf8_encode "error.execution" : Bytes)) m rest))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxCondRaise,
+  parameters: [r : SxRun, has : Bool, name : Bytes],
+  result: SxRun,
+  body: (let n : Nat := (sxErrSelect r 0 has name 0 (sxSize (project r config))); (sxRaiseN r n n)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxHalted,
+  parameters: [r : SxRun],
+  result: Bool,
+  body: (0 <? (sxLen (sxGet r (prim utf8_encode "!halt" : Bytes)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxFail,
+  parameters: [r : SxRun],
+  result: SxRun,
+  body: (sxPut (sxRaise r (prim utf8_encode "error.execution" : Bytes)) (prim utf8_encode "!halt" : Bytes) 0x01),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxResume,
+  parameters: [r : SxRun],
+  result: SxRun,
+  body: (if (sxHalted r) then (sxPut r (prim utf8_encode "!halt" : Bytes) 0x) else r),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxAssign,
+  parameters: [r : SxRun, e : Nat],
+  result: SxRun,
+  body: (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (if ((sxHas s t e (prim utf8_encode "conf:invalidLocation" : Bytes)) || (sxHas s t e (prim utf8_encode "conf:systemVarLocation" : Bytes))) then (sxFail r) else (match (sxAttr s t e (prim utf8_encode "conf:location" : Bytes))
+    | Option.none => (sxFail r)
+    | Option.some n => (if (sxDeclared r n) then (match (sxValueOf r e)
+    | Option.none => (sxFail r)
+    | Option.some v => (sxPut r n v)) else (sxFail r)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxIncrement,
+  parameters: [r : SxRun, e : Nat],
+  result: SxRun,
+  body: (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (let n : Bytes := (sxAttrOr s t e (prim utf8_encode "id" : Bytes)); (let v : Bytes := (sxGet r n); (let k : Nat := (sxAt v 0); (if (sxDeclared r n) then (sxPut r n (if (k =? 1) then (prim append 0x01 (sxDecimal ((sxNum (sxFrom v 1)) + 1)) : Bytes) else (if (k =? 2) then (prim append v (prim utf8_encode "1" : Bytes) : Bytes) else 0x05))) else (sxFail r))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxBranchFrom,
+  parameters: [r : SxRun, l : Bytes, i : Nat, on : Bool, done : Bool, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxSize l) <? (i + 1)) then acc else (let c : Nat := (sxNth l i); (let k : Nat := (sxKind (project r tab) c); (if (k =? 18) then (if done then (sxBranchFrom r l (i + 1) false true acc rest) else (let g : Nat := (sxCond r c); (if (g =? 2) then (prim append acc (sxU16 65535) : Bytes) else (sxBranchFrom r l (i + 1) (g =? 1) (g =? 1) acc rest)))) else (if (k =? 19) then (sxBranchFrom r l (i + 1) (not done) true acc rest) else (sxBranchFrom r l (i + 1) on done (if on then (prim append acc (sxU16 c) : Bytes) else acc) rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxBranch,
+  parameters: [r : SxRun, e : Nat],
+  result: Bytes,
+  body: (let l : Bytes := (sxChildren (project r tab) e); (let g : Nat := (sxCond r e); (if (g =? 2) then (sxU16 65535) else (sxBranchFrom r l 0 (g =? 1) (g =? 1) 0x (sxSize l))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: sxExecFrom,
   parameters: [r : SxRun, l : Bytes, i : Nat, fuel : Nat],
   result: SxRun,
   body: (match fuel
     | Nat.zero => r
-    | Nat.succ rest => (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (if ((sxSize l) <? (i + 1)) then r else (let c : Nat := (sxNth l i); (if ((sxKind t c) =? 10) then (sxExecFrom (sxRaise r (sxAttrOr s t c (prim utf8_encode "event" : Bytes))) l (i + 1) rest) else (if ((sxKind t c) =? 11) then (match (sxSend r c)
-      | Option.none => (sxRaise r (prim utf8_encode "error.execution" : Bytes))
-      | Option.some r2 => (sxExecFrom r2 l (i + 1) rest)) else (sxExecFrom r l (i + 1) rest)))))))),
+    | Nat.succ rest => (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (if ((sxHalted r) || ((sxSize l) <? (i + 1))) then r else (let c : Nat := (sxNth l i); (let k : Nat := (if (c =? 65535) then 255 else (sxKind t c)); (if (k =? 255) then (sxFail r) else (if (k =? 10) then (sxExecFrom (sxRaise r (sxAttrOr s t c (prim utf8_encode "event" : Bytes))) l (i + 1) rest) else (if (k =? 11) then (match (sxSend r c)
+    | Option.none => (sxFail r)
+    | Option.some r2 => (sxExecFrom r2 l (i + 1) rest)) else (if (k =? 16) then (sxExecFrom (sxAssign r c) l (i + 1) rest) else (if (k =? 20) then (sxExecFrom (sxIncrement r c) l (i + 1) rest) else (if (k =? 17) then (sxExecFrom (sxExecFrom r (sxBranch r c) 0 rest) l (i + 1) rest) else (sxExecFrom r l (i + 1) rest))))))))))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
@@ -1168,7 +1482,76 @@ definition{
   name: sxExec,
   parameters: [r : SxRun, block : Nat],
   result: SxRun,
-  body: (sxExecFrom r (sxChildren (project r tab) block) 0 (sxCount (project r tab))),
+  body: (sxResume (sxExecFrom r (sxChildren (project r tab) block) 0 (sxCount (project r tab)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxDataInit,
+  parameters: [r : SxRun, e : Nat],
+  result: SxRun,
+  body: (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (match (sxAttr s t e (prim utf8_encode "conf:id" : Bytes))
+    | Option.none => r
+    | Option.some n => (let kids : Bytes := (sxChildren t e); (let oid : Nat := (sxG16 (sxGet r (prim utf8_encode "!oid" : Bytes)) 0); (if ((sxSize kids) =? 0) then (match (sxValueOf r e)
+    | Option.none => (sxRaise (sxPut r n 0x00) (prim utf8_encode "error.execution" : Bytes))
+    | Option.some v => (sxPut r n v)) else (if (sxStartsAt s ((sxTagStart t (sxNth kids 0)) + 1) (prim utf8_encode "conf:array123" : Bytes)) then (sxPut (sxPut r (prim utf8_encode "!oid" : Bytes) (sxU16 (oid + 1))) n (prim append 0x03 (prim append (sxU16 oid) (prim utf8_encode "[1,2,3]" : Bytes) : Bytes) : Bytes)) else (sxRaise (sxPut r n 0x00) (prim utf8_encode "error.execution" : Bytes))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxDataFrom,
+  parameters: [r : SxRun, j : Nat, late : Bool, fuel : Nat],
+  result: SxRun,
+  body: (match fuel
+    | Nat.zero => r
+    | Nat.succ rest => (let t : Bytes := (project r tab); (let root : Nat := (project r root); (if ((sxEnd t root) <? (j + 1)) then r else (if ((sxKind t j) =? 1) then (sxDataFrom r (sxEnd t j) late rest) else (if (((sxKind t j) =? 15) && ((not late) || ((sxParent t (sxParent t j)) =? root))) then (sxDataFrom (sxDataInit r j) (j + 1) late rest) else (sxDataFrom r (j + 1) late rest))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxLate,
+  parameters: [r : SxRun],
+  result: Bool,
+  body: (sxSame (sxAttrOr (project r doc) (project r tab) (project r root) (prim utf8_encode "binding" : Bytes)) (prim utf8_encode "late" : Bytes)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxInitData,
+  parameters: [r : SxRun],
+  result: SxRun,
+  body: (sxDataFrom r ((project r root) + 1) (sxLate r) (sxCount (project r tab))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxDataList,
+  parameters: [r : SxRun, l : Bytes, i : Nat, fuel : Nat],
+  result: SxRun,
+  body: (match fuel
+    | Nat.zero => r
+    | Nat.succ rest => (if ((sxSize l) <? (i + 1)) then r else (sxDataList (if (sxDeclared r (sxAttrOr (project r doc) (project r tab) (sxNth l i) (prim utf8_encode "conf:id" : Bytes))) then r else (sxDataInit r (sxNth l i))) l (i + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxStateData,
+  parameters: [r : SxRun, l : Bytes, i : Nat, fuel : Nat],
+  result: SxRun,
+  body: (match fuel
+    | Nat.zero => r
+    | Nat.succ rest => (if ((sxSize l) <? (i + 1)) then r else (let ds : Bytes := (sxChildrenOf (project r tab) (sxNth l i) 15); (sxStateData (sxDataList r ds 0 (sxSize ds)) l (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxEnterData,
+  parameters: [r : SxRun, x : Nat],
+  result: SxRun,
+  body: (if (sxLate r) then (let l : Bytes := (sxChildrenOf (project r tab) x 14); (sxStateData r l 0 (sxSize l))) else r),
   axioms: [Quot.sound, propext]
 }
 
@@ -1406,7 +1789,7 @@ definition{
   name: sxEnterOne,
   parameters: [r : SxRun, e : SxEntry, x : Nat],
   result: SxRun,
-  body: (let t : Bytes := (project r tab); (let r1 : SxRun := (sxSetToinvoke (sxSetConfig r (sxIns (project r config) x)) (sxIns (project r toinvoke) x)); (let r2 : SxRun := (sxExecAll r1 (sxChildrenOf t x 8) 0 (sxCount t)); (let r3 : SxRun := (if (sxMem (project e defaults) x) then (match (sxFirstOf t x 6)
+  body: (let t : Bytes := (project r tab); (let r1 : SxRun := (sxSetToinvoke (sxSetConfig r (sxIns (project r config) x)) (sxIns (project r toinvoke) x)); (let r2 : SxRun := (sxExecAll (sxEnterData r1 x) (sxChildrenOf t x 8) 0 (sxCount t)); (let r3 : SxRun := (if (sxMem (project e defaults) x) then (match (sxFirstOf t x 6)
     | Option.none => r2
     | Option.some ini => (sxExec r2 (sxDefaultTransition r2 ini))) else r2); (let r4 : SxRun := (match (sxContentFor (project e content) 0 x (sxLen (project e content)))
     | Option.none => r3
@@ -1443,9 +1826,9 @@ definition{
 
 definition{
   name: sxBegin,
-  parameters: [r : SxRun],
+  parameters: [r0 : SxRun],
   result: SxRun,
-  body: (let ini : Bytes := (sxInitials r (project r root)); (let e : SxEntry := (sxWork r (sxDescAnc ini (project r root)) (sxNoEntry) (sxFuel r)); (sxEnterFrom r e 0 (sxSize (project e enter))))),
+  body: (let r : SxRun := (sxInitData r0); (let ini : Bytes := (sxInitials r (project r root)); (let e : SxEntry := (sxWork r (sxDescAnc ini (project r root)) (sxNoEntry) (sxFuel r)); (sxEnterFrom r e 0 (sxSize (project e enter)))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -1455,7 +1838,7 @@ definition{
   result: SxRun,
   body: (match fuel
     | Nat.zero => r
-    | Nat.succ rest => (if (not (project r running)) then r else (let ts : Bytes := (sxSelect r false 0x); (if ((sxSize ts) =? 0) then (if ((sxLen (project r internal)) =? 0) then r else (let q : Bytes := (project r internal); (let r1 : SxRun := (sxSetInternal r (sxTail q)); (let ts2 : Bytes := (sxSelect r1 true (sxHeadName q)); (sxSettle (if ((sxSize ts2) =? 0) then r1 else (sxMicrostep r1 ts2)) rest))))) else (sxSettle (sxMicrostep r ts) rest))))),
+    | Nat.succ rest => (if (not (project r running)) then r else (let ts : Bytes := (sxSelect r false 0x); (let r0 : SxRun := (sxCondRaise r false 0x); (if ((sxSize ts) =? 0) then (if ((sxLen (project r0 internal)) =? 0) then r0 else (let q : Bytes := (project r0 internal); (let r1 : SxRun := (sxPut (sxSetInternal r0 (sxTail q)) (prim utf8_encode "_event.name" : Bytes) (sxText (sxHeadName q))); (let ts2 : Bytes := (sxSelect r1 true (sxHeadName q)); (let r2 : SxRun := (sxCondRaise r1 true (sxHeadName q)); (sxSettle (if ((sxSize ts2) =? 0) then r2 else (sxMicrostep r2 ts2)) rest)))))) else (sxSettle (sxMicrostep r0 ts) rest)))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
@@ -1464,7 +1847,7 @@ definition{
   name: sxReceive,
   parameters: [r : SxRun, name : Bytes],
   result: SxRun,
-  body: (let ts : Bytes := (sxSelect r true name); (if ((sxSize ts) =? 0) then r else (sxMicrostep r ts))),
+  body: (let r0 : SxRun := (sxPut r (prim utf8_encode "_event.name" : Bytes) (sxText name)); (let ts : Bytes := (sxSelect r0 true name); (let r1 : SxRun := (sxCondRaise r0 true name); (if ((sxSize ts) =? 0) then r1 else (sxMicrostep r1 ts))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -1491,7 +1874,7 @@ definition{
   name: sxNoSession,
   parameters: [],
   result: SxSession,
-  body: (record SxSession {root := 0, parent := 0, invoker := 0, iid := 0x, config := 0x, hist := 0x, internal := 0x, running := false, started := true, outcome := 0x, cancelled := false, forward := false})
+  body: (record SxSession {root := 0, parent := 0, invoker := 0, iid := 0x, config := 0x, hist := 0x, internal := 0x, running := false, started := true, outcome := 0x, cancelled := false, forward := false, data := 0x})
 }
 
 definition{name: sxBit, parameters: [b : Bool, v : Nat], result: Nat, body: (if b then v else 0)}
@@ -1507,7 +1890,7 @@ definition{
   name: sxSesEnc,
   parameters: [x : SxSession],
   result: Bytes,
-  body: (let body : Bytes := (prim append (sxU16 (project x root)) (prim append (sxU16 (project x parent)) (prim append (sxU16 (project x invoker)) (prim append (sxByte ((sxBit (project x running) 1) + ((sxBit (project x started) 2) + ((sxBit (project x cancelled) 4) + (sxBit (project x forward) 8))))) (prim append (sxEventRow (project x iid)) (prim append (sxEventRow (project x config)) (prim append (sxEventRow (project x hist)) (prim append (sxEventRow (project x internal)) (sxEventRow (project x outcome)) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes); (prim append (sxU16 (sxLen body)) body : Bytes))
+  body: (let body : Bytes := (prim append (sxU16 (project x root)) (prim append (sxU16 (project x parent)) (prim append (sxU16 (project x invoker)) (prim append (sxByte ((sxBit (project x running) 1) + ((sxBit (project x started) 2) + ((sxBit (project x cancelled) 4) + (sxBit (project x forward) 8))))) (prim append (sxEventRow (project x iid)) (prim append (sxEventRow (project x config)) (prim append (sxEventRow (project x hist)) (prim append (sxEventRow (project x internal)) (prim append (sxEventRow (project x outcome)) (sxEventRow (project x data)) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes) : Bytes); (prim append (sxU16 (sxLen body)) body : Bytes))
 }
 
 definition{
@@ -1530,7 +1913,7 @@ definition{
   name: sxSesDec,
   parameters: [b : Bytes],
   result: SxSession,
-  body: (let f : Nat := (sxAt b 6); (let k1 : Nat := 7; (let k2 : Nat := (sxNextField b k1); (let k3 : Nat := (sxNextField b k2); (let k4 : Nat := (sxNextField b k3); (let k5 : Nat := (sxNextField b k4); (record SxSession {root := (sxG16 b 0), parent := (sxG16 b 2), invoker := (sxG16 b 4), iid := (sxFieldAt b k1), config := (sxFieldAt b k2), hist := (sxFieldAt b k3), internal := (sxFieldAt b k4), running := (sxHasBit f 1), started := (sxHasBit f 2), outcome := (sxFieldAt b k5), cancelled := (sxHasBit f 4), forward := (sxHasBit f 8)}))))))),
+  body: (let f : Nat := (sxAt b 6); (let k1 : Nat := 7; (let k2 : Nat := (sxNextField b k1); (let k3 : Nat := (sxNextField b k2); (let k4 : Nat := (sxNextField b k3); (let k5 : Nat := (sxNextField b k4); (let k6 : Nat := (sxNextField b k5); (record SxSession {root := (sxG16 b 0), parent := (sxG16 b 2), invoker := (sxG16 b 4), iid := (sxFieldAt b k1), config := (sxFieldAt b k2), hist := (sxFieldAt b k3), internal := (sxFieldAt b k4), running := (sxHasBit f 1), started := (sxHasBit f 2), outcome := (sxFieldAt b k5), cancelled := (sxHasBit f 4), forward := (sxHasBit f 8), data := (sxFieldAt b k6)})))))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -1612,7 +1995,7 @@ definition{
   name: sxRunOf,
   parameters: [w : SxWorld, k : Nat],
   result: SxRun,
-  body: (let x : SxSession := (sxNthSession (project w sessions) k); (record SxRun {doc := (project w doc), tab := (project w tab), root := (project x root), sid := k, parent := (project x parent), config := (project x config), hist := (project x hist), internal := (project x internal), toinvoke := 0x, running := (project x running), outcome := (project x outcome), posts := 0x, cancels := 0x, kids := (sxKidRows (project w sessions) 0 k), spawns := 0x})),
+  body: (let x : SxSession := (sxNthSession (project w sessions) k); (record SxRun {doc := (project w doc), tab := (project w tab), root := (project x root), sid := k, parent := (project x parent), config := (project x config), hist := (project x hist), internal := (project x internal), toinvoke := 0x, running := (project x running), outcome := (project x outcome), posts := 0x, cancels := 0x, kids := (sxKidRows (project w sessions) 0 k), spawns := 0x, data := (project x data)})),
   axioms: [Quot.sound, propext]
 }
 
@@ -1659,7 +2042,7 @@ definition{
   result: Bytes,
   body: (match fuel
     | Nat.zero => l
-    | Nat.succ rest => (if ((sxSessions l) <? (k + 1)) then l else (let x : SxSession := (sxNthSession l k); (sxCancelFrom (if (((project x parent) =? (me + 1)) && (sxMem c (project x invoker))) then (sxPutSession l k (record SxSession {root := (project x root), parent := (project x parent), invoker := (project x invoker), iid := (project x iid), config := (project x config), hist := (project x hist), internal := (project x internal), running := false, started := true, outcome := (project x outcome), cancelled := true, forward := (project x forward)})) else l) (k + 1) me c rest)))),
+    | Nat.succ rest => (if ((sxSessions l) <? (k + 1)) then l else (let x : SxSession := (sxNthSession l k); (sxCancelFrom (if (((project x parent) =? (me + 1)) && (sxMem c (project x invoker))) then (sxPutSession l k (record SxSession {root := (project x root), parent := (project x parent), invoker := (project x invoker), iid := (project x iid), config := (project x config), hist := (project x hist), internal := (project x internal), running := false, started := true, outcome := (project x outcome), cancelled := true, forward := (project x forward), data := (project x data)})) else l) (k + 1) me c rest)))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
@@ -1688,7 +2071,7 @@ definition{
   result: SxWorld,
   body: (match fuel
     | Nat.zero => w
-    | Nat.succ rest => (let s : Bytes := (project w doc); (let t : Bytes := (project w tab); (if ((sxSize l) <? (i + 1)) then w else (let inv : Nat := (sxNth l i); (let iid : Bytes := (if (sxHas s t inv (prim utf8_encode "id" : Bytes)) then (sxAttrOr s t inv (prim utf8_encode "id" : Bytes)) else (prim append (sxId s t (sxParent t inv)) (prim append (prim utf8_encode "." : Bytes) (sxDec inv) : Bytes) : Bytes)); (sxSpawnAll (sxWithSessions w (sxAppendSession (project w sessions) (record SxSession {root := (sxChildRoot t inv), parent := (me + 1), invoker := inv, iid := iid, config := 0x, hist := 0x, internal := 0x, running := (not ((sxChildRoot t inv) =? 0)), started := false, outcome := 0x, cancelled := false, forward := (sxSame (sxAttrOr s t inv (prim utf8_encode "autoforward" : Bytes)) (prim utf8_encode "true" : Bytes))}))) me l (i + 1) rest))))))),
+    | Nat.succ rest => (let s : Bytes := (project w doc); (let t : Bytes := (project w tab); (if ((sxSize l) <? (i + 1)) then w else (let inv : Nat := (sxNth l i); (let iid : Bytes := (if (sxHas s t inv (prim utf8_encode "id" : Bytes)) then (sxAttrOr s t inv (prim utf8_encode "id" : Bytes)) else (prim append (sxId s t (sxParent t inv)) (prim append (prim utf8_encode "." : Bytes) (sxDec inv) : Bytes) : Bytes)); (sxSpawnAll (sxWithSessions w (sxAppendSession (project w sessions) (record SxSession {root := (sxChildRoot t inv), parent := (me + 1), invoker := inv, iid := iid, config := 0x, hist := 0x, internal := 0x, running := (not ((sxChildRoot t inv) =? 0)), started := false, outcome := 0x, cancelled := false, forward := (sxSame (sxAttrOr s t inv (prim utf8_encode "autoforward" : Bytes)) (prim utf8_encode "true" : Bytes)), data := 0x}))) me l (i + 1) rest))))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
@@ -1697,7 +2080,7 @@ definition{
   name: sxStore,
   parameters: [w : SxWorld, r : SxRun],
   result: SxWorld,
-  body: (let k : Nat := (project r sid); (let x : SxSession := (sxNthSession (project w sessions) k); (let r1 : SxRun := (if ((project r running) || (((project r parent) =? 0) || (project x cancelled))) then r else (sxPost r (prim subtract (project r parent) 1 : Nat) 0 (prim append (prim utf8_encode "done.invoke." : Bytes) (project x iid) : Bytes))); (let w1 : SxWorld := (sxWithSessions w (sxCancelIn (sxPutSession (project w sessions) k (record SxSession {root := (project x root), parent := (project x parent), invoker := (project x invoker), iid := (project x iid), config := (project r1 config), hist := (project r1 hist), internal := (project r1 internal), running := (project r1 running), started := true, outcome := (project r1 outcome), cancelled := (project x cancelled), forward := (project x forward)})) k (project r1 cancels))); (sxSpawnAll (sxPostsFrom w1 (project r1 posts) 0 (sxLen (project r1 posts))) k (project r1 spawns) 0 (sxSize (project r1 spawns))))))),
+  body: (let k : Nat := (project r sid); (let x : SxSession := (sxNthSession (project w sessions) k); (let r1 : SxRun := (if ((project r running) || (((project r parent) =? 0) || (project x cancelled))) then r else (sxPost r (prim subtract (project r parent) 1 : Nat) 0 (prim append (prim utf8_encode "done.invoke." : Bytes) (project x iid) : Bytes))); (let w1 : SxWorld := (sxWithSessions w (sxCancelIn (sxPutSession (project w sessions) k (record SxSession {root := (project x root), parent := (project x parent), invoker := (project x invoker), iid := (project x iid), config := (project r1 config), hist := (project r1 hist), internal := (project r1 internal), running := (project r1 running), started := true, outcome := (project r1 outcome), cancelled := (project x cancelled), forward := (project x forward), data := (project r1 data)})) k (project r1 cancels))); (sxSpawnAll (sxPostsFrom w1 (project r1 posts) 0 (sxLen (project r1 posts))) k (project r1 spawns) 0 (sxSize (project r1 spawns))))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -1769,7 +2152,7 @@ definition{
   result: Bytes,
   body: (let t : Bytes := (sxTable s); (match (sxFirstScxml t 0 (sxCount t))
     | Option.none => (prim utf8_encode "invalid" : Bytes)
-    | Option.some root => (sxLoop (record SxWorld {doc := s, tab := t, sessions := (sxSesEnc (record SxSession {root := root, parent := 0, invoker := 0, iid := 0x, config := 0x, hist := 0x, internal := 0x, running := true, started := false, outcome := 0x, cancelled := false, forward := false})), ext := 0x, time := 0, seq := 0}) (prim multiply (sxCount t) 64 : Nat)))),
+    | Option.some root => (sxLoop (record SxWorld {doc := s, tab := t, sessions := (sxSesEnc (record SxSession {root := root, parent := 0, invoker := 0, iid := 0x, config := 0x, hist := 0x, internal := 0x, running := true, started := false, outcome := 0x, cancelled := false, forward := false, data := 0x})), ext := 0x, time := 0, seq := 0}) (prim multiply (sxCount t) 64 : Nat)))),
   axioms: [Quot.sound, propext]
 }
 
