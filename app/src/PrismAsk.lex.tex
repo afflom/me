@@ -38,19 +38,23 @@ definition{name: prismAskActTask, parameters: [], result: Nat, body: 0}
 
 definition{name: prismAskActAutofeedback, parameters: [], result: Nat, body: 1}
 
+definition{name: prismAskActSocial, parameters: [], result: Nat, body: 2}
+
 definition{name: prismAskAnswerPaused, parameters: [], result: Nat, body: 0}
 
 definition{name: prismAskAnswerClock, parameters: [], result: Nat, body: 1}
 
-definition{name: prismAskAnswerEmpty, parameters: [], result: Nat, body: 2}
+definition{name: prismAskAnswerGreet, parameters: [], result: Nat, body: 2}
 
-definition{name: prismAskAnswerAnswer, parameters: [], result: Nat, body: 3}
+definition{name: prismAskAnswerEmpty, parameters: [], result: Nat, body: 3}
 
-definition{name: prismAskAnswerHeard, parameters: [], result: Nat, body: 4}
+definition{name: prismAskAnswerAnswer, parameters: [], result: Nat, body: 4}
 
-definition{name: prismAskAnswerKeep, parameters: [], result: Nat, body: 5}
+definition{name: prismAskAnswerHeard, parameters: [], result: Nat, body: 5}
 
-definition{name: prismAskAnswerLook, parameters: [], result: Nat, body: 6}
+definition{name: prismAskAnswerKeep, parameters: [], result: Nat, body: 6}
+
+definition{name: prismAskAnswerLook, parameters: [], result: Nat, body: 7}
 
 structure{
   name: PrismAskRequest,
@@ -154,7 +158,7 @@ definition{
   name: prismAskParseAct,
   parameters: [value : Bytes],
   result: (Option Nat),
-  body: (if (prim equal value 0x7461736b : Bool) then (ctor Option.some [Nat] (prismAskActTask)) else (if (prim equal value 0x6175746f666565646261636b : Bool) then (ctor Option.some [Nat] (prismAskActAutofeedback)) else (ctor Option.none [Nat])))
+  body: (if (prim equal value 0x7461736b : Bool) then (ctor Option.some [Nat] (prismAskActTask)) else (if (prim equal value 0x6175746f666565646261636b : Bool) then (ctor Option.some [Nat] (prismAskActAutofeedback)) else (if (prim equal value 0x736f6369616c : Bool) then (ctor Option.some [Nat] (prismAskActSocial)) else (ctor Option.none [Nat]))))
 }
 
 definition{
@@ -267,67 +271,74 @@ definition{
   name: prismAskRule3,
   parameters: [request : PrismAskRequest],
   result: Bool,
-  body: (((project request box) =? (prismAskBoxAsks)) && ((project request held) =? (prismAskHeldNone)))
+  body: ((project request act) =? (prismAskActSocial))
 }
 
 definition{
   name: prismAskRule4,
   parameters: [request : PrismAskRequest],
   result: Bool,
-  body: ((project request box) =? (prismAskBoxAsks))
+  body: (((project request box) =? (prismAskBoxAsks)) && ((project request held) =? (prismAskHeldNone)))
 }
 
 definition{
   name: prismAskRule5,
   parameters: [request : PrismAskRequest],
   result: Bool,
-  body: (((project request intent) =? (prismAskIntentQuestion)) && ((project request held) =? (prismAskHeldNone)))
+  body: ((project request box) =? (prismAskBoxAsks))
 }
 
 definition{
   name: prismAskRule6,
   parameters: [request : PrismAskRequest],
   result: Bool,
-  body: ((project request intent) =? (prismAskIntentQuestion))
+  body: (((project request intent) =? (prismAskIntentQuestion)) && ((project request held) =? (prismAskHeldNone)))
 }
 
 definition{
   name: prismAskRule7,
   parameters: [request : PrismAskRequest],
   result: Bool,
-  body: ((((project request act) =? (prismAskActAutofeedback)) && ((project request intent) =? (prismAskIntentFact))) && ((project request timed) =? (prismAskTimedNo)))
+  body: ((project request intent) =? (prismAskIntentQuestion))
 }
 
 definition{
   name: prismAskRule8,
   parameters: [request : PrismAskRequest],
   result: Bool,
-  body: ((project request timed) =? (prismAskTimedYes))
+  body: ((((project request act) =? (prismAskActAutofeedback)) && ((project request intent) =? (prismAskIntentFact))) && ((project request timed) =? (prismAskTimedNo)))
 }
 
 definition{
   name: prismAskRule9,
   parameters: [request : PrismAskRequest],
   result: Bool,
+  body: ((project request timed) =? (prismAskTimedYes))
+}
+
+definition{
+  name: prismAskRule10,
+  parameters: [request : PrismAskRequest],
+  result: Bool,
   body: ((project request held) =? (prismAskHeldNone))
 }
 
 definition{
-  name: prismAskRule3Misses,
+  name: prismAskRule4Misses,
   parameters: [request : PrismAskRequest],
   result: Bool,
   body: ((((project request box) <? (prismAskBoxAsks)) || ((prismAskBoxAsks) <? (project request box))) || (((project request held) <? (prismAskHeldNone)) || ((prismAskHeldNone) <? (project request held))))
 }
 
 definition{
-  name: prismAskRule5Misses,
+  name: prismAskRule6Misses,
   parameters: [request : PrismAskRequest],
   result: Bool,
   body: ((((project request intent) <? (prismAskIntentQuestion)) || ((prismAskIntentQuestion) <? (project request intent))) || (((project request held) <? (prismAskHeldNone)) || ((prismAskHeldNone) <? (project request held))))
 }
 
 definition{
-  name: prismAskRule7Misses,
+  name: prismAskRule8Misses,
   parameters: [request : PrismAskRequest],
   result: Bool,
   body: (((((project request act) <? (prismAskActAutofeedback)) || ((prismAskActAutofeedback) <? (project request act))) || (((project request intent) <? (prismAskIntentFact)) || ((prismAskIntentFact) <? (project request intent)))) || (((project request timed) <? (prismAskTimedNo)) || ((prismAskTimedNo) <? (project request timed))))
@@ -337,14 +348,14 @@ definition{
   name: prismAskJudge,
   parameters: [request : PrismAskRequest],
   result: Nat,
-  body: (if (prismAskRule1 request) then (prismAskAnswerPaused) else (if (prismAskRule2 request) then (prismAskAnswerClock) else (if (prismAskRule3Misses request) then (if (prismAskRule4 request) then (prismAskAnswerAnswer) else (if (prismAskRule5Misses request) then (if (prismAskRule6 request) then (prismAskAnswerAnswer) else (if (prismAskRule7Misses request) then (if (prismAskRule8 request) then (prismAskAnswerKeep) else (if (prismAskRule9 request) then (prismAskAnswerKeep) else (prismAskAnswerLook))) else (prismAskAnswerHeard))) else (prismAskAnswerEmpty))) else (prismAskAnswerEmpty))))
+  body: (if (prismAskRule1 request) then (prismAskAnswerPaused) else (if (prismAskRule2 request) then (prismAskAnswerClock) else (if (prismAskRule3 request) then (prismAskAnswerGreet) else (if (prismAskRule4Misses request) then (if (prismAskRule5 request) then (prismAskAnswerAnswer) else (if (prismAskRule6Misses request) then (if (prismAskRule7 request) then (prismAskAnswerAnswer) else (if (prismAskRule8Misses request) then (if (prismAskRule9 request) then (prismAskAnswerKeep) else (if (prismAskRule10 request) then (prismAskAnswerKeep) else (prismAskAnswerLook))) else (prismAskAnswerHeard))) else (prismAskAnswerEmpty))) else (prismAskAnswerEmpty)))))
 }
 
 definition{
   name: prismAskEncodeAnswer,
   parameters: [code : Nat],
   result: Bytes,
-  body: (if (code =? (prismAskAnswerPaused)) then 0x706175736564 else (if (code =? (prismAskAnswerClock)) then 0x636c6f636b else (if (code =? (prismAskAnswerEmpty)) then 0x656d707479 else (if (code =? (prismAskAnswerAnswer)) then 0x616e73776572 else (if (code =? (prismAskAnswerHeard)) then 0x6865617264 else (if (code =? (prismAskAnswerKeep)) then 0x6b656570 else (if (code =? (prismAskAnswerLook)) then 0x6c6f6f6b else 0x696e76616c6964)))))))
+  body: (if (code =? (prismAskAnswerPaused)) then 0x706175736564 else (if (code =? (prismAskAnswerClock)) then 0x636c6f636b else (if (code =? (prismAskAnswerGreet)) then 0x6772656574 else (if (code =? (prismAskAnswerEmpty)) then 0x656d707479 else (if (code =? (prismAskAnswerAnswer)) then 0x616e73776572 else (if (code =? (prismAskAnswerHeard)) then 0x6865617264 else (if (code =? (prismAskAnswerKeep)) then 0x6b656570 else (if (code =? (prismAskAnswerLook)) then 0x6c6f6f6b else 0x696e76616c6964))))))))
 }
 
 definition{

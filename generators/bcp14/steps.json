@@ -363,6 +363,21 @@
     },
     {
       "generator": "bcp14excluded",
+      "split": "app/specs/standards/texts/9ab2b8864a85dca73a88f49b0927bc7bc85f596926e4fd1890905777924e700a",
+      "breakBefore": "^([0-9]+([.][0-9]+)*|Appendix [A-Z]([.][0-9]+)*)[.]?[[:blank:]]+[^[:blank:]]",
+      "output": ".gen/rfc3339.excluded"
+    },
+    {
+      "generator": "bcp14",
+      "split": "app/specs/standards/texts/9ab2b8864a85dca73a88f49b0927bc7bc85f596926e4fd1890905777924e700a",
+      "breakBefore": "^([0-9]+([.][0-9]+)*|Appendix [A-Z]([.][0-9]+)*)[.]?[[:blank:]]+[^[:blank:]]",
+      "inputs": [
+        ".gen/rfc3339.excluded"
+      ],
+      "output": "test/standards/generated/rfc3339.jsonl"
+    },
+    {
+      "generator": "bcp14excluded",
       "split": "app/specs/standards/texts/21c1cdce6ab0e5509b04d84a28000836c7a087cf786efe6f04877ebfff47232a",
       "breakBefore": "^([0-9]+([.][0-9]+)*|Appendix [A-Z]([.][0-9]+)*|[A-Z]([.][0-9]+)+)[.]?[[:blank:]]+[^[:blank:]]",
       "inputs": [

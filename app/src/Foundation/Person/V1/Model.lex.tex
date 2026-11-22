@@ -3,6 +3,7 @@
 \useglossary{lexlean.std.nat@1.2.0}
 \useglossary{prism.arch@1.0.0}
 \importmodule{Foundation.Bytes}
+\importmodule{Foundation.Person.V1.More}
 \title{Person model}
 \begin{semanticmodule}
 inductive{
@@ -198,13 +199,6 @@ definition{
 }
 
 definition{
-  name: personPropertyNameMore,
-  parameters: [index : Nat],
-  result: String,
-  body: (if (index =? 63) then "additionalName" else (if (index =? 64) then "additionalType" else (if (index =? 65) then "agentInteractionStatistic" else (if (index =? 66) then "alternateName" else (if (index =? 67) then "award" else (if (index =? 68) then "awards" else (if (index =? 69) then "birthPlace" else (if (index =? 70) then "brand" else (if (index =? 71) then "callSign" else (if (index =? 72) then "children" else (if (index =? 73) then "colleague" else (if (index =? 74) then "colleagues" else (if (index =? 75) then "contactPoints" else (if (index =? 76) then "deathDate" else (if (index =? 77) then "deathPlace" else (if (index =? 78) then "description" else (if (index =? 79) then "disambiguatingDescription" else (if (index =? 80) then "duns" else (if (index =? 81) then "faxNumber" else (if (index =? 82) then "follows" else (if (index =? 83) then "funder" else (if (index =? 84) then "funding" else (if (index =? 85) then "gender" else (if (index =? 86) then "globalLocationNumber" else (if (index =? 87) then "hasCertification" else (if (index =? 88) then "hasOfferCatalog" else (if (index =? 89) then "hasPOS" else (if (index =? 90) then "height" else (if (index =? 91) then "honorificPrefix" else (if (index =? 92) then "honorificSuffix" else (if (index =? 93) then "identifier" else (if (index =? 94) then "image" else (if (index =? 95) then "interactionStatistic" else (if (index =? 96) then "isicV4" else (if (index =? 97) then "lifeEvent" else (if (index =? 98) then "mainEntityOfPage" else (if (index =? 99) then "makesOffer" else (if (index =? 100) then "memberOf" else (if (index =? 101) then "naics" else (if (index =? 102) then "netWorth" else (if (index =? 103) then "owner" else (if (index =? 104) then "owns" else (if (index =? 105) then "parent" else (if (index =? 106) then "parents" else (if (index =? 107) then "performerIn" else (if (index =? 108) then "potentialAction" else (if (index =? 109) then "pronouns" else (if (index =? 110) then "publishingPrinciples" else (if (index =? 111) then "relatedTo" else (if (index =? 112) then "seeks" else (if (index =? 113) then "sibling" else (if (index =? 114) then "siblings" else (if (index =? 115) then "skills" else (if (index =? 116) then "sponsor" else (if (index =? 117) then "spouse" else (if (index =? 118) then "subjectOf" else (if (index =? 119) then "taxID" else (if (index =? 120) then "vatID" else (if (index =? 121) then "weight" else "workLocation")))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
-}
-
-definition{
   name: personPropertyNameBase,
   parameters: [index : Nat],
   result: String,
@@ -215,14 +209,7 @@ definition{
   name: personPropertyName,
   parameters: [index : Nat],
   result: String,
-  body: (if (index <? 63) then (personPropertyNameBase index) else (personPropertyNameMore index))
-}
-
-definition{
-  name: personPropertyPhraseMore,
-  parameters: [index : Nat],
-  result: String,
-  body: (if (index =? 63) then "additional name" else (if (index =? 64) then "additional type" else (if (index =? 65) then "agent interaction statistic" else (if (index =? 66) then "alternate name" else (if (index =? 67) then "award" else (if (index =? 68) then "awards" else (if (index =? 69) then "birth place" else (if (index =? 70) then "brand" else (if (index =? 71) then "call sign" else (if (index =? 72) then "children" else (if (index =? 73) then "colleague" else (if (index =? 74) then "colleagues" else (if (index =? 75) then "contact points" else (if (index =? 76) then "death date" else (if (index =? 77) then "death place" else (if (index =? 78) then "description" else (if (index =? 79) then "disambiguating description" else (if (index =? 80) then "duns" else (if (index =? 81) then "fax number" else (if (index =? 82) then "follows" else (if (index =? 83) then "funder" else (if (index =? 84) then "funding" else (if (index =? 85) then "gender" else (if (index =? 86) then "global location number" else (if (index =? 87) then "has certification" else (if (index =? 88) then "has offer catalog" else (if (index =? 89) then "has pos" else (if (index =? 90) then "height" else (if (index =? 91) then "honorific prefix" else (if (index =? 92) then "honorific suffix" else (if (index =? 93) then "identifier" else (if (index =? 94) then "image" else (if (index =? 95) then "interaction statistic" else (if (index =? 96) then "isic v4" else (if (index =? 97) then "life event" else (if (index =? 98) then "main entity of page" else (if (index =? 99) then "makes offer" else (if (index =? 100) then "member of" else (if (index =? 101) then "naics" else (if (index =? 102) then "net worth" else (if (index =? 103) then "owner" else (if (index =? 104) then "owns" else (if (index =? 105) then "parent" else (if (index =? 106) then "parents" else (if (index =? 107) then "performer in" else (if (index =? 108) then "potential action" else (if (index =? 109) then "pronouns" else (if (index =? 110) then "publishing principles" else (if (index =? 111) then "related to" else (if (index =? 112) then "seeks" else (if (index =? 113) then "sibling" else (if (index =? 114) then "siblings" else (if (index =? 115) then "skills" else (if (index =? 116) then "sponsor" else (if (index =? 117) then "spouse" else (if (index =? 118) then "subject of" else (if (index =? 119) then "tax id" else (if (index =? 120) then "vat id" else (if (index =? 121) then "weight" else "work location")))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+  body: (if (index <? (Foundation.Person.V1.More::personMoreFirst)) then (personPropertyNameBase index) else (Foundation.Person.V1.More::personMoreName index))
 }
 
 definition{
@@ -236,14 +223,7 @@ definition{
   name: personPropertyPhrase,
   parameters: [index : Nat],
   result: String,
-  body: (if (index <? 63) then (personPropertyPhraseBase index) else (personPropertyPhraseMore index))
-}
-
-definition{
-  name: personPropertyRangeMore,
-  parameters: [index : Nat],
-  result: String,
-  body: (if (index =? 63) then "Text" else (if (index =? 64) then "Text" else (if (index =? 65) then "InteractionCounter" else (if (index =? 66) then "Text" else (if (index =? 67) then "Text" else (if (index =? 68) then "Text" else (if (index =? 69) then "Place" else (if (index =? 70) then "Organization" else (if (index =? 71) then "Text" else (if (index =? 72) then "Person" else (if (index =? 73) then "URL" else (if (index =? 74) then "Person" else (if (index =? 75) then "ContactPoint" else (if (index =? 76) then "Date" else (if (index =? 77) then "Place" else (if (index =? 78) then "Text" else (if (index =? 79) then "Text" else (if (index =? 80) then "Text" else (if (index =? 81) then "Text" else (if (index =? 82) then "Person" else (if (index =? 83) then "Organization" else (if (index =? 84) then "Grant" else (if (index =? 85) then "Text" else (if (index =? 86) then "Text" else (if (index =? 87) then "Certification" else (if (index =? 88) then "OfferCatalog" else (if (index =? 89) then "Place" else (if (index =? 90) then "Distance" else (if (index =? 91) then "Text" else (if (index =? 92) then "Text" else (if (index =? 93) then "Text" else (if (index =? 94) then "URL" else (if (index =? 95) then "InteractionCounter" else (if (index =? 96) then "Text" else (if (index =? 97) then "Event" else (if (index =? 98) then "URL" else (if (index =? 99) then "Offer" else (if (index =? 100) then "Organization" else (if (index =? 101) then "Text" else (if (index =? 102) then "MonetaryAmount" else (if (index =? 103) then "Organization" else (if (index =? 104) then "Thing" else (if (index =? 105) then "Person" else (if (index =? 106) then "Person" else (if (index =? 107) then "Event" else (if (index =? 108) then "Action" else (if (index =? 109) then "Text" else (if (index =? 110) then "URL" else (if (index =? 111) then "Person" else (if (index =? 112) then "Demand" else (if (index =? 113) then "Person" else (if (index =? 114) then "Person" else (if (index =? 115) then "Text" else (if (index =? 116) then "Organization" else (if (index =? 117) then "Person" else (if (index =? 118) then "CreativeWork" else (if (index =? 119) then "Text" else (if (index =? 120) then "Text" else (if (index =? 121) then "Mass" else "Place")))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+  body: (if (index <? (Foundation.Person.V1.More::personMoreFirst)) then (personPropertyPhraseBase index) else (Foundation.Person.V1.More::personMorePhrase index))
 }
 
 definition{
@@ -257,7 +237,7 @@ definition{
   name: personPropertyRange,
   parameters: [index : Nat],
   result: String,
-  body: (if (index <? 63) then (personPropertyRangeBase index) else (personPropertyRangeMore index))
+  body: (if (index <? (Foundation.Person.V1.More::personMoreFirst)) then (personPropertyRangeBase index) else (Foundation.Person.V1.More::personMoreRange index))
 }
 
 definition{
@@ -268,10 +248,17 @@ definition{
 }
 
 definition{
-  name: personPropertiesMore,
-  parameters: [],
-  result: (List PersonProperty),
-  body: (cons (record PersonProperty {index := 63, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 64, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 65, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 66, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 67, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 68, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 69, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 70, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 71, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 72, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 73, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.uri), label := 2, detector := 0}) (cons (record PersonProperty {index := 74, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 75, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 76, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.date), label := 2, detector := 0}) (cons (record PersonProperty {index := 77, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 78, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 79, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 80, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 1, detector := 0}) (cons (record PersonProperty {index := 81, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 82, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 83, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 84, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 85, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 86, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 87, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 88, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 89, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 90, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 91, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 92, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 93, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 94, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.uri), label := 2, detector := 0}) (cons (record PersonProperty {index := 95, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 96, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 97, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 98, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.uri), label := 2, detector := 0}) (cons (record PersonProperty {index := 99, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 100, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 101, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 102, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 103, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 104, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 105, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 106, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 107, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 108, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 109, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 110, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.uri), label := 2, detector := 0}) (cons (record PersonProperty {index := 111, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 112, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 113, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 114, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 115, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 116, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 117, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 118, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 119, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 120, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.text), label := 2, detector := 0}) (cons (record PersonProperty {index := 121, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (cons (record PersonProperty {index := 122, facet := (ctor PersonFacet.person), kind := (ctor PersonValueKind.reference), label := 2, detector := 0}) (nil PersonProperty)))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))
+  name: personKindNumbered,
+  parameters: [code : Nat],
+  result: PersonValueKind,
+  body: (if (code =? 0) then (ctor PersonValueKind.text) else (if (code =? 3) then (ctor PersonValueKind.uri) else (if (code =? 4) then (ctor PersonValueKind.date) else (if (code =? 5) then (ctor PersonValueKind.dateTime) else (ctor PersonValueKind.reference)))))
+}
+
+definition{
+  name: personMoreProperty,
+  parameters: [index : Nat],
+  result: PersonProperty,
+  body: (record PersonProperty {index := index, facet := (ctor PersonFacet.person), kind := (personKindNumbered (Foundation.Person.V1.More::personMoreKind index)), label := (Foundation.Person.V1.More::personMoreLabel index), detector := 0})
 }
 
 definition{
@@ -483,6 +470,17 @@ definition{
 }
 
 definition{
+  name: personBranchesMore,
+  parameters: [index : Nat, left : Nat],
+  result: String,
+  body: (match left
+    | Nat.zero => ""
+    | Nat.succ rest => (prim join (cons (personBranch (personMoreProperty index)) (cons (if (rest =? 0) then "" else ",") (cons (personBranchesMore (index + 1) rest) (nil String)))) "" : String)),
+  axioms: [propext],
+  recursive_argument: left
+}
+
+definition{
   name: personSchemaHead,
   parameters: [schema : PersonSchema],
   result: String,
@@ -497,7 +495,7 @@ definition{
   body: (prim join (cons (personSchemaHead schema) (cons (match schema
     | PersonSchema.utterance => ",\"required\":[\"text\",\"channel\"],\"additionalProperties\":false,\"properties\":{\"text\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":4096},\"channel\":{\"enum\":[\"typed\",\"spoken\"]}}}"
     | PersonSchema.prose => ",\"required\":[\"prose\",\"mode\",\"model\",\"cause\"],\"additionalProperties\":false,\"properties\":{\"prose\":{\"type\":\"string\",\"maxLength\":1024,\"pattern\":\"^.+\\\\.$\"},\"mode\":{\"enum\":[\"compiled\",\"embedded\",\"routed\"]},\"model\":{\"type\":\"string\",\"pattern\":\"^[0-9a-f]{64}$\"},\"cause\":{\"type\":\"string\",\"minLength\":1,\"maxLength\":128}}}"
-    | PersonSchema.claim => (prim join (cons ",\"required\":[\"subject\",\"facet\",\"property\",\"label\",\"detector\",\"value\"],\"additionalProperties\":false,\"properties\":{\"subject\":" (cons (personSubjectSchema) (cons ",\"facet\":{\"enum\":[" (cons (personFacetTypesFrom (personFacets)) (cons "]},\"property\":{\"type\":\"string\"},\"label\":{\"enum\":" (cons (personLabelEnum) (cons "},\"detector\":{\"enum\":" (cons (personDetectorEnum) (cons "},\"value\":{\"type\":\"string\"}},\"oneOf\":[" (cons (personBranchesFrom (personProperties)) (cons "," (cons (personBranchesFrom (personPropertiesMore)) (cons "]}" (nil String)))))))))))))) "" : String)
+    | PersonSchema.claim => (prim join (cons ",\"required\":[\"subject\",\"facet\",\"property\",\"label\",\"detector\",\"value\"],\"additionalProperties\":false,\"properties\":{\"subject\":" (cons (personSubjectSchema) (cons ",\"facet\":{\"enum\":[" (cons (personFacetTypesFrom (personFacets)) (cons "]},\"property\":{\"type\":\"string\"},\"label\":{\"enum\":" (cons (personLabelEnum) (cons "},\"detector\":{\"enum\":" (cons (personDetectorEnum) (cons "},\"value\":{\"type\":\"string\"}},\"oneOf\":[" (cons (personBranchesFrom (personProperties)) (cons "," (cons (personBranchesMore (Foundation.Person.V1.More::personMoreFirst) (Foundation.Person.V1.More::personMoreCount)) (cons "]}" (nil String)))))))))))))) "" : String)
     | PersonSchema.observation => (prim join (cons ",\"required\":[\"source\",\"claims\"],\"additionalProperties\":false,\"properties\":{\"source\":{\"enum\":[\"gmail\",\"google-calendar\",\"proton-mail\",\"proton-calendar\"]},\"claims\":{\"type\":\"array\",\"minItems\":1,\"maxItems\":256,\"items\":{\"$ref\":\"" (cons (personSchemaUri (ctor PersonSchema.claim)) (cons "\"}}}}" (nil String)))) "" : String)) (nil String))) "" : String),
   axioms: [propext]
 }
@@ -920,10 +918,28 @@ definition{
 }
 
 definition{
+  name: personReadMore,
+  parameters: [
+    body : Bytes,
+    offset : Nat,
+    facet : PersonFacet,
+    subject : Bytes,
+    index : Nat,
+    left : Nat
+  ],
+  result: Bytes,
+  body: (match left
+    | Nat.zero => (prim utf8_encode "refused unknown-property" : Bytes)
+    | Nat.succ rest => (let item : PersonProperty := (personMoreProperty index); (let key : Bytes := (prim utf8_encode (prim join (cons (personPropertyPhrase (project item index)) (cons " is " (nil String))) "" : String) : Bytes); (if ((personFacetHolds facet (project item facet)) && (personStartsAt body offset key)) then (let value : Bytes := (personSliceOf body (offset + (personLen key)) (prim subtract (personLen body) (offset + (personLen key)) : Nat)); (if (personValueOk (project item kind) value) then (personClaimJson subject item value) else (prim utf8_encode (prim join (cons "refused malformed-value " (cons (personKindName (project item kind)) (nil String))) "" : String) : Bytes))) else (personReadMore body offset facet subject (index + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: left
+}
+
+definition{
   name: personReadEither,
   parameters: [body : Bytes, offset : Nat, facet : PersonFacet, subject : Bytes],
   result: Bytes,
-  body: (let read : Bytes := (personReadProperty body offset facet subject (personProperties)); (if (prim equal read (prim utf8_encode "refused unknown-property" : Bytes) : Bool) then (personReadProperty body offset facet subject (personPropertiesMore)) else read)),
+  body: (let read : Bytes := (personReadProperty body offset facet subject (personProperties)); (if (prim equal read (prim utf8_encode "refused unknown-property" : Bytes) : Bool) then (personReadMore body offset facet subject (Foundation.Person.V1.More::personMoreFirst) (Foundation.Person.V1.More::personMoreCount)) else read)),
   axioms: [Quot.sound, propext]
 }
 
