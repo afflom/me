@@ -64,7 +64,7 @@ const router = makeRouter({
     const [facet, ...rest] = text.split(' ');
     return facet === 'boundary' ? boundary(rest.join(' ')) : facet === 'dest' ? dest(rest.join(' ')) : 'invalid request';
   },
-  halted: () => haltedNow,
+  read: dest, halted: () => haltedNow,
   pace: () => paceNow,
   handoff: async (out, target) => { handed.push({ out, target }); },
 });

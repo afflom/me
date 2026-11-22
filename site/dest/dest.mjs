@@ -15,7 +15,6 @@
 // uses (their mail client, their calendar, the device's share sheet or a
 // file), started by the owner's own press. No host is called from here.
 
-export const TARGETS = ['owner', 'calendar', 'mail', 'platform'];
 
 // The tone check, for the `tone` field. Coercive wording: pressure, false
 // urgency or scarcity, guilt, threat. A match keeps words from leaving and
@@ -130,33 +129,35 @@ export const BUILD = { mail: buildMail, calendar: buildEvent, platform: buildSha
 
 //   makeRouter({ line, halted, pace, handoff })
 //   line(text)  asks the Prism root guest ("<facet> <rest>")
+//   read(text)  asks the reader in front of the two decisions (the dest guest, opened on first use)
 //   halted()    'yes' | 'no'      (the kill switch)
 //   pace()      'open' | 'quiet'  (the owner's attention right now)
 //   handoff(payload, target) hands the payload to an app the owner uses
-export function makeRouter({ line, halted = () => 'no', pace = () => 'open', handoff = browserHandoff }) {
+let reader = null;
+const guestRead = async (text) => (await (reader ??= import('./guest.mjs').then((m) => m.opened(m.GUEST))))(text);
+const wordHex = (value) => hex(encoder.encode(String(value ?? '')));
+
+export function makeRouter({ line, read = guestRead, halted = () => 'no', pace = () => 'open', handoff = browserHandoff }) {
   if (typeof line !== 'function') throw new Error('makeRouter needs line (the Prism root guest)');
 
   // An item: { target, text, label, detector, identifier, cause, urgency, payload }
   // `payload` is the destination's fields (to/subject/... or start/end/...);
-  // `text` is the words a person reads. `cause` is grounded only when the item
-  // names its source (an address in the vault) or is the owner's own input.
+  // `text` is the words a person reads. The reader works out the rest from these
+  // facts: where the item goes, whether its cause is grounded (it names its
+  // source, or is the owner's own input), and whether the words are the ones the
+  // owner saw (Prepare compares them with themselves; a missing seal on Send
+  // counts as changed). An item's own words travel as hex, so they stay one word.
   async function ask(item, { act = 'none', seen = null } = {}) {
-    const target = TARGETS.includes(item.target) ? item.target : 'other';
-    const outward = target !== 'owner';
-    const out = BUILD[target] ? BUILD[target](item.payload ?? {}) : null;
+    const out = Object.hasOwn(BUILD, item.target) ? BUILD[item.target](item.payload ?? {}) : null;
     const words = out ? out.bytes : String(item.text ?? '');
     const seal = await sealOf(words);
-    const verdict = await line(`boundary ${item.label ?? 'confidential'} ${item.detector ?? 'none'} ${outward ? 'outbound' : 'browser'} ${act} ${item.identifier ?? 'no'} ${halted()}`);
-    const cause = item.source || item.cause === 'owner' ? 'grounded' : 'orphan';
-    // Prepare compares the words with themselves; Send compares them with the
-    // seal of what the owner saw, and a missing seal counts as changed.
-    const wording = (seen ?? (act === 'none' ? seal : null)) === seal ? 'seen' : 'changed';
     const tone = toneOf(String(item.text ?? words));
-    const request = `${target} ${verdict} ${cause} ${act} ${wording} ${tone} ${pace()} ${item.urgency === 'urgent' ? 'urgent' : 'normal'} ${halted()}`;
-    const answer = verdict === 'allow' || verdict === 'ask' || verdict === 'hashonly' || verdict === 'deny'
-      ? await line(`dest ${request}`)
-      : 'refuse';
-    return { answer, request, seal, out, tone, verdict };
+    const target = wordHex(item.target);
+    const verdict = await line(`boundary ${await read(`bound ${target} ${item.label ?? '-'} ${item.detector ?? '-'} ${act} ${item.identifier ?? '-'} ${halted()}`)}`);
+    const routed = await read(`route ${target} ${verdict} ${item.source ? 'yes' : 'no'} ${wordHex(item.cause)} ${act} ${seen ?? '-'} ${seal} ${tone} ${pace()} ${wordHex(item.urgency)} ${halted()}`);
+    const refused = routed.startsWith('refuse ');
+    const request = refused ? routed.slice(7) : routed;
+    return { answer: refused ? 'refuse' : await line(`dest ${request}`), request, seal, out, tone, verdict };
   }
 
   // Prepare: what the Prism may do on its own. Never delivers (act none).
