@@ -1,0 +1,22 @@
+{
+  "id": "rfc3339",
+  "wasm": "site/rfc3339/guest/rfc3339.wasm",
+  "pin": "site/rfc3339/guest.mjs",
+  "modules": [
+    "Abnf",
+    "PrismGrammarRfc3339",
+    "PrismRfc3339"
+  ],
+  "dispatch": "PrismRfc3339::prismRfc3339Dispatch",
+  "vectors": "spec:rfc3339",
+  "sync": true,
+  "limits": [
+    256,
+    1024,
+    512
+  ],
+  "memory": [
+    2048,
+    1048576
+  ]
+}

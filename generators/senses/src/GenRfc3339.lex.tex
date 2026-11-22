@@ -1,0 +1,140 @@
+\begin{lexlean}{GenRfc3339}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{GenSenses}
+\importmodule{GenDigest}
+\title{Date and time cases generator}
+\begin{semanticmodule}
+definition{
+  name: rfExamples,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (GenSenses::senU "app/specs/standards/texts/9ab2b8864a85dca73a88f49b0927bc7bc85f596926e4fd1890905777924e700a"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (let k : Nat := (GenSenses::senFind s 0 0x352e382e204578616d706c65730a (Foundation.Bytes::byteLength s)); (if (k <? (Foundation.Bytes::byteLength s)) then (ctor Option.some [Bytes] (Foundation.Json::span s k (GenSenses::senFind s k 0x0a362e205265666572656e636573 (Foundation.Bytes::byteLength s)))) else (ctor Option.some [Bytes] 0x)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rfIsExample,
+  parameters: [s : Bytes, i : Nat, e : Nat],
+  result: Bool,
+  body: (let a : Nat := (GenSenses::senSkip s i (Foundation.Bytes::byteLength s)); (((a =? (i + 6)) && (a <? e)) && ((47 <? (Foundation.Tar::byteOr s a)) && ((Foundation.Tar::byteOr s a) <? 58)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rfSep,
+  parameters: [acc : Bytes],
+  result: Bytes,
+  body: (if ((Foundation.Bytes::byteLength acc) =? 0) then 0x else 0x2c0a)
+}
+
+definition{
+  name: rfCount,
+  parameters: [acc : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength acc) <? (i + 1)) then n else (rfCount acc (i + 1) (if ((Foundation.Tar::byteOr acc i) =? 10) then (n + 1) else n) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rfRow,
+  parameters: [mode : Nat, acc : Bytes, request : Bytes, answer : Bytes],
+  result: Bytes,
+  body: (if (mode =? 0) then (GenSenses::senCat (cons acc (cons (rfSep acc) (cons 0x202020205b22 (cons request (cons 0x5c6e222c2022 (cons answer (cons 0x5c6e225d (nil Bytes))))))))) else (if (mode =? 1) then (GenSenses::senCat (cons acc (cons 0x7b226964223a2022726663333333392d6578616d706c652d (cons (GenDigest::digDec ((rfCount acc 0 0 (Foundation.Bytes::byteLength acc)) + 1)) (cons 0x222c20226b696e64223a20224578616d706c65222c2022726566223a2022 (cons request (cons 0x222c202274657874223a202252464320333333392073656374696f6e20352e382074656c6c732074686973206f6620697473206578616d706c65733b2074686520726663333333392067756573742c2061736b65642069742c20616e737765727320 (cons answer (cons 0x227d0a (nil Bytes)))))))))) else (let x : Bytes := (Foundation.Json::span request 5 (Foundation.Bytes::byteLength request)); (if ((GenSenses::senStartsAt request 0 0x757463) && (not (GenSenses::senIs x 0 (Foundation.Bytes::byteLength x) answer))) then (GenSenses::senCat (cons acc (cons (rfSep acc) (cons 0x202020205b22666c61745c6e626173652068747470733a2f2f6578616d706c652e636f6d2f6d652f5c6e6e6f7720 (cons answer (cons 0x5c6e6c6f63616c20 (cons x (cons 0x5c6e222c20226c6f63616c54696d6520 (cons x (cons 0x5c6e225d (nil Bytes))))))))))) else acc)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rfLine,
+  parameters: [mode : Nat, s : Bytes, i : Nat, e : Nat, prev : Bytes, cur : Bytes, acc : Bytes],
+  result: Bytes,
+  body: (let p : Nat := (GenSenses::senFind s i 0x6571756976616c656e7420746f20 (Foundation.Bytes::byteLength s)); (if (p <? e) then (rfRow mode acc (GenSenses::senCat (cons 0x7574635c6e (cons cur (nil Bytes)))) (Foundation.Json::span s (p + 14) e)) else (if ((GenSenses::senFind s i 0x7468652073616d65206c656170207365636f6e64 (Foundation.Bytes::byteLength s)) <? e) then (rfRow mode acc (GenSenses::senCat (cons 0x73616d655c6e (cons prev (cons 0x5c6e (cons cur (nil Bytes)))))) 0x73616d65) else acc))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rfScan,
+  parameters: [mode : Nat, s : Bytes, i : Nat, prev : Bytes, cur : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then acc else (let e : Nat := (GenSenses::senFind s i 0x0a (Foundation.Bytes::byteLength s)); (if (rfIsExample s i e) then (let x : Bytes := (Foundation.Json::span s (i + 6) e); (rfScan mode s (e + 1) cur x (if ((Foundation.Tar::byteOr s (prim subtract e 1 : Nat)) =? 90) then (rfRow mode acc (GenSenses::senCat (cons 0x7574635c6e (cons x (nil Bytes)))) x) else acc) rest)) else (rfScan mode s (e + 1) prev cur (rfLine mode s i e prev cur acc) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rfReqs,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (GenSenses::senU ".gen/rfc3339-examples"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (let rows : Bytes := (rfScan 1 s 0 0x 0x 0x (Foundation.Bytes::byteLength s)); (if ((Foundation.Bytes::byteLength rows) =? 0) then (ctor Option.none [Bytes]) else (ctor Option.some [Bytes] rows)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rfNoteA,
+  parameters: [],
+  result: Bytes,
+  body: (GenSenses::senCat (cons 0x7b0a202022636f6d6d656e74223a20225772697474656e2062792067656e657261746f72732f73656e7365732028726663333333396361736573292066726f6d2052464320333333392073656374696f6e20352e38206174206974732070696e6e656420627974657320286170702f73706563732f7374616e64617264732f74657874732f39616232623838363461383564636137336138386634396230393237626337626338356635393639323665346664313839303930353737373932346537303061293a20 (cons 0x646f206e6f7420656469742e2045616368206578616d706c6520697320612072657175657374206f6620746865207266633333333920677565737420616e642069747320616e737765722061 (nil Bytes))))
+}
+
+definition{
+  name: rfNoteB,
+  parameters: [],
+  result: Bytes,
+  body: (GenSenses::senCat (cons 0x73207468652073656374696f6e20697473656c662074656c6c732069743a20616e206578616d706c6520616c726561647920696e2055544320697320697473206f776e2055544320666f726d3b20746865206578616d706c65207468652073656374696f6e2063616c6c73206571756976616c656e7420746f206120646174652d74696d6520696e20555443206861732074686174206173206974732055544320666f726d3b207468652074776f206578616d706c65732069742063616c6c73207468652073616d (cons 0x65206c656170207365636f6e6420617265207468652073616d6520696e7374616e742e222c0a2020226578616d706c6573223a205b0a (nil Bytes))))
+}
+
+definition{
+  name: rfFile,
+  parameters: [rows : Bytes],
+  result: Bytes,
+  body: (GenSenses::senCat (cons (rfNoteA) (cons (rfNoteB) (cons rows (cons 0x0a20205d0a7d0a (nil Bytes))))))
+}
+
+definition{
+  name: rfCases,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (GenSenses::senU ".gen/rfc3339-examples"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (let rows : Bytes := (rfScan 0 s 0 0x 0x 0x (Foundation.Bytes::byteLength s)); (if ((Foundation.Bytes::byteLength rows) =? 0) then (ctor Option.none [Bytes]) else (ctor Option.some [Bytes] (rfFile rows))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rfLocalA,
+  parameters: [],
+  result: Bytes,
+  body: (GenSenses::senCat (cons 0x7b0a202022636f6d6d656e74223a20225772697474656e2062792067656e657261746f72732f73656e736573202873656e7365736c6f63616c292066726f6d2052464320333333392073656374696f6e20352e38206174206974732070696e6e656420627974657320286170702f73706563732f7374616e64617264732f74657874732f39616232623838363461383564636137336138386634396230393237626337626338356635393639323665346664313839303930353737373932346537303061293a2064 (cons 0x6f206e6f7420656469742e205468652073656374696f6e206769766573206f6e65206f6620697473206578616d70 (nil Bytes))))
+}
+
+definition{
+  name: rfLocalB,
+  parameters: [],
+  result: Bytes,
+  body: (GenSenses::senCat (cons 0x6c657320616e642074686520646174652d74696d6520696e20555443206974206973206571756976616c656e7420746f3b2061736b656420776974682074686174206173206e6f7720616e6420746865206578616d706c65206173206c6f63616c2c207468652073656e73657320677565737420616e737765727320746865206c6f63616c2074696d652c20776869636820697420646f6573206f6e6c79207768656e207468652074776f20617265207468652073616d6520696e7374616e742e222c0a20202265 (cons 0x78616d706c6573223a205b0a (nil Bytes))))
+}
+
+definition{
+  name: rfLocal,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (GenSenses::senU ".gen/rfc3339-examples"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (let rows : Bytes := (rfScan 2 s 0 0x 0x 0x (Foundation.Bytes::byteLength s)); (if ((Foundation.Bytes::byteLength rows) =? 0) then (ctor Option.none [Bytes]) else (ctor Option.some [Bytes] (GenSenses::senCat (cons (rfLocalA) (cons (rfLocalB) (cons rows (cons 0x0a20205d0a7d0a (nil Bytes)))))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
