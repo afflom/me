@@ -1,5 +1,5 @@
 {
-  "comment": "The steps of the calendar program (generators/calendar/), run in order by tools/generators/run.sh: the IANA iCalendar registries and RFC 5545 section 3 into the reader's registry and ST-01's inventory of RFC 5545's registered elements, and RFC 5545's own examples into the suite that holds the reader to each registered element (test/calendar.registry.test.mjs).",
+  "comment": "The steps of the calendar program (generators/calendar/), run in order by tools/generators/run.sh: the IANA iCalendar registries and RFC 5545 section 3 into the reader's registry and ST-01's inventory of RFC 5545's registered elements, and the examples of RFC 5545 and of RFC 5546 (section 4) into the suite that holds the reader to each registered element (test/calendar.registry.test.mjs).",
   "steps": [
     {
       "generator": "icalxml",
@@ -45,11 +45,27 @@
       "output": ".gen/ical-found"
     },
     {
+      "generator": "icaltipexamples",
+      "split": "app/specs/standards/texts/a7aad5fd02f4e226e09f5092f0e985131c66af530400b097a6c35bbba01b558a",
+      "breakBefore": "^[0-9]+[.][0-9.]*[.]? ",
+      "output": "test/standards/generated/rfc5546-examples.txt"
+    },
+    {
+      "generator": "icaltipfound",
+      "split": "test/standards/generated/rfc5546-examples.txt",
+      "inputs": [
+        ".gen/ical-iana",
+        "app/specs/calendar/spec.json"
+      ],
+      "output": ".gen/ical-found-tip"
+    },
+    {
       "generator": "icalsuite",
       "inputs": [
         ".gen/ical-iana",
         "app/specs/calendar/spec.json",
-        ".gen/ical-found"
+        ".gen/ical-found",
+        ".gen/ical-found-tip"
       ],
       "output": "test/calendar.registry.test.mjs"
     }
