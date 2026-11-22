@@ -9,9 +9,9 @@
 // of them, holding the corpus's messages.
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { openGuest } from '../google/guest.mjs';
+import { GUESTS, opened } from './guest.mjs';
 import { ingestInto } from '../google/ingest.mjs';
-import { GUEST, HOST_GUEST, SOURCE_GUEST, openDevice, formatOf, formatOfText, contactCards, mboxMessages, calendarItems, contactItems, LIMIT } from './device.mjs';
+import { FORMATS, openDevice, formatOf, formatOfText, contactCards, mboxMessages, calendarItems, contactItems } from './device.mjs';
 import { HOST, SURFACES, present, lanes, plan } from './host.mjs';
 import { vcard } from '../read/read.mjs';
 
@@ -24,8 +24,8 @@ const mboxOf = (...ids) => ids.map((id) => {
   const sender = /^From:.*?<?([^\s<>]+@[^\s<>]+?)>?\s*$/m.exec(raw)?.[1] ?? 'MAILER-DAEMON';
   return `From ${sender} Thu Jan  1 00:00:00 1970\n${raw.replace(/^(>*From )/gm, '>$1')}\n`;
 }).join('');
-const folder = await openGuest(new Uint8Array(await readFile(new URL(GUEST.path, import.meta.url))), GUEST.sha256);
-const hostGuest = await openGuest(new Uint8Array(await readFile(new URL(HOST_GUEST.path, import.meta.url))), HOST_GUEST.sha256);
+const folder = await opened(GUESTS.folder);
+const hostGuest = await opened(GUESTS.host);
 let checks = 0;
 const ok = (cond, message) => { assert.ok(cond, message); checks += 1; };
 
@@ -53,6 +53,7 @@ ok((await folder('granted mbox read small')) === 'invalid', 'a short request is 
 
 // The parsers: the formats Google Takeout, Proton, Apple and Thunderbird write.
 ok(formatOf('All mail Including Spam and Trash.mbox') === 'mbox' && formatOf('a.EML') === 'eml' && formatOf('cal.ics') === 'ics' && formatOf('contacts.vcf') === 'vcf', 'formats by name');
+ok(FORMATS.length === 5 && FORMATS.every(([extension, format]) => formatOf(`a.${extension.toUpperCase()}`) === format) && formatOf('busy.ifb') === 'ics' && formatOf('a.vcard') === 'vcf' && formatOf('a.ical') === 'other' && formatOf('a.mbx') === 'other', 'every extension a registration states, and no other');
 ok(formatOf('1700000000.M1P2.host:2,S', 'cur') === 'maildir' && formatOf('.hidden', 'cur') === 'other' && formatOf('notes.txt') === 'other', 'Maildir by its folder, nothing else');
 const chunked = (text, size = 7) => (async function* () { const b = new TextEncoder().encode(text); for (let i = 0; i < b.length; i += size) yield b.slice(i, i + size); })();
 const MBOX = mboxOf('rfc5322-1', 'rfc5322-6');
@@ -95,7 +96,7 @@ const decide = async (line) => { asked.push(line); return folder(line); };
 
 let stop = 'no';
 const store = memoryStore();
-const device = openDevice({ decide, ingest: ingestInto({ vault }), vcard, store, halted: () => stop, now: () => Date.parse('2026-11-13T00:00:00Z') });
+const device = openDevice({ decide, read: folder, ingest: ingestInto({ vault }), vcard, store, halted: () => stop, now: () => Date.parse('2026-11-13T00:00:00Z') });
 const takeout = dirOf('Takeout', [
   dirOf('Mail', [entryOf(fileOf('All mail.mbox', MBOX))]),
   dirOf('Calendar', [entryOf(fileOf('me.ics', ICS))]),
@@ -135,7 +136,7 @@ takeout.state = 'denied';
 ok((await device.readFolders()).refuse === 1, 'a revoked grant is refused');
 
 // Picked or dropped files: the act is the grant; other formats and oversize files are passed over.
-const huge = { name: 'big.eml', size: LIMIT + 1, lastModified: 1, text: async () => { throw new Error('read'); } };
+const huge = { name: 'big.eml', size: 33554433, lastModified: 1, text: async () => { throw new Error('read'); } };
 const dropped = await device.readFiles([fileOf('a.eml', example('rfc5322-2')), fileOf('b.vcf', CARDS[0]), fileOf('c.pdf', '%PDF'), huge]);
 ok(dropped.store === 2 && dropped.skip === 2, `picked files are kept, others passed over: ${JSON.stringify(dropped)}`);
 
@@ -174,7 +175,7 @@ ok(lanes({ hardwareConcurrency: 8, deviceMemory: 8 }) === 8 && lanes({ hardwareC
 {
   let inFlight = 0, most = 0;
   const slow = { put: async () => { inFlight += 1; most = Math.max(most, inFlight); await new Promise((r) => setTimeout(r, 5)); inFlight -= 1; return { outcome: 'store' }; } };
-  const wide = openDevice({ decide: folder, ingest: ingestInto({ vault: slow }), vcard, store: memoryStore(), lanes: 3 });
+  const wide = openDevice({ decide: folder, read: folder, ingest: ingestInto({ vault: slow }), vcard, store: memoryStore(), lanes: 3 });
   const many = CARDS.join('');
   const t = await wide.readFiles([fileOf('many.vcf', many)]);
   ok(CARDS.length > 3 && t.store === CARDS.length && most === 3, `items are kept on every lane and no more: ${most}`);
@@ -400,7 +401,7 @@ ok(present({ document: {}, navigator: { userAgentData: { mobile: false, brands: 
 
 // DV-05: PrismSource, every request: a declared service by every route the browser offers, read only.
 {
-  const source = await openGuest(new Uint8Array(await readFile(new URL(SOURCE_GUEST.path, import.meta.url))), SOURCE_GUEST.sha256), SITES = Object.fromEntries(JSON.parse(await readFile(new URL('../../app/specs/source/contracts.json', import.meta.url), 'utf8')).sites.map((c) => [c.service, c]));
+  const source = await opened(GUESTS.source), SITES = Object.fromEntries(JSON.parse(await readFile(new URL('../../app/specs/source/contracts.json', import.meta.url), 'utf8')).sites.map((c) => [c.service, c]));
   let n = 0;
   for (const [service, route, act, halted] of product(['gmail', 'calendar', 'discord', 'whatsapp', 'linkedin', 'other'], ['seen', 'own', 'export'], ['read', 'write'], ['no', 'yes'])) {
     const answer = await source(`${service} ${route} ${act} ${halted}`);
