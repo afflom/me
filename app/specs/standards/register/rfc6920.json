@@ -22,5 +22,75 @@
  ],
  "realizedBy": [
   "ST-01"
- ]
+ ],
+ "enforcedBy": {
+  "rfc6920-2-3c1f21bc": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 section 8.1 (the text \"Hello World!\"): match of ni:///sha-256;f4OxZX... and ni://example.com/sha-256;f4OxZX... answers same, the authority not considered; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6920-2-a8e3b358": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 Figure 10 (the names of the public key of Figure 9): match answers same for the binary name and the nih name, for the nih names written with sha-256-120 and with suite number 3, and for the ni name and its URL segment; different where the algorithm or length differs; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6920-2-03644dc0": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 section 8.1 (the text \"Hello World!\") and RFC 6920 Figure 10 (the names of the public key of Figure 9): ni answers the RFC's sha-256 name from the bytes, and check answers valid for it; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6920-2-89f14437": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 Figure 10 (the names of the public key of Figure 9): check answers valid for the names truncated to 120 and to 32 bits; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6920-2-25a77524": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 Figure 10 (the names of the public key of Figure 9): nih with sha-256-32 answers nih:sha-256-32;53269057;b, the truncation in the algorithm string, and match of the 32-bit and 120-bit names answers different; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6920-2-9dcbb8e4": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 Figure 10 (the names of the public key of Figure 9): the 32-bit and 120-bit names of the key are the leftmost bits of the sha-256 hash of Figure 9, which nih generates and check accepts; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6920-3-83108df1": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 section 8.1 (the text \"Hello World!\") and RFC 6920 Figure 10 (the names of the public key of Figure 9): ni answers the RFC's names character for character, base64url without padding; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6920-3-90d1e438": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 section 8.1 (the text \"Hello World!\") and RFC 6920 Figure 10 (the names of the public key of Figure 9): ni answers the RFC's val from the object's bytes, and check answers mismatch when a name is asked against the other example's bytes; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6920-3-20a3283c": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 section 8.1 (the text \"Hello World!\") and RFC 6920 Figure 10 (the names of the public key of Figure 9): check validates a name against bytes in every form the RFC gives; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6920-3.1-3593ca92": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 Figure 6: ct answers text/plain for ni:///sha-256-32;f4OxZQ?ct=text/plain; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6920-3.1-7bc14351": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 section 8.1 (the text \"Hello World!\") and RFC 6920 Figure 10 (the names of the public key of Figure 9): check validates names against the raw octets, with no transfer encoding; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6920-4-88e999a7": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 section 8.1 (the text \"Hello World!\"): wellknown answers http://example.com/.well-known/ni/sha-256/f4OxZX... for ni://example.com/sha-256;f4OxZX..., the same authority, and check answers valid for that URL; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6920-7-64338f90": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 Figure 10 (the names of the public key of Figure 9): the nih names grouped by four and by six characters match as the same name, and each checks valid; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6920-7-dfac2554": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 Figure 10 (the names of the public key of Figure 9): the nih names with a checkdigit check valid; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6920-7-6de7f6ee": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 Figure 10 (the names of the public key of Figure 9): nih with sha-256-32 answers the RFC's checkdigit b, computed by Luhn's mod 16 over the hex value; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6920-7-c8c1e2b3": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 Figure 10 (the names of the public key of Figure 9): nih:3;532690-57e12f-e2b74b-a07c89-2560a2;f checks valid against the key; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  },
+  "rfc6920-7-14b3a7c4": {
+   "suite": "crates/conformance/tests/guests.rs",
+   "how": "RFC 6920 Figure 10 (the names of the public key of Figure 9): match of the name written with suite number 3 and the name written sha-256-120 answers same; prismpm build runs every acceptance vector of the snapshot guest's name requests (app/specs/snapshot-name/spec.json, written from the RFC's pinned text by generators/transition namecases) and GU-01 holds the pinned wasm to those vectors"
+  }
+ }
 }

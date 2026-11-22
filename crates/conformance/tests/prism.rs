@@ -77,29 +77,40 @@ fn guarantees(id: &str, module: &str, kind: &str, count: usize) {
 fn prism_pm_01() {
     let prism = model("Prism.lex.tex");
     let proofs = model("PrismProofs.lex.tex");
-    for (facet, module, dispatch) in [
-        ("Boundary", "PrismBoundary", "prismBoundaryDispatch"),
-        ("Learn", "PrismLearning", "prismLearningDispatch"),
-        ("When", "PrismChronology", "prismChronologyDispatch"),
-        ("Store", "PrismVaultStore", "prismVaultStoreDispatch"),
-        ("Restore", "PrismVaultRestore", "prismVaultRestoreDispatch"),
-        ("R4", "PrismR4", "prismR4Dispatch"),
-        ("Route", "PrismRoute", "routeDispatch"),
-        ("Google", "PrismGoogle", "prismGoogleDispatch"),
-        ("Googlelink", "PrismGoogleLink", "prismGoogleLinkDispatch"),
-        ("Dest", "PrismDest", "prismDestDispatch"),
-        ("Folder", "PrismFolder", "prismFolderDispatch"),
-        ("Host", "PrismHost", "prismHostDispatch"),
-        ("Source", "PrismSource", "prismSourceDispatch"),
-        ("Model", "PrismModels", "prismModelsDispatch"),
-        ("Kappa", "PrismKappaLabel", "kappaLabelDispatch"),
-        ("Uorc", "PrismUorc", "prismUorcDispatch"),
-        ("Holon", "PrismHolon", "prismHolonDispatch"),
-        ("Curate", "PrismCurate", "prismCurateDispatch"),
-        ("Resonance", "PrismResonance", "prismResonanceDispatch"),
-        ("Router", "PrismRouter", "prismRouterDispatch"),
-        ("Ask", "PrismAsk", "prismAskDispatch"),
-    ] {
+    let root = model("../../tools/prism_root.py");
+    let facets = root
+        .split("FACETS = [")
+        .nth(1)
+        .and_then(|rest| rest.split("\n]").next())
+        .expect("FACETS");
+    for row in facets.lines().filter(|line| line.contains('(')) {
+        let field: Vec<&str> = row.split('"').collect();
+        let held = if declaration(&prism, "firstRoute").contains(&format!(
+            "(facet{}{})",
+            field[1][..1].to_uppercase(),
+            &field[1][1..]
+        )) {
+            let same = format!("((Prism::firstRoute (Prism::facet{0}) rest) = (Prism::route (Prism::facet{0}) rest)),", format!("{}{}", field[1][..1].to_uppercase(), &field[1][1..]));
+            declaration(
+                &proofs,
+                &format!("first{}{}", field[1][..1].to_uppercase(), &field[1][1..]),
+            )
+            .contains(&same)
+        } else {
+            let guest = model(&format!("../specs/guests/later/later-{}.json", field[1]));
+            guest.contains(&format!("\"dispatch\": \"{}::{}\"", field[3], field[5]))
+                && guest.contains(&format!("\"as\": \"{}\"", field[1]))
+        };
+        assert!(
+            held,
+            "PM-01: {} is answered on a first visit as the route answers it, or by its own guest",
+            field[1]
+        );
+        let (facet, module, dispatch) = (
+            format!("{}{}", field[1][..1].to_uppercase(), &field[1][1..]),
+            field[3],
+            field[5],
+        );
         let theorem = declaration(&proofs, &format!("routes{facet}"));
         assert!(
             theorem.contains(&format!(
@@ -117,8 +128,8 @@ fn prism_pm_01() {
     );
     let dispatch = declaration(&prism, "dispatch");
     assert!(
-        dispatch.contains("(route (facetOf value) (restOf value))"),
-        "PM-01: the application's answer must be decided by route:\n{dispatch}"
+        dispatch.contains("(firstRoute (facetOf value) (restOf value))"),
+        "PM-01: the application's answer must be decided by firstRoute:\n{dispatch}"
     );
     let application = declaration(&prism, "application");
     assert!(

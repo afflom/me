@@ -8,8 +8,8 @@
 app/specs/guests/<facet>/<id>.json is one guest: the core wasm the page's Node
 suites open, the file that pins it by SHA-256, the app modules it is built
 from (each with its proofs), the dispatch it answers with, and where its
-acceptance vectors come from (the builder's prompt, or a spec whose examples
-are raw requests). `write` lays out app/'s toolchain files, Foundation, those
+acceptance vectors come from (the builder's prompt, a spec whose examples
+are raw requests, or a list its own module defines). `write` lays out app/'s toolchain files, Foundation, those
 modules and a <Guest>App module whose application record routes every request
 straight to that dispatch. tools/guests/build.sh builds each stale project in
 the locked SDK with no network (lexlean lock, fmt, lock, verify, then prismpm
@@ -37,8 +37,9 @@ LOCKS = {g["id"]: p.with_name(f"{g['id']}.lock.json") for p, g in FILES.items() 
 
 
 def vectors(g):
-    """The acceptance vectors: the prompt's examples, or a raw-request spec's."""
+    """The acceptance vectors: the prompt's examples, a raw-request spec's, or `in:` a list the module defines (those that are text; the build replays them all)."""
     v = g["vectors"]
+    if v.startswith("in:"): return [(bytes.fromhex(q).decode(), bytes.fromhex(r).decode()) for q, r in re.findall(r"request := 0x([0-9a-f]*), response := 0x([0-9a-f]*)", (APP / f"src/{v[3:].split('::')[0]}.lex.tex").read_text().split(f"name: {v.split('::')[1]},")[1].split("\n}")[0]) if max(bytes.fromhex(q + r), default=0) < 128]
     if v.startswith("spec:"):
         return [tuple(e) for p in v[5:].split("+") for e in json.loads((APP / f"specs/{p}/spec.json").read_text())["examples"]]
     return [(e["request"], e["response"]) for e in json.loads((APP / f"prompts/{v}.prompt.json").read_text())["app"]["examples"]]
@@ -46,7 +47,7 @@ def vectors(g):
 
 def held(g):
     # Every request the build holds the guest to: its vectors, then the empty, the over-long and the over-allocated one.
-    return vectors(g) + [("", "invalid"), ("x" * (limits(g)[0] + 1), "invalid"), ("x" * limits(g)[2], "invalid")]
+    return vectors(g) + [(r, g.get("refusal", "invalid")) for r in ("", "x" * (limits(g)[0] + 1), "x" * limits(g)[2])]
 
 
 def limits(g):
@@ -86,8 +87,8 @@ def write(gid, out):
     (out / "lexlean.toml").write_text(toml[:start] + "entrypoints = [" + ", ".join(f'"{e}"' for e in sorted([f"src/{appm}.lex.tex", *files])) + "]\n" + toml[toml.index("]\n", start) + 2:])
     req, resp, alloc = limits(g)
     h = lambda s: "0x" + s.encode().hex()
-    vec = "(nil Foundation.View.Text.V1.Model::AcceptanceVector)"
-    for r, a in reversed(held(g)):
+    vec = f"({g['vectors'][3:]})" if g["vectors"].startswith("in:") else "(nil Foundation.View.Text.V1.Model::AcceptanceVector)"
+    for r, a in reversed(held(g)[-3 if g["vectors"].startswith("in:") else 0 :]):
         vec = f"(cons (record Foundation.View.Text.V1.Model::AcceptanceVector {{request := {h(r)}, response := {h(a)}}}) {vec})"
     name = f"prism-{gid}"
     (out / f"src/{appm}.lex.tex").write_text(rf"""\begin{{lexlean}}{{{appm}}}
