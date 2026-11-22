@@ -1,0 +1,21 @@
+{
+  "id": "snapshot-replay-stale",
+  "wasm": "site/snapshot/guest/snapshot.wasm",
+  "pin": "site/snapshot/guest.mjs",
+  "modules": [
+    "Sha256",
+    "PrismSnapshot"
+  ],
+  "dispatch": "PrismSnapshot::prismSnapshotDispatch",
+  "vectors": "spec:snapshot-replay/stale",
+  "limits": [
+    2048,
+    2048,
+    4096
+  ],
+  "memory": [
+    2048,
+    1048576
+  ],
+  "as": "replayStale"
+}
