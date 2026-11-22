@@ -122,7 +122,7 @@ jobs:
               if [[ $now != "$MAIN" ]]; then
                 echo "::notice::main moved to $now outside the train; the next run tests ${entries[*]} again"
                 entries=()
-              elif git push -q "https://x-access-token:$GH_TOKEN@github.com/$REPO" "$tip:refs/heads/main"; then
+              elif git -c http.extraheader="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" push -q "https://github.com/$REPO" "$tip:refs/heads/main"; then
                 echo "pushed the train as tested: main is $tip, with ${entries[*]}"
                 entries=()
               else
