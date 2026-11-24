@@ -21,17 +21,12 @@
 // usage: NODE_PATH="$(npm root --global)" [PAGE_SITE=dir | PAGE_URL=url] node --test test/page/standards.test.mjs
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { createReadStream, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { createServer } from "node:http";
-import { createRequire } from "node:module";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { extname, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import test from "node:test";
+import { chromium, serve } from "../product/harness.mjs";
 
-const { chromium } = createRequire(import.meta.url)("playwright");
-const site = resolve(process.env.PAGE_SITE ?? "site");
-const published = process.env.PAGE_URL;
-const types = { ".html": "text/html", ".mjs": "text/javascript", ".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".wasm": "application/wasm", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2", ".webmanifest": "application/manifest+json" };
 const { PLACES } = await import(resolve("site/surface/surface.mjs"));
 const { example, toOf } = await import(resolve("test/oracle/examples.mjs"));
 
@@ -77,7 +72,7 @@ const VIEWS = [
 
 // In the page: every element, the frame's shadow roots included.
 const DEEP = `const deep = (root = document) => [...root.querySelectorAll("*")].flatMap((el) => el.shadowRoot ? [el, ...deep(el.shadowRoot)] : [el]);
-const shown = (el) => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return (r.width > 0 || r.height > 0 || s.display === "contents") && s.visibility !== "hidden" && !el.closest("[hidden]"); };
+const shown = (el) => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return (r.width > 0 || r.height > 0 || s.display === "contents") && s.visibility !== "hidden" && !el.closest("[hidden], details:not([open]) > :not(summary)"); };
 const active = () => { let a = document.activeElement; while (a?.shadowRoot?.activeElement) a = a.shadowRoot.activeElement; return a; };`;
 const inPage = (body) => new Function("arg", `${DEEP}\n${body}`);
 
@@ -149,20 +144,21 @@ const SCREEN = {
 };
 
 // Probes run once a view, on a place with its content: each returns its failures by requirement.
-async function viewProbes(page, view, home) {
+async function viewProbes(page, view, home, probed = PROBED) {
   const out = [];
   const fail = (probe, why) => out.push({ probe, why });
   const where = () => page.evaluate(() => [document.getElementById("pr-title")?.textContent, document.documentElement.className, location.hash].join("|"));
-  if (PROBED.has("keyboard")) {
+  if (probed.has("keyboard")) {
     // 2.1.1, 2.1.2, 2.4.7, 2.4.11, 3.2.1: Tab reaches every control, comes round again, each shows its focus
     // and is not hidden under anything, and focusing changes nothing.
-    await page.evaluate(() => { document.activeElement?.blur?.(); window.scrollTo(0, 0); });
+    await page.evaluate(() => { document.activeElement?.blur?.(); window.__reached = new WeakSet(); window.scrollTo(0, 0); });
     const before = await where();
     const seen = [];
     for (let i = 0; i < 160; i++) {
       await page.keyboard.press("Tab");
       const f = await page.evaluate(inPage(`const el = active();
         if (!el || el === document.body) return null;
+        const again = (window.__reached ??= new WeakSet()).has(el); window.__reached.add(el);
         const target = getComputedStyle(el).display === "contents" ? el.parentElement : el;
         const s = getComputedStyle(el), t = getComputedStyle(target);
         // A ring may be drawn on the control, on the row it lends its cells to, or on its ::before or ::after.
@@ -171,21 +167,21 @@ async function viewProbes(page, view, home) {
         const points = [[r.left + r.width / 2, r.top + r.height / 2], [r.left + 2, r.top + 2], [r.right - 2, r.bottom - 2]];
         const top = (x, y) => { let e = document.elementFromPoint(x, y); while (e?.shadowRoot) { const inner = e.shadowRoot.elementFromPoint(x, y); if (!inner || inner === e) break; e = inner; } return e; };
         const clear = points.some(([x, y]) => { const e = top(x, y); return e && (e === el || e === target || el.contains(e) || target.contains(e) || e.contains(el)); });
-        return { id: el.id || el.getAttribute("aria-label") || el.textContent.trim().slice(0, 30) || el.tagName, key: el.id + "|" + el.className + "|" + el.textContent.trim().slice(0, 40) + "|" + Math.round(r.left) + "," + Math.round(r.top), ring: ring(s) || ring(t) || ring(getComputedStyle(el, "::before")) || ring(getComputedStyle(el, "::after")), clear };`));
+        return { again, id: el.id || el.getAttribute("aria-label") || el.textContent.trim().slice(0, 30) || el.tagName, key: el.id + "|" + el.className + "|" + el.textContent.trim().slice(0, 40) + "|" + Math.round(r.left) + "," + Math.round(r.top), ring: ring(s) || ring(t) || ring(getComputedStyle(el, "::before")) || ring(getComputedStyle(el, "::after")), clear };`));
       if (!f) continue;
-      if (seen.length && f.key === seen[0].key) break;
+      if (f.again || (seen.length && f.key === seen[0].key)) break;
       seen.push(f);
       if (!f.ring) fail("keyboard", `2.4.7 ${f.id} shows no focus`);
       if (!f.clear) fail("keyboard", `2.4.11 ${f.id} is hidden when focused`);
     }
-    if (seen.length >= 160 || new Set(seen.map((f) => f.key)).size < seen.length / 2) fail("keyboard", "2.1.2 Tab does not come round");
-    const reached = new Set(seen.map((f) => f.key));
-    const missing = await page.evaluate(inPage(`return deep().filter((el) => el.matches('button:not([disabled]), input:not([disabled]):not([type=hidden]), textarea, select, a[href], [tabindex="0"]') && shown(el) && el.tabIndex >= 0)
+    if (seen.length >= 160) fail("keyboard", "2.1.2 Tab does not come round");
+    const missing = await page.evaluate(inPage(`return deep().filter((el) => el.matches('button:not([disabled]), input:not([disabled]):not([type=hidden]), textarea, select, a[href], [tabindex="0"]') && shown(el) && !window.__reached?.has(el))
       .map((el) => { const r = (getComputedStyle(el).display === "contents" ? el.parentElement : el).getBoundingClientRect(); return { id: el.id || el.getAttribute("aria-label") || el.textContent.trim().slice(0, 30) || el.tagName, key: el.id + "|" + el.className + "|" + el.textContent.trim().slice(0, 40) + "|" + Math.round(r.left) + "," + Math.round(r.top) }; });`));
-    for (const m of missing) if (!reached.has(m.key)) fail("keyboard", `2.1.1 Tab never reaches ${m.id}`);
+    // A control drawn again while the walk ran is the one reached where it stood.
+    for (const m of missing) if (!seen.some((f) => f.key === m.key)) fail("keyboard", `2.1.1 Tab never reaches ${m.id}`);
     if ((await where()) !== before) fail("keyboard", "3.2.1 focusing changed the page");
   }
-  if (PROBED.has("character-keys")) {
+  if (probed.has("character-keys")) {
     // 2.1.4: no single printable key does anything unless focus is on its control.
     for (const key of [..."abcdefghijklmnopqrstuvwxyz0123456789.,/;'[]-=?"]) {
       await page.evaluate(() => { document.activeElement?.blur?.(); });
@@ -195,13 +191,13 @@ async function viewProbes(page, view, home) {
     }
   }
   const overflow = () => page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
-  if (PROBED.has("text-200")) {
+  if (probed.has("text-200")) {
     // 1.4.4: text at 200 percent loses nothing sideways.
     await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
     if (await overflow()) fail("text-200", "1.4.4 text at 200 percent overflows sideways");
     await page.evaluate(() => { document.documentElement.style.fontSize = ""; });
   }
-  if (PROBED.has("reflow")) {
+  if (probed.has("reflow")) {
     // 1.4.10: at 320 CSS pixels wide, nothing needs scrolling sideways.
     await page.setViewportSize({ width: 320, height: view.viewport.height });
     await page.waitForTimeout(200);
@@ -209,7 +205,7 @@ async function viewProbes(page, view, home) {
     await page.setViewportSize(view.viewport);
     await page.waitForTimeout(200);
   }
-  if (PROBED.has("text-spacing")) {
+  if (probed.has("text-spacing")) {
     // 1.4.12: WCAG's own spacing (line 1.5, paragraph 2, letter 0.12, word 0.16) clips nothing new.
     const clipped = () => page.evaluate(inPage(`return deep().filter((el) => shown(el) && el.children.length === 0 && el.textContent.trim() && /hidden|clip/.test(getComputedStyle(el).overflow) && getComputedStyle(el).textOverflow !== "ellipsis" && (el.scrollHeight > el.clientHeight + 2 || el.scrollWidth > el.clientWidth + 2)).map((el) => el.id || el.className || el.tagName);`));
     const was = new Set(await clipped());
@@ -219,14 +215,14 @@ async function viewProbes(page, view, home) {
     for (const c of await clipped()) if (!was.has(c)) fail("text-spacing", `1.4.12 ${c} is clipped`);
     await page.evaluate(() => document.querySelector("style[data-probe=spacing]")?.remove());
   }
-  if (PROBED.has("on-input")) {
+  if (probed.has("on-input")) {
     // 3.2.2: typing into a field changes no place.
     const before = await where();
     await page.fill("#pr-prompt", "a");
     if ((await where()) !== before) fail("on-input", "3.2.2 typing in Ask changed the page");
     await page.fill("#pr-prompt", "");
   }
-  if (PROBED.has("pointer-cancellation")) {
+  if (probed.has("pointer-cancellation")) {
     // 2.5.2: a press acts on release, and releasing away from it cancels.
     const before = await where();
     const box = await page.locator(`.pr-go[data-place="${home}"]`).first().boundingBox();
@@ -237,7 +233,7 @@ async function viewProbes(page, view, home) {
     await page.mouse.up();
     if ((await where()) !== before) fail("pointer-cancellation", "2.5.2 releasing away did not cancel");
   }
-  if (PROBED.has("error-identification")) {
+  if (probed.has("error-identification")) {
     // 3.3.1, 3.3.3: a wrong address is identified, in text, with what would be right.
     await page.click('.pr-go[data-place="conversations"]');
     await page.click("#pr-new");
@@ -257,15 +253,7 @@ test("the front end meets every requirement of its standards, as the registry en
   const axe = await engine();
   const dir = mkdtempSync(join(tmpdir(), "standards-"));
   const files = FEED.map(([id, ext]) => { const path = join(dir, `${id}.${ext}`); writeFileSync(path, example(id)); return path; });
-  const server = createServer((request, response) => {
-    let path = decodeURIComponent(new URL(request.url, "http://localhost").pathname).replace(/^\/me\//, "/");
-    if (path.endsWith("/")) path += "index.html";
-    const file = resolve(join(site, path));
-    if (!file.startsWith(site) || !existsSync(file)) return response.writeHead(404).end();
-    response.writeHead(200, { "content-type": types[extname(file)] ?? "application/octet-stream" });
-    createReadStream(file).pipe(response);
-  });
-  if (!published) await new Promise((done) => server.listen(0, "127.0.0.1", done));
+  const server = await serve();
   // What fails, by "standard id", with the first place it failed.
   const failed = new Map();
   const failing = (standard, id, why) => { const key = `${standard} ${id}`; if (!failed.has(key)) failed.set(key, why); };
@@ -287,7 +275,7 @@ test("the front end meets every requirement of its standards, as the registry en
       const page = await context.newPage();
       const errors = [];
       page.on("pageerror", (error) => errors.push(error.message));
-      await page.goto(published ?? `http://127.0.0.1:${server.address().port}/me/`);
+      await page.goto(server.url);
       await page.waitForSelector("html.pr-ready", { timeout: 60000 });
       // The canonical frame, fetched live, is part of every screen: the walk starts once it is drawn.
       await page.waitForFunction(() => customElements.get("prism-frame") && !document.querySelector(".frame-fallback"), null, { timeout: 30000 }).catch(() => {});
@@ -307,6 +295,8 @@ test("the front end meets every requirement of its standards, as the registry en
           const arg = name === "multiple-ways" ? PLACES.filter((p) => p.viewpoint === "person" && p.host !== "composer").map((p) => p.key) : null;
           for (const why of await page.evaluate(probe, arg)) byProbe(name, `at ${screen} (${view.name}): ${why}`);
         }
+        // 2.1.1: the keyboard reaches every control of every screen, not only of the last.
+        for (const { probe, why } of await viewProbes(page, view, null, new Set(["keyboard"].filter((name) => PROBED.has(name))))) byProbe(probe, `at ${screen} (${view.name}): ${why}`);
         // 3.2.3, 3.2.4, 3.2.6: the navigation, and the help beside it, are the same on every screen.
         navs.push([screen, await page.evaluate(() => JSON.stringify([...document.querySelectorAll(".pr-go")].map((b) => [b.dataset.place, b.textContent.trim()]).concat([[ "spec", document.getElementById("open-spec")?.textContent.trim() ?? "" ]])))]);
       };
