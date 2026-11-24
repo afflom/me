@@ -3,9 +3,15 @@
   "wasm": "site/holon/guest/holon.wasm",
   "pin": "site/holon/guest.mjs",
   "modules": [
-    "PrismHolon"
+    "PrismHolon",
+    "PrismHolonRegister"
   ],
-  "dispatch": "PrismHolon::prismHolonDispatch",
+  "dispatch": "PrismHolonRegister::holonRegisterDispatch",
   "vectors": "holon",
-  "as": "holon"
+  "as": "holon",
+  "limits": [
+    160,
+    64,
+    320
+  ]
 }
