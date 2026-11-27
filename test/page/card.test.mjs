@@ -4,35 +4,21 @@
 // page, so a site that does not work fails the run instead of shipping quietly.
 // usage: NODE_PATH="$(npm root --global)" [PAGE_SITE=dir | PAGE_URL=url] node --test test/page/card.test.mjs
 import assert from "node:assert/strict";
-import { createReadStream, existsSync } from "node:fs";
-import { createServer } from "node:http";
-import { createRequire } from "node:module";
-import { extname, join, resolve } from "node:path";
+import { resolve } from "node:path";
 import test from "node:test";
+import { chromium, serve } from "../product/harness.mjs";
 
-const { chromium } = createRequire(import.meta.url)("playwright");
 // What the owner types comes from the specifications' own examples (RFC 5546 §4.4; RFC 5322 Appendix A.1.1).
 const { titleOf, bodyOf, toOf } = await import(resolve("test/oracle/examples.mjs"));
-const site = resolve(process.env.PAGE_SITE ?? "site");
-const published = process.env.PAGE_URL;
-const types = { ".html": "text/html", ".mjs": "text/javascript", ".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".wasm": "application/wasm", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2", ".webmanifest": "application/manifest+json" };
 
 test("the Prism keeps at the model's floors, refuses while halted and drafts only through the app (PG-01)", async () => {
-  const server = createServer((request, response) => {
-    let path = decodeURIComponent(new URL(request.url, "http://localhost").pathname).replace(/^\/me\//, "/");
-    if (path.endsWith("/")) path += "index.html";
-    const file = resolve(join(site, path));
-    if (!file.startsWith(site) || !existsSync(file)) return response.writeHead(404).end();
-    response.writeHead(200, { "content-type": types[extname(file)] ?? "application/octet-stream" });
-    createReadStream(file).pipe(response);
-  });
-  if (!published) await new Promise((done) => server.listen(0, "127.0.0.1", done));
+  const server = await serve();
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
     const errors = [];
     page.on("pageerror", (error) => errors.push(error.message));
-    await page.goto(published ?? `http://127.0.0.1:${server.address().port}/me/`);
+    await page.goto(server.url);
     // The Prism is ready once the vault has opened and every place is drawn.
     await page.waitForSelector("html.pr-ready", { timeout: 60000 });
     const settle = (text) => page.waitForFunction((t) => document.getElementById("pr-out").textContent.trim() === t, text, { timeout: 10000 });
@@ -93,6 +79,6 @@ test("the Prism keeps at the model's floors, refuses while halted and drafts onl
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
-    if (server.listening) server.close();
+    server.close();
   }
 });
