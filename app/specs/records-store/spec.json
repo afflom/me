@@ -1,0 +1,59 @@
+{
+ "name": "records-store",
+ "title": "The records store's reader",
+ "purpose": "What the reader in front of PrismRecords (app/src/PrismRecordsStore.lex.tex) answers the records store: each example is a request and its answer, and the records guest is held to every one (GU-01).",
+ "examples": [
+  [
+   "put -",
+   "kept"
+  ],
+  [
+   "put k1:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "held"
+  ],
+  [
+   "put",
+   "invalid"
+  ],
+  [
+   "put  ",
+   "invalid"
+  ],
+  [
+   "put k1:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa k1:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "invalid"
+  ],
+  [
+   "put a\"b",
+   "refuse"
+  ],
+  [
+   "swap - -",
+   "moved"
+  ],
+  [
+   "swap k1:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa -",
+   "stale"
+  ],
+  [
+   "swap - k1:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "stale"
+  ],
+  [
+   "swap k1:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa k1:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "moved"
+  ],
+  [
+   "swap k1:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa k1:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "stale"
+  ],
+  [
+   "swap k1:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+   "invalid"
+  ],
+  [
+   "swap a\"b a\"b",
+   "refuse"
+  ]
+ ]
+}
