@@ -1,0 +1,138 @@
+{
+ "name": "scxml/event",
+ "comment": "IRP tests of SCXML 1.0 sections 5.5, 5.6, 5.7, 6.2 and C.1 on the data of an event: <param>, <content> and namelist in <send>, <donedata> in a <final> state, and what an error in one of them does, pinned by SHA-256 as W3C serves it under the IRP base that app/specs/scxml/spec.json pins, each answered by the id of the top-level <final> state the document halts in. The conf: terms are read with the meaning the pinned confEcma.xsl gives each.",
+ "tests": [
+  {
+   "assert": "294",
+   "section": "5.5",
+   "file": "294/test294.txml",
+   "sha256": "c71fe498ef003c8f9d50c2fbbaac8542d39c00522450c5659b09f840fe235460"
+  },
+  {
+   "assert": "527",
+   "section": "5.6",
+   "file": "527/test527.txml",
+   "sha256": "4e0c0e9189cccbefc606319341b69cc44590e8696d3a05d3822f36fe74ecbf73"
+  },
+  {
+   "assert": "528",
+   "section": "5.6",
+   "file": "528/test528.txml",
+   "sha256": "b9f4f9875bf5abe121d818db3b29a6623b606fdd4063d849d1677675303b205c"
+  },
+  {
+   "assert": "529",
+   "section": "5.6",
+   "file": "529/test529.txml",
+   "sha256": "2890791bfb417169785742d02327677f4c5a12529107bc86138b731f79472c8f"
+  },
+  {
+   "assert": "298",
+   "section": "5.7",
+   "file": "298/test298.txml",
+   "sha256": "302d95a5651ccfb31b1684ab4448c92ae33d4ed80b084334f92943fe08be1924"
+  },
+  {
+   "assert": "343",
+   "section": "5.7",
+   "file": "343/test343.txml",
+   "sha256": "f8ef10753fcaa44e3a772d45747f64dea18944d5224393b12909cba5556ed9d1"
+  },
+  {
+   "assert": "488",
+   "section": "5.7",
+   "file": "488/test488.txml",
+   "sha256": "302c8818db826b13656d4434763ced3aff54a127ebbd3b72fee6468e3881987b"
+  },
+  {
+   "assert": "176",
+   "section": "6.2",
+   "file": "176/test176.txml",
+   "sha256": "3743c72366d5ca117481cf01d1e1bf2a3df40dd767ef040f6a722df9b0fb0770"
+  },
+  {
+   "assert": "179",
+   "section": "6.2",
+   "file": "179/test179.txml",
+   "sha256": "a0b28d74ae3187cef8317a921b1ddb6ea8c756bf4fb75c1351f60b26775fb022"
+  },
+  {
+   "assert": "186",
+   "section": "6.2",
+   "file": "186/test186.txml",
+   "sha256": "9e268c498f38d08718d7ed31ec0e3607451f96945ed3c09dc0d06e084eb8cd87"
+  },
+  {
+   "assert": "205",
+   "section": "6.2",
+   "file": "205/test205.txml",
+   "sha256": "c8f82d9af01e38da19e46671305a00923163039766ce34380b065e7e92d5e379"
+  },
+  {
+   "assert": "553",
+   "section": "6.2",
+   "file": "553/test553.txml",
+   "sha256": "311947fc4c3579b6d3091f226c60b1c9fc596c514e9bc848d9ef6ec3c04627a4"
+  },
+  {
+   "assert": "354",
+   "section": "C.1",
+   "file": "354/test354.txml",
+   "sha256": "59fdd554408b8a7576f8041ccf20c35284f1decd900e3202c54b09f870dc77c6"
+  }
+ ],
+ "examples": [
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that a param inside donedata ends up in the data field of the done event and\nthat content inside donedata sets the full value of the event.data field -->\n\n<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\" conf:datamodel=\"\" initial=\"s0\">\n <datamodel>\n       <data conf:id=\"1\" conf:expr=\"0\"/>\n    </datamodel>   \n     \n <state id=\"s0\" initial=\"s01\">\n    \n   <transition event=\"done.state.s0\"  conf:eventvarVal=\"1=1\" target=\"s1\">\n     </transition>\n     \n      <transition event=\"done.state.s0\"  conf:targetfail=\"\">\n     </transition>\n\n   <state id=\"s01\">\n   <transition target=\"s02\"/>\n   </state>\n   <final id=\"s02\">\n     <donedata>\n      <param conf:name=\"1\" conf:expr=\"1\"/>\n      </donedata>\n     </final>\n </state>\n \n <state id=\"s1\" initial=\"s11\">\n    \n   <transition event=\"done.state.s1\"  conf:eventdataVal=\"'foo'\" conf:targetpass=\"\">\n     </transition>\n     \n      <transition event=\"done.state.s1\"  conf:targetfail=\"\">\n     </transition>\n\n   <state id=\"s11\">\n   <transition target=\"s12\"/>\n   </state>\n   <final id=\"s12\">\n     <donedata>\n      <conf:contentFoo/>\n      </donedata>\n     </final>\n </state>\n\n<conf:pass/>\n<conf:fail/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- simple test that 'expr' works with <content> -->\n\n<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\" conf:datamodel=\"\" initial=\"s0\">\n\n     \n <state id=\"s0\" initial=\"s01\">\n    \n   <transition event=\"done.state.s0\"  conf:eventdataVal=\"'foo'\" conf:targetpass=\"\">\n     </transition>\n     \n      <transition event=\"done.state.s0\"  conf:targetfail=\"\">\n     </transition>\n\n   <state id=\"s01\">\n   <transition target=\"s02\"/>\n   </state>\n   <final id=\"s02\">\n     <donedata>\n      <content conf:quoteExpr=\"foo\"/>\n      </donedata>\n     </final>\n </state>\n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!--  test that illegal 'expr' produces error.execution and empty event.data -->\n\n<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\" conf:datamodel=\"\" initial=\"s0\">\n\n     \n <state id=\"s0\" initial=\"s01\">\n   <!-- we should get the error before the done event -->\n   <transition event=\"error.execution\" target=\"s1\"/>\n   <transition event=\"done.state.s0\" conf:targetfail=\"\"/>     \n\n\n   <state id=\"s01\">\n   <transition target=\"s02\"/>\n   </state>\n   <final id=\"s02\">\n     <donedata>\n      <content conf:illegalExpr=\"\"/>\n      </donedata>\n     </final>\n  </state>\n\n \n <!-- if we get here, we received the error event. Now check that the done\n event has empty event.data -->\n \n <state id=\"s1\">\n   <transition event=\"done.state.s0\" conf:emptyEventData=\"\" conf:targetpass=\"\"/>\n   <transition event=\"*\" conf:targetfail=\"\"/>\n   </state>\n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- simple test that children workn with <content> -->\n\n<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\" conf:datamodel=\"\" initial=\"s0\">\n\n     \n <state id=\"s0\" initial=\"s01\">\n    \n   <transition event=\"done.state.s0\"  conf:eventdataVal=\"21\" conf:targetpass=\"\">\n     </transition>\n     \n      <transition event=\"done.state.s0\"  conf:targetfail=\"\">\n     </transition>\n\n   <state id=\"s01\">\n   <transition target=\"s02\"/>\n   </state>\n   <final id=\"s02\">\n     <donedata>\n      <content>21</content>\n      </donedata>\n     </final>\n </state>\n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- reference a non-existent data model location in param in donedata and see that the right error is raised -->\n\n<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\" conf:datamodel=\"\" initial=\"s0\">\n <datamodel>\n       <data conf:id=\"1\" conf:expr=\"0\"/>\n    </datamodel>   \n     \n <state id=\"s0\" initial=\"s01\">\n \t<onentry>\n \t\t<send event=\"timeout\" delay=\"1s\"/>\n \t\t</onentry>\n \t\t\n    <transition event=\"error.execution\" conf:targetpass=\"\"/>\n       <transition event=\"*\" conf:targetfail=\"\"/>\n\n   <state id=\"s01\">\n   <transition target=\"s02\"/>\n   </state>\n   <final id=\"s02\">\n     <donedata>\n      <param conf:name=\"3\" conf:invalidLocation=\"\"/>\n      </donedata>\n     </final>\n </state>\n\n<conf:pass/>\n<conf:fail/>\n     \n</scxml>\n   \n\n",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!--  test that illegal <param> produces error.execution and empty event.data -->\n\n<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\" conf:datamodel=\"\" initial=\"s0\">\n\n     \n <state id=\"s0\" initial=\"s01\">\n   <!-- we should get the error before the done event -->\n   <transition event=\"error.execution\" target=\"s1\"/>\n   <transition event=\"done.state.s0\" conf:targetfail=\"\"/>     \n\n      <transition event=\"done.state.s0\"  conf:targetfail=\"\">\n     </transition>\n\n   <state id=\"s01\">\n   <transition target=\"s02\"/>\n   </state>\n   <final id=\"s02\">\n     <donedata>\n      <param conf:invalidLocation=\"foo\" name=\"someParam\"/>\n      </donedata>\n     </final>\n  </state>\n\n \n <!-- if we get here, we received the error event. Now check that the done\n event has empty event.data -->\n \n <state id=\"s1\">\n   <transition event=\"done.state.s0\" conf:emptyEventData=\"\" conf:targetpass=\"\"/>\n   <transition event=\"*\" conf:targetfail=\"\"/>\n   </state>\n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!--  test that illegal expr in <param> produces error.execution and empty event.data -->\n\n<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\" conf:datamodel=\"\" initial=\"s0\">\n\n     \n <state id=\"s0\" initial=\"s01\">\n   <!-- we should get the error before the done event -->\n   <transition event=\"error.execution\" target=\"s1\"/>\n   <transition event=\"done.state.s0\" conf:targetfail=\"\"/>     \n\n      <transition event=\"done.state.s0\"  conf:targetfail=\"\">\n     </transition>\n\n   <state id=\"s01\">\n   <transition target=\"s02\"/>\n   </state>\n   <final id=\"s02\">\n     <donedata>\n      <param conf:illegalExpr=\"\" name=\"someParam\"/>\n      </donedata>\n     </final>\n  </state>\n\n \n <!-- if we get here, we received the error event. Now check that the done\n event has empty event.data -->\n \n <state id=\"s1\">\n   <transition event=\"done.state.s0\" conf:emptyEventData=\"\" conf:targetpass=\"\"/>\n   <transition event=\"*\" conf:targetfail=\"\"/>\n   </state>\n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that <param> uses the current value of var1, not its initial value.  If the value of\naParam in event1 is 2 so that var2 gets set to 2, success, otherwise failure  -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"1\"/>\n  <data conf:id=\"2\"/>\n  </datamodel>\n  \n<state id=\"s0\">\n  <onentry>\n   <assign conf:location=\"1\" conf:expr=\"2\"/>\n   <send event=\"event1\">\n     <param name=\"aParam\" conf:varExpr=\"1\"/>\n     </send>\n    </onentry>\n    \n  <transition event=\"event1\"  target=\"s1\">\n  <assign conf:location=\"2\" conf:eventDataFieldValue=\"aParam\"/>\n  </transition>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n </state>\n\n<state id=\"s1\">\n  <transition conf:idVal=\"2=2\" conf:targetpass=\"\"/>\n  <transition conf:targetfail=\"\"/>\n  </state>\n     \n   <conf:pass/>\n   <conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that <content> can be used to populate body of a message -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n  \n<state id=\"s0\">\n  <onentry>\n   <send event=\"event1\">\n   <content>123</content>\n   </send>\n    </onentry>\n    \n  <transition event=\"event1\" conf:eventdataVal=\"123\" conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n </state>\n   \n   <conf:pass/>\n   <conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that <send> evals its args when it is evaluated, not when the delay interval expires and the\nmessage is actually sent.  If it does, aParam will have the value of 1 (even though var1 has been incremented\nin the interval.)  If var2 ends up == 1, we pass.  Otherwise we fail  -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n <data conf:id=\"1\" conf:expr=\"1\"/>\n <data conf:id=\"2\"/>\n </datamodel>\n  \n<state id=\"s0\">\n  <onentry>\n   <send event=\"event1\" conf:delay=\"1\">\n     <param name=\"aParam\" conf:varExpr=\"1\"/>\n     </send>\n   <assign conf:location=\"1\" conf:expr=\"2\"/>\n    </onentry>\n    \n  <transition event=\"event1\" target=\"s1\">\n    <assign conf:location=\"2\" conf:eventDataFieldValue=\"aParam\"/>\n    </transition>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n </state>\n\n<state id=\"s1\">\n  <transition conf:idVal=\"2=1\"  conf:targetpass=\"\"/>\n  <transition  conf:targetfail=\"\"/>\n  </state>\n       \n   <conf:pass/>\n   <conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that the processor doesn't  change the message.  We can't test that it never does this, but\nat least we can check that the event name and included data are the same as we sent.  -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n   <data conf:id=\"1\"/>\n   </datamodel>\n   \n<state id=\"s0\">\n  <onentry>\n   <send  event=\"event1\">\n     <param name=\"aParam\" conf:expr=\"1\"/>\n     </send>\n   <send event=\"timeout\"/>\n    </onentry>\n \n \n  <transition event=\"event1\" target=\"s1\">\n     <assign conf:location=\"1\" conf:eventDataFieldValue=\"aParam\"/>\n     </transition>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n </state>\n\n<state id=\"s1\">\n  <transition conf:idVal=\"1=1\" conf:targetpass=\"\"/>\n  <transition conf:targetfail=\"\"/>\n  </state> \n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that the processor does not dispatch the event if evaluation\nof <send>'s args causes an error..  -->\n\n\n<scxml initial=\"s0\"  conf:datamodel=\"\"  version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n  \n<state id=\"s0\">\n  <onentry>\n   <!-- timeout event -->\n   <send event=\"timeout\" conf:delay=\"1\"/>\n   <!-- generate an invalid namelist -->\n   <send event=\"event1\" conf:invalidNamelist=\"\"/> \n    </onentry>\n \n <!-- if we get the timeout before event1, we assume that event1 hasn't been sent\n We ignore the error event here because this assertion doesn't mention it -->   \n  <transition event=\"timeout\" conf:targetpass=\"\"/>\n  <transition event=\"event1\" conf:targetfail=\"\"/>\n </state>\n \n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that event.data can be populated using both namelist, param and <content>\nand that correct values are used -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" expr=\"1\"/>\n  <data conf:id=\"2\"/>\n  <data conf:id=\"3\"/>\n  </datamodel>\n  \n<state id=\"s0\">\n   <onentry>\n     <send delay=\"5s\" event=\"timeout\"/>\n    <send event=\"event1\" type=\"http://www.w3.org/TR/scxml/#SCXMLEventProcessor\" conf:namelist=\"1\"> \n      <param name=\"param1\" conf:expr=\"2\"/>\n      </send> \n     </onentry>\n  <transition event=\"event1\" target=\"s1\">\n    <assign conf:location=\"2\" conf:eventDataNamelistValue=\"1\"/>\n    <assign conf:location=\"3\" conf:eventDataParamValue=\"param1\"/>\n    </transition>\n  <transition event=\"*\" conf:targetfail=\"\">\n    </transition>\n\n</state>\n\n<state id=\"s1\">\n  \n  <transition conf:idVal=\"2=1\" target=\"s2\"/>\n  <transition conf:targetfail=\"\"/>\n  </state>\n\n<state id=\"s2\">\n    <transition conf:idVal=\"3=2\" target=\"s3\"/>\n  <transition conf:targetfail=\"\"/>\n  </state>\n\n<state id=\"s3\">\n   <onentry>\n     <send delay=\"5s\" event=\"timeout\"/>\n    <send  event=\"event2\"> \n      <content><conf:someInlineVal/></content>\n      </send>\n     </onentry>\n  <transition event=\"event2\" conf:eventdataSomeVal=\"\" conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n\n</state>\n\n\n   <conf:pass/>\n   <conf:fail/>\n\n</scxml>",
+   "pass"
+  ]
+ ]
+}
