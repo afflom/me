@@ -1,6 +1,6 @@
 {
  "name": "scxml/data",
- "comment": "IRP tests of SCXML 1.0 sections 4 and 5 and appendices B.1 and C.1 (executable content, the data model, the null data model, the SCXML event I/O processor) that need variables or conditions, pinned by SHA-256 as W3C serves it under the IRP base that app/specs/scxml/spec.json pins, each answered by the id of the top-level <final> state the document halts in. Variables, conditions, <assign> and <if> are read as the IRP states them in its conf: vocabulary, with the meaning the pinned confEcma.xsl gives each term: numbers in decimal digits, strings, the array of test 551 as an opaque object, and system variable names; any other expression cannot be evaluated and raises error.execution.",
+ "comment": "IRP tests of SCXML 1.0 sections 4 and 5 and appendices B.1 and C.1 (executable content, the data model, the null data model, the SCXML event I/O processor) that need variables or conditions, pinned by SHA-256 as W3C serves it under the IRP base that app/specs/scxml/spec.json pins, each answered by the id of the top-level <final> state the document halts in. Variables, conditions, <assign>, <if> and <foreach> are read as the IRP states them in its conf: vocabulary, with the meaning the pinned confEcma.xsl gives each term: numbers in decimal digits, strings, arrays of numbers, and system variable names; any other expression cannot be evaluated and raises error.execution.",
  "tests": [
   {
    "assert": "147",
@@ -19,6 +19,48 @@
    "section": "4.3",
    "file": "149/test149.txml",
    "sha256": "5ab0d7b951ada322f668ae3e5421c05940777c52c3cfbea07186bf36eb986354"
+  },
+  {
+   "assert": "150",
+   "section": "4.6",
+   "file": "150/test150.txml",
+   "sha256": "05ea3a68c4859a2a5fe41883b6ba9aef1ba06824ed3e44fc28740bbcdc4ce467"
+  },
+  {
+   "assert": "151",
+   "section": "4.6",
+   "file": "151/test151.txml",
+   "sha256": "f127a454f6934a68b3be43e4252fa88b85d2d5e670acd6be439b4b6db50f45c6"
+  },
+  {
+   "assert": "152",
+   "section": "4.6",
+   "file": "152/test152.txml",
+   "sha256": "0e818600343007e6a9971b154d721b6c4fc857e5e4ca833e772fca86ddf66b41"
+  },
+  {
+   "assert": "153",
+   "section": "4.6",
+   "file": "153/test153.txml",
+   "sha256": "adeba6c104f94b579e66ff4b2e4914446e98a5517a62ab12587ea4a2b703919f"
+  },
+  {
+   "assert": "155",
+   "section": "4.6",
+   "file": "155/test155.txml",
+   "sha256": "feb837865a3322da0b44ffd8ffe8105c18d4aa2540661f9b6b1023f46b33595c"
+  },
+  {
+   "assert": "156",
+   "section": "4.6",
+   "file": "156/test156.txml",
+   "sha256": "5afccd63207640b6ac5e110d6f32c674284c5473c0a53c8dbc0c489f9674786b"
+  },
+  {
+   "assert": "525",
+   "section": "4.6",
+   "file": "525/test525.txml",
+   "sha256": "8081cb26d5cc2eae0bbef5d7c5a96fb4606999985cc9efb301f7c19c1d8dbbb6"
   },
   {
    "assert": "158",
@@ -140,6 +182,34 @@
   ],
   [
    "<?xml version=\"1.0\"?>\n<!-- test that neither if clause executes, so that bat is the only event raised. -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"0\"/>\n  </datamodel>\n  \n<state id=\"s0\">\n  <onentry>\n  <if conf:false=\"\">\n    <raise event=\"foo\"/>\n    <conf:incrementID id=\"1\"/>\n  <elseif conf:false=\"\"/>\n    <raise event=\"bar\"/>\n    <conf:incrementID id=\"1\"/>\n </if>\n   <raise event=\"bat\"/>\n    </onentry>\n  <transition event=\"bat\" conf:idVal=\"1=0\" conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n </state>\n\n  \n   <conf:pass/>\n   <conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that foreach causes a new variable to be declared if 'item' doesn't already exist.  Also\ntest that it will use an existing var if it does exist. -->\n\n<scxml initial=\"s0\" conf:datamodel=\"\"  version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\"/>\n  <data conf:id=\"2\"/>\n  <data conf:id=\"3\">\n    <conf:array123/>\n    </data>\n  </datamodel>\n  \n   <state id=\"s0\">\n      <onentry>\n<!-- first use declared variables -->\n        <foreach conf:item=\"1\" conf:index=\"2\" conf:arrayVar=\"3\"/>\n        <raise event=\"foo\"/>\n        </onentry>\n   <transition event=\"error\" conf:targetfail=\"\"/>\n   <transition event=\"*\" target=\"s1\"/> \n   </state>\n   \n<state id=\"s1\">\n     <onentry>\n<!-- now use undeclared variables -->\n        <foreach conf:item=\"4\" conf:index=\"5\" conf:arrayVar=\"3\"/>\n        <raise event=\"bar\"/>\n        </onentry>\n   <transition event=\"error\" conf:targetfail=\"\"/>\n   <transition event=\"*\" target=\"s2\"/> \n   </state>\n\n<state id=\"s2\">\n  <!-- check that var4 is bound -->\n  <transition conf:isBound=\"4\" conf:targetpass=\"\"/>\n  <transition conf:targetfail=\"\"/>\n  </state>  \n   <conf:pass/>\n   <conf:fail/>\n   \n\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that foreach causes a new variable to be declared if 'item' doesn't already exist.  Also\ntest that it will use an existing var if it does exist. -->\n\n<scxml initial=\"s0\" conf:datamodel=\"\"  version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\"/>\n  <data conf:id=\"2\"/>\n  <data conf:id=\"3\">\n    <conf:array123/>\n    </data>\n  </datamodel>\n  \n   <state id=\"s0\">\n      <onentry>\n<!-- first use declared variables -->\n        <foreach conf:item=\"1\" conf:index=\"2\" conf:arrayVar=\"3\"/>\n        <raise event=\"foo\"/>\n        </onentry>\n   <transition event=\"error\" conf:targetfail=\"\"/>\n   <transition event=\"*\" target=\"s1\"/> \n   </state>\n   \n<state id=\"s1\">\n     <onentry>\n<!-- now use undeclared variables -->\n        <foreach conf:item=\"4\" conf:index=\"5\" conf:arrayVar=\"3\"/>\n        <raise event=\"bar\"/>\n        </onentry>\n   <transition event=\"error\" conf:targetfail=\"\"/>\n   <transition event=\"*\" target=\"s2\"/> \n   </state>\n\n<state id=\"s2\">\n  <!-- check that var5 is bound -->\n  <transition conf:isBound=\"5\" conf:targetpass=\"\"/>\n  <transition conf:targetfail=\"\"/>\n  </state>  \n   <conf:pass/>\n   <conf:fail/>\n   \n\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that an illegal array or item value causes error.execution and results in executable content\nnot being executed. -->\n\n<scxml initial=\"s0\" conf:datamodel=\"\" version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"0\"/>\n  <data conf:id=\"2\"/>\n  <data conf:id=\"3\"/>\n  <data conf:id=\"4\" conf:illegalArray=\"\"/>\n  <data conf:id=\"5\">\n    <conf:array123/>\n    </data>\n  </datamodel>\n  \n   <state id=\"s0\">\n      <onentry>\n<!-- invalid array, legal item -->\n        <foreach conf:item=\"2\" conf:index=\"3\" conf:arrayTextVar=\"4\">\n          <conf:incrementID id=\"1\"/>\n          </foreach>\n        <raise event=\"foo\"/>\n        </onentry>\n   <transition event=\"error.execution\" target=\"s1\"/>\n   <transition event=\"*\" conf:targetfail=\"\"/> \n   </state>\n   \n   <state id=\"s1\">\n      <onentry>\n<!-- illegal item, legal array -->\n        <foreach conf:illegalItem=\"\" conf:index=\"3\" conf:arrayVar=\"5\">\n          <conf:incrementID id=\"1\"/>\n          </foreach>\n        <raise event=\"bar\"/>\n        </onentry>\n   <transition event=\"error.execution\" target=\"s2\"/>\n   <transition event=\"bar\" conf:targetfail=\"\"/> \n   </state>\n\n<state id=\"s2\">\n  <!-- check that var1 has its original value (so executable content never got executed -->\n  <transition conf:idVal=\"1=0\" conf:targetpass=\"\"/>\n  <transition conf:targetfail=\"\"/>\n  </state> \n   \n   <conf:pass/>\n   <conf:fail/>\n   \n\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that foreach goes over the array in the right order.  since the array contains 1 2 3, we compare the current \nvalue with the previous value, which is stored in var1. The current value should always be larger.  If\nit ever isn't, set Var4 to 0, indicating failure -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"0\"/> <!-- contains the previous value -->\n  <data conf:id=\"2\"/> <!-- the item which will contain the current value -->\n  <data conf:id=\"3\">\n    <conf:array123/>\n    </data>\n  <data conf:id=\"4\" conf:expr=\"1\"/> <!-- 1 if success, 0 if failure -->\n  </datamodel>\n  \n   <state id=\"s0\">\n      <onentry>\n        <foreach conf:item=\"2\"  conf:arrayVar=\"3\">\n         <if conf:compareIDVal=\"1&lt;2\">\n         <assign conf:location=\"1\" conf:varExpr=\"2\"/>\n         <else/>\n         <!-- values are out of order, record failure -->\n         <assign conf:location=\"4\" conf:expr=\"0\"/>\n         </if>\n          </foreach>\n        </onentry>\n\n  <!-- check that var1 has its original value  -->\n  <transition conf:idVal=\"4=0\" conf:targetfail=\"\"/>\n  <transition conf:targetpass=\"\"/>\n  </state> \n   \n   <conf:pass/>\n   <conf:fail/>\n   \n\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that foreach executes the executable content once for each item in the list '(1,2,3)'. The executable\ncontent sums the items into var1 so it should be 6 at the end -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"0\"/>\n  <data conf:id=\"2\"/>\n  <data conf:id=\"3\">\n    <conf:array123/>\n    </data>\n  </datamodel>\n  \n   <state id=\"s0\">\n      <onentry>\n        <foreach conf:item=\"2\"  conf:arrayVar=\"3\">\n          <conf:sumVars id1=\"1\" id2=\"2\"/>\n          </foreach>\n        </onentry>\n\n  <transition conf:idVal=\"1=6\" conf:targetpass=\"\"/>\n  <transition conf:targetfail=\"\"/>\n  </state> \n   \n   <conf:pass/>\n   <conf:fail/>\n   \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that an error causes the foreach to stop execution.  The second piece of executable content\nshould cause an error, so var1 should be incremented only once -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"0\"/>\n  <data conf:id=\"2\"/>\n  <data conf:id=\"3\">\n  <conf:array123/>\n  </data>\n  </datamodel>\n  \n   <state id=\"s0\">\n      <onentry>\n        <foreach conf:item=\"2\"  conf:arrayVar=\"3\">\n          <conf:incrementID id=\"1\"/>\n          <!-- assign an illegal value to a non-existent var -->\n          <assign conf:location=\"5\" conf:illegalExpr=\"\"/>\n          </foreach>\n        </onentry>\n\n  <transition conf:idVal=\"1=1\" conf:targetpass=\"\"/>\n  <transition conf:targetfail=\"\"/>\n  </state> \n   \n   <conf:pass/>\n   <conf:fail/>\n   \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that <foreach> does a shallow copy, so that modifying the array does not change\nthe iteration behavior. -->\n\n\n<scxml  conf:datamodel=\"\"  version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n  <datamodel>\n    <data conf:id=\"1\">\n      <conf:array123/>\n      </data>\n    <data conf:id=\"2\" conf:expr=\"0\"/>  <!-- counts the number of iterations -->\n    </datamodel>\n     \n<state id=\"s0\">\n  <onentry>\n  <foreach conf:item=\"3\" conf:arrayVar=\"1\">\n    <conf:extendArray id=\"1\"/>\n    <conf:incrementID id=\"2\"/>\n    </foreach>\n   </onentry>\n   \n   <transition conf:idVal=\"2=3\" conf:targetpass=\"\"/>\n   <transition conf:targetfail=\"\"/>\n</state>\n\n\n \n<conf:pass/>\n<conf:fail/>\n</scxml>",
    "pass"
   ],
   [
