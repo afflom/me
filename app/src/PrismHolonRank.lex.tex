@@ -1,0 +1,103 @@
+\begin{lexlean}{PrismHolonRank}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\importmodule{PrismHolon}
+\importmodule{PrismHolonRegister}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: holonRankNat,
+  parameters: [s : Bytes, i : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (PrismHolon::prismHolonByteAt s i)
+      | Option.none => acc
+      | Option.some d => (if (d =? 32) then acc else (holonRankNat s (i + 1) ((prim multiply acc 10 : Nat) + (prim subtract d 48 : Nat)) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: holonRankDigitsFrom,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => (match (PrismHolon::prismHolonByteAt s i)
+      | Option.none => true
+      | Option.some d => (d =? 32))
+    | Nat.succ rest => (match (PrismHolon::prismHolonByteAt s i)
+      | Option.none => true
+      | Option.some d => (if (d =? 32) then true else (((47 <? d) && (d <? 58)) && (holonRankDigitsFrom s (i + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: holonRankDigits,
+  parameters: [value : Bytes, k : Nat],
+  result: Bool,
+  body: (let a : Nat := (PrismHolonRegister::holonRegisterStart value 0 k); (match (PrismHolon::prismHolonByteAt value a)
+    | Option.none => false
+    | Option.some d => ((if (d =? 32) then false else true) && (holonRankDigitsFrom value a 18)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonRankOk,
+  parameters: [value : Bytes, k : Nat],
+  result: Bool,
+  body: (((prim equal (PrismHolonRegister::holonRegisterWord value k) 0x2d : Bool) || (prim equal (PrismHolonRegister::holonRegisterWord value k) 0x696e66 : Bool)) || (holonRankDigits value k)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonRankNum,
+  parameters: [value : Bytes, k : Nat],
+  result: Nat,
+  body: (if (prim equal (PrismHolonRegister::holonRegisterWord value k) 0x696e66 : Bool) then 18446744073709551615 else (holonRankNat value (PrismHolonRegister::holonRegisterStart value 0 k) 0 18)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonRankAllOk,
+  parameters: [value : Bytes, k : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => ((holonRankOk value k) && (holonRankAllOk value (k + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: holonRankFlags,
+  parameters: [value : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => 0
+    | Nat.succ rest => (let r : Nat := (holonRankFlags value (i + 1) n rest); (let skip : Bool := ((prim equal (PrismHolonRegister::holonRegisterWord value (2 + i)) 0x2d : Bool) || (prim equal (PrismHolonRegister::holonRegisterWord value ((2 + n) + i)) 0x2d : Bool)); (let a : Nat := (holonRankNum value (2 + i)); (let b : Nat := (holonRankNum value ((2 + n) + i)); ((if (((if skip then false else true) && (a <? b)) || ((prim remainder r 2 0 : Nat) =? 1)) then 1 else 0) + (if (((if skip then false else true) && (b <? a)) || ((prim quotient r 2 0 : Nat) =? 1)) then 2 else 0))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: holonRankAnswer,
+  parameters: [value : Bytes, n : Nat],
+  result: Bytes,
+  body: (let f : Nat := (holonRankFlags value 0 n n); (if (f =? 1) then 0x646f6d696e61746573 else (if (f =? 0) then 0x657175616c else (if (f =? 2) then 0x646f6d696e61746564 else 0x696e636f6d70617261626c65)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonRankDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (160 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (if (prim equal (PrismHolonRegister::holonRegisterWord value 0) 0x72616e6b : Bool) then (let n : Nat := (holonRankNat value (PrismHolonRegister::holonRegisterStart value 0 1) 0 2); (if ((((holonRankDigits value 1) && (0 <? n)) && (n <? 9)) && ((holonRankAllOk value 2 (n + n)) && (prim equal (PrismHolonRegister::holonRegisterWord value ((2 + n) + n)) 0x : Bool))) then (holonRankAnswer value n) else 0x696e76616c6964)) else (PrismHolonRegister::holonRegisterDispatch value))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
