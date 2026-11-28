@@ -4,6 +4,7 @@
 \useglossary{prism.arch@1.0.0}
 \importmodule{Foundation.Bytes}
 \importmodule{GenLook}
+\importmodule{GenTokens}
 \importmodule{Foundation.Tar}
 \importmodule{Foundation.View.Text.V1.Model}
 \importmodule{Foundation.View.Text.V3.Model}
@@ -71,7 +72,9 @@ definition{
     | Option.none => (refused 0x6e656564732061207069656365206f6620736974652f636172642e6373732077686f7365206c6f6f6b20626c6f636b20656e6473)
     | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x63617264637373) then (match (GenLook::lookCssGenerate archive)
     | Option.none => (refused 0x6e65656473202e67656e2f6c6f6f6b2e63737320616e64202e67656e2f636172642d726573742e637373)
-    | Option.some file => (written file)) else 0x696e76616c6964))))))))))),
+    | Option.some file => (written file)) else (if (Foundation.Tar::sameBytes name 0x746f6b656e73) then (match (GenTokens::tkGenerate archive)
+    | Option.none => (refused 0x6e65656473206170702f73706563732f737572666163652f737065632e6a736f6e2077686f7365206c6f6f6b20686173207369782d64696769742068657820746f6e657320616e6420726164696920696e207078206f722072656d)
+    | Option.some file => (written file)) else 0x696e76616c6964)))))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

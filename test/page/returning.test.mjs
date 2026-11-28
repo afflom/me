@@ -13,7 +13,7 @@ import assert from "node:assert/strict";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import test from "node:test";
-import { chromium, serve, surface } from "../product/harness.mjs";
+import { chromium, faults, serve, surface } from "../product/harness.mjs";
 
 async function open(run, profile) {
   const server = await serve();
@@ -21,8 +21,7 @@ async function open(run, profile) {
   const context = profile ? await chromium.launchPersistentContext(profile) : await (await chromium.launch()).newContext();
   try {
     const page = await context.newPage();
-    const errors = [];
-    page.on("pageerror", (error) => errors.push(error.message));
+    const errors = faults(page);
     await run({ page, url: server.url, errors, context });
   } finally {
     await (context.browser() ?? context).close();

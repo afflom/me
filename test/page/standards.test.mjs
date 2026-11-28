@@ -25,7 +25,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFil
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
-import { chromium, serve } from "../product/harness.mjs";
+import { chromium, faults, open, serve } from "../product/harness.mjs";
 
 const { PLACES } = await import(resolve("site/surface/surface.mjs"));
 const { example, toOf } = await import(resolve("test/oracle/examples.mjs"));
@@ -47,16 +47,16 @@ const CHECKS = STANDARDS.flatMap((s) => enforcing(s).filter(([, e]) => e.suite =
 const RULES = [...new Set(CHECKS.filter((c) => c.kind === "axe-core rules").flatMap((c) => c.arg))];
 const ABSENT = [...new Set(CHECKS.filter((c) => c.kind === "absent").map((c) => c.arg))];
 const PROBED = new Set(CHECKS.filter((c) => c.kind === "probe").map((c) => c.arg));
-const ENGINE = STANDARDS.find((s) => s.engine)?.engine;
+const ENGINE = STANDARDS.find((s) => s.engine?.name === "axe-core")?.engine;
 
-async function engine() {
+async function engine(pin = ENGINE) {
   const dir = join(tmpdir(), "prism-standards");
-  const path = join(dir, ENGINE.sha256);
-  const bytes = existsSync(path) ? readFileSync(path) : Buffer.from(await (await fetch(ENGINE.url)).arrayBuffer());
+  // A pin the repository keeps is read there; an engine is fetched once and kept beside the tests.
+  const kept = join("app/specs/standards/texts", pin.sha256), path = existsSync(kept) ? kept : join(dir, pin.sha256);
+  const bytes = existsSync(path) ? readFileSync(path) : Buffer.from(await (await fetch(pin.url)).arrayBuffer());
   const digest = createHash("sha256").update(bytes).digest("hex");
-  assert.equal(digest, ENGINE.sha256, `${ENGINE.url} is ${digest}, not the pinned engine`);
-  mkdirSync(dir, { recursive: true });
-  writeFileSync(path, bytes);
+  assert.equal(digest, pin.sha256, `${pin.url} is ${digest}, not the pinned engine`);
+  existsSync(path) || (mkdirSync(dir, { recursive: true }), writeFileSync(path, bytes));
   return bytes.toString("utf8");
 }
 
@@ -251,7 +251,7 @@ async function viewProbes(page, view, home, probed = PROBED) {
 // AccName 1.2: each control, and each node named by an attribute, has the name the step that names it gives
 // from the page's own markup; the name is read as the browser computed it (the accessibility tree).
 const NAMED = new Set(["button", "link", "textbox", "searchbox", "combobox", "checkbox", "switch", "radio", "slider", "DisclosureTriangle"]);
-async function names(page) {
+async function names(page, tries = 5) {
   const cdp = await page.context().newCDPSession(page);
   const out = [];
   // The browser names a node in the letter case its style draws; the step gives the letters.
@@ -261,7 +261,9 @@ async function names(page) {
     if (n.ignored || !n.backendDOMNodeId || n.role?.value === "RootWebArea" || !(NAMED.has(n.role?.value) || (src && src.type !== "contents"))) continue;
     const how = !src ? "none" : src.type === "contents" ? "contents" : src.nativeSource ? "label" : src.attribute;
     const step = { "aria-labelledby": "2B", "aria-label": "2D", contents: "2F", title: "2I", none: "2" }[how] ?? "2E";
-    const { object } = await cdp.send("DOM.resolveNode", { backendNodeId: n.backendDOMNodeId });
+    const { object } = await cdp.send("DOM.resolveNode", { backendNodeId: n.backendDOMNodeId }).catch(() => ({}));
+    // The page redrew between the tree and this node: the names are read again from the page as it stands now.
+    if (!object) return cdp.detach().then(() => (assert.ok(tries, "accessible names: the page never stood still while its tree was read"), names(page, tries - 1)));
     const { result, exceptionDetails } = await cdp.send("Runtime.callFunctionOn", { objectId: object.objectId, returnByValue: true, arguments: [{ value: how }], functionDeclaration: `function (how) {
       const el = this.nodeType === 1 ? this : this.parentElement;
       const gone = (x) => x.hidden || x.getAttribute("aria-hidden") === "true" || getComputedStyle(x).display === "none";
@@ -280,7 +282,7 @@ async function names(page) {
 }
 
 test("the front end meets every requirement of its standards, as the registry enforces each", { timeout: 20 * 60000 }, async () => {
-  for (const name of PROBED) assert.ok(name in SCREEN || ["keyboard", "character-keys", "text-200", "reflow", "text-spacing", "on-input", "pointer-cancellation", "error-identification", "consistent-navigation", "redundant-entry", "no-motion", "accessible-name"].includes(name), `no probe "${name}"`);
+  for (const name of PROBED) assert.ok(name in SCREEN || ["keyboard", "character-keys", "text-200", "reflow", "text-spacing", "on-input", "pointer-cancellation", "error-identification", "consistent-navigation", "redundant-entry", "no-motion", "accessible-name", "token-file"].includes(name), `no probe "${name}"`);
   const axe = await engine();
   const dir = mkdtempSync(join(tmpdir(), "standards-"));
   const files = FEED.map(([id, ext]) => { const path = join(dir, `${id}.${ext}`); writeFileSync(path, example(id)); return path; });
@@ -299,15 +301,24 @@ test("the front end meets every requirement of its standards, as the registry en
 
   const browser = await chromium.launch();
   try {
+    // Design Tokens: the look's token file, as the page serves it, is valid by the format's own schema (the pinned validator, on a blank page).
+    if (PROBED.has("token-file")) {
+      const { schema, engine: validator } = STANDARDS.find((s) => s.schema);
+      const blank = await browser.newPage();
+      await blank.evaluate(await engine(validator));
+      const tokens = await (await fetch(new URL("look.tokens.json", server.url))).json();
+      const errors = await blank.evaluate(([schema, tokens]) => { const valid = new window.ajv7({ allErrors: true, strict: false, validateFormats: false }).compile(JSON.parse(schema)); return valid(tokens) ? [] : valid.errors; }, [await engine(schema), tokens]);
+      for (const e of errors) byProbe("token-file", `look.tokens.json${e.instancePath} ${e.message}`);
+      // The schema judges a value by the type its own token states, so every token states one.
+      (function own(group, path) { for (const [name, x] of Object.entries(group)) if (!name.startsWith("$")) "$value" in x ? "$type" in x || byProbe("token-file", `look.tokens.json${path}/${name} states no type of its own`) : own(x, `${path}/${name}`); })(tokens, "");
+    }
     for (const view of VIEWS) {
       // The page's own CSP refuses injected scripts; the checker is let in for the audit only.
       const context = await browser.newContext({ timezoneId: "UTC", locale: "en-US", bypassCSP: true, viewport: view.viewport, colorScheme: view.colorScheme });
       await context.clock.install({ time: new Date(DAY) });
       const page = await context.newPage();
-      const errors = [];
-      page.on("pageerror", (error) => errors.push(error.message));
-      await page.goto(server.url);
-      await page.waitForSelector("html.pr-ready", { timeout: 60000 });
+      const errors = faults(page);
+      await open(page, server.url);
       // The canonical frame, fetched live, is part of every screen: the walk starts once it is drawn.
       await page.waitForFunction(() => customElements.get("prism-frame") && !document.querySelector(".frame-fallback"), null, { timeout: 30000 }).catch(() => {});
       const navs = [];

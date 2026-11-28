@@ -14,6 +14,7 @@ import { createRequire } from "node:module";
 import test from "node:test";
 import { drawOn } from "../../site/coherence/sense.mjs";
 import { PROVIDERS } from "../../site/router/table.mjs";
+import { faults, open } from "../product/harness.mjs";
 import { serve } from "./examples.mjs";
 
 const { chromium } = createRequire(import.meta.url)("playwright");
@@ -86,10 +87,8 @@ test("Ask finds a kept caption from its pair where their words alone miss each o
   try {
     const context = await browser.newContext({ timezoneId: "UTC" });
     const page = await context.newPage();
-    const errors = [];
-    page.on("pageerror", (error) => errors.push(error.message));
-    await page.goto(`${await origin()}/`);
-    await page.waitForSelector("html.pr-ready", { timeout: 60000 });
+    const errors = faults(page);
+    await open(page, `${await origin()}/`);
     const say = async (text) => {
       await page.fill("#pr-prompt", text);
       await page.click("#pr-ask-go");

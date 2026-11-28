@@ -22,7 +22,7 @@ async function walk(browser, url, journey, returning) {
   page.on("pageerror", (error) => errors.push(error.message)).on("console", (m) => ["warning", "error"].includes(m.type()) && said.push(m.text().slice(0, 200)));
   try {
     await open(page, url);
-    if (returning) { await page.reload(); await page.waitForSelector("html.pr-ready", { timeout: 60000 }); }
+    if (returning) { await open(page); }
     await walks[journey.walk](page);
     assert.deepEqual(errors, [], `page errors: ${errors.join(" | ")}`);
     return { ok: true };

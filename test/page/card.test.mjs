@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import test from "node:test";
-import { chromium, serve } from "../product/harness.mjs";
+import { chromium, faults, open, serve } from "../product/harness.mjs";
 
 // What the owner types comes from the specifications' own examples (RFC 5546 §4.4; RFC 5322 Appendix A.1.1).
 const { titleOf, bodyOf, toOf } = await import(resolve("test/oracle/examples.mjs"));
@@ -16,11 +16,9 @@ test("the Prism keeps at the model's floors, refuses while halted and drafts onl
   const browser = await chromium.launch();
   try {
     const page = await browser.newPage();
-    const errors = [];
-    page.on("pageerror", (error) => errors.push(error.message));
-    await page.goto(server.url);
+    const errors = faults(page);
     // The Prism is ready once the vault has opened and every place is drawn.
-    await page.waitForSelector("html.pr-ready", { timeout: 60000 });
+    await open(page, server.url);
     const settle = (text) => page.waitForFunction((t) => document.getElementById("pr-out").textContent.trim() === t, text, { timeout: 10000 });
     // The list repaints after the result is said: wait for the count, then read it.
     const count = async (selector, n) => {

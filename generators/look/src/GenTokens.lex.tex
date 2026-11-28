@@ -1,0 +1,167 @@
+\begin{lexlean}{GenTokens}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{GenLook}
+\title{Design tokens generator}
+\begin{semanticmodule}
+definition{
+  name: tkHex,
+  parameters: [c : Nat],
+  result: Nat,
+  body: (if ((47 <? c) && (c <? 58)) then (prim subtract c 48 : Nat) else (if ((96 <? c) && (c <? 103)) then (prim subtract c 87 : Nat) else (if ((64 <? c) && (c <? 71)) then (prim subtract c 55 : Nat) else 16)))
+}
+
+definition{
+  name: tkHexOkFrom,
+  parameters: [h : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((tkHex (Foundation.Tar::byteOr h i)) <? 16) then (tkHexOkFrom h (i + 1) rest) else false)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tkHexOk,
+  parameters: [h : Bytes],
+  result: Bool,
+  body: ((((Foundation.Bytes::byteLength h) =? 7) && ((Foundation.Tar::byteOr h 0) =? 35)) && (tkHexOkFrom h 1 6)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tkPad,
+  parameters: [v : Nat, width : Nat],
+  result: Bytes,
+  body: (match width
+    | Nat.zero => 0x
+    | Nat.succ rest => (let d : Nat := (prim remainder v 10 0 : Nat); (Foundation.Bytes::appendBytes (tkPad (prim quotient v 10 0 : Nat) rest) (Foundation.Json::span 0x30313233343536373839 d (d + 1))))),
+  recursive_argument: width
+}
+
+definition{
+  name: tkTrim,
+  parameters: [d : Bytes, e : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (Foundation.Json::span d 0 e)
+    | Nat.succ rest => (if ((1 <? e) && ((Foundation.Tar::byteOr d (prim subtract e 1 : Nat)) =? 48)) then (tkTrim d (prim subtract e 1 : Nat) rest) else (Foundation.Json::span d 0 e))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tkComponent,
+  parameters: [h : Bytes, i : Nat],
+  result: Bytes,
+  body: (let n : Nat := ((prim multiply (tkHex (Foundation.Tar::byteOr h i)) 16 : Nat) + (tkHex (Foundation.Tar::byteOr h (i + 1)))); (let v : Nat := (prim quotient ((prim multiply n 2000000 : Nat) + 255) 510 0 : Nat); (if (v =? 0) then 0x30 else (if (v =? 1000000) then 0x31 else (Foundation.Bytes::appendBytes 0x302e (tkTrim (tkPad v 6) 6 6)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tkColor,
+  parameters: [h : Bytes],
+  result: Bytes,
+  body: (GenLook::lookCat (cons 0x7b22636f6c6f725370616365223a202273726762222c2022636f6d706f6e656e7473223a205b (cons (tkComponent h 1) (cons 0x2c20 (cons (tkComponent h 3) (cons 0x2c20 (cons (tkComponent h 5) (cons 0x5d2c2022686578223a2022 (cons h (cons 0x227d (nil Bytes))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tkJoin,
+  parameters: [acc : Bytes, item : Bytes],
+  result: Bytes,
+  body: (if ((Foundation.Bytes::byteLength acc) =? 0) then item else (GenLook::lookCat (cons acc (cons 0x2c0a (cons item (nil Bytes))))))
+}
+
+definition{
+  name: tkTonesFrom,
+  parameters: [s : Bytes, tones : (Option Nat), theme : Bytes, n : Nat, acc : Bytes, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (match (Foundation.Json::elementAt s tones n)
+      | Option.none => (ctor Option.some [Bytes] acc)
+      | Option.some i => (let t : (Option Nat) := (ctor Option.some [Nat] i); (let h : Bytes := (Foundation.Json::textAt s (Foundation.Json::memberAt s t theme)); (if (tkHexOk h) then (tkTonesFrom s tones theme (n + 1) (tkJoin acc (GenLook::lookCat (cons 0x202022 (cons (GenLook::lookTextOf s t "key") (cons 0x223a207b222474797065223a2022636f6c6f72222c20222476616c7565223a20 (cons (tkColor h) (cons 0x7d (nil Bytes)))))))) rest) else (ctor Option.none [Bytes])))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tkThemesFrom,
+  parameters: [s : Bytes, look : (Option Nat), n : Nat, acc : Bytes, fuel : Nat],
+  result: (Option Bytes),
+  body: (match fuel
+    | Nat.zero => (ctor Option.none [Bytes])
+    | Nat.succ rest => (match (Foundation.Json::elementAt s (Foundation.Json::memberAt s look (GenLook::lookU "themes")) n)
+      | Option.none => (ctor Option.some [Bytes] acc)
+      | Option.some i => (let theme : Bytes := (Foundation.Json::textAt s (ctor Option.some [Nat] i)); (match (tkTonesFrom s (Foundation.Json::memberAt s look (GenLook::lookU "tones")) theme 0 0x (Foundation.Bytes::byteLength s))
+        | Option.none => (ctor Option.none [Bytes])
+        | Option.some tones => (tkThemesFrom s look (n + 1) (GenLook::lookCat (cons acc (cons 0x2022 (cons theme (cons 0x223a207b0a (cons tones (cons 0x0a207d2c0a (nil Bytes)))))))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tkNumberEnd,
+  parameters: [d : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (let c : Nat := (Foundation.Tar::byteOr d i); (if (((47 <? c) && (c <? 58)) || (c =? 46)) then (tkNumberEnd d (i + 1) rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tkDimension,
+  parameters: [d : Bytes],
+  result: (Option Bytes),
+  body: (let n : Nat := (Foundation.Bytes::byteLength d); (let e : Nat := (tkNumberEnd d 0 n); (let unit : Bytes := (Foundation.Json::span d e n); (let lead : Nat := (Foundation.Tar::byteOr d 0); (let tail : Nat := (Foundation.Tar::byteOr d (prim subtract e 1 : Nat)); (if (((0 <? e) && ((47 <? lead) && (lead <? 58))) && (((47 <? tail) && (tail <? 58)) && (((not (lead =? 48)) || ((e =? 1) || ((Foundation.Tar::byteOr d 1) =? 46))) && ((Foundation.Tar::sameBytes unit (GenLook::lookU "rem")) || (Foundation.Tar::sameBytes unit (GenLook::lookU "px")))))) then (ctor Option.some [Bytes] (GenLook::lookCat (cons 0x7b222474797065223a202264696d656e73696f6e222c20222476616c7565223a207b2276616c7565223a20 (cons (Foundation.Json::span d 0 e) (cons 0x2c2022756e6974223a2022 (cons unit (cons 0x227d7d (nil Bytes)))))))) else (ctor Option.none [Bytes]))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tkRadius,
+  parameters: [s : Bytes, look : (Option Nat)],
+  result: (Option Bytes),
+  body: (let radius : (Option Nat) := (Foundation.Json::memberAt s look (GenLook::lookU "radius")); (match (tkDimension (GenLook::lookTextOf s radius "outer"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some outer => (match (tkDimension (GenLook::lookTextOf s radius "inner"))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some inner => (ctor Option.some [Bytes] (GenLook::lookCat (cons 0x2022726164697573223a207b0a2020226f75746572223a20 (cons outer (cons 0x2c0a202022696e6e6572223a20 (cons inner (cons 0x0a207d2c0a (nil Bytes))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: tkFontsFrom,
+  parameters: [s : Bytes, fonts : (Option Nat), n : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (match (Foundation.Json::elementAt s fonts n)
+      | Option.none => acc
+      | Option.some i => (let f : (Option Nat) := (ctor Option.some [Nat] i); (tkFontsFrom s fonts (n + 1) (tkJoin acc (GenLook::lookCat (cons 0x202022 (cons (GenLook::lookTextOf s f "key") (cons 0x223a207b0a2020202266616d696c79223a207b222474797065223a2022666f6e7446616d696c79222c20222476616c7565223a205b (cons (GenLook::lookCompact s (Foundation.Json::memberAt s f (GenLook::lookU "family"))) (cons 0x2c20 (cons (GenLook::lookCompact s (Foundation.Json::memberAt s f (GenLook::lookU "fallback"))) (cons 0x5d7d2c0a20202022776569676874223a207b222474797065223a2022666f6e74576569676874222c20222476616c7565223a20 (cons (GenLook::lookCompact s (Foundation.Json::memberAt s f (GenLook::lookU "weight"))) (cons 0x7d0a20207d (nil Bytes)))))))))))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: tkGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (GenLook::lookU "app/specs/surface/spec.json"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some s => (let look : (Option Nat) := (Foundation.Json::memberAt s (Foundation.Json::root s) (GenLook::lookU "look")); (match (tkThemesFrom s look 0 0x (Foundation.Bytes::byteLength s))
+      | Option.none => (ctor Option.none [Bytes])
+      | Option.some themes => (match (tkRadius s look)
+        | Option.none => (ctor Option.none [Bytes])
+        | Option.some radius => (ctor Option.some [Bytes] (GenLook::lookCat (cons 0x7b0a (cons themes (cons radius (cons 0x2022666f6e74223a207b0a (cons (tkFontsFrom s (Foundation.Json::memberAt s look (GenLook::lookU "fonts")) 0 0x (Foundation.Bytes::byteLength s)) (cons 0x0a207d0a7d0a (nil Bytes))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

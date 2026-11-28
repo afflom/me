@@ -1,0 +1,120 @@
+\begin{lexlean}{GenBcp14Html}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Tar}
+\importmodule{GenBcp14}
+\title{Marked key word requirement extractor}
+\begin{semanticmodule}
+definition{
+  name: bhIsName,
+  parameters: [b : Nat],
+  result: Bool,
+  body: (((96 <? b) && (b <? 123)) || (GenBcp14::bcIsDigit b))
+}
+
+definition{
+  name: bhNameEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if (bhIsName (GenBcp14::bcAt s i)) then (bhNameEnd s (i + 1) rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bhUntil,
+  parameters: [s : Bytes, i : Nat, stop : Nat, other : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((GenBcp14::bcLen s) <? (i + 1)) then i else (let c : Nat := (GenBcp14::bcAt s i); (if ((c =? stop) || (c =? other)) then i else (bhUntil s (i + 1) stop other rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bhAmong,
+  parameters: [name : Bytes, names : (List String)],
+  result: Bool,
+  body: (match names
+    | List.nil => false
+    | List.cons head rest => (if (Foundation.Tar::sameBytes name (GenBcp14::bcU head)) then true else (bhAmong name rest))),
+  axioms: [propext],
+  recursive_argument: names
+}
+
+definition{
+  name: bhInline,
+  parameters: [name : Bytes],
+  result: Bool,
+  body: (bhAmong name (cons "em" (cons "code" (cons "a" (cons "strong" (cons "span" (cons "cite" (cons "abbr" (cons "dfn" (cons "i" (cons "b" (cons "sub" (cons "sup" (cons "var" (cons "kbd" (cons "bdi" (cons "q" (cons "small" (cons "u" (cons "mark" (cons "s" (cons "wbr" (nil String))))))))))))))))))))))),
+  axioms: [propext]
+}
+
+definition{
+  name: bhSection,
+  parameters: [s : Bytes, i : Nat, j : Nat, sec : Bytes],
+  result: Bytes,
+  body: (let a : Nat := (GenBcp14::bcIndexFrom s i 0x2069643d22 (GenBcp14::bcLen s)); (if (a <? j) then (GenBcp14::bcSpan s (a + 5) (bhUntil s (a + 5) 34 34 (GenBcp14::bcLen s))) else sec)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bhEntity,
+  parameters: [s : Bytes, i : Nat],
+  result: Bytes,
+  body: (if (GenBcp14::bcEqAt s i 0x26616d703b) then 0x26 else (if (GenBcp14::bcEqAt s i 0x266c743b) then 0x3c else (if (GenBcp14::bcEqAt s i 0x2667743b) then 0x3e else (if (GenBcp14::bcEqAt s i 0x2671756f743b) then 0x22 else 0x)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bhFlush,
+  parameters: [para : Bytes, marked : Bool, key : Bytes, sec : Bytes, acc : Bytes],
+  result: Bytes,
+  body: (GenBcp14::bcParagraph para (marked && (not (Foundation.Tar::sameBytes sec (GenBcp14::bcU "conformance")))) key key sec acc),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bhScan,
+  parameters: [
+    s : Bytes,
+    i : Nat,
+    sec : Bytes,
+    para : Bytes,
+    marked : Bool,
+    key : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let n : Nat := (GenBcp14::bcLen s); (if (n <? (i + 1)) then (bhFlush para marked key sec acc) else (let c : Nat := (GenBcp14::bcAt s i); (if (c =? 60) then (let j : Nat := (bhUntil s i 62 62 n); (let close : Bool := ((GenBcp14::bcAt s (i + 1)) =? 47); (let a : Nat := (if close then (i + 2) else (i + 1)); (let name : Bytes := (GenBcp14::bcSpan s a (bhNameEnd s a n)); (if (bhInline name) then (bhScan s (j + 1) sec para (marked || (GenBcp14::bcEqAt s i 0x3c656d20636c6173733d227266633231313922)) key acc rest) else (bhScan s (j + 1) (if ((not close) && (Foundation.Tar::sameBytes name (GenBcp14::bcU "section"))) then (bhSection s i j sec) else sec) 0x false key (bhFlush para marked key sec acc) rest)))))) else (if (c =? 38) then (let e : Bytes := (bhEntity s i); (if ((GenBcp14::bcLen e) =? 0) then (bhScan s (i + 1) sec (Foundation.Bytes::appendBytes para 0x26) marked key acc rest) else (bhScan s ((bhUntil s i 59 59 n) + 1) sec (Foundation.Bytes::appendBytes para e) marked key acc rest))) else (let k : Nat := (bhUntil s i 60 38 n); (bhScan s k sec (Foundation.Bytes::appendBytes para (GenBcp14::bcSpan s i k)) marked key acc rest)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: bhKey,
+  parameters: [target : Bytes],
+  result: Bytes,
+  body: (let a : Nat := (GenBcp14::bcNameStart target 0 0 (GenBcp14::bcLen target)); (GenBcp14::bcSpan target a (GenBcp14::bcIndexFrom target a 0x2e6a736f6e6c (GenBcp14::bcLen target)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: bhReport,
+  parameters: [archive : Bytes, target : Bytes],
+  result: Bytes,
+  body: (match (GenBcp14::bcFirst archive)
+    | Option.none => (GenBcp14::bcRefused (GenBcp14::bcU "no input text"))
+    | Option.some piece => (GenBcp14::bcWritten (bhScan piece 0 0x 0x false (bhKey target) 0x ((GenBcp14::bcLen piece) + 1)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

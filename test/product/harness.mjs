@@ -30,8 +30,16 @@ export async function serve() {
   return { url: `http://127.0.0.1:${server.address().port}/me/`, close: () => server.close() };
 }
 
+// The page's uncaught errors, as they come.
+export function faults(page) {
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  return errors;
+}
+
+// Opens the page at url, or with none loads again the page it is on.
 export async function open(page, url) {
-  await page.goto(url);
+  await (url ? page.goto(url) : page.reload());
   await page.waitForSelector("html.pr-ready", { timeout: 60000 });
 }
 
