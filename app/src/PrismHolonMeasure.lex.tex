@@ -1,0 +1,59 @@
+\begin{lexlean}{PrismHolonMeasure}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\importmodule{PrismHolon}
+\importmodule{PrismHolonRegister}
+\importmodule{PrismHolonRank}
+\importmodule{PrismHolonMove}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: holonMeasureDec,
+  parameters: [n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let d : Bytes := (PrismHolon::prismHolonSliceOf 0x30313233343536373839 (prim remainder n 10 0 : Nat) 1); (if (n <? 10) then d else (Foundation.Bytes::appendBytes (holonMeasureDec (prim quotient n 10 0 : Nat) rest) d)))),
+  axioms: [],
+  recursive_argument: fuel
+}
+
+definition{
+  name: holonMeasureShare,
+  parameters: [part : Nat, whole : Nat],
+  result: Bytes,
+  body: (if (whole =? 0) then 0x2d else (holonMeasureDec (prim quotient (prim multiply 1000 part : Nat) whole 0 : Nat) 20)),
+  axioms: []
+}
+
+definition{
+  name: holonMeasureIn,
+  parameters: [value : Bytes, w : Nat, b : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => ((prim equal (PrismHolonRegister::holonRegisterWord value w) (PrismHolonRegister::holonRegisterWord value b) : Bool) || (holonMeasureIn value w (b + 1) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: holonMeasureMark,
+  parameters: [value : Bytes, nb : Nat, nq : Nat],
+  result: Bytes,
+  body: (let keep : Bool := (prim equal (PrismHolonRegister::holonRegisterWord value 1) 0x6b656570 : Bool); (Foundation.Bytes::appendBytes (if ((prim equal (PrismHolonRegister::holonRegisterWord value 1) 0x6469736d697373 : Bool) && (holonMeasureIn value 2 5 nb)) then 0x31 else 0x30) (Foundation.Bytes::appendBytes (if keep then 0x31 else 0x30) (Foundation.Bytes::appendBytes (if (keep && (holonMeasureIn value 2 (6 + nb) nq)) then 0x31 else 0x30) (if (holonMeasureIn value 3 5 nb) then 0x31 else 0x30))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonMeasureDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (640 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (if (prim equal (PrismHolonRegister::holonRegisterWord value 0) 0x6d61726b : Bool) then (if (((((PrismHolonRank::holonRankDigits value 4) && ((PrismHolonMove::holonMoveNum value 4) <? 17)) && (PrismHolonRank::holonRankDigits value (5 + (PrismHolonMove::holonMoveNum value 4)))) && ((PrismHolonMove::holonMoveNum value (5 + (PrismHolonMove::holonMoveNum value 4))) <? 17)) && ((if (prim equal (PrismHolonRegister::holonRegisterWord value 3) 0x : Bool) then false else true) && (prim equal (PrismHolonRegister::holonRegisterWord value ((6 + (PrismHolonMove::holonMoveNum value 4)) + (PrismHolonMove::holonMoveNum value (5 + (PrismHolonMove::holonMoveNum value 4))))) 0x : Bool))) then (holonMeasureMark value (PrismHolonMove::holonMoveNum value 4) (PrismHolonMove::holonMoveNum value (5 + (PrismHolonMove::holonMoveNum value 4)))) else 0x696e76616c6964) else (if (prim equal (PrismHolonRegister::holonRegisterWord value 0) 0x7368617265 : Bool) then (if ((((PrismHolonRank::holonRankDigits value 1) && (PrismHolonRank::holonRankDigits value 2)) && (prim equal (PrismHolonRegister::holonRegisterWord value 3) 0x : Bool)) && (if ((PrismHolonMove::holonMoveNum value 2) <? (PrismHolonMove::holonMoveNum value 1)) then false else true)) then (holonMeasureShare (PrismHolonMove::holonMoveNum value 1) (PrismHolonMove::holonMoveNum value 2)) else 0x696e76616c6964) else (PrismHolonMove::holonMoveDispatch value)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
