@@ -20,7 +20,7 @@ export const DEFAULTS = Object.freeze(Object.fromEntries(TUNABLE.map((t) => [t.n
 export const GESTURES = ['open', 'keep', 'dismiss', 'still'];
 export const BROUGHT = ['bloom', 'chorus'];
 const STATES = ['inferred', 'consolidated', 'confirmed', 'rejected'];
-const LEARNED = Object.keys(LEARNING);
+const STEPS = `${Object.keys(LEARNING).length} ${Object.entries(LEARNING).map(([name, step]) => `${name} ${(step ?? ['-', '-']).join(' ')}`).join(' ')}`;
 
 // The page's one resonance bus: every instance's signals reach every listener
 // (the curator, the voice). Returns the unsubscribe.
@@ -97,13 +97,11 @@ export async function makeResonance({ line, read = guestRead, halted = () => 'no
   async function learn(kappa, signal) {
     const b = beliefOf(kappa);
     const outcome = (await line(`learn ${b.belief} ${b.weight} ${signal}`)).trim();
-    if (!LEARNED.includes(outcome)) return 'refused';
-    const step = LEARNING[outcome];
-    if (step) {
-      const next = { ...b };
-      if (step[0] === 'weight') next.weight = b.weight + step[1];
-      else next.belief = step[1];
-      beliefs.set(kappa, next);
+    const said = await read(`step ${b.belief} ${b.weight} ${outcome || '-'} ${STEPS}`);
+    const [belief, weight] = said.split(' ');
+    if (!weight && said !== 'same') return 'refused';
+    if (weight) {
+      beliefs.set(kappa, { belief, weight: Number(weight) });
       if (keep) saving = saving.then(async () => keep.set(await persist(beliefs)));
     }
     return outcome;
@@ -131,7 +129,7 @@ export async function makeResonance({ line, read = guestRead, halted = () => 'no
   const reject = (item) => learn(item.address, 'ownerreject');
 
   // Things the owner resonates with come first; within a weight, the newest.
-  const rank = (b) => (b.belief === 'rejected' ? -1 : b.belief === 'confirmed' ? 32 : b.belief === 'consolidated' ? 16 : 0) + b.weight;
+  const rank = (b) => Number(guestRead(`rank ${b.belief} ${b.weight}`));
   const order = (items) => [...items].sort((a, b) => rank(beliefOf(b.address)) - rank(beliefOf(a.address)) || b.at - a.at);
 
   return {

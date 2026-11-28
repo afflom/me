@@ -91,7 +91,7 @@ fn resonance_rs_02() {
         "RS-02: the resonance module calls no host and keeps nothing itself"
     );
     assert!(
-        module.contains("if (!LEARNED.includes(outcome)) return 'refused';")
+        module.contains("if (!weight && said !== 'same') return 'refused';")
             && module.contains("const answer = ANSWERS.includes(said) ? said : 'rest';"),
         "RS-02: an unmodeled answer moves nothing"
     );

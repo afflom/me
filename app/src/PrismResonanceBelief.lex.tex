@@ -1,0 +1,76 @@
+\begin{lexlean}{PrismResonanceBelief}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\importmodule{PrismResonance}
+\importmodule{PrismResonanceSense}
+\importmodule{PrismResonanceTune}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: resonanceBeliefDec,
+  parameters: [n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let d : Bytes := (PrismResonance::prismResonanceSliceOf 0x30313233343536373839 (prim remainder n 10 0 : Nat) 1); (if (n <? 10) then d else (Foundation.Bytes::appendBytes (resonanceBeliefDec (prim quotient n 10 0 : Nat) rest) d)))),
+  axioms: [],
+  recursive_argument: fuel
+}
+
+definition{
+  name: resonanceBeliefFind,
+  parameters: [value : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if (prim equal (PrismResonanceSense::resonanceSenseWord value (5 + (prim multiply 3 i : Nat))) (PrismResonanceSense::resonanceSenseWord value 3) : Bool) then i else (resonanceBeliefFind value (i + 1) n rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: resonanceBeliefPair,
+  parameters: [belief : Bytes, weight : Nat],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes belief (Foundation.Bytes::appendBytes 0x20 (resonanceBeliefDec weight 20))),
+  axioms: []
+}
+
+definition{
+  name: resonanceBeliefWeigh,
+  parameters: [value : Bytes, k : Nat],
+  result: Bytes,
+  body: (let a : Nat := (PrismResonanceSense::resonanceSenseStart value 0 k); (let w : Nat := (PrismResonanceTune::resonanceTuneNum value 2); (match (PrismResonance::prismResonanceByteAt value a)
+    | Option.none => 0x72656675736564
+    | Option.some d => (if (d =? 45) then (let v : Nat := (PrismResonanceSense::resonanceSenseNat value (a + 1) 0 20); (if ((PrismResonanceSense::resonanceSenseDigits value (a + 1) 20) && (if (w <? v) then false else true)) then (resonanceBeliefPair (PrismResonanceSense::resonanceSenseWord value 1) (prim subtract w v : Nat)) else 0x72656675736564)) else (if (PrismResonanceTune::resonanceTuneIsNum value k) then (resonanceBeliefPair (PrismResonanceSense::resonanceSenseWord value 1) (w + (PrismResonanceTune::resonanceTuneNum value k))) else 0x72656675736564))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceBeliefStep,
+  parameters: [value : Bytes, n : Nat],
+  result: Bytes,
+  body: (let f : Nat := (resonanceBeliefFind value 0 n n); (let b : Nat := (5 + (prim multiply 3 f : Nat)); (if (f <? n) then (if (prim equal (PrismResonanceSense::resonanceSenseWord value (b + 1)) 0x2d : Bool) then 0x73616d65 else (if (prim equal (PrismResonanceSense::resonanceSenseWord value (b + 1)) 0x776569676874 : Bool) then (resonanceBeliefWeigh value (b + 2)) else (if (prim equal (PrismResonanceSense::resonanceSenseWord value (b + 1)) 0x62656c696566 : Bool) then (resonanceBeliefPair (PrismResonanceSense::resonanceSenseWord value (b + 2)) (PrismResonanceTune::resonanceTuneNum value 2)) else 0x72656675736564))) else 0x72656675736564))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceBeliefRank,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (resonanceBeliefDec ((if (prim equal (PrismResonanceSense::resonanceSenseWord value 1) 0x72656a6563746564 : Bool) then 0 else (if (prim equal (PrismResonanceSense::resonanceSenseWord value 1) 0x636f6e6669726d6564 : Bool) then 33 else (if (prim equal (PrismResonanceSense::resonanceSenseWord value 1) 0x636f6e736f6c696461746564 : Bool) then 17 else 1))) + (PrismResonanceTune::resonanceTuneNum value 2)) 20),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceBeliefDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (320 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (if (prim equal (PrismResonanceSense::resonanceSenseWord value 0) 0x73746570 : Bool) then (if ((((PrismResonanceTune::resonanceTuneIsNum value 2) && (PrismResonanceTune::resonanceTuneIsNum value 4)) && ((PrismResonanceTune::resonanceTuneNum value 4) <? 17)) && (prim equal (PrismResonanceSense::resonanceSenseWord value (5 + (prim multiply 3 (PrismResonanceTune::resonanceTuneNum value 4) : Nat))) 0x : Bool)) then (resonanceBeliefStep value (PrismResonanceTune::resonanceTuneNum value 4)) else 0x696e76616c6964) else (if (prim equal (PrismResonanceSense::resonanceSenseWord value 0) 0x72616e6b : Bool) then (if ((PrismResonanceTune::resonanceTuneIsNum value 2) && (prim equal (PrismResonanceSense::resonanceSenseWord value 3) 0x : Bool)) then (resonanceBeliefRank value) else 0x696e76616c6964) else (PrismResonanceTune::resonanceTuneDispatch value)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
