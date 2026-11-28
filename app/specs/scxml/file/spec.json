@@ -1,0 +1,110 @@
+{
+ "name": "scxml/file",
+ "comment": "IRP tests of SCXML 1.0 sections 5.3 and 6.4 in which a document fetches a second file: <invoke> with src or srcexpr, and <data> with src. Each file is pinned by SHA-256 as W3C serves it under the IRP base that app/specs/scxml/spec.json pins; \"with\" names the files a test fetches and the name its src gives each. A request is the test, and behind it each fetched file after a line <?file NAME?>: the interpreter fetches nothing, it reads what the request carries. Each is answered by the id of the top-level <final> state the document halts in. The conf: terms are read with the meaning the pinned confEcma.xsl gives each.",
+ "tests": [
+  {
+   "assert": "276",
+   "section": "5.3",
+   "file": "276/test276.txml",
+   "sha256": "e56b7105eada5bb1ec649a6554fa32864198b729769cfbe42617f4caf463d2a0",
+   "with": [
+    {
+     "file": "276/test276sub1.txml",
+     "as": "test276sub1.scxml",
+     "sha256": "601a51016a2130e264996d07c7f541b6598bfec69541ebfd885fb83ed1799f18"
+    }
+   ]
+  },
+  {
+   "assert": "552",
+   "section": "5.3",
+   "file": "552/test552.txml",
+   "sha256": "2641f85b0e9f2ec03fcb16d4150ced5f99fce3e6a2f77a90ea0e8d5c90f73b9b",
+   "with": [
+    {
+     "file": "552/test552.txt",
+     "as": "test552.txt",
+     "sha256": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35"
+    }
+   ]
+  },
+  {
+   "assert": "216",
+   "section": "6.4",
+   "file": "216/test216.txml",
+   "sha256": "b5f5d5be36365a05622b0721e2fa695ea24f50401aeac6459699712ed6bf99af",
+   "with": [
+    {
+     "file": "216/test216sub1.txml",
+     "as": "test216sub1.scxml",
+     "sha256": "e1c2a8aabb8594d4e51b66ceeff100d63510c489d1ac716a3d53ca5c67b938cd"
+    }
+   ]
+  },
+  {
+   "assert": "226",
+   "section": "6.4",
+   "file": "226/test226.txml",
+   "sha256": "2ca3d42fde2e922dfd881b4124f6315000854529053e781d6d79727086b5e5e6",
+   "with": [
+    {
+     "file": "226/test226sub1.txml",
+     "as": "test226sub1.scxml",
+     "sha256": "ebe5ef6823f0afdacb2efd60e3e42eb2cc61f5944bab8ee9d4a2057c670ae45e"
+    }
+   ]
+  },
+  {
+   "assert": "239",
+   "section": "6.4",
+   "file": "239/test239.txml",
+   "sha256": "e0256359ace001f884eb261de026cc247caa87756c249a008a5e97772a80868b",
+   "with": [
+    {
+     "file": "239/test239sub1.txml",
+     "as": "test239sub1.scxml",
+     "sha256": "099cf8cb0e29d3cc25a1ee34b3945f3f05ab4ea8fae9321279086ca2640fd395"
+    }
+   ]
+  },
+  {
+   "assert": "242",
+   "section": "6.4",
+   "file": "242/test242.txml",
+   "sha256": "c8f1284306f4467c5855062f59ad89418e03e717cbd8625a2a432f40a7792a46",
+   "with": [
+    {
+     "file": "242/test242sub1.txml",
+     "as": "test242sub1.scxml",
+     "sha256": "099cf8cb0e29d3cc25a1ee34b3945f3f05ab4ea8fae9321279086ca2640fd395"
+    }
+   ]
+  }
+ ],
+ "examples": [
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that values passed in from parent process override default values specified in the child, test276sub1.scxml.\nThe child returns event1 if var1 has value 1, event0 if it has default value 0.  -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n   <state id=\"s0\">\n     <invoke type=\"scxml\" src=\"file:test276sub1.scxml\" >\n       <param conf:name=\"1\" conf:expr=\"1\"/>\n       </invoke>\n       <transition event=\"event1\" conf:targetpass=\"\"/>\n       <transition event=\"event0\" conf:targetfail=\"\"/>\n   </state>\n\n   <conf:pass/>\n   <conf:fail/>\n   \n\n\n</scxml>\n<?file test276sub1.scxml?>\n<?xml version=\"1.0\"?>\n\n<!-- define var1 with default value 0.  Parent will invoke this process setting var1 = 1.  Return event1 if var1 == 1, event0 otherwise -->\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n   <datamodel>\n     <data conf:id=\"1\" conf:expr=\"0\"/>\n     </datamodel>\n     \n <state id=\"s0\">\n \n     \n  <transition conf:idVal=\"1=1\" target=\"final\">\n     <send target=\"#_parent\" event=\"event1\"/>\n     </transition>\n     \n  <transition target=\"final\">\n     <send target=\"#_parent\" event=\"event0\"/>\n     </transition>\n     \n   </state>\n   \n   <final id=\"final\"/>\n     \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n\n<!-- test that src content can be used to assign a value to a var. Edit\ntest552.txt to have a value that's legal for the datamodel in question -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n  <datamodel>\n    <data conf:id=\"1\" src=\"file:test552.txt\"/>\n    </datamodel>\n    \n   <state id=\"s0\">\n \n       <transition conf:isBound=\"1\" conf:targetpass=\"\"/>\n       <transition  conf:targetfail=\"\"/>\n   </state>\n\n   <conf:pass/>\n   <conf:fail/>\n   \n\n\n</scxml>\n<?file test552.txt?>\n2",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- we test that srcexpr is evaluated at runtime.  If the original value of var1 is used, the invocation\nwill fail (assuming that there is no script named 'foo').  If\nthe runtime value is used, the invocation will succeed -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n<datamodel>\n  <data conf:id=\"1\" conf:quoteExpr=\"foo\"/>\n   </datamodel> \n   \n<state id=\"s0\" >\n  <onentry>\n    <send event=\"timeout\" delay=\"5s\"/>\n   <assign conf:location=\"1\" conf:quoteExpr=\"file:test216sub1.scxml\"/>\n    </onentry>\n  <invoke conf:srcExpr=\"1\" type=\"http://www.w3.org/TR/scxml\"/>\n  <transition event=\"done.invoke\" conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/> \n</state>\n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>\n<?file test216sub1.scxml?>\n<?xml version=\"1.0\"?>\n<!-- when invoked, terminate returning done.invoke. This proves that the invocation succeeded.   -->\n\n\n<scxml initial=\"final\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n<final id=\"final\"/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- this is basically just a test that invoke works correctly and that you can pass data\nto the invoked process.  If the invoked session finds aParam==1, it exits, signalling\nsuccess.  otherwise it will hang and the timeout in this doc signifies failure.   -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n     \n<state id=\"s0\" >\n  <onentry>\n    <send event=\"timeout\" delay=\"3s\"/>\n    </onentry>\n\n \n   <invoke type=\"http://www.w3.org/TR/scxml/\" src=\"file:test226sub1.scxml\">\n      <param conf:name=\"1\" conf:expr=\"1\"/>\n      </invoke>\n\n  <transition event=\"varBound\" conf:targetpass=\"\"/>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n</state>\n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>\n<?file test226sub1.scxml?>\n<?xml version=\"1.0\"?>\n<!-- when invoked, if var1 has a value notify parent. Then terminate.   -->\n\n\n<scxml initial=\"s0\" conf:datamodel=\"\"  version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n<datamodel>\n  <data conf:id=\"1\"/>\n  </datamodel>\n\n<state id=\"s0\">\n  <transition conf:isBound=\"1\" target=\"final\">\n    <send target=\"#_parent\" event=\"varBound\"/>\n    </transition>\n  <transition target=\"final\"/>\n  </state>\n  \n<final id=\"final\"/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that markup can be specified both by 'src' and by <content>  -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n     \n<state id=\"s0\" initial=\"s01\">\n  <onentry>\n    <send event=\"timeout\" delay=\"2s\"/>\n    </onentry>\n    <transition event=\"timeout\" conf:targetfail=\"\"/>\n    \n   <state id=\"s01\">\n     <invoke type=\"http://www.w3.org/TR/scxml/\"  src=\"file:test239sub1.scxml\"/>\n     <transition event=\"done.invoke\" target=\"s02\"/>\n   </state>\n\n<state id=\"s02\">\n      <invoke type=\"http://www.w3.org/TR/scxml/\">\n        <!-- identical to test239sub1.scxml.  -->\n          <content>\n            <scxml version=\"1.0\" initial=\"final\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n             <final id=\"final\"/>\n              </scxml>\n            </content>\n        </invoke>\n \n  <transition event=\"done.invoke\" conf:targetpass=\"\"/>\n  </state>\n  \n</state>\n \n<conf:pass/>\n<conf:fail/>\n</scxml>\n<?file test239sub1.scxml?>\n<?xml version=\"1.0\"?>\n<!-- when invoked, just terminate.  -->\n\n\n<scxml initial=\"final\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n <final id=\"final\"/>\n \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that markup specified  by 'src' and by <content> is treated the same way.  That means that\neither we get done.invoke in both cases or in neither case (in which case we timeout) -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n     \n<state id=\"s0\" >\n  <onentry>\n    <send event=\"timeout1\" delay=\"1s\"/>\n    </onentry>\n    <transition event=\"timeout\" conf:targetfail=\"\"/>\n\n     <invoke type=\"http://www.w3.org/TR/scxml/\"  src=\"file:test242sub1.scxml\"/>\n     <transition event=\"done.invoke\" target=\"s02\"/>\n     <transition event=\"timeout1\" target=\"s03\"/>\n   </state>\n\n<state id=\"s02\">\n    <onentry>\n    <send event=\"timeout2\" delay=\"1s\"/>\n    </onentry>\n      <invoke type=\"http://www.w3.org/TR/scxml/\">\n        <!-- identical to test242sub1.scxml.  -->\n          <content>\n            <scxml version=\"1.0\" initial=\"subFinal1\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n             <final id=\"subFinal1\"/>\n              </scxml>\n            </content>\n        </invoke>\n <!-- we got done.invoke last time, so we need it this time too -->\n  <transition event=\"done.invoke\" conf:targetpass=\"\"/>\n  <transition event=\"timeout2\" conf:targetfail=\"\"/>\n </state>\n \n<state id=\"s03\">\n    <onentry>\n    <send event=\"timeout3\" delay=\"1s\"/>\n    </onentry>\n      <invoke type=\"http://www.w3.org/TR/scxml/\">\n        <!-- identical to test242sub1.scxml.  -->\n          <content>\n            <scxml version=\"1.0\" initial=\"subFinal2\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n             <final id=\"subFinal2\"/>\n              </scxml>\n            </content>\n        </invoke>\n <!-- we got timeout last time, so we need it this time too -->\n  <transition event=\"timeout3\" conf:targetpass=\"\"/>\n  <transition event=\"done.invoke\" conf:targetfail=\"\"/>\n </state>\n  \n\n<conf:pass/>\n<conf:fail/>\n</scxml>\n<?file test242sub1.scxml?>\n<?xml version=\"1.0\"?>\n<!-- when invoked, just terminate.  -->\n\n\n<scxml initial=\"final\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n <final id=\"final\"/>\n \n</scxml>",
+   "pass"
+  ]
+ ]
+}
