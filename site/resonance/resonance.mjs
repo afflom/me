@@ -27,26 +27,23 @@ const LEARNED = Object.keys(LEARNING);
 const bus = new Set();
 export function onResonance(fn) { bus.add(fn); return () => bus.delete(fn); }
 
+// The resonance guest, opened once with this module and asked without waiting:
+// it reads a gesture (PrismResonanceSense) and holds the tunables to their
+// modeled bounds, steps and order (PrismResonanceTune).
+const guestRead = await import('./guest.mjs').then((m) => m.opened(m.GUEST));
+const tuneWord = (v) => (Number.isSafeInteger(v) && v >= 0 ? v : '-');
+
 // A candidate's tunables, inside their modeled bounds and steps, or refused.
 export function paramsOf(candidate = {}) {
-  const out = {};
-  for (const t of TUNABLE) {
-    const v = candidate[t.name] ?? t.initial;
-    if (!Number.isFinite(v) || v < t.min || v > t.max || (v - t.min) % t.step !== 0) {
-      throw Object.assign(new Error(`${t.name} ${v} is outside ${t.min}..${t.max} by ${t.step}`), { code: 'resonance.tunable' });
-    }
-    out[t.name] = v;
-  }
-  if (!(out.hurriedGapMs < out.calmGapMs) || !(out.dawnHour < out.dayHour && out.dayHour < out.duskHour && out.duskHour < out.nightHour)) {
-    throw Object.assign(new Error('tunables out of order'), { code: 'resonance.tunable' });
-  }
-  return out;
+  const out = Object.fromEntries(TUNABLE.map((t) => [t.name, candidate[t.name] ?? t.initial]));
+  const said = guestRead(`tune ${TUNABLE.length} ${TUNABLE.map((t) => `${tuneWord(out[t.name])} ${t.min} ${t.max} ${t.step}`).join(' ')}`);
+  if (said === 'ok') return out;
+  const t = TUNABLE[Number(said.split(' ')[1])];
+  throw Object.assign(new Error(t ? `${t.name} ${out[t.name]} is outside ${t.min}..${t.max} by ${t.step}` : 'tunables out of order'), { code: 'resonance.tunable' });
 }
 
 // The request's fields from what the browser saw, read by the resonance guest
 // (PrismResonanceSense). raw = {kind, gapMs, dwellMs, at, itemAt, hour}; rest = {belief, attention, halted}.
-let reader = null;
-const guestRead = async (text) => (await (reader ??= import('./guest.mjs').then((m) => m.opened(m.GUEST))))(text);
 const whole = (ms) => Math.max(0, Math.floor(ms));
 async function sense(read, p, raw, rest) {
   const words = (await read(`sense ${raw.kind} ${whole(raw.gapMs)} ${whole(raw.dwellMs)} ${raw.itemAt ? Math.abs(raw.itemAt - raw.at) : '-'} ${raw.hour} ${rest.belief} ${rest.attention} ${rest.halted} ${p.dwellMs} ${p.calmGapMs} ${p.hurriedGapMs} ${p.nearHours} ${p.dawnHour} ${p.dayHour} ${p.duskHour} ${p.nightHour}`)).trim().split(' ');

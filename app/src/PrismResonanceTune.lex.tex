@@ -1,0 +1,70 @@
+\begin{lexlean}{PrismResonanceTune}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\importmodule{PrismResonance}
+\importmodule{PrismResonanceSense}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: resonanceTuneNum,
+  parameters: [value : Bytes, k : Nat],
+  result: Nat,
+  body: (PrismResonanceSense::resonanceSenseNat value (PrismResonanceSense::resonanceSenseStart value 0 k) 0 20),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceTuneIsNum,
+  parameters: [value : Bytes, k : Nat],
+  result: Bool,
+  body: (PrismResonanceSense::resonanceSenseDigits value (PrismResonanceSense::resonanceSenseStart value 0 k) 20),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceTuneFits,
+  parameters: [value : Bytes, i : Nat],
+  result: Bool,
+  body: (let b : Nat := (2 + (prim multiply 4 i : Nat)); (((((resonanceTuneIsNum value b) && (resonanceTuneIsNum value (b + 1))) && ((resonanceTuneIsNum value (b + 2)) && (resonanceTuneIsNum value (b + 3)))) && (0 <? (resonanceTuneNum value (b + 3)))) && (((if ((resonanceTuneNum value b) <? (resonanceTuneNum value (b + 1))) then false else true) && (if ((resonanceTuneNum value (b + 2)) <? (resonanceTuneNum value b)) then false else true)) && ((prim remainder (prim subtract (resonanceTuneNum value b) (resonanceTuneNum value (b + 1)) : Nat) (resonanceTuneNum value (b + 3)) 0 : Nat) =? 0)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceTuneFirst,
+  parameters: [value : Bytes, i : Nat, n : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => n
+    | Nat.succ rest => (if (resonanceTuneFits value i) then (resonanceTuneFirst value (i + 1) n rest) else i)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: resonanceTuneOrdered,
+  parameters: [value : Bytes],
+  result: Bool,
+  body: ((((resonanceTuneNum value 10) <? (resonanceTuneNum value 6)) && ((resonanceTuneNum value 18) <? (resonanceTuneNum value 22))) && (((resonanceTuneNum value 22) <? (resonanceTuneNum value 26)) && ((resonanceTuneNum value 26) <? (resonanceTuneNum value 30)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceTuneAnswer,
+  parameters: [value : Bytes, n : Nat],
+  result: Bytes,
+  body: (let f : Nat := (resonanceTuneFirst value 0 n n); (if (f <? n) then (Foundation.Bytes::appendBytes 0x6f75747369646520 (PrismResonance::prismResonanceSliceOf 0x3031323334353637 f 1)) else (if ((n =? 8) && (if (resonanceTuneOrdered value) then false else true)) then 0x6f72646572 else 0x6f6b))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: resonanceTuneDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (320 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (if (prim equal (PrismResonanceSense::resonanceSenseWord value 0) 0x74756e65 : Bool) then (let n : Nat := (resonanceTuneNum value 1); (if ((((resonanceTuneIsNum value 1) && (0 <? n)) && (n <? 9)) && (prim equal (PrismResonanceSense::resonanceSenseWord value (2 + (prim multiply 4 n : Nat))) 0x : Bool)) then (resonanceTuneAnswer value n) else 0x696e76616c6964)) else (PrismResonanceSense::resonanceSenseDispatch value))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
