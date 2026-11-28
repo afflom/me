@@ -2,9 +2,8 @@
 //!
 //! The Lean kernel checks PrismRealizabilityProofs when `just vv` runs
 //! `prismpm verify` on `app/`. What this test holds fixed is what those proofs
-//! are about: the gate passes on the specs as they are and on what the LexLean
-//! program generators/realize answers over each facet's request space, the proved model is
-//! exactly what the gate writes from them, and every field of every facet has
+//! are about: the LexLean program generators/realize answers each facet's request
+//! space, refuses nothing of the specs as they are, and writes the proved model, and every field of every facet has
 //! its witness theorem, stated against that facet's own judge.
 
 use std::path::PathBuf;
@@ -35,11 +34,13 @@ fn camel(name: &str) -> String {
 /// `RZ-01`: Every Prism setting does something: every field of every facet spec changes some answer, every rule decides a request no other rule would, every setting drives such a field, and every facet carries a complete eleven-element descriptor, with every witness pair answered by the facet judge as its spec says
 #[test]
 fn realize_rz_01() {
-    let check = std::process::Command::new("python3")
-        .args(["-I", "tools/realize/gate.py", "--check"])
+    // The gate is the realize program's rzcheck step, and the proved model is
+    // what its last steps write; GN-01 runs them and holds every output.
+    let check = std::process::Command::new("sh")
+        .args(["tools/generators/run.sh", "--check"])
         .current_dir(root())
         .output()
-        .expect("python3 runs the realizability gate");
+        .expect("sh runs the generator programs");
     assert!(
         check.status.success(),
         "RZ-01: the realizability gate refuses the Prism:\n{}",
@@ -116,7 +117,7 @@ fn realize_rz_01() {
         }
     }
     assert!(seen >= 10, "RZ-01: the model names {seen} facets");
-    // What the gate reads of composition and of the settings, the program writes.
+    // What the gate concludes from, the program writes.
     for (generator, output) in [
         ("rzcomp", "composition.txt"),
         ("rzset", "settings.txt"),
@@ -126,6 +127,17 @@ fn realize_rz_01() {
         assert!(
             steps.contains(&format!("\"generator\": \"{generator}\",")) && steps.contains(&format!("\"output\": \"test/realize/{output}\"")),
             "RZ-01: generators/realize/steps.json has no {generator} step writing test/realize/{output}"
+        );
+    }
+    for (generator, output) in [
+        ("rzcheck", ".gen/rz-check"),
+        ("rzmtail", "app/src/PrismRealizability.lex.tex"),
+        ("rzptail", "app/src/PrismRealizabilityProofs.lex.tex"),
+    ] {
+        assert!(
+            steps.contains(&format!("\"generator\": \"{generator}\","))
+                && steps.contains(&format!("\"output\": \"{output}\"")),
+            "RZ-01: generators/realize/steps.json has no {generator} step writing {output}"
         );
     }
     assert!(
