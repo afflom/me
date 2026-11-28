@@ -1,5 +1,5 @@
 {
-  "comment": "The steps of the browser program (generators/browser/), run in order by tools/generators/run.sh. A step reads repository files and the .gen/ outputs of this program's earlier steps only. deviceformats writes site/device/formats.mjs from app/src/PrismDevice.lex.tex and refuses a file extension whose registration (app/specs/oracle/media-types) does not state it as the model quotes it. recordsstore writes site/records/records.mjs, the store of kept records and cells, with the database and object store app/src/PrismRecordsStore.lex.tex names.",
+  "comment": "The steps of the browser program (generators/browser/), run in order by tools/generators/run.sh. A step reads repository files and the .gen/ outputs of this program's earlier steps only. deviceformats writes site/device/formats.mjs from app/src/PrismDevice.lex.tex and refuses a file extension whose registration (app/specs/oracle/media-types) does not state it as the model quotes it. recordsstore writes site/records/records.mjs, the store of kept records and cells, with the database and object store app/src/PrismRecordsStore.lex.tex names. r4store writes site/r4/store.mjs, the store of locked objects, with the directory app/src/PrismR4Store.lex.tex names.",
   "steps": [
     {
       "generator": "browserindex",
@@ -431,6 +431,13 @@
       "output": ".gen/browser/idl/WritableStream"
     },
     {
+      "generator": "r4store",
+      "inputs": [
+        "app/src/PrismR4Store.lex.tex"
+      ],
+      "output": "site/r4/store.mjs"
+    },
+    {
       "generator": "browseradapter",
       "inputs": [
         ".gen/browser-index",
@@ -548,6 +555,14 @@
         "site/records/records.mjs"
       ],
       "output": ".gen/browser/adapter/site/records/records.mjs"
+    },
+    {
+      "generator": "browseradapter",
+      "inputs": [
+        ".gen/browser-index",
+        "site/r4/guest.mjs"
+      ],
+      "output": ".gen/browser/adapter/site/r4/guest.mjs"
     }
   ]
 }

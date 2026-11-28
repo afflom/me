@@ -87,7 +87,11 @@ definition{
     | Option.none => (refused 0x6e65656473206170702f7372632f507269736d5265636f72647353746f72652e6c65782e746578)
     | Option.some reasons => (if ((Foundation.Bytes::byteLength reasons) =? 0) then (match (GenBrowser::brRecordsStore archive false)
       | Option.none => 0x696e76616c6964
-      | Option.some file => (written file)) else (refused reasons))) else 0x696e76616c6964)))))))))))))))),
+      | Option.some file => (written file)) else (refused reasons))) else (if (Foundation.Tar::sameBytes name 0x723473746f7265) then (match (GenBrowser::brR4Store archive true)
+    | Option.none => (refused 0x6e65656473206170702f7372632f507269736d523453746f72652e6c65782e746578)
+    | Option.some reasons => (if ((Foundation.Bytes::byteLength reasons) =? 0) then (match (GenBrowser::brR4Store archive false)
+      | Option.none => 0x696e76616c6964
+      | Option.some file => (written file)) else (refused reasons))) else 0x696e76616c6964))))))))))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}
