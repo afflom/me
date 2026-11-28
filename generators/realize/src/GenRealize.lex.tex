@@ -1281,10 +1281,21 @@ definition{
 }
 
 definition{
+  name: rzNamesFrom,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::elemDone s i) then acc else (rzNamesFrom s (Check::elemNext s i) (Check::cat (cons acc (cons 0x09 (cons (Check::str s (Check::key s (ctor Option.some [Nat] i) "name")) (nil Bytes))))) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
   name: rzTermsOf,
   parameters: [s : Bytes, d : Bytes],
   result: Bytes,
-  body: (Check::cat (cons (Check::u "outcomes") (cons 0x09 (cons d (cons (rzTabbed s (rzTop s "outcomes")) (cons 0x0a (cons (rzFieldTermsFrom s (Check::elemStart s (rzFields s)) d 0x (rzLen s)) (nil Bytes)))))))),
+  body: (Check::cat (cons (Check::u "outcomes") (cons 0x09 (cons d (cons (rzTabbed s (rzTop s "outcomes")) (cons 0x0a (cons (Check::u "fields") (cons 0x09 (cons d (cons (rzNamesFrom s (Check::elemStart s (rzFields s)) 0x (rzLen s)) (cons 0x0a (cons (rzFieldTermsFrom s (Check::elemStart s (rzFields s)) d 0x (rzLen s)) (nil Bytes))))))))))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -1690,6 +1701,558 @@ definition{
   parameters: [archive : Bytes],
   result: Bytes,
   body: (let b : Bytes := (Foundation.Bytes::appendBytes 0x0a (Check::file archive (Check::u ".gen/rz-bind"))); (let dr : Bytes := (Foundation.Bytes::appendBytes 0x0a (Check::file archive (Check::u ".gen/rz-drives"))); (let m : Bytes := (Check::file archive (Check::u "app/specs/realizability/spec.json")); (let st : (Option Nat) := (rzTop m "settings"); (Check::cat (cons (Check::u "settings bound ") (cons (rzOf (rzHeadCount b 0 (Foundation.Bytes::appendBytes (Check::u "bound") 0x09) 0 ((rzLen b) + 1)) (rzHeadCount b 0 (Foundation.Bytes::appendBytes (Check::u "key") 0x09) 0 ((rzLen b) + 1))) (cons 0x0a (cons (rzRelay b 0 (Foundation.Bytes::appendBytes (Check::u "seen") 0x09) (Check::u "settings seen ") 0x 0x ((rzLen b) + 1)) (cons (if ((Check::contains (Check::raw m st) 0x5c) || (Check::contains (Check::raw m (rzTop m "facets")) 0x5c)) then (Check::cat (cons (Check::u "settings flaw app/specs/realizability/spec.json writes its facets or settings with an escape, which the settings check does not read") (cons 0x0a (nil Bytes)))) else 0x) (cons (rzRelay dr 0 (Foundation.Bytes::appendBytes (Check::u "odd") 0x09) (Check::u "settings flaw app/specs/coherence/facets/") (Check::u ".json is written with an escape, which the settings check does not read") 0x ((rzLen dr) + 1)) (cons (rzRelay b 0 (Foundation.Bytes::appendBytes (Check::u "flaw") 0x09) (Check::u "settings flaw ") 0x 0x ((rzLen b) + 1)) (cons (rzStrayFrom m (Check::memberStart m st) b 0x (rzLen m)) (nil Bytes)))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzIsW,
+  parameters: [c : Nat],
+  result: Bool,
+  body: (((47 <? c) && (c <? 58)) || (((64 <? c) && (c <? 91)) || (((96 <? c) && (c <? 123)) || ((c =? 95) || (127 <? c)))))
+}
+
+definition{
+  name: rzWsEnd,
+  parameters: [t : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((rzLen t) <? (i + 1)) then i else (let c : Nat := (Foundation.Tar::byteOr t i); (if ((c =? 32) || ((8 <? c) && (c <? 14))) then (rzWsEnd t (i + 1) rest) else i)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzWordBack,
+  parameters: [t : Bytes, e : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => e
+    | Nat.succ rest => (if (e =? 0) then 0 else (if (rzIsW (Foundation.Tar::byteOr t (prim subtract e 1 : Nat))) then (rzWordBack t (prim subtract e 1 : Nat) rest) else e))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzWordFwd,
+  parameters: [t : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((rzLen t) <? (i + 1)) then i else (if (rzIsW (Foundation.Tar::byteOr t i)) then (rzWordFwd t (i + 1) rest) else i))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzFind,
+  parameters: [t : Bytes, pat : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => ((rzLen t) + 1)
+    | Nat.succ rest => (if ((rzLen t) <? (i + (rzLen pat))) then ((rzLen t) + 1) else (if (Check::startsAt t i pat) then i else (rzFind t pat (i + 1) rest)))),
+  axioms: [propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzNamed,
+  parameters: [t : Bytes, a : Nat],
+  result: Bool,
+  body: ((5 <? a) && (Check::startsAt t (prim subtract a 6 : Nat) 0x6e616d653a20)),
+  axioms: [propext]
+}
+
+definition{
+  name: rzJudgeOk,
+  parameters: [t : Bytes, j : Nat],
+  result: Bool,
+  body: (let a : Nat := (rzWordBack t j ((rzLen t) + 1)); (let q : Nat := (rzWsEnd t (j + 6) ((rzLen t) + 1)); (let e : Nat := (rzWordFwd t (q + 23) ((rzLen t) + 1)); ((a <? j) && ((rzNamed t a) && ((Check::startsAt t q 0x706172616d65746572733a205b72657175657374203a20) && (((q + 23) <? e) && ((Foundation.Tar::byteOr t e) =? 93)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzJudgeFrom,
+  parameters: [t : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => ((rzLen t) + 1)
+    | Nat.succ rest => (let j : Nat := (rzFind t 0x4a756467652c i ((rzLen t) + 1)); (if ((rzLen t) <? j) then j else (if (rzJudgeOk t j) then j else (rzJudgeFrom t (j + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzJPrefix,
+  parameters: [t : Bytes, j : Nat],
+  result: Bytes,
+  body: (Foundation.Json::span t (rzWordBack t j ((rzLen t) + 1)) j),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzJStruct,
+  parameters: [t : Bytes, j : Nat],
+  result: Bytes,
+  body: (let q : Nat := (rzWsEnd t (j + 6) ((rzLen t) + 1)); (Foundation.Json::span t (q + 23) (rzWordFwd t (q + 23) ((rzLen t) + 1)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzRootLine,
+  parameters: [l : Bytes],
+  result: Bytes,
+  body: (if ((8 <? (rzLen l)) && ((Check::startsAt l 0 0x202020202822) && (Check::startsAt l (prim subtract (rzLen l) 3 : Nat) 0x22292c))) then (let inner : Bytes := (Foundation.Json::span l 6 (prim subtract (rzLen l) 3 : Nat)); (let p1 : Nat := (rzFind inner 0x222c2022 0 ((rzLen inner) + 1)); (let p2 : Nat := (rzFind inner 0x222c2022 (p1 + 4) ((rzLen inner) + 1)); (if (((rzLen inner) <? p1) || (((rzLen inner) <? p2) || (not ((rzLen inner) <? (rzFind inner 0x222c2022 (p2 + 4) ((rzLen inner) + 1)))))) then 0x else (Check::cat (cons 0x726f757465 (cons 0x09 (cons (Foundation.Json::span inner 0 p1) (cons 0x09 (cons (Foundation.Json::span inner (p1 + 4) p2) (cons 0x0a (nil Bytes)))))))))))) else (if (Check::startsAt l 0 0x5245515f4d41582c20) then (let p : Nat := (rzFind l 0x203d20 0 ((rzLen l) + 1)); (if ((rzLen l) <? p) then (Check::cat (cons 0x7265716d6178 (cons 0x09 (cons 0x0a (nil Bytes))))) else (let r : Bytes := (Foundation.Json::span l (p + 3) (rzLen l)); (let c : Nat := (rzFind r 0x2c 0 ((rzLen r) + 1)); (Check::cat (cons 0x7265716d6178 (cons 0x09 (cons (Foundation.Json::span r 0 (if ((rzLen r) <? c) then (rzLen r) else c)) (cons 0x0a (nil Bytes)))))))))) else 0x)),
+  axioms: [propext]
+}
+
+definition{
+  name: rzRootFrom,
+  parameters: [t : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((rzLen t) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf t i (rzLen t)); (let l : Bytes := (Foundation.Json::span t i e); (rzRootFrom t (e + 1) (Foundation.Bytes::appendBytes acc (rzRootLine l)) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzRoutes,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let t : Bytes := (Check::file archive 0x746f6f6c732f707269736d5f726f6f742e7079); (rzRootFrom t 0 0x ((rzLen t) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzJudgeLines,
+  parameters: [t : Bytes, i : Nat, m : Bytes, acc : Bytes, n : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((rzLen t) <? (i + 1)) then (if (n =? 0) then acc else (Check::cat (cons acc (cons 0x7468656f72656d73 (cons 0x09 (cons m (cons 0x09 (cons (rzNum n) (cons 0x0a (nil Bytes)))))))))) else (let e : Nat := (Check::lineEndOf t i (rzLen t)); (let l : Bytes := (Foundation.Json::span t i e); (let c : Nat := (rzFind l 0x7d 0 ((rzLen l) + 1)); (rzJudgeLines t (e + 1) m (if ((Check::startsAt l 0 0x5c696d706f72746d6f64756c657b) && (not ((rzLen l) <? c))) then (Check::cat (cons acc (cons 0x696d706f7274 (cons 0x09 (cons m (cons 0x09 (cons (Foundation.Json::span l 14 c) (cons 0x0a (nil Bytes))))))))) else acc) (if (Check::startsAt l 0 0x7468656f72656d7b) then (n + 1) else n) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzJudgeFacts,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let name : Bytes := (rzSpecName archive); (let t : Bytes := (Check::file archive name); (let m : Bytes := (Check::stem name); (let j : Nat := (rzJudgeFrom t 0 ((rzLen t) + 1)); (Check::cat (cons (if ((Check::contains t 0x5c626567696e7b6c65786c65616e7d) && (Check::contains t 0x5c656e647b6c65786c65616e7d)) then (Check::cat (cons 0x77686f6c65 (cons 0x09 (cons m (cons 0x0a (nil Bytes)))))) else 0x) (cons (if ((rzLen t) <? j) then 0x else (Check::cat (cons 0x6a75646765 (cons 0x09 (cons m (cons 0x09 (cons (rzJPrefix t j) (cons 0x09 (cons (rzJStruct t j) (cons 0x0a (nil Bytes))))))))))) (cons (rzJudgeLines t 0 m 0x 0 ((rzLen t) + 1)) (nil Bytes))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzCloseFrom,
+  parameters: [t : Bytes, p : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => ((rzLen t) + 1)
+    | Nat.succ rest => (let c : Nat := (rzFind t 0x5d p ((rzLen t) + 1)); (if ((rzLen t) <? c) then c else (if ((Foundation.Tar::byteOr t (rzWsEnd t (c + 1) ((rzLen t) + 1))) =? 125) then c else (rzCloseFrom t (c + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzStructAt,
+  parameters: [t : Bytes, head : Bytes, j : Nat],
+  result: Nat,
+  body: (let a1 : Nat := (rzWsEnd t (j + (rzLen head)) ((rzLen t) + 1)); (let a2 : Nat := (rzWsEnd t (a1 + 20) ((rzLen t) + 1)); (let a3 : Nat := (rzWsEnd t (a2 + 15) ((rzLen t) + 1)); (if ((Check::startsAt t a1 0x747970655f706172616d65746572733a205b5d2c) && ((Check::startsAt t a2 0x706172616d65746572733a205b5d2c) && (Check::startsAt t a3 0x6669656c64733a205b))) then (a3 + 9) else ((rzLen t) + 1))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzStructFrom,
+  parameters: [t : Bytes, head : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => ((rzLen t) + 1)
+    | Nat.succ rest => (let j : Nat := (rzFind t head i ((rzLen t) + 1)); (if ((rzLen t) <? j) then j else (let b0 : Nat := (rzStructAt t head j); (if (((rzLen t) <? b0) || ((rzLen t) <? (rzCloseFrom t b0 ((rzLen t) + 1)))) then (rzStructFrom t head (j + 1) rest) else b0))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzNatFields,
+  parameters: [bd : Bytes, k : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let a : Nat := (rzFind bd 0x7b6e616d653a20 k ((rzLen bd) + 1)); (if ((rzLen bd) <? a) then acc else (let e : Nat := (rzWordFwd bd (a + 7) ((rzLen bd) + 1)); (if (((a + 7) <? e) && (Check::startsAt bd e 0x2c20747970653a204e61747d)) then (rzNatFields bd (e + 12) (Check::cat (cons acc (cons 0x20 (cons (Foundation.Json::span bd (a + 7) e) (nil Bytes))))) rest) else (rzNatFields bd (a + 1) acc rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzDigitsEnd,
+  parameters: [t : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((rzLen t) <? (i + 1)) then i else (let c : Nat := (Foundation.Tar::byteOr t i); (if ((47 <? c) && (c <? 58)) then (rzDigitsEnd t (i + 1) rest) else i)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzNoZeros,
+  parameters: [t : Bytes, d : Nat, e : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => (Foundation.Json::span t d e)
+    | Nat.succ rest => (if (((d + 1) <? e) && ((Foundation.Tar::byteOr t d) =? 48)) then (rzNoZeros t (d + 1) e rest) else (Foundation.Json::span t d e))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzConstsFrom,
+  parameters: [t : Bytes, i : Nat, m : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (let j : Nat := (rzFind t 0x2c20706172616d65746572733a205b5d2c20726573756c743a204e61742c20626f64793a20 i ((rzLen t) + 1)); (if ((rzLen t) <? j) then acc else (let a : Nat := (rzWordBack t j ((rzLen t) + 1)); (let d : Nat := (j + 37); (let e : Nat := (rzDigitsEnd t d ((rzLen t) + 1)); (if ((a <? j) && ((rzNamed t a) && ((d <? e) && ((Foundation.Tar::byteOr t e) =? 125)))) then (rzConstsFrom t e m (Check::cat (cons acc (cons m (cons 0x20636f6e737420 (cons (Foundation.Json::span t a j) (cons 0x20 (cons (rzNoZeros t d e (rzLen t)) (cons 0x0a (nil Bytes))))))))) rest) else (rzConstsFrom t (j + 1) m acc rest)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzLeanFacts,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let name : Bytes := (rzSpecName archive); (let t : Bytes := (Check::file archive name); (let m : Bytes := (Check::stem name); (let j : Nat := (rzJudgeFrom t 0 ((rzLen t) + 1)); (if ((rzLen t) <? j) then 0x else (let b0 : Nat := (rzStructFrom t (Check::cat (cons 0x6e616d653a20 (cons (rzJStruct t j) (cons 0x2c (nil Bytes))))) 0 ((rzLen t) + 1)); (Check::cat (cons m (cons 0x206669656c6473 (cons (if ((rzLen t) <? b0) then 0x else (rzNatFields (Foundation.Json::span t b0 (rzCloseFrom t b0 ((rzLen t) + 1))) 0 0x ((rzLen t) + 1))) (cons 0x0a (cons (rzConstsFrom t 0 m 0x ((rzLen t) + 1)) (nil Bytes))))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzModFacts,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (Foundation.Bytes::appendBytes (rzJudgeFacts archive) (rzLeanFacts archive)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzPickFrom,
+  parameters: [t : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((rzLen t) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf t i (rzLen t)); (let l : Bytes := (Foundation.Json::span t i e); (rzPickFrom t (e + 1) (if ((rzLen l) <? (rzFind l 0x09 0 ((rzLen l) + 1))) then acc else (Check::cat (cons acc (cons l (cons 0x0a (nil Bytes)))))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzPick,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let t : Bytes := (Check::file archive 0x2e67656e2f727a2d616c6c); (rzPickFrom t 0 0x ((rzLen t) + 1))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzRouteFrom,
+  parameters: [r : Bytes, i : Nat, head : Bytes, found : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => found
+    | Nat.succ rest => (if ((rzLen r) <? (i + 1)) then found else (let e : Nat := (Check::lineEndOf r i (rzLen r)); (let l : Bytes := (Foundation.Json::span r i e); (rzRouteFrom r (e + 1) head (if (Check::startsAt l 0 head) then (Foundation.Bytes::appendBytes 0x01 (Foundation.Json::span l (rzLen head) (rzLen l))) else found) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzRouteOf,
+  parameters: [r : Bytes, kw : Bytes],
+  result: Bytes,
+  body: (rzRouteFrom r 0 (Check::cat (cons 0x726f757465 (cons 0x09 (cons kw (cons 0x09 (nil Bytes)))))) 0x ((rzLen r) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzHasJudge,
+  parameters: [j1 : Bytes, md : Bytes],
+  result: Bool,
+  body: (Check::contains j1 (Check::cat (cons 0x0a (cons 0x6a75646765 (cons 0x09 (cons md (cons 0x09 (nil Bytes)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzImpFrom,
+  parameters: [j1 : Bytes, i : Nat, head : Bytes, cnt : Nat, got : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((rzLen j1) <? (i + 1)) then (if (cnt =? 1) then got else 0x) else (let e : Nat := (Check::lineEndOf j1 i (rzLen j1)); (let l : Bytes := (Foundation.Json::span j1 i e); (let hit : Bool := ((Check::startsAt l 0 head) && (rzHasJudge j1 (Foundation.Json::span l (rzLen head) (rzLen l)))); (rzImpFrom j1 (e + 1) head (if hit then (cnt + 1) else cnt) (if (hit && (cnt =? 0)) then (Foundation.Json::span l (rzLen head) (rzLen l)) else got) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzDeciding,
+  parameters: [j1 : Bytes, md : Bytes],
+  result: Bytes,
+  body: (if (rzHasJudge j1 md) then md else (let g : Bytes := (rzImpFrom j1 0 (Check::cat (cons 0x696d706f7274 (cons 0x09 (cons md (cons 0x09 (nil Bytes)))))) 0 0x ((rzLen j1) + 1)); (if ((rzLen g) =? 0) then md else g))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzModsFrom,
+  parameters: [m : Bytes, i : Nat, r : Bytes, j1 : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::memberDone m i) then acc else (let rt : Bytes := (rzRouteOf r (Check::str m (ctor Option.some [Nat] (Check::memberValue m i)))); (let dm : Bytes := (if ((rzLen rt) =? 0) then 0x else (rzDeciding j1 (Foundation.Json::span rt 1 (rzLen rt)))); (rzModsFrom m (Check::memberNext m i) r j1 (if (((rzLen rt) =? 0) || (Check::contains (Foundation.Bytes::appendBytes 0x0a acc) (Check::cat (cons 0x0a (cons dm (cons 0x0a (nil Bytes))))))) then acc else (Check::cat (cons acc (cons dm (cons 0x0a (nil Bytes)))))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzMods,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let m : Bytes := (Check::file archive 0x6170702f73706563732f7265616c697a6162696c6974792f737065632e6a736f6e); (rzModsFrom m (Check::memberStart m (rzTop m "facets")) (Check::file archive 0x2e67656e2f727a2d726f6f74) (Foundation.Bytes::appendBytes 0x0a (Check::file archive 0x2e67656e2f727a2d6a7564676573)) 0x (rzLen m))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzSepEnd,
+  parameters: [s : Bytes, i : Nat, sep : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((rzLen s) <? (i + 1)) then i else (if ((Foundation.Tar::byteOr s i) =? sep) then i else (rzSepEnd s (i + 1) sep rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzNthTok,
+  parameters: [s : Bytes, sep : Nat, n : Nat, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (if ((rzLen s) <? (i + 1)) then 0x else (let e : Nat := (rzSepEnd s i sep ((rzLen s) + 1)); (if (n =? 0) then (Foundation.Json::span s i e) else (rzNthTok s sep (prim subtract n 1 : Nat) (e + 1) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzLastIdx,
+  parameters: [s : Bytes, sep : Nat, tok : Bytes, i : Nat, k : Nat, found : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => found
+    | Nat.succ rest => (if ((rzLen s) <? (i + 1)) then found else (let e : Nat := (rzSepEnd s i sep ((rzLen s) + 1)); (rzLastIdx s sep tok (e + 1) (k + 1) (if (Check::same (Foundation.Json::span s i e) tok) then (k + 1) else found) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzDigitsOnly,
+  parameters: [l : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (if ((rzLen l) <? (i + 1)) then true else (let c : Nat := (Foundation.Tar::byteOr l i); (if ((47 <? c) && (c <? 58)) then (rzDigitsOnly l (i + 1) rest) else false)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzRenamedFrom,
+  parameters: [names : Bytes, i : Nat, lf : Bytes, j : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => false
+    | Nat.succ rest => (if ((rzLen names) <? (i + 1)) then ((rzLen lf) <? (j + 1)) else (if ((rzLen lf) <? (j + 1)) then false else (let e1 : Nat := (rzSepEnd names i 9 ((rzLen names) + 1)); (let e2 : Nat := (rzSepEnd lf j 32 ((rzLen lf) + 1)); (let n : Bytes := (Foundation.Json::span names i e1); (let l : Bytes := (Foundation.Json::span lf j e2); (if ((Check::same l n) || ((Check::startsAt l 0 n) && (((rzLen n) <? (rzLen l)) && (rzDigitsOnly l (rzLen n) ((rzLen l) + 1))))) then (rzRenamedFrom names (e1 + 1) lf (e2 + 1) rest) else false)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzLeanOf,
+  parameters: [names : Bytes, lf : Bytes, ren : Bool, field : Bytes],
+  result: Bytes,
+  body: (if ren then (let k : Nat := (rzLastIdx names 9 field 0 0 0 ((rzLen names) + 1)); (if (k =? 0) then field else (rzNthTok lf 32 (prim subtract k 1 : Nat) 0 ((rzLen lf) + 1)))) else field),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzCap,
+  parameters: [x : Bytes],
+  result: Bytes,
+  body: (let c : Nat := (Foundation.Tar::byteOr x 0); (if ((0 <? (rzLen x)) && ((96 <? c) && (c <? 123))) then (Foundation.Bytes::appendBytes (Foundation.Json::span 0x4142434445464748494a4b4c4d4e4f505152535455565758595a (prim subtract c 97 : Nat) (prim subtract c 96 : Nat)) (Foundation.Json::span x 1 (rzLen x))) else x)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzRepFrom,
+  parameters: [s : Bytes, sep : Nat, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((rzLen s) <? (i + 1)) then acc else (let e : Nat := (rzSepEnd s i sep ((rzLen s) + 1)); (rzRepFrom s sep (e + 1) (Check::cat (cons acc (cons (if (i =? 0) then 0x else 0x2c20) (cons 0x27 (cons (Foundation.Json::span s i e) (cons 0x27 (nil Bytes))))))) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzConstFrom,
+  parameters: [own : Bytes, i : Nat, head : Bytes, found : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => found
+    | Nat.succ rest => (if ((rzLen own) <? (i + 1)) then found else (let e : Nat := (Check::lineEndOf own i (rzLen own)); (let l : Bytes := (Foundation.Json::span own i e); (rzConstFrom own (e + 1) head (if (Check::startsAt l 0 head) then (Foundation.Bytes::appendBytes 0x01 (Foundation.Json::span l (rzLen head) (rzLen l))) else found) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzToksFrom,
+  parameters: [
+    toks : Bytes,
+    i : Nat,
+    k : Nat,
+    pre : Bytes,
+    own : Bytes,
+    m : Bytes,
+    d : Bytes,
+    isVal : Bool,
+    field : Bytes,
+    faults : Bool,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((rzLen toks) <? (i + 1)) then acc else (let e : Nat := (rzSepEnd toks i 9 ((rzLen toks) + 1)); (let rw : Bytes := (Foundation.Json::span toks i e); (let tok : Bytes := (if ((1 <? (rzLen rw)) && (((Foundation.Tar::byteOr rw 0) =? 34) && ((Foundation.Tar::byteOr rw (prim subtract (rzLen rw) 1 : Nat)) =? 34))) then (Foundation.Json::span rw 1 (prim subtract (rzLen rw) 1 : Nat)) else rw); (let name : Bytes := (Foundation.Bytes::appendBytes pre (rzCap tok)); (let good : Bool := (Check::same (rzConstFrom own 0 (Check::cat (cons m (cons 0x20636f6e737420 (cons name (cons 0x20 (nil Bytes)))))) 0x ((rzLen own) + 1)) (Foundation.Bytes::appendBytes 0x01 (rzNum k))); (rzToksFrom toks (e + 1) (k + 1) pre own m d isVal field faults (if faults then (if good then acc else (Check::cat (cons acc (cons d (cons 0x206661756c7420 (cons m (cons 0x3a3a (cons name (cons (if isVal then (Check::cat (cons 0x206973206e6f742076616c756520 (cons (rzNum k) (cons 0x206f66206669656c6420 (cons field (nil Bytes)))))) else (Check::cat (cons 0x206973206e6f7420616e7377657220 (cons (rzNum k) (nil Bytes))))) (cons 0x0a (nil Bytes))))))))))) else (Check::cat (cons acc (cons d (cons (if isVal then (Check::cat (cons 0x2076616c756520 (cons field (cons 0x09 (cons tok (cons 0x09 (cons name (nil Bytes)))))))) else (Check::cat (cons 0x20616e7377657220 (cons tok (cons 0x09 (cons name (nil Bytes))))))) (cons 0x0a (nil Bytes))))))) rest)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzValsFrom,
+  parameters: [
+    t : Bytes,
+    i : Nat,
+    hv : Bytes,
+    names : Bytes,
+    lf : Bytes,
+    ren : Bool,
+    prefix : Bytes,
+    own : Bytes,
+    m : Bytes,
+    d : Bytes,
+    faults : Bool,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((rzLen t) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf t i (rzLen t)); (let l : Bytes := (Foundation.Json::span t i e); (let bd : Bytes := (Foundation.Json::span l (if (Check::startsAt l 0 hv) then (rzLen hv) else (rzLen l)) (rzLen l)); (let fe : Nat := (rzSepEnd bd 0 9 ((rzLen bd) + 1)); (let field : Bytes := (Foundation.Json::span bd 0 fe); (rzValsFrom t (e + 1) hv names lf ren prefix own m d faults (if (Check::startsAt l 0 hv) then (rzToksFrom (if (fe <? (rzLen bd)) then (Foundation.Json::span bd (fe + 1) (rzLen bd)) else 0x) 0 0 (Foundation.Bytes::appendBytes prefix (rzCap (rzLeanOf names lf ren field))) own m d true field faults acc ((rzLen bd) + 1)) else acc) rest)))))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzFieldLines,
+  parameters: [names : Bytes, i : Nat, lf : Bytes, ren : Bool, d : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((rzLen names) <? (i + 1)) then acc else (let e : Nat := (rzSepEnd names i 9 ((rzLen names) + 1)); (let n : Bytes := (Foundation.Json::span names i e); (rzFieldLines names (e + 1) lf ren d (Check::cat (cons acc (cons d (cons 0x206669656c6420 (cons n (cons 0x20 (cons (rzLeanOf names lf ren n) (cons 0x0a (nil Bytes))))))))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzThFrom,
+  parameters: [j1 : Bytes, i : Nat, head : Bytes, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((rzLen j1) <? (i + 1)) then acc else (let e : Nat := (Check::lineEndOf j1 i (rzLen j1)); (let l : Bytes := (Foundation.Json::span j1 i e); (rzThFrom j1 (e + 1) head (if (Check::startsAt l 0 head) then (acc + (rzNatFrom l (rzLen head) 0 (rzLen l))) else acc) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzOwnFields,
+  parameters: [own : Bytes, i : Nat, head : Bytes, found : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => found
+    | Nat.succ rest => (if ((rzLen own) <? (i + 1)) then found else (let e : Nat := (Check::lineEndOf own i (rzLen own)); (let l : Bytes := (Foundation.Json::span own i e); (rzOwnFields own (if ((Check::startsAt l 0 head) && ((rzLen found) =? 0)) then (rzLen own) else (e + 1)) head (if ((Check::startsAt l 0 head) && ((rzLen found) =? 0)) then (Foundation.Bytes::appendBytes 0x01 (Foundation.Json::span l (rzLen head) (rzLen l))) else found) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzProjOf,
+  parameters: [d : Bytes, m : Bytes, own : Bytes, t : Bytes, j1 : Bytes],
+  result: Bytes,
+  body: (Check::cat (cons d (cons 0x206d6f64756c6520 (cons m (cons 0x0a (cons d (cons 0x207468656f72656d7320 (cons (rzNum (rzThFrom j1 0 (Check::cat (cons 0x7468656f72656d73 (cons 0x09 (cons m (cons 0x50726f6f6673 (cons 0x09 (nil Bytes))))))) 0 ((rzLen j1) + 1))) (cons 0x0a (cons (if (not (rzHasJudge j1 m)) then (Check::cat (cons d (cons 0x206661756c7420 (cons m (cons 0x20686173206e6f206a75646765206f66206f6e652072657175657374 (cons 0x0a (nil Bytes))))))) else (if (not (Check::contains j1 (Check::cat (cons 0x0a (cons 0x77686f6c65 (cons 0x09 (cons m (cons 0x0a (nil Bytes))))))))) then (Check::cat (cons d (cons 0x206661756c7420 (cons m (cons 0x206973207265616420696e207069656365732c207768696368207468652070726f6a656374696f6e20636865636b20646f6573206e6f742072656164 (cons 0x0a (nil Bytes))))))) else (let jl : Bytes := (rzRecord j1 (Check::cat (cons 0x6a75646765 (cons 0x09 (cons m (nil Bytes)))))); (let jt : Bytes := (rzTail jl (Check::cat (cons 0x6a75646765 (cons 0x09 (cons m (nil Bytes)))))); (let pe : Nat := (rzSepEnd jt 0 9 ((rzLen jt) + 1)); (let prefix : Bytes := (Foundation.Json::span jt 0 pe); (let st : Bytes := (if (pe <? (rzLen jt)) then (Foundation.Json::span jt (pe + 1) (rzLen jt)) else 0x); (let names : Bytes := (rzTail (rzRecord t (rzHeadOf "fields" d)) (rzHeadOf "fields" d)); (let fr : Bytes := (rzOwnFields own 0 (Foundation.Bytes::appendBytes m 0x206669656c6473) 0x ((rzLen own) + 1)); (let lf : Bytes := (if ((rzLen fr) <? 3) then 0x else (Foundation.Json::span fr 2 (rzLen fr))); (let ren : Bool := (rzRenamedFrom names 0 lf 0 (((rzLen names) + (rzLen lf)) + 2)); (let fl : Bytes := (Check::cat (cons (if ren then 0x else (Check::cat (cons d (cons 0x206661756c7420 (cons m (cons 0x3a3a (cons st (cons 0x20686173206669656c647320 (cons (Check::cat (cons 0x5b (cons (rzRepFrom lf 32 0 0x ((rzLen lf) + 1)) (cons 0x5d (nil Bytes))))) (cons 0x2c20746865207370656320 (cons (Check::cat (cons 0x5b (cons (rzRepFrom names 9 0 0x ((rzLen names) + 1)) (cons 0x5d (nil Bytes))))) (cons 0x0a (nil Bytes))))))))))))) (cons (rzValsFrom t 0 (Check::cat (cons 0x76616c756573 (cons 0x09 (cons d (cons 0x09 (nil Bytes)))))) names lf ren prefix own m d true 0x ((rzLen t) + 1)) (cons (rzToksFrom (rzTail (rzRecord t (rzHeadOf "outcomes" d)) (rzHeadOf "outcomes" d)) 0 0 (Foundation.Bytes::appendBytes prefix 0x416e73776572) own m d false 0x true 0x ((rzLen t) + 1)) (nil Bytes))))); (if ((rzLen fl) =? 0) then (Check::cat (cons d (cons 0x206a7564676520 (cons prefix (cons 0x4a75646765 (cons 0x0a (cons d (cons 0x2073747275637420 (cons st (cons 0x0a (cons (rzFieldLines names 0 lf ren d 0x ((rzLen names) + 1)) (cons (rzValsFrom t 0 (Check::cat (cons 0x76616c756573 (cons 0x09 (cons d (cons 0x09 (nil Bytes)))))) names lf ren prefix own m d false 0x ((rzLen t) + 1)) (cons (rzToksFrom (rzTail (rzRecord t (rzHeadOf "outcomes" d)) (rzHeadOf "outcomes" d)) 0 0 (Foundation.Bytes::appendBytes prefix 0x416e73776572) own m d false 0x false 0x ((rzLen t) + 1)) (nil Bytes)))))))))))))) else fl))))))))))))) (nil Bytes))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzResFacts,
+  parameters: [j1 : Bytes, dm : Bytes],
+  result: Bytes,
+  body: (let jl : Bytes := (rzRecord j1 (Check::cat (cons 0x6a75646765 (cons 0x09 (cons dm (nil Bytes)))))); (Check::cat (cons (if (Check::contains j1 (Check::cat (cons 0x0a (cons 0x77686f6c65 (cons 0x09 (cons dm (cons 0x0a (nil Bytes)))))))) then (Check::cat (cons 0x77686f6c65 (cons 0x09 (cons dm (cons 0x0a (nil Bytes)))))) else 0x) (cons (if ((rzLen jl) =? 0) then 0x else (Foundation.Bytes::appendBytes jl 0x0a)) (cons 0x7468656f72656d73 (cons 0x09 (cons dm (cons 0x50726f6f6673 (cons 0x09 (cons (rzNum (rzThFrom j1 0 (Check::cat (cons 0x7468656f72656d73 (cons 0x09 (cons dm (cons 0x50726f6f6673 (cons 0x09 (nil Bytes))))))) 0 ((rzLen j1) + 1))) (cons 0x0a (nil Bytes)))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzResFrom,
+  parameters: [mo : Bytes, i : Nat, r : Bytes, j1 : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::memberDone mo i) then acc else (let rt : Bytes := (rzRouteOf r (Check::str mo (ctor Option.some [Nat] (Check::memberValue mo i)))); (let dm : Bytes := (if ((rzLen rt) =? 0) then 0x else (rzDeciding j1 (Foundation.Json::span rt 1 (rzLen rt)))); (rzResFrom mo (Check::memberNext mo i) r j1 (if ((rzLen rt) =? 0) then acc else (Check::cat (cons acc (cons 0x726573 (cons 0x09 (cons (Check::str mo (ctor Option.some [Nat] i)) (cons 0x09 (cons dm (cons 0x0a (cons (if (Check::contains acc (Check::cat (cons 0x09 (cons dm (cons 0x0a (nil Bytes)))))) then 0x else (rzResFacts j1 dm)) (nil Bytes))))))))))) rest))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzRes,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let mo : Bytes := (Check::file archive 0x6170702f73706563732f7265616c697a6162696c6974792f737065632e6a736f6e); (rzResFrom mo (Check::memberStart mo (rzTop mo "facets")) (Check::file archive 0x2e67656e2f727a2d726f6f74) (Foundation.Bytes::appendBytes 0x0a (Check::file archive 0x2e67656e2f727a2d6a7564676573)) 0x (rzLen mo))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: rzProjFrom,
+  parameters: [
+    mo : Bytes,
+    i : Nat,
+    m : Bytes,
+    own : Bytes,
+    t : Bytes,
+    j1 : Bytes,
+    acc : Bytes,
+    fuel : Nat
+  ],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (Check::memberDone mo i) then acc else (let d : Bytes := (Check::str mo (ctor Option.some [Nat] i)); (rzProjFrom mo (Check::memberNext mo i) m own t j1 (if (Check::contains j1 (Check::cat (cons 0x0a (cons 0x726573 (cons 0x09 (cons d (cons 0x09 (cons m (cons 0x0a (nil Bytes)))))))))) then (Foundation.Bytes::appendBytes acc (rzProjOf d m own t j1)) else acc) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: rzProj,
+  parameters: [archive : Bytes],
+  result: Bytes,
+  body: (let mo : Bytes := (Check::file archive 0x6170702f73706563732f7265616c697a6162696c6974792f737065632e6a736f6e); (rzProjFrom mo (Check::memberStart mo (rzTop mo "facets")) (Foundation.Json::span (Check::file archive 0x2e67656e2f727a2d6d6f6473) 0 (Check::lineEndOf (Check::file archive 0x2e67656e2f727a2d6d6f6473) 0 (rzLen (Check::file archive 0x2e67656e2f727a2d6d6f6473)))) (Check::file archive 0x2e67656e2f727a2d616c6c) (Check::file archive 0x2e67656e2f727a2d7465726d73) (Foundation.Bytes::appendBytes 0x0a (Check::file archive 0x2e67656e2f727a2d726573)) 0x (rzLen mo))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}
