@@ -62,8 +62,8 @@ These modules are hand-patched after generation, so do not regenerate them from
   `prismR4Dispatch`), because the holo build puts every module into one crate.
 
 Realizability (`RZ-01`): `realizability/spec.json` names every facet spec
-here, and `python3 -I tools/realize/gate.py` proves each field changes some
-answer and each rule decides something no other rule would. The vault store's
+here, and the LexLean program `generators/realize` (`sh tools/generators/run.sh`)
+proves each field changes some answer and each rule decides something no other rule would. The vault store's
 rule for a denied value (formerly REQ-003) was dropped for that reason: the
 default already refuses it, and INV-002 still holds.
 

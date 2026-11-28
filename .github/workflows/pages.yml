@@ -67,11 +67,6 @@ jobs:
           node bootstrap/brand-sync.mjs --check
           python3 -I bootstrap/brand-fonts.py --check
           node bootstrap/frame-sync.mjs --check
-      # RZ-01 before the slow proof: a spec field, rule or setting that changes
-      # no answer fails here in a second, not after twenty minutes of proving.
-      - name: Check that every spec field, rule and setting changes an answer
-        shell: bash
-        run: python3 -I tools/realize/gate.py --check
       # HW-01, the shrink-only ratchet: this tree and the base revision (the merge
       # base with main, or main's parent) are measured alike, every producer run
       # in a scratch copy and every file compared with its pinned upstream; no

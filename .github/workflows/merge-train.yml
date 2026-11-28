@@ -180,8 +180,8 @@ jobs:
       # Ready: open, from this repository, not a draft, and both required
       # checks passed on its head. The fast gates are the ones that take
       # seconds to minutes: every gate the page job runs before the proof
-      # (brand and frame locks, RZ-01, HW-01's ratchet and ST-01, the last two
-      # against main), the parts, product and guest gates natively, then the
+      # (brand and frame locks, HW-01's ratchet and ST-01, the last two against
+      # main), the realizability, parts, product and guest gates natively, then the
       # workspace's format, model, template, lint and test gates in the
       # locked SDK. The proof is not repeated: main's own run binds it.
       - name: Test each ready pull request on main and the train before it
@@ -205,7 +205,6 @@ jobs:
             node bootstrap/brand-sync.mjs --check &&
               python3 -I bootstrap/brand-fonts.py --check &&
               node bootstrap/frame-sync.mjs --check &&
-              python3 -I tools/realize/gate.py --check &&
               python3 -I tools/standards/gate.py --check --base "$main" &&
               python3 -I tools/guests/gen.py check &&
               sh tools/generators/run.sh --check &&

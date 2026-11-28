@@ -5,14 +5,14 @@ Feature: realize
   decides nothing no other rule would, or a setting that drives nothing is a
   static stub, and the Prism refuses it. The model is
   app/specs/realizability/spec.json; the LexLean program generators/realize
-  answers every facet spec over its whole request space (test/realize), and
-  tools/realize/gate.py reads those facts with the model and writes PrismRealizability, which the Lean kernel checks
+  answers every facet spec over its whole request space (test/realize), refuses
+  the Prism with every reason in words, and writes PrismRealizability, which the Lean kernel checks
   against the very judges the holo is compiled from.
 
   @RZ-01 @build
   Scenario: Every Prism setting does something: every field of every facet spec changes some answer, every rule decides a request no other rule would, every setting drives such a field, and every facet carries a complete eleven-element descriptor, with every witness pair answered by the facet judge as its spec says
     Given every app/specs/*/spec.json is named in app/specs/realizability/spec.json, and every facet the root routes has a spec
-    When generators/realize answers each facet spec over its whole request space (tools/generators/run.sh) and tools/realize/gate.py --check reads them with its facts
+    When generators/realize answers each facet spec over its whole request space (tools/generators/run.sh --check) and its rzcheck step reads what it concludes of each
     Then every field has a witness pair: two requests that differ in that field alone and get different answers
     And every rule changes some answer when removed, every tree leaf is reached, and every request gets one of the outcomes
     And every example is answered as it says, and every field read from another facet takes exactly that facet's outcomes
