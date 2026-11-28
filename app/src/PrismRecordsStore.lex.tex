@@ -1,0 +1,88 @@
+\begin{lexlean}{PrismRecordsStore}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{PrismRecords}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: recordsStoreAbout,
+  parameters: [],
+  result: String,
+  body: "Reads what the records store (site/records/records.mjs) finds in the browser into the conditional request PrismRecords answers (RFC 9110 section 13), and the answer into what the store does. put: a record is kept only where none is current (PUT with If-None-Match *): kept, or held where one already is. swap: a cell moves only from the name the caller expects (PUT with If-Match of that name, or If-None-Match * where the caller expects none): moved, or stale. A name is the vault's keyed name, sent bare and compared as a strong entity tag; - stands for none. The store's names live in the database and object store named here. Anything else is PrismRecords' own request."
+}
+
+definition{name: recordsStoreDatabase, parameters: [], result: String, body: "prism-records"}
+
+definition{name: recordsStoreNames, parameters: [], result: String, body: "names"}
+
+definition{
+  name: recordsStoreEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((PrismRecords::rcLen s) <? (i + 1)) then i else (if ((PrismRecords::rcAt s i) =? 32) then i else (recordsStoreEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: recordsStoreStart,
+  parameters: [s : Bytes, i : Nat, k : Nat],
+  result: Nat,
+  body: (match k
+    | Nat.zero => i
+    | Nat.succ rest => (recordsStoreStart s ((recordsStoreEnd s i (PrismRecords::rcLen s)) + 1) rest)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: k
+}
+
+definition{
+  name: recordsStoreWord,
+  parameters: [s : Bytes, k : Nat],
+  result: Bytes,
+  body: (let a : Nat := (recordsStoreStart s 0 k); (PrismRecords::rcCut s a (recordsStoreEnd s a (PrismRecords::rcLen s)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: recordsStoreTag,
+  parameters: [name : Bytes],
+  result: Bytes,
+  body: (if (prim equal name 0x2d : Bool) then 0x else (Foundation.Bytes::appendBytes 0x22 (Foundation.Bytes::appendBytes name 0x22)))
+}
+
+definition{
+  name: recordsStoreSays,
+  parameters: [answer : Bytes, yes : Bytes, no : Bytes],
+  result: Bytes,
+  body: (if (prim equal answer 0x706572666f726d : Bool) then yes else (if (prim equal answer 0x343132 : Bool) then no else 0x726566757365))
+}
+
+definition{
+  name: recordsStorePut,
+  parameters: [current : Bytes],
+  result: Bytes,
+  body: (recordsStoreSays (PrismRecords::rcRespondOf 0x505554 (recordsStoreTag current) 0x 0x2a) 0x6b657074 0x68656c64),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: recordsStoreSwap,
+  parameters: [current : Bytes, expected : Bytes],
+  result: Bytes,
+  body: (recordsStoreSays (PrismRecords::rcRespondOf 0x505554 (recordsStoreTag current) (recordsStoreTag expected) (if (prim equal expected 0x2d : Bool) then 0x2a else 0x)) 0x6d6f766564 0x7374616c65),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: recordsStoreDispatch,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (if (2048 <? (PrismRecords::rcLen s)) then 0x696e76616c6964 else (if ((prim equal (recordsStoreWord s 0) 0x707574 : Bool) && (((recordsStoreStart s 0 2) =? ((PrismRecords::rcLen s) + 1)) && (0 <? (PrismRecords::rcLen (recordsStoreWord s 1))))) then (recordsStorePut (recordsStoreWord s 1)) else (if ((prim equal (recordsStoreWord s 0) 0x73776170 : Bool) && (((recordsStoreStart s 0 3) =? ((PrismRecords::rcLen s) + 1)) && ((0 <? (PrismRecords::rcLen (recordsStoreWord s 1))) && (0 <? (PrismRecords::rcLen (recordsStoreWord s 2)))))) then (recordsStoreSwap (recordsStoreWord s 1) (recordsStoreWord s 2)) else (PrismRecords::prismRecordsDispatch s)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

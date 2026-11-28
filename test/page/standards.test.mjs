@@ -261,9 +261,8 @@ async function names(page, tries = 5) {
     if (n.ignored || !n.backendDOMNodeId || n.role?.value === "RootWebArea" || !(NAMED.has(n.role?.value) || (src && src.type !== "contents"))) continue;
     const how = !src ? "none" : src.type === "contents" ? "contents" : src.nativeSource ? "label" : src.attribute;
     const step = { "aria-labelledby": "2B", "aria-label": "2D", contents: "2F", title: "2I", none: "2" }[how] ?? "2E";
-    const { object } = await cdp.send("DOM.resolveNode", { backendNodeId: n.backendDOMNodeId }).catch(() => ({}));
-    // The page redrew between the tree and this node: the names are read again from the page as it stands now.
-    if (!object) return cdp.detach().then(() => (assert.ok(tries, "accessible names: the page never stood still while its tree was read"), names(page, tries - 1)));
+    // A node gone since the tree was read means the page drew again in between: the tree is read again, from the page as it stands now.
+    const object = (await cdp.send("DOM.resolveNode", { backendNodeId: n.backendDOMNodeId }).catch(() => null))?.object; if (!object) return cdp.detach().then(() => (assert.ok(tries, "accessible names: the page never stood still while its tree was read"), names(page, tries - 1)));
     const { result, exceptionDetails } = await cdp.send("Runtime.callFunctionOn", { objectId: object.objectId, returnByValue: true, arguments: [{ value: how }], functionDeclaration: `function (how) {
       const el = this.nodeType === 1 ? this : this.parentElement;
       const gone = (x) => x.hidden || x.getAttribute("aria-hidden") === "true" || getComputedStyle(x).display === "none";

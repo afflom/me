@@ -1,5 +1,5 @@
 {
-  "comment": "The steps of the realize program (generators/realize/), run in order by tools/generators/run.sh. Each step answers one decision spec of app/specs/realizability/spec.json over its whole request space (an each over the empty path stages the spec itself, compact): its witness pairs, live rules, totality and examples (RZ-01). A step reads repository files and the .gen/ outputs of this program's earlier steps only. Then each spec's outcomes and the values of its fields are gathered into .gen/rz-terms (one step per spec, each after the last), and rzcomp answers composition from them and the realizability model's reads: for every facet, how many of the fields that take another facet's outcomes say so, and each flaw in words (test/realize/composition.txt). Last, the settings: rzdrives lists which settings each facet of the coherence registry drives, rzsens which fields of each facet have a witness, rzbind answers one setting of the surface at a time (every field bound under it in the realizability model is a sensitive field of a facet the registry has it drive, and every such facet has a field bound), and rzset counts the settings bound and gives each flaw in words (test/realize/settings.txt).",
+  "comment": "The steps of the realize program (generators/realize/), run in order by tools/generators/run.sh. Each step answers one decision spec of app/specs/realizability/spec.json over its whole request space (an each over the empty path stages the spec itself, compact): its witness pairs, live rules, totality and examples (RZ-01). A step reads repository files and the .gen/ outputs of this program's earlier steps only. Then each spec's outcomes and the values of its fields are gathered into .gen/rz-terms (one step per spec, each after the last), and rzcomp answers composition from them and the realizability model's reads: for every facet, how many of the fields that take another facet's outcomes say so, and each flaw in words (test/realize/composition.txt). Last, the settings: rzdrives lists which settings each facet of the coherence registry drives, rzsens which fields of each facet have a witness, rzbind answers one setting of the surface at a time (every field bound under it in the realizability model is a sensitive field of a facet the registry has it drive, and every such facet has a field bound), and rzset counts the settings bound and gives each flaw in words (test/realize/settings.txt). Last, the projection: rzroutes reads the root's facet table; rzmod reads every Prism module of app/src once (its judge of one request, its imports, its theorems and, where it has a judge, its request structure and constants) and rzpick keeps the short facts of those; rzmods and rzres say which module decides for each facet; and rzproj says, one deciding module at a time, how that module names the spec's fields, values and answers, or each fault in words (test/realize/projection.txt).",
   "steps": [
     {
       "generator": "rzfacts",
@@ -383,6 +383,58 @@
         "app/specs/realizability/spec.json"
       ],
       "output": "test/realize/settings.txt"
+    },
+    {
+      "generator": "rzroutes",
+      "inputs": [
+        "tools/prism_root.py"
+      ],
+      "output": ".gen/rz-root"
+    },
+    {
+      "generator": "rzmod",
+      "glob": [
+        "app/src/Prism*.lex.tex"
+      ],
+      "output": ".gen/rz-all"
+    },
+    {
+      "generator": "rzpick",
+      "split": ".gen/rz-all",
+      "output": ".gen/rz-judges"
+    },
+    {
+      "generator": "rzmods",
+      "inputs": [
+        ".gen/rz-root",
+        ".gen/rz-judges",
+        "app/specs/realizability/spec.json"
+      ],
+      "output": ".gen/rz-mods"
+    },
+    {
+      "generator": "rzres",
+      "inputs": [
+        ".gen/rz-root",
+        ".gen/rz-judges",
+        "app/specs/realizability/spec.json"
+      ],
+      "output": ".gen/rz-res"
+    },
+    {
+      "generator": "rzproj",
+      "lines": ".gen/rz-mods",
+      "inputs": [
+        ".gen/rz-all",
+        ".gen/rz-terms",
+        ".gen/rz-res",
+        "app/specs/realizability/spec.json"
+      ],
+      "own": [
+        ".gen/rz-all"
+      ],
+      "after": ".gen/rz-root",
+      "output": "test/realize/projection.txt"
     }
   ]
 }

@@ -42,7 +42,7 @@ await vault.exportTo(passphrase); await vault.importFrom(file, passphrase);
 
 ## Tests
 
-`test/scenario.mjs` is one scenario with 22 checks under VS-01, VS-02 and VS-03.
+`test/scenario.mjs` is one scenario with 26 checks under VS-01, VS-02 and VS-03.
 `test/vault-gate.mjs` runs it in Node (`cargo test -p conformance --test vault`),
 and `test/vault-browser.test.mjs` runs it in headless Chromium over OPFS and the
 IndexedDB fallback (`try-page.yml`). Both use the guests in `test/guests/`, the

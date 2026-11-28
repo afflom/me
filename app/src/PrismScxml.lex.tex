@@ -248,7 +248,7 @@ definition{
   name: sxKindOf,
   parameters: [n : Bytes],
   result: Nat,
-  body: (if (sxSame n (prim utf8_encode "scxml" : Bytes)) then 1 else (if (sxSame n (prim utf8_encode "state" : Bytes)) then 2 else (if (sxSame n (prim utf8_encode "parallel" : Bytes)) then 3 else (if (sxSame n (prim utf8_encode "final" : Bytes)) then 4 else (if (sxSame n (prim utf8_encode "history" : Bytes)) then 5 else (if (sxSame n (prim utf8_encode "initial" : Bytes)) then 6 else (if (sxSame n (prim utf8_encode "transition" : Bytes)) then 7 else (if (sxSame n (prim utf8_encode "onentry" : Bytes)) then 8 else (if (sxSame n (prim utf8_encode "onexit" : Bytes)) then 9 else (if (sxSame n (prim utf8_encode "raise" : Bytes)) then 10 else (if (sxSame n (prim utf8_encode "send" : Bytes)) then 11 else (if (sxSame n (prim utf8_encode "invoke" : Bytes)) then 12 else (if (sxSame n (prim utf8_encode "content" : Bytes)) then 13 else (if (sxSame n (prim utf8_encode "datamodel" : Bytes)) then 14 else (if (sxSame n (prim utf8_encode "data" : Bytes)) then 15 else (if (sxSame n (prim utf8_encode "assign" : Bytes)) then 16 else (if (sxSame n (prim utf8_encode "if" : Bytes)) then 17 else (if (sxSame n (prim utf8_encode "elseif" : Bytes)) then 18 else (if (sxSame n (prim utf8_encode "else" : Bytes)) then 19 else (if (sxSame n (prim utf8_encode "conf:incrementID" : Bytes)) then 20 else (if (sxSame n (prim utf8_encode "conf:concatVars" : Bytes)) then 21 else (if (sxSame n (prim utf8_encode "conf:sendToSender" : Bytes)) then 22 else (if (sxSame n (prim utf8_encode "cancel" : Bytes)) then 23 else (if (sxSame n (prim utf8_encode "param" : Bytes)) then 24 else (if (sxSame n (prim utf8_encode "donedata" : Bytes)) then 25 else (if (sxSame n (prim utf8_encode "finalize" : Bytes)) then 26 else (if (sxSame n (prim utf8_encode "conf:contentFoo" : Bytes)) then 27 else 0))))))))))))))))))))))))))),
+  body: (if (sxSame n (prim utf8_encode "scxml" : Bytes)) then 1 else (if (sxSame n (prim utf8_encode "state" : Bytes)) then 2 else (if (sxSame n (prim utf8_encode "parallel" : Bytes)) then 3 else (if (sxSame n (prim utf8_encode "final" : Bytes)) then 4 else (if (sxSame n (prim utf8_encode "history" : Bytes)) then 5 else (if (sxSame n (prim utf8_encode "initial" : Bytes)) then 6 else (if (sxSame n (prim utf8_encode "transition" : Bytes)) then 7 else (if (sxSame n (prim utf8_encode "onentry" : Bytes)) then 8 else (if (sxSame n (prim utf8_encode "onexit" : Bytes)) then 9 else (if (sxSame n (prim utf8_encode "raise" : Bytes)) then 10 else (if (sxSame n (prim utf8_encode "send" : Bytes)) then 11 else (if (sxSame n (prim utf8_encode "invoke" : Bytes)) then 12 else (if (sxSame n (prim utf8_encode "content" : Bytes)) then 13 else (if (sxSame n (prim utf8_encode "datamodel" : Bytes)) then 14 else (if (sxSame n (prim utf8_encode "data" : Bytes)) then 15 else (if (sxSame n (prim utf8_encode "assign" : Bytes)) then 16 else (if (sxSame n (prim utf8_encode "if" : Bytes)) then 17 else (if (sxSame n (prim utf8_encode "elseif" : Bytes)) then 18 else (if (sxSame n (prim utf8_encode "else" : Bytes)) then 19 else (if (sxSame n (prim utf8_encode "conf:incrementID" : Bytes)) then 20 else (if (sxSame n (prim utf8_encode "conf:concatVars" : Bytes)) then 21 else (if (sxSame n (prim utf8_encode "conf:sendToSender" : Bytes)) then 22 else (if (sxSame n (prim utf8_encode "cancel" : Bytes)) then 23 else (if (sxSame n (prim utf8_encode "param" : Bytes)) then 24 else (if (sxSame n (prim utf8_encode "donedata" : Bytes)) then 25 else (if (sxSame n (prim utf8_encode "finalize" : Bytes)) then 26 else (if (sxSame n (prim utf8_encode "conf:contentFoo" : Bytes)) then 27 else (if (sxSame n (prim utf8_encode "foreach" : Bytes)) then 28 else (if (sxSame n (prim utf8_encode "conf:sumVars" : Bytes)) then 29 else (if (sxSame n (prim utf8_encode "conf:extendArray" : Bytes)) then 30 else 0)))))))))))))))))))))))))))))),
   axioms: [propext]
 }
 
@@ -1231,7 +1231,7 @@ definition{
   name: sxValueOf,
   parameters: [r : SxRun, e : Nat],
   result: (Option Bytes),
-  body: (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (if ((sxHas s t e (prim utf8_encode "conf:illegalExpr" : Bytes)) || (sxHas s t e (prim utf8_encode "conf:invalidLocation" : Bytes))) then (ctor Option.none [Bytes]) else (if (sxHas s t e (prim utf8_encode "conf:expr" : Bytes)) then (sxEvalText r (sxAttrOr s t e (prim utf8_encode "conf:expr" : Bytes))) else (if (sxHas s t e (prim utf8_encode "expr" : Bytes)) then (sxEvalText r (sxAttrOr s t e (prim utf8_encode "expr" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:varExpr" : Bytes)) then (if (sxDeclared r (sxAttrOr s t e (prim utf8_encode "conf:varExpr" : Bytes))) then (ctor Option.some [Bytes] (sxGet r (sxAttrOr s t e (prim utf8_encode "conf:varExpr" : Bytes)))) else (ctor Option.none [Bytes])) else (if (sxHas s t e (prim utf8_encode "conf:quoteExpr" : Bytes)) then (ctor Option.some [Bytes] (sxText (sxAttrOr s t e (prim utf8_encode "conf:quoteExpr" : Bytes)))) else (if (sxHas s t e (prim utf8_encode "conf:systemVarExpr" : Bytes)) then (sxEvalText r (sxAttrOr s t e (prim utf8_encode "conf:systemVarExpr" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:eventName" : Bytes)) then (sxEvValue r (prim utf8_encode "name" : Bytes)) else (if (sxHas s t e (prim utf8_encode "conf:eventType" : Bytes)) then (sxEvValue r (prim utf8_encode "type" : Bytes)) else (if (sxHas s t e (prim utf8_encode "conf:eventSendid" : Bytes)) then (sxEvValue r (prim utf8_encode "sendid" : Bytes)) else (if (sxHas s t e (prim utf8_encode "conf:eventField" : Bytes)) then (sxEvValue r (sxAttrOr s t e (prim utf8_encode "conf:eventField" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:eventDataFieldValue" : Bytes)) then (sxEvDataField r (sxAttrOr s t e (prim utf8_encode "conf:eventDataFieldValue" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:eventDataNamelistValue" : Bytes)) then (sxEvDataField r (sxAttrOr s t e (prim utf8_encode "conf:eventDataNamelistValue" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:eventDataParamValue" : Bytes)) then (sxEvDataField r (sxAttrOr s t e (prim utf8_encode "conf:eventDataParamValue" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:scxmlEventIOLocation" : Bytes)) then (ctor Option.some [Bytes] (sxText (sxLocation r))) else (if (sxHas s t e (prim utf8_encode "conf:invalidSessionID" : Bytes)) then (ctor Option.some [Bytes] (prim append 0x01 (prim utf8_encode "27" : Bytes) : Bytes)) else (ctor Option.some [Bytes] 0x00)))))))))))))))))),
+  body: (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (if ((sxHas s t e (prim utf8_encode "conf:illegalExpr" : Bytes)) || (sxHas s t e (prim utf8_encode "conf:invalidLocation" : Bytes))) then (ctor Option.none [Bytes]) else (if (sxHas s t e (prim utf8_encode "conf:expr" : Bytes)) then (sxEvalText r (sxAttrOr s t e (prim utf8_encode "conf:expr" : Bytes))) else (if (sxHas s t e (prim utf8_encode "expr" : Bytes)) then (sxEvalText r (sxAttrOr s t e (prim utf8_encode "expr" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:varExpr" : Bytes)) then (if (sxDeclared r (sxAttrOr s t e (prim utf8_encode "conf:varExpr" : Bytes))) then (ctor Option.some [Bytes] (sxGet r (sxAttrOr s t e (prim utf8_encode "conf:varExpr" : Bytes)))) else (ctor Option.none [Bytes])) else (if (sxHas s t e (prim utf8_encode "conf:quoteExpr" : Bytes)) then (ctor Option.some [Bytes] (sxText (sxAttrOr s t e (prim utf8_encode "conf:quoteExpr" : Bytes)))) else (if (sxHas s t e (prim utf8_encode "conf:systemVarExpr" : Bytes)) then (sxEvalText r (sxAttrOr s t e (prim utf8_encode "conf:systemVarExpr" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:eventName" : Bytes)) then (sxEvValue r (prim utf8_encode "name" : Bytes)) else (if (sxHas s t e (prim utf8_encode "conf:eventType" : Bytes)) then (sxEvValue r (prim utf8_encode "type" : Bytes)) else (if (sxHas s t e (prim utf8_encode "conf:eventSendid" : Bytes)) then (sxEvValue r (prim utf8_encode "sendid" : Bytes)) else (if (sxHas s t e (prim utf8_encode "conf:eventField" : Bytes)) then (sxEvValue r (sxAttrOr s t e (prim utf8_encode "conf:eventField" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:eventDataFieldValue" : Bytes)) then (sxEvDataField r (sxAttrOr s t e (prim utf8_encode "conf:eventDataFieldValue" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:eventDataNamelistValue" : Bytes)) then (sxEvDataField r (sxAttrOr s t e (prim utf8_encode "conf:eventDataNamelistValue" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:eventDataParamValue" : Bytes)) then (sxEvDataField r (sxAttrOr s t e (prim utf8_encode "conf:eventDataParamValue" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:illegalArray" : Bytes)) then (ctor Option.some [Bytes] (sxNumber (prim utf8_encode "7" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:scxmlEventIOLocation" : Bytes)) then (ctor Option.some [Bytes] (sxText (sxLocation r))) else (if (sxHas s t e (prim utf8_encode "conf:invalidSessionID" : Bytes)) then (ctor Option.some [Bytes] (prim append 0x01 (prim utf8_encode "27" : Bytes) : Bytes)) else (ctor Option.some [Bytes] 0x00))))))))))))))))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -1283,12 +1283,20 @@ definition{
 }
 
 definition{
+  name: sxCmpVars,
+  parameters: [r : SxRun, v : Bytes],
+  result: Nat,
+  body: (let ie : Nat := (sxDigitsEnd v 0 (sxLen v)); (let a : Bytes := (sxSlice v 0 ie); (let ent : Bool := ((sxAt v ie) =? 38); (let op : Nat := (if ent then (if (sxStartsAt v ie (prim utf8_encode "&lt;" : Bytes)) then 60 else (if (sxStartsAt v ie (prim utf8_encode "&gt;" : Bytes)) then 62 else 0)) else (sxAt v ie)); (let oe : Nat := (if ent then (ie + 4) else (ie + 1)); (let eq : Bool := ((not (op =? 61)) && ((sxAt v oe) =? 61)); (let b : Bytes := (sxFrom v (if eq then (oe + 1) else oe)); (let va : Bytes := (sxGet r a); (let vb : Bytes := (sxGet r b); (if ((ie =? 0) || ((not (sxDeclared r a)) || (not (sxDeclared r b)))) then 2 else (if (((sxAt va 0) =? 1) && ((sxAt vb 0) =? 1)) then (sxCompare (sxNum (sxFrom va 1)) (sxNum (sxFrom vb 1)) op eq) else 0))))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: sxCond,
   parameters: [r : SxRun, e : Nat],
   result: Nat,
   body: (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (if (sxHas s t e (prim utf8_encode "conf:true" : Bytes)) then 1 else (if (sxHas s t e (prim utf8_encode "conf:false" : Bytes)) then 0 else (if (sxHas s t e (prim utf8_encode "conf:nonBoolean" : Bytes)) then 2 else (if (sxHas s t e (prim utf8_encode "conf:inState" : Bytes)) then (match (sxById s t (project r root) (sxAttrOr s t e (prim utf8_encode "conf:inState" : Bytes)))
       | Option.none => 0
-      | Option.some x => (sxBit01 (sxMem (project r config) x))) else (if (sxHas s t e (prim utf8_encode "conf:idVal" : Bytes)) then (sxIdVal r (sxAttrOr s t e (prim utf8_encode "conf:idVal" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:isBound" : Bytes)) then (let n : Bytes := (sxAttrOr s t e (prim utf8_encode "conf:isBound" : Bytes)); (if (sxDeclared r n) then (sxBit01 (sxTruthy (sxGet r n))) else 2)) else (if (sxHas s t e (prim utf8_encode "conf:noValue" : Bytes)) then (let n : Bytes := (sxAttrOr s t e (prim utf8_encode "conf:noValue" : Bytes)); (if (sxDeclared r n) then (sxBit01 (not (sxTruthy (sxGet r n)))) else 2)) else (if (sxHas s t e (prim utf8_encode "conf:unboundVar" : Bytes)) then (let n : Bytes := (sxAttrOr s t e (prim utf8_encode "conf:unboundVar" : Bytes)); (sxBit01 (not ((sxDeclared r n) && (not ((sxAt (sxGet r n) 0) =? 0)))))) else (if (sxHas s t e (prim utf8_encode "conf:VarEqVar" : Bytes)) then (sxVarEq r (sxAttrOr s t e (prim utf8_encode "conf:VarEqVar" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:VarEqVarStruct" : Bytes)) then (sxVarEq r (sxAttrOr s t e (prim utf8_encode "conf:VarEqVarStruct" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:idQuoteVal" : Bytes)) then (sxQuoteVal r (sxAttrOr s t e (prim utf8_encode "conf:idQuoteVal" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:idSystemVarVal" : Bytes)) then (sxSysVal r (sxAttrOr s t e (prim utf8_encode "conf:idSystemVarVal" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:systemVarIsBound" : Bytes)) then (let n : Bytes := (sxAttrOr s t e (prim utf8_encode "conf:systemVarIsBound" : Bytes)); (sxBit01 ((sxDeclared r n) && (sxTruthy (sxGet r n))))) else (if (sxHas s t e (prim utf8_encode "conf:nameVarVal" : Bytes)) then (sxBit01 (sxSame (sxGet r (prim utf8_encode "_name" : Bytes)) (sxText (sxAttrOr s t e (prim utf8_encode "conf:nameVarVal" : Bytes))))) else (if (sxHas s t e (prim utf8_encode "conf:eventNameVal" : Bytes)) then (if (sxDeclared r (prim utf8_encode "_event" : Bytes)) then (sxBit01 (sxSame (sxEvF r 0) (sxAttrOr s t e (prim utf8_encode "conf:eventNameVal" : Bytes)))) else 2) else (if (sxHas s t e (prim utf8_encode "conf:eventFieldHasNoValue" : Bytes)) then (if (sxDeclared r (prim utf8_encode "_event" : Bytes)) then (sxBit01 ((sxLen (sxEvF r (sxFieldIndex (sxAttrOr s t e (prim utf8_encode "conf:eventFieldHasNoValue" : Bytes))))) =? 0)) else 2) else (if (sxHas s t e (prim utf8_encode "conf:eventFieldsAreBound" : Bytes)) then (if (sxDeclared r (prim utf8_encode "_event" : Bytes)) then 1 else 2) else (if (sxHas s t e (prim utf8_encode "conf:originTypeEq" : Bytes)) then (if (sxDeclared r (prim utf8_encode "_event" : Bytes)) then (sxBit01 (sxSame (sxEvF r 4) (sxAttrOr s t e (prim utf8_encode "conf:originTypeEq" : Bytes)))) else 2) else (if (sxHas s t e (prim utf8_encode "conf:varPrefix" : Bytes)) then (sxVarPrefix r (sxAttrOr s t e (prim utf8_encode "conf:varPrefix" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:eventdataVal" : Bytes)) then (sxEvDataIs r (sxAttrOr s t e (prim utf8_encode "conf:eventdataVal" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:eventdataSomeVal" : Bytes)) then (sxEvDataIs r (prim utf8_encode "123" : Bytes)) else (if (sxHas s t e (prim utf8_encode "conf:eventvarVal" : Bytes)) then (sxEvVarVal r (sxAttrOr s t e (prim utf8_encode "conf:eventvarVal" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:emptyEventData" : Bytes)) then (if (sxDeclared r (prim utf8_encode "_event" : Bytes)) then (sxBit01 (((sxLen (sxEvData r)) =? 0) || ((sxAt (sxEvData r) 0) =? 0))) else 2) else (if (sxHas s t e (prim utf8_encode "cond" : Bytes)) then 0 else 1)))))))))))))))))))))))))),
+      | Option.some x => (sxBit01 (sxMem (project r config) x))) else (if (sxHas s t e (prim utf8_encode "conf:idVal" : Bytes)) then (sxIdVal r (sxAttrOr s t e (prim utf8_encode "conf:idVal" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:isBound" : Bytes)) then (let n : Bytes := (sxAttrOr s t e (prim utf8_encode "conf:isBound" : Bytes)); (if (sxDeclared r n) then (sxBit01 (sxTruthy (sxGet r n))) else 2)) else (if (sxHas s t e (prim utf8_encode "conf:noValue" : Bytes)) then (let n : Bytes := (sxAttrOr s t e (prim utf8_encode "conf:noValue" : Bytes)); (if (sxDeclared r n) then (sxBit01 (not (sxTruthy (sxGet r n)))) else 2)) else (if (sxHas s t e (prim utf8_encode "conf:unboundVar" : Bytes)) then (let n : Bytes := (sxAttrOr s t e (prim utf8_encode "conf:unboundVar" : Bytes)); (sxBit01 (not ((sxDeclared r n) && (not ((sxAt (sxGet r n) 0) =? 0)))))) else (if (sxHas s t e (prim utf8_encode "conf:VarEqVar" : Bytes)) then (sxVarEq r (sxAttrOr s t e (prim utf8_encode "conf:VarEqVar" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:VarEqVarStruct" : Bytes)) then (sxVarEq r (sxAttrOr s t e (prim utf8_encode "conf:VarEqVarStruct" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:idQuoteVal" : Bytes)) then (sxQuoteVal r (sxAttrOr s t e (prim utf8_encode "conf:idQuoteVal" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:idSystemVarVal" : Bytes)) then (sxSysVal r (sxAttrOr s t e (prim utf8_encode "conf:idSystemVarVal" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:systemVarIsBound" : Bytes)) then (let n : Bytes := (sxAttrOr s t e (prim utf8_encode "conf:systemVarIsBound" : Bytes)); (sxBit01 ((sxDeclared r n) && (sxTruthy (sxGet r n))))) else (if (sxHas s t e (prim utf8_encode "conf:nameVarVal" : Bytes)) then (sxBit01 (sxSame (sxGet r (prim utf8_encode "_name" : Bytes)) (sxText (sxAttrOr s t e (prim utf8_encode "conf:nameVarVal" : Bytes))))) else (if (sxHas s t e (prim utf8_encode "conf:eventNameVal" : Bytes)) then (if (sxDeclared r (prim utf8_encode "_event" : Bytes)) then (sxBit01 (sxSame (sxEvF r 0) (sxAttrOr s t e (prim utf8_encode "conf:eventNameVal" : Bytes)))) else 2) else (if (sxHas s t e (prim utf8_encode "conf:eventFieldHasNoValue" : Bytes)) then (if (sxDeclared r (prim utf8_encode "_event" : Bytes)) then (sxBit01 ((sxLen (sxEvF r (sxFieldIndex (sxAttrOr s t e (prim utf8_encode "conf:eventFieldHasNoValue" : Bytes))))) =? 0)) else 2) else (if (sxHas s t e (prim utf8_encode "conf:eventFieldsAreBound" : Bytes)) then (if (sxDeclared r (prim utf8_encode "_event" : Bytes)) then 1 else 2) else (if (sxHas s t e (prim utf8_encode "conf:originTypeEq" : Bytes)) then (if (sxDeclared r (prim utf8_encode "_event" : Bytes)) then (sxBit01 (sxSame (sxEvF r 4) (sxAttrOr s t e (prim utf8_encode "conf:originTypeEq" : Bytes)))) else 2) else (if (sxHas s t e (prim utf8_encode "conf:varPrefix" : Bytes)) then (sxVarPrefix r (sxAttrOr s t e (prim utf8_encode "conf:varPrefix" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:eventdataVal" : Bytes)) then (sxEvDataIs r (sxAttrOr s t e (prim utf8_encode "conf:eventdataVal" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:eventdataSomeVal" : Bytes)) then (sxEvDataIs r (prim utf8_encode "123" : Bytes)) else (if (sxHas s t e (prim utf8_encode "conf:eventvarVal" : Bytes)) then (sxEvVarVal r (sxAttrOr s t e (prim utf8_encode "conf:eventvarVal" : Bytes))) else (if (sxHas s t e (prim utf8_encode "conf:emptyEventData" : Bytes)) then (if (sxDeclared r (prim utf8_encode "_event" : Bytes)) then (sxBit01 (((sxLen (sxEvData r)) =? 0) || ((sxAt (sxEvData r) 0) =? 0))) else 2) else (if (sxHas s t e (prim utf8_encode "conf:compareIDVal" : Bytes)) then (sxCmpVars r (sxAttrOr s t e (prim utf8_encode "conf:compareIDVal" : Bytes))) else (if (sxHas s t e (prim utf8_encode "cond" : Bytes)) then 0 else 1))))))))))))))))))))))))))),
   axioms: [Quot.sound, propext]
 }
 
@@ -1723,12 +1731,117 @@ definition{
 }
 
 definition{
+  name: sxCountByte,
+  parameters: [b : Bytes, i : Nat, x : Nat, acc : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((sxLen b) <? (i + 1)) then acc else (sxCountByte b (i + 1) x (if ((sxAt b i) =? x) then (acc + 1) else acc) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxArraySize,
+  parameters: [a : Bytes],
+  result: Nat,
+  body: (if ((sxAt a (sxSkipWs a 1 (sxLen a))) =? 93) then 0 else ((sxCountByte a 0 44 0 (sxLen a)) + 1)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxItemAt,
+  parameters: [a : Bytes, i : Nat, j : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (match j
+      | Nat.zero => i
+      | Nat.succ m => (sxItemAt a ((sxFindByte a i 44 (sxLen a)) + 1) m rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxArrayItem,
+  parameters: [a : Bytes, j : Nat],
+  result: Bytes,
+  body: (let i : Nat := (sxSkipWs a (sxItemAt a 1 j (j + 1)) (sxLen a)); (let c : Nat := (sxFindByte a i 44 (sxLen a)); (let z : Nat := (sxFindByte a i 93 (sxLen a)); (let e : Nat := (if (c <? z) then c else z); (let text : Bytes := (sxSlice a i (prim subtract e i : Nat)); (if (sxIsDigits text) then (sxNumber text) else (sxText text))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxIsArray,
+  parameters: [v : Bytes],
+  result: Bool,
+  body: (((sxAt v 0) =? 3) && ((sxAt v 3) =? 91)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxEachName,
+  parameters: [c : Nat],
+  result: Bytes,
+  body: (prim append (prim utf8_encode "!each." : Bytes) (sxDec c) : Bytes)
+}
+
+definition{
+  name: sxEachBegin,
+  parameters: [r : SxRun, c : Nat],
+  result: SxRun,
+  body: (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (let n : Bytes := (if (sxHas s t c (prim utf8_encode "conf:arrayVar" : Bytes)) then (sxAttrOr s t c (prim utf8_encode "conf:arrayVar" : Bytes)) else (sxAttrOr s t c (prim utf8_encode "conf:arrayTextVar" : Bytes))); (let v : Bytes := (sxGet r n); (sxPut r (sxEachName c) (if ((sxHas s t c (prim utf8_encode "conf:illegalItem" : Bytes)) || ((not (sxDeclared r n)) || (not (sxIsArray v)))) then 0x else (sxFrom v 3))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxEachList,
+  parameters: [c : Nat, j : Nat, n : Nat, kids : Bytes, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if (n <? (j + 1)) then acc else (sxEachList c (j + 1) n kids (prim append acc (prim append (sxU16 65534) (prim append (sxU16 c) (prim append (sxU16 j) kids : Bytes) : Bytes) : Bytes) : Bytes) rest))),
+  recursive_argument: fuel
+}
+
+definition{
+  name: sxEachOf,
+  parameters: [r : SxRun, c : Nat],
+  result: Bytes,
+  body: (let a : Bytes := (sxGet r (sxEachName c)); (let n : Nat := (sxArraySize a); (if ((sxLen a) =? 0) then (sxU16 65535) else (sxEachList c 0 n (sxChildren (project r tab) c) 0x n)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxEachStep,
+  parameters: [r : SxRun, c : Nat, j : Nat],
+  result: SxRun,
+  body: (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (let a : Bytes := (sxGet r (sxEachName c)); (let r1 : SxRun := (sxPut r (sxAttrOr s t c (prim utf8_encode "conf:item" : Bytes)) (sxArrayItem a j)); (if (sxHas s t c (prim utf8_encode "conf:index" : Bytes)) then (sxPut r1 (sxAttrOr s t c (prim utf8_encode "conf:index" : Bytes)) (prim append 0x01 (sxDecimal j) : Bytes)) else r1))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxEachEnd,
+  parameters: [r : SxRun, c : Nat],
+  result: SxRun,
+  body: (sxPut r (sxEachName c) 0x),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: sxExtend,
+  parameters: [r : SxRun, e : Nat],
+  result: SxRun,
+  body: (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (let n : Bytes := (sxAttrOr s t e (prim utf8_encode "id" : Bytes)); (let v : Bytes := (sxGet r n); (let a : Bytes := (sxFrom v 3); (let oid : Nat := (sxG16 (sxGet r (prim utf8_encode "!oid" : Bytes)) 0); (let head : Bytes := (sxSlice a 0 (prim subtract (sxFindByte a 0 93 (sxLen a)) 0 : Nat)); (if ((sxDeclared r n) && (sxIsArray v)) then (sxPut (sxPut r (prim utf8_encode "!oid" : Bytes) (sxU16 (oid + 1))) n (prim append 0x03 (prim append (sxU16 oid) (prim append head (if ((sxArraySize a) =? 0) then (prim utf8_encode "4]" : Bytes) else (prim utf8_encode ",4]" : Bytes)) : Bytes) : Bytes) : Bytes)) else (sxFail r))))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: sxExecFrom,
   parameters: [r : SxRun, l : Bytes, i : Nat, fuel : Nat],
   result: SxRun,
   body: (match fuel
     | Nat.zero => r
-    | Nat.succ rest => (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (if ((sxHalted r) || ((sxSize l) <? (i + 1))) then r else (let c : Nat := (sxNth l i); (let k : Nat := (if (c =? 65535) then 255 else (sxKind t c)); (if (k =? 255) then (sxFail r) else (if (k =? 10) then (sxExecFrom (sxRaise r (sxAttrOr s t c (prim utf8_encode "event" : Bytes))) l (i + 1) rest) else (if (k =? 11) then (sxExecFrom (sxSend r c) l (i + 1) rest) else (if (k =? 16) then (sxExecFrom (sxAssign r c) l (i + 1) rest) else (if (k =? 20) then (sxExecFrom (sxIncrement r c) l (i + 1) rest) else (if (k =? 21) then (sxExecFrom (sxConcat r c) l (i + 1) rest) else (if (k =? 22) then (sxExecFrom (sxSendToSender r c) l (i + 1) rest) else (if (k =? 23) then (sxExecFrom (sxCancelSend r c) l (i + 1) rest) else (if (k =? 17) then (sxExecFrom (sxExecFrom r (sxBranch r c) 0 rest) l (i + 1) rest) else (sxExecFrom r l (i + 1) rest)))))))))))))))),
+    | Nat.succ rest => (let s : Bytes := (project r doc); (let t : Bytes := (project r tab); (if ((sxHalted r) || ((sxSize l) <? (i + 1))) then r else (let c : Nat := (sxNth l i); (let k : Nat := (if (c =? 65535) then 255 else (if (c =? 65534) then 254 else (sxKind t c))); (if (k =? 255) then (sxFail r) else (if (k =? 254) then (sxExecFrom (sxEachStep r (sxNth l (i + 1)) (sxNth l (i + 2))) l (i + 3) rest) else (if (k =? 10) then (sxExecFrom (sxRaise r (sxAttrOr s t c (prim utf8_encode "event" : Bytes))) l (i + 1) rest) else (if (k =? 11) then (sxExecFrom (sxSend r c) l (i + 1) rest) else (if (k =? 16) then (sxExecFrom (sxAssign r c) l (i + 1) rest) else (if (k =? 20) then (sxExecFrom (sxIncrement r c) l (i + 1) rest) else (if ((k =? 21) || (k =? 29)) then (sxExecFrom (sxConcat r c) l (i + 1) rest) else (if (k =? 22) then (sxExecFrom (sxSendToSender r c) l (i + 1) rest) else (if (k =? 23) then (sxExecFrom (sxCancelSend r c) l (i + 1) rest) else (if (k =? 30) then (sxExecFrom (sxExtend r c) l (i + 1) rest) else (if (k =? 28) then (let r1 : SxRun := (sxEachBegin r c); (sxExecFrom (sxEachEnd (sxExecFrom r1 (sxEachOf r1 c) 0 rest) c) l (i + 1) rest)) else (if (k =? 17) then (sxExecFrom (sxExecFrom r (sxBranch r c) 0 rest) l (i + 1) rest) else (sxExecFrom r l (i + 1) rest))))))))))))))))))),
   axioms: [Quot.sound, propext],
   recursive_argument: fuel
 }
@@ -1737,7 +1850,7 @@ definition{
   name: sxExec,
   parameters: [r : SxRun, block : Nat],
   result: SxRun,
-  body: (sxResume (sxExecFrom r (sxChildren (project r tab) block) 0 (sxCount (project r tab)))),
+  body: (sxResume (sxExecFrom r (sxChildren (project r tab) block) 0 (prim multiply (sxLen (project r doc)) 64 : Nat))),
   axioms: [Quot.sound, propext]
 }
 
