@@ -4,13 +4,10 @@
 // item opens to its words, and Ask draws on what is kept, never while halted.
 // usage: NODE_PATH="$(npm root --global)" [PAGE_SITE=dir | PAGE_URL=url] node --test test/page/acts.test.mjs
 import assert from "node:assert/strict";
-import { createReadStream, existsSync } from "node:fs";
-import { createServer } from "node:http";
-import { createRequire } from "node:module";
-import { extname, join, resolve } from "node:path";
+import { resolve } from "node:path";
 import test from "node:test";
+import { chromium, serve } from "../product/harness.mjs";
 
-const { chromium } = createRequire(import.meta.url)("playwright");
 // What the owner types comes from the specifications' own examples: a to-do,
 // a meeting and a message (RFC 5546 §4.4, §4.2.4; RFC 5322 Appendix A.1.1).
 const { titleOf, expectOf, bodyOf, toOf } = await import(resolve("test/oracle/examples.mjs"));
@@ -19,20 +16,9 @@ const MEETING = titleOf("rfc5546-9");
 const MEETING_AT = new Date(expectOf("rfc5546-9").start.at).toISOString().slice(0, 16);
 const TO = toOf("rfc5322-1");
 const [FIRST_LINE, ...REST] = bodyOf("rfc5322-1").split("\n");
-const site = resolve(process.env.PAGE_SITE ?? "site");
-const published = process.env.PAGE_URL;
-const types = { ".html": "text/html", ".mjs": "text/javascript", ".js": "text/javascript", ".json": "application/json", ".css": "text/css", ".wasm": "application/wasm", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2", ".webmanifest": "application/manifest+json" };
 
 test("every act completes: sent things are kept where they left from, items open, Ask draws on what is kept (PG-03)", async () => {
-  const server = createServer((request, response) => {
-    let path = decodeURIComponent(new URL(request.url, "http://localhost").pathname).replace(/^\/me\//, "/");
-    if (path.endsWith("/")) path += "index.html";
-    const file = resolve(join(site, path));
-    if (!file.startsWith(site) || !existsSync(file)) return response.writeHead(404).end();
-    response.writeHead(200, { "content-type": types[extname(file)] ?? "application/octet-stream" });
-    createReadStream(file).pipe(response);
-  });
-  if (!published) await new Promise((done) => server.listen(0, "127.0.0.1", done));
+  const server = await serve();
   const browser = await chromium.launch();
   try {
     const context = await browser.newContext({ acceptDownloads: true });
@@ -41,7 +27,7 @@ test("every act completes: sent things are kept where they left from, items open
     page.on("pageerror", (error) => errors.push(error.message));
     const downloads = [];
     page.on("download", (download) => downloads.push(download.suggestedFilename()));
-    await page.goto(published ?? `http://127.0.0.1:${server.address().port}/me/`);
+    await page.goto(server.url);
     await page.waitForSelector("html.pr-ready", { timeout: 60000 });
     const settle = (text) => page.waitForFunction((t) => document.getElementById("pr-out").textContent.trim() === t, text, { timeout: 10000 });
     const listed = (text) => page.waitForFunction((t) => document.getElementById("pr-list").innerText.includes(t), text, { timeout: 10000 });
@@ -100,6 +86,6 @@ test("every act completes: sent things are kept where they left from, items open
     assert.deepEqual(errors, []);
   } finally {
     await browser.close();
-    if (server.listening) server.close();
+    server.close();
   }
 });

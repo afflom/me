@@ -57,10 +57,10 @@ for (const [from, to] of RULE30.vectors) ok((await rule30(BigInt(from))) === Big
 ok((await rule30(0n)) === (await rule30(BigInt(RULE30.seed))), 'the all-zero register is seeded first');
 const l = await lane(0xff_ffn, 0);
 ok(l.pick === 15 && l.up && l.steps === 4, 'lane bits');
-ok(dominance({ dissonant: 1, missed: 0, interruptions: 0 }, { dissonant: 2, missed: 0, interruptions: 0 }) === 'dominates', 'dominates');
-ok(dominance({ dissonant: 1, missed: 0, interruptions: 0 }, { dissonant: 1, missed: 0, interruptions: 0 }) === 'equal', 'equal');
-ok(dominance({ dissonant: 3, missed: 0, interruptions: 0 }, { dissonant: 1, missed: 0, interruptions: 0 }) === 'dominated', 'dominated');
-ok(dominance({ dissonant: 0, missed: 1, interruptions: 0 }, { dissonant: 1, missed: 0, interruptions: 0 }) === 'incomparable', 'incomparable');
+ok((await dominance({ dissonant: 1, missed: 0, interruptions: 0 }, { dissonant: 2, missed: 0, interruptions: 0 })) === 'dominates', 'dominates');
+ok((await dominance({ dissonant: 1, missed: 0, interruptions: 0 }, { dissonant: 1, missed: 0, interruptions: 0 })) === 'equal', 'equal');
+ok((await dominance({ dissonant: 3, missed: 0, interruptions: 0 }, { dissonant: 1, missed: 0, interruptions: 0 })) === 'dominated', 'dominated');
+ok((await dominance({ dissonant: 0, missed: 1, interruptions: 0 }, { dissonant: 1, missed: 0, interruptions: 0 })) === 'incomparable', 'incomparable');
 
 const m = measure([
   { kappa: 'a', gesture: 'open', answer: 'bloom' },

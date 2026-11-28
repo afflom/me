@@ -2,10 +2,33 @@
  "key": "accname-1.2",
  "title": "W3C Accessible Name and Description Computation 1.2",
  "issuer": "W3C",
- "text": null,
- "unpinned": "the steps of the computation need pinning with an extractor; WPT accname is the oracle",
- "governs": [],
+ "text": {
+  "url": "https://www.w3.org/TR/2026/WD-accname-1.2-20261104/",
+  "sha256": "0524e58877ed6abe4ad7455ad19f49e76bca820f33fd258cf7f36b8bb4927127"
+ },
+ "governs": [
+  "site/card.mjs",
+  "site/app.mjs",
+  "site/surface/surface.mjs",
+  "site/surface/setup.mjs"
+ ],
  "realizedBy": [
   "ST-01"
- ]
+ ],
+ "inventories": [
+  {
+   "generated": "test/standards/generated/accname-1.2.jsonl",
+   "vendored": "app/specs/standards/upstream/accname-1.2.html",
+   "source": {
+    "url": "https://www.w3.org/TR/2026/WD-accname-1.2-20261104/",
+    "sha256": "0524e58877ed6abe4ad7455ad19f49e76bca820f33fd258cf7f36b8bb4927127"
+   }
+  }
+ ],
+ "enforcedByKind": {
+  "step": {
+   "suite": "test/page/standards.test.mjs",
+   "how": "probe: accessible-name"
+  }
+ }
 }
