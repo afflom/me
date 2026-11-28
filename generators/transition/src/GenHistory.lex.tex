@@ -1,0 +1,168 @@
+\begin{lexlean}{GenHistory}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Tar}
+\importmodule{GenPatch}
+\importmodule{GenJcs}
+\importmodule{GenRec}
+\title{History vector writer}
+\begin{semanticmodule}
+structure{
+  name: GhState,
+  type_parameters: [],
+  parameters: [],
+  fields: [
+    {name: acc, type: Bytes},
+    {name: act, type: Bytes},
+    {name: entry, type: Bytes},
+    {name: eaddr, type: Bytes},
+    {name: after, type: Bytes}
+  ]
+}
+
+definition{
+  name: ghEntry,
+  parameters: [text : Bytes, prev : Bytes],
+  result: Bytes,
+  body: (GenPatch::jpCat 0x5b (GenPatch::jpCat (GenPatch::jpEncode text) (GenPatch::jpCat 0x2c (GenPatch::jpCat (if ((GenPatch::jpLen prev) =? 0) then 0x6e756c6c else (GenPatch::jpCat 0x22 (GenPatch::jpCat prev 0x22))) 0x5d)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ghLine,
+  parameters: [a : Bytes, c : Bytes],
+  result: Bytes,
+  body: (GenPatch::jpCat a (GenPatch::jpCat 0x20 c))
+}
+
+definition{
+  name: ghLines,
+  parameters: [fc : Bytes, qc : Bytes, tc : Bytes, e : Bytes],
+  result: Bytes,
+  body: (GenPatch::jpCat (ghLine (GenRec::rvAddr fc) fc) (GenPatch::jpCat 0x0a (GenPatch::jpCat (ghLine (GenRec::rvAddr qc) qc) (GenPatch::jpCat 0x0a (GenPatch::jpCat (ghLine (GenRec::rvAddr tc) tc) (GenPatch::jpCat 0x0a (ghLine (GenRec::rvAddr e) e))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ghKeep,
+  parameters: [d : Bytes, q : Bytes, e : Bytes],
+  result: Bytes,
+  body: (GenPatch::jpCat 0x6b6565700a5b (GenPatch::jpCat d (GenPatch::jpCat 0x2c (GenPatch::jpCat q (GenPatch::jpCat 0x2c (GenPatch::jpCat (if ((GenPatch::jpLen e) =? 0) then 0x6e756c6c else e) 0x5d))))))
+}
+
+definition{
+  name: ghEmit,
+  parameters: [acc : Bytes, on : Bool, req : Bytes, resp : Bytes],
+  result: Bytes,
+  body: (if (on && ((GenPatch::jpLen req) <? 8193)) then (GenRec::rvJoin acc (GenRec::rvPair req resp)) else acc),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ghHeld,
+  parameters: [st : GhState],
+  result: Bool,
+  body: (0 <? (GenPatch::jpLen (project st entry)))
+}
+
+definition{
+  name: ghOut,
+  parameters: [
+    st : GhState,
+    emit : Bool,
+    mode : Nat,
+    d : Bytes,
+    q : Bytes,
+    fc : Bytes,
+    qc : Bytes,
+    tc : Bytes,
+    chained : Bool,
+    e : Bytes,
+    pe : Bytes
+  ],
+  result: Bytes,
+  body: (if (mode =? 0) then (ghEmit (project st acc) emit (ghKeep d q 0x) (ghLines fc qc tc (ghEntry (GenRec::snRecord (GenRec::rvAddr fc) (GenRec::rvAddr qc) (GenRec::rvAddr tc) 0x) 0x))) else (if (mode =? 1) then (ghEmit (project st acc) (emit && (ghHeld st)) (ghKeep d q (project st entry)) (if (chained && true) then (ghLines fc qc tc e) else 0x74686520646f63756d656e74206973206e6f742074686520686561642773207374617465)) else (if (mode =? 2) then (ghEmit (project st acc) emit (GenPatch::jpCat 0x6e656564730a e) (GenPatch::jpCat (GenRec::rvAddr fc) (GenPatch::jpCat 0x20 (GenPatch::jpCat (GenRec::rvAddr qc) (GenPatch::jpCat 0x20 (GenPatch::jpCat (GenRec::rvAddr tc) (GenPatch::jpCat 0x20 (if ((GenPatch::jpLen pe) =? 0) then 0x2d else pe)))))))) else (ghEmit (project st acc) emit (GenPatch::jpCat 0x7265706c61790a5b (GenPatch::jpCat d (GenPatch::jpCat 0x2c (GenPatch::jpCat q (GenPatch::jpCat 0x2c (GenPatch::jpCat e 0x5d)))))) tc)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ghMoved,
+  parameters: [
+    st : GhState,
+    emit : Bool,
+    mode : Nat,
+    d : Bytes,
+    q : Bytes,
+    fc : Bytes,
+    qc : Bytes,
+    tc : Bytes
+  ],
+  result: GhState,
+  body: (let chained : Bool := ((ghHeld st) && (GenPatch::jpSame fc (project st after))); (let act : Bytes := (if (chained && true) then (project st act) else 0x); (let pe : Bytes := (if (chained && true) then (project st eaddr) else 0x); (let e : Bytes := (ghEntry (GenRec::snRecord (GenRec::rvAddr fc) (GenRec::rvAddr qc) (GenRec::rvAddr tc) act) pe); (record GhState {acc := (ghOut st emit mode d q fc qc tc chained e pe), act := (GenRec::snTransitionId (GenRec::rvAddr fc) (GenRec::rvAddr qc) act), entry := e, eaddr := (GenRec::rvAddr e), after := tc}))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ghStay,
+  parameters: [
+    st : GhState,
+    emit : Bool,
+    mode : Nat,
+    d : Bytes,
+    q : Bytes,
+    fc : Bytes,
+    resp : Bytes
+  ],
+  result: GhState,
+  body: (record GhState {acc := (if (mode =? 0) then (ghEmit (project st acc) emit (ghKeep d q 0x) resp) else (if (mode =? 1) then (ghEmit (project st acc) (emit && (ghHeld st)) (ghKeep d q (project st entry)) (if (GenPatch::jpSame fc (project st after)) then resp else 0x74686520646f63756d656e74206973206e6f742074686520686561642773207374617465)) else (project st acc))), act := (project st act), entry := (project st entry), eaddr := (project st eaddr), after := (project st after)}),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ghCase,
+  parameters: [el : Bytes, st : GhState, emit : Bool, mode : Nat],
+  result: GhState,
+  body: (match (GenRec::rvMember el 0x646f63)
+    | Option.none => st
+    | Option.some d => (match (GenRec::rvMember el 0x7061746368)
+      | Option.none => st
+      | Option.some q => (match (GenJcs::jcCanonicalize d)
+        | Option.none => st
+        | Option.some fc => (match (GenRec::rvMember el 0x6578706563746564)
+          | Option.some x => (match (GenJcs::jcCanonicalize x)
+            | Option.none => st
+            | Option.some tc => (match (GenJcs::jcCanonicalize q)
+              | Option.none => st
+              | Option.some qc => (if (GenPatch::jpSame tc fc) then (ghStay st emit mode d q fc 0x74686520737461746520646f6573206e6f74206368616e6765) else (ghMoved st emit mode d q fc qc tc))))
+          | Option.none => (match (GenRec::rvMember el 0x6572726f72)
+            | Option.none => st
+            | Option.some y => (ghStay st emit mode d q fc 0x74686520706174636820646f6573206e6f74206170706c79)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: ghFrom,
+  parameters: [cases : Bytes, n : Nat, lo : Nat, hi : Nat, mode : Nat, st : GhState, fuel : Nat],
+  result: GhState,
+  body: (match fuel
+    | Nat.zero => st
+    | Nat.succ rest => (match (GenPatch::jpElement cases n)
+      | Option.none => st
+      | Option.some h => (ghFrom cases (n + 1) lo hi mode (ghCase (GenPatch::jpSpan cases (project h vstart) (project h vend)) st ((lo <? (n + 1)) && (n <? hi)) mode) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: ghVectors,
+  parameters: [archive : Bytes, mode : Nat, lo : Nat, hi : Nat, head : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive 0x6170702f73706563732f6f7261636c652f6a736f6e2d70617463682d74657374732f74657374732e6a736f6e)
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some t => (let cases : Bytes := (GenPatch::jpCompact t); (let st : GhState := (ghFrom cases 0 lo hi mode (record GhState {acc := 0x, act := 0x, entry := 0x, eaddr := 0x, after := 0x}) ((GenPatch::jpCount cases) + 1)); (ctor Option.some [Bytes] (GenPatch::jpCat head (GenPatch::jpCat 0x222c226578616d706c6573223a5b0a (GenPatch::jpCat (project st acc) 0x0a5d7d0a))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

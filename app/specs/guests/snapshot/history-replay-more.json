@@ -1,0 +1,22 @@
+{
+  "id": "history-replay-more",
+  "wasm": "site/snapshot/guest/history.wasm",
+  "pin": "site/snapshot/guest.mjs",
+  "modules": [
+    "Sha256",
+    "PrismSnapshot",
+    "PrismHistory"
+  ],
+  "dispatch": "PrismHistory::prismHistoryDispatch",
+  "vectors": "spec:history/replay-more",
+  "limits": [
+    8192,
+    16384,
+    16384
+  ],
+  "memory": [
+    16384,
+    1048576
+  ],
+  "as": "historyReplayMore"
+}
