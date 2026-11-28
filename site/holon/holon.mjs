@@ -42,32 +42,29 @@ export const dominance = (a, b, read = guestRead) => read(`rank ${OBJECTIVES.len
 // An item is brought forward when the Prism answered one of GESTURES.brought
 // on it; a dismiss after that is dissonant; a keep after GESTURES.quiet is
 // missed.
-export function measure(signals) {
+export function measure(signals, read = guestRead) {
   const last = new Map();
   const brought = new Set();
   const dissonant = new Set();
   let keeps = 0;
   let missed = 0;
+  const lists = [GESTURES.brought, GESTURES.quiet].map((l) => `${l.length} ${l.join(' ')}`).join(' ');
   for (const s of signals) {
-    const before = last.get(s.kappa);
-    if (s.gesture === 'dismiss' && GESTURES.brought.includes(before)) dissonant.add(s.kappa);
-    if (s.gesture === 'keep') {
-      keeps++;
-      if (GESTURES.quiet.includes(before)) missed++;
-    }
-    if (GESTURES.brought.includes(s.answer)) brought.add(s.kappa);
+    const [undone, keep, miss, forward] = read(`mark ${s.gesture} ${last.get(s.kappa) ?? '-'} ${s.answer ?? '-'} ${lists}`);
+    if (undone === '1') dissonant.add(s.kappa);
+    keeps += Number(keep);
+    missed += Number(miss);
+    if (forward === '1') brought.add(s.kappa);
     last.set(s.kappa, s.answer);
   }
   return { gestures: signals.length, brought: brought.size, dissonant: dissonant.size, keeps, missed };
 }
 
-const permille = (part, whole) => (whole === 0 ? null : Math.floor((1000 * part) / whole));
+// A share in thousandths, stated by the holon guest (null when the whole is nothing).
+const permille = (part, whole, said = guestRead(`share ${part} ${whole}`)) => (said === '-' ? null : Number(said));
 
 // One facet's KPI over its signals (null when nothing was measured).
-export function kpiOf(facet, m) {
-  if (facet.kind === 'owner') return permille(m.keeps - m.missed, m.keeps);
-  return permille(m.brought - m.dissonant, m.brought);
-}
+export const kpiOf = (facet, m) => (facet.kind === 'owner' ? permille(m.keeps - m.missed, m.keeps) : permille(m.brought - m.dissonant, m.brought));
 
 // A facet's parameters beside the bounds and step its spec gives each tunable:
 // what the holon guest (PrismHolonMove) holds them to and moves them by.
