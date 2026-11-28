@@ -1,0 +1,132 @@
+\begin{lexlean}{PrismR4Store}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: r4StoreAbout,
+  parameters: [],
+  result: String,
+  body: "Decides what the store of locked objects (site/r4/store.mjs) does with what it finds in the browser. An object is filed under its fingerprint: sha256- and the 64 lower-case hex digits of the SHA-256 of its bytes. put <expected> <label> <actual>: the name must be a fingerprint (BadFingerprint), only a public object is kept here (NeedsVault: anything else belongs in the vault, sealed), and the bytes must hash to the name (FingerprintMismatch); then write. get <expected> <actual>, with - where no file is held: missing, match, or mismatch, on which the store removes the file. held <state>: an object held intact is used (use), one that changed on disk is never fetched over (tampered), a missing one is fetched (fetch). fetch <code> and keep <code>: a failure that shows wrong bytes is a mismatch, any other leaves the object missing. The objects live in the directory named here, in the origin private file system."
+}
+
+definition{name: r4StoreDirectory, parameters: [], result: String, body: "prism-r4-objects"}
+
+definition{
+  name: r4StoreAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Nat,
+  body: (match (prim index s i : (Option UInt8))
+    | Option.none => 0
+    | Option.some b => (prim to_nat b : Nat)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{name: r4StoreLen, parameters: [s : Bytes], result: Nat, body: (prim length s : Nat)}
+
+definition{
+  name: r4StoreCut,
+  parameters: [s : Bytes, a : Nat, b : Nat],
+  result: Bytes,
+  body: (match (prim slice s a (prim subtract b a : Nat) : (Option Bytes))
+    | Option.none => 0x
+    | Option.some part => part)
+}
+
+definition{
+  name: r4StoreEnd,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((r4StoreLen s) <? (i + 1)) then i else (if ((r4StoreAt s i) =? 32) then i else (r4StoreEnd s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: r4StoreStart,
+  parameters: [s : Bytes, i : Nat, k : Nat],
+  result: Nat,
+  body: (match k
+    | Nat.zero => i
+    | Nat.succ rest => (r4StoreStart s ((r4StoreEnd s i (r4StoreLen s)) + 1) rest)),
+  axioms: [Quot.sound, propext],
+  recursive_argument: k
+}
+
+definition{
+  name: r4StoreWord,
+  parameters: [s : Bytes, k : Nat],
+  result: Bytes,
+  body: (let a : Nat := (r4StoreStart s 0 k); (r4StoreCut s a (r4StoreEnd s a (r4StoreLen s)))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r4StoreHex,
+  parameters: [s : Bytes, i : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => true
+    | Nat.succ rest => (let b : Nat := (r4StoreAt s i); ((((48 <=? b) && (b <=? 57)) || ((97 <=? b) && (b <=? 102))) && (r4StoreHex s (i + 1) rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: r4StoreNamed,
+  parameters: [name : Bytes],
+  result: Bool,
+  body: ((((r4StoreLen name) =? 71) && (prim equal (r4StoreCut name 0 7) 0x7368613235362d : Bool)) && (r4StoreHex name 7 64)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r4StorePut,
+  parameters: [expected : Bytes, label : Bytes, actual : Bytes],
+  result: Bytes,
+  body: (if (not (r4StoreNamed expected)) then 0x42616446696e6765727072696e74 else (if (not (prim equal label 0x7075626c6963 : Bool)) then 0x4e656564735661756c74 else (if (prim equal expected actual : Bool) then 0x7772697465 else 0x46696e6765727072696e744d69736d61746368))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r4StoreGet,
+  parameters: [expected : Bytes, actual : Bytes],
+  result: Bytes,
+  body: (if (not (r4StoreNamed expected)) then 0x42616446696e6765727072696e74 else (if (prim equal actual 0x2d : Bool) then 0x6d697373696e67 else (if (prim equal expected actual : Bool) then 0x6d61746368 else 0x6d69736d61746368))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: r4StoreHeld,
+  parameters: [state : Bytes],
+  result: Bytes,
+  body: (if (prim equal state 0x6d61746368 : Bool) then 0x757365 else (if (prim equal state 0x6d69736d61746368 : Bool) then 0x74616d7065726564 else 0x6665746368))
+}
+
+definition{
+  name: r4StoreFetched,
+  parameters: [code : Bytes],
+  result: Bytes,
+  body: (if (((prim equal code 0x46696e6765727072696e744d69736d61746368 : Bool) || (prim equal code 0x5069656365546f6f4c61726765 : Bool)) || (prim equal code 0x5069656365436f7272757074 : Bool)) then 0x6d69736d61746368 else 0x6d697373696e67)
+}
+
+definition{
+  name: r4StoreKept,
+  parameters: [code : Bytes],
+  result: Bytes,
+  body: (if (prim equal code 0x46696e6765727072696e744d69736d61746368 : Bool) then 0x6d69736d61746368 else 0x6d697373696e67)
+}
+
+definition{
+  name: r4StoreDispatch,
+  parameters: [s : Bytes],
+  result: Bytes,
+  body: (let verb : Bytes := (r4StoreWord s 0); (let words : Nat := (if ((r4StoreStart s 0 2) =? ((r4StoreLen s) + 1)) then 2 else (if ((r4StoreStart s 0 3) =? ((r4StoreLen s) + 1)) then 3 else (if ((r4StoreStart s 0 4) =? ((r4StoreLen s) + 1)) then 4 else 0))); (if (256 <? (r4StoreLen s)) then 0x696e76616c6964 else (if ((prim equal verb 0x707574 : Bool) && (words =? 4)) then (r4StorePut (r4StoreWord s 1) (r4StoreWord s 2) (r4StoreWord s 3)) else (if ((prim equal verb 0x676574 : Bool) && (words =? 3)) then (r4StoreGet (r4StoreWord s 1) (r4StoreWord s 2)) else (if ((prim equal verb 0x68656c64 : Bool) && (words =? 2)) then (r4StoreHeld (r4StoreWord s 1)) else (if ((prim equal verb 0x6665746368 : Bool) && (words =? 2)) then (r4StoreFetched (r4StoreWord s 1)) else (if ((prim equal verb 0x6b656570 : Bool) && (words =? 2)) then (r4StoreKept (r4StoreWord s 1)) else 0x696e76616c6964)))))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
