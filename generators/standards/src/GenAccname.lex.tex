@@ -1,0 +1,65 @@
+\begin{lexlean}{GenAccname}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.Json}
+\importmodule{Foundation.Tar}
+\importmodule{GenWcag}
+\title{Accessible name steps generator}
+\begin{semanticmodule}
+definition{
+  name: accUntil,
+  parameters: [s : Bytes, i : Nat, stop : Nat, fuel : Nat],
+  result: Nat,
+  body: (match fuel
+    | Nat.zero => i
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then i else (if ((Foundation.Tar::byteOr s i) =? stop) then i else (accUntil s (i + 1) stop rest)))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: accPair,
+  parameters: [key : String, value : Bytes],
+  result: Bytes,
+  body: (GenWcag::cat (cons (GenWcag::quoted (GenWcag::u key)) (cons 0x3a (cons (GenWcag::quoted value) (nil Bytes)))))
+}
+
+definition{
+  name: accEntry,
+  parameters: [ident : Bytes, label : Bytes],
+  result: Bytes,
+  body: (let said : Bytes := (if ((Foundation.Bytes::byteLength label) =? 0) then ident else (GenWcag::cat (cons ident (cons 0x20 (cons label (nil Bytes)))))); (GenWcag::cat (cons 0x7b (cons (accPair "id" (Foundation.Bytes::appendBytes (GenWcag::u "accname-1.2-step") ident)) (cons 0x2c (cons (accPair "kind" (GenWcag::u "step")) (cons 0x2c (cons (accPair "ref" (Foundation.Bytes::appendBytes (GenWcag::u "https://www.w3.org/TR/accname-1.2/#step") ident)) (cons 0x2c (cons (accPair "text" (Foundation.Bytes::appendBytes (GenWcag::u "step ") said)) (cons 0x7d0a (nil Bytes))))))))))))
+}
+
+definition{
+  name: accAt,
+  parameters: [s : Bytes, i : Nat],
+  result: Bytes,
+  body: (if (((Foundation.Tar::byteOr s i) =? 60) && (GenWcag::startsAt s i 0x3c7370616e2069643d2273746570)) then (let n : Nat := (Foundation.Bytes::byteLength s); (let j : Nat := (accUntil s (i + 14) 34 n); (if (GenWcag::startsAt s j 0x223e3c2f7370616e3e3c656d3e) then (let k : Nat := (accUntil s (j + 13) 58 n); (accEntry (Foundation.Json::span s (i + 14) j) (Foundation.Json::span s (j + 13) k))) else (accEntry (Foundation.Json::span s (i + 14) j) 0x)))) else 0x),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: accScan,
+  parameters: [s : Bytes, i : Nat, acc : Bytes, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => acc
+    | Nat.succ rest => (if ((Foundation.Bytes::byteLength s) <? (i + 1)) then acc else (accScan s (i + 1) (Foundation.Bytes::appendBytes acc (accAt s i)) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: accGenerate,
+  parameters: [archive : Bytes],
+  result: (Option Bytes),
+  body: (match (Foundation.Tar::find archive (GenWcag::u "app/specs/standards/upstream/accname-1.2.html"))
+    | Option.none => (ctor Option.none [Bytes])
+    | Option.some piece => (ctor Option.some [Bytes] (accScan piece 0 0x (Foundation.Bytes::byteLength piece)))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}

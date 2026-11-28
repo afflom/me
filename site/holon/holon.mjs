@@ -35,19 +35,9 @@ export async function lane(register, g, read = guestRead) {
   return { pick, up: up === 1, steps };
 }
 
-// a against b on objectives that are each minimized.
-export function dominance(a, b) {
-  let better = false;
-  let worse = false;
-  for (const k of OBJECTIVES) {
-    if (a[k] < b[k]) better = true;
-    if (a[k] > b[k]) worse = true;
-  }
-  if (better && !worse) return 'dominates';
-  if (!better && !worse) return 'equal';
-  if (worse && !better) return 'dominated';
-  return 'incomparable';
-}
+// a against b on objectives that are each minimized, ranked by the holon guest (PrismHolonRank).
+const scoreWord = (v) => (v === Infinity ? 'inf' : Number.isSafeInteger(v) && v >= 0 ? String(v) : '-');
+export const dominance = (a, b, read = guestRead) => read(`rank ${OBJECTIVES.length} ${[a, b].flatMap((s) => OBJECTIVES.map((k) => scoreWord(s[k]))).join(' ')}`);
 
 // What the owner did with what the Prism answered, over a run of signals.
 // An item is brought forward when the Prism answered one of GESTURES.brought
@@ -196,10 +186,10 @@ export function makeObserver({ decide, kappa, replay, read, keep = memoryKeep(),
       label: admitted,
       defect: scored.defect === 0 ? 'zero' : 'some',
       evidence,
-      floor: dominance(floor, scored) === 'dominates' ? 'regressed' : 'kept',
+      floor: (await dominance(floor, scored, read)) === 'dominates' ? 'regressed' : 'kept',
       move,
       eased: scored.dissonant < runs.dissonant ? 'yes' : 'no',
-      dominance: dominance(scored, runs),
+      dominance: await dominance(scored, runs, read),
       claim: s.ledger.includes(label) ? 'known' : 'new',
     };
     const answer = expect(await decide.curate(CURATE.line(r)), ['adopt', 'recall', 'keep', 'refuse']);
@@ -257,7 +247,7 @@ export function makeObserver({ decide, kappa, replay, read, keep = memoryKeep(),
       const s = state.facets[f.id];
       if (s) {
         const now = await score(f, s.params, ofFacet(f));
-        if (dominance(await score(f, floorOf(f), ofFacet(f)), now) === 'dominates') floor = 'regressed';
+        if ((await dominance(await score(f, floorOf(f), ofFacet(f)), now, read)) === 'dominates') floor = 'regressed';
       }
       rows.push({ f, kind: f.kind, floor: f.floor, kpi: b.kpi, request: { halted: halted(), floor, signal: b.signal, tunable: f.tunable.length ? 'yes' : 'no', dissonance: b.dissonance, kpi: b.met } });
     }
