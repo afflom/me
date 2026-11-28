@@ -1,6 +1,6 @@
 {
  "name": "scxml/event",
- "comment": "IRP tests of SCXML 1.0 sections 5.5, 5.6, 5.7, 6.2 and C.1 on the data of an event: <param>, <content> and namelist in <send>, <donedata> in a <final> state, and what an error in one of them does, pinned by SHA-256 as W3C serves it under the IRP base that app/specs/scxml/spec.json pins, each answered by the id of the top-level <final> state the document halts in. The conf: terms are read with the meaning the pinned confEcma.xsl gives each.",
+ "comment": "IRP tests of SCXML 1.0 sections 5.5, 5.6, 5.7, 5.8, 6.2, 6.4 and C.1 on the data of an event: <param>, <content> and namelist in <send>, <donedata> in a <final> state, and what an error in one of them does; on <script> as the IRP states it (conf:script); and on an invoked document held in a variable. Pinned by SHA-256 as W3C serves it under the IRP base that app/specs/scxml/spec.json pins, each answered by the id of the top-level <final> state the document halts in. The conf: terms are read with the meaning the pinned confEcma.xsl gives each.",
  "tests": [
   {
    "assert": "294",
@@ -45,6 +45,24 @@
    "sha256": "302c8818db826b13656d4434763ced3aff54a127ebbd3b72fee6468e3881987b"
   },
   {
+   "assert": "302",
+   "section": "5.8",
+   "file": "302/test302.txml",
+   "sha256": "99f86ee6431a253b64043b693b356ec0d4b484427d0deb905a98bbd1958d060a"
+  },
+  {
+   "assert": "303",
+   "section": "5.8",
+   "file": "303/test303.txml",
+   "sha256": "57e2cd297683b1b385c2cbc94c9e7acbb4a28653cfc973f82fef8bc3677721df"
+  },
+  {
+   "assert": "304",
+   "section": "5.8",
+   "file": "304/test304.txml",
+   "sha256": "d469fa4956dc1383b471da895b8d76ebdbffc9f7798a63e908d7178e7842ef04"
+  },
+  {
    "assert": "176",
    "section": "6.2",
    "file": "176/test176.txml",
@@ -73,6 +91,12 @@
    "section": "6.2",
    "file": "553/test553.txml",
    "sha256": "311947fc4c3579b6d3091f226c60b1c9fc596c514e9bc848d9ef6ec3c04627a4"
+  },
+  {
+   "assert": "530",
+   "section": "6.4",
+   "file": "530/test530.txml",
+   "sha256": "d160ad634ffe79bb2e9eac21135101ff45fd4b9a97caf5a171e0da3f4bdf112b"
   },
   {
    "assert": "354",
@@ -111,6 +135,18 @@
    "pass"
   ],
   [
+   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<!-- test that a script is evaluated at load time.  <conf:script> shoudl assign the value 1 to \nVar1.  Hence, if script is evaluated at download time, Var1 has a value in the initial state s0.\nThis test is valid only for datamodels that support scripting -->\n\n<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" conf:datamodel=\"\"\n xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\" initial=\"s0\">\n <conf:script/>\n     \n <state id=\"s0\">\n   <transition conf:idVal=\"1=1\" conf:targetpass=\"\"/>\n   <transition conf:targetfail=\"\"/>\n   </state>\n   \n<conf:pass/>\n<conf:fail/>\n\n   \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<!-- to test that scripts are run as part of executable content, we check that it changes the value of a var at the\nright point. This test is valid only for datamodels that support scripting -->\n\n<scxml version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" \n\tconf:datamodel=\"\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\" initial=\"s0\">\n<datamodel>\n<data conf:id=\"1\" conf:expr=\"0\"/>\n</datamodel>\n     \n <state id=\"s0\">\n   <onentry>\n   <assign conf:location=\"1\" conf:expr=\"2\"/>\n   <conf:script/>\n   </onentry>\n   <transition conf:idVal=\"1=1\" conf:targetpass=\"\"/>\n   <transition conf:targetfail=\"\"/>\n   </state>\n   \n<conf:pass/>\n<conf:fail/>\n\n   \n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\n<!-- test that a variable declared by a script can be accessed like any other part of the data model -->\n\n<scxml xmlns=\"http://www.w3.org/2005/07/scxml\" conf:datamodel=\"\" \n\tversion=\"1.0\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\" initial=\"s0\">\n <conf:script/>\n     \n <state id=\"s0\">\n   <transition conf:idVal=\"1=1\" conf:targetpass=\"\"/>\n   <transition conf:targetfail=\"\"/>\n   </state>\n   \n<conf:pass/>\n<conf:fail/>\n\n   \n</scxml>",
+   "pass"
+  ],
+  [
    "<?xml version=\"1.0\"?>\n<!-- we test that <param> uses the current value of var1, not its initial value.  If the value of\naParam in event1 is 2 so that var2 gets set to 2, success, otherwise failure  -->\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n<datamodel>\n  <data conf:id=\"1\" conf:expr=\"1\"/>\n  <data conf:id=\"2\"/>\n  </datamodel>\n  \n<state id=\"s0\">\n  <onentry>\n   <assign conf:location=\"1\" conf:expr=\"2\"/>\n   <send event=\"event1\">\n     <param name=\"aParam\" conf:varExpr=\"1\"/>\n     </send>\n    </onentry>\n    \n  <transition event=\"event1\"  target=\"s1\">\n  <assign conf:location=\"2\" conf:eventDataFieldValue=\"aParam\"/>\n  </transition>\n  <transition event=\"*\" conf:targetfail=\"\"/>\n </state>\n\n<state id=\"s1\">\n  <transition conf:idVal=\"2=2\" conf:targetpass=\"\"/>\n  <transition conf:targetfail=\"\"/>\n  </state>\n     \n   <conf:pass/>\n   <conf:fail/>\n\n</scxml>",
    "pass"
   ],
@@ -128,6 +164,10 @@
   ],
   [
    "<?xml version=\"1.0\"?>\n<!-- we test that the processor does not dispatch the event if evaluation\nof <send>'s args causes an error..  -->\n\n\n<scxml initial=\"s0\"  conf:datamodel=\"\"  version=\"1.0\" xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n\n  \n<state id=\"s0\">\n  <onentry>\n   <!-- timeout event -->\n   <send event=\"timeout\" conf:delay=\"1\"/>\n   <!-- generate an invalid namelist -->\n   <send event=\"event1\" conf:invalidNamelist=\"\"/> \n    </onentry>\n \n <!-- if we get the timeout before event1, we assume that event1 hasn't been sent\n We ignore the error event here because this assertion doesn't mention it -->   \n  <transition event=\"timeout\" conf:targetpass=\"\"/>\n  <transition event=\"event1\" conf:targetfail=\"\"/>\n </state>\n \n\n<conf:pass/>\n<conf:fail/>\n\n</scxml>",
+   "pass"
+  ],
+  [
+   "<?xml version=\"1.0\"?>\n<!-- test that <content> child is evaluated when <invoke> is. Var1 is initialized\nwith an integer value, then set to an scxml script in the onentry to s0.  If <content>\nis evaluated at the right time, we should get invoke.done, otherwise an error  -->\n\n\n<scxml initial=\"s0\" version=\"1.0\" conf:datamodel=\"\"  xmlns=\"http://www.w3.org/2005/07/scxml\" xmlns:conf=\"http://www.w3.org/2005/scxml-conformance\">\n  <datamodel>\n    <data conf:id=\"1\" conf:expr=\"1\"/>\n    </datamodel>\n    \n    <state id=\"s0\">\n      <onentry>\n        <assign conf:location=\"1\">\n           <scxml version=\"1.0\"><final/></scxml>\n           </assign>\n        <send event=\"timeout\" delay=\"2s\"/>\n        </onentry>\n        \n      <invoke type=\"http://www.w3.org/TR/scxml/\">\n        <content conf:varChildExpr=\"1\"/>\n        </invoke>\n        \n        <transition event=\"done.invoke\" conf:targetpass=\"\"/>\n        <transition event=\"*\" conf:targetfail=\"\"/>\n    </state>\n    \n    <conf:pass/>\n    <conf:fail/>\n  </scxml>",
    "pass"
   ],
   [
