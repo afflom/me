@@ -1,5 +1,5 @@
 {
-  "comment": "The steps of the transition program (generators/transition/), run in order by tools/generators/run.sh. Each step reads json-patch-tests tests.json and walks its cases as one history: a case that states an expected document is a transition from its document by its patch, chained to the transition before it. transitions and transitionsmore write the acceptance vectors of the snapshot guest's transition request (cases 1 to 36, and the rest): the W3C PROV record the case must give, whose addresses are those of the case's own document, patch and expected document; 'the state does not change' where the expected document is the document; 'the patch does not apply' where the case states an error. provtransitions and provtransitionsmore write the same records as acceptance vectors of the PROV-CONSTRAINTS checker (guest prov), each to be answered valid. GenPatch, GenJcs and Sha256 are the modules of generators/snapshot, byte for byte. jsonsuitesums writes the SHA256SUMS of the JSONTestSuite files held under app/specs/oracle/json-test-suite, one request per file. refusalcase writes, for one of those files, the acceptance vector of the snapshot guest's canonical request over the file's text, to be answered 'not I-JSON'; refusals, refusalsmore and refusalsijson gather them: the files the suite says a parser must refuse (n_, in two halves), and the lone surrogates, overflowing numbers and duplicated names that RFC 8785 requires refused. replays, replaysmore, replaysthird and replaysrest write the acceptance vectors of the snapshot guest's replay request over the same history (cases 1 to 36, 37 to 58, 59 to 80, and the rest): each case's document, patch and previous transition with the record it must have, answered by the case's expected document in canonical form (or by the refusal, where the case does not move the state or states an error, asked with the record kept before it). replaysstale asks each moving case of the first 36 with the record of the transition before it, to be answered 'the record does not match'. A request over the guest's 2048 bytes is left out. namecases reads RFC 6920's own text (the pinned copy ST-01 inventories), cut before its section 8, and writes the acceptance vectors of the snapshot guest's name requests from the examples the RFC states: the ni names of the text \"Hello World!\" and their .well-known URL (section 8.1), the names of the public key of Figure 9 in every form of Figure 10 (ni, URL segment, binary, nih with its checkdigit, truncated and by suite number), and the content type of Figure 6; names gathers them.",
+  "comment": "The steps of the transition program (generators/transition/), run in order by tools/generators/run.sh. Each step reads json-patch-tests tests.json and walks its cases as one history: a case that states an expected document is a transition from its document by its patch, chained to the transition before it. transitions and transitionsmore write the acceptance vectors of the snapshot guest's transition request (cases 1 to 36, and the rest): the W3C PROV record the case must give, whose addresses are those of the case's own document, patch and expected document; 'the state does not change' where the expected document is the document; 'the patch does not apply' where the case states an error. provtransitions and provtransitionsmore write the same records as acceptance vectors of the PROV-CONSTRAINTS checker (guest prov), each to be answered valid. GenPatch, GenJcs and Sha256 are the modules of generators/snapshot, byte for byte. jsonsuitesums writes the SHA256SUMS of the JSONTestSuite files held under app/specs/oracle/json-test-suite, one request per file. refusalcase writes, for one of those files, the acceptance vector of the snapshot guest's canonical request over the file's text, to be answered 'not I-JSON'; refusals, refusalsmore and refusalsijson gather them: the files the suite says a parser must refuse (n_, in two halves), and the lone surrogates, overflowing numbers and duplicated names that RFC 8785 requires refused. replays, replaysmore, replaysthird and replaysrest write the acceptance vectors of the snapshot guest's replay request over the same history (cases 1 to 36, 37 to 58, 59 to 80, and the rest): each case's document, patch and previous transition with the record it must have, answered by the case's expected document in canonical form (or by the refusal, where the case does not move the state or states an error, asked with the record kept before it). replaysstale asks each moving case of the first 36 with the record of the transition before it, to be answered 'the record does not match'. A request over the guest's 2048 bytes is left out. namecases reads RFC 6920's own text (the pinned copy ST-01 inventories), cut before its section 8, and writes the acceptance vectors of the snapshot guest's name requests from the examples the RFC states: the ni names of the text \"Hello World!\" and their .well-known URL (section 8.1), the names of the public key of Figure 9 in every form of Figure 10 (ni, URL segment, binary, nih with its checkdigit, truncated and by suite number), and the content type of Figure 6; names gathers them. The history generators write the acceptance vectors of the history guest (PrismHistory) from the same suite; an entry is the canonical JSON of a transition's record and the address of the entry before it, or null. A moving case is kept on the last entry when its document, in canonical form, is the state that entry left, and starts a chain of its own otherwise. histories and historiesmore ask each case of their range (the suite's first 20 cases, and the 20 after) to be kept with no entry before it, answered by the four addressed values to keep (document, patch, expected document, entry) or by the refusal. historychains, historychainsmore and historychainsrest ask each case (the first 20, the next 20, and cases 59 to 64) to be kept on the last entry of the walk, answered by the four values where the case chains and by 'the document is not the head's state' where its document is another. historyneeds and historyneedsmore ask each entry of the walk (cases 1 to 25, and from case 56 on) for the addresses it needs: document, patch, expected document, and the entry before it or '-'. historyreplays and historyreplaysmore ask each entry (cases 1 to 25, and from case 59 on) to be replayed from its document and patch, answered by the expected document in canonical form. The ranges are parts of the suite, 136 vectors in all, cut so that each guest entry builds within the compile bound; a request over the guest's 8192 bytes is left out.",
   "steps": [
     {
       "generator": "transitions",
@@ -147,6 +147,69 @@
         ".gen/store-cache"
       ],
       "output": "app/specs/records/spec.json"
+    },
+    {
+      "generator": "histories",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/history/spec.json"
+    },
+    {
+      "generator": "historiesmore",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/history/more/spec.json"
+    },
+    {
+      "generator": "historychains",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/history/chain/spec.json"
+    },
+    {
+      "generator": "historychainsmore",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/history/chain-more/spec.json"
+    },
+    {
+      "generator": "historychainsrest",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/history/chain-rest/spec.json"
+    },
+    {
+      "generator": "historyneeds",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/history/needs/spec.json"
+    },
+    {
+      "generator": "historyneedsmore",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/history/needs-more/spec.json"
+    },
+    {
+      "generator": "historyreplays",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/history/replay/spec.json"
+    },
+    {
+      "generator": "historyreplaysmore",
+      "inputs": [
+        "app/specs/oracle/json-patch-tests/tests.json"
+      ],
+      "output": "app/specs/history/replay-more/spec.json"
     }
   ]
 }

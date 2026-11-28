@@ -7,6 +7,7 @@
 \importmodule{GenRec}
 \importmodule{GenNames}
 \importmodule{GenReplay}
+\importmodule{GenHistory}
 \importmodule{GenStore}
 \importmodule{GenSuite}
 \importmodule{Foundation.Tar}
@@ -85,10 +86,44 @@ definition{
 }
 
 definition{
+  name: dispatchHistoryMore,
+  parameters: [name : Bytes, archive : Bytes],
+  result: Bytes,
+  body: (if (Foundation.Tar::sameBytes name 0x686973746f72796e65656473) then (match (GenHistory::ghVectors archive 2 0 25 0x7b226e616d65223a22686973746f72792f6e65656473)
+    | Option.none => (refused 0x746865206f7261636c652066696c65206973206e6f7420696e2074686520726571756573740a)
+    | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x686973746f72796e656564736d6f7265) then (match (GenHistory::ghVectors archive 2 55 4096 0x7b226e616d65223a22686973746f72792f6e656564732d6d6f7265)
+    | Option.none => (refused 0x746865206f7261636c652066696c65206973206e6f7420696e2074686520726571756573740a)
+    | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x686973746f72797265706c617973) then (match (GenHistory::ghVectors archive 3 0 25 0x7b226e616d65223a22686973746f72792f7265706c6179)
+    | Option.none => (refused 0x746865206f7261636c652066696c65206973206e6f7420696e2074686520726571756573740a)
+    | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x686973746f72797265706c6179736d6f7265) then (match (GenHistory::ghVectors archive 3 58 4096 0x7b226e616d65223a22686973746f72792f7265706c61792d6d6f7265)
+    | Option.none => (refused 0x746865206f7261636c652066696c65206973206e6f7420696e2074686520726571756573740a)
+    | Option.some v => (written v)) else (dispatchReplay name archive))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: dispatchHistory,
+  parameters: [name : Bytes, archive : Bytes],
+  result: Bytes,
+  body: (if (Foundation.Tar::sameBytes name 0x686973746f72696573) then (match (GenHistory::ghVectors archive 0 0 20 0x7b226e616d65223a22686973746f7279)
+    | Option.none => (refused 0x746865206f7261636c652066696c65206973206e6f7420696e2074686520726571756573740a)
+    | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x686973746f726965736d6f7265) then (match (GenHistory::ghVectors archive 0 20 40 0x7b226e616d65223a22686973746f72792f6d6f7265)
+    | Option.none => (refused 0x746865206f7261636c652066696c65206973206e6f7420696e2074686520726571756573740a)
+    | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x686973746f7279636861696e73) then (match (GenHistory::ghVectors archive 1 0 20 0x7b226e616d65223a22686973746f72792f636861696e)
+    | Option.none => (refused 0x746865206f7261636c652066696c65206973206e6f7420696e2074686520726571756573740a)
+    | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x686973746f7279636861696e736d6f7265) then (match (GenHistory::ghVectors archive 1 20 40 0x7b226e616d65223a22686973746f72792f636861696e2d6d6f7265)
+    | Option.none => (refused 0x746865206f7261636c652066696c65206973206e6f7420696e2074686520726571756573740a)
+    | Option.some v => (written v)) else (if (Foundation.Tar::sameBytes name 0x686973746f7279636861696e7372657374) then (match (GenHistory::ghVectors archive 1 58 64 0x7b226e616d65223a22686973746f72792f636861696e2d72657374)
+    | Option.none => (refused 0x746865206f7261636c652066696c65206973206e6f7420696e2074686520726571756573740a)
+    | Option.some v => (written v)) else (dispatchHistoryMore name archive)))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
   name: dispatchStore,
   parameters: [name : Bytes, archive : Bytes],
   result: Bytes,
-  body: (if (Foundation.Tar::sameBytes name 0x73746f72657461626c65) then (written (GenStore::gsTableOf archive)) else (if (Foundation.Tar::sameBytes name 0x73746f72656361636865) then (written (GenStore::gsCacheOf archive)) else (if (Foundation.Tar::sameBytes name 0x73746f7265766563746f7273) then (written (GenStore::gsVectors archive 0x7b226e616d65223a227265636f726473)) else (dispatchReplay name archive)))),
+  body: (if (Foundation.Tar::sameBytes name 0x73746f72657461626c65) then (written (GenStore::gsTableOf archive)) else (if (Foundation.Tar::sameBytes name 0x73746f72656361636865) then (written (GenStore::gsCacheOf archive)) else (if (Foundation.Tar::sameBytes name 0x73746f7265766563746f7273) then (written (GenStore::gsVectors archive 0x7b226e616d65223a227265636f726473)) else (dispatchHistory name archive)))),
   axioms: [Quot.sound, propext]
 }
 
