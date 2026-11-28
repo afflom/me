@@ -5,14 +5,14 @@
 // bytes whose SHA-256 is not the pinned one are refused before they compile.
 
 export const GUESTS = {
-  data: { path: 'guest/scxml.wasm', sha256: '18810d2aa2eee697c587b1b9bafebd367e7308f19719ea720c1768a0be30312f' },
-  delay: { path: 'guest/scxml.wasm', sha256: '18810d2aa2eee697c587b1b9bafebd367e7308f19719ea720c1768a0be30312f' },
-  event: { path: 'guest/scxml.wasm', sha256: '18810d2aa2eee697c587b1b9bafebd367e7308f19719ea720c1768a0be30312f' },
-  invoke: { path: 'guest/scxml.wasm', sha256: '18810d2aa2eee697c587b1b9bafebd367e7308f19719ea720c1768a0be30312f' },
-  send: { path: 'guest/scxml.wasm', sha256: '18810d2aa2eee697c587b1b9bafebd367e7308f19719ea720c1768a0be30312f' },
-  state: { path: 'guest/scxml.wasm', sha256: '18810d2aa2eee697c587b1b9bafebd367e7308f19719ea720c1768a0be30312f' },
-  system: { path: 'guest/scxml.wasm', sha256: '18810d2aa2eee697c587b1b9bafebd367e7308f19719ea720c1768a0be30312f' },
-  scxml: { path: 'guest/scxml.wasm', sha256: '18810d2aa2eee697c587b1b9bafebd367e7308f19719ea720c1768a0be30312f' },
+  data: { path: 'guest/scxml.wasm', sha256: 'eda4548ca4744fdb4454c44e28efeb5ac4fc4a8ea1a8c8f10890f06bcf5b84c1' },
+  delay: { path: 'guest/scxml.wasm', sha256: 'eda4548ca4744fdb4454c44e28efeb5ac4fc4a8ea1a8c8f10890f06bcf5b84c1' },
+  event: { path: 'guest/scxml.wasm', sha256: 'eda4548ca4744fdb4454c44e28efeb5ac4fc4a8ea1a8c8f10890f06bcf5b84c1' },
+  invoke: { path: 'guest/scxml.wasm', sha256: 'eda4548ca4744fdb4454c44e28efeb5ac4fc4a8ea1a8c8f10890f06bcf5b84c1' },
+  send: { path: 'guest/scxml.wasm', sha256: 'eda4548ca4744fdb4454c44e28efeb5ac4fc4a8ea1a8c8f10890f06bcf5b84c1' },
+  state: { path: 'guest/scxml.wasm', sha256: 'eda4548ca4744fdb4454c44e28efeb5ac4fc4a8ea1a8c8f10890f06bcf5b84c1' },
+  system: { path: 'guest/scxml.wasm', sha256: 'eda4548ca4744fdb4454c44e28efeb5ac4fc4a8ea1a8c8f10890f06bcf5b84c1' },
+  scxml: { path: 'guest/scxml.wasm', sha256: 'eda4548ca4744fdb4454c44e28efeb5ac4fc4a8ea1a8c8f10890f06bcf5b84c1' },
 };
 
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');

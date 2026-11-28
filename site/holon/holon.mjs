@@ -26,8 +26,7 @@ const te = new TextEncoder();
 // its step, next(i) = cell(i + 1) XOR (cell(i) OR cell(i - 1)) on Z/64Z with the
 // all-zero register seeded first, and lane g of a stepped register (which
 // tunable, which way, how many steps).
-let reader = null;
-const guestRead = async (text) => (await (reader ??= import('./guest.mjs').then((m) => m.opened(m.GUESTS.holon))))(text);
+const guestRead = await import('./guest.mjs').then((m) => m.opened(m.GUESTS.holon));
 const cells = (state) => BigInt.asUintN(64, BigInt(state)).toString(16);
 export const rule30 = async (state, read = guestRead) => BigInt(`0x${await read(`step ${cells(state)} ${cells(RULE30.seed)}`)}`);
 export async function lane(register, g, read = guestRead) {
@@ -70,41 +69,23 @@ export function kpiOf(facet, m) {
   return permille(m.brought - m.dissonant, m.brought);
 }
 
-const isNumber = (v) => typeof v === 'number' && Number.isFinite(v);
+// A facet's parameters beside the bounds and step its spec gives each tunable:
+// what the holon guest (PrismHolonMove) holds them to and moves them by.
+const quads = (facet, params) => `${facet.tunable.length} ${facet.tunable.map((t) => `${scoreWord(params[t.name])} ${t.min} ${t.max} ${t.step}`).join(' ')}`;
+const moved = (facet, params, words) => ({ ...params, [facet.tunable[parseInt(words[0], 16)].name]: parseInt(words[1], 16) });
 
 // Whether every value is a tunable of the facet, on its step and in its bounds.
-export function tunableWord(facet, params) {
-  const names = new Set(facet.tunable.map((t) => t.name));
-  for (const [name, value] of Object.entries(params)) {
-    const t = facet.tunable.find((x) => x.name === name);
-    if (!t || !isNumber(value) || value < t.min || value > t.max) return 'no';
-    const k = (value - t.min) / t.step;
-    if (Math.abs(k - Math.round(k)) > 1e-9) return 'no';
-  }
-  return names.size > 0 && facet.tunable.every((t) => t.name in params) ? 'yes' : 'no';
-}
+export const tunableWord = (facet, params, read = guestRead) => read(`tunable ${Object.keys(params).length} ${quads(facet, params)}`);
 
 export const floorOf = (facet) => Object.fromEntries(facet.tunable.map((t) => [t.name, t.initial]));
 
-const clamp = (t, v) => Math.min(t.max, Math.max(t.min, v));
-
 // A Rule-30 hypothesis: one lane moves one tunable by one to four steps.
-export async function propose(facet, params, register, g, read) {
-  const { pick, up, steps } = await lane(register, g, read);
-  const t = facet.tunable[pick % facet.tunable.length];
-  return { ...params, [t.name]: clamp(t, params[t.name] + (up ? 1 : -1) * steps * t.step) };
-}
+export const propose = async (facet, params, register, g, read = guestRead) => moved(facet, params, (await read(`propose ${cells(register)} ${g} ${quads(facet, params)}`)).split(' '));
 
 // Every one-step move of one tunable, in spec order.
-export function neighbours(facet, params) {
-  const out = [];
-  for (const t of facet.tunable) {
-    for (const d of [-1, 1]) {
-      const v = clamp(t, params[t.name] + d * t.step);
-      if (v !== params[t.name]) out.push({ ...params, [t.name]: v });
-    }
-  }
-  return out;
+export function neighbours(facet, params, read = guestRead) {
+  const words = read(`near ${quads(facet, params)}`).split(' ').slice(1);
+  return Array.from({ length: words.length / 2 }, (_, i) => moved(facet, params, words.slice(2 * i, 2 * i + 2)));
 }
 
 export function claimForm(facet, params, scored, move) {

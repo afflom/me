@@ -1,0 +1,98 @@
+\begin{lexlean}{PrismHolonMove}
+\useglossary{lexlean.std.bool@1.2.0}
+\useglossary{lexlean.std.nat@1.2.0}
+\useglossary{prism.arch@1.0.0}
+\importmodule{Foundation.Bytes}
+\importmodule{Foundation.View.Text.V1.Model}
+\importmodule{PrismHolon}
+\importmodule{PrismHolonRegister}
+\importmodule{PrismHolonRank}
+\title{Text application model}
+\begin{semanticmodule}
+definition{
+  name: holonMoveNum,
+  parameters: [value : Bytes, k : Nat],
+  result: Nat,
+  body: (PrismHolonRank::holonRankNat value (PrismHolonRegister::holonRegisterStart value 0 k) 0 18),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonMoveFits,
+  parameters: [value : Bytes, b : Nat],
+  result: Bool,
+  body: (((((PrismHolonRank::holonRankDigits value b) && (PrismHolonRank::holonRankDigits value (b + 1))) && ((PrismHolonRank::holonRankDigits value (b + 2)) && (PrismHolonRank::holonRankDigits value (b + 3)))) && (0 <? (holonMoveNum value (b + 3)))) && (((if ((holonMoveNum value b) <? (holonMoveNum value (b + 1))) then false else true) && (if ((holonMoveNum value (b + 2)) <? (holonMoveNum value b)) then false else true)) && ((prim remainder (prim subtract (holonMoveNum value b) (holonMoveNum value (b + 1)) : Nat) (holonMoveNum value (b + 3)) 0 : Nat) =? 0))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonMoveAll,
+  parameters: [value : Bytes, b : Nat, fuel : Nat],
+  result: Bool,
+  body: (match fuel
+    | Nat.zero => (prim equal (PrismHolonRegister::holonRegisterWord value b) 0x : Bool)
+    | Nat.succ rest => ((holonMoveFits value b) && (holonMoveAll value (b + 4) rest))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: holonMoveDown,
+  parameters: [v : Nat, lo : Nat, d : Nat],
+  result: Nat,
+  body: (if (v <? (lo + d)) then lo else (prim subtract v d : Nat)),
+  axioms: []
+}
+
+definition{
+  name: holonMoveUp,
+  parameters: [v : Nat, hi : Nat, d : Nat],
+  result: Nat,
+  body: (if (hi <? (v + d)) then hi else (v + d)),
+  axioms: []
+}
+
+definition{
+  name: holonMovePair,
+  parameters: [i : Nat, v : Nat, to : Nat],
+  result: Bytes,
+  body: (if (to =? v) then 0x else (Foundation.Bytes::appendBytes 0x20 (Foundation.Bytes::appendBytes (PrismHolonRegister::holonRegisterHex i 16) (Foundation.Bytes::appendBytes 0x20 (PrismHolonRegister::holonRegisterHex to 16))))),
+  axioms: []
+}
+
+definition{
+  name: holonMoveNear,
+  parameters: [value : Bytes, i : Nat, fuel : Nat],
+  result: Bytes,
+  body: (match fuel
+    | Nat.zero => 0x
+    | Nat.succ rest => (let b : Nat := (2 + (prim multiply 4 i : Nat)); (let v : Nat := (holonMoveNum value b); (Foundation.Bytes::appendBytes (holonMovePair i v (holonMoveDown v (holonMoveNum value (b + 1)) (holonMoveNum value (b + 3)))) (Foundation.Bytes::appendBytes (holonMovePair i v (holonMoveUp v (holonMoveNum value (b + 2)) (holonMoveNum value (b + 3)))) (holonMoveNear value (i + 1) rest)))))),
+  axioms: [Quot.sound, propext],
+  recursive_argument: fuel
+}
+
+definition{
+  name: holonMovePropose,
+  parameters: [value : Bytes, n : Nat],
+  result: Bytes,
+  body: (let l : Nat := (prim remainder (prim quotient (PrismHolonRegister::holonRegisterNat value (PrismHolonRegister::holonRegisterStart value 0 1) 0 16) (PrismHolonRegister::holonRegisterPow (prim multiply 16 (PrismHolonRegister::holonRegisterNat value (PrismHolonRegister::holonRegisterStart value 0 2) 0 16) : Nat)) 0 : Nat) 256 0 : Nat); (let pick : Nat := (prim remainder (prim remainder l 16 0 : Nat) n 0 : Nat); (let b : Nat := (4 + (prim multiply 4 pick : Nat)); (let v : Nat := (holonMoveNum value b); (let d : Nat := (prim multiply ((prim remainder (prim quotient l 32 0 : Nat) 4 0 : Nat) + 1) (holonMoveNum value (b + 3)) : Nat); (Foundation.Bytes::appendBytes (PrismHolonRegister::holonRegisterHex pick 16) (Foundation.Bytes::appendBytes 0x20 (PrismHolonRegister::holonRegisterHex (if ((prim remainder (prim quotient l 16 0 : Nat) 2 0 : Nat) =? 1) then (holonMoveUp v (holonMoveNum value (b + 2)) d) else (holonMoveDown v (holonMoveNum value (b + 1)) d)) 16)))))))),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonMoveCount,
+  parameters: [value : Bytes, k : Nat],
+  result: Bool,
+  body: (((PrismHolonRank::holonRankDigits value k) && (0 <? (holonMoveNum value k))) && ((holonMoveNum value k) <? 9)),
+  axioms: [Quot.sound, propext]
+}
+
+definition{
+  name: holonMoveDispatch,
+  parameters: [value : Bytes],
+  result: Bytes,
+  body: (if (640 <? (Foundation.Bytes::byteLength value)) then 0x696e76616c6964 else (if (prim equal (PrismHolonRegister::holonRegisterWord value 0) 0x74756e61626c65 : Bool) then (if (((PrismHolonRank::holonRankDigits value 1) && (holonMoveCount value 2)) && (((holonMoveNum value 1) =? (holonMoveNum value 2)) && (holonMoveAll value 3 (holonMoveNum value 2)))) then 0x796573 else 0x6e6f) else (if (prim equal (PrismHolonRegister::holonRegisterWord value 0) 0x6e656172 : Bool) then (if ((holonMoveCount value 1) && (holonMoveAll value 2 (holonMoveNum value 1))) then (Foundation.Bytes::appendBytes 0x6e656172 (holonMoveNear value 0 (holonMoveNum value 1))) else 0x696e76616c6964) else (if (prim equal (PrismHolonRegister::holonRegisterWord value 0) 0x70726f706f7365 : Bool) then (if (((((PrismHolonRegister::holonRegisterDigits value (PrismHolonRegister::holonRegisterStart value 0 1) 16) && (PrismHolonRegister::holonRegisterDigits value (PrismHolonRegister::holonRegisterStart value 0 2) 16)) && ((PrismHolonRegister::holonRegisterNat value (PrismHolonRegister::holonRegisterStart value 0 2) 0 16) <? 4)) && (holonMoveCount value 3)) && (holonMoveAll value 4 (holonMoveNum value 3))) then (holonMovePropose value (holonMoveNum value 3)) else 0x696e76616c6964) else (PrismHolonRank::holonRankDispatch value))))),
+  axioms: [Quot.sound, propext]
+}
+\end{semanticmodule}
+\end{lexlean}
