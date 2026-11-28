@@ -144,7 +144,7 @@ export async function scenario(read, prefix = '') {
     q.onsuccess = () => {
       const seen = [];
       const c = q.result.transaction(NAMES).objectStore(NAMES).openCursor();
-      c.onsuccess = () => { const at = c.result; if (at) { seen.push(at.key, at.value); at.continue(); } else resolve(seen.length === 6 && !/ba7816|248d6a|head|abc/.test(seen.join(' '))); };
+      c.onsuccess = () => { const at = c.result; if (at) { seen.push(at.key, at.value); at.continue(); } else resolve(seen.length === 6 && ![AX.slice(7), AY.slice(7), 'sha256:', 'head'].some((bare) => seen.join(' ').includes(bare))); };
     };
   });
   await rv._blobs.swap(await rv.addressOf(X), await rv.addressOf(Y));

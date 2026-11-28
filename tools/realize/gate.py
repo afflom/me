@@ -7,7 +7,9 @@ It reads app/specs/realizability/spec.json, every facet spec named there, and
 test/realize/<facet>.txt: what the LexLean program generators/realize answers
 over each spec's whole request space (its witness pairs, the rules or leaves
 that change an answer, the answers outside the outcomes, the examples, how many
-of its words and reasons are given, and which fields read another facet).
+of its words and reasons are given, and which fields read another facet),
+and test/realize/descriptor.facts: what that program concludes of each facet
+(each reason it is refused, and its eleven elements as have and need).
 It refuses the Prism unless:
 
   sensitivity  every field of every spec changes some answer: there is a
@@ -33,7 +35,6 @@ PrismRealizabilityProofs.lex.tex (every descriptor is complete, and every
 witness pair is answered by the facet's judge as the spec says, each by
 reflexivity); then run `(cd app && lexlean fmt && lexlean lock)`.
 """
-import hashlib
 import json
 import pathlib
 import re
@@ -55,9 +56,9 @@ MODEL = json.loads((SPECS / "realizability/spec.json").read_text())
 # What the program reads of the root's facet table and of every facet's Lean
 # module (its rzproj step): the routes, the request maximum, and per facet the
 # deciding module, its theorems, and how it names the spec, or each fault.
+DESC = (FACTS / "descriptor.facts").read_text(encoding="utf-8").splitlines() if (FACTS / "descriptor.facts").exists() else []
 PROJ = (FACTS / "projection.txt").read_text(encoding="utf-8").splitlines() if (FACTS / "projection.txt").exists() else []
 FACETS = [tuple(l.split("\t")[1:]) for l in PROJ if l.startswith("route\t")]
-REQ_MAX = int(next((l.split("\t")[1] for l in PROJ if l.startswith("reqmax\t")), 0))
 
 
 def said(d, word):
@@ -73,8 +74,6 @@ class Spec:
         self.raw = json.loads((SPECS / d / "spec.json").read_text(encoding="utf-8"))
         self.fields = self.raw["fields"]
         self.names = [f["name"] for f in self.fields]
-        self.outcomes = self.raw["outcomes"]
-        self.shape = "rules" if "rules" in self.raw else "tree"
         path = FACTS / f"{d}.txt"
         self.facts = path.read_text(encoding="utf-8").splitlines() + COMPOSED if path.exists() else None
 
@@ -84,13 +83,7 @@ class Spec:
     def told(self, word):
         """The facts of one kind, each split at its tabs."""
         head = f"{self.dir} {word} "
-        return [line[len(head):].split("\t") for line in self.facts if line.startswith(head)]
-
-    def pair(self, word):
-        """A fact `have of need`, as two numbers."""
-        (counts,), = self.told(word)
-        have, _, need = counts.split(" ")
-        return int(have), int(need)
+        return [line[len(head):].split("\t") for line in self.facts or [] if line.startswith(head)]
 
     def point(self, line):
         return tuple(int(v) if self.is_number(f) else v for f, v in zip(self.fields, line.split(" ")))
@@ -129,72 +122,23 @@ def audit():
         decides = "outcomes" in json.loads((SPECS / d / "spec.json").read_text())
         if d not in specs and decides:
             fail.append(f"app/specs/{d} is not named in app/specs/realizability/spec.json")
+    if not DESC:
+        fail.append("test/realize/descriptor.facts is missing: run tools/generators/run.sh")
     for d, s in specs.items():
-        where = f"{d}"
-        if s.module is None:
-            fail.append(f"{where}: keyword `{s.keyword}` is not routed by tools/prism_root.py")
+        # What the program says of the facet (its rzdesc step): each reason it
+        # is refused, in words, then its requests, the digest of its spec as
+        # staged, and its eleven elements as have and need.
+        says = lambda word: [l[len(d) + len(word) + 2:] for l in DESC if l.startswith(f"{d} {word} ")]
+        fail += [f"{d}: {m}" for m in says("fail")]
+        if DESC and not says("fail") and not says("points"):
+            fail.append(f"{d}: test/realize/descriptor.facts says nothing of it: run tools/generators/run.sh")
+        if not says("points"):
             continue
-        if s.facts is None:
-            fail.append(f"{where}: test/realize/{d}.txt is missing: give it a step in generators/realize/steps.json and run tools/generators/run.sh")
-            continue
-        if not s.told("composition"):
-            fail.append(f"{where}: test/realize/composition.txt says nothing of it: give it an rzterms step in generators/realize/steps.json and run tools/generators/run.sh")
-            continue
-        (counts,), = s.told("points")
-        points, _, longest_line = counts.split(" ")
-        points, longest_line = int(points), int(longest_line)
-        for line, a in s.told("bad"):
-            fail.append(f"{where}: `{line}` answers {a!r}, not an outcome")
-        never = [o for (o,) in s.told("unanswered")]
-        reached = [o for o in s.outcomes if o not in never]
-        for o in never:
-            fail.append(f"{where}: outcome `{o}` is never answered")
-        witnesses = []
+        desc = {e: (int(have), int(need)) for e, have, need in (x.split(" ") for x in says("element"))}
         found = {name: (s.point(x), s.point(y), a, b) for name, x, y, a, b in s.told("witness")}
-        for f in s.fields:
-            if f["name"] in found:
-                witnesses.append((f["name"], found[f["name"]]))
-            else:
-                fail.append(f"{where}: field `{f['name']}` changes no answer")
-        live = [b for (b,) in s.told("live")]
-        for (b,) in s.told("dead"):
-            fail.append(f"{where}: {'rule' if s.shape == 'rules' else 'leaf'} {b} changes no answer")
-        branches = len(live) + len(s.told("dead"))
-        agree, valid = s.pair("agree")
-        for q, r, a in s.told("wrong"):
-            fail.append(f"{where}: example `{q}` says {r!r}, the spec answers {a!r}")
-        for q, r in s.told("stray"):
-            fail.append(f"{where}: example `{q}` is not a request of this spec, yet says {r!r}")
-        fail += [f"{where}: " + "\t".join(why) for why in s.told("flaw")]
-        (guards,), = s.told("guards")
-        longest = len(s.keyword.encode()) + 1 + longest_line
-        names, faults = projection(s)
-        fail += [f"{where}: {m}" for m in faults]
-        projected = len(witnesses) if names else 0
-        facet_code = routed.index(s.keyword) + 1
-        digest = hashlib.sha256((SPECS / d / "spec.json").read_bytes()).hexdigest()
-        desc = {
-            "identity": (facet_code, 1),
-            "vocabulary": s.pair("vocabulary"),
-            "capability": (len(reached), len(s.outcomes)),
-            "interfaceSpec": (len(witnesses), len(s.fields)),
-            "composition": s.pair("composition"),
-            "dynamics": (len(live), branches),
-            "fidelity": (agree, valid),
-            "resources": (REQ_MAX, longest),
-            "authority": s.pair("authority"),
-            "evidence": (int(said(d, "theorems")[0]), int(guards)),
-            "projection": (projected, len(s.fields)),
-        }
-        for e in ("vocabulary", "authority"):
-            have, need = desc[e]
-            if have < need:
-                fail.append(f"{where}: {e} has {have} of {need}")
-        if desc["evidence"][0] < desc["evidence"][1]:
-            fail.append(f"{where}: {s.module}Proofs proves {desc['evidence'][0]} theorems for {desc['evidence'][1]} guarantees")
-        if longest > REQ_MAX:
-            fail.append(f"{where}: a request of {longest} bytes exceeds the root's maximum {REQ_MAX}")
-        out[d] = {"spec": s, "desc": desc, "digest": digest, "witnesses": witnesses, "points": points, "names": names}
+        witnesses = [(f["name"], found[f["name"]]) for f in s.fields if f["name"] in found]
+        names, _ = projection(s)
+        out[d] = {"spec": s, "desc": desc, "digest": says("digest")[0], "witnesses": witnesses, "points": int(says("points")[0]), "names": names}
     # Settings: generators/realize answers them from the surface, the coherence
     # registry and this model (test/realize/settings.txt, held by GN-01): how
     # many settings drive a sensitive field of every facet the registry has
