@@ -6,7 +6,7 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import test from "node:test";
-import { chromium, serve } from "../product/harness.mjs";
+import { chromium, faults, open, serve } from "../product/harness.mjs";
 
 // What the owner types comes from the specifications' own examples: a to-do,
 // a meeting and a message (RFC 5546 §4.4, §4.2.4; RFC 5322 Appendix A.1.1).
@@ -23,12 +23,10 @@ test("every act completes: sent things are kept where they left from, items open
   try {
     const context = await browser.newContext({ acceptDownloads: true });
     const page = await context.newPage();
-    const errors = [];
-    page.on("pageerror", (error) => errors.push(error.message));
+    const errors = faults(page);
     const downloads = [];
     page.on("download", (download) => downloads.push(download.suggestedFilename()));
-    await page.goto(server.url);
-    await page.waitForSelector("html.pr-ready", { timeout: 60000 });
+    await open(page, server.url);
     const settle = (text) => page.waitForFunction((t) => document.getElementById("pr-out").textContent.trim() === t, text, { timeout: 10000 });
     const listed = (text) => page.waitForFunction((t) => document.getElementById("pr-list").innerText.includes(t), text, { timeout: 10000 });
     const review = async () => {

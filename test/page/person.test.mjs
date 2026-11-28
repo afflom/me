@@ -14,7 +14,7 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import test from "node:test";
-import { chromium, serve } from "../product/harness.mjs";
+import { chromium, faults, open, serve } from "../product/harness.mjs";
 import { deflateRawSync, crc32 } from "node:zlib";
 
 const { PLACES } = await import(resolve("site/surface/surface.mjs"));
@@ -76,10 +76,8 @@ test("the owner brings content in, every place shows it, Today and Ask answer fr
     const context = await browser.newContext({ permissions: ["clipboard-read", "clipboard-write"], timezoneId: "UTC" });
     await context.clock.install({ time: new Date(DAY) });
     const page = await context.newPage();
-    const errors = [];
-    page.on("pageerror", (error) => errors.push(error.message));
-    await page.goto(server.url);
-    await page.waitForSelector("html.pr-ready", { timeout: 60000 });
+    const errors = faults(page);
+    await open(page, server.url);
     const out = () => page.textContent("#pr-out");
     // The status line once it matches; a timeout says what it showed instead.
     const settled = (pattern) => page.waitForFunction((p) => new RegExp(p).test(document.getElementById("pr-out").textContent), pattern.source, { timeout: 30000 })

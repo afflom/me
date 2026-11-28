@@ -3,7 +3,7 @@
 // page's ids. Each walk throws with the first part of its done-state the page
 // does not meet. A walk is named by the journey's "walk" key.
 import assert from "node:assert/strict";
-import { surface } from "./harness.mjs";
+import { open as reopen, surface } from "./harness.mjs";
 import { PROVIDERS } from "../../site/router/table.mjs";
 
 const app = (page) => page.locator("#stage, #rail");
@@ -59,8 +59,7 @@ export const walks = {
     await confirm.click();
     await page.waitForTimeout(800);
     assert.equal(await app(page).getByRole("button", { name: /^this is me$/i }).filter({ visible: true }).count(), 0, "confirming does not settle who the person is");
-    await page.reload();
-    await page.waitForSelector("html.pr-ready", { timeout: 60000 });
+    await reopen(page);
     await go(page, surface.places.find((p) => p.show === "settings").key);
     const names = app(page).getByRole("textbox", { name: /your addresses/i }).first();
     assert.ok(await names.count(), "the settings have no place for who the person is");
@@ -245,8 +244,7 @@ export const walks = {
     const quiet = app(page).getByRole("switch", { name: /^quiet$/i }).first();
     assert.ok(await quiet.count(), "the settings have no Quiet switch");
     await quiet.check();
-    await page.reload();
-    await page.waitForSelector("html.pr-ready", { timeout: 60000 });
+    await reopen(page);
     await go(page, settings);
     assert.ok(await app(page).getByRole("switch", { name: /^quiet$/i }).first().isChecked(), "Quiet does not stay on");
   },

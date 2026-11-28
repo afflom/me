@@ -5,7 +5,7 @@
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import test from "node:test";
-import { chromium, serve } from "../product/harness.mjs";
+import { chromium, faults, open, serve } from "../product/harness.mjs";
 
 // What the owner types comes from the specifications' own examples (RFC 5546 §4.4).
 const { titleOf } = await import(resolve("test/oracle/examples.mjs"));
@@ -30,10 +30,8 @@ test("the Prism answers in just tones and colour, only after a gesture, silent u
     });
     const voiceFetched = [];
     page.on("request", (request) => { if (request.url().endsWith("/voice.mjs")) voiceFetched.push(request.url()); });
-    const errors = [];
-    page.on("pageerror", (error) => errors.push(error.message));
-    await page.goto(server.url);
-    await page.waitForSelector("html.pr-ready", { timeout: 60000 });
+    const errors = faults(page);
+    await open(page, server.url);
     await page.waitForTimeout(500);
     assert.equal(voiceFetched.length, 0, "the voice loads before any gesture");
 

@@ -4,6 +4,7 @@
 \useglossary{prism.arch@1.0.0}
 \importmodule{Foundation.Bytes}
 \importmodule{GenBcp14}
+\importmodule{GenBcp14Html}
 \importmodule{Foundation.Tar}
 \importmodule{Foundation.View.Text.V1.Model}
 \importmodule{Foundation.View.Text.V3.Model}
@@ -75,7 +76,7 @@ definition{
   name: dispatch,
   parameters: [value : Bytes],
   result: Bytes,
-  body: (let n : Nat := (Foundation.Bytes::byteLength value); (let eol : Nat := (lineEnd value 0 n); (if (n <? (eol + 1)) then 0x696e76616c6964 else (let line : Bytes := (sliceOr value 0 eol); (let sp : Nat := (wordEnd line 0 eol eol); (let name : Bytes := (sliceOr line 0 sp); (let target : Bytes := (sliceOr line (sp + 1) (prim subtract eol (sp + 1) : Nat)); (let archive : Bytes := (sliceOr value (eol + 1) (prim subtract n (eol + 1) : Nat)); (if (Foundation.Tar::sameBytes name 0x636174) then (catFile archive target) else (if (Foundation.Tar::sameBytes name (GenBcp14::bcU "bcp14excluded")) then (GenBcp14::bcExcludedReport archive) else (if (Foundation.Tar::sameBytes name (GenBcp14::bcU "bcp14")) then (GenBcp14::bcReport archive target) else 0x696e76616c6964))))))))))),
+  body: (let n : Nat := (Foundation.Bytes::byteLength value); (let eol : Nat := (lineEnd value 0 n); (if (n <? (eol + 1)) then 0x696e76616c6964 else (let line : Bytes := (sliceOr value 0 eol); (let sp : Nat := (wordEnd line 0 eol eol); (let name : Bytes := (sliceOr line 0 sp); (let target : Bytes := (sliceOr line (sp + 1) (prim subtract eol (sp + 1) : Nat)); (let archive : Bytes := (sliceOr value (eol + 1) (prim subtract n (eol + 1) : Nat)); (if (Foundation.Tar::sameBytes name 0x636174) then (catFile archive target) else (if (Foundation.Tar::sameBytes name (GenBcp14::bcU "bcp14excluded")) then (GenBcp14::bcExcludedReport archive) else (if (Foundation.Tar::sameBytes name (GenBcp14::bcU "bcp14")) then (GenBcp14::bcReport archive target) else (if (Foundation.Tar::sameBytes name (GenBcp14::bcU "bcp14html")) then (GenBcp14Html::bhReport archive target) else 0x696e76616c6964)))))))))))),
   axioms: [Quot.sound, propext]
 }
 \end{semanticmodule}

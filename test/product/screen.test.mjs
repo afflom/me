@@ -23,7 +23,7 @@ test("no word or control of the system view is on the screen beyond the listed d
     const errors = [];
     let page;
     for (const pass of ["fresh", "returning", "with the day"]) {
-      if (pass === "returning") { await page.reload(); await page.waitForSelector("html.pr-ready", { timeout: 60000 }); }
+      if (pass === "returning") { await open(page); }
       else {
         const context = await browser.newContext({ timezoneId: "UTC", locale: "en-US" });
         if (pass === "with the day") await device(context);
