@@ -1,0 +1,634 @@
+route	boundary	PrismBoundary
+route	learn	PrismLearning
+route	when	PrismChronology
+route	store	PrismVaultStore
+route	restore	PrismVaultRestore
+route	r4	PrismR4
+route	route	PrismRoute
+route	google	PrismGoogle
+route	googlelink	PrismGoogleLink
+route	dest	PrismDest
+route	folder	PrismFolder
+route	host	PrismHost
+route	source	PrismSource
+route	model	PrismModels
+route	kappa	PrismKappaLabel
+route	uorc	PrismUorc
+route	holon	PrismHolon
+route	curate	PrismCurate
+route	resonance	PrismResonance
+route	router	PrismRouter
+route	ask	PrismAsk
+reqmax	1107
+boundary module PrismBoundary
+boundary theorems 7
+boundary judge prismBoundaryJudge
+boundary struct PrismBoundaryRequest
+boundary field label label
+boundary field detector detector
+boundary field destination destination
+boundary field approval approval
+boundary field identifier identifier
+boundary field halted halted
+boundary value label	public	prismBoundaryLabelPublic
+boundary value label	internal	prismBoundaryLabelInternal
+boundary value label	confidential	prismBoundaryLabelConfidential
+boundary value label	restricted	prismBoundaryLabelRestricted
+boundary value label	unlabeled	prismBoundaryLabelUnlabeled
+boundary value detector	none	prismBoundaryDetectorNone
+boundary value detector	pci	prismBoundaryDetectorPci
+boundary value detector	phi	prismBoundaryDetectorPhi
+boundary value detector	credential	prismBoundaryDetectorCredential
+boundary value detector	special	prismBoundaryDetectorSpecial
+boundary value destination	browser	prismBoundaryDestinationBrowser
+boundary value destination	github	prismBoundaryDestinationGithub
+boundary value destination	verifier	prismBoundaryDestinationVerifier
+boundary value destination	outbound	prismBoundaryDestinationOutbound
+boundary value approval	none	prismBoundaryApprovalNone
+boundary value approval	owner	prismBoundaryApprovalOwner
+boundary value identifier	no	prismBoundaryIdentifierNo
+boundary value identifier	yes	prismBoundaryIdentifierYes
+boundary value halted	no	prismBoundaryHaltedNo
+boundary value halted	yes	prismBoundaryHaltedYes
+boundary answer allow	prismBoundaryAnswerAllow
+boundary answer hashonly	prismBoundaryAnswerHashonly
+boundary answer ask	prismBoundaryAnswerAsk
+boundary answer deny	prismBoundaryAnswerDeny
+learning module PrismLearning
+learning theorems 8
+learning judge prismLearningJudge
+learning struct PrismLearningRequest
+learning field state state
+learning field weight weight
+learning field signal signal
+learning value state	inferred	prismLearningStateInferred
+learning value state	consolidated	prismLearningStateConsolidated
+learning value state	confirmed	prismLearningStateConfirmed
+learning value state	rejected	prismLearningStateRejected
+learning value signal	support	prismLearningSignalSupport
+learning value signal	contradict	prismLearningSignalContradict
+learning value signal	decay	prismLearningSignalDecay
+learning value signal	ownerconfirm	prismLearningSignalOwnerconfirm
+learning value signal	ownerreject	prismLearningSignalOwnerreject
+learning answer raise	prismLearningAnswerRaise
+learning answer lower	prismLearningAnswerLower
+learning answer hold	prismLearningAnswerHold
+learning answer consolidate	prismLearningAnswerConsolidate
+learning answer demote	prismLearningAnswerDemote
+learning answer confirm	prismLearningAnswerConfirm
+learning answer reject	prismLearningAnswerReject
+chronology module PrismChronology
+chronology theorems 8
+chronology judge prismChronologyJudge
+chronology struct PrismChronologyRequest
+chronology field astart astart
+chronology field aend aend
+chronology field bstart bstart
+chronology field bend bend
+chronology answer before	prismChronologyAnswerBefore
+chronology answer meets	prismChronologyAnswerMeets
+chronology answer overlaps	prismChronologyAnswerOverlaps
+chronology answer starts	prismChronologyAnswerStarts
+chronology answer during	prismChronologyAnswerDuring
+chronology answer finishes	prismChronologyAnswerFinishes
+chronology answer equals	prismChronologyAnswerEquals
+chronology answer after	prismChronologyAnswerAfter
+chronology answer metby	prismChronologyAnswerMetby
+chronology answer overlappedby	prismChronologyAnswerOverlappedby
+chronology answer startedby	prismChronologyAnswerStartedby
+chronology answer contains	prismChronologyAnswerContains
+chronology answer finishedby	prismChronologyAnswerFinishedby
+chronology answer malformed	prismChronologyAnswerMalformed
+vault-store module PrismVaultStore
+vault-store theorems 5
+vault-store judge prismVaultStoreJudge
+vault-store struct PrismVaultStoreRequest
+vault-store field boundary boundary
+vault-store field key key
+vault-store field address address
+vault-store field room room
+vault-store value boundary	allow	prismVaultStoreBoundaryAllow
+vault-store value boundary	hashonly	prismVaultStoreBoundaryHashonly
+vault-store value boundary	ask	prismVaultStoreBoundaryAsk
+vault-store value boundary	deny	prismVaultStoreBoundaryDeny
+vault-store value key	present	prismVaultStoreKeyPresent
+vault-store value key	missing	prismVaultStoreKeyMissing
+vault-store value address	derived	prismVaultStoreAddressDerived
+vault-store value address	mismatch	prismVaultStoreAddressMismatch
+vault-store value room	ok	prismVaultStoreRoomOk
+vault-store value room	full	prismVaultStoreRoomFull
+vault-store answer store	prismVaultStoreAnswerStore
+vault-store answer storehash	prismVaultStoreAnswerStorehash
+vault-store answer ask	prismVaultStoreAnswerAsk
+vault-store answer refuse	prismVaultStoreAnswerRefuse
+vault-restore module PrismVaultRestore
+vault-restore theorems 5
+vault-restore judge prismVaultRestoreJudge
+vault-restore struct PrismVaultRestoreRequest
+vault-restore field key key
+vault-restore field format format
+vault-restore field seal seal
+vault-restore field address address
+vault-restore field kind kind
+vault-restore value key	present	prismVaultRestoreKeyPresent
+vault-restore value key	missing	prismVaultRestoreKeyMissing
+vault-restore value format	known	prismVaultRestoreFormatKnown
+vault-restore value format	unknown	prismVaultRestoreFormatUnknown
+vault-restore value seal	valid	prismVaultRestoreSealValid
+vault-restore value seal	broken	prismVaultRestoreSealBroken
+vault-restore value address	derived	prismVaultRestoreAddressDerived
+vault-restore value address	mismatch	prismVaultRestoreAddressMismatch
+vault-restore value kind	value	prismVaultRestoreKindValue
+vault-restore value kind	hash	prismVaultRestoreKindHash
+vault-restore answer restore	prismVaultRestoreAnswerRestore
+vault-restore answer hashonly	prismVaultRestoreAnswerHashonly
+vault-restore answer refuse	prismVaultRestoreAnswerRefuse
+r4 module PrismR4
+r4 theorems 7
+r4 judge prismR4Judge
+r4 struct PrismR4Request
+r4 field mode mode
+r4 field engine engine
+r4 field weights weights
+r4 field route route
+r4 field boundary boundary
+r4 value mode	compiled	prismR4ModeCompiled
+r4 value mode	inprism	prismR4ModeInprism
+r4 value mode	routed	prismR4ModeRouted
+r4 value engine	match	prismR4EngineMatch
+r4 value engine	mismatch	prismR4EngineMismatch
+r4 value engine	missing	prismR4EngineMissing
+r4 value weights	match	prismR4WeightsMatch
+r4 value weights	mismatch	prismR4WeightsMismatch
+r4 value weights	missing	prismR4WeightsMissing
+r4 value weights	none	prismR4WeightsNone
+r4 value route	none	prismR4RouteNone
+r4 value route	granted	prismR4RouteGranted
+r4 value route	ungranted	prismR4RouteUngranted
+r4 value boundary	allow	prismR4BoundaryAllow
+r4 value boundary	hashonly	prismR4BoundaryHashonly
+r4 value boundary	ask	prismR4BoundaryAsk
+r4 value boundary	deny	prismR4BoundaryDeny
+r4 answer answer	prismR4AnswerAnswer
+r4 answer receipt	prismR4AnswerReceipt
+r4 answer ask	prismR4AnswerAsk
+r4 answer refuse	prismR4AnswerRefuse
+google module PrismGoogle
+google theorems 7
+google judge prismGoogleJudge
+google struct PrismGoogleRequest
+google field service service
+google field method method
+google field scope scope
+google field token token
+google field act act
+google field halted halted
+google value service	gmail	prismGoogleServiceGmail
+google value service	calendar	prismGoogleServiceCalendar
+google value service	other	prismGoogleServiceOther
+google value method	read	prismGoogleMethodRead
+google value method	write	prismGoogleMethodWrite
+google value scope	none	prismGoogleScopeNone
+google value scope	readonly	prismGoogleScopeReadonly
+google value scope	write	prismGoogleScopeWrite
+google value token	none	prismGoogleTokenNone
+google value token	fresh	prismGoogleTokenFresh
+google value token	expired	prismGoogleTokenExpired
+google value act	none	prismGoogleActNone
+google value act	owner	prismGoogleActOwner
+google value halted	no	prismGoogleHaltedNo
+google value halted	yes	prismGoogleHaltedYes
+google answer fetch	prismGoogleAnswerFetch
+google answer consent	prismGoogleAnswerConsent
+google answer ask	prismGoogleAnswerAsk
+google answer refuse	prismGoogleAnswerRefuse
+google-link module PrismGoogleLink
+google-link theorems 9
+google-link judge prismGoogleLinkJudge
+google-link struct PrismGoogleLinkRequest
+google-link field stage stage
+google-link field event event
+google-link field actor actor
+google-link field origin origin
+google-link field halted halted
+google-link value stage	unprovisioned	prismGoogleLinkStageUnprovisioned
+google-link value stage	registered	prismGoogleLinkStageRegistered
+google-link value stage	granted	prismGoogleLinkStageGranted
+google-link value stage	syncing	prismGoogleLinkStageSyncing
+google-link value stage	revoked	prismGoogleLinkStageRevoked
+google-link value event	provision	prismGoogleLinkEventProvision
+google-link value event	consent	prismGoogleLinkEventConsent
+google-link value event	renew	prismGoogleLinkEventRenew
+google-link value event	sync	prismGoogleLinkEventSync
+google-link value event	forget	prismGoogleLinkEventForget
+google-link value event	halt	prismGoogleLinkEventHalt
+google-link value actor	prism	prismGoogleLinkActorPrism
+google-link value actor	operator	prismGoogleLinkActorOperator
+google-link value actor	owner	prismGoogleLinkActorOwner
+google-link value actor	other	prismGoogleLinkActorOther
+google-link value origin	matches	prismGoogleLinkOriginMatches
+google-link value origin	differs	prismGoogleLinkOriginDiffers
+google-link value halted	no	prismGoogleLinkHaltedNo
+google-link value halted	yes	prismGoogleLinkHaltedYes
+google-link answer unprovisioned	prismGoogleLinkAnswerUnprovisioned
+google-link answer registered	prismGoogleLinkAnswerRegistered
+google-link answer granted	prismGoogleLinkAnswerGranted
+google-link answer syncing	prismGoogleLinkAnswerSyncing
+google-link answer revoked	prismGoogleLinkAnswerRevoked
+google-link answer refuse	prismGoogleLinkAnswerRefuse
+dest module PrismDest
+dest theorems 13
+dest judge prismDestJudge
+dest struct PrismDestRequest
+dest field target target
+dest field verdict verdict
+dest field cause cause
+dest field act act
+dest field wording wording
+dest field tone tone
+dest field pace pace
+dest field urgency urgency
+dest field halted halted
+dest value target	owner	prismDestTargetOwner
+dest value target	calendar	prismDestTargetCalendar
+dest value target	mail	prismDestTargetMail
+dest value target	platform	prismDestTargetPlatform
+dest value target	other	prismDestTargetOther
+dest value verdict	allow	prismDestVerdictAllow
+dest value verdict	ask	prismDestVerdictAsk
+dest value verdict	hashonly	prismDestVerdictHashonly
+dest value verdict	deny	prismDestVerdictDeny
+dest value cause	grounded	prismDestCauseGrounded
+dest value cause	orphan	prismDestCauseOrphan
+dest value act	none	prismDestActNone
+dest value act	owner	prismDestActOwner
+dest value wording	seen	prismDestWordingSeen
+dest value wording	changed	prismDestWordingChanged
+dest value tone	calm	prismDestToneCalm
+dest value tone	coercive	prismDestToneCoercive
+dest value pace	open	prismDestPaceOpen
+dest value pace	quiet	prismDestPaceQuiet
+dest value urgency	normal	prismDestUrgencyNormal
+dest value urgency	urgent	prismDestUrgencyUrgent
+dest value halted	no	prismDestHaltedNo
+dest value halted	yes	prismDestHaltedYes
+dest answer deliver	prismDestAnswerDeliver
+dest answer draft	prismDestAnswerDraft
+dest answer show	prismDestAnswerShow
+dest answer hold	prismDestAnswerHold
+dest answer refuse	prismDestAnswerRefuse
+folder module PrismFolder
+folder theorems 7
+folder judge prismFolderJudge
+folder struct PrismFolderRequest
+folder field grant grant
+folder field format format
+folder field action action
+folder field bulk bulk
+folder field halted halted
+folder value grant	none	prismFolderGrantNone
+folder value grant	prompt	prismFolderGrantPrompt
+folder value grant	granted	prismFolderGrantGranted
+folder value grant	revoked	prismFolderGrantRevoked
+folder value format	mbox	prismFolderFormatMbox
+folder value format	eml	prismFolderFormatEml
+folder value format	maildir	prismFolderFormatMaildir
+folder value format	ics	prismFolderFormatIcs
+folder value format	vcf	prismFolderFormatVcf
+folder value format	other	prismFolderFormatOther
+folder value action	list	prismFolderActionList
+folder value action	read	prismFolderActionRead
+folder value action	write	prismFolderActionWrite
+folder value bulk	small	prismFolderBulkSmall
+folder value bulk	large	prismFolderBulkLarge
+folder value halted	no	prismFolderHaltedNo
+folder value halted	yes	prismFolderHaltedYes
+folder answer read	prismFolderAnswerRead
+folder answer ask	prismFolderAnswerAsk
+folder answer skip	prismFolderAnswerSkip
+folder answer refuse	prismFolderAnswerRefuse
+host module PrismHost
+host theorems 11
+host judge prismHostJudge
+host struct PrismHostRequest
+host field surface surface
+host field present present
+host field act act
+host field grant grant
+host field halted halted
+host value surface	folder	prismHostSurfaceFolder
+host value surface	files	prismHostSurfaceFiles
+host value surface	drop	prismHostSurfaceDrop
+host value surface	paste	prismHostSurfacePaste
+host value surface	contacts	prismHostSurfaceContacts
+host value surface	workers	prismHostSurfaceWorkers
+host value surface	mail	prismHostSurfaceMail
+host value surface	calendar	prismHostSurfaceCalendar
+host value surface	extension	prismHostSurfaceExtension
+host value present	yes	prismHostPresentYes
+host value present	no	prismHostPresentNo
+host value act	none	prismHostActNone
+host value act	owner	prismHostActOwner
+host value grant	none	prismHostGrantNone
+host value grant	kept	prismHostGrantKept
+host value halted	no	prismHostHaltedNo
+host value halted	yes	prismHostHaltedYes
+host answer use	prismHostAnswerUse
+host answer offer	prismHostAnswerOffer
+host answer sealed	prismHostAnswerSealed
+host answer refuse	prismHostAnswerRefuse
+holon module PrismHolon
+holon theorems 12
+holon judge prismHolonJudge
+holon struct PrismHolonRequest
+holon field halted halted
+holon field floor floor
+holon field signal signal
+holon field tunable tunable
+holon field dissonance dissonance
+holon field kpi kpi
+holon value halted	no	prismHolonHaltedNo
+holon value halted	yes	prismHolonHaltedYes
+holon value floor	held	prismHolonFloorHeld
+holon value floor	regressed	prismHolonFloorRegressed
+holon value signal	owner	prismHolonSignalOwner
+holon value signal	self	prismHolonSignalSelf
+holon value tunable	yes	prismHolonTunableYes
+holon value tunable	no	prismHolonTunableNo
+holon value dissonance	none	prismHolonDissonanceNone
+holon value dissonance	some	prismHolonDissonanceSome
+holon value dissonance	high	prismHolonDissonanceHigh
+holon value kpi	met	prismHolonKpiMet
+holon value kpi	missed	prismHolonKpiMissed
+holon answer hold	prismHolonAnswerHold
+holon answer reconcile	prismHolonAnswerReconcile
+holon answer curate	prismHolonAnswerCurate
+holon answer restore	prismHolonAnswerRestore
+holon answer refuse	prismHolonAnswerRefuse
+curate module PrismCurate
+curate theorems 20
+curate judge prismCurateJudge
+curate struct PrismCurateRequest
+curate field halted halted
+curate field tunable tunable
+curate field label label
+curate field defect defect
+curate field evidence evidence
+curate field floor floor
+curate field move move
+curate field eased eased
+curate field dominance dominance
+curate field claim claim
+curate value halted	no	prismCurateHaltedNo
+curate value halted	yes	prismCurateHaltedYes
+curate value tunable	yes	prismCurateTunableYes
+curate value tunable	no	prismCurateTunableNo
+curate value label	admit	prismCurateLabelAdmit
+curate value label	other	prismCurateLabelOther
+curate value defect	zero	prismCurateDefectZero
+curate value defect	some	prismCurateDefectSome
+curate value evidence	owner	prismCurateEvidenceOwner
+curate value evidence	self	prismCurateEvidenceSelf
+curate value floor	kept	prismCurateFloorKept
+curate value floor	regressed	prismCurateFloorRegressed
+curate value move	explore	prismCurateMoveExplore
+curate value move	reconcile	prismCurateMoveReconcile
+curate value eased	yes	prismCurateEasedYes
+curate value eased	no	prismCurateEasedNo
+curate value dominance	dominates	prismCurateDominanceDominates
+curate value dominance	equal	prismCurateDominanceEqual
+curate value dominance	dominated	prismCurateDominanceDominated
+curate value dominance	incomparable	prismCurateDominanceIncomparable
+curate value claim	new	prismCurateClaimNew
+curate value claim	known	prismCurateClaimKnown
+curate answer adopt	prismCurateAnswerAdopt
+curate answer recall	prismCurateAnswerRecall
+curate answer keep	prismCurateAnswerKeep
+curate answer refuse	prismCurateAnswerRefuse
+kappa module PrismKappa
+kappa theorems 17
+kappa judge prismKappaJudge
+kappa struct PrismKappaRequest
+kappa field colon colon
+kappa field axis axis
+kappa field digits digits
+kappa field hex hex
+kappa field digest digest
+kappa value colon	present	prismKappaColonPresent
+kappa value colon	absent	prismKappaColonAbsent
+kappa value axis	sha256	prismKappaAxisSha256
+kappa value axis	sha512	prismKappaAxisSha512
+kappa value axis	blake3	prismKappaAxisBlake3
+kappa value axis	sha1	prismKappaAxisSha1
+kappa value axis	sha3x256	prismKappaAxisSha3x256
+kappa value axis	keccak256	prismKappaAxisKeccak256
+kappa value axis	other	prismKappaAxisOther
+kappa value digits	right	prismKappaDigitsRight
+kappa value digits	wrong	prismKappaDigitsWrong
+kappa value hex	lower	prismKappaHexLower
+kappa value hex	bad	prismKappaHexBad
+kappa value digest	match	prismKappaDigestMatch
+kappa value digest	mismatch	prismKappaDigestMismatch
+kappa value digest	uncomputed	prismKappaDigestUncomputed
+kappa value digest	collision	prismKappaDigestCollision
+kappa answer admit	prismKappaAnswerAdmit
+kappa answer unverified	prismKappaAnswerUnverified
+kappa answer mismatch	prismKappaAnswerMismatch
+kappa answer collision	prismKappaAnswerCollision
+kappa answer nocolon	prismKappaAnswerNocolon
+kappa answer unknownaxis	prismKappaAnswerUnknownaxis
+kappa answer digits	prismKappaAnswerDigits
+kappa answer badhex	prismKappaAnswerBadhex
+source module PrismSource
+source theorems 7
+source judge prismSourceJudge
+source struct PrismSourceRequest
+source field service service
+source field route route
+source field act act
+source field halted halted
+source value service	gmail	prismSourceServiceGmail
+source value service	calendar	prismSourceServiceCalendar
+source value service	discord	prismSourceServiceDiscord
+source value service	whatsapp	prismSourceServiceWhatsapp
+source value service	linkedin	prismSourceServiceLinkedin
+source value service	other	prismSourceServiceOther
+source value route	seen	prismSourceRouteSeen
+source value route	own	prismSourceRouteOwn
+source value route	export	prismSourceRouteExport
+source value act	read	prismSourceActRead
+source value act	write	prismSourceActWrite
+source value halted	no	prismSourceHaltedNo
+source value halted	yes	prismSourceHaltedYes
+source answer read	prismSourceAnswerRead
+source answer refuse	prismSourceAnswerRefuse
+uorc module PrismUorc
+uorc theorems 14
+uorc judge prismUorcJudge
+uorc struct PrismUorcRequest
+uorc field act act
+uorc field halted halted
+uorc field seal seal
+uorc field format format
+uorc field scope scope
+uorc field objects objects
+uorc field restore restore
+uorc field kappa kappa
+uorc value act	keep	prismUorcActKeep
+uorc value act	open	prismUorcActOpen
+uorc value halted	no	prismUorcHaltedNo
+uorc value halted	yes	prismUorcHaltedYes
+uorc value seal	ok	prismUorcSealOk
+uorc value seal	broken	prismUorcSealBroken
+uorc value format	known	prismUorcFormatKnown
+uorc value format	other	prismUorcFormatOther
+uorc value scope	self	prismUorcScopeSelf
+uorc value scope	standard	prismUorcScopeStandard
+uorc value scope	other	prismUorcScopeOther
+uorc value objects	one	prismUorcObjectsOne
+uorc value objects	many	prismUorcObjectsMany
+uorc value restore	same	prismUorcRestoreSame
+uorc value restore	differs	prismUorcRestoreDiffers
+uorc value restore	failed	prismUorcRestoreFailed
+uorc value kappa	admit	prismUorcKappaAdmit
+uorc value kappa	other	prismUorcKappaOther
+uorc answer keep	prismUorcAnswerKeep
+uorc answer open	prismUorcAnswerOpen
+uorc answer refuse	prismUorcAnswerRefuse
+resonance module PrismResonance
+resonance theorems 16
+resonance judge prismResonanceJudge
+resonance struct PrismResonanceRequest
+resonance field gesture gesture
+resonance field pace pace
+resonance field salience salience
+resonance field phase phase
+resonance field belief belief
+resonance field attention attention
+resonance field halted halted
+resonance value gesture	open	prismResonanceGestureOpen
+resonance value gesture	dwell	prismResonanceGestureDwell
+resonance value gesture	keep	prismResonanceGestureKeep
+resonance value gesture	dismiss	prismResonanceGestureDismiss
+resonance value gesture	still	prismResonanceGestureStill
+resonance value pace	still	prismResonancePaceStill
+resonance value pace	calm	prismResonancePaceCalm
+resonance value pace	hurried	prismResonancePaceHurried
+resonance value salience	near	prismResonanceSalienceNear
+resonance value salience	far	prismResonanceSalienceFar
+resonance value phase	dawn	prismResonancePhaseDawn
+resonance value phase	day	prismResonancePhaseDay
+resonance value phase	dusk	prismResonancePhaseDusk
+resonance value phase	night	prismResonancePhaseNight
+resonance value belief	inferred	prismResonanceBeliefInferred
+resonance value belief	consolidated	prismResonanceBeliefConsolidated
+resonance value belief	confirmed	prismResonanceBeliefConfirmed
+resonance value belief	rejected	prismResonanceBeliefRejected
+resonance value attention	open	prismResonanceAttentionOpen
+resonance value attention	quiet	prismResonanceAttentionQuiet
+resonance value halted	no	prismResonanceHaltedNo
+resonance value halted	yes	prismResonanceHaltedYes
+resonance answer rest	prismResonanceAnswerRest
+resonance answer whisper	prismResonanceAnswerWhisper
+resonance answer chime	prismResonanceAnswerChime
+resonance answer bloom	prismResonanceAnswerBloom
+resonance answer chorus	prismResonanceAnswerChorus
+resonance answer recede	prismResonanceAnswerRecede
+router module PrismRouter
+router theorems 15
+router judge prismRouterJudge
+router struct PrismRouterRequest
+router field source source
+router field value value2
+router field feature feature
+router field provider provider
+router field halted halted
+router value source	note	prismRouterSourceNote
+router value source	message	prismRouterSourceMessage
+router value source	calendar	prismRouterSourceCalendar
+router value source	contact	prismRouterSourceContact
+router value value	text	prismRouterValue2Text
+router value value	subject	prismRouterValue2Subject
+router value value	start	prismRouterValue2Start
+router value value	party	prismRouterValue2Party
+router value value	shape	prismRouterValue2Shape
+router value feature	time	prismRouterFeatureTime
+router value feature	intent	prismRouterFeatureIntent
+router value feature	party	prismRouterFeatureParty
+router value feature	meaning	prismRouterFeatureMeaning
+router value feature	kind	prismRouterFeatureKind
+router value feature	topic	prismRouterFeatureTopic
+router value provider	compiled	prismRouterProviderCompiled
+router value provider	absent	prismRouterProviderAbsent
+router value provider	mismatch	prismRouterProviderMismatch
+router value halted	no	prismRouterHaltedNo
+router value halted	yes	prismRouterHaltedYes
+router answer map	prismRouterAnswerMap
+router answer direct	prismRouterAnswerDirect
+router answer skip	prismRouterAnswerSkip
+router answer refuse	prismRouterAnswerRefuse
+models module PrismModels
+models theorems 9
+models judge prismModelsJudge
+models struct PrismModelsRequest
+models field source source
+models field format format
+models field runtime runtime
+models field weights weights
+models field route route
+models field halted halted
+models value source	locked	prismModelsSourceLocked
+models value source	unlocked	prismModelsSourceUnlocked
+models value format	onnx	prismModelsFormatOnnx
+models value format	gguf	prismModelsFormatGguf
+models value format	other	prismModelsFormatOther
+models value runtime	match	prismModelsRuntimeMatch
+models value runtime	mismatch	prismModelsRuntimeMismatch
+models value runtime	missing	prismModelsRuntimeMissing
+models value weights	match	prismModelsWeightsMatch
+models value weights	mismatch	prismModelsWeightsMismatch
+models value weights	missing	prismModelsWeightsMissing
+models value route	granted	prismModelsRouteGranted
+models value route	ungranted	prismModelsRouteUngranted
+models value halted	no	prismModelsHaltedNo
+models value halted	yes	prismModelsHaltedYes
+models answer run	prismModelsAnswerRun
+models answer fetch	prismModelsAnswerFetch
+models answer ask	prismModelsAnswerAsk
+models answer refuse	prismModelsAnswerRefuse
+ask module PrismAsk
+ask theorems 14
+ask judge prismAskJudge
+ask struct PrismAskRequest
+ask field halted halted
+ask field clock clock
+ask field box box
+ask field intent intent
+ask field timed timed
+ask field held held
+ask field act act
+ask value halted	no	prismAskHaltedNo
+ask value halted	yes	prismAskHaltedYes
+ask value clock	not	prismAskClockNot
+ask value clock	asked	prismAskClockAsked
+ask value box	keeps	prismAskBoxKeeps
+ask value box	asks	prismAskBoxAsks
+ask value intent	question	prismAskIntentQuestion
+ask value intent	task	prismAskIntentTask
+ask value intent	event	prismAskIntentEvent
+ask value intent	fact	prismAskIntentFact
+ask value timed	no	prismAskTimedNo
+ask value timed	yes	prismAskTimedYes
+ask value held	some	prismAskHeldSome
+ask value held	none	prismAskHeldNone
+ask value act	task	prismAskActTask
+ask value act	autofeedback	prismAskActAutofeedback
+ask value act	social	prismAskActSocial
+ask answer paused	prismAskAnswerPaused
+ask answer clock	prismAskAnswerClock
+ask answer greet	prismAskAnswerGreet
+ask answer empty	prismAskAnswerEmpty
+ask answer answer	prismAskAnswerAnswer
+ask answer heard	prismAskAnswerHeard
+ask answer keep	prismAskAnswerKeep
+ask answer look	prismAskAnswerLook

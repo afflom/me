@@ -33,7 +33,6 @@ PrismRealizabilityProofs.lex.tex (every descriptor is complete, and every
 witness pair is answered by the facet's judge as the spec says, each by
 reflexivity); then run `(cd app && lexlean fmt && lexlean lock)`.
 """
-import ast
 import hashlib
 import json
 import pathlib
@@ -52,39 +51,17 @@ ELEMENTS = ["identity", "vocabulary", "capability", "interfaceSpec", "compositio
             "fidelity", "resources", "authority", "evidence", "projection"]
 
 
-def root_facets():
-    """(keyword, module) of every facet the application root routes, and its
-    request maximum, read from tools/prism_root.py without running it."""
-    tree = ast.parse((ROOT / "tools/prism_root.py").read_text())
-    facets, req_max = None, None
-    for node in tree.body:
-        if isinstance(node, ast.Assign):
-            names = [t.id for t in node.targets if isinstance(t, ast.Name)]
-            if "FACETS" in names:
-                facets = ast.literal_eval(node.value)
-            if any(isinstance(t, ast.Tuple) for t in node.targets):
-                t = node.targets[0]
-                if [e.id for e in t.elts][:1] == ["REQ_MAX"]:
-                    req_max = ast.literal_eval(node.value.elts[0])
-    return [(k, m) for k, m, _ in facets], req_max
-
-
-def deciding(module):
-    """The module that decides for a routed one: the module itself when it has
-    the judge of one request, else the one module it imports that has (a reader
-    in front of a decision, as PrismKappaLabel reads a label for PrismKappa)."""
-    judge = re.compile(r"name: \w+Judge,\s*parameters: \[request : \w+\]")
-    text = (SRC / f"{module}.lex.tex").read_text()
-    if judge.search(text):
-        return module
-    found = [m for m in re.findall(r"\\importmodule\{(\w+)\}", text)
-             if (SRC / f"{m}.lex.tex").exists() and judge.search((SRC / f"{m}.lex.tex").read_text())]
-    return found[0] if len(found) == 1 else module
-
-
 MODEL = json.loads((SPECS / "realizability/spec.json").read_text())
-FACETS, REQ_MAX = root_facets()
-KEYWORD_MODULE = {k: deciding(m) for k, m in FACETS}
+# What the program reads of the root's facet table and of every facet's Lean
+# module (its rzproj step): the routes, the request maximum, and per facet the
+# deciding module, its theorems, and how it names the spec, or each fault.
+PROJ = (FACTS / "projection.txt").read_text(encoding="utf-8").splitlines() if (FACTS / "projection.txt").exists() else []
+FACETS = [tuple(l.split("\t")[1:]) for l in PROJ if l.startswith("route\t")]
+REQ_MAX = int(next((l.split("\t")[1] for l in PROJ if l.startswith("reqmax\t")), 0))
+
+
+def said(d, word):
+    return [l[len(d) + len(word) + 2:] for l in PROJ if l.startswith(f"{d} {word} ")]
 
 
 class Spec:
@@ -92,7 +69,7 @@ class Spec:
     whole request space (test/realize/<facet>.txt, held by GN-01)."""
 
     def __init__(self, d, keyword):
-        self.dir, self.keyword, self.module = d, keyword, KEYWORD_MODULE.get(keyword)
+        self.dir, self.keyword, self.module = d, keyword, (said(d, "module") or [None])[0]
         self.raw = json.loads((SPECS / d / "spec.json").read_text(encoding="utf-8"))
         self.fields = self.raw["fields"]
         self.names = [f["name"] for f in self.fields]
@@ -123,50 +100,20 @@ def load():
     return {d: Spec(d, keyword) for d, keyword in MODEL["facets"].items()}
 
 
-def theorem_count(module):
-    p = SRC / f"{module}Proofs.lex.tex"
-    return len(re.findall(r"^theorem\{", p.read_text(), re.M)) if p.exists() else 0
-
-
 def cap(word):
     return word[:1].upper() + word[1:]
 
 
 def projection(s):
     """How the facet's Lean module realizes its spec: the request structure,
-    the judge, and the constant of every value and answer. Returns
-    (names, faults); names is None when the module does not realize it."""
-    text = (SRC / f"{s.module}.lex.tex").read_text()
-    faults = []
-    judge = re.search(r"name: (\w+)Judge,\s*parameters: \[request : (\w+)\]", text)
-    if not judge:
-        return None, [f"{s.module} has no judge of one request"]
-    prefix, struct = judge.group(1), judge.group(2)
-    body = re.search(r"name: %s,\s*type_parameters: \[\],\s*parameters: \[\],\s*fields: \[(.*?)\]\s*\}" % struct, text, re.S)
-    lean_fields = re.findall(r"\{name: (\w+), type: Nat\}", body.group(1)) if body else []
-    # The builder renames a field whose name Lean reserves (value -> value2), keeping its place.
-    renamed = len(lean_fields) == len(s.names) and all(l == n or re.fullmatch(re.escape(n) + r"\d+", l) for l, n in zip(lean_fields, s.names))
-    if not renamed:
-        faults.append(f"{s.module}::{struct} has fields {lean_fields}, the spec {s.names}")
-    fields = dict(zip(s.names, lean_fields)) if renamed else {n: n for n in s.names}
-    consts = {m.group(1): int(m.group(2)) for m in re.finditer(r"name: (\w+), parameters: \[\], result: Nat, body: (\d+)\}", text)}
-    values = {}
-    for f in s.fields:
-        if s.is_number(f):
-            continue
-        for k, v in enumerate(f["values"]):
-            name = f"{prefix}{cap(fields[f['name']])}{cap(v)}"
-            if consts.get(name) != k:
-                faults.append(f"{s.module}::{name} is not value {k} of field {f['name']}")
-            values[(f["name"], v)] = name
-    answers = {}
-    for k, o in enumerate(s.outcomes):
-        name = f"{prefix}Answer{cap(o)}"
-        if consts.get(name) != k:
-            faults.append(f"{s.module}::{name} is not answer {k}")
-        answers[o] = name
-    names = {"judge": f"{prefix}Judge", "struct": struct, "fields": fields, "values": values, "answers": answers}
-    return (None if faults else names), faults
+    the judge, and the constant of every value and answer, as the program read
+    them. Returns (names, faults); names is None when the module does not."""
+    faults = said(s.dir, "fault")
+    if faults:
+        return None, faults
+    pair = lambda word: dict(x.rsplit("\t", 1) for x in said(s.dir, word))
+    return {"judge": said(s.dir, "judge")[0], "struct": said(s.dir, "struct")[0], "fields": dict(x.split(" ") for x in said(s.dir, "field")),
+            "values": {tuple(k.split("\t")): c for k, c in pair("value").items()}, "answers": pair("answer")}, []
 
 
 def audit():
@@ -236,7 +183,7 @@ def audit():
             "fidelity": (agree, valid),
             "resources": (REQ_MAX, longest),
             "authority": s.pair("authority"),
-            "evidence": (theorem_count(s.module), int(guards)),
+            "evidence": (int(said(d, "theorems")[0]), int(guards)),
             "projection": (projected, len(s.fields)),
         }
         for e in ("vocabulary", "authority"):

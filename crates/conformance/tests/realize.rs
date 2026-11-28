@@ -117,7 +117,11 @@ fn realize_rz_01() {
     }
     assert!(seen >= 10, "RZ-01: the model names {seen} facets");
     // What the gate reads of composition and of the settings, the program writes.
-    for (generator, output) in [("rzcomp", "composition"), ("rzset", "settings")] {
+    for (generator, output) in [
+        ("rzcomp", "composition"),
+        ("rzset", "settings"),
+        ("rzproj", "projection"),
+    ] {
         assert!(
             steps.contains(&format!("\"generator\": \"{generator}\",")) && steps.contains(&format!("\"output\": \"test/realize/{output}.txt\"")),
             "RZ-01: generators/realize/steps.json has no {generator} step writing test/realize/{output}.txt"
