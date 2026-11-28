@@ -93,9 +93,7 @@ definition{
   name: hsPrevEntry,
   parameters: [e : Bytes],
   result: Bytes,
-  body: (match (PrismSnapshot::snPrev (hsEl e 1))
-    | Option.none => 0x
-    | Option.some x => x),
+  body: (match (PrismSnapshot::snPrev (hsEl e 1)) | Option.none => 0x | Option.some x => x),
   axioms: [Quot.sound, propext]
 }
 
