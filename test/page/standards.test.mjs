@@ -248,8 +248,39 @@ async function viewProbes(page, view, home, probed = PROBED) {
   return out;
 }
 
+// AccName 1.2: each control, and each node named by an attribute, has the name the step that names it gives
+// from the page's own markup; the name is read as the browser computed it (the accessibility tree).
+const NAMED = new Set(["button", "link", "textbox", "searchbox", "combobox", "checkbox", "switch", "radio", "slider", "DisclosureTriangle"]);
+async function names(page) {
+  const cdp = await page.context().newCDPSession(page);
+  const out = [];
+  // The browser names a node in the letter case its style draws; the step gives the letters.
+  const squash = (text) => String(text ?? "").replace(/\s+/g, "").toLowerCase();
+  for (const n of (await cdp.send("Accessibility.getFullAXTree")).nodes) {
+    const src = (n.name?.sources ?? []).find((s) => !s.superseded && (s.value?.value || s.attributeValue?.value));
+    if (n.ignored || !n.backendDOMNodeId || n.role?.value === "RootWebArea" || !(NAMED.has(n.role?.value) || (src && src.type !== "contents"))) continue;
+    const how = !src ? "none" : src.type === "contents" ? "contents" : src.nativeSource ? "label" : src.attribute;
+    const step = { "aria-labelledby": "2B", "aria-label": "2D", contents: "2F", title: "2I", none: "2" }[how] ?? "2E";
+    const { object } = await cdp.send("DOM.resolveNode", { backendNodeId: n.backendDOMNodeId });
+    const { result, exceptionDetails } = await cdp.send("Runtime.callFunctionOn", { objectId: object.objectId, returnByValue: true, arguments: [{ value: how }], functionDeclaration: `function (how) {
+      const el = this.nodeType === 1 ? this : this.parentElement;
+      const gone = (x) => x.hidden || x.getAttribute("aria-hidden") === "true" || getComputedStyle(x).display === "none";
+      const said = (x, top) => x.nodeType === 3 ? x.data : x.nodeType !== 1 || (!top && gone(x)) ? "" : (!top && x.getAttribute("aria-label")) || x.alt || [...x.childNodes].map((c) => said(c)).join(" ");
+      const want = how === "aria-labelledby" ? el.getAttribute(how).trim().split(/\\s+/).map((id) => el.getRootNode().getElementById(id)).filter(Boolean).map((x) => said(x, true)).join(" ")
+        : how === "contents" ? said(el, true) : how === "label" ? [...(el.labels ?? [])].map((x) => said(x, true)).join(" ") : el.getAttribute(how);
+      return { want, id: el.id || el.className || el.tagName };
+    }` });
+    assert.ok(!exceptionDetails, `${n.role?.value} named by ${how}: ${exceptionDetails?.exception?.description}`);
+    const { want, id } = result.value;
+    if (!squash(n.name?.value)) out.push(`step ${step}: ${n.role.value} ${id} has no name`);
+    else if (how !== "none" && squash(want) !== squash(n.name.value)) out.push(`step ${step}: ${n.role.value} ${id} is named "${n.name.value}", its ${how} gives "${want}"`);
+  }
+  await cdp.detach();
+  return out;
+}
+
 test("the front end meets every requirement of its standards, as the registry enforces each", { timeout: 20 * 60000 }, async () => {
-  for (const name of PROBED) assert.ok(name in SCREEN || ["keyboard", "character-keys", "text-200", "reflow", "text-spacing", "on-input", "pointer-cancellation", "error-identification", "consistent-navigation", "redundant-entry", "no-motion"].includes(name), `no probe "${name}"`);
+  for (const name of PROBED) assert.ok(name in SCREEN || ["keyboard", "character-keys", "text-200", "reflow", "text-spacing", "on-input", "pointer-cancellation", "error-identification", "consistent-navigation", "redundant-entry", "no-motion", "accessible-name"].includes(name), `no probe "${name}"`);
   const axe = await engine();
   const dir = mkdtempSync(join(tmpdir(), "standards-"));
   const files = FEED.map(([id, ext]) => { const path = join(dir, `${id}.${ext}`); writeFileSync(path, example(id)); return path; });
@@ -295,6 +326,7 @@ test("the front end meets every requirement of its standards, as the registry en
           const arg = name === "multiple-ways" ? PLACES.filter((p) => p.viewpoint === "person" && p.host !== "composer").map((p) => p.key) : null;
           for (const why of await page.evaluate(probe, arg)) byProbe(name, `at ${screen} (${view.name}): ${why}`);
         }
+        if (PROBED.has("accessible-name")) for (const why of await names(page)) byProbe("accessible-name", `at ${screen} (${view.name}): ${why}`);
         // 2.1.1: the keyboard reaches every control of every screen, not only of the last.
         for (const { probe, why } of await viewProbes(page, view, null, new Set(["keyboard"].filter((name) => PROBED.has(name))))) byProbe(probe, `at ${screen} (${view.name}): ${why}`);
         // 3.2.3, 3.2.4, 3.2.6: the navigation, and the help beside it, are the same on every screen.
