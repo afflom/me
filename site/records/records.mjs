@@ -18,10 +18,11 @@ const encoder = new TextEncoder();
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
 const fail = (code, message) => Object.assign(new Error(message), { code });
 
-// One object store of one database. get(key) reads; change(key, next) runs next(current)
-// inside one readwrite transaction, puts what it returns unless that is undefined,
-// and answers whether it put.
-function keyed(database, store, indexed) {
+// One object store of one database, each call one transaction. get(key) reads;
+// all() lists [key, value] in key order; put and remove write. change(key, next)
+// runs next(current) inside one readwrite transaction, puts what it returns unless
+// that is undefined, and answers whether it put.
+export function keyed(database, store, indexed = globalThis.indexedDB) {
   const within = (mode, work) => new Promise((resolve, reject) => {
     const request = indexed.open(database, 1);
     request.onupgradeneeded = () => request.result.createObjectStore(store);
@@ -37,6 +38,13 @@ function keyed(database, store, indexed) {
   });
   return {
     get: (key) => within('readonly', (s, say) => { const r = s.get(key); r.onsuccess = () => say(r.result); }),
+    all: () => within('readonly', (s, say) => {
+      const rows = [];
+      const cursor = s.openCursor();
+      cursor.onsuccess = () => { const at = cursor.result; if (at) { rows.push([at.key, at.value]); at.continue(); } else say(rows); };
+    }),
+    put: (key, value) => within('readwrite', (s) => { s.put(value, key); }),
+    remove: (key) => within('readwrite', (s) => { s.delete(key); }),
     change: (key, next) => within('readwrite', (s, say) => {
       const r = s.get(key);
       r.onsuccess = () => { const value = next(r.result); say(value !== undefined); if (value !== undefined) s.put(value, key); };

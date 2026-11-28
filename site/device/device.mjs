@@ -21,6 +21,7 @@ const encoder = new TextEncoder();
 const hex = (u8) => Array.from(u8, (b) => b.toString(16).padStart(2, '0')).join('');
 import { isZip, zipEntries } from './zip.mjs';
 import { FORMATS } from './formats.mjs';
+import { keyed } from '../records/records.mjs';
 export { FORMATS };
 import { exportItems, exportKind } from '../source/exports.mjs';
 import { mboxSeparator, headerLines, readField } from '../read/mail.mjs';
@@ -130,39 +131,8 @@ const guestRead = async (text) => (await (reader ??= import('./guest.mjs').then(
 
 // The handles the owner granted, kept in this browser.
 export function handleStore(indexed = globalThis.indexedDB) {
-  const open = () => new Promise((resolve, reject) => {
-    const request = indexed.open(DB, 1);
-    request.onupgradeneeded = () => request.result.createObjectStore('folders');
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
-  });
-  const run = async (mode, work) => {
-    const db = await open();
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction('folders', mode);
-      const result = work(tx.objectStore('folders'));
-      tx.oncomplete = () => { db.close(); resolve(result.result ?? result); };
-      tx.onerror = () => reject(tx.error);
-    });
-  };
-  return {
-    all: async () => {
-      const db = await open();
-      return new Promise((resolve, reject) => {
-        const out = [];
-        const cursor = db.transaction('folders').objectStore('folders').openCursor();
-        cursor.onsuccess = () => {
-          const c = cursor.result;
-          if (!c) { db.close(); resolve(out); return; }
-          out.push({ id: c.key, ...c.value });
-          c.continue();
-        };
-        cursor.onerror = () => reject(cursor.error);
-      });
-    },
-    put: (id, value) => run('readwrite', (s) => s.put(value, id)),
-    remove: (id) => run('readwrite', (s) => s.delete(id)),
-  };
+  const folders = keyed(DB, 'folders', indexed);
+  return { all: async () => (await folders.all()).map(([id, value]) => ({ id, ...value })), put: folders.put, remove: folders.remove };
 }
 
 // openDevice: the device as a source.
