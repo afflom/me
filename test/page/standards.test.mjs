@@ -261,7 +261,8 @@ async function names(page) {
     if (n.ignored || !n.backendDOMNodeId || n.role?.value === "RootWebArea" || !(NAMED.has(n.role?.value) || (src && src.type !== "contents"))) continue;
     const how = !src ? "none" : src.type === "contents" ? "contents" : src.nativeSource ? "label" : src.attribute;
     const step = { "aria-labelledby": "2B", "aria-label": "2D", contents: "2F", title: "2I", none: "2" }[how] ?? "2E";
-    const { object } = await cdp.send("DOM.resolveNode", { backendNodeId: n.backendDOMNodeId });
+    // A node gone since the tree was read means the page drew again in between: the tree is read again.
+    const object = (await cdp.send("DOM.resolveNode", { backendNodeId: n.backendDOMNodeId }).catch(() => null))?.object; if (!object) return names(page);
     const { result, exceptionDetails } = await cdp.send("Runtime.callFunctionOn", { objectId: object.objectId, returnByValue: true, arguments: [{ value: how }], functionDeclaration: `function (how) {
       const el = this.nodeType === 1 ? this : this.parentElement;
       const gone = (x) => x.hidden || x.getAttribute("aria-hidden") === "true" || getComputedStyle(x).display === "none";

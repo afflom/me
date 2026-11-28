@@ -2,6 +2,7 @@
 // (vault-browser.test.mjs). All values are synthetic. Each check that guards a refusal
 // is a planted defect: it changes the stored bytes and expects the guest to refuse them.
 import { openVault, routerDecide } from '../vault.mjs';
+import { DATABASE, NAMES, openRecords } from '../../records/records.mjs';
 import { GUESTS, loadRouter, openGuest } from './guests.mjs';
 
 const keyRing = (name) => new Promise((resolve, reject) => {
@@ -20,6 +21,9 @@ const dropKeyRing = (name) => new Promise((resolve) => {
     tx.oncomplete = () => { q.result.close(); resolve(); };
   };
 });
+
+const AX = 'sha256:ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad';
+const AY = 'sha256:248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1';
 
 // read(file) -> bytes of a guest in ./guests/; prefix keeps two runs in one origin apart.
 export async function scenario(read, prefix = '') {
@@ -119,6 +123,33 @@ export async function scenario(read, prefix = '') {
   out.imported = JSON.stringify(texts) === JSON.stringify([A, B, 'synthetic unlabeled'].sort()) && all.some((x) => x.outcome === 'hashonly');
   out.newDeviceAddress = Boolean(wa) && wa.address !== a.address;
 
+  // The records store over a vault of its own. The two records are the one-block and
+  // two-block messages of FIPS 180-2 appendix B, filed under the digests it states.
+  const rv = await openVault({ decide, name: `${prefix}v3` });
+  const records = await openRecords({ vault: rv });
+  const te = new TextEncoder();
+  const [X, Y] = [te.encode('abc'), te.encode('abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq')];
+  const [ax, ay] = [AX, AY];
+  out.recordKept = [await records.put(ax, X, { label: 'internal' }), await records.put(ay, Y, { label: 'internal' }), await records.put(ax, X, { label: 'internal' })].join(',');
+  out.recordBack = td.decode((await records.get(ax)) ?? X.subarray(0, 0)) === 'abc' && (await records.get(ay.replace('248d', '348d'))) === null;
+  out.recordMisfiled = [await records.put(ay, X, { label: 'internal' }), await records.put(ax.replace('ba78', 'ba79'), X, { label: 'internal' })].join(',');
+  out.recordHalted = await (await openRecords({ vault: await openVault({ decide, name: `${prefix}v3`, halted: () => 'yes' }) })).put('sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', new Uint8Array(0), { label: 'internal' });
+  const head = records.cell('head');
+  out.cellMoves = [await head.read(), await head.swap(null, ax), await head.read(), await head.swap(null, ay), await head.swap(ax, ay), await head.read(), await head.swap(ax, ay), await head.swap(ay, ay.replace('248d', '348d'))].join(',');
+  // Two moves at once from the same record: the browser's transactions let one through. Node's stand-in has no transactions.
+  out.cellOnce = (await Promise.all([head.swap(ay, ax), head.swap(ay, ax)])).sort().join(',');
+  out.transactions = typeof IDBFactory !== 'undefined' && indexedDB instanceof IDBFactory;
+  out.namesClean = await new Promise((resolve) => {
+    const q = indexedDB.open(DATABASE);
+    q.onsuccess = () => {
+      const seen = [];
+      const c = q.result.transaction(NAMES).objectStore(NAMES).openCursor();
+      c.onsuccess = () => { const at = c.result; if (at) { seen.push(at.key, at.value); at.continue(); } else resolve(seen.length === 6 && !/ba7816|248d6a|head|abc/.test(seen.join(' '))); };
+    };
+  });
+  await rv._blobs.swap(await rv.addressOf(X), await rv.addressOf(Y));
+  out.recordSwapped = (await records.get(ax)) === null && (await records.get(ay)) === null && (await head.read()) === null;
+
   // Key ring gone (site data partly cleared): every restore and store is refused, nothing is deleted.
   await dropKeyRing(`${prefix}v1`);
   const v1b = await openVault({ decide, name: `${prefix}v1` });
@@ -151,6 +182,10 @@ export function checks(r) {
     ['VS-02', 'an unknown envelope is refused', r.unknownFormat === 'refuse'],
     ['VS-02', 'a lost key ring refuses restore and store, and deletes nothing', r.keyState === 'missing' && r.keyMissingGet === 'refuse' && r.keyMissingPut === 'refuse' && r.objectsKept === 5],
     ['VS-02', 'a guest with the wrong fingerprint is refused', r.badGuest === 'refused'],
+    ['VS-01', 'a record is kept once, under the SHA-256 address of its bytes only', r.recordKept === 'kept,kept,held' && r.recordBack && r.recordMisfiled === 'refuse,refuse' && r.recordHalted === 'refuse'],
+    ['VS-01', 'the record names hold no content hash and no cell name', r.namesClean],
+    ['VS-02', 'a cell moves only from the record the caller expects, and only once', r.cellMoves === `,true,${AX},false,true,${AY},false,false` && (r.cellOnce === 'false,true' || !r.transactions)],
+    ['VS-02', 'swapped record bytes open to nothing', r.recordSwapped],
     ['VS-03', 'keys are non-extractable', r.nonExtractable && r.exportKeyRefused],
     ['VS-03', 'reopening needs no passphrase and restores the value', r.reopen],
     ['VS-03', 'persist() is asked and reported', r.persist],
